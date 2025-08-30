@@ -1,0 +1,32 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Backend API for badminton court booking and management system using Node.js and Express",
+  "keywords": [
+    "badminton",
+    "booking",
+    "manager",
+    "nodejs",
+    "express"
+  ],
+  "license": "ISC",
+  "author": "Nguyễn Tuấn Thành, Huỳnh Thái Toàn",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "babel src/server.js -d dist",
+    "start": "npm run build && nodemon src/server.js"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.28.3",
+    "@babel/core": "^7.28.3",
+    "@babel/preset-env": "^7.28.3",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10"
+  },
+  "dependencies": {
+    "mysql2": "^3.14.3"
+  }
+}

@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import initWebRoutes from "./routes/webRoute.js";
+import sequelize from "./config/db.js";
 
 dotenv.config();
 
@@ -12,6 +13,9 @@ app.use(express.urlencoded({ extended: true }));
 
 initWebRoutes(app);
 
-app.listen(PORT, () => {
-  console.log(`Server is listening on port http://localhost:${PORT}`);
+sequelize.sync({ force: false }).then(() => {
+  console.log("Database synced");
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
 });

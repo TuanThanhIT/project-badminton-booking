@@ -21,25 +21,28 @@ const Header = () => {
               placeholder="Xin chào, bạn cần tìm gì hôm nay?"
               className="w-[400px] px-5 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none text-gray-700"
             />
-            <button className="bg-orange-500 hover:bg-orange-600 text-white p-2 rounded-md shadow-md transition cursor-pointer">
+            <button className="bg-sky-500 hover:bg-sky-600 text-white p-2 rounded-md shadow-md transition cursor-pointer">
               <Search className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Buttons */}
-          <div className="flex justify-center items-center gap-8 ">
+          {/* Right section */}
+          <div className="flex justify-center items-center gap-8">
             {/* Language */}
-            <button className="border border-gray-400 text-gray-600 px-4 py-2 rounded-md shadow-sm hover:bg-gray-100 transition cursor-pointer">
+            <button className="border border-gray-300 text-gray-600 px-4 py-2 rounded-md shadow-sm hover:bg-gray-50 transition cursor-pointer">
               <Languages />
             </button>
 
-            <div className="flex flex-col items-center">
+            {/* Cart */}
+            <div className="flex flex-col items-center font-bold">
               <ShoppingCart />
               <NavLink
                 to="/cart"
                 className={({ isActive }) =>
-                  `text-gray-700 hover:text-red-500 ${
-                    isActive ? "text-red-700 font-bold" : ""
+                  `transition-colors ${
+                    isActive
+                      ? "text-blue-700"
+                      : "text-gray-700 hover:text-blue-600"
                   }`
                 }
               >
@@ -48,15 +51,15 @@ const Header = () => {
             </div>
 
             {/* Login */}
-            <div className="flex flex-row gap-2 items-center">
-              <LogIn className="text-gray-600 group-hover:text-orange-500" />
+            <div className="flex flex-row gap-2 items-center font-bold">
+              <LogIn className="text-gray-600" />
               <NavLink
-                to="/login"
+                to="/customer/login"
                 className={({ isActive }) =>
-                  `transition ${
+                  `transition-colors ${
                     isActive
-                      ? "text-orange-600 font-bold"
-                      : "text-gray-700 hover:text-orange-500"
+                      ? "text-blue-700"
+                      : "text-gray-700 hover:text-blue-600"
                   }`
                 }
               >
@@ -65,15 +68,15 @@ const Header = () => {
             </div>
 
             {/* Register */}
-            <div className="flex flex-row gap-2 items-center">
+            <div className="flex flex-row gap-2 items-center font-bold">
               <UserPlus className="text-gray-600" />
               <NavLink
-                to="/register"
+                to="/customer/register"
                 className={({ isActive }) =>
-                  `transition ${
+                  `transition-colors ${
                     isActive
-                      ? "text-orange-600 font-bold"
-                      : "text-gray-700 hover:text-orange-500"
+                      ? "text-blue-700"
+                      : "text-gray-700 hover:text-blue-600"
                   }`
                 }
               >

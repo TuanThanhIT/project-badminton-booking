@@ -3,7 +3,7 @@ import { Calendar, Contact, History, Home, Info, Package } from "lucide-react";
 
 const Navbar = () => {
   return (
-    <nav className="p-2 text-center bg-green-700 shadow-md">
+    <nav className="p-2 text-center bg-sky-600 shadow-md">
       <ul className="flex justify-center items-center gap-10 list-none m-0 p-0 text-base font-medium">
         {/* Home */}
         <li>
@@ -13,7 +13,7 @@ const Navbar = () => {
               `flex items-center gap-1 transition ${
                 isActive
                   ? "text-yellow-300 font-semibold underline underline-offset-4"
-                  : "text-white hover:text-orange-300"
+                  : "text-white hover:text-yellow-300"
               }`
             }
           >
@@ -30,7 +30,7 @@ const Navbar = () => {
               `flex items-center gap-1 transition ${
                 isActive
                   ? "text-yellow-300 font-semibold underline underline-offset-4"
-                  : "text-white hover:text-orange-300"
+                  : "text-white hover:text-yellow-300"
               }`
             }
           >
@@ -47,7 +47,7 @@ const Navbar = () => {
               `flex items-center gap-1 transition ${
                 isActive
                   ? "text-yellow-300 font-semibold underline underline-offset-4"
-                  : "text-white hover:text-orange-300"
+                  : "text-white hover:text-yellow-300"
               }`
             }
           >
@@ -64,7 +64,7 @@ const Navbar = () => {
               `flex items-center gap-1 transition ${
                 isActive
                   ? "text-yellow-300 font-semibold underline underline-offset-4"
-                  : "text-white hover:text-orange-300"
+                  : "text-white hover:text-yellow-300"
               }`
             }
           >
@@ -81,7 +81,7 @@ const Navbar = () => {
               `flex items-center gap-1 transition ${
                 isActive
                   ? "text-yellow-300 font-semibold underline underline-offset-4"
-                  : "text-white hover:text-orange-300"
+                  : "text-white hover:text-yellow-300"
               }`
             }
           >
@@ -98,7 +98,7 @@ const Navbar = () => {
               `flex items-center gap-1 transition ${
                 isActive
                   ? "text-yellow-300 font-semibold underline underline-offset-4"
-                  : "text-white hover:text-orange-300"
+                  : "text-white hover:text-yellow-300"
               }`
             }
           >

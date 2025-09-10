@@ -8,12 +8,12 @@ const Order = sequelize.define(
     totalAmount: { type: DataTypes.DOUBLE, allowNull: false },
     userId: {
       type: DataTypes.INTEGER,
-      references: { model: "User", key: "id" },
+      references: { model: "Users", key: "id" },
       allowNull: false,
     },
     discountId: {
       type: DataTypes.INTEGER,
-      references: { model: "Discount", key: "id" },
+      references: { model: "Discounts", key: "id" },
       allowNull: false,
     },
   },

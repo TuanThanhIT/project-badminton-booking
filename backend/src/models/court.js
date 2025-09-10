@@ -1,12 +1,12 @@
 import { DataTypes } from "sequelize";
-import sequelize from "../config/db";
+import sequelize from "../config/db.js";
 
 const Court = sequelize.define(
   "Court",
   {
-    name: { types: DataTypes.STRING(255), allowNull: false, unique: true },
-    location: { types: DataTypes.STRING(255), allowNull: false },
-    pricePerHour: { types: DataTypes.FLOAT, allowNull: false },
+    name: { type: DataTypes.STRING(255), allowNull: false, unique: true },
+    location: { type: DataTypes.STRING(255), allowNull: false },
+    pricePerHour: { type: DataTypes.FLOAT, allowNull: false },
   },
   {
     tableName: "Courts",

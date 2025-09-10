@@ -8,9 +8,6 @@ const User = sequelize.define(
     password: {
       type: DataTypes.STRING(255),
       allowNull: false,
-      validate: {
-        len: [8, 50],
-      },
     },
     email: {
       type: DataTypes.STRING(255),
@@ -19,6 +16,14 @@ const User = sequelize.define(
       validate: {
         isEmail: true,
       },
+    },
+    isVerified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    isActive: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
     },
     roleId: {
       type: DataTypes.INTEGER,

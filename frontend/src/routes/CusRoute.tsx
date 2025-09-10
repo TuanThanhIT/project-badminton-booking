@@ -6,9 +6,9 @@ import BookingCourtPage from "../pages/Customer/BookingCourtPage";
 import ContactPage from "../pages/Customer/ContactPage";
 import AboutPage from "../pages/Customer/AboutPage";
 import HistoryPage from "../pages/Customer/HistoryPage";
-import LoginPage from "../pages/LoginPage";
-import RegisterPage from "../pages/RegisterPage";
-import ForgotPasswordPage from "../pages/ForgotPasswordPage";
+import LoginPage from "../pages/Customer/LoginPage";
+import RegisterPage from "../pages/Customer/RegisterPage";
+import ForgotPasswordPage from "../pages/Customer/ForgotPasswordPage";
 import NotFoundPage from "../pages/NotFoundPage";
 
 const CustomerRoute = () => {
@@ -25,10 +25,14 @@ const CustomerRoute = () => {
           <Route path="/customer/history" element={<HistoryPage />}></Route>
           <Route path="/customer/contact" element={<ContactPage />}></Route>
           <Route path="/customer/about" element={<AboutPage />}></Route>
+          <Route path="/customer/login" element={<LoginPage />}></Route>
+          <Route path="/customer/register" element={<RegisterPage />}></Route>
+          <Route
+            path="/customer/forgotpass"
+            element={<ForgotPasswordPage />}
+          ></Route>
         </Route>
-        <Route path="/login" element={<LoginPage />}></Route>
-        <Route path="/register" element={<RegisterPage />}></Route>
-        <Route path="/forgotpass" element={<ForgotPasswordPage />}></Route>
+
         <Route path="*" element={<NotFoundPage />}></Route>
       </Routes>
     </div>

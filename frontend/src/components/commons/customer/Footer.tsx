@@ -4,7 +4,7 @@ const Footer = () => {
       <div className="grid grid-cols-4 gap-6 shadow-inner p-8 text-gray-700 bg-gray-100">
         {/* Địa chỉ */}
         <div>
-          <h3 className="font-bold text-green-700 mb-2 text-lg">Address</h3>
+          <h3 className="font-bold text-sky-600 mb-2 text-lg">Address</h3>
           <p>Badminton Court Booking & Shop</p>
           <p>456 Nguyen Van Bao, Go Vap District, Ho Chi Minh City</p>
           <p>Phone: +84 987 654 321</p>
@@ -14,7 +14,7 @@ const Footer = () => {
 
         {/* Thông tin dịch vụ */}
         <div>
-          <h3 className="font-bold text-green-700 mb-2 text-lg">
+          <h3 className="font-bold text-sky-600 mb-2 text-lg">
             Service Information
           </h3>
           <p className="hover:text-orange-500 cursor-pointer">Court booking</p>
@@ -32,9 +32,7 @@ const Footer = () => {
 
         {/* Chăm sóc khách hàng */}
         <div>
-          <h3 className="font-bold text-green-700 mb-2 text-lg">
-            Customer Care
-          </h3>
+          <h3 className="font-bold text-sky-600 mb-2 text-lg">Customer Care</h3>
           <p className="hover:text-orange-500 cursor-pointer">
             How to book a court
           </p>

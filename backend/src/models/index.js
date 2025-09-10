@@ -1,7 +1,6 @@
 import User from "./user.js";
 import Role from "./role.js";
 import Profile from "./profile.js";
-import Role from "./role.js";
 import Report from "./report.js";
 import GeneralFeedback from "./generalFeedback.js";
 import Booking from "./booking.js";
@@ -20,6 +19,7 @@ import CartItem from "./cartItem.js";
 import ProductVarient from "./productVarient.js";
 import ProductImage from "./productImage.js";
 import ProductFeedback from "./productFeedback.js";
+import UserOtp from "./userOtp.js";
 
 // Quan hệ n-1 giữa Role và User
 Role.hasMany(User, { foreignKey: "roleId" });
@@ -97,14 +97,18 @@ ProductVarient.belongsTo(Product, { foreignKey: "productId" });
 ProductVarient.hasMany(ProductImage, { foreignKey: "varientId" });
 ProductImage.belongsTo(ProductVarient, { foreignKey: "varientId" });
 
+// Quan hệ 1-n giữa User và UserOtp
+User.hasMany(UserOtp, { foreignKey: "userId" });
+UserOtp.belongsTo(User, { foreignKey: "userId" });
+
 // Quan hệ n-n giữa User và Product thông qua ProductFeedback
-User.belongsToMany(models.Product, {
-  through: models.ProductFeedback,
+User.belongsToMany(Product, {
+  through: ProductFeedback,
   foreignKey: "userId",
   otherKey: "productId",
 });
-Product.belongsToMany(models.User, {
-  through: models.ProductFeedback,
+Product.belongsToMany(User, {
+  through: ProductFeedback,
   foreignKey: "productId",
   otherKey: "userId",
 });
@@ -112,7 +116,6 @@ export {
   Role,
   User,
   Profile,
-  Role,
   Report,
   Booking,
   Court,

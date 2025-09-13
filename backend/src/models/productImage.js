@@ -5,9 +5,9 @@ const ProductImage = sequelize.define(
   "ProductImage",
   {
     imageUrl: { type: DataTypes.STRING },
-    varientId: {
+    productId: {
       type: DataTypes.INTEGER,
-      references: { model: "ProductVarients", key: "id" },
+      references: { model: "Products", key: "id" },
       allowNull: false,
     },
   },

@@ -9,6 +9,7 @@ const initAuthRoute = (app) => {
   authRoute.post("/verify-otp", authController.verifyUserOtp);
   authRoute.post("/sent-otp", authController.sentVerifyUserOtp);
   authRoute.post("/login", authController.userLogin);
-  app.use("/customer", auth, authRoute);
+  authRoute.get("/account", authController.getAccount);
+  app.use("/auth", auth, authRoute);
 };
 export default initAuthRoute;

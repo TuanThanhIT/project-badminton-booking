@@ -2,15 +2,16 @@ import Header from "../commons/customer/Header";
 import Footer from "../commons/customer/Footer";
 import { Outlet } from "react-router-dom";
 
-const CustomerLayout = () => {
+const CustomerPrivateLayout = () => {
   return (
-    <div className="h-screen grid grid-rows-[25%_1fr] w-screen overflow-x-hidden">
+    <div className="min-h-screen flex flex-col w-full overflow-x-hidden">
       <Header />
-      <main>
+      <main className="flex-1">
         <Outlet />
       </main>
       <Footer />
     </div>
   );
 };
-export default CustomerLayout;
+
+export default CustomerPrivateLayout;

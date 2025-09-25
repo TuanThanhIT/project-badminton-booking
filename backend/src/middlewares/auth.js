@@ -10,14 +10,18 @@ const auth = (req, res, next) => {
     "/verify-otp",
     "/sent-otp",
   ];
-  if (white_list.find((item) => "/customer" + item === req.originalUrl)) {
+  if (white_list.find((item) => "/auth" + item === req.originalUrl)) {
     next();
   } else {
     if (req.headers && req.headers.authorization) {
       try {
         const token = req.headers.authorization.split(" ")[1];
         const decoder = jwt.verify(token, process.env.JWT_SECRET);
-        console.log(`check token: ${decoder}`);
+        req.user = {
+          id: decoder?.id,
+          username: decoder?.username,
+          email: decoder?.email,
+        };
         next();
       } catch (err) {
         return res.status(401).json({

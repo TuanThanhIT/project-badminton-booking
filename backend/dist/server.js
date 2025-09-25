@@ -2,11 +2,15 @@
 
 var _express = _interopRequireDefault(require("express"));
 var _dotenv = _interopRequireDefault(require("dotenv"));
+var _cors = _interopRequireDefault(require("cors"));
 var _db = _interopRequireDefault(require("./config/db.js"));
 var _roleRoute = _interopRequireDefault(require("./routes/admin/roleRoute.js"));
 var _webRoute = _interopRequireDefault(require("./routes/customer/webRoute.js"));
 var _authRoute = _interopRequireDefault(require("./routes/customer/authRoute.js"));
 var _errorHandling = require("./middlewares/errorHandling.js");
+var _userRoute = _interopRequireDefault(require("./routes/customer/userRoute.js"));
+var _cateRoute = _interopRequireDefault(require("./routes/admin/cateRoute.js"));
+var _productRoute = _interopRequireDefault(require("./routes/admin/productRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -15,13 +19,17 @@ app.use(_express["default"].json());
 app.use(_express["default"].urlencoded({
   extended: true
 }));
+app.use((0, _cors["default"])());
 
 // Customer
 (0, _webRoute["default"])(app);
 (0, _authRoute["default"])(app);
+(0, _userRoute["default"])(app);
 
 // Admin
 (0, _roleRoute["default"])(app);
+(0, _cateRoute["default"])(app);
+(0, _productRoute["default"])(app);
 app.use(_errorHandling.errorHandlingMiddleware);
 _db["default"].sync({
   force: false

@@ -1,95 +1,117 @@
-import { Search, Languages, LogIn, UserPlus, ShoppingCart } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import {
+  Search,
+  Languages,
+  LogIn,
+  UserPlus,
+  ShoppingCart,
+  LogOut,
+  User,
+} from "lucide-react";
+import { NavLink, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
+import { useContext } from "react";
+import { AuthContext } from "../../contexts/authContext";
 
 const Header = () => {
+  const { auth, setAuth } = useContext(AuthContext);
+  const navigate = useNavigate();
+
   return (
-    <div>
-      <header className="bg-white shadow-md grid grid-rows-[75%_1fr] text-gray-700">
-        <div className="grid grid-cols-[1fr_2fr_3fr] gap-x-4 py-3 px-5 items-center">
-          {/* Logo */}
+    <header className="bg-white shadow-sm">
+      <div className="flex justify-between items-center px-8 py-4">
+        {/* Logo */}
+        <div
+          className="flex items-center gap-3 cursor-pointer"
+          onClick={() => navigate("/")}
+        >
           <img
             src="/img/logo_badminton.jpg"
             alt="Logo"
-            className="w-28 h-20 rounded-md shadow-lg"
+            className="w-12 h-12 rounded-xl shadow-sm"
           />
-
-          {/* Search box */}
-          <div className="flex flex-row gap-2 justify-center items-center">
-            <input
-              type="text"
-              placeholder="Xin chào, bạn cần tìm gì hôm nay?"
-              className="w-[400px] px-5 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none text-gray-700"
-            />
-            <button className="bg-sky-500 hover:bg-sky-600 text-white p-2 rounded-md shadow-md transition cursor-pointer">
-              <Search className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Right section */}
-          <div className="flex justify-center items-center gap-8">
-            {/* Language */}
-            <button className="border border-gray-300 text-gray-600 px-4 py-2 rounded-md shadow-sm hover:bg-gray-50 transition cursor-pointer">
-              <Languages />
-            </button>
-
-            {/* Cart */}
-            <div className="flex flex-col items-center font-bold">
-              <ShoppingCart />
-              <NavLink
-                to="/cart"
-                className={({ isActive }) =>
-                  `transition-colors ${
-                    isActive
-                      ? "text-blue-700"
-                      : "text-gray-700 hover:text-blue-600"
-                  }`
-                }
-              >
-                Cart
-              </NavLink>
-            </div>
-
-            {/* Login */}
-            <div className="flex flex-row gap-2 items-center font-bold">
-              <LogIn className="text-gray-600" />
-              <NavLink
-                to="/customer/login"
-                className={({ isActive }) =>
-                  `transition-colors ${
-                    isActive
-                      ? "text-blue-700"
-                      : "text-gray-700 hover:text-blue-600"
-                  }`
-                }
-              >
-                Login
-              </NavLink>
-            </div>
-
-            {/* Register */}
-            <div className="flex flex-row gap-2 items-center font-bold">
-              <UserPlus className="text-gray-600" />
-              <NavLink
-                to="/customer/register"
-                className={({ isActive }) =>
-                  `transition-colors ${
-                    isActive
-                      ? "text-blue-700"
-                      : "text-gray-700 hover:text-blue-600"
-                  }`
-                }
-              >
-                Register
-              </NavLink>
-            </div>
-          </div>
+          <h1 className="text-2xl font-bold text-sky-600 tracking-wide">
+            B-Hub
+          </h1>
         </div>
 
-        {/* Navbar */}
-        <Navbar />
-      </header>
-    </div>
+        {/* Search */}
+        <div className="flex items-center bg-gray-50 rounded-full px-4 py-2 shadow-inner w-[400px] border border-gray-200">
+          <input
+            type="text"
+            placeholder="Tìm sân hoặc dụng cụ..."
+            className="flex-1 bg-transparent outline-none text-sm text-gray-700 placeholder-gray-400"
+          />
+          <button className="ml-2 p-2 rounded-full bg-sky-500 hover:bg-sky-600 transition">
+            <Search className="w-4 h-4 text-white" />
+          </button>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-4">
+          {/* Ngôn ngữ */}
+          <button className="flex items-center gap-1 px-3 py-1.5 rounded-full text-gray-600 border border-gray-300 hover:bg-gray-100 transition text-sm font-medium">
+            <Languages className="w-4 h-4" />
+            VI
+          </button>
+
+          {/* Giỏ hàng */}
+          <NavLink
+            to="/cart"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-gray-700 hover:bg-gray-100 transition text-sm font-medium"
+          >
+            <ShoppingCart className="w-5 h-5" />
+            Giỏ hàng
+          </NavLink>
+
+          {/* Auth */}
+          {!auth.isAuthenticated ? (
+            <div className="flex items-center gap-3">
+              <NavLink
+                to="/login"
+                className="flex items-center gap-1 px-4 py-1.5 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-100 transition text-sm font-medium"
+              >
+                <LogIn className="w-4 h-4" />
+                Đăng nhập
+              </NavLink>
+              <NavLink
+                to="/register"
+                className="flex items-center gap-1 px-4 py-1.5 rounded-full bg-sky-500 text-white hover:bg-sky-600 transition text-sm font-medium shadow-sm"
+              >
+                <UserPlus className="w-4 h-4" />
+                Đăng ký
+              </NavLink>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <NavLink
+                to="/profile"
+                className="flex items-center gap-1 px-4 py-1.5 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-100 transition text-sm font-medium"
+              >
+                <User className="w-4 h-4 text-sky-600" />
+                {auth?.user?.username}
+              </NavLink>
+              <button
+                onClick={() => {
+                  localStorage.removeItem("access_token");
+                  setAuth({
+                    isAuthenticated: false,
+                    user: { id: 0, email: "", username: "" },
+                  });
+                  navigate("/login");
+                }}
+                className="flex items-center gap-1 px-4 py-1.5 rounded-full border border-gray-300 text-gray-700 hover:bg-red-50 hover:text-red-600 transition text-sm font-medium cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Navbar dưới */}
+      <Navbar />
+    </header>
   );
 };
 

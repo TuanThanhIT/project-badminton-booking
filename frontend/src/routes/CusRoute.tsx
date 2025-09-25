@@ -1,5 +1,4 @@
 import { Routes, Route } from "react-router-dom";
-import CustomerLayout from "../components/layouts/CustomerLayout";
 import HomePage from "../pages/Customer/HomePage";
 import ProductPage from "../pages/Customer/ProductPage";
 import BookingCourtPage from "../pages/Customer/BookingCourtPage";
@@ -10,27 +9,41 @@ import LoginPage from "../pages/Customer/LoginPage";
 import RegisterPage from "../pages/Customer/RegisterPage";
 import ForgotPasswordPage from "../pages/Customer/ForgotPasswordPage";
 import NotFoundPage from "../pages/NotFoundPage";
+import OTPPage from "../pages/Customer/OTPPage";
+import ProfilePage from "../pages/Customer/ProfilePage";
+import CartPage from "../pages/Customer/CartPage";
+import CustomerPrivateLayout from "../components/layouts/CustomerPrivateLayout";
+import CustomerPublicLayout from "../components/layouts/CustomerPublicLayout";
+import AuthGuard from "../components/guards/AuthGuard";
+import GuestHomePage from "../pages/Customer/GuestHomePage";
 
 const CustomerRoute = () => {
   return (
     <div>
       <Routes>
-        <Route element={<CustomerLayout />}>
-          <Route path="/customer/home" element={<HomePage />}></Route>
-          <Route path="/customer/product" element={<ProductPage />}></Route>
-          <Route
-            path="/customer/booking"
-            element={<BookingCourtPage />}
-          ></Route>
-          <Route path="/customer/history" element={<HistoryPage />}></Route>
-          <Route path="/customer/contact" element={<ContactPage />}></Route>
-          <Route path="/customer/about" element={<AboutPage />}></Route>
-          <Route path="/customer/login" element={<LoginPage />}></Route>
-          <Route path="/customer/register" element={<RegisterPage />}></Route>
-          <Route
-            path="/customer/forgotpass"
-            element={<ForgotPasswordPage />}
-          ></Route>
+        <Route path="/" element={<CustomerPublicLayout />}>
+          <Route index element={<GuestHomePage />}></Route>
+          <Route path="contact" element={<ContactPage />}></Route>
+          <Route path="about" element={<AboutPage />}></Route>
+          <Route path="login" element={<LoginPage />}></Route>
+          <Route path="register" element={<RegisterPage />}></Route>
+          <Route path="verify-otp" element={<OTPPage />}></Route>
+          <Route path="forgotpass" element={<ForgotPasswordPage />}></Route>
+        </Route>
+        <Route
+          path="/"
+          element={
+            <AuthGuard>
+              <CustomerPrivateLayout />
+            </AuthGuard>
+          }
+        >
+          <Route path="home" element={<HomePage />}></Route>
+          <Route path="product" element={<ProductPage />}></Route>
+          <Route path="booking" element={<BookingCourtPage />}></Route>
+          <Route path="history" element={<HistoryPage />}></Route>
+          <Route path="profile" element={<ProfilePage />}></Route>
+          <Route path="cart" element={<CartPage />}></Route>
         </Route>
 
         <Route path="*" element={<NotFoundPage />}></Route>

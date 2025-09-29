@@ -39,7 +39,7 @@ const CustomerRoute = () => {
           }
         >
           <Route path="home" element={<HomePage />}></Route>
-          <Route path="product" element={<ProductPage />}></Route>
+          <Route path="products" element={<ProductPage />}></Route>
           <Route path="booking" element={<BookingCourtPage />}></Route>
           <Route path="history" element={<HistoryPage />}></Route>
           <Route path="profile" element={<ProfilePage />}></Route>

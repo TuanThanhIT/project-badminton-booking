@@ -7,8 +7,10 @@ import initWebRoutes from "./routes/customer/webRoute.js";
 import initAuthRoute from "./routes/customer/authRoute.js";
 import { errorHandlingMiddleware } from "./middlewares/errorHandling.js";
 import initUserRoute from "./routes/customer/userRoute.js";
-import initCateRoute from "./routes/admin/cateRoute.js";
-import initProductRoute from "./routes/admin/productRoute.js";
+import initCateAdminRoute from "./routes/admin/cateRoute.js";
+import initCateCustomerRoute from "./routes/customer/cateRoute.js";
+import initProductAdminRoute from "./routes/admin/productRoute.js";
+import initProductCustomerRoute from "./routes/customer/productRoute.js";
 
 dotenv.config();
 
@@ -24,11 +26,13 @@ app.use(cors());
 initWebRoutes(app);
 initAuthRoute(app);
 initUserRoute(app);
+initCateCustomerRoute(app);
+initProductCustomerRoute(app);
 
 // Admin
 initRoleRoute(app);
-initCateRoute(app);
-initProductRoute(app);
+initCateAdminRoute(app);
+initProductAdminRoute(app);
 
 app.use(errorHandlingMiddleware);
 

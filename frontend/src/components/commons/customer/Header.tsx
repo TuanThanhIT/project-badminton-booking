@@ -19,19 +19,32 @@ const Header = () => {
   return (
     <header className="bg-white shadow-sm">
       <div className="flex justify-between items-center px-8 py-4">
-        {/* Logo */}
+        {/* Logo + Hotline */}
         <div
-          className="flex items-center gap-3 cursor-pointer"
+          className="flex items-center gap-20 cursor-pointer"
           onClick={() => navigate("/")}
         >
-          <img
-            src="/img/logo_badminton.jpg"
-            alt="Logo"
-            className="w-12 h-12 rounded-xl shadow-sm"
-          />
-          <h1 className="text-2xl font-bold text-sky-600 tracking-wide">
-            B-Hub
-          </h1>
+          <div className="flex items-center gap-3">
+            <img
+              src="/img/logo_badminton.jpg"
+              alt="Logo"
+              className="w-12 h-12 rounded-xl shadow-sm"
+            />
+            <h1 className="text-2xl font-bold text-sky-600 tracking-wide">
+              B-Hub
+            </h1>
+          </div>
+
+          {/* Hotline nổi bật */}
+          <div className="hidden md:flex items-center gap-2 bg-sky-100 px-3 py-1 rounded-full shadow-sm">
+            <span className="text-gray-700 font-normal">Hotline:</span>
+            <a
+              href="tel:0901234567"
+              className="text-red-600 font-bold text-sm hover:text-red-700"
+            >
+              0901 234 567
+            </a>
+          </div>
         </div>
 
         {/* Search */}
@@ -92,7 +105,7 @@ const Header = () => {
               </NavLink>
               <button
                 onClick={() => {
-                  localStorage.removeItem("access_token");
+                  localStorage.clear(); // Xóa toàn bộ
                   setAuth({
                     isAuthenticated: false,
                     user: { id: 0, email: "", username: "" },

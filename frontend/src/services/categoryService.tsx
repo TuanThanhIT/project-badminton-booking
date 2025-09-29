@@ -1,10 +1,17 @@
-import type { CategoryResponse } from "../types/category";
+import {
+  type CategoryOtherResponse,
+  type CategoryResponse,
+} from "../types/category";
 import instance from "../utils/axiosCustomize";
 
-const getCategoryService = () =>
-  instance.get<CategoryResponse[]>("/admin/category/list");
+const getCategoriesService = () =>
+  instance.get<CategoryResponse[]>("/user/category/list");
+
+const getOtherCategoriesService = (cateId: number) =>
+  instance.get<CategoryOtherResponse[]>(`/user/category/list/other/${cateId}`);
 
 const categoryService = {
-  getCategoryService,
+  getCategoriesService,
+  getOtherCategoriesService,
 };
 export default categoryService;

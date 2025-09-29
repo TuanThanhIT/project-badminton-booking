@@ -4,13 +4,14 @@ dotenv.config();
 
 const auth = (req, res, next) => {
   const white_list = [
-    "/login",
-    "/register",
-    "/abc",
-    "/verify-otp",
-    "/sent-otp",
+    "/auth/login",
+    "/auth/register",
+    "/auth/abc",
+    "/auth/verify-otp",
+    "/auth/sent-otp",
+    "/user/category/list",
   ];
-  if (white_list.find((item) => "/auth" + item === req.originalUrl)) {
+  if (white_list.find((item) => item === req.originalUrl)) {
     next();
   } else {
     if (req.headers && req.headers.authorization) {

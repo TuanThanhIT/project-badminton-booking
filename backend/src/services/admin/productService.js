@@ -95,9 +95,9 @@ const createProductImagesService = async (imageUrls, productId) => {
   }
 };
 
-const productService = {
+const productAdminService = {
   createProductService,
   createProductVarientService,
   createProductImagesService,
 };
-export default productService;
+export default productAdminService;

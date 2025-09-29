@@ -10,7 +10,7 @@ var uploader = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
-const initProductRoute = (app) => {
+const initProductAdminRoute = (app) => {
   productRoute.post(
     "/add",
     uploader.single("file"),
@@ -24,4 +24,4 @@ const initProductRoute = (app) => {
   );
   app.use("/admin/product", auth, productRoute);
 };
-export default initProductRoute;
+export default initProductAdminRoute;

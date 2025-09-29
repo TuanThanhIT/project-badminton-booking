@@ -30,7 +30,7 @@ const Navbar = () => {
               {({ isActive }) => (
                 <>
                   <Home className={iconClass({ isActive })} />
-                  Trang chủ
+                  TRANG CHỦ
                 </>
               )}
             </NavLink>
@@ -39,7 +39,7 @@ const Navbar = () => {
               {({ isActive }) => (
                 <>
                   <Home className={iconClass({ isActive })} />
-                  Trang chủ khách
+                  TRANG CHỦ
                 </>
               )}
             </NavLink>
@@ -57,7 +57,7 @@ const Navbar = () => {
             {({ isActive }) => (
               <>
                 <Calendar className={iconClass({ isActive })} />
-                Đặt sân
+                ĐẶT SÂN
               </>
             )}
           </NavLink>
@@ -69,7 +69,7 @@ const Navbar = () => {
             {({ isActive }) => (
               <>
                 <History className={iconClass({ isActive })} />
-                Lịch sử
+                LỊCH SỬ
               </>
             )}
           </NavLink>
@@ -81,7 +81,7 @@ const Navbar = () => {
             {({ isActive }) => (
               <>
                 <Contact className={iconClass({ isActive })} />
-                Liên hệ
+                LIÊN HỆ
               </>
             )}
           </NavLink>
@@ -93,7 +93,7 @@ const Navbar = () => {
             {({ isActive }) => (
               <>
                 <Info className={iconClass({ isActive })} />
-                Giới thiệu
+                GIỚI THIỆU
               </>
             )}
           </NavLink>

@@ -12,7 +12,9 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { setAuth } = useContext(AuthContext);
   const location = useLocation();
-  const from = location.state?.from?.pathname || "/home";
+  const from = location.state?.from
+    ? `${location.state.from.pathname}${location.state.from.search || ""}`
+    : "/home";
 
   const {
     register,

@@ -1,4 +1,4 @@
-import productService from "../../services/admin/productService.js";
+import productAdminService from "../../services/admin/productService.js";
 import uploadFile from "../../utils/upload.js";
 
 const createProduct = async (req, res, next) => {
@@ -12,7 +12,7 @@ const createProduct = async (req, res, next) => {
       thumbnailUrl = upload.secure_url;
     }
 
-    const product = await productService.createProductService(
+    const product = await productAdminService.createProductService(
       productName,
       brand,
       description,
@@ -29,16 +29,17 @@ const createProductVarient = async (req, res, next) => {
   try {
     const { sku, price, stock, discount, color, size, material, productId } =
       req.body;
-    const productVarient = await productService.createProductVarientService(
-      sku,
-      price,
-      stock,
-      discount,
-      color,
-      size,
-      material,
-      productId
-    );
+    const productVarient =
+      await productAdminService.createProductVarientService(
+        sku,
+        price,
+        stock,
+        discount,
+        color,
+        size,
+        material,
+        productId
+      );
     return res.status(201).json(productVarient);
   } catch (error) {
     next(error);
@@ -55,7 +56,7 @@ const createProductImages = async (req, res, next) => {
       const image = upload.secure_url || null;
       images.push(image);
     }
-    const productImages = await productService.createProductImagesService(
+    const productImages = await productAdminService.createProductImagesService(
       images,
       productId
     );

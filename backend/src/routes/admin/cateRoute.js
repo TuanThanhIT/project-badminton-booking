@@ -1,11 +1,10 @@
 import express from "express";
-import categoryController from "../../controllers/admin/categoryController.js";
+import categoryAdminController from "../../controllers/admin/categoryController.js";
 
 const cateRoute = express.Router();
 
-const initCateRoute = (app) => {
-  cateRoute.post("/add", categoryController.createCategory);
-  cateRoute.get("/list", categoryController.getCategoryByGroupName);
+const initCateAdminRoute = (app) => {
+  cateRoute.post("/add", categoryAdminController.createCategory);
   app.use("/admin/category", cateRoute);
 };
-export default initCateRoute;
+export default initCateAdminRoute;

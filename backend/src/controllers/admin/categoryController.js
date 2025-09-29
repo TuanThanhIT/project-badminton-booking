@@ -1,9 +1,9 @@
-import categoryService from "../../services/admin/categoryService.js";
+import categoryAdminService from "../../services/admin/categoryService.js";
 
 const createCategory = async (req, res, next) => {
   try {
     const { cateName, menuGroup } = req.body;
-    const category = await categoryService.createCategoryService(
+    const category = await categoryAdminService.createCategoryService(
       cateName,
       menuGroup
     );
@@ -13,16 +13,7 @@ const createCategory = async (req, res, next) => {
   }
 };
 
-const getCategoryByGroupName = async (req, res, next) => {
-  try {
-    const cateGroup = await categoryService.getCategoryByGroupNameService();
-    return res.status(200).json(cateGroup);
-  } catch (error) {
-    next(error);
-  }
-};
-const categoryController = {
+const categoryAdminController = {
   createCategory,
-  getCategoryByGroupName,
 };
-export default categoryController;
+export default categoryAdminController;

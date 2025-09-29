@@ -18,34 +18,8 @@ const createCategoryService = async (cateName, menuGroup) => {
   }
 };
 
-const getCategoryByGroupNameService = async () => {
-  try {
-    const categories = await Category.findAll();
-
-    const cateGroup = categories.reduce((acc, cate) => {
-      if (!acc[cate.menuGroup]) {
-        acc[cate.menuGroup] = [];
-      }
-      acc[cate.menuGroup].push({
-        id: cate.id,
-        cateName: cate.cateName,
-      });
-      return acc;
-    }, {});
-
-    const result = Object.entries(cateGroup).map(([menuGroup, items]) => ({
-      menuGroup,
-      items,
-    }));
-    return result;
-  } catch (error) {
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
-};
-
-const categoryService = {
+const categoryAdminService = {
   createCategoryService,
-  getCategoryByGroupNameService,
 };
 
-export default categoryService;
+export default categoryAdminService;

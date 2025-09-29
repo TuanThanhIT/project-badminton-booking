@@ -7,25 +7,25 @@ const Profile = sequelize.define(
     fullName: {
       type: DataTypes.STRING(255),
       allowNull: false,
-      defaultValue: "Unknown",
+      defaultValue: "Nguyễn Văn A",
     },
     dob: {
       type: DataTypes.DATE,
-      defaultValue: null,
+      defaultValue: new Date("2000-01-01"),
     },
     gender: {
       type: DataTypes.STRING(255),
-      defaultValue: "other",
+      defaultValue: "male",
     },
     address: {
       type: DataTypes.STRING(255),
       allowNull: false,
-      defaultValue: "Not provided",
+      defaultValue: "231 Lê Văn Chí, Phường Linh Trung, TP. Thủ Đức, TP.HCM",
     },
     phoneNumber: {
       type: DataTypes.STRING(255),
       allowNull: false,
-      defaultValue: "0123456789",
+      defaultValue: "0912345678",
     },
     avatar: {
       type: DataTypes.STRING(1000),

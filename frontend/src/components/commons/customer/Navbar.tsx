@@ -1,109 +1,101 @@
 import { NavLink } from "react-router-dom";
-import { Calendar, Contact, History, Home, Info, Package } from "lucide-react";
+import { Calendar, Contact, History, Home, Info } from "lucide-react";
+import { useContext } from "react";
+import { AuthContext } from "../../contexts/authContext";
+import CategoryMenu from "../../ui/CategoryMenu";
 
 const Navbar = () => {
+  const { auth } = useContext(AuthContext);
+
+  const linkClass = ({ isActive }: { isActive: boolean }) =>
+    `group flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium transition-all duration-200
+     ${
+       isActive
+         ? "bg-white text-sky-600 shadow-md"
+         : "text-white hover:text-white hover:bg-sky-500/40"
+     }`;
+
+  const iconClass = ({ isActive }: { isActive: boolean }) =>
+    `w-5 h-5 transition-colors duration-200 ${
+      isActive ? "text-sky-600" : "text-white group-hover:text-white"
+    }`;
+
   return (
-    <nav className="p-2 text-center bg-sky-600 shadow-md">
-      <ul className="flex justify-center items-center gap-10 list-none m-0 p-0 text-base font-medium">
-        {/* Home */}
+    <nav className="relative bg-gradient-to-r from-sky-600 to-sky-700 shadow-lg">
+      <ul className="flex flex-wrap justify-center items-center gap-6 py-3">
+        {/* Trang chủ */}
         <li>
-          <NavLink
-            to="/customer/home"
-            className={({ isActive }) =>
-              `flex items-center gap-1 transition ${
-                isActive
-                  ? "text-yellow-300 font-semibold underline underline-offset-4"
-                  : "text-white hover:text-yellow-300"
-              }`
-            }
-          >
-            <Home className="w-5 h-5" />
-            Home
+          {auth.isAuthenticated ? (
+            <NavLink to="/home" className={linkClass}>
+              {({ isActive }) => (
+                <>
+                  <Home className={iconClass({ isActive })} />
+                  TRANG CHỦ
+                </>
+              )}
+            </NavLink>
+          ) : (
+            <NavLink to="/" className={linkClass}>
+              {({ isActive }) => (
+                <>
+                  <Home className={iconClass({ isActive })} />
+                  TRANG CHỦ
+                </>
+              )}
+            </NavLink>
+          )}
+        </li>
+
+        {/* Sản phẩm (thay bằng CategoryMenu) */}
+        <li>
+          <CategoryMenu />
+        </li>
+
+        {/* Đặt sân */}
+        <li>
+          <NavLink to="/booking" className={linkClass}>
+            {({ isActive }) => (
+              <>
+                <Calendar className={iconClass({ isActive })} />
+                ĐẶT SÂN
+              </>
+            )}
           </NavLink>
         </li>
 
-        {/* Product */}
+        {/* Lịch sử */}
         <li>
-          <NavLink
-            to="/customer/product"
-            className={({ isActive }) =>
-              `flex items-center gap-1 transition ${
-                isActive
-                  ? "text-yellow-300 font-semibold underline underline-offset-4"
-                  : "text-white hover:text-yellow-300"
-              }`
-            }
-          >
-            <Package className="w-5 h-5" />
-            Product
+          <NavLink to="/history" className={linkClass}>
+            {({ isActive }) => (
+              <>
+                <History className={iconClass({ isActive })} />
+                LỊCH SỬ
+              </>
+            )}
           </NavLink>
         </li>
 
-        {/* Booking */}
+        {/* Liên hệ */}
         <li>
-          <NavLink
-            to="/customer/booking"
-            className={({ isActive }) =>
-              `flex items-center gap-1 transition ${
-                isActive
-                  ? "text-yellow-300 font-semibold underline underline-offset-4"
-                  : "text-white hover:text-yellow-300"
-              }`
-            }
-          >
-            <Calendar className="w-5 h-5" />
-            Booking
+          <NavLink to="/contact" className={linkClass}>
+            {({ isActive }) => (
+              <>
+                <Contact className={iconClass({ isActive })} />
+                LIÊN HỆ
+              </>
+            )}
           </NavLink>
         </li>
 
-        {/* History */}
+        {/* Giới thiệu */}
         <li>
-          <NavLink
-            to="/customer/history"
-            className={({ isActive }) =>
-              `flex items-center gap-1 transition ${
-                isActive
-                  ? "text-yellow-300 font-semibold underline underline-offset-4"
-                  : "text-white hover:text-yellow-300"
-              }`
-            }
-          >
-            <History className="w-5 h-5" />
-            History
-          </NavLink>
-        </li>
-
-        {/* Contact */}
-        <li>
-          <NavLink
-            to="/customer/contact"
-            className={({ isActive }) =>
-              `flex items-center gap-1 transition ${
-                isActive
-                  ? "text-yellow-300 font-semibold underline underline-offset-4"
-                  : "text-white hover:text-yellow-300"
-              }`
-            }
-          >
-            <Contact className="w-5 h-5" />
-            Contact
-          </NavLink>
-        </li>
-
-        {/* About */}
-        <li>
-          <NavLink
-            to="/customer/about"
-            className={({ isActive }) =>
-              `flex items-center gap-1 transition ${
-                isActive
-                  ? "text-yellow-300 font-semibold underline underline-offset-4"
-                  : "text-white hover:text-yellow-300"
-              }`
-            }
-          >
-            <Info className="w-5 h-5" />
-            About
+          <NavLink to="/about" className={linkClass}>
+            {({ isActive }) => (
+              <>
+                <Info className={iconClass({ isActive })} />
+                GIỚI THIỆU
+              </>
+            )}
           </NavLink>
         </li>
       </ul>

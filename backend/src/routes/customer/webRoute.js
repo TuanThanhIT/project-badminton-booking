@@ -5,6 +5,6 @@ const router = express.Router();
 
 const initWebRoutes = (app) => {
   router.get("/abc", helloWorld);
-  return app.use("/customer", auth, router);
+  return app.use("/user", auth, router);
 };
 export default initWebRoutes;

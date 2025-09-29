@@ -6,10 +6,11 @@ import {
   FormRegisterSchema,
   type formRegister,
 } from "../../schemas/FormRegisterSchema";
-import { ArrowRight } from "lucide-react";
+import authService from "../../services/authService";
+import { toast, ToastContainer } from "react-toastify";
+import type { ApiErrorType } from "../../types/error";
 
 const RegisterPage = () => {
-  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const {
@@ -21,13 +22,23 @@ const RegisterPage = () => {
     mode: "onChange",
   });
 
-  const onSubmit = async (data: formRegister) => {};
-
-  error ? <div className="text-red-400">{error}</div> : "";
+  const onSubmit = async (data: formRegister) => {
+    try {
+      const res = await authService.registerService(data);
+      toast.success(res.data.message);
+      const email = res.data.safeUser.email;
+      setTimeout(() => {
+        navigate("/verify-otp", { state: { email } });
+      }, 3000);
+    } catch (error) {
+      const apiError = error as ApiErrorType;
+      toast.error(apiError.userMessage);
+    }
+  };
 
   return (
     <div className="p-20 w-3/4 mx-auto">
-      <div className="grid grid-cols-2 shadow-sm rounded-2xl gap-5 text-sm">
+      <div className="grid grid-cols-2 shadow-md rounded-2xl gap-5 text-sm">
         <div className="flex justify-center p-3">
           <img src="/img/register.jpg"></img>
         </div>
@@ -36,23 +47,23 @@ const RegisterPage = () => {
           className="flex flex-col justify-between gap-2 p-10"
         >
           <h1 className="font-bold text-2xl">
-            Join us and never miss a thing - REGISTER!
+            Tham gia cùng chúng tôi và không bỏ lỡ điều gì - ĐĂNG KÝ NGAY!
           </h1>
-          <label>Username </label>
+          <label>Tên đăng nhập</label>
           <input
-            placeholder="Username"
+            placeholder="Tên đăng nhập"
             {...register("username")}
-            className="rounded-md mb-3 shadow-lg p-2 px-4 outline-0"
+            className="rounded-md mb-3 shadow-sm p-2 px-4 outline-0"
           ></input>
           {errors.username && (
             <p className="text-red-500 text-sm">{errors.username.message}</p>
           )}
 
-          <label>Password</label>
+          <label>Mật khẩu</label>
           <input
-            placeholder="Password"
+            placeholder="Mật khẩu"
             {...register("password")}
-            className="border-0 p-2 px-4 rounded-md mb-3 shadow-lg outline-0"
+            className="border-0 p-2 px-4 rounded-md mb-3 shadow-sm outline-0"
           ></input>
           {errors.password && (
             <p className="text-red-500 text-sm">{errors.password.message}</p>
@@ -62,7 +73,7 @@ const RegisterPage = () => {
           <input
             placeholder="Email"
             {...register("email")}
-            className="border-0 p-2 px-4 rounded-md mb-3 shadow-lg outline-0"
+            className="border-0 p-2 px-4 rounded-md mb-3 shadow-sm outline-0"
           ></input>
           {errors.email && (
             <p className="text-red-500 text-sm">{errors.email.message}</p>
@@ -72,19 +83,18 @@ const RegisterPage = () => {
             className="cursor-pointer bg-blue-500 rounded-2xl text-white text-lg py-1 hover:bg-blue-800"
             disabled={!isDirty && !isValid}
           >
-            Sign up
+            Đăng ký
           </button>
           <label>
-            Already have an account? Login{" "}
-            <Link
-              to="/customer/login"
-              className="text-blue-700 hover:text-red-500"
-            >
-              here
+            Đã có tài khoản? Đăng nhập{" "}
+            <Link to="/login" className="text-blue-700 hover:text-red-500">
+              tại đây
             </Link>
           </label>
         </form>
       </div>
+      {/* {error ? <div className="text-red-400">{error}</div> : ""} */}
+      <ToastContainer />
     </div>
   );
 };

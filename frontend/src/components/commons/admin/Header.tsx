@@ -49,9 +49,9 @@ const Header = () => {
   return (
     <div>
       <header className="flex justify-between items-center p-4 bg-white shadow ">
-        <h1 className="text-xl font-bold text-blue-600">
+        {/* <h1 className="text-xl font-bold text-blue-600">
           The Logo will be there
-        </h1>
+        </h1> */}
         <SearchBar />
         <nav className="flex items-center space-x-4">
           <div className="">

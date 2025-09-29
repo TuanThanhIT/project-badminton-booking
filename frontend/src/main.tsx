@@ -13,7 +13,7 @@ createRoot(document.getElementById("root")!).render(
         <Route element={<AdminRoute />}></Route>
       </Routes> */}
       <AdminRoute />
-      <CustomerRoute />
+      {/* <CustomerRoute /> */}
     </Router>
   </StrictMode>
 );

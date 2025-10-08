@@ -85,9 +85,13 @@ Product.belongsTo(Category, { foreignKey: "categoryId" });
 Cart.hasMany(CartItem, { foreignKey: "cartId" });
 CartItem.belongsTo(Cart, { foreignKey: "cartId" });
 
+// Quan hệ 1-1 giữa Card và User
+User.hasOne(Cart, { foreignKey: "userId" });
+Cart.belongsTo(User, { foreignKey: "userId" });
+
 // Quan hệ 1-1 giữa Product và CartItem
-Product.hasOne(CartItem, { foreignKey: "productId" });
-CartItem.belongsTo(Product, { foreignKey: "productId" });
+ProductVarient.hasOne(CartItem, { foreignKey: "varientId", as: "cartItem" });
+CartItem.belongsTo(ProductVarient, { foreignKey: "varientId", as: "varient" });
 
 // Quan hệ 1-n giữa Product và ProductVarient
 Product.hasMany(ProductVarient, { foreignKey: "productId", as: "varients" });

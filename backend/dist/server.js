@@ -13,6 +13,7 @@ var _cateRoute = _interopRequireDefault(require("./routes/admin/cateRoute.js"));
 var _cateRoute2 = _interopRequireDefault(require("./routes/customer/cateRoute.js"));
 var _productRoute = _interopRequireDefault(require("./routes/admin/productRoute.js"));
 var _productRoute2 = _interopRequireDefault(require("./routes/customer/productRoute.js"));
+var _cartRoute = _interopRequireDefault(require("./routes/customer/cartRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -29,6 +30,7 @@ app.use((0, _cors["default"])());
 (0, _userRoute["default"])(app);
 (0, _cateRoute2["default"])(app);
 (0, _productRoute2["default"])(app);
+(0, _cartRoute["default"])(app);
 
 // Admin
 (0, _roleRoute["default"])(app);

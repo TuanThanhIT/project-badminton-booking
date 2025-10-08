@@ -1,11 +1,11 @@
 import { NavLink } from "react-router-dom";
 
 type BreadcrumbProps = {
-  cateId: number;
-  cateName: string;
+  cate_id: number;
+  cate_name: string;
 };
 
-const Breadcrumb = ({ cateId, cateName }: BreadcrumbProps) => {
+const Breadcrumb = ({ cate_id, cate_name }: BreadcrumbProps) => {
   return (
     <nav
       className="text-gray-600 flex items-center gap-1"
@@ -16,12 +16,12 @@ const Breadcrumb = ({ cateId, cateName }: BreadcrumbProps) => {
       </NavLink>
       <span>{">"}</span>
       <NavLink
-        to={`/product?category_id=${cateId}&category_name=${encodeURIComponent(
-          cateName
+        to={`/product?category_id=${cate_id}&category_name=${encodeURIComponent(
+          cate_name
         )}`}
         className="text-gray-800 font-medium hover:text-sky-600"
       >
-        {cateName}
+        {cate_name}
       </NavLink>
     </nav>
   );

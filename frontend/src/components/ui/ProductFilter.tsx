@@ -226,14 +226,14 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
       <div className="flex gap-2">
         <button
           onClick={viewResults}
-          className="flex-1 bg-blue-500 text-white py-2 rounded cursor-pointer"
+          className="flex-1 bg-blue-500 text-white py-2 rounded"
         >
           Kết quả lọc
         </button>
       </div>
       <button
         onClick={resetFilters}
-        className="w-full bg-red-500 text-white py-2 rounded cursor-pointer"
+        className="w-full bg-red-500 text-white py-2 rounded"
       >
         Xóa bộ lọc
       </button>

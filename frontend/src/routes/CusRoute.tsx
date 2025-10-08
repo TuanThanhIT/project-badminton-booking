@@ -16,6 +16,7 @@ import CustomerPrivateLayout from "../components/layouts/CustomerPrivateLayout";
 import CustomerPublicLayout from "../components/layouts/CustomerPublicLayout";
 import AuthGuard from "../components/guards/AuthGuard";
 import GuestHomePage from "../pages/Customer/GuestHomePage";
+import ProductDetailPage from "../pages/Customer/ProductDetailPage";
 
 const CustomerRoute = () => {
   return (
@@ -40,6 +41,7 @@ const CustomerRoute = () => {
         >
           <Route path="home" element={<HomePage />}></Route>
           <Route path="products" element={<ProductPage />}></Route>
+          <Route path="product/:id" element={<ProductDetailPage />}></Route>
           <Route path="booking" element={<BookingCourtPage />}></Route>
           <Route path="history" element={<HistoryPage />}></Route>
           <Route path="profile" element={<ProfilePage />}></Route>

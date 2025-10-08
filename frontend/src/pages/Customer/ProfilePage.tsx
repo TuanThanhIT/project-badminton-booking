@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import userService from "../../services/userService";
 import type { ProfileRequest, ProfileResponse } from "../../types/user";
 import EditProfileModal from "../../components/ui/EditProfileModal";
@@ -46,7 +46,6 @@ const ProfilePage = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-10">
       {/* Loading overlay */}
-      <ToastContainer />
       <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-2xl p-8">
         {/* Avatar + Tên */}
         <div className="flex flex-col items-center">
@@ -100,7 +99,7 @@ const ProfilePage = () => {
         <div className="mt-8 flex justify-center">
           <button
             onClick={() => setIsOpen(true)}
-            className="px-6 py-2 rounded-full bg-sky-500 text-white font-medium shadow hover:bg-sky-600 transition cursor-pointer"
+            className="px-6 py-2 rounded-full bg-sky-500 text-white font-medium shadow hover:bg-sky-600 transition"
           >
             Chỉnh sửa hồ sơ
           </button>

@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import authService from "../../services/authService";
 import { useLocation, useNavigate } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import type { ApiErrorType } from "../../types/error";
 
 const OTPPage: React.FC = () => {
@@ -110,7 +110,7 @@ const OTPPage: React.FC = () => {
 
         <button
           onClick={handleSubmitOpt}
-          className="w-full bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white py-3 rounded-full font-medium shadow-md transition cursor-pointer"
+          className="w-full bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white py-3 rounded-full font-medium shadow-md transition"
         >
           Xác thực
         </button>
@@ -140,8 +140,6 @@ const OTPPage: React.FC = () => {
             Gửi lại OTP
           </button>
         </div>
-
-        <ToastContainer />
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ const productRoute = express.Router();
 
 const initProductCustomerRoute = (app) => {
   productRoute.get("/list", productCustomerController.getProductsByFilter);
+  productRoute.get("/:id", productCustomerController.getProductDetail);
   app.use("/user/product", productRoute);
 };
 export default initProductCustomerRoute;

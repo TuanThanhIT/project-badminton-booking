@@ -1,5 +1,4 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -7,7 +6,7 @@ import {
   type formRegister,
 } from "../../schemas/FormRegisterSchema";
 import authService from "../../services/authService";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import type { ApiErrorType } from "../../types/error";
 
 const RegisterPage = () => {
@@ -80,7 +79,7 @@ const RegisterPage = () => {
           )}
           <button
             type="submit"
-            className="cursor-pointer bg-blue-500 rounded-2xl text-white text-lg py-1 hover:bg-blue-800"
+            className="bg-blue-500 rounded-2xl text-white text-lg py-1 hover:bg-blue-800"
             disabled={!isDirty && !isValid}
           >
             Đăng ký
@@ -93,8 +92,6 @@ const RegisterPage = () => {
           </label>
         </form>
       </div>
-      {/* {error ? <div className="text-red-400">{error}</div> : ""} */}
-      <ToastContainer />
     </div>
   );
 };

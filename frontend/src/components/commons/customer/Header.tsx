@@ -112,7 +112,7 @@ const Header = () => {
                   });
                   navigate("/login");
                 }}
-                className="flex items-center gap-1 px-4 py-1.5 rounded-full border border-gray-300 text-gray-700 hover:bg-red-50 hover:text-red-600 transition text-sm font-medium cursor-pointer"
+                className="flex items-center gap-1 px-4 py-1.5 rounded-full border border-gray-300 text-gray-700 hover:bg-red-50 hover:text-red-600 transition text-sm font-medium"
               >
                 <LogOut className="w-4 h-4" />
                 Logout

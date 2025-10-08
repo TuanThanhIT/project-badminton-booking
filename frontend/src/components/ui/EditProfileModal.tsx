@@ -51,7 +51,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute bottom-0 right-0 bg-sky-500 hover:bg-sky-600 text-white p-2 rounded-full shadow transition cursor-pointer"
+                className="absolute bottom-0 right-0 bg-sky-500 hover:bg-sky-600 text-white p-2 rounded-full shadow transition"
               >
                 <Camera size={18} />
               </button>
@@ -145,14 +145,14 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 transition cursor-pointer"
+              className="px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 transition"
             >
               Hủy
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className={`px-4 py-2 text-sm flex items-center gap-2 rounded-lg text-white font-medium transition cursor-pointer ${
+              className={`px-4 py-2 text-sm flex items-center gap-2 rounded-lg text-white font-medium transition ${
                 isSaving
                   ? "bg-sky-400 cursor-not-allowed"
                   : "bg-sky-500 hover:bg-sky-600"
@@ -167,7 +167,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
         {/* Nút đóng */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-4 text-gray-500 hover:text-red-500 text-xl cursor-pointer"
+          className="absolute top-3 right-4 text-gray-500 hover:text-red-500 text-xl"
         >
           <X size={22} />
         </button>

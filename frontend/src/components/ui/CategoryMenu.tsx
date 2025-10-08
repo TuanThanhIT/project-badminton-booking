@@ -61,7 +61,7 @@ const CategoryMenu = () => {
               : "opacity-0 pointer-events-none"
           }`}
       >
-        <div className="bg-white shadow-2xl rounded-lg w-[90vw] p-6 max-h-[24rem] overflow-y-auto">
+        <div className="bg-white shadow-2xl rounded-lg w-[80vw] p-6 max-h-[24rem] overflow-y-auto">
           <div className="grid grid-cols-5 gap-6">
             {categories.map((group) => (
               <div key={group.menuGroup} className="cursor-pointer">

@@ -16,7 +16,7 @@ const Breadcrumb = ({ cate_id, cate_name }: BreadcrumbProps) => {
       </NavLink>
       <span>{">"}</span>
       <NavLink
-        to={`/product?category_id=${cate_id}&category_name=${encodeURIComponent(
+        to={`/products?category_id=${cate_id}&category_name=${encodeURIComponent(
           cate_name
         )}`}
         className="text-gray-800 font-medium hover:text-sky-600"

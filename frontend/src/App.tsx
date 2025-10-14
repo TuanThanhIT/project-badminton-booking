@@ -12,8 +12,8 @@ const App = () => (
 
     {/* Container chung cho toàn bộ app */}
     <ToastContainer
-      position="bottom-right"
-      autoClose={3000}
+      position="top-right"
+      autoClose={2000}
       hideProgressBar={false}
       newestOnTop={false}
       closeOnClick

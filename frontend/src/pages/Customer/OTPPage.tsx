@@ -7,20 +7,38 @@ import type { ApiErrorType } from "../../types/error";
 
 const OTPPage: React.FC = () => {
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
-  const [countdown, setCountdown] = useState(300); // 5 phút
+
+  const getInitialCountdown = () => {
+    const time = localStorage.getItem("countdown");
+    return time ? parseInt(time, 10) : 300;
+  };
+  const [countdown, setCountdown] = useState(getInitialCountdown); // 5 phút
+
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const location = useLocation();
   const email = location.state?.email;
+  const newPassword = location.state?.newPassword;
 
   const navigate = useNavigate();
 
   useEffect(() => {
     if (countdown <= 0) return;
     const timer = setInterval(() => {
-      setCountdown((c) => c - 1);
+      setCountdown((c) => {
+        const newValue = c - 1;
+        localStorage.setItem("countdown", newValue.toString());
+        return newValue;
+      });
     }, 1000);
     return () => clearInterval(timer);
+  }, [countdown]);
+
+  // Khi countdown = 0 → xóa localStorage
+  useEffect(() => {
+    if (countdown <= 0) {
+      localStorage.removeItem("countdown");
+    }
   }, [countdown]);
 
   const handleSubmitOpt = async () => {
@@ -29,6 +47,7 @@ const OTPPage: React.FC = () => {
       const dataOtp = {
         email,
         otpCode,
+        newPassword,
       };
       console.log("dataOtp", dataOtp);
       const res = await authService.verifyOtpService(dataOtp);
@@ -97,7 +116,9 @@ const OTPPage: React.FC = () => {
           {otp.map((digit, i) => (
             <input
               key={i}
-              ref={(el) => (inputRefs.current[i] = el)}
+              ref={(el) => {
+                inputRefs.current[i] = el;
+              }}
               type="text"
               maxLength={1}
               value={digit}

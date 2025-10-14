@@ -56,7 +56,7 @@ const CartPage = () => {
   };
 
   const handleCheckout = () => {
-    toast.success("Thanh toán thành công!");
+    navigate("/checkout");
   };
 
   const handleQuantityChange = (item: any, val: number) => {
@@ -230,7 +230,7 @@ const CartPage = () => {
               onClick={handleCheckout}
               className="w-full mt-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg shadow-sm transition"
             >
-              Thanh toán ngay
+              Mua hàng
             </button>
           </div>
         </div>

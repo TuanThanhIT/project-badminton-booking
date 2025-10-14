@@ -81,7 +81,7 @@ const createUserService = async (username, email, password) => {
 /**
  * Xác thực OTP
  */
-const verifyOtpService = async (email, otpCode) => {
+const verifyOtpService = async (email, otpCode, newPassword) => {
   try {
     const user = await User.findOne({ where: { email } });
     if (!user) {
@@ -117,7 +117,13 @@ const verifyOtpService = async (email, otpCode) => {
       );
     }
 
-    user.isVerified = true;
+    if (!newPassword) {
+      user.isVerified = true;
+    } else {
+      // hash mật khẩu
+      const hashNewPassword = await bcrypt.hash(newPassword, saltRounds);
+      user.password = hashNewPassword;
+    }
     await user.save();
 
     userOtp.isUsed = true;

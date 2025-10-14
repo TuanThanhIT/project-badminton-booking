@@ -40,6 +40,7 @@ export type RegisterResponse = {
 export type OptVerifyRequest = {
   email: string;
   otpCode: string;
+  newPassword: string;
 };
 
 export type OtpVerifyResponse = {

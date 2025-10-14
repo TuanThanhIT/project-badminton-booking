@@ -39,7 +39,10 @@ const LoginPage = () => {
         },
       });
 
-      navigate(from, { replace: true });
+      toast.success("Đăng nhập thành công! B-Hub rất vui được gặp lại bạn");
+      setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 2000);
     } catch (error) {
       const apiError = error as ApiErrorType;
       toast.error(apiError.userMessage);

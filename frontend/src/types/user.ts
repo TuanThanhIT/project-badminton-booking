@@ -18,3 +18,9 @@ export type ProfileRequest = {
   phoneNumber?: string;
   file?: File;
 };
+
+export type CheckoutInfoResponse = {
+  fullName: string;
+  address: string;
+  phoneNumber: string;
+};

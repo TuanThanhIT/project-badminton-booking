@@ -1,8 +1,15 @@
-import type { ProfileRequest, ProfileResponse } from "../types/user";
+import {
+  type CheckoutInfoResponse,
+  type ProfileRequest,
+  type ProfileResponse,
+} from "../types/user";
 import instance from "../utils/axiosCustomize";
 
 const getProfileService = async () =>
   instance.get<ProfileResponse>("/user/profile");
+
+const getCheckoutInfoService = async () =>
+  instance.get<CheckoutInfoResponse>("/user/profile");
 
 const updateProfileService = async (data: ProfileRequest) => {
   const formData = new FormData();
@@ -22,5 +29,6 @@ const updateProfileService = async (data: ProfileRequest) => {
 const userService = {
   getProfileService,
   updateProfileService,
+  getCheckoutInfoService,
 };
 export default userService;

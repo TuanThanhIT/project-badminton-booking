@@ -44,8 +44,32 @@ const updateProfile = async (req, res, next) => {
   }
 };
 
+const updateUserInfo = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { fullName, address, phoneNumber } = req.body;
+
+    // Tạo object chứa những trường tồn tại trong req.body
+    const updateUserData = {};
+    if (fullName !== undefined) updateUserData.fullName = fullName;
+    if (address !== undefined) updateUserData.address = address;
+    if (phoneNumber !== undefined) updateUserData.phoneNumber = phoneNumber;
+
+    // Gọi service
+    const profileUpdate = await userService.updateUserInfoService(
+      updateUserData,
+      userId
+    );
+
+    return res.status(200).json(profileUpdate);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const userController = {
   getProfile,
   updateProfile,
+  updateUserInfo,
 };
 export default userController;

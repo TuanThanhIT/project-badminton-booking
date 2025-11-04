@@ -40,8 +40,28 @@ const updateProfileService = async (updateData, userId) => {
   }
 };
 
+const updateUserInfoService = async (updateUserData, userId) => {
+  try {
+    const profile = await Profile.findOne({
+      where: { userId },
+      attributes: { exclude: ["userId"] },
+    });
+    if (!profile) {
+      throw new ApiError(StatusCodes.NOT_FOUND, "Profile chưa được tạo!");
+    }
+    profile.update(updateUserData);
+    return profile;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
+
 const userService = {
   getProfileService,
   updateProfileService,
+  updateUserInfoService,
 };
 export default userService;

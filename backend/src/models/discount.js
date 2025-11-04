@@ -18,15 +18,15 @@ const Discount = sequelize.define(
       type: DataTypes.DOUBLE,
       allowNull: false,
     },
-    quantity: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 1, // số lượng mã còn lại
-    },
     isActive: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true, // cho phép bật/tắt mã giảm giá
+    },
+    isUsed: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     },
     startDate: {
       type: DataTypes.DATE,

@@ -5,14 +5,16 @@ const Payment = sequelize.define(
   "Payment",
   {
     paymentAmount: { type: DataTypes.DOUBLE, allowNull: false },
-    paymentMethod: { type: DataTypes.STRING, allowNull: false, unique: true },
+    paymentMethod: { type: DataTypes.STRING, allowNull: false },
     paymentStatus: {
-      type: DataTypes.ENUM("Pending", "Success", "Fail", "Cancelled"),
+      type: DataTypes.ENUM("Pending", "Success", "Cancelled"),
       allowNull: false,
       defaultValue: "Pending",
     },
     transactionCode: { type: DataTypes.STRING, allowNull: true },
     paidAt: { type: DataTypes.DATE, allowNull: true },
+    refundAmount: { type: DataTypes.DOUBLE, allowNull: true },
+    refundAt: { type: DataTypes.DATE, allowNull: true },
     orderId: {
       type: DataTypes.INTEGER,
       references: { model: "Orders", key: "id" },
@@ -24,4 +26,5 @@ const Payment = sequelize.define(
     timestamps: false,
   }
 );
+
 export default Payment;

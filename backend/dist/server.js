@@ -14,6 +14,8 @@ var _cateRoute2 = _interopRequireDefault(require("./routes/customer/cateRoute.js
 var _productRoute = _interopRequireDefault(require("./routes/admin/productRoute.js"));
 var _productRoute2 = _interopRequireDefault(require("./routes/customer/productRoute.js"));
 var _cartRoute = _interopRequireDefault(require("./routes/customer/cartRoute.js"));
+var _discountRoute = _interopRequireDefault(require("./routes/admin/discountRoute.js"));
+var _discountRoute2 = _interopRequireDefault(require("./routes/customer/discountRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -31,11 +33,13 @@ app.use((0, _cors["default"])());
 (0, _cateRoute2["default"])(app);
 (0, _productRoute2["default"])(app);
 (0, _cartRoute["default"])(app);
+(0, _discountRoute2["default"])(app);
 
 // Admin
 (0, _roleRoute["default"])(app);
 (0, _cateRoute["default"])(app);
 (0, _productRoute["default"])(app);
+(0, _discountRoute["default"])(app);
 app.use(_errorHandling.errorHandlingMiddleware);
 _db["default"].sync({
   force: false

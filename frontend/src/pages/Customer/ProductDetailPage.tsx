@@ -1,10 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { ShoppingCart, Star } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../store/hook";
-import { useForm } from "react-hook-form";
-import { addCart, clearError } from "../../store/slices/cartSlice";
+import { addCart, clearCartError } from "../../store/slices/cartSlice";
 import productService from "../../services/productService";
 import type { ApiErrorType } from "../../types/error";
 import type {
@@ -13,9 +12,7 @@ import type {
   ProductVarient,
 } from "../../types/product";
 import ProductsRelated from "../../components/ui/ProductsRelated";
-import ProductReviewForm, {
-  type formRating,
-} from "../../components/ui/ReviewForm";
+import ProductReviewForm from "../../components/ui/ReviewForm";
 import ProductReviewList from "../../components/ui/ReviewList";
 
 // --- format tiền ---
@@ -127,7 +124,7 @@ const ProductDetailPage: React.FC = () => {
   useEffect(() => {
     if (error) {
       toast.error(error);
-      dispatch(clearError());
+      dispatch(clearCartError());
     }
   }, [error, dispatch]);
 

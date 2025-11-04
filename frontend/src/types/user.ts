@@ -19,6 +19,12 @@ export type ProfileRequest = {
   file?: File;
 };
 
+export type UpdateUserInfoRequest = {
+  fullName?: string;
+  phoneNumber?: string;
+  address?: string;
+};
+
 export type CheckoutInfoResponse = {
   fullName: string;
   address: string;

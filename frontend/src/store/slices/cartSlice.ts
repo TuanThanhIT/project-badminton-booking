@@ -94,7 +94,7 @@ const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
-    clearError(state) {
+    clearCartError(state) {
       state.error = undefined;
     },
 
@@ -237,5 +237,5 @@ const cartSlice = createSlice({
       });
   },
 });
-export const { clearError, updateQuantityLocal } = cartSlice.actions;
+export const { clearCartError, updateQuantityLocal } = cartSlice.actions;
 export default cartSlice.reducer;

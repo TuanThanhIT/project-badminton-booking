@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "../../store/hook";
 import {
-  clearError,
+  clearCartError,
   deleteAllCart,
   deleteCart,
   fetchCart,
@@ -9,7 +9,7 @@ import {
   updateQuantityLocal,
 } from "../../store/slices/cartSlice";
 import { toast } from "react-toastify";
-import { ArrowRight, ShoppingCart, Trash2 } from "lucide-react";
+import { ArrowRight, Loader2, ShoppingCart, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import debounce from "lodash/debounce";
 
@@ -27,7 +27,7 @@ const CartPage = () => {
   useEffect(() => {
     if (error) {
       toast.error(error);
-      dispatch(clearError());
+      dispatch(clearCartError());
     }
   }, [error, dispatch]);
 
@@ -74,8 +74,9 @@ const CartPage = () => {
   // --- Loading ---
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-[60vh] text-sky-600 text-lg font-medium">
-        Đang tải giỏ hàng...
+      <div className="flex flex-col justify-center items-center h-[60vh] text-sky-600">
+        <Loader2 className="w-10 h-10 animate-spin mb-3" />
+        <p className="text-lg font-medium">Đang tải giỏ hàng...</p>
       </div>
     );
   }

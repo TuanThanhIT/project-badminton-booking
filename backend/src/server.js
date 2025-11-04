@@ -12,6 +12,8 @@ import initCateCustomerRoute from "./routes/customer/cateRoute.js";
 import initProductAdminRoute from "./routes/admin/productRoute.js";
 import initProductCustomerRoute from "./routes/customer/productRoute.js";
 import initCartCustomerRoute from "./routes/customer/cartRoute.js";
+import initDiscountAdminRoute from "./routes/admin/discountRoute.js";
+import initDiscountCustomerRoute from "./routes/customer/discountRoute.js";
 
 dotenv.config();
 
@@ -30,11 +32,13 @@ initUserRoute(app);
 initCateCustomerRoute(app);
 initProductCustomerRoute(app);
 initCartCustomerRoute(app);
+initDiscountCustomerRoute(app);
 
 // Admin
 initRoleRoute(app);
 initCateAdminRoute(app);
 initProductAdminRoute(app);
+initDiscountAdminRoute(app);
 
 app.use(errorHandlingMiddleware);
 

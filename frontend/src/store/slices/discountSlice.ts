@@ -1,5 +1,8 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import type { DiscountResponse } from "../../types/discount";
+import type {
+  DiscountResponse,
+  UpdateDiscountResponse,
+} from "../../types/discount";
 import type { ApiErrorType } from "../../types/error";
 import discountService from "../../services/discountService";
 
@@ -44,7 +47,7 @@ const discountSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // fetchCart
+      // applyDiscount
       .addCase(applyDiscount.pending, (state) => {
         state.loading = true;
         state.error = undefined;

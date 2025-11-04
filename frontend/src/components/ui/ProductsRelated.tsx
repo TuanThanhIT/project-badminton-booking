@@ -53,7 +53,7 @@ const ProductsRelated = ({ productsRelated }: ProductRelatedProps) => {
               }}
             >
               {productsRelated.map((product) => (
-                <div key={product.id} className="w-1/4 p-2 flex-shrink-0">
+                <div key={product.id} className="w-1/4 px-2 py-4 flex-shrink-0">
                   <ProductCard product={product} />
                 </div>
               ))}

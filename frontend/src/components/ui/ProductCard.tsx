@@ -1,4 +1,4 @@
-import { Eye, ShoppingCart } from "lucide-react";
+import { Eye } from "lucide-react";
 import type { ProductResponse } from "../../types/product";
 import { useNavigate } from "react-router-dom";
 
@@ -12,7 +12,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
   return (
     <div
       key={product.id}
-      className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer border border-gray-100 flex flex-col transform hover:-translate-y-1"
+      className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer border border-gray-100 flex flex-col transform hover:scale-105"
     >
       {/* Ảnh sản phẩm */}
       <div className="relative w-full h-56 bg-gray-50 overflow-hidden">

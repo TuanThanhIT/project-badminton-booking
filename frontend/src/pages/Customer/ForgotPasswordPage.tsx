@@ -38,7 +38,7 @@ const ForgotPasswordPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 to-white">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#E3F2FD] to-white">
       <div className="w-full max-w-md bg-white shadow-xl rounded-2xl p-8 border border-sky-200">
         <h2 className="text-3xl font-bold text-gray-600 mb-6 text-center">
           Quên mật khẩu

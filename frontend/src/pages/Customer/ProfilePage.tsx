@@ -44,7 +44,7 @@ const ProfilePage = () => {
   if (!profile) return <div className="p-6">Đang tải...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10">
+    <div className="min-h-screen bg-gradient-to-b from-[#E3F2FD] to-white p-6 py-10">
       {/* Loading overlay */}
       <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-2xl p-8">
         {/* Avatar + Tên */}

@@ -9,3 +9,11 @@ export type DiscountRequest = {
   code: string;
   orderAmount: number;
 };
+
+export type UpdateDiscountRequest = {
+  code: string;
+};
+
+export type UpdateDiscountResponse = {
+  message: string;
+};

@@ -93,8 +93,7 @@ const CartPage = () => {
             Giỏ hàng trống
           </h2>
           <p className="text-gray-500 text-sm mb-6 text-center max-w-xs">
-            Có vẻ như bạn chưa thêm sản phẩm nào vào giỏ. Hãy khám phá và chọn
-            ngay món yêu thích nhé! 💙
+            Hãy thêm sản phẩm để tiếp tục mua sắm nhé! 💙
           </p>
           <button
             onClick={() => navigate("/home")}
@@ -109,7 +108,7 @@ const CartPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-[#E3F2FD] to-white py-10 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-10 text-center">

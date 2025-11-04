@@ -10,7 +10,20 @@ const applyDiscount = async (req, res, next) => {
   }
 };
 
+const updateDiscount = async (req, res, next) => {
+  try {
+    const { code } = req.body;
+    const discount = await discountService.updateDiscountService(code);
+    return res
+      .status(200)
+      .json({ message: "Mã giảm giá đã được ghi nhận và áp dụng." });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const discountController = {
   applyDiscount,
+  updateDiscount,
 };
 export default discountController;

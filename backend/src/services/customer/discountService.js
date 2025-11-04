@@ -17,6 +17,13 @@ const applyDiscountService = async (code, orderAmount) => {
         "Mã giảm giá không thể sử dụng!"
       );
     }
+
+    if (discount.isUsed) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Mã giảm giá đã được sử dụng!"
+      );
+    }
     // Chuyển sang Date để so sánh
     const start = new Date(discount.startDate);
     const end = new Date(discount.endDate);
@@ -38,10 +45,6 @@ const applyDiscountService = async (code, orderAmount) => {
         StatusCodes.BAD_REQUEST,
         "Giá trị của đơn hàng chưa đủ để áp dụng giảm giá!"
       );
-    }
-
-    if (discount.quantity <= 0) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Mã giảm giá đã hết!");
     }
 
     let finalPrice = orderAmount;
@@ -67,8 +70,27 @@ const applyDiscountService = async (code, orderAmount) => {
   }
 };
 
+const updateDiscountService = async (code) => {
+  try {
+    const discount = await Discount.findOne({
+      where: { code },
+    });
+    if (!discount) {
+      throw new ApiError(StatusCodes.NOT_FOUND, "Mã giảm giá không hợp lệ!");
+    }
+    await discount.update({ isUsed: true });
+    return discount;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
+
 const discountService = {
   applyDiscountService,
+  updateDiscountService,
 };
 
 export default discountService;

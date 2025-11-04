@@ -5,6 +5,7 @@ const discountRoute = express.Router();
 
 const initDiscountCustomerRoute = (app) => {
   discountRoute.post("/add", discountController.applyDiscount);
+  discountRoute.patch("/update", discountController.updateDiscount);
   app.use("/user/discount", discountRoute);
 };
 export default initDiscountCustomerRoute;

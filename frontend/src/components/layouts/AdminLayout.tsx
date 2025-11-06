@@ -23,11 +23,13 @@ const AdminLayout = () => {
           <Header />
         </div>
         <div>
-          <main className="p-4 h-full min-h-0 overflow-y-auto  ">
+          <main className=" p-4 h-full min-h-0 overflow-y-auto  ">
             <Outlet />
           </main>
         </div>
-        <Footer />
+        <div className="">
+          <Footer />
+        </div>
       </div>
     </div>
   );

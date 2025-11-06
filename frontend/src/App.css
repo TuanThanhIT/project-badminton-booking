@@ -1,0 +1,6 @@
+/* Áp dụng cho toàn bộ button và input[type="button"], input[type="submit"] */
+button,
+input[type="button"],
+input[type="submit"] {
+  @apply cursor-pointer;
+}

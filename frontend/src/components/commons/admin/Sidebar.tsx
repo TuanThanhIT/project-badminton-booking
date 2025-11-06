@@ -6,6 +6,8 @@ import {
   UsersRound,
   ChevronFirst,
   ChevronLast,
+  Headset,
+  Grid2X2,
 } from "lucide-react";
 import { createContext, useState } from "react";
 type SideBarContextType = {
@@ -72,12 +74,31 @@ const Sidebar = () => {
                   />
                 )}
               </NavLink>
+              <NavLink to={"/admin/categories"}>
+                {({ isActive }) => (
+                  <SidebarElement
+                    icon={Grid2X2}
+                    text="Categories"
+                    active={isActive}
+                  />
+                )}
+              </NavLink>
               <NavLink to={"/admin/users"}>
                 {({ isActive }) => (
                   <SidebarElement
                     icon={UsersRound}
                     text="Users"
                     active={isActive}
+                  />
+                )}
+              </NavLink>
+              <NavLink to={"/admin/support"} end>
+                {({ isActive }) => (
+                  <SidebarElement
+                    icon={Headset}
+                    text="Support"
+                    active={isActive}
+                    alert={true}
                   />
                 )}
               </NavLink>

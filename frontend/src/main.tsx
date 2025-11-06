@@ -1,7 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
-<<<<<<< HEAD
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import CustomerRoute from "./routes/CusRoute";
 import AdminRoute from "./routes/AdminRoute";
@@ -16,12 +15,5 @@ createRoot(document.getElementById("root")!).render(
       <AdminRoute />
       {/* <CustomerRoute /> */}
     </Router>
-=======
-import App from "./App";
-
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <App />
->>>>>>> dev_customer_tuanthanh
   </StrictMode>
 );

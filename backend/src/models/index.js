@@ -94,14 +94,8 @@ Product.hasMany(ProductVarient, { foreignKey: "productId", as: "varients" });
 ProductVarient.belongsTo(Product, { foreignKey: "productId", as: "product" });
 
 // Quan hệ 1-n giữa ProductVarient và ProductImage
-<<<<<<< HEAD
-Product.hasMany(ProductImage, { foreignKey: "productId" });
-ProductImage.belongsTo(Product, { foreignKey: "productId" });
-=======
 Product.hasMany(ProductImage, { foreignKey: "productId", as: "images" });
 ProductImage.belongsTo(Product, { foreignKey: "productId", as: "product" });
->>>>>>> dev_customer_tuanthanh
-
 // Quan hệ 1-n giữa User và UserOtp
 User.hasMany(UserOtp, { foreignKey: "userId" });
 UserOtp.belongsTo(User, { foreignKey: "userId" });

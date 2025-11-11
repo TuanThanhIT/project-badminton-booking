@@ -107,16 +107,27 @@ User.hasMany(UserOtp, { foreignKey: "userId" });
 UserOtp.belongsTo(User, { foreignKey: "userId" });
 
 // Quan hệ n-n giữa User và Product thông qua ProductFeedback
-User.belongsToMany(Product, {
+User.belongsToMany(ProductVarient, {
   through: ProductFeedback,
   foreignKey: "userId",
   otherKey: "productId",
 });
-Product.belongsToMany(User, {
+ProductVarient.belongsToMany(User, {
   through: ProductFeedback,
   foreignKey: "productId",
   otherKey: "userId",
 });
+
+// Quan hệ 1-1 giữa ProductFeedback và OrderDetail
+ProductFeedback.belongsTo(OrderDetail, {
+  foreignKey: "orderDetailId",
+  as: "orderDetail",
+});
+OrderDetail.hasOne(ProductFeedback, {
+  foreignKey: "orderDetailId",
+  as: "feedback",
+});
+
 export {
   Role,
   User,

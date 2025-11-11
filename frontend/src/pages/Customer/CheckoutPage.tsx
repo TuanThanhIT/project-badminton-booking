@@ -19,16 +19,22 @@ import {
   Ticket,
   StickyNote,
   Wallet,
+  Truck,
+  DollarSign,
+  Smartphone,
+  Check,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../store/hook";
 import { clearCartError } from "../../store/slices/cartSlice";
 import {
   applyDiscount,
-  clearDiscount,
   clearDiscountError,
+  updateDiscount,
 } from "../../store/slices/discountSlice";
 import { useNavigate } from "react-router-dom";
-import discountService from "../../services/discountService";
+import { addOrder } from "../../store/slices/orderSlice";
+import type { AddOrderRequest, MomoPaymentRequest } from "../../types/order";
+import OrderService from "../../services/orderService";
 
 const CheckoutPage = () => {
   const dispatch = useAppDispatch();
@@ -77,21 +83,20 @@ const CheckoutPage = () => {
   }, [reset]);
 
   useEffect(() => {
-    dispatch(clearDiscount());
-  }, [dispatch]);
-
-  useEffect(() => {
     const error = cartError || discountError;
     if (error) toast.error(error);
     if (cartError) dispatch(clearCartError());
-    if (discountError) dispatch(clearDiscountError());
+    if (discountError) {
+      dispatch(clearDiscountError());
+      setCode("");
+    }
   }, [cartError, discountError, dispatch]);
 
   if (discountLoading || cartLoading) {
     return (
-      <div className="flex flex-col justify-center items-center h-[60vh] text-sky-600">
+      <div className="flex flex-col justify-center items-center h-[60vh] text-[#0288D1]">
         <Loader2 className="w-10 h-10 animate-spin mb-3" />
-        <p className="text-lg font-medium">Đang tải dữ liệu...</p>
+        <p className="text-lg font-semibold">Đang tải dữ liệu...</p>
       </div>
     );
   }
@@ -109,48 +114,86 @@ const CheckoutPage = () => {
   };
 
   const handleDiscount = async (code: string) => {
-    if (!cart?.totalAmount) {
-      toast.error("Không có sản phẩm trong giỏ hàng");
-      return;
-    }
     try {
+      if (!cart?.totalAmount) {
+        toast.error("Không có sản phẩm trong giỏ hàng");
+        return;
+      }
       await dispatch(
         applyDiscount({ code, orderAmount: cart.totalAmount })
       ).unwrap();
       setCheckApply(true);
       toast.success("Áp mã giảm giá sản phẩm thành công!");
-    } catch {
-      // lỗi đã toast ở useEffect
+    } catch (error) {
+      // lỗi đã xử lý cục bộ
     }
   };
 
   const handleCheckout = async () => {
-    if (checkApply) {
-      try {
-        await discountService.updateDiscountService(code);
-      } catch (error) {
-        const apiError = error as ApiErrorType;
-        toast.error(apiError.userMessage);
-      }
+    if (checkApply && code) {
+      await dispatch(updateDiscount({ code }));
     }
-    if (paymentMethod === "COD") {
-      navigate("/orders/success");
+
+    const orderDetails =
+      cart?.cartItems?.map((item) => ({
+        quantity: item.quantity,
+        subTotal: item.subTotal,
+        varientId: item.varientId,
+      })) || [];
+
+    const orderData: AddOrderRequest = {
+      orderStatus: "Pending",
+      totalAmount: discount?.finalPrice ?? cart?.totalAmount ?? 0,
+      code,
+      note,
+      orderDetails,
+      paymentAmount: discount?.finalPrice ?? cart?.totalAmount ?? 0,
+      paymentMethod,
+      paymentStatus: "Pending",
+    };
+
+    const resultAction = await dispatch(addOrder({ data: orderData }));
+
+    if (addOrder.fulfilled.match(resultAction)) {
+      const orderId = resultAction.payload.orderId;
+      if (paymentMethod === "COD") {
+        toast.success(resultAction.payload.message);
+        setTimeout(() => navigate("/orders/success"), 2000);
+      } else if (paymentMethod === "MOMO") {
+        try {
+          const momoOrderId = `${orderId}_${Date.now()}`;
+          const data: MomoPaymentRequest = {
+            orderId: momoOrderId,
+            amount: orderData.paymentAmount,
+            orderInfo: `Thanh toán đơn hàng #${orderId}`,
+          };
+          const res = await OrderService.createMoMoPaymentService(data);
+          if (res.data.payUrl) {
+            window.location.href = res.data.payUrl;
+          } else {
+            toast.error("Không tạo được đường dẫn thanh toán Momo");
+          }
+        } catch (error: any) {
+          const apiError = error as ApiErrorType;
+          toast.error(apiError.userMessage || "Tạo thanh toán Momo thất bại");
+        }
+      }
     }
   };
 
   return (
     <div className="p-6 bg-gradient-to-b from-[#E3F2FD] to-white min-h-screen">
       {/* ==== Thông tin giao hàng ==== */}
-      <div className="border rounded-xl bg-white p-6 shadow-md">
+      <div className="border border-gray-300 rounded-xl bg-white p-6 shadow-md">
         <div className="flex items-center gap-2 text-[#0288D1] font-semibold mb-4 text-lg">
-          <MapPin className="w-6 h-6" />
+          <MapPin className="w-6 h-6 text-[#0288D1]" />
           <span>Thông Tin Thanh Toán & Nhận Hàng</span>
         </div>
 
         {userInfo && (
           <div className="flex justify-between items-center flex-wrap gap-2">
             <div className="text-gray-800 font-medium">
-              <span className="font-semibold text-[#0277BD] text-[17px]">
+              <span className="font-semibold text-[#0288D1] text-[17px]">
                 {userInfo.fullName}
               </span>{" "}
               | (+84) {userInfo.phoneNumber}
@@ -158,7 +201,7 @@ const CheckoutPage = () => {
             </div>
             <button
               onClick={() => setOpenUpdate(true)}
-              className="text-[#0288D1] hover:text-[#01579B] font-medium transition"
+              className="text-[#0288D1] hover:text-[#01579B] font-semibold transition"
             >
               Thay Đổi
             </button>
@@ -169,7 +212,7 @@ const CheckoutPage = () => {
       {/* ==== Form cập nhật thông tin ==== */}
       {openUpdate && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl w-[420px] shadow-2xl p-6 relative border-t-4 border-[#4FC3F7]">
+          <div className="bg-white rounded-2xl w-[420px] shadow-2xl p-6 relative border-t-4 border-[#0288D1]">
             <button
               onClick={() => setOpenUpdate(false)}
               className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
@@ -189,7 +232,7 @@ const CheckoutPage = () => {
                 <label className="block mb-1 font-medium">Họ và tên</label>
                 <input
                   {...register("fullName")}
-                  className="w-full rounded-xl p-3 shadow-sm focus:shadow-md focus:ring-2 focus:ring-sky-300 outline-none transition bg-white"
+                  className="w-full rounded-xl p-3 shadow-sm focus:shadow-md focus:ring-2 focus:ring-[#0288D1] outline-none transition bg-white"
                 />
                 {errors.fullName && (
                   <p className="text-red-500 text-sm mt-1">
@@ -202,7 +245,7 @@ const CheckoutPage = () => {
                 <label className="block mb-1 font-medium">Số điện thoại</label>
                 <input
                   {...register("phoneNumber")}
-                  className="w-full rounded-xl p-3 shadow-sm focus:shadow-md focus:ring-2 focus:ring-sky-300 outline-none transition bg-white"
+                  className="w-full rounded-xl p-3 shadow-sm focus:shadow-md focus:ring-2 focus:ring-[#0288D1] outline-none transition bg-white"
                 />
                 {errors.phoneNumber && (
                   <p className="text-red-500 text-sm mt-1">
@@ -216,7 +259,7 @@ const CheckoutPage = () => {
                 <textarea
                   {...register("address")}
                   rows={2}
-                  className="w-full rounded-xl p-3 shadow-sm focus:shadow-md focus:ring-2 focus:ring-sky-300 outline-none transition bg-white resize-none"
+                  className="w-full rounded-xl p-3 shadow-sm focus:shadow-md focus:ring-2 focus:ring-[#0288D1] outline-none transition bg-white resize-none"
                 ></textarea>
                 {errors.address && (
                   <p className="text-red-500 text-sm mt-1">
@@ -235,7 +278,7 @@ const CheckoutPage = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#4FC3F7] text-white rounded-lg hover:bg-[#03A9F4]"
+                  className="px-4 py-2 bg-[#0288D1] text-white rounded-lg hover:bg-[#0277BD]"
                 >
                   Lưu
                 </button>
@@ -246,16 +289,16 @@ const CheckoutPage = () => {
       )}
 
       {/* ==== Danh sách sản phẩm ==== */}
-      <div className="mt-6 border rounded-xl bg-white p-6 shadow-sm">
+      <div className="mt-6 border border-gray-300 rounded-xl bg-white p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-4 text-[#0288D1] font-semibold text-lg">
-          <Package className="w-6 h-6" />
+          <Package className="w-6 h-6 text-[#0288D1]" />
           <span>Đơn Hàng Của Bạn</span>
         </div>
 
         {!cart?.cartItems?.length ? (
           <div className="flex flex-col items-center justify-center py-16 text-gray-500">
             <div className="bg-sky-100 p-6 rounded-full mb-4 shadow-inner">
-              <CreditCard className="w-14 h-14 text-sky-500" />
+              <CreditCard className="w-14 h-14 text-[#0288D1]" />
             </div>
             <p className="text-lg font-semibold text-gray-800">
               Không có sản phẩm để thanh toán
@@ -266,7 +309,7 @@ const CheckoutPage = () => {
             </p>
             <button
               onClick={() => navigate("/home")}
-              className="flex items-center gap-2 px-5 py-2 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg shadow-sm transition-all"
+              className="flex items-center gap-2 px-5 py-2 bg-[#0288D1] hover:bg-[#0277BD] text-white font-semibold rounded-lg shadow-sm transition-all"
             >
               <span>Mua sắm ngay</span>
               <ArrowRight size={18} />
@@ -274,22 +317,21 @@ const CheckoutPage = () => {
           </div>
         ) : (
           <>
+            {/* Cart Items */}
             <div className="space-y-3">
               {cart.cartItems.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-sky-100 hover:border-sky-200 p-3"
+                  className="flex items-center justify-between bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-[#0288D1]/30 p-3"
                 >
-                  {/* Thumbnail + thông tin */}
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-sky-50">
+                    <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-[#E3F2FD]">
                       <img
                         src={item.thumbnailUrl || "/placeholder.png"}
                         alt={item.productName}
                         className="w-full h-full object-cover hover:scale-105 transition-transform"
                       />
                     </div>
-
                     <div className="flex flex-col justify-center">
                       <p className="font-semibold text-gray-800 text-base">
                         {item.productName}
@@ -303,10 +345,8 @@ const CheckoutPage = () => {
                       </p>
                     </div>
                   </div>
-
-                  {/* Giá tổng */}
                   <div className="text-right">
-                    <p className="font-bold text-sky-600 text-lg">
+                    <p className="font-bold text-[#0288D1] text-lg">
                       {item.subTotal.toLocaleString()}₫
                     </p>
                   </div>
@@ -317,16 +357,15 @@ const CheckoutPage = () => {
             {/* Mã giảm giá */}
             <div className="mt-6">
               <div className="flex items-center gap-2 mb-2 text-[#0288D1] font-semibold text-lg">
-                <Ticket className="w-5 h-5" />
+                <Ticket className="w-5 h-5 text-[#0288D1]" />
                 <span>Mã giảm giá</span>
               </div>
-
               <div className="flex gap-2">
                 <input
                   value={code}
                   placeholder="Nhập mã giảm giá"
                   onChange={(e) => setCode(e.target.value)}
-                  className="flex-1 rounded-xl p-3 shadow-sm focus:shadow-md focus:ring-2 focus:ring-sky-300 outline-none transition bg-white placeholder:text-gray-400"
+                  className="flex-1 rounded-xl p-3 shadow-sm focus:shadow-md focus:ring-2 focus:ring-[#0288D1] outline-none transition bg-white placeholder:text-gray-400"
                 />
                 <button
                   onClick={() => handleDiscount(code)}
@@ -340,50 +379,98 @@ const CheckoutPage = () => {
             {/* Ghi chú đơn hàng */}
             <div className="mt-6">
               <div className="flex items-center gap-2 mb-2 text-[#0288D1] font-semibold text-lg">
-                <StickyNote className="w-5 h-5" />
+                <StickyNote className="w-5 h-5 text-[#0288D1]" />
                 <span>Ghi chú đơn hàng</span>
               </div>
-
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 rows={2}
                 placeholder="VD: Giao trong giờ hành chính, gọi trước khi đến..."
-                className="w-full rounded-xl p-3 shadow-sm focus:shadow-md focus:ring-2 focus:ring-sky-300 outline-none transition bg-white resize-none placeholder:text-gray-400"
+                className="w-full rounded-xl p-3 shadow-sm focus:shadow-md focus:ring-2 focus:ring-[#0288D1] outline-none transition bg-white resize-none placeholder:text-gray-400"
               />
             </div>
 
             {/* Phương thức thanh toán */}
             <div className="mt-4">
-              <div className="flex items-center gap-2 mb-2 text-[#0288D1] font-semibold text-lg">
-                <Wallet className="w-5 h-5" />
+              <div className="flex items-center gap-2 mb-3 text-[#0288D1] font-semibold text-lg">
+                <Wallet className="w-5 h-5 text-[#0288D1]" />
                 <span>Phương thức thanh toán</span>
               </div>
+
               <div className="flex flex-col sm:flex-row gap-4">
-                <label className="flex items-center gap-2 cursor-pointer border rounded-lg p-3 hover:bg-[#E1F5FE]/50 transition">
+                {/* COD */}
+                <label
+                  className={`relative flex items-center gap-4 cursor-pointer border rounded-xl p-4 transition 
+                  ${
+                    paymentMethod === "COD"
+                      ? "bg-[#E3F2FD] border-[#0288D1] shadow-md"
+                      : "hover:bg-[#E3F2FD] border-gray-300"
+                  }`}
+                >
                   <input
                     type="radio"
                     checked={paymentMethod === "COD"}
                     onChange={() => setPaymentMethod("COD")}
-                    className="accent-[#0288D1]"
+                    className="absolute opacity-0 w-0 h-0"
                   />
-                  <span>Thanh toán khi nhận hàng (COD)</span>
+                  <DollarSign className="w-8 h-8 text-[#0288D1] flex-shrink-0" />
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-gray-800 text-base">
+                      Thanh toán khi nhận hàng
+                    </span>
+                    <span className="text-sm text-gray-500">(COD)</span>
+                  </div>
+                  {paymentMethod === "COD" && (
+                    <div className="ml-auto text-white bg-[#0288D1] w-6 h-6 rounded-full flex items-center justify-center">
+                      <Check className="w-4 h-4" />
+                    </div>
+                  )}
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer border rounded-lg p-3 hover:bg-[#E1F5FE]/50 transition">
+
+                {/* MoMo */}
+                <label
+                  className={`relative flex items-center gap-4 cursor-pointer border rounded-xl p-4 transition 
+                  ${
+                    paymentMethod === "MOMO"
+                      ? "bg-[#E3F2FD] border-[#0288D1] shadow-md"
+                      : "hover:bg-[#E3F2FD] border-gray-300"
+                  }`}
+                >
                   <input
                     type="radio"
                     checked={paymentMethod === "MOMO"}
                     onChange={() => setPaymentMethod("MOMO")}
-                    className="accent-[#0288D1]"
+                    className="absolute opacity-0 w-0 h-0"
                   />
-                  <span>Thanh toán online qua Momo</span>
+                  <Smartphone className="w-8 h-8 text-[#0288D1] flex-shrink-0" />
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-gray-800 text-base">
+                      Thanh toán online
+                    </span>
+                    <span className="text-sm text-gray-500">qua MoMo</span>
+                  </div>
+                  {paymentMethod === "MOMO" && (
+                    <div className="ml-auto text-white bg-[#0288D1] w-6 h-6 rounded-full flex items-center justify-center">
+                      <Check className="w-4 h-4" />
+                    </div>
+                  )}
                 </label>
               </div>
             </div>
 
+            {/* Phí vận chuyển */}
+            <div className="mt-4 flex items-center gap-2 mb-2 text-[#0288D1] font-semibold text-lg">
+              <Truck className="w-5 h-5 text-[#0288D1]" />
+              <span>Phí vận chuyển</span>
+              <span className="ml-auto text-green-700 font-medium">
+                Miễn phí
+              </span>
+            </div>
+
             {/* Tổng tiền */}
             <div className="mt-8 bg-gradient-to-r from-sky-50 to-white border border-sky-100 rounded-xl shadow-sm px-6 py-4 flex justify-between items-center">
-              <span className="text-xl font-semibold text-gray-800">
+              <span className="text-xl font-semibold text-[#0288D1]">
                 Tổng tiền
               </span>
               <span className="text-2xl font-bold text-[#0288D1] tracking-wide">
@@ -391,14 +478,15 @@ const CheckoutPage = () => {
               </span>
             </div>
 
+            {/* Button thanh toán */}
             <button
               onClick={handleCheckout}
-              className="w-full mt-5 py-3 bg-[#0288D1] text-white rounded-xl font-medium hover:bg-[#0277BD] transition flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+              className="w-full mt-5 py-3 bg-[#0288D1] text-white rounded-xl font-semibold hover:bg-[#0277BD] transition flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
             >
               <CreditCard size={20} />
               {paymentMethod === "COD"
-                ? "Đặt hàng (Thanh toán khi nhận hàng)"
-                : "Thanh toán qua Momo"}
+                ? "Đặt hàng ngay - Thanh toán khi nhận hàng"
+                : "Thanh toán an toàn qua Momo"}
             </button>
           </>
         )}

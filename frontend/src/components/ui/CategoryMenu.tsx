@@ -75,7 +75,7 @@ const CategoryMenu = () => {
             left: `${dropdownStyle.left}px`,
           }}
         >
-          <div className="bg-white shadow-2xl rounded-b-2xl border-t-4 border-sky-400 p-8 max-h-[26rem] overflow-y-auto">
+          <div className="bg-white shadow-2xl rounded-b-2xl border-t-4 border-sky-400 p-8">
             <div className="grid grid-cols-5 gap-8">
               {categories.map((group) => (
                 <div key={group.menuGroup}>

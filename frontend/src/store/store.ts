@@ -3,6 +3,7 @@ import storage from "redux-persist/lib/storage"; // dùng localStorage
 import { persistReducer, persistStore } from "redux-persist";
 import cartReducer from "./slices/cartSlice";
 import discountReducer from "./slices/discountSlice";
+import orderReducer from "./slices/orderSlice";
 
 const persistConfig = {
   key: "root",
@@ -13,6 +14,7 @@ const persistConfig = {
 const rootReducer = combineReducers({
   cart: cartReducer,
   discount: discountReducer,
+  order: orderReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

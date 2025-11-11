@@ -10,6 +10,7 @@ const auth = (req, res, next) => {
     "/auth/verify-otp",
     "/auth/sent-otp",
     "/user/category/list",
+    "/user/momo/momo-webhook",
   ];
   if (white_list.find((item) => item === req.originalUrl)) {
     next();

@@ -82,13 +82,26 @@ const ProductDetailPage: React.FC = () => {
   // --- Handlers chọn size / color ---
   const handleSelectSize = (size: string) => {
     setSelectedSize(size);
-    setSelectedColor(null);
-    const firstVariant = productDetail?.varients.find((v) => v.size === size);
-    setSelectedVariant(firstVariant || null);
+
+    // Lọc các variant theo size mới
+    const variantsOfSize = productDetail?.varients.filter(
+      (v) => v.size === size
+    );
+
+    if (variantsOfSize && variantsOfSize.length > 0) {
+      const firstColor = variantsOfSize[0].color; // lấy màu đầu tiên
+      setSelectedColor(firstColor);
+      setSelectedVariant(variantsOfSize[0]);
+    } else {
+      setSelectedColor(null);
+      setSelectedVariant(null);
+    }
+
     setQuantity(1);
   };
 
   const handleSelectColor = (color: string) => {
+    if (!selectedSize) return;
     setSelectedColor(color);
     const variant = productDetail?.varients.find(
       (v) => v.size === selectedSize && v.color === color
@@ -148,7 +161,7 @@ const ProductDetailPage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
         {/* Hình ảnh */}
         <div className="md:col-span-5 flex flex-col items-center space-y-4">
-          <div className="w-full bg-white rounded-3xl shadow-sm p-6 flex items-center justify-center transition-all">
+          <div className="w-full bg-white border border-gray-400 p-6 flex items-center justify-center transition-all">
             {mainImage ? (
               <img
                 src={mainImage}

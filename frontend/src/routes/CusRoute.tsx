@@ -21,6 +21,7 @@ import PaymentResultPage from "../pages/Customer/PaymentResultPage";
 import CheckoutPage from "../pages/Customer/CheckoutPage";
 import OrderPage from "../pages/Customer/OrderPage";
 import OrderSuccessPage from "../pages/Customer/OrderSuccessPage";
+import MomoReturnPage from "../pages/Customer/MomoReturnPage";
 
 const CustomerRoute = () => {
   return (
@@ -54,6 +55,7 @@ const CustomerRoute = () => {
           <Route path="checkout" element={<CheckoutPage />}></Route>
           <Route path="orders" element={<OrderPage />}></Route>
           <Route path="orders/success" element={<OrderSuccessPage />}></Route>
+          <Route path="orders/momo-return" element={<MomoReturnPage />}></Route>
         </Route>
 
         <Route path="*" element={<NotFoundPage />}></Route>

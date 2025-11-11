@@ -61,16 +61,22 @@ Discount.hasOne(Order, { foreignKey: "discountId" });
 Order.belongsTo(Discount, { foreignKey: "discountId" });
 
 // Quan hệ 1-n giữa Order và OrderDetail
-Order.hasMany(OrderDetail, { foreignKey: "orderId" });
-OrderDetail.belongsTo(Order, { foreignKey: "orderId" });
+Order.hasMany(OrderDetail, { foreignKey: "orderId", as: "orderDetails" });
+OrderDetail.belongsTo(Order, { foreignKey: "orderId", as: "order" });
 
 // Quan hệ 1-n giữa Order và Payment
-Order.hasOne(Payment, { foreignKey: "orderId" });
-Payment.belongsTo(Order, { foreignKey: "orderId" });
+Order.hasOne(Payment, { foreignKey: "orderId", as: "payment" });
+Payment.belongsTo(Order, { foreignKey: "orderId", as: "orders" });
 
 //Quan hệ 1-1 giữa ProductVarient và OrderDetail
-ProductVarient.hasOne(OrderDetail, { foreignKey: "varientId" });
-OrderDetail.belongsTo(ProductVarient, { foreignKey: "varientId" });
+ProductVarient.hasOne(OrderDetail, {
+  foreignKey: "varientId",
+  as: "orderDetail",
+});
+OrderDetail.belongsTo(ProductVarient, {
+  foreignKey: "varientId",
+  as: "varient",
+});
 
 // Quan hệ 1-n giữa Category và Product
 Category.hasMany(Product, { foreignKey: "categoryId" });

@@ -96,7 +96,15 @@ const getCartItemService = async (userId) => {
         {
           model: ProductVarient,
           as: "varient",
-          attributes: ["id", "price", "discount", "stock"],
+          attributes: [
+            "id",
+            "price",
+            "discount",
+            "stock",
+            "color",
+            "size",
+            "material",
+          ],
           include: [
             {
               model: Product,
@@ -123,6 +131,9 @@ const getCartItemService = async (userId) => {
         thumbnailUrl: obj.varient.product.thumbnailUrl,
         varientId: obj.varient.id,
         stock: obj.varient.stock,
+        color: obj.varient.color,
+        size: obj.varient.size,
+        material: obj.varient.material,
         price,
       };
     });

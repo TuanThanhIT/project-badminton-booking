@@ -8,12 +8,14 @@ import discountService from "../../services/discountService";
 
 interface DiscountState {
   discount?: DiscountResponse;
+  message?: string;
   loading: boolean;
   error: string | undefined;
 }
 
 const initialState: DiscountState = {
   discount: undefined,
+  message: undefined,
   loading: false,
   error: undefined,
 };
@@ -34,6 +36,18 @@ export const applyDiscount = createAsyncThunk<
   }
 );
 
+export const updateDiscount = createAsyncThunk<
+  UpdateDiscountResponse,
+  { code: string },
+  { rejectValue: ApiErrorType }
+>("discount/updateDiscount", async ({ code }, { rejectWithValue }) => {
+  try {
+    const res = await discountService.updateDiscountService(code);
+    return res.data as UpdateDiscountResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
 const discountSlice = createSlice({
   name: "discount",
   initialState,
@@ -57,6 +71,19 @@ const discountSlice = createSlice({
         state.discount = action.payload;
       })
       .addCase(applyDiscount.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.userMessage;
+      })
+      // updateDiscount
+      .addCase(updateDiscount.pending, (state) => {
+        state.loading = true;
+        state.error = undefined;
+      })
+      .addCase(updateDiscount.fulfilled, (state, action) => {
+        state.loading = false;
+        state.message = action.payload.message;
+      })
+      .addCase(updateDiscount.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.userMessage;
       });

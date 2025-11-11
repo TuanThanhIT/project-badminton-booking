@@ -39,7 +39,7 @@ const ReviewForm: React.FC = () => {
       </h3>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="max-w-lg bg-white p-6 rounded-2xl border text-gray-700"
+        className="max-w-lg bg-white p-6 rounded-2xl border border-gray-400 text-gray-700"
       >
         {/* Chọn sao */}
         <div className="mb-6">

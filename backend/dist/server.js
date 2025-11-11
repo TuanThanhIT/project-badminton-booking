@@ -16,6 +16,8 @@ var _productRoute2 = _interopRequireDefault(require("./routes/customer/productRo
 var _cartRoute = _interopRequireDefault(require("./routes/customer/cartRoute.js"));
 var _discountRoute = _interopRequireDefault(require("./routes/admin/discountRoute.js"));
 var _discountRoute2 = _interopRequireDefault(require("./routes/customer/discountRoute.js"));
+var _orderRoute = _interopRequireDefault(require("./routes/customer/orderRoute.js"));
+var _momoRoute = _interopRequireDefault(require("./routes/customer/momoRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -34,6 +36,8 @@ app.use((0, _cors["default"])());
 (0, _productRoute2["default"])(app);
 (0, _cartRoute["default"])(app);
 (0, _discountRoute2["default"])(app);
+(0, _orderRoute["default"])(app);
+(0, _momoRoute["default"])(app);
 
 // Admin
 (0, _roleRoute["default"])(app);

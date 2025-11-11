@@ -5,7 +5,13 @@ const Order = sequelize.define(
   "Order",
   {
     orderStatus: {
-      type: DataTypes.ENUM("Pending", "Paid", "Completed", "Cancelled"),
+      type: DataTypes.ENUM(
+        "Pending", // Đơn mới được đặt, chưa xác nhận
+        "Confirmed", // Nhân viên đã xác nhận, chuẩn bị giao hàng
+        "Paid", // Đã thanh toán (Momo hoặc COD)
+        "Completed", // Đã giao thành công, hoàn tất
+        "Cancelled" // Đơn đã bị hủy
+      ),
       allowNull: false,
       defaultValue: "Pending",
     },

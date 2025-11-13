@@ -24,6 +24,7 @@ export type ProductInfo = {
 };
 
 export type VarientInfo = {
+  id: number;
   color: string | null;
   size: string | null;
   material: string | null;
@@ -31,8 +32,10 @@ export type VarientInfo = {
 };
 
 export type OrderDetailInfo = {
+  id: number;
   quantity: number;
   subTotal: number;
+  review?: boolean;
   varient: VarientInfo;
 };
 

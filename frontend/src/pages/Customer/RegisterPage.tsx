@@ -37,7 +37,7 @@ const RegisterPage = () => {
 
   return (
     <div className="p-20 w-3/4 mx-auto">
-      <div className="grid grid-cols-2 shadow-md rounded-2xl gap-5 text-sm">
+      <div className="grid grid-cols-2 rounded-2xl gap-5 text-sm border border-gray-200">
         <div className="flex justify-center p-3">
           <img src="/img/register.jpg"></img>
         </div>

@@ -18,10 +18,9 @@ const getOrderService = () =>
 const cancelOrderService = (data: OrderCancelRequest) => {
   const orderId = data.orderId;
   const cancelReason = data.cancelReason;
-  return instance.patch<OrderCancelResponse>(
-    `/user/order/cancel/${orderId}`,
-    cancelReason
-  );
+  return instance.patch<OrderCancelResponse>(`/user/order/cancel/${orderId}`, {
+    cancelReason,
+  });
 };
 
 const createMoMoPaymentService = async (data: MomoPaymentRequest) => {

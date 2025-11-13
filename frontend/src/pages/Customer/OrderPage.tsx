@@ -9,11 +9,12 @@ import {
 import {
   Loader2,
   Package,
-  Calendar,
+  CalendarClock,
   DollarSign,
   XCircle,
-  X,
   CreditCard,
+  X,
+  MapPin,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import {
@@ -22,7 +23,6 @@ import {
 } from "../../schemas/FormCancelOrderSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { ApiErrorType } from "../../types/error";
-import { da } from "zod/v4/locales";
 import type {
   MomoPaymentRequest,
   OrderCancelRequest,
@@ -31,9 +31,9 @@ import type {
 import OrderService from "../../services/orderService";
 
 const statusColor = {
-  Pending: "bg-yellow-100 text-yellow-700",
-  Paid: "bg-blue-100 text-blue-700",
-  Confirmed: "bg-purple-100 text-purple-700",
+  Pending: "bg-yellow-50 text-yellow-700 border-yellow-200",
+  Paid: "bg-blue-50 text-blue-700 border-blue-200",
+  Confirmed: "bg-purple-50 text-purple-700 border-purple-200",
 } as const;
 
 type ActiveStatus = keyof typeof statusColor;
@@ -47,12 +47,9 @@ const statusLabelVN: Record<ActiveStatus | "All", string> = {
 
 const OrderPage = () => {
   const dispatch = useAppDispatch();
-  const orderLoading = useAppSelector((state) => state.order.loading);
-  const orderError = useAppSelector((state) => state.order.error);
-  const orders = useAppSelector((state) => state.order.orders);
-
+  const { orders, loading, error } = useAppSelector((s) => s.order);
   const [filterStatus, setFilterStatus] = useState<ActiveStatus | "All">("All");
-  const [openCancel, setOpenCancel] = useState<boolean>(false);
+  const [openCancel, setOpenCancel] = useState(false);
   const [orderId, setOrderId] = useState<number>(0);
 
   const {
@@ -69,17 +66,17 @@ const OrderPage = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (orderError) {
-      toast.error(orderError);
+    if (error) {
+      toast.error(error);
       dispatch(clearOrdersError());
     }
-  }, [orderError, dispatch]);
+  }, [error, dispatch]);
 
-  if (orderLoading) {
+  if (loading) {
     return (
-      <div className="flex flex-col justify-center items-center h-[60vh] text-sky-600">
-        <Loader2 className="w-10 h-10 animate-spin mb-3" />
-        <p className="text-lg font-medium">Đang tải dữ liệu...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-sky-50 to-white">
+        <Loader2 className="w-10 h-10 text-sky-600 animate-spin mb-3" />
+        <p className="text-gray-600 font-medium">Đang tải đơn hàng...</p>
       </div>
     );
   }
@@ -104,9 +101,7 @@ const OrderPage = () => {
       const res = await OrderService.createMoMoPaymentService(data);
       if (res.data.payUrl) {
         window.location.href = res.data.payUrl;
-      } else {
-        toast.error("Không tạo được đường dẫn thanh toán Momo");
-      }
+      } else toast.error("Không tạo được đường dẫn thanh toán Momo");
     } catch (error: any) {
       const apiError = error as ApiErrorType;
       toast.error(apiError.userMessage || "Tạo thanh toán Momo thất bại");
@@ -114,117 +109,138 @@ const OrderPage = () => {
   };
 
   const renderOrderCard = (order: OrderResponse, index: number) => {
+    const statusStyle = {
+      Pending:
+        "bg-yellow-50 text-yellow-700 border-yellow-200 flex items-center gap-1",
+      Paid: "bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1",
+      Confirmed:
+        "bg-orange-50 text-orange-700 border-orange-200 flex items-center gap-1",
+    } as const;
+
     return (
       <div
         key={order.id || index}
-        className="border border-gray-300 bg-white rounded-xl shadow-sm transition p-4"
+        className="relative border-l-2 border-sky-100 pl-6 mb-8"
       >
-        {/* Header: Thông tin đơn hàng + Trạng thái */}
-        <div className="flex justify-between items-center mb-4 flex-wrap sm:flex-nowrap gap-2">
-          {/* Thông tin đơn hàng (bên trái) */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4">
-            <div className="flex items-center gap-2">
-              <Package className="w-5 h-5 text-sky-600" />
-              <span className="font-medium text-sky-700">
-                Đơn hàng #{index + 1}
-              </span>
-            </div>
+        {/* Chấm trạng thái */}
+        <div
+          className={`absolute -left-[10px] top-2 w-5 h-5 rounded-full ring-4 ring-white shadow-sm ${
+            order.orderStatus === "Pending"
+              ? "bg-yellow-500"
+              : order.orderStatus === "Paid"
+              ? "bg-blue-500"
+              : "bg-orange-500"
+          }`}
+        />
 
-            <div className="flex items-center gap-2 text-gray-700 mt-1 sm:mt-0 text-sm">
-              <DollarSign className="w-4 h-4 text-sky-600" />
-              <span className="font-medium">
-                {order.totalAmount.toLocaleString()}₫
-              </span>
+        {/* Card chính */}
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 p-5">
+          {/* Header */}
+          <div className="flex flex-wrap justify-between items-start mb-4">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <Package className="w-5 h-5 text-sky-600" />
+                Đơn hàng #{String(index + 1).padStart(3, "0")}
+              </h3>
+              <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
+                <CalendarClock className="w-4 h-4 text-sky-600" />
+                <span>
+                  {new Date(order.createdDate).toLocaleString("vi-VN")}
+                </span>
+              </div>
             </div>
-
-            <div className="flex items-center gap-2 text-gray-700 mt-1 sm:mt-0 text-sm">
-              <Calendar className="w-4 h-4 text-sky-600" />
-              <span>{new Date(order.createdDate).toLocaleString()}</span>
+            <div
+              className={`px-3 py-1.5 rounded-full text-sm font-semibold border ${
+                statusStyle[order.orderStatus as keyof typeof statusStyle]
+              }`}
+            >
+              {statusLabelVN[order.orderStatus as keyof typeof statusLabelVN]}
             </div>
+          </div>
 
-            <div className="flex items-center gap-2 mt-1 sm:mt-0">
-              <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 select-none">
+          {/* Items */}
+          <div className="divide-y divide-gray-100 mb-4">
+            {order.orderDetails.map((od, idx) => (
+              <div
+                key={idx}
+                className="py-4 flex items-center justify-between gap-4"
+              >
+                <div className="flex gap-4 flex-1">
+                  <div className="w-16 h-16 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 flex-shrink-0">
+                    <img
+                      src={od.varient.product.thumbnailUrl}
+                      alt={od.varient.product.productName}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-800 truncate">
+                      {od.varient.product.productName}
+                    </h4>
+                    <div className="text-xs text-gray-600 flex flex-wrap gap-2 mt-1">
+                      <span>Màu: {od.varient.color}</span>
+                      <span>•</span>
+                      <span>Size: {od.varient.size}</span>
+                      {od.varient.material && (
+                        <>
+                          <span>•</span>
+                          <span>Chất liệu: {od.varient.material}</span>
+                        </>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-700 mt-1">
+                      SL: {od.quantity}
+                    </p>
+                  </div>
+                </div>
+                <p className="font-semibold text-sky-700 whitespace-nowrap">
+                  {od.subTotal.toLocaleString("vi-VN")}₫
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Footer */}
+          <div className="mt-4 flex justify-between items-center text-sm text-gray-600 flex-wrap gap-3">
+            <div className="flex items-center gap-2 text-gray-700 flex-1 min-w-[120px]">
+              <MapPin className="w-4 h-4 text-sky-600" />
+              <span>Thanh toán:</span>
+              <span className="font-medium text-gray-800">
                 {order.payment.paymentMethod}
               </span>
             </div>
-          </div>
-
-          {/* Trạng thái (bên phải) */}
-          <div className="flex-shrink-0 flex items-center gap-2">
-            <span className="text-gray-600 text-sm font-medium select-none">
-              Trạng thái:
-            </span>
-            <span
-              className={`px-3 py-1 rounded-lg text-sm font-semibold shadow-sm ${
-                statusColor[order.orderStatus as ActiveStatus]
-              }`}
-            >
-              {statusLabelVN[order.orderStatus as ActiveStatus]}
-            </span>
-          </div>
-        </div>
-
-        {/* Chi tiết sản phẩm */}
-        <div className="space-y-3 mb-3">
-          {order.orderDetails.map((od: any, idx: number) => (
-            <div
-              key={idx}
-              className="flex justify-between items-center border border-sky-100 rounded-xl p-2 hover:border-sky-300 transition"
-            >
-              <div className="flex gap-3">
-                <div className="w-14 h-14 rounded-lg overflow-hidden bg-sky-50">
-                  <img
-                    src={od.varient.product.thumbnailUrl}
-                    alt={od.varient.product.productName}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-800 text-sm">
-                    {od.varient.product.productName}
-                  </h4>
-                  <p className="text-xs text-gray-600">
-                    Màu: {od.varient.color} | Size: {od.varient.size} | Chất
-                    liệu: {od.varient.material}
-                  </p>
-                  <p className="text-sm text-gray-700 mt-1">
-                    SL: {od.quantity}
-                  </p>
-                </div>
-              </div>
-              <p className="font-medium text-sky-600 text-sm">
-                {od.subTotal.toLocaleString()}₫
-              </p>
+            <div className="flex items-center gap-2 text-sky-700 font-bold text-lg min-w-[120px]">
+              <DollarSign className="w-4 h-4" />
+              <span>{order.totalAmount.toLocaleString("vi-VN")}₫</span>
             </div>
-          ))}
-        </div>
-
-        {/* Nút thao tác (bên dưới) */}
-        <div className="flex items-center justify-end gap-3 flex-wrap mt-2">
-          {order.payment.paymentMethod === "Momo" &&
-            order.orderStatus === "Pending" && (
-              <button
-                onClick={() => handlePaymentAgain(order.id, order.totalAmount)}
-                className="flex items-center gap-1 px-3 py-1 min-h-[32px] bg-green-500 text-white rounded-lg hover:bg-green-600 shadow-md transition text-sm font-medium"
-              >
-                <CreditCard size={16} />
-                Thanh toán
-              </button>
-            )}
-
-          {(order.orderStatus === "Pending" ||
-            order.orderStatus === "Paid") && (
-            <button
-              onClick={() => {
-                setOrderId(order.id);
-                setOpenCancel(true);
-              }}
-              className="flex items-center gap-1 px-3 py-1 min-h-[32px] bg-red-500 text-white rounded-lg hover:bg-red-600 shadow-md transition text-sm font-medium"
-            >
-              <XCircle size={16} />
-              Hủy
-            </button>
-          )}
+            <div className="flex items-center gap-2 flex-wrap">
+              {order.payment.paymentMethod === "Momo" &&
+                order.orderStatus === "Pending" && (
+                  <button
+                    onClick={() =>
+                      handlePaymentAgain(order.id, order.totalAmount)
+                    }
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 shadow-sm text-sm font-medium"
+                  >
+                    <CreditCard size={16} />
+                    Thanh toán
+                  </button>
+                )}
+              {(order.orderStatus === "Pending" ||
+                order.orderStatus === "Paid") && (
+                <button
+                  onClick={() => {
+                    setOrderId(order.id);
+                    setOpenCancel(true);
+                  }}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 shadow-sm text-sm font-medium"
+                >
+                  <XCircle size={16} />
+                  Hủy
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -232,149 +248,127 @@ const OrderPage = () => {
 
   const onSubmit = async (dt: any) => {
     try {
-      const cancelReason = dt.cancelReason;
-      const data: OrderCancelRequest = { orderId, cancelReason };
+      const data: OrderCancelRequest = {
+        orderId,
+        cancelReason: dt.cancelReason,
+      };
       const res = await dispatch(cancelOrder({ data })).unwrap();
       toast.success(res.message);
       await dispatch(getOrders());
       setOpenCancel(false);
     } catch (error) {
-      // không xử lý do xử lý cục bộ rồi
+      // không xử lý lỗi nữa
     }
   };
 
-  const renderFormCancel = () => {
-    return (
-      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-        <div className="bg-white rounded-2xl w-[420px] shadow-2xl p-6 relative border-t-4 border-[#4FC3F7]">
-          <button
-            onClick={() => {
-              setOpenCancel(false);
-            }}
-            className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
-          >
-            <X size={20} />
-          </button>
+  const renderFormCancel = () => (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl w-[420px] shadow-2xl p-6 relative border-t-4 border-sky-400">
+        <button
+          onClick={() => setOpenCancel(false)}
+          className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
+        >
+          <X size={20} />
+        </button>
 
-          <h3 className="text-lg font-semibold mb-4 text-center text-[#0288D1]">
-            Lý do hủy đơn hàng
-          </h3>
+        <h3 className="text-2xl font-semibold mb-4 text-center text-sky-700">
+          Lý do hủy đơn hàng
+        </h3>
 
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="space-y-5 text-gray-700"
-          >
-            <div className="space-y-2">
-              <label className="block font-medium text-gray-800">
-                Nhập lý do hủy đơn (tối thiểu 20 ký tự):
-              </label>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <div>
+            <textarea
+              {...register("cancelReason")}
+              rows={4}
+              placeholder="Nhập lý do hủy đơn hàng..."
+              className="w-full rounded-xl p-3 border border-gray-400 bg-white shadow-sm resize-none focus:outline-none focus:ring-0 focus:border-gray-400"
+            />
+            {errors.cancelReason && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.cancelReason.message}
+              </p>
+            )}
+          </div>
 
-              <textarea
-                {...register("cancelReason")}
-                rows={4}
-                placeholder="Nhập lý do hủy đơn hàng..."
-                className="w-full rounded-xl p-3 border border-gray-300 bg-white shadow-sm 
-                 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent
-                 transition resize-none"
-              />
-
-              {errors.cancelReason && (
-                <p className="text-red-500 text-sm">
-                  {errors.cancelReason.message}
-                </p>
-              )}
-            </div>
-
-            <div className="flex justify-end gap-3 pt-3">
-              <button
-                type="button"
-                onClick={() => setOpenCancel(false)}
-                className="px-4 py-2 border border-sky-100 rounded-lg text-sky-700 hover:bg-sky-50 transition"
-              >
-                Hủy
-              </button>
-
-              <button
-                type="submit"
-                className="px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition shadow-sm"
-              >
-                Gửi
-              </button>
-            </div>
-          </form>
-        </div>
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => setOpenCancel(false)}
+              className="px-4 py-2 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+            >
+              Đóng
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 rounded-full bg-sky-500 text-white font-medium hover:bg-sky-600 transition"
+            >
+              Gửi
+            </button>
+          </div>
+        </form>
       </div>
-    );
-  };
+    </div>
+  );
 
   return (
-    <div className="p-6 bg-gradient-to-b from-[#E3F2FD] to-white min-h-screen flex flex-col py-10">
-      {/* Header */}
-      <div className="mb-8 text-center">
-        <div className="flex items-center justify-center gap-3 mb-3">
-          <div className="bg-sky-100 p-2 rounded-full">
-            <Package size={28} className="text-sky-600" />
-          </div>
-          <h1 className="text-3xl font-extrabold text-gray-800 tracking-tight">
-            Đơn hàng của bạn
-          </h1>
+    <div className="min-h-screen bg-gradient-to-b from-sky-50 to-white py-12 px-4 sm:px-6">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-8">
+          <Package className="w-8 h-8 text-sky-700" />
+          <h1 className="text-3xl font-bold text-sky-800">Đơn hàng của bạn</h1>
         </div>
 
-        <p className="text-gray-500 text-sm md:text-base">
-          Xem lại các đơn hàng đang xử lý
-        </p>
+        {/* Filter buttons */}
+        <div className="flex flex-wrap gap-3 mb-10">
+          {(["All", "Pending", "Paid", "Confirmed"] as const).map((status) => {
+            const count =
+              status === "All"
+                ? activeOrders.length
+                : activeOrders.filter((o) => o.orderStatus === status).length;
 
-        <div className="mx-auto mt-3 w-16 h-1.5 bg-gradient-to-r from-sky-400 to-sky-600 rounded-full"></div>
-      </div>
+            return (
+              <button
+                key={status}
+                onClick={() => setFilterStatus(status)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm border transition ${
+                  filterStatus === status
+                    ? "bg-sky-600 text-white border-sky-600 shadow"
+                    : "bg-white text-gray-700 border-gray-200 hover:bg-sky-50 hover:border-sky-200"
+                }`}
+              >
+                {statusLabelVN[status]}
+                <span
+                  className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                    filterStatus === status
+                      ? "bg-white text-sky-700"
+                      : "bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
 
-      {/* Filter tabs */}
-      <div className="flex gap-4 mb-6 border-b border-gray-500 pb-2">
-        {(
-          ["All", "Pending", "Paid", "Confirmed"] as (ActiveStatus | "All")[]
-        ).map((status) => {
-          // Tính số lượng đơn cho mỗi tab
-          const count =
-            status === "All"
-              ? orders.length
-              : orders.filter((o) => o.orderStatus === status).length;
-
-          return (
-            <button
-              key={status}
-              onClick={() => setFilterStatus(status)}
-              className={`px-5 py-2.5 font-medium transition-all flex items-center gap-2 ${
-                filterStatus === status
-                  ? "text-white bg-sky-600 rounded-lg shadow-sm"
-                  : "text-gray-700 hover:text-sky-600"
-              }`}
-            >
-              <span>{statusLabelVN[status]}</span>
-              <span className="bg-gray-200 text-gray-800 text-xs font-semibold px-2 py-0.5 rounded-full">
-                {count}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 flex flex-col">
-        {filteredOrders.length ? (
-          <div className="space-y-3">{filteredOrders.map(renderOrderCard)}</div>
+        {/* Order list */}
+        {filteredOrders.length > 0 ? (
+          <div className="space-y-6">{filteredOrders.map(renderOrderCard)}</div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center">
-            <Package size={64} className="text-sky-400 mb-4" />
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">
+          <div className="text-center py-16 bg-white rounded-2xl shadow-sm border border-gray-100">
+            <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-700 mb-1">
               Không có đơn hàng
             </h3>
-            <p className="text-sm text-gray-500 text-center max-w-xs">
+            <p className="text-sm text-gray-500">
               Hiện tại bạn chưa có đơn hàng nào cho trạng thái này.
             </p>
           </div>
         )}
-      </div>
 
-      {openCancel && renderFormCancel()}
+        {openCancel && renderFormCancel()}
+      </div>
     </div>
   );
 };

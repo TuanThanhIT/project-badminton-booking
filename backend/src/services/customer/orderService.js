@@ -8,6 +8,7 @@ import {
   Product,
   ProductVarient,
   User,
+  ProductFeedback,
 } from "../../models/index.js";
 
 const createOrderService = async (
@@ -111,12 +112,12 @@ const getOrdersService = async (userId) => {
         {
           model: OrderDetail,
           as: "orderDetails",
-          attributes: ["quantity", "subTotal"],
+          attributes: ["id", "quantity", "subTotal"],
           include: [
             {
               model: ProductVarient,
               as: "varient",
-              attributes: ["color", "size", "material"],
+              attributes: ["id","color", "size", "material"],
               include: [
                 {
                   model: Product,
@@ -134,7 +135,29 @@ const getOrdersService = async (userId) => {
         },
       ],
     });
-    return orders;
+
+    const newOrders = await Promise.all(
+      orders.map(async (order) => {
+        const orderData = order.toJSON();
+        if (orderData.orderStatus === "Completed") {
+          const newOrderDetails = await Promise.all(
+            orderData.orderDetails.map(async (orderDetail) => {
+              const review = await ProductFeedback.findOne({
+                where: { orderDetailId: orderDetail.id },
+              });
+              return {
+                ...orderDetail,
+                review: !!review,
+              };
+            })
+          );
+          orderData.orderDetails = newOrderDetails;
+        }
+        return orderData;
+      })
+    );
+
+    return newOrders;
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;

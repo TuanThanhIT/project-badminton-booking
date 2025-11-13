@@ -4,6 +4,7 @@ import { persistReducer, persistStore } from "redux-persist";
 import cartReducer from "./slices/cartSlice";
 import discountReducer from "./slices/discountSlice";
 import orderReducer from "./slices/orderSlice";
+import productFeedbackReducer from "./slices/productFeedbackSlice";
 
 const persistConfig = {
   key: "root",
@@ -15,6 +16,7 @@ const rootReducer = combineReducers({
   cart: cartReducer,
   discount: discountReducer,
   order: orderReducer,
+  productFeedback: productFeedbackReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

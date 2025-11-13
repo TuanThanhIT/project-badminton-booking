@@ -182,7 +182,7 @@ const CheckoutPage = () => {
   };
 
   return (
-    <div className="p-6 bg-gradient-to-b from-[#E3F2FD] to-white min-h-screen">
+    <div className="p-6 bg-gradient-to-b from-sky-50 to-white min-h-screen">
       {/* ==== Thông tin giao hàng ==== */}
       <div className="border border-gray-300 rounded-xl bg-white p-6 shadow-md">
         <div className="flex items-center gap-2 text-[#0288D1] font-semibold mb-4 text-lg">

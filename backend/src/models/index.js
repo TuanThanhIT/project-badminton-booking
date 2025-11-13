@@ -110,11 +110,11 @@ UserOtp.belongsTo(User, { foreignKey: "userId" });
 User.belongsToMany(ProductVarient, {
   through: ProductFeedback,
   foreignKey: "userId",
-  otherKey: "productId",
+  otherKey: "varientId",
 });
 ProductVarient.belongsToMany(User, {
   through: ProductFeedback,
-  foreignKey: "productId",
+  foreignKey: "varientId",
   otherKey: "userId",
 });
 
@@ -147,4 +147,5 @@ export {
   CartItem,
   ProductImage,
   ProductVarient,
+  ProductFeedback,
 };

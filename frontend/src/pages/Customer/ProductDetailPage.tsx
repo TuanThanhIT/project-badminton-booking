@@ -12,7 +12,6 @@ import type {
   ProductVarient,
 } from "../../types/product";
 import ProductsRelated from "../../components/ui/ProductsRelated";
-import ProductReviewForm from "../../components/ui/ReviewForm";
 import ProductReviewList from "../../components/ui/ReviewList";
 
 // --- format tiền ---
@@ -317,9 +316,6 @@ const ProductDetailPage: React.FC = () => {
               {productDetail?.description}
             </p>
           </div>
-
-          {/* Form đánh giá */}
-          <ProductReviewForm />
 
           {/* Đánh giá của khách hàng */}
           <ProductReviewList />

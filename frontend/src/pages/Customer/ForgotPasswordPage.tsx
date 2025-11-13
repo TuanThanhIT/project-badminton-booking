@@ -38,8 +38,8 @@ const ForgotPasswordPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#E3F2FD] to-white">
-      <div className="w-full max-w-md bg-white shadow-xl rounded-2xl p-8 border border-sky-200">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-sky-50 to-white">
+      <div className="w-full max-w-md bg-white rounded-2xl p-8 border border-gray-200">
         <h2 className="text-3xl font-bold text-gray-600 mb-6 text-center">
           Quên mật khẩu
         </h2>
@@ -114,8 +114,8 @@ const ForgotPasswordPage: React.FC = () => {
           <button
             type="submit"
             disabled={!isValid || !isDirty}
-            className="w-full bg-sky-600 hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed 
-                       text-white font-semibold py-3 rounded-lg shadow-md transition-all duration-200"
+            className="w-full bg-sky-600 hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed
+             text-white font-semibold py-3 rounded-lg shadow-md transition-all duration-200"
           >
             Gửi yêu cầu
           </button>

@@ -186,7 +186,7 @@ const CheckoutPage = () => {
   return (
     <div className="p-6 bg-white min-h-screen">
       {/* ==== Thông tin giao hàng ==== */}
-      <div className="border border-gray-300 rounded-xl bg-white p-6 shadow-md">
+      <div className="border border-gray-300 rounded-xl bg-white p-6">
         <div className="flex items-center gap-2 text-[#0288D1] font-semibold mb-4 text-lg">
           <MapPin className="w-6 h-6 text-[#0288D1]" />
           <span>Thông Tin Thanh Toán & Nhận Hàng</span>
@@ -291,7 +291,7 @@ const CheckoutPage = () => {
       )}
 
       {/* ==== Danh sách sản phẩm ==== */}
-      <div className="mt-6 border border-gray-300 rounded-xl bg-white p-6 shadow-sm">
+      <div className="mt-6 border border-gray-300 rounded-xl bg-white p-6">
         <div className="flex items-center gap-2 mb-4 text-[#0288D1] font-semibold text-lg">
           <Package className="w-6 h-6 text-[#0288D1]" />
           <span>Đơn Hàng Của Bạn</span>
@@ -367,7 +367,7 @@ const CheckoutPage = () => {
                   value={code}
                   placeholder="Nhập mã giảm giá"
                   onChange={(e) => setCode(e.target.value)}
-                  className="flex-1 rounded-xl p-3 shadow-sm focus:shadow-md focus:ring-2 focus:ring-[#0288D1] outline-none transition bg-white placeholder:text-gray-400"
+                  className="flex-1 rounded-xl p-3 border border-gray-300 focus:shadow-md focus:ring-2 focus:ring-[#0288D1] outline-none transition bg-white placeholder:text-gray-400"
                 />
                 <button
                   onClick={() => handleDiscount(code)}
@@ -389,7 +389,7 @@ const CheckoutPage = () => {
                 onChange={(e) => setNote(e.target.value)}
                 rows={2}
                 placeholder="VD: Giao trong giờ hành chính, gọi trước khi đến..."
-                className="w-full rounded-xl p-3 shadow-sm focus:shadow-md focus:ring-2 focus:ring-[#0288D1] outline-none transition bg-white resize-none placeholder:text-gray-400"
+                className="w-full rounded-xl p-3 border border-gray-300 focus:shadow-md focus:ring-2 focus:ring-[#0288D1] outline-none transition bg-white resize-none placeholder:text-gray-400"
               />
             </div>
 

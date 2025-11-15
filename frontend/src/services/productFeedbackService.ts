@@ -23,7 +23,7 @@ const getProductFeedbackDetailService = async (
 ) => {
   const orderDetailId = data.orderDetailId;
   return instance.get<ProductFeedBackDetailResponse>(
-    `user/product/feedback/${orderDetailId}`
+    `user/product/feedback/update/${orderDetailId}`
   );
 };
 
@@ -31,7 +31,7 @@ const updateProductFeedbackService = async (dt: AddOrUpdateFeedbackRequest) => {
   const { content, rating, orderDetailId } = dt;
   const data = { content, rating };
   return instance.patch<AddOrUpdateFeedbackResponse>(
-    `/user/product/feedback/update/${orderDetailId}`,
+    `/user/product/feedback/${orderDetailId}`,
     data
   );
 };

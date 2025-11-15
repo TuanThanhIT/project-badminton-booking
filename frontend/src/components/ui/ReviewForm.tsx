@@ -178,7 +178,7 @@ const ReviewForm = (props: ReviewFormProps) => {
             {...register("content", {
               required: "Nội dung đánh giá là bắt buộc!",
             })}
-            className="w-full border border-gray-300 rounded-2xl p-3 resize-none outline-none shadow-sm focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition"
+            className="w-full border border-gray-300 rounded-2xl p-3 resize-none outline-none shadow-sm focus:ring-2 focus:ring-green-400 focus:border-green-400 transition"
           />
           {errors.content && (
             <p className="text-red-500 text-sm mt-1">
@@ -204,7 +204,7 @@ const ReviewForm = (props: ReviewFormProps) => {
         {/* Submit */}
         <button
           type="submit"
-          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-orange-400 to-red-500 text-white font-semibold py-3 rounded-2xl shadow-lg hover:opacity-90 transition-all duration-200"
+          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-400 to-green-700 text-white font-semibold py-3 rounded-2xl shadow-lg hover:opacity-90 transition-all duration-200"
         >
           <Star size={20} /> {update ? "Lưu đánh giá" : "Gửi đánh giá"}
         </button>

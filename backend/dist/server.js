@@ -19,6 +19,7 @@ var _discountRoute2 = _interopRequireDefault(require("./routes/customer/discount
 var _orderRoute = _interopRequireDefault(require("./routes/customer/orderRoute.js"));
 var _momoRoute = _interopRequireDefault(require("./routes/customer/momoRoute.js"));
 var _productFeedbackRoute = _interopRequireDefault(require("./routes/customer/productFeedbackRoute.js"));
+var _contactRoute = _interopRequireDefault(require("./routes/customer/contactRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -40,6 +41,7 @@ app.use((0, _cors["default"])());
 (0, _orderRoute["default"])(app);
 (0, _momoRoute["default"])(app);
 (0, _productFeedbackRoute["default"])(app);
+(0, _contactRoute["default"])(app);
 
 // Admin
 (0, _roleRoute["default"])(app);

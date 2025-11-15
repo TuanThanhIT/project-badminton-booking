@@ -5,11 +5,14 @@ import type {
   AddOrUpdateFeedbackResponse,
   ProductFeedbackDetailRequest,
   ProductFeedBackDetailResponse,
+  ProductFeedbackRequest,
+  ProductFeedbackResponse,
 } from "../../types/productFeedback";
 import productFeedbackService from "../../services/productFeedbackService";
 
 interface ProductFeedbackState {
   productFeedbackDetail: ProductFeedBackDetailResponse | undefined;
+  productFeedbacks: ProductFeedbackResponse;
   message: string | undefined;
   loading: boolean;
   error: string | undefined;
@@ -17,6 +20,7 @@ interface ProductFeedbackState {
 
 const initialState: ProductFeedbackState = {
   productFeedbackDetail: undefined,
+  productFeedbacks: [],
   message: undefined,
   loading: false,
   error: undefined,
@@ -76,6 +80,22 @@ export const getProductFeedbackDetail = createAsyncThunk<
   }
 );
 
+export const getProductFeedback = createAsyncThunk<
+  ProductFeedbackResponse,
+  { data: ProductFeedbackRequest },
+  { rejectValue: ApiErrorType }
+>(
+  "/productFeedback/getProductFeedback",
+  async ({ data }, { rejectWithValue }) => {
+    try {
+      const res = await productFeedbackService.getProductFeedbackService(data);
+      return res.data as ProductFeedbackResponse;
+    } catch (error) {
+      return rejectWithValue(error as ApiErrorType);
+    }
+  }
+);
+
 const productFeedbackSlice = createSlice({
   name: "productFeedback",
   initialState,
@@ -127,6 +147,20 @@ const productFeedbackSlice = createSlice({
         state.message = action.payload.message;
       })
       .addCase(updateProductFeedback.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.userMessage;
+      })
+
+      // getProductFeedback
+      .addCase(getProductFeedback.pending, (state) => {
+        state.loading = true;
+        state.error = undefined;
+      })
+      .addCase(getProductFeedback.fulfilled, (state, action) => {
+        state.loading = false;
+        state.productFeedbacks = action.payload;
+      })
+      .addCase(getProductFeedback.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.userMessage;
       });

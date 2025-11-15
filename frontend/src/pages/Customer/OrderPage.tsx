@@ -311,8 +311,8 @@ const OrderPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-50 to-white py-12 px-4 sm:px-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-white p-10 sm:px-6">
+      <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
           <Package className="w-8 h-8 text-sky-700" />

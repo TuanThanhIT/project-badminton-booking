@@ -9,6 +9,7 @@ import {
   ProductVarient,
   User,
   ProductFeedback,
+  Profile,
 } from "../../models/index.js";
 
 const createOrderService = async (
@@ -31,10 +32,37 @@ const createOrderService = async (
         "Trạng thái đơn hàng không hợp lệ!"
       );
     }
-    const user = await User.findByPk(userId);
-    if (!user) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Người dùng không tồn tại!");
+
+    const user = await User.findByPk(userId, {
+      include: [
+        { model: Profile, attributes: ["fullName", "phoneNumber", "address"] },
+      ],
+    });
+
+    if (!user.Profile) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Thông tin giao hàng chưa được cập nhật!"
+      );
     }
+
+    const { fullName, address, phoneNumber } = user.Profile;
+
+    if (!fullName)
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Tên khách hàng không hợp lệ. Vui lòng cập nhật lại thông tin giao hàng!"
+      );
+    if (!address)
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Địa chỉ khách hàng không hợp lệ. Vui lòng cập nhật lại thông tin giao hàng!"
+      );
+    if (!phoneNumber || !/^\d{10}$/.test(phoneNumber))
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Số điện thoại khách hàng không hợp lệ. Vui lòng cập nhật lại thông tin giao hàng!"
+      );
 
     let order;
 
@@ -117,7 +145,7 @@ const getOrdersService = async (userId) => {
             {
               model: ProductVarient,
               as: "varient",
-              attributes: ["id","color", "size", "material"],
+              attributes: ["id", "color", "size", "material"],
               include: [
                 {
                   model: Product,

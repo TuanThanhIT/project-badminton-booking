@@ -9,8 +9,8 @@ const Footer = () => {
           <h3 className="font-bold text-sky-600 mb-3 text-lg">Địa chỉ</h3>
           <p>Đặt sân & Cửa hàng Cầu lông</p>
           <p>456 Nguyễn Văn Bảo, Quận Gò Vấp, TP.HCM</p>
-          <p>Điện thoại: +84 987 654 321</p>
-          <p>Email: support@badmintonvn.com</p>
+          <p>Điện thoại: 0901 234 567</p>
+          <p>Email: support@B-Hub.vn</p>
           <p>Giờ mở cửa: 6:00 - 23:00 (T2 - CN)</p>
         </div>
 

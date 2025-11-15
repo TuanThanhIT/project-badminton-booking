@@ -13,8 +13,12 @@ const initProductFeedbackCustomerRoute = (app) => {
     productFeedbackController.updateFeedback
   );
   productFeedbackRoute.get(
-    "/feedback/:id",
+    "/feedback/update/:id",
     productFeedbackController.getFeedbackUpdate
+  );
+  productFeedbackRoute.get(
+    "/feedback/:id",
+    productFeedbackController.getFeedbackProduct
   );
   app.use("/user/product", productFeedbackRoute);
 };

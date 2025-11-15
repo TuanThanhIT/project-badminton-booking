@@ -32,7 +32,7 @@ import {
   updateDiscount,
 } from "../../store/slices/discountSlice";
 import { useNavigate } from "react-router-dom";
-import { addOrder } from "../../store/slices/orderSlice";
+import { addOrder, clearOrdersError } from "../../store/slices/orderSlice";
 import type { AddOrderRequest, MomoPaymentRequest } from "../../types/order";
 import OrderService from "../../services/orderService";
 
@@ -63,6 +63,7 @@ const CheckoutPage = () => {
   const discountLoading = useAppSelector((state) => state.discount.loading);
   const cartError = useAppSelector((state) => state.cart.error);
   const discountError = useAppSelector((state) => state.discount.error);
+  const orderError = useAppSelector((state) => state.order.error);
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -83,14 +84,15 @@ const CheckoutPage = () => {
   }, [reset]);
 
   useEffect(() => {
-    const error = cartError || discountError;
+    const error = cartError || discountError || orderError;
     if (error) toast.error(error);
     if (cartError) dispatch(clearCartError());
     if (discountError) {
       dispatch(clearDiscountError());
       setCode("");
     }
-  }, [cartError, discountError, dispatch]);
+    if (orderError) dispatch(clearOrdersError());
+  }, [cartError, discountError, orderError, dispatch]);
 
   if (discountLoading || cartLoading) {
     return (
@@ -182,7 +184,7 @@ const CheckoutPage = () => {
   };
 
   return (
-    <div className="p-6 bg-gradient-to-b from-sky-50 to-white min-h-screen">
+    <div className="p-6 bg-white min-h-screen">
       {/* ==== Thông tin giao hàng ==== */}
       <div className="border border-gray-300 rounded-xl bg-white p-6 shadow-md">
         <div className="flex items-center gap-2 text-[#0288D1] font-semibold mb-4 text-lg">

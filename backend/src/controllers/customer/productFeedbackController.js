@@ -50,9 +50,21 @@ const updateFeedback = async (req, res, next) => {
     next(error);
   }
 };
+
+const getFeedbackProduct = async (req, res, next) => {
+  try {
+    const productId = req.params.id;
+    const productFeedback =
+      await productFeedbackService.getFeedbackProductService(productId);
+    return res.status(200).json(productFeedback);
+  } catch (error) {
+    next(error);
+  }
+};
 const productFeedbackController = {
   createProductFeedback,
   getFeedbackUpdate,
   updateFeedback,
+  getFeedbackProduct,
 };
 export default productFeedbackController;

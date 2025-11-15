@@ -13,6 +13,10 @@ import type {
 } from "../../types/product";
 import ProductsRelated from "../../components/ui/ProductsRelated";
 import ProductReviewList from "../../components/ui/ReviewList";
+import {
+  clearProductFeedbackError,
+  getProductFeedback,
+} from "../../store/slices/productFeedbackSlice";
 
 // --- format tiền ---
 const formatPrice = (n: number) =>
@@ -20,7 +24,13 @@ const formatPrice = (n: number) =>
 
 const ProductDetailPage: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { error } = useAppSelector((state) => state.cart);
+  const cartError = useAppSelector((state) => state.cart.error);
+  const productFeedbacks = useAppSelector(
+    (state) => state.productFeedback.productFeedbacks
+  );
+  const productFeedbackError = useAppSelector(
+    (state) => state.productFeedback.error
+  );
 
   // --- Params & Search ---
   const { id } = useParams();
@@ -134,11 +144,15 @@ const ProductDetailPage: React.FC = () => {
 
   // --- Xử lý lỗi chung ---
   useEffect(() => {
-    if (error) {
-      toast.error(error);
+    const error = cartError || productFeedbackError;
+    toast.error(error);
+    if (cartError) {
       dispatch(clearCartError());
     }
-  }, [error, dispatch]);
+    if (productFeedbackError) {
+      dispatch(clearProductFeedbackError());
+    }
+  }, [cartError, productFeedbackError, dispatch]);
 
   // --- Fetch sản phẩm liên quan ---
   useEffect(() => {
@@ -155,12 +169,18 @@ const ProductDetailPage: React.FC = () => {
     fetchProductsRelated();
   }, [product_id, category_id]);
 
+  // -- Lấy đánh giá
+  useEffect(() => {
+    const data = { productId: product_id };
+    dispatch(getProductFeedback({ data }));
+  }, [dispatch]);
+
   return (
     <div className="container mx-auto px-6 py-12">
       <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
         {/* Hình ảnh */}
         <div className="md:col-span-5 flex flex-col items-center space-y-4">
-          <div className="w-full bg-white border border-gray-400 p-6 flex items-center justify-center transition-all">
+          <div className="w-full bg-white border border-gray-200 rounded-2xl p-6 flex items-center justify-center transition-all">
             {mainImage ? (
               <img
                 src={mainImage}
@@ -318,7 +338,7 @@ const ProductDetailPage: React.FC = () => {
           </div>
 
           {/* Đánh giá của khách hàng */}
-          <ProductReviewList />
+          <ProductReviewList productFeedbacks={productFeedbacks} />
         </div>
       </div>
 

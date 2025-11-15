@@ -1,8 +1,11 @@
+import { da } from "zod/v4/locales";
 import type {
   AddOrUpdateFeedbackRequest,
   AddOrUpdateFeedbackResponse,
   ProductFeedbackDetailRequest,
   ProductFeedBackDetailResponse,
+  ProductFeedbackRequest,
+  ProductFeedbackResponse,
 } from "../types/productFeedback";
 import instance from "../utils/axiosCustomize";
 
@@ -28,14 +31,21 @@ const updateProductFeedbackService = async (dt: AddOrUpdateFeedbackRequest) => {
   const { content, rating, orderDetailId } = dt;
   const data = { content, rating };
   return instance.patch<AddOrUpdateFeedbackResponse>(
-    `/user/product/feedback/${orderDetailId}`,
+    `/user/product/feedback/update/${orderDetailId}`,
     data
   );
 };
 
+const getProductFeedbackService = async (data: ProductFeedbackRequest) => {
+  const { productId } = data;
+  return instance.get<ProductFeedbackResponse>(
+    `/user/product/feedback/${productId}`
+  );
+};
 const productFeedbackService = {
   createProductFeedbackService,
   getProductFeedbackDetailService,
   updateProductFeedbackService,
+  getProductFeedbackService,
 };
 export default productFeedbackService;

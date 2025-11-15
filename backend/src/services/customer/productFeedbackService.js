@@ -3,7 +3,10 @@ import ApiError from "../../utils/ApiError.js";
 import {
   Order,
   OrderDetail,
+  Product,
   ProductFeedback,
+  ProductVarient,
+  Profile,
   User,
 } from "../../models/index.js";
 
@@ -160,9 +163,68 @@ const updateFeedbackService = async (content, rate, userId, orderDetailId) => {
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
+
+const getFeedbackProductService = async (productId) => {
+  try {
+    const product = await Product.findByPk(productId, {
+      attributes: [],
+      include: [
+        {
+          model: ProductVarient,
+          as: "varients",
+          attributes: ["id"],
+        },
+      ],
+    });
+
+    if (!product) {
+      throw new ApiError(StatusCodes.NOT_FOUND, "Sản phẩm không tồn tại!");
+    }
+
+    // Lấy toàn bộ feedback theo varient
+    const productFeedbackList = await Promise.all(
+      product.varients.map((varient) =>
+        ProductFeedback.findAll({
+          where: { varientId: varient.id },
+          attributes: ["rating", "content", "updatedDate", "userId"],
+        })
+      )
+    );
+
+    const productFeedbacks = productFeedbackList.flat();
+
+    // Lấy thêm user + avatar
+    const productFeedbacksResult = await Promise.all(
+      productFeedbacks.map(async (pf) => {
+        const user = await User.findByPk(pf.userId, {
+          attributes: ["username"],
+          include: [
+            {
+              model: Profile,
+              attributes: ["avatar"],
+            },
+          ],
+        });
+
+        return {
+          ...pf.dataValues, // Lấy đúng data Feedback
+          username: user?.username || null,
+          avatar: user?.Profile?.avatar || null,
+        };
+      })
+    );
+
+    return productFeedbacksResult;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
+
 const productFeedbackService = {
   createFeedbackService,
   getFeedbackUpdateService,
   updateFeedbackService,
+  getFeedbackProductService,
 };
 export default productFeedbackService;

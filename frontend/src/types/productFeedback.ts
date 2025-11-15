@@ -17,3 +17,16 @@ export type ProductFeedBackDetailResponse = {
 export type ProductFeedbackDetailRequest = {
   orderDetailId: number;
 };
+
+export type ProductFeedbackRequest = {
+  productId: number;
+};
+
+export type ProductFeedbackResponse = {
+  rating: number;
+  content: string;
+  updatedDate: string;
+  userId: number;
+  username: string;
+  avatar: string;
+}[];

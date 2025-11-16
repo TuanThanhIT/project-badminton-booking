@@ -19,6 +19,8 @@ import ProductVarient from "./productVarient.js";
 import ProductImage from "./productImage.js";
 import ProductFeedback from "./productFeedback.js";
 import UserOtp from "./userOtp.js";
+import DiscountBooking from "./discountBooking.js";
+import PaymentBooking from "./paymentBooking.js";
 
 // Quan hệ n-1 giữa Role và User
 Role.hasMany(User, { foreignKey: "roleId" });
@@ -41,12 +43,20 @@ User.hasMany(Booking, { foreignKey: "userId" });
 Booking.belongsTo(User, { foreignKey: "userId" });
 
 // Quan hệ 1-1 giữa Booking và Court
-Court.hasOne(Booking, { foreignKey: "courtId" });
+Court.hasMany(Booking, { foreignKey: "courtId" });
 Booking.belongsTo(Court, { foreignKey: "courtId" });
 
+// Quan hệ 1-1 giữa Booking - Discount
+DiscountBooking.hasOne(Booking, { foreignKey: "discountId" });
+Booking.belongsTo(DiscountBooking, { foreignKey: "discountId" });
+
+//Quan hệ 1-1 giữa Booking - PaymentBooking
+Booking.hasOne(PaymentBooking, { foreignKey: "bookingId", as: "payment" });
+PaymentBooking.belongsTo(Booking, { foreignKey: "bookingId", as: "booking" });
+
 // Quan hệ 1-n giữa Court và CourtSchedule
-Court.hasMany(CourtSchedule, { foreignKey: "courtId" });
-CourtSchedule.belongsTo(Court, { foreignKey: "courtId" });
+Court.hasMany(CourtSchedule, { foreignKey: "courtId", as: "courtSchedules" });
+CourtSchedule.belongsTo(Court, { foreignKey: "courtId", as: "court" });
 
 // Quan hệ 1-n giữa User và Notification
 User.hasMany(Notification, { foreignKey: "userId" });
@@ -136,6 +146,8 @@ export {
   Booking,
   Court,
   CourtSchedule,
+  PaymentBooking,
+  DiscountBooking,
   Notification,
   Order,
   Discount,

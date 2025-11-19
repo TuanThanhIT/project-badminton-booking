@@ -21,6 +21,7 @@ import UserOtp from "./userOtp.js";
 import DiscountBooking from "./discountBooking.js";
 import PaymentBooking from "./paymentBooking.js";
 import BookingFeedback from "./bookingFeedback.js";
+import CourtPrice from "./courtPrice.js";
 
 // Quan hệ n-1 giữa Role và User
 Role.hasMany(User, { foreignKey: "roleId" });
@@ -169,4 +170,5 @@ export {
   ProductVarient,
   ProductFeedback,
   BookingFeedback,
+  CourtPrice,
 };

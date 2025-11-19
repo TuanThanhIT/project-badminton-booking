@@ -20,6 +20,9 @@ var _orderRoute = _interopRequireDefault(require("./routes/customer/orderRoute.j
 var _momoRoute = _interopRequireDefault(require("./routes/customer/momoRoute.js"));
 var _productFeedbackRoute = _interopRequireDefault(require("./routes/customer/productFeedbackRoute.js"));
 var _contactRoute = _interopRequireDefault(require("./routes/customer/contactRoute.js"));
+var _courtRoute = _interopRequireDefault(require("./routes/admin/courtRoute.js"));
+var _courtRoute2 = _interopRequireDefault(require("./routes/customer/courtRoute.js"));
+var _discountBooking = _interopRequireDefault(require("./routes/customer/discountBooking.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -42,12 +45,15 @@ app.use((0, _cors["default"])());
 (0, _momoRoute["default"])(app);
 (0, _productFeedbackRoute["default"])(app);
 (0, _contactRoute["default"])(app);
+(0, _courtRoute2["default"])(app);
+(0, _discountBooking["default"])(app);
 
 // Admin
 (0, _roleRoute["default"])(app);
 (0, _cateRoute["default"])(app);
 (0, _productRoute["default"])(app);
 (0, _discountRoute["default"])(app);
+(0, _courtRoute["default"])(app);
 app.use(_errorHandling.errorHandlingMiddleware);
 _db["default"].sync({
   force: false

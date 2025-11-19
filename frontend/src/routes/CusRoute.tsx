@@ -22,6 +22,7 @@ import CheckoutPage from "../pages/Customer/CheckoutPage";
 import OrderPage from "../pages/Customer/OrderPage";
 import OrderSuccessPage from "../pages/Customer/OrderSuccessPage";
 import MomoReturnPage from "../pages/Customer/MomoReturnPage";
+import BookingCourtDetailPage from "../pages/Customer/BooingCourtDetailPage";
 
 const CustomerRoute = () => {
   return (
@@ -56,6 +57,10 @@ const CustomerRoute = () => {
           <Route path="orders" element={<OrderPage />}></Route>
           <Route path="orders/success" element={<OrderSuccessPage />}></Route>
           <Route path="orders/momo-return" element={<MomoReturnPage />}></Route>
+          <Route
+            path="booking/:id"
+            element={<BookingCourtDetailPage />}
+          ></Route>
         </Route>
 
         <Route path="*" element={<NotFoundPage />}></Route>

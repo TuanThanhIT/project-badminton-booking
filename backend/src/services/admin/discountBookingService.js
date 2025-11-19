@@ -1,18 +1,18 @@
 import { StatusCodes } from "http-status-codes";
 import ApiError from "../../utils/ApiError.js";
-import { Discount } from "../../models/index.js";
+import DiscountBooking from "../../models/discountBooking.js";
 
-const createDiscountService = async (
+const createDiscountBookingService = async (
   code,
   type,
   value,
   startDate,
   endDate,
-  minOrderAmount
+  minBookingAmount
 ) => {
   try {
     // Kiểm tra trùng mã
-    const existingCode = await Discount.findOne({ where: { code } });
+    const existingCode = await DiscountBooking.findOne({ where: { code } });
     if (existingCode) {
       throw new ApiError(StatusCodes.BAD_REQUEST, "Mã giảm giá đã tồn tại!");
     }
@@ -55,32 +55,32 @@ const createDiscountService = async (
       );
     }
 
-    if (minOrderAmount < 0) {
+    if (minBookingAmount < 0) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Giá trị đơn hàng tối thiểu không hợp lệ!"
+        "Giá trị thanh toán tối thiểu không hợp lệ!"
       );
     }
 
     // Tạo discount
-    const discount = await Discount.create({
+    const discountBooking = await DiscountBooking.create({
       code: code.trim().toUpperCase(),
       type,
       value,
       startDate: start,
       endDate: end,
-      minOrderAmount,
+      minBookingAmount,
     });
 
-    return discount;
+    return discountBooking;
   } catch (error) {
     if (error instanceof ApiError) throw error;
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error.message);
   }
 };
 
-const discountService = {
-  createDiscountService,
+const discountBookingService = {
+  createDiscountBookingService,
 };
 
-export default discountService;
+export default discountBookingService;

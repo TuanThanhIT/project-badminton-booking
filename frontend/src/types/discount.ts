@@ -10,6 +10,11 @@ export type DiscountRequest = {
   orderAmount: number;
 };
 
+export type DiscountBookingRequest = {
+  code: string;
+  bookingAmount: number;
+};
+
 export type UpdateDiscountRequest = {
   code: string;
 };

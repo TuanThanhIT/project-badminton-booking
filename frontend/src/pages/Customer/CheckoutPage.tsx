@@ -56,6 +56,7 @@ const CheckoutPage = () => {
   const [note, setNote] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "MOMO">("COD");
   const [checkApply, setCheckApply] = useState<boolean>(false);
+  const [finalPrice, setFinalPrice] = useState<number>();
 
   const cart = useAppSelector((state) => state.cart.cart);
   const discount = useAppSelector((state) => state.discount.discount);
@@ -121,10 +122,11 @@ const CheckoutPage = () => {
         toast.error("Không có sản phẩm trong giỏ hàng");
         return;
       }
-      await dispatch(
+      const res = await dispatch(
         applyDiscount({ code, orderAmount: cart.totalAmount })
       ).unwrap();
       setCheckApply(true);
+      setFinalPrice(res.finalPrice);
       toast.success("Áp mã giảm giá sản phẩm thành công!");
     } catch (error) {
       // lỗi đã xử lý cục bộ
@@ -476,7 +478,7 @@ const CheckoutPage = () => {
                 Tổng tiền
               </span>
               <span className="text-2xl font-bold text-[#0288D1] tracking-wide">
-                {(discount?.finalPrice ?? cart?.totalAmount)?.toLocaleString()}₫
+                {(finalPrice ?? cart?.totalAmount)?.toLocaleString()}₫
               </span>
             </div>
 

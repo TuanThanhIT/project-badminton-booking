@@ -18,6 +18,10 @@ import initOrderCustomerRoute from "./routes/customer/orderRoute.js";
 import initMomoCustomerRoute from "./routes/customer/momoRoute.js";
 import initProductFeedbackCustomerRoute from "./routes/customer/productFeedbackRoute.js";
 import initContactCustomerRoute from "./routes/customer/contactRoute.js";
+import initCourtAdminRoute from "./routes/admin/courtRoute.js";
+import initCourtCustomerRoute from "./routes/customer/courtRoute.js";
+import initDiscountBookingCustomerRoute from "./routes/customer/discountBooking.js";
+import initDiscountBookingAdminRoute from "./routes/admin/discountBookingRoute.js";
 
 dotenv.config();
 
@@ -41,12 +45,16 @@ initOrderCustomerRoute(app);
 initMomoCustomerRoute(app);
 initProductFeedbackCustomerRoute(app);
 initContactCustomerRoute(app);
+initCourtCustomerRoute(app);
+initDiscountBookingCustomerRoute(app);
 
 // Admin
 initRoleRoute(app);
 initCateAdminRoute(app);
 initProductAdminRoute(app);
 initDiscountAdminRoute(app);
+initCourtAdminRoute(app);
+initDiscountBookingAdminRoute(app);
 
 app.use(errorHandlingMiddleware);
 

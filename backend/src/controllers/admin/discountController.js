@@ -2,13 +2,11 @@ import discountService from "../../services/admin/discountService.js";
 
 const createDiscount = async (req, res, next) => {
   try {
-    const { code, type, value, quantity, startDate, endDate, minOrderAmount } =
-      req.body;
+    const { code, type, value, startDate, endDate, minOrderAmount } = req.body;
     const discount = await discountService.createDiscountService(
       code,
       type,
       value,
-      quantity,
       startDate,
       endDate,
       minOrderAmount

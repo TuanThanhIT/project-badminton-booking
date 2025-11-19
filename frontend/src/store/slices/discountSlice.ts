@@ -5,6 +5,7 @@ import type {
 } from "../../types/discount";
 import type { ApiErrorType } from "../../types/error";
 import discountService from "../../services/discountService";
+import discountBookingService from "../../services/discountBookingService";
 
 interface DiscountState {
   discount?: DiscountResponse;
@@ -29,6 +30,25 @@ export const applyDiscount = createAsyncThunk<
   async ({ code, orderAmount }, { rejectWithValue }) => {
     try {
       const res = await discountService.applyDiscountService(code, orderAmount);
+      return res.data as DiscountResponse;
+    } catch (error) {
+      return rejectWithValue(error as ApiErrorType);
+    }
+  }
+);
+
+export const applyDiscountBooking = createAsyncThunk<
+  DiscountResponse,
+  { code: string; bookingAmount: number },
+  { rejectValue: ApiErrorType }
+>(
+  "discount/applyDiscountBooking",
+  async ({ code, bookingAmount }, { rejectWithValue }) => {
+    try {
+      const res = await discountBookingService.applyDiscountBookingService(
+        code,
+        bookingAmount
+      );
       return res.data as DiscountResponse;
     } catch (error) {
       return rejectWithValue(error as ApiErrorType);
@@ -84,6 +104,19 @@ const discountSlice = createSlice({
         state.message = action.payload.message;
       })
       .addCase(updateDiscount.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.userMessage;
+      })
+      // applyDiscountBooking
+      .addCase(applyDiscountBooking.pending, (state) => {
+        state.loading = true;
+        state.error = undefined;
+      })
+      .addCase(applyDiscountBooking.fulfilled, (state, action) => {
+        state.loading = false;
+        state.discount = action.payload;
+      })
+      .addCase(applyDiscountBooking.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.userMessage;
       });

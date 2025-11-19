@@ -1,8 +1,51 @@
 import { Target, Eye, Heart, Calendar } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "../../store/hook";
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import { useEffect } from "react";
+import { getCourtPrice } from "../../store/slices/courtSlice";
+
+interface CourtPrice {
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+  price: number;
+  periodType: string;
+}
 
 const AboutPage = () => {
+  const dispatch = useAppDispatch();
+  const courtPrices = useAppSelector((state) => state.court.courtPrices);
+
+  const columnHelper = createColumnHelper<CourtPrice>();
+
+  useEffect(() => {
+    dispatch(getCourtPrice());
+  }, [dispatch]);
+
+  const columns = [
+    columnHelper.accessor("dayOfWeek", { header: "Thứ" }),
+    columnHelper.accessor("startTime", { header: "Giờ bắt đầu" }),
+    columnHelper.accessor("endTime", { header: "Giờ kết thúc" }),
+    columnHelper.accessor("price", {
+      header: "Giá sân",
+      cell: (info) => info.getValue<number>().toLocaleString("vi-VN") + " ₫",
+    }),
+    columnHelper.accessor("periodType", { header: "Khung giờ" }),
+  ];
+
+  const table = useReactTable({
+    data: courtPrices,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
   return (
-    <div className="max-w-5xl mx-auto p-10 space-y-8">
+    <div className="max-w-5xl mx-auto p-10 space-y-12">
       {/* Header / Banner */}
       <div className="flex items-center gap-3">
         <Target className="w-8 h-8 text-sky-700" />
@@ -10,7 +53,6 @@ const AboutPage = () => {
           B-Hub | Đặt Sân & Mua Sắm Cầu Lông Chất Lượng
         </h1>
       </div>
-
       {/* Giới thiệu ngắn */}
       <section className="space-y-4">
         <p className="text-gray-700">
@@ -28,9 +70,9 @@ const AboutPage = () => {
 
       {/* Hình minh họa sản phẩm */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-5">
           <img
-            src="/img/gioithieu2.jpg"
+            src="/img/gioithieu1.jpg"
             alt="Shuttlecock close-up"
             className="w-full rounded-lg shadow-md"
           />
@@ -40,13 +82,25 @@ const AboutPage = () => {
             className="w-full rounded-lg shadow-md"
           />
         </div>
-        <img
-          src="/img/gioithieu1.jpg"
-          alt="Người đánh cầu lông"
-          className="w-full h-9/10 rounded-lg shadow-md"
-        />
-      </section>
 
+        <div className="flex flex-col gap-5">
+          <img
+            src="/img/gioithieu6.jpg"
+            alt="Shuttlecock close-up"
+            className="w-full rounded-lg shadow-md"
+          />{" "}
+          <img
+            src="/img/gioithieu7.jpg"
+            alt="Người đánh cầu lông"
+            className="w-full rounded-lg shadow-md"
+          />
+          <img
+            src="/img/gioithieu2.jpg"
+            alt="Người đánh cầu lông"
+            className="w-full rounded-lg shadow-md"
+          />
+        </div>
+      </section>
       {/* Tầm nhìn & sứ mệnh */}
       <section className="space-y-4">
         <div className="flex items-center gap-2">
@@ -62,7 +116,6 @@ const AboutPage = () => {
           tâm và trải nghiệm chuyên nghiệp cho mọi khách hàng.
         </p>
       </section>
-
       {/* Giá trị cốt lõi */}
       <section className="space-y-4">
         <div className="flex items-center gap-2">
@@ -89,7 +142,6 @@ const AboutPage = () => {
           </li>
         </ul>
       </section>
-
       {/* Sự kiện & Giải đấu định kỳ */}
       <section className="space-y-4">
         <div className="flex items-center gap-2">
@@ -113,7 +165,6 @@ const AboutPage = () => {
           className="w-full rounded-lg shadow-md"
         />
       </section>
-
       {/* Banner sản phẩm cuối */}
       <div className="relative w-full h-full rounded-lg overflow-hidden shadow-lg">
         <img
@@ -122,6 +173,59 @@ const AboutPage = () => {
           className="w-full h-full object-cover"
         />
       </div>
+      {/* Bảng giá đặt sân */}
+      <section className="space-y-6">
+        {/* Tiêu đề với icon */}
+        <div className="flex items-center gap-2">
+          <Calendar className="w-6 h-6 text-sky-600" />
+          <h2 className="text-2xl font-bold text-sky-800">Bảng giá đặt sân</h2>
+        </div>
+
+        {/* Bảng full-width */}
+        <div className="w-full overflow-x-auto rounded-lg shadow-lg border">
+          <table className="min-w-full border-collapse">
+            <thead className="bg-gray-100">
+              {table.getHeaderGroups().map((headerGroup: any) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header: any) => (
+                    <th
+                      key={header.id}
+                      className="border-b border-gray-200 p-4 text-left text-gray-700 font-semibold uppercase text-sm"
+                    >
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody>
+              {table.getRowModel().rows.map((row, rowIndex) => (
+                <tr
+                  key={row.id}
+                  className={`transition-colors hover:bg-sky-50 ${
+                    rowIndex % 2 === 0 ? "bg-white" : "bg-gray-50"
+                  }`}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td
+                      key={cell.id}
+                      className="border-b border-gray-200 p-4 text-gray-700 whitespace-nowrap"
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 };

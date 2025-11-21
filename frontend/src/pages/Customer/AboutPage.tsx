@@ -72,7 +72,7 @@ const AboutPage = () => {
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="flex flex-col gap-5">
           <img
-            src="/img/gioithieu1.jpg"
+            src="/img/gioithieu7.jpg"
             alt="Shuttlecock close-up"
             className="w-full rounded-lg shadow-md"
           />
@@ -81,21 +81,21 @@ const AboutPage = () => {
             alt="Shuttlecock close-up"
             className="w-full rounded-lg shadow-md"
           />
-        </div>
-
-        <div className="flex flex-col gap-5">
           <img
             src="/img/gioithieu6.jpg"
             alt="Shuttlecock close-up"
             className="w-full rounded-lg shadow-md"
-          />{" "}
+          />
+        </div>
+
+        <div className="flex flex-col gap-5">
           <img
-            src="/img/gioithieu7.jpg"
+            src="/img/gioithieu1.jpg"
             alt="Người đánh cầu lông"
             className="w-full rounded-lg shadow-md"
           />
           <img
-            src="/img/gioithieu2.jpg"
+            src="/img/gioithieu8.jpg"
             alt="Người đánh cầu lông"
             className="w-full rounded-lg shadow-md"
           />

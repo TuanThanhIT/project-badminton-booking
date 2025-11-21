@@ -68,6 +68,20 @@ export const updateDiscount = createAsyncThunk<
     return rejectWithValue(error as ApiErrorType);
   }
 });
+
+export const updateDiscountBooking = createAsyncThunk<
+  UpdateDiscountResponse,
+  { code: string },
+  { rejectValue: ApiErrorType }
+>("discount/updateDiscountBooking", async ({ code }, { rejectWithValue }) => {
+  try {
+    const res = await discountBookingService.updateDiscountBookingService(code);
+    return res.data as UpdateDiscountResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
 const discountSlice = createSlice({
   name: "discount",
   initialState,
@@ -117,6 +131,20 @@ const discountSlice = createSlice({
         state.discount = action.payload;
       })
       .addCase(applyDiscountBooking.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.userMessage;
+      })
+
+      // updateDiscountBooking
+      .addCase(updateDiscountBooking.pending, (state) => {
+        state.loading = true;
+        state.error = undefined;
+      })
+      .addCase(updateDiscountBooking.fulfilled, (state, action) => {
+        state.loading = false;
+        state.message = action.payload.message;
+      })
+      .addCase(updateDiscountBooking.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.userMessage;
       });

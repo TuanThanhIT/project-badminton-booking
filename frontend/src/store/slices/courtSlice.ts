@@ -84,10 +84,11 @@ const courtSlice = createSlice({
       action: PayloadAction<{
         selectedSlots: CourtScheduleInfo[];
         weekday: string;
+        courtId: number;
       }>
     ) {
       const toHour = (t: string) => Number(t.split(":")[0]); // "08:00" -> 8
-      const { selectedSlots, weekday } = action.payload;
+      const { selectedSlots, weekday, courtId } = action.payload;
       if (!state.courtPrices || state.courtPrices.length === 0) return;
       let total = 0;
 
@@ -105,7 +106,7 @@ const courtSlice = createSlice({
 
       state.bookingAmount = total;
 
-      localStorage.setItem("bookingAmount", String(total)); // Lưu lại
+      localStorage.setItem(`bookingAmount_${courtId}`, String(total)); // Lưu lại
     },
 
     setBookingAmountLocal(state, action: PayloadAction<{ amount: number }>) {

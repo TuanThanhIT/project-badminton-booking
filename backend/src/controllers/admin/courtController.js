@@ -43,7 +43,7 @@ export const createWeeklySlots = async (req, res, next) => {
     const { startDate } = req.body;
     await courtService.createWeeklySlotsService(startDate);
     return res
-      .status(StatusCodes.CREATED)
+      .status(201)
       .json({ message: "Đã tạo slot 7 ngày cho tất cả sân!" });
   } catch (error) {
     next(error);

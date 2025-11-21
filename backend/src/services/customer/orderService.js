@@ -68,7 +68,7 @@ const createOrderService = async (
 
     if (code) {
       const discount = await Discount.findOne({ where: { code } });
-      if (!code) {
+      if (!discount) {
         throw new ApiError(
           StatusCodes.NOT_FOUND,
           "Mã giảm giá không chính xác!"

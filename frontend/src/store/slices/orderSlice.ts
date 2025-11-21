@@ -7,7 +7,7 @@ import type {
   OrderCancelResponse,
   OrderListResponse,
 } from "../../types/order";
-import OrderService from "../../services/orderService";
+import orderService from "../../services/orderService";
 
 interface OrderState {
   orders: OrderListResponse;
@@ -31,7 +31,7 @@ export const addOrder = createAsyncThunk<
   { rejectValue: ApiErrorType }
 >("order/addOrder", async ({ data }, { rejectWithValue }) => {
   try {
-    const res = await OrderService.createOrderService(data);
+    const res = await orderService.createOrderService(data);
     return res.data as AddOrderResponse;
   } catch (error) {
     return rejectWithValue(error as ApiErrorType);
@@ -44,7 +44,7 @@ export const getOrders = createAsyncThunk<
   { rejectValue: ApiErrorType }
 >("order/getOrders", async (_, { rejectWithValue }) => {
   try {
-    const res = await OrderService.getOrderService();
+    const res = await orderService.getOrderService();
     return res.data as OrderListResponse;
   } catch (error) {
     return rejectWithValue(error as ApiErrorType);
@@ -57,7 +57,7 @@ export const cancelOrder = createAsyncThunk<
   { rejectValue: ApiErrorType }
 >("order/cancelOrder", async ({ data }, { rejectWithValue }) => {
   try {
-    const res = await OrderService.cancelOrderService(data);
+    const res = await orderService.cancelOrderService(data);
     return res.data as OrderCancelResponse;
   } catch (error) {
     return rejectWithValue(error as ApiErrorType);

@@ -22,6 +22,7 @@ import DiscountBooking from "./discountBooking.js";
 import PaymentBooking from "./paymentBooking.js";
 import BookingFeedback from "./bookingFeedback.js";
 import CourtPrice from "./courtPrice.js";
+import BookingDetail from "./bookingDetail.js";
 
 // Quan hệ n-1 giữa Role và User
 Role.hasMany(User, { foreignKey: "roleId" });
@@ -36,8 +37,8 @@ User.hasMany(Report, { foreignKey: "userId" });
 Report.belongsTo(User, { foreignKey: "userId" });
 
 // Quan hệ 1-n User -> BookingFeedback
-User.hasMany(BookingFeedback, { foreignKey: "userId" });
-BookingFeedback.belongsTo(User, { foreignKey: "userId" });
+User.hasMany(BookingFeedback, { foreignKey: "userId", as: "bookingFeedbacks" });
+BookingFeedback.belongsTo(User, { foreignKey: "userId", as: "user" });
 
 // Quan hệ 1-1 Booking -> BookingFeedback
 Booking.hasOne(BookingFeedback, { foreignKey: "bookingId" });
@@ -51,17 +52,33 @@ BookingFeedback.belongsTo(Court, { foreignKey: "courtId" });
 User.hasMany(Booking, { foreignKey: "userId" });
 Booking.belongsTo(User, { foreignKey: "userId" });
 
-// Quan hệ 1-1 giữa Booking và Court
-Court.hasMany(Booking, { foreignKey: "courtId" });
-Booking.belongsTo(Court, { foreignKey: "courtId" });
-
 // Quan hệ 1-1 giữa Booking - Discount
 DiscountBooking.hasOne(Booking, { foreignKey: "discountId" });
 Booking.belongsTo(DiscountBooking, { foreignKey: "discountId" });
 
 //Quan hệ 1-1 giữa Booking - PaymentBooking
-Booking.hasOne(PaymentBooking, { foreignKey: "bookingId", as: "payment" });
+Booking.hasOne(PaymentBooking, {
+  foreignKey: "bookingId",
+  as: "paymentBooking",
+});
 PaymentBooking.belongsTo(Booking, { foreignKey: "bookingId", as: "booking" });
+
+// Quan hệ 1-n giữa Booking và BooingDetail
+Booking.hasMany(BookingDetail, {
+  foreignKey: "bookingId",
+  as: "bookingDetails",
+});
+BookingDetail.belongsTo(Booking, { foreignKey: "bookingId", as: "booking" });
+
+// Quan hệ 1-1 giữ BookingDetail và CourtSchedule
+CourtSchedule.hasOne(BookingDetail, {
+  foreignKey: "courtScheduleId",
+  as: "bookingDetails",
+});
+BookingDetail.belongsTo(CourtSchedule, {
+  foreignKey: "courtScheduleId",
+  as: "courtSchedule",
+});
 
 // Quan hệ 1-n giữa Court và CourtSchedule
 Court.hasMany(CourtSchedule, { foreignKey: "courtId", as: "courtSchedules" });
@@ -171,4 +188,5 @@ export {
   ProductFeedback,
   BookingFeedback,
   CourtPrice,
+  BookingDetail,
 };

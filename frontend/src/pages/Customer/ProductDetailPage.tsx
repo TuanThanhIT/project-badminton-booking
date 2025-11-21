@@ -338,7 +338,10 @@ const ProductDetailPage: React.FC = () => {
           </div>
 
           {/* Đánh giá của khách hàng */}
-          <ProductReviewList productFeedbacks={productFeedbacks} />
+          <ProductReviewList
+            productFeedbacks={productFeedbacks}
+            type="product"
+          />
         </div>
       </div>
 

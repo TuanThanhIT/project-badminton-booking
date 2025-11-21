@@ -81,7 +81,8 @@ export type MoMoPaymentResponse = {
 };
 
 export type MomoPaymentRequest = {
-  orderId: string;
+  entityId: string;
   amount: number;
   orderInfo: string;
+  type: string;
 };

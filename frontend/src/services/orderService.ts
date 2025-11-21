@@ -4,8 +4,6 @@ import {
   type AddOrderResponse,
   type OrderCancelRequest,
   type OrderCancelResponse,
-  type MoMoPaymentResponse,
-  type MomoPaymentRequest,
 } from "../types/order";
 import instance from "../utils/axiosCustomize";
 
@@ -23,16 +21,9 @@ const cancelOrderService = (data: OrderCancelRequest) => {
   });
 };
 
-const createMoMoPaymentService = async (data: MomoPaymentRequest) => {
-  return instance.post<MoMoPaymentResponse>(
-    "/user/momo/create-momo-payment",
-    data
-  );
-};
-const OrderService = {
+const orderService = {
   createOrderService,
   getOrderService,
   cancelOrderService,
-  createMoMoPaymentService,
 };
-export default OrderService;
+export default orderService;

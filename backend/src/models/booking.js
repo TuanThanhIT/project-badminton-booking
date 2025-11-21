@@ -15,18 +15,10 @@ const Booking = sequelize.define(
       allowNull: false,
       defaultValue: "Pending",
     },
-    bookingDate: { type: DataTypes.DATEONLY, allowNull: false },
-    startTime: { type: DataTypes.TIME, allowNull: false },
-    endTime: { type: DataTypes.TIME, allowNull: false },
-    notes: { type: DataTypes.STRING(1000) },
+    totalAmount: { type: DataTypes.DOUBLE, allowNull: false },
     userId: {
       type: DataTypes.INTEGER,
       references: { model: "Users", key: "id" },
-      allowNull: false,
-    },
-    courtId: {
-      type: DataTypes.INTEGER,
-      references: { model: "Courts", key: "id" },
       allowNull: false,
     },
     discountId: {
@@ -34,7 +26,7 @@ const Booking = sequelize.define(
       references: { model: "Discounts", key: "id" },
       allowNull: true,
     },
-    totalAmount: { type: DataTypes.DOUBLE, allowNull: false },
+    note: { type: DataTypes.STRING(1000), allowNull: true }, // giữ note ở đây
     cancelledBy: {
       type: DataTypes.ENUM("User", "Employee", "System"),
       allowNull: true,

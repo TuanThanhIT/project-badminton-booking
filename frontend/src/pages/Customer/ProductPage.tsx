@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Folder, Filter } from "lucide-react";
 import { toast } from "react-toastify";
 import Breadcrumb from "../../components/ui/Breadcrumb";

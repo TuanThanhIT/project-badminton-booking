@@ -1,4 +1,3 @@
-// OTPPage.tsx
 import React, { useEffect, useState, useRef } from "react";
 import authService from "../../services/authService";
 import { useLocation, useNavigate } from "react-router-dom";

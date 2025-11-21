@@ -2,11 +2,6 @@ import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../store/hook";
 import { toast } from "react-toastify";
 import {
-  cancelOrder,
-  clearOrdersError,
-  getOrders,
-} from "../../store/slices/orderSlice";
-import {
   Loader2,
   Package,
   CalendarClock,
@@ -14,14 +9,21 @@ import {
   XCircle,
   CreditCard,
   MapPin,
+  Calendar1,
 } from "lucide-react";
+
 import type { ApiErrorType } from "../../types/error";
-import type {
-  MomoPaymentRequest,
-  OrderCancelRequest,
-  OrderResponse,
-} from "../../types/order";
+import type { MomoPaymentRequest } from "../../types/order";
 import momoService from "../../services/momoService";
+import {
+  cancelBooking,
+  clearBookingsError,
+  getBookings,
+} from "../../store/slices/bookingSlice";
+import type {
+  BookingCancelRequest,
+  BookingResponse,
+} from "../../types/booking";
 import CancelForm from "../../components/ui/CancelForm";
 
 const statusColor = {
@@ -39,21 +41,22 @@ const statusLabelVN: Record<ActiveStatus | "All", string> = {
   Confirmed: "Đã xác nhận",
 };
 
-const OrderPage = () => {
+const BookingPage = () => {
   const dispatch = useAppDispatch();
-  const { orders, loading, error } = useAppSelector((s) => s.order);
+  const { bookings, loading, error } = useAppSelector((s) => s.booking);
+
   const [filterStatus, setFilterStatus] = useState<ActiveStatus | "All">("All");
   const [openCancel, setOpenCancel] = useState(false);
-  const [orderId, setOrderId] = useState<number>(0);
+  const [bookingId, setBookingId] = useState<number>(0);
 
   useEffect(() => {
-    dispatch(getOrders());
+    dispatch(getBookings());
   }, [dispatch]);
 
   useEffect(() => {
     if (error) {
       toast.error(error);
-      dispatch(clearOrdersError());
+      dispatch(clearBookingsError());
     }
   }, [error, dispatch]);
 
@@ -61,28 +64,28 @@ const OrderPage = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-sky-50 to-white">
         <Loader2 className="w-10 h-10 text-sky-600 animate-spin mb-3" />
-        <p className="text-gray-600 font-medium">Đang tải đơn hàng...</p>
+        <p className="text-gray-600 font-medium">Đang tải lịch đặt sân...</p>
       </div>
     );
   }
 
-  const activeOrders = orders.filter((o) =>
-    ["Pending", "Paid", "Confirmed"].includes(o.orderStatus)
+  const activeBookings = bookings.filter((b) =>
+    ["Pending", "Paid", "Confirmed"].includes(b.bookingStatus)
   );
 
-  const filteredOrders =
+  const filteredBookings =
     filterStatus === "All"
-      ? activeOrders
-      : activeOrders.filter((o) => o.orderStatus === filterStatus);
+      ? activeBookings
+      : activeBookings.filter((b) => b.bookingStatus === filterStatus);
 
-  const handlePaymentAgain = async (orderId: number, totalAmount: number) => {
+  const handlePaymentAgain = async (bookingId: number, totalAmount: number) => {
     try {
-      const momoOrderId = `${orderId}_${Date.now()}`;
+      const momoBookingId = `${bookingId}_${Date.now()}`;
       const data: MomoPaymentRequest = {
-        entityId: momoOrderId,
+        entityId: momoBookingId,
         amount: totalAmount,
-        orderInfo: `Thanh toán đơn hàng #${orderId}`,
-        type: "order",
+        orderInfo: `Thanh toán đơn đặt sân #${bookingId}`,
+        type: "booking",
       };
       const res = await momoService.createMoMoPaymentService(data);
       if (res.data.payUrl) {
@@ -94,7 +97,7 @@ const OrderPage = () => {
     }
   };
 
-  const renderOrderCard = (order: OrderResponse, index: number) => {
+  const renderBookingCard = (booking: BookingResponse, index: number) => {
     const statusStyle = {
       Pending:
         "bg-yellow-50 text-yellow-700 border-yellow-200 flex items-center gap-1",
@@ -105,106 +108,108 @@ const OrderPage = () => {
 
     return (
       <div
-        key={order.id || index}
+        key={booking.id || index}
         className="relative border-l-2 border-sky-100 pl-6 mb-8"
       >
         {/* Chấm trạng thái */}
         <div
           className={`absolute -left-[10px] top-2 w-5 h-5 rounded-full ring-4 ring-white shadow-sm ${
-            order.orderStatus === "Pending"
+            booking.bookingStatus === "Pending"
               ? "bg-yellow-500"
-              : order.orderStatus === "Paid"
+              : booking.bookingStatus === "Paid"
               ? "bg-blue-500"
               : "bg-orange-500"
           }`}
         />
 
         {/* Card chính */}
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 p-5">
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 p-5 mb-6">
           {/* Header */}
           <div className="flex flex-wrap justify-between items-start mb-4">
-            <div>
+            <div className="flex-1 min-w-[200px]">
               <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <Package className="w-5 h-5 text-sky-600" />
-                Đơn hàng #{String(index + 1).padStart(3, "0")}
+                <Calendar1 className="w-5 h-5 text-sky-600" />
+                Lịch đặt sân #{String(index + 1).padStart(3, "0")}
               </h3>
               <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
                 <CalendarClock className="w-4 h-4 text-sky-600" />
                 <span>
-                  {new Date(order.createdDate).toLocaleString("vi-VN")}
+                  {new Date(booking.createdDate).toLocaleString("vi-VN")}
                 </span>
               </div>
             </div>
+
             <div
               className={`px-3 py-1.5 rounded-full text-sm font-semibold border ${
-                statusStyle[order.orderStatus as keyof typeof statusStyle]
+                statusStyle[booking.bookingStatus as keyof typeof statusStyle]
               }`}
             >
-              {statusLabelVN[order.orderStatus as keyof typeof statusLabelVN]}
+              {
+                statusLabelVN[
+                  booking.bookingStatus as keyof typeof statusLabelVN
+                ]
+              }
             </div>
           </div>
 
-          {/* Items */}
-          <div className="divide-y divide-gray-100 mb-4">
-            {order.orderDetails.map((od, idx) => (
-              <div
-                key={idx}
-                className="py-4 flex items-center justify-between gap-4"
-              >
-                <div className="flex gap-4 flex-1">
-                  <div className="w-16 h-16 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 flex-shrink-0">
-                    <img
-                      src={od.varient.product.thumbnailUrl}
-                      alt={od.varient.product.productName}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-800 truncate">
-                      {od.varient.product.productName}
-                    </h4>
-                    <div className="text-xs text-gray-600 flex flex-wrap gap-2 mt-1">
-                      <span>Màu: {od.varient.color}</span>
-                      <span>•</span>
-                      <span>Size: {od.varient.size}</span>
-                      {od.varient.material && (
-                        <>
-                          <span>•</span>
-                          <span>Chất liệu: {od.varient.material}</span>
-                        </>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-700 mt-1">
-                      SL: {od.quantity}
-                    </p>
-                  </div>
-                </div>
-                <p className="font-semibold text-sky-700 whitespace-nowrap">
-                  {od.subTotal.toLocaleString("vi-VN")}₫
-                </p>
+          {/* Thông tin sân */}
+          <div className="flex items-start gap-4 mb-4">
+            {/* Ảnh sân */}
+            <div className="w-24 h-24 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 flex-shrink-0">
+              <img
+                src={booking.court.thumbnailUrl}
+                alt={booking.court.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            {/* Thông tin */}
+            <div className="flex-1 flex flex-col justify-start">
+              {/* Tên sân */}
+              <h4 className="font-semibold text-gray-900 text-lg mb-2 truncate">
+                {booking.court.name}
+              </h4>
+
+              {/* Ngày (basic) */}
+              <span className="inline-block px-2 py-1 text-gray-700 text-sm mb-2">
+                <span className="font-bold">Ngày đặt:</span>{" "}
+                {booking.court.date}
+              </span>
+
+              {/* Khung giờ */}
+              <div className="flex flex-wrap gap-2">
+                {booking.timeSlots.map((slot, idx) => (
+                  <span
+                    key={idx}
+                    className="px-3 py-1 border border-green-300 text-green-800 text-sm font-medium rounded-full"
+                  >
+                    {slot}
+                  </span>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
 
           {/* Footer */}
-          <div className="mt-4 flex justify-between items-center text-sm text-gray-600 flex-wrap gap-3">
+          <div className="flex justify-between items-center text-sm text-gray-600 flex-wrap gap-3">
             <div className="flex items-center gap-2 text-gray-700 flex-1 min-w-[120px]">
               <MapPin className="w-4 h-4 text-sky-600" />
               <span>Thanh toán:</span>
               <span className="font-medium text-gray-800">
-                {order.payment.paymentMethod}
+                {booking.paymentBooking.paymentMethod}
               </span>
             </div>
             <div className="flex items-center gap-2 text-sky-700 font-bold text-lg min-w-[120px]">
               <DollarSign className="w-4 h-4" />
-              <span>{order.totalAmount.toLocaleString("vi-VN")}₫</span>
+              <span>{booking.totalAmount.toLocaleString("vi-VN")}₫</span>
             </div>
+
             <div className="flex items-center gap-2 flex-wrap">
-              {order.payment.paymentMethod === "Momo" &&
-                order.orderStatus === "Pending" && (
+              {booking.paymentBooking.paymentMethod === "Momo" &&
+                booking.bookingStatus === "Pending" && (
                   <button
                     onClick={() =>
-                      handlePaymentAgain(order.id, order.totalAmount)
+                      handlePaymentAgain(booking.id, booking.totalAmount)
                     }
                     className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 shadow-sm text-sm font-medium"
                   >
@@ -212,11 +217,11 @@ const OrderPage = () => {
                     Thanh toán
                   </button>
                 )}
-              {(order.orderStatus === "Pending" ||
-                order.orderStatus === "Paid") && (
+              {(booking.bookingStatus === "Pending" ||
+                booking.bookingStatus === "Paid") && (
                 <button
                   onClick={() => {
-                    setOrderId(order.id);
+                    setBookingId(booking.id);
                     setOpenCancel(true);
                   }}
                   className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 shadow-sm text-sm font-medium"
@@ -234,13 +239,13 @@ const OrderPage = () => {
 
   const onSubmit = async (dt: any) => {
     try {
-      const data: OrderCancelRequest = {
-        orderId,
+      const data: BookingCancelRequest = {
+        bookingId,
         cancelReason: dt.cancelReason,
       };
-      const res = await dispatch(cancelOrder({ data })).unwrap();
+      const res = await dispatch(cancelBooking({ data })).unwrap();
       toast.success(res.message);
-      await dispatch(getOrders());
+      await dispatch(getBookings());
       setOpenCancel(false);
     } catch (error) {
       // không xử lý lỗi nữa
@@ -261,7 +266,9 @@ const OrderPage = () => {
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
           <Package className="w-8 h-8 text-sky-700" />
-          <h1 className="text-3xl font-bold text-sky-800">Đơn hàng của bạn</h1>
+          <h1 className="text-3xl font-bold text-sky-800">
+            Lịch đặt sân của bạn
+          </h1>
         </div>
 
         {/* Filter buttons */}
@@ -269,8 +276,9 @@ const OrderPage = () => {
           {(["All", "Pending", "Paid", "Confirmed"] as const).map((status) => {
             const count =
               status === "All"
-                ? activeOrders.length
-                : activeOrders.filter((o) => o.orderStatus === status).length;
+                ? activeBookings.length
+                : activeBookings.filter((o) => o.bookingStatus === status)
+                    .length;
 
             return (
               <button
@@ -297,17 +305,19 @@ const OrderPage = () => {
           })}
         </div>
 
-        {/* Order list */}
-        {filteredOrders.length > 0 ? (
-          <div className="space-y-6">{filteredOrders.map(renderOrderCard)}</div>
+        {/* Booking list */}
+        {filteredBookings.length > 0 ? (
+          <div className="space-y-6">
+            {filteredBookings.map(renderBookingCard)}
+          </div>
         ) : (
           <div className="text-center py-16 bg-white rounded-2xl shadow-sm border border-gray-100">
             <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-700 mb-1">
-              Không có đơn hàng
+              Không có lịch đặt sân
             </h3>
             <p className="text-sm text-gray-500">
-              Hiện tại bạn chưa có đơn hàng nào cho trạng thái này.
+              Hiện tại bạn chưa có lịch đặt sân nào cho trạng thái này.
             </p>
           </div>
         )}
@@ -318,4 +328,4 @@ const OrderPage = () => {
   );
 };
 
-export default OrderPage;
+export default BookingPage;

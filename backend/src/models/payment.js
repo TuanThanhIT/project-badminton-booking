@@ -9,7 +9,7 @@ const Payment = sequelize.define(
       allowNull: false,
     },
     paymentMethod: {
-      type: DataTypes.ENUM("COD", "Momo"),
+      type: DataTypes.ENUM("COD", "MOMO"),
       allowNull: false,
     },
     paymentStatus: {

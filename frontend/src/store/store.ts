@@ -6,11 +6,13 @@ import discountReducer from "./slices/discountSlice";
 import orderReducer from "./slices/orderSlice";
 import productFeedbackReducer from "./slices/productFeedbackSlice";
 import courtReducer from "./slices/courtSlice";
+import bookingReducer from "./slices/bookingSlice";
+import bookingFeedbackReducer from "./slices/bookingFeedbackSlice";
 
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["cart"], // chỉ persist 2 slice này
+  whitelist: ["cart"],
 };
 
 const rootReducer = combineReducers({
@@ -19,6 +21,8 @@ const rootReducer = combineReducers({
   order: orderReducer,
   productFeedback: productFeedbackReducer,
   court: courtReducer,
+  booking: bookingReducer,
+  bookingFeedback: bookingFeedbackReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

@@ -11,9 +11,9 @@ import {
   XCircle,
   Loader2,
   Calendar,
-  Clock,
   Edit2,
   Star,
+  Calendar1,
 } from "lucide-react";
 import ReviewForm, { type formRating } from "../../components/ui/ReviewForm";
 import {
@@ -21,6 +21,15 @@ import {
   clearProductFeedbackError,
   updateProductFeedback,
 } from "../../store/slices/productFeedbackSlice";
+import {
+  clearBookingsError,
+  getBookings,
+} from "../../store/slices/bookingSlice";
+import {
+  addBookingFeedback,
+  clearBookingFeedbackError,
+  updateBookingFeedback,
+} from "../../store/slices/bookingFeedbackSlice";
 
 const HistoryPage = () => {
   const dispatch = useAppDispatch();
@@ -28,10 +37,18 @@ const HistoryPage = () => {
   const orderError = useAppSelector((s) => s.order.error);
   const orderLoading = useAppSelector((s) => s.order.loading);
   const feedbackError = useAppSelector((s) => s.productFeedback.error);
+  const bookingFeedbackError = useAppSelector((s) => s.bookingFeedback.error);
+
+  const bookings = useAppSelector((s) => s.booking.bookings);
+  const bookingError = useAppSelector((s) => s.booking.error);
+  const bookingLoading = useAppSelector((s) => s.booking.loading);
 
   const [openReviewForm, setOpenReviewForm] = useState(false);
   const [orderDetailId, setOrderDetailId] = useState(0);
+  const [bookingId, setBookingId] = useState(0);
   const [update, setUpdate] = useState(false);
+  const [type, setType] = useState("product");
+  const [courtId, setCourtId] = useState(0);
 
   const [filterStatus, setFilterStatus] = useState<
     "All" | "Completed" | "Cancelled"
@@ -39,10 +56,12 @@ const HistoryPage = () => {
 
   useEffect(() => {
     dispatch(getOrders());
+    dispatch(getBookings());
   }, [dispatch]);
 
   useEffect(() => {
-    const error = orderError || feedbackError;
+    const error =
+      orderError || feedbackError || bookingError || bookingFeedbackError;
     if (error) {
       toast.error(error);
       if (orderError) {
@@ -51,8 +70,14 @@ const HistoryPage = () => {
       if (feedbackError) {
         dispatch(clearProductFeedbackError());
       }
+      if (bookingError) {
+        dispatch(clearBookingsError());
+      }
+      if (bookingId) {
+        dispatch(clearBookingFeedbackError());
+      }
     }
-  }, [orderError, feedbackError, dispatch]);
+  }, [orderError, feedbackError, bookingError, bookingFeedbackError, dispatch]);
 
   const filteredOrders = orders.filter((o) =>
     filterStatus === "All"
@@ -60,13 +85,17 @@ const HistoryPage = () => {
       : o.orderStatus === filterStatus
   );
 
-  if (orderLoading) {
+  const filteredBookings = bookings.filter((b) =>
+    filterStatus === "All"
+      ? b.bookingStatus === "Completed" || b.bookingStatus === "Cancelled"
+      : b.bookingStatus === filterStatus
+  );
+
+  if (orderLoading || bookingLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-sky-50 to-white">
         <Loader2 className="w-10 h-10 text-sky-600 animate-spin mb-3" />
-        <p className="text-gray-600 font-medium">
-          Đang tải lịch sử đơn hàng...
-        </p>
+        <p className="text-gray-600 font-medium">Đang tải lịch sử ...</p>
       </div>
     );
   }
@@ -85,23 +114,45 @@ const HistoryPage = () => {
   const handleSubmitForm = async (dt: formRating) => {
     const content = dt.content;
     const rating = dt.rating;
-    const data = {
-      content,
-      rating,
-      orderDetailId,
-    };
-    if (!update) {
-      const productFeedback = await dispatch(addProductFeedback({ data }));
-      if (addProductFeedback.fulfilled.match(productFeedback)) {
-        toast.success(productFeedback.payload.message);
+    if (type === "product") {
+      const data = {
+        content,
+        rating,
+        orderDetailId,
+      };
+      if (!update) {
+        const productFeedback = await dispatch(addProductFeedback({ data }));
+        if (addProductFeedback.fulfilled.match(productFeedback)) {
+          toast.success(productFeedback.payload.message);
+        }
+      } else {
+        const productFeedback = await dispatch(updateProductFeedback({ data }));
+        if (updateProductFeedback.fulfilled.match(productFeedback)) {
+          toast.success(productFeedback.payload.message);
+        }
       }
+      await dispatch(getOrders());
     } else {
-      const productFeedback = await dispatch(updateProductFeedback({ data }));
-      if (updateProductFeedback.fulfilled.match(productFeedback)) {
-        toast.success(productFeedback.payload.message);
+      const data = {
+        content,
+        rating,
+        bookingId,
+        courtId,
+      };
+
+      if (!update) {
+        const bookingFeedback = await dispatch(addBookingFeedback({ data }));
+        if (addBookingFeedback.fulfilled.match(bookingFeedback)) {
+          toast.success(bookingFeedback.payload.message);
+        }
+      } else {
+        const bookingFeedback = await dispatch(updateBookingFeedback({ data }));
+        if (updateBookingFeedback.fulfilled.match(bookingFeedback)) {
+          toast.success(bookingFeedback.payload.message);
+        }
       }
+      await dispatch(getBookings());
     }
-    await dispatch(getOrders());
   };
 
   const renderReviewForm = () => {
@@ -113,6 +164,8 @@ const HistoryPage = () => {
           update={update}
           setUpdate={setUpdate}
           orderDetailId={orderDetailId}
+          bookingId={bookingId}
+          type={type}
         />
       </div>
     );
@@ -121,221 +174,231 @@ const HistoryPage = () => {
   return (
     <div className="min-h-screen bg-white p-10">
       <div className="max-w-5xl mx-auto space-y-10">
-        {/* HEADER */}
-        <div className="flex items-center gap-3 mb-8">
-          <Package className="w-8 h-8 text-sky-700" />
-          <h1 className="text-3xl font-bold text-sky-800">Lịch sử đơn hàng</h1>
-        </div>
+        {/* PHẦN LỊCH SỬ ĐẶT HÀNG */}
+        <section>
+          <div className="flex items-center gap-3 mb-8">
+            <Package className="w-8 h-8 text-sky-700" />
+            <h1 className="text-3xl font-bold text-sky-800">
+              Lịch sử đơn hàng
+            </h1>
+          </div>
 
-        {/* FILTER TABS */}
-        <div className="flex flex-wrap gap-3 mb-10">
-          {(["All", "Completed", "Cancelled"] as const).map((status) => {
-            const active = filterStatus === status;
-            const count =
-              status === "All"
-                ? orders.filter(
-                    (o) =>
-                      o.orderStatus === "Completed" ||
-                      o.orderStatus === "Cancelled"
-                  ).length
-                : orders.filter((o) => o.orderStatus === status).length;
-            return (
-              <button
-                key={status}
-                onClick={() => setFilterStatus(status)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm transition-all duration-200 border ${
-                  active
-                    ? "bg-sky-600 text-white border-sky-600"
-                    : "bg-white text-gray-700 border-gray-200 hover:border-sky-300 hover:text-sky-700"
-                }`}
-              >
-                <span>
-                  {status === "All"
-                    ? "Tất cả"
-                    : status === "Completed"
-                    ? "Hoàn tất"
-                    : "Đã hủy"}
-                </span>
-                <span
-                  className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+          <div className="flex flex-wrap gap-3 mb-10">
+            {(["All", "Completed", "Cancelled"] as const).map((status) => {
+              const active = filterStatus === status;
+              const count =
+                status === "All"
+                  ? orders.filter(
+                      (o) =>
+                        o.orderStatus === "Completed" ||
+                        o.orderStatus === "Cancelled"
+                    ).length
+                  : orders.filter((o) => o.orderStatus === status).length;
+              return (
+                <button
+                  key={status}
+                  onClick={() => setFilterStatus(status)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm transition-all duration-200 border ${
                     active
-                      ? "bg-white/20 text-white"
-                      : "bg-sky-100 text-sky-700"
+                      ? "bg-sky-600 text-white border-sky-600"
+                      : "bg-white text-gray-700 border-gray-200 hover:border-sky-300 hover:text-sky-700"
                   }`}
                 >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* NỘI DUNG */}
-        {filteredOrders.length === 0 ? (
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-10 text-center max-w-2xl mx-auto mt-10">
-            <div className="bg-gray-100 border-2 border-dashed rounded-xl w-28 h-28 mx-auto mb-5 flex items-center justify-center">
-              <Package className="w-12 h-12 text-gray-400" />
-            </div>
-            <h2 className="text-lg font-medium text-gray-700 mb-1">
-              Không có đơn hàng phù hợp
-            </h2>
-            <p className="text-sm text-gray-500">
-              Khi bạn hoàn tất hoặc hủy đơn hàng, chúng sẽ xuất hiện ở đây.
-            </p>
-          </div>
-        ) : (
-          <div className="relative ">
-            {filteredOrders.map((order, index) => {
-              const status = order.orderStatus as keyof typeof statusStyle;
-              return (
-                <div
-                  key={order.id || index}
-                  className="relative border-l-2 border-sky-100 pl-6 mb-8"
-                >
-                  {/* Chấm timeline */}
-                  <div
-                    className={`absolute -left-[10px] top-2 w-5 h-5 rounded-full ring-4 ring-white shadow-sm ${
-                      status === "Completed" ? "bg-green-500" : "bg-red-500"
+                  <span>
+                    {status === "All"
+                      ? "Tất cả"
+                      : status === "Completed"
+                      ? "Hoàn tất"
+                      : "Đã hủy"}
+                  </span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                      active
+                        ? "bg-white/20 text-white"
+                        : "bg-sky-100 text-sky-700"
                     }`}
-                  ></div>
-
-                  {/* Card chính */}
-                  <div className="bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 p-5">
-                    {/* Header */}
-                    <div className="flex flex-wrap justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                          <Package className="w-5 h-5 text-sky-600" />
-                          Đơn hàng #{String(index + 1).padStart(3, "0")}
-                        </h3>
-                        <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
-                          <CalendarClock className="w-4 h-4 text-sky-600" />
-                          <span>
-                            {new Date(order.createdDate).toLocaleString(
-                              "vi-VN"
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                      <div
-                        className={`px-3 py-1.5 rounded-full text-sm font-semibold border ${statusStyle[status]}`}
-                      >
-                        {status === "Completed" ? (
-                          <CheckCircle2 className="w-4 h-4" />
-                        ) : (
-                          <XCircle className="w-4 h-4" />
-                        )}
-                        {statusLabel[status]}
-                      </div>
-                    </div>
-
-                    {/* Items */}
-                    <div className="divide-y divide-gray-100 mb-4">
-                      {order.orderDetails.map((od, idx) => (
-                        <div key={idx} className="py-4 flex flex-col gap-4">
-                          {/* Hàng trên: ảnh + info bên trái, giá bên phải */}
-                          <div className="flex flex-row justify-between items-center w-full">
-                            <div className="flex gap-4 flex-shrink-0 min-w-0">
-                              <div className="w-16 h-16 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 flex-shrink-0">
-                                <img
-                                  src={od.varient.product.thumbnailUrl}
-                                  alt={od.varient.product.productName}
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                              <div className="min-w-0">
-                                <h4 className="font-medium text-gray-800 truncate">
-                                  {od.varient.product.productName}
-                                </h4>
-                                <div className="text-xs text-gray-600 flex flex-wrap gap-2 mt-1">
-                                  <span>Màu: {od.varient.color}</span>
-                                  <span>•</span>
-                                  <span>Size: {od.varient.size}</span>
-                                  {od.varient.material && (
-                                    <>
-                                      <span>•</span>
-                                      <span>
-                                        Chất liệu: {od.varient.material}
-                                      </span>
-                                    </>
-                                  )}
-                                </div>
-                                <p className="text-sm text-gray-700 mt-1">
-                                  SL: {od.quantity}
-                                </p>
-                              </div>
-                            </div>
-
-                            <p className="font-semibold text-sky-700 whitespace-nowrap">
-                              {od.subTotal.toLocaleString("vi-VN")}₫
-                            </p>
-                          </div>
-
-                          {/* Hàng dưới: review */}
-                          {od.review !== undefined && (
-                            <div className="flex items-center gap-3 mt-2">
-                              {od.review ? (
-                                <>
-                                  <Edit2 size={16} className="text-green-500" />
-                                  <p className="text-gray-700 text-sm font-medium">
-                                    Đã đánh giá sản phẩm
-                                  </p>
-                                  <button
-                                    onClick={() => {
-                                      setOpenReviewForm(true);
-                                      setOrderDetailId(od.id);
-                                      setUpdate(true);
-                                    }}
-                                    className="ml-auto bg-gradient-to-r from-orange-400 to-orange-600 text-white px-3 py-1 rounded-lg shadow-sm hover:opacity-90 transition-opacity duration-200"
-                                  >
-                                    Sửa đánh giá
-                                  </button>
-                                </>
-                              ) : (
-                                <>
-                                  <Star size={16} className="text-yellow-400" />
-                                  <p className="text-gray-700 text-sm font-medium">
-                                    Chưa đánh giá sản phẩm
-                                  </p>
-                                  <button
-                                    onClick={() => {
-                                      setOpenReviewForm(true);
-                                      setOrderDetailId(od.id);
-                                    }}
-                                    className="ml-auto bg-gradient-to-r from-green-600 to-green-500 text-white px-3 py-1 rounded-lg shadow-sm hover:opacity-90 transition-opacity duration-200"
-                                  >
-                                    Đánh giá
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Footer */}
-                    <div className="mt-4 flex justify-between items-center text-sm text-gray-600 flex-wrap gap-3">
-                      <div className="flex items-center gap-2 text-gray-700 flex-1 min-w-[120px]">
-                        <MapPin className="w-4 h-4 text-sky-600" />
-                        <span>Thanh toán:</span>
-                        <span className="font-medium text-gray-800">
-                          {order.payment.paymentMethod}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sky-700 font-bold text-lg min-w-[120px]">
-                        <DollarSign className="w-4 h-4" />
-                        <span>
-                          {order.totalAmount.toLocaleString("vi-VN")}₫
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  >
+                    {count}
+                  </span>
+                </button>
               );
             })}
           </div>
-        )}
+
+          {filteredOrders.length === 0 ? (
+            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-10 text-center max-w-2xl mx-auto mt-10">
+              <div className="bg-gray-100 border-2 border-dashed rounded-xl w-28 h-28 mx-auto mb-5 flex items-center justify-center">
+                <Package className="w-12 h-12 text-gray-400" />
+              </div>
+              <h2 className="text-lg font-medium text-gray-700 mb-1">
+                Không có đơn hàng phù hợp
+              </h2>
+              <p className="text-sm text-gray-500">
+                Khi bạn hoàn tất hoặc hủy đơn hàng, chúng sẽ xuất hiện ở đây.
+              </p>
+            </div>
+          ) : (
+            <div className="relative ">
+              {filteredOrders.map((order, index) => {
+                const status = order.orderStatus as keyof typeof statusStyle;
+                return (
+                  <div
+                    key={order.id || index}
+                    className="relative border-l-2 border-sky-100 pl-6 mb-8"
+                  >
+                    {/* Chấm timeline */}
+                    <div
+                      className={`absolute -left-[10px] top-2 w-5 h-5 rounded-full ring-4 ring-white shadow-sm ${
+                        status === "Completed" ? "bg-green-500" : "bg-red-500"
+                      }`}
+                    ></div>
+
+                    {/* Card chính */}
+                    <div className="bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 p-5">
+                      {/* Header */}
+                      <div className="flex flex-wrap justify-between items-start mb-4">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                            <Package className="w-5 h-5 text-sky-600" />
+                            Đơn hàng #{String(index + 1).padStart(3, "0")}
+                          </h3>
+                          <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
+                            <CalendarClock className="w-4 h-4 text-sky-600" />
+                            <span>
+                              {new Date(order.createdDate).toLocaleString(
+                                "vi-VN"
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                        <div
+                          className={`px-3 py-1.5 rounded-full text-sm font-semibold border ${statusStyle[status]}`}
+                        >
+                          {status === "Completed" ? (
+                            <CheckCircle2 className="w-4 h-4" />
+                          ) : (
+                            <XCircle className="w-4 h-4" />
+                          )}
+                          {statusLabel[status]}
+                        </div>
+                      </div>
+
+                      {/* Items */}
+                      <div className="divide-y divide-gray-100 mb-4">
+                        {order.orderDetails.map((od, idx) => (
+                          <div key={idx} className="py-4 flex flex-col gap-4">
+                            {/* Hàng trên: ảnh + info bên trái, giá bên phải */}
+                            <div className="flex flex-row justify-between items-center w-full">
+                              <div className="flex gap-4 flex-shrink-0 min-w-0">
+                                <div className="w-16 h-16 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 flex-shrink-0">
+                                  <img
+                                    src={od.varient.product.thumbnailUrl}
+                                    alt={od.varient.product.productName}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="min-w-0">
+                                  <h4 className="font-medium text-gray-800 truncate">
+                                    {od.varient.product.productName}
+                                  </h4>
+                                  <div className="text-xs text-gray-600 flex flex-wrap gap-2 mt-1">
+                                    <span>Màu: {od.varient.color}</span>
+                                    <span>•</span>
+                                    <span>Size: {od.varient.size}</span>
+                                    {od.varient.material && (
+                                      <>
+                                        <span>•</span>
+                                        <span>
+                                          Chất liệu: {od.varient.material}
+                                        </span>
+                                      </>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-gray-700 mt-1">
+                                    SL: {od.quantity}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <p className="font-semibold text-sky-700 whitespace-nowrap">
+                                {od.subTotal.toLocaleString("vi-VN")}₫
+                              </p>
+                            </div>
+
+                            {/* Hàng dưới: review */}
+                            {od.review !== undefined && (
+                              <div className="flex items-center gap-3 mt-2">
+                                {od.review ? (
+                                  <>
+                                    <Edit2
+                                      size={16}
+                                      className="text-green-500"
+                                    />
+                                    <p className="text-gray-700 text-sm font-medium">
+                                      Đã đánh giá sản phẩm
+                                    </p>
+                                    <button
+                                      onClick={() => {
+                                        setOpenReviewForm(true);
+                                        setOrderDetailId(od.id);
+                                        setUpdate(true);
+                                        setType("product");
+                                      }}
+                                      className="ml-auto bg-gradient-to-r from-orange-400 to-orange-600 text-white px-3 py-1 rounded-lg shadow-sm hover:opacity-90 transition-opacity duration-200"
+                                    >
+                                      Sửa đánh giá
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Star
+                                      size={16}
+                                      className="text-yellow-400"
+                                    />
+                                    <p className="text-gray-700 text-sm font-medium">
+                                      Chưa đánh giá sản phẩm
+                                    </p>
+                                    <button
+                                      onClick={() => {
+                                        setOpenReviewForm(true);
+                                        setOrderDetailId(od.id);
+                                        setType("product");
+                                      }}
+                                      className="ml-auto bg-gradient-to-r from-green-600 to-green-500 text-white px-3 py-1 rounded-lg shadow-sm hover:opacity-90 transition-opacity duration-200"
+                                    >
+                                      Đánh giá
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Footer */}
+                      <div className="mt-4 flex justify-between items-center text-sm text-gray-600 flex-wrap gap-3">
+                        <div className="flex items-center gap-2 text-gray-700 flex-1 min-w-[120px]">
+                          <MapPin className="w-4 h-4 text-sky-600" />
+                          <span>Thanh toán:</span>
+                          <span className="font-medium text-gray-800">
+                            {order.payment.paymentMethod}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sky-700 font-bold text-lg min-w-[120px]">
+                          <DollarSign className="w-4 h-4" />
+                          <span>
+                            {order.totalAmount.toLocaleString("vi-VN")}₫
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
 
         {/* PHẦN ĐẶT SÂN */}
         <section className="mt-20">
@@ -346,19 +409,215 @@ const HistoryPage = () => {
             </h2>
           </div>
 
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-10 text-center max-w-2xl mx-auto">
-            <div className="bg-emerald-50 border-2 border-dashed border-emerald-100 rounded-full w-28 h-28 mx-auto mb-6 flex items-center justify-center">
-              <Clock className="w-12 h-12 text-emerald-500" />
-            </div>
-            <h3 className="text-xl font-semibold text-emerald-800 mb-2">
-              Tính năng đặt sân đang được phát triển
-            </h3>
-            <p className="text-gray-600 max-w-md mx-auto">
-              Chúng tôi đang hoàn thiện hệ thống đặt sân trực tuyến. Bạn sẽ sớm
-              có thể xem lại lịch sử đặt sân, thời gian và trạng thái ngay tại
-              đây.
-            </p>
+          {/* FILTER TABS */}
+          <div className="flex flex-wrap gap-3 mb-10">
+            {(["All", "Completed", "Cancelled"] as const).map((status) => {
+              const active = filterStatus === status;
+              const count =
+                status === "All"
+                  ? bookings.filter(
+                      (b) =>
+                        b.bookingStatus === "Completed" ||
+                        b.bookingStatus === "Cancelled"
+                    ).length
+                  : bookings.filter((b) => b.bookingStatus === status).length;
+              return (
+                <button
+                  key={status}
+                  onClick={() => setFilterStatus(status)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm transition-all duration-200 border ${
+                    active
+                      ? "bg-sky-600 text-white border-sky-600"
+                      : "bg-white text-gray-700 border-gray-200 hover:border-sky-300 hover:text-sky-700"
+                  }`}
+                >
+                  <span>
+                    {status === "All"
+                      ? "Tất cả"
+                      : status === "Completed"
+                      ? "Hoàn tất"
+                      : "Đã hủy"}
+                  </span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                      active
+                        ? "bg-white/20 text-white"
+                        : "bg-sky-100 text-sky-700"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
+
+          {/* NỘI DUNG */}
+          {filteredBookings.length === 0 ? (
+            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-10 text-center max-w-2xl mx-auto mt-10">
+              <div className="bg-gray-100 border-2 border-dashed rounded-xl w-28 h-28 mx-auto mb-5 flex items-center justify-center">
+                <Calendar className="w-12 h-12 text-gray-400" />
+              </div>
+              <h2 className="text-lg font-medium text-gray-700 mb-1">
+                Không có lịch đặt sân phù hợp
+              </h2>
+              <p className="text-sm text-gray-500">
+                Khi bạn hoàn tất hoặc hủy đặt sân, chúng sẽ xuất hiện ở đây.
+              </p>
+            </div>
+          ) : (
+            <div className="relative ">
+              {filteredBookings.map((booking, index) => {
+                const status =
+                  booking.bookingStatus as keyof typeof statusStyle;
+                return (
+                  <div
+                    key={booking.id || index}
+                    className="relative border-l-2 border-sky-100 pl-6 mb-8"
+                  >
+                    {/* Chấm timeline */}
+                    <div
+                      className={`absolute -left-[10px] top-2 w-5 h-5 rounded-full ring-4 ring-white shadow-sm ${
+                        status === "Completed" ? "bg-green-500" : "bg-red-500"
+                      }`}
+                    ></div>
+
+                    {/* Card chính */}
+                    <div className="bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 p-5 mb-6">
+                      {/* Header */}
+                      <div className="flex flex-wrap justify-between items-start mb-4">
+                        <div className="flex-1 min-w-[200px]">
+                          <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                            <Calendar1 className="w-5 h-5 text-sky-600" />
+                            Lịch đặt sân #{String(index + 1).padStart(3, "0")}
+                          </h3>
+                          <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
+                            <CalendarClock className="w-4 h-4 text-sky-600" />
+                            <span>
+                              {new Date(booking.createdDate).toLocaleString(
+                                "vi-VN"
+                              )}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div
+                          className={`px-3 py-1.5 rounded-full text-sm font-semibold border ${statusStyle[status]}`}
+                        >
+                          {status === "Completed" ? (
+                            <CheckCircle2 className="w-4 h-4" />
+                          ) : (
+                            <XCircle className="w-4 h-4" />
+                          )}
+                          {statusLabel[status]}
+                        </div>
+                      </div>
+
+                      {/* Thông tin sân */}
+                      <div className="flex items-start gap-4 mb-4">
+                        {/* Ảnh sân */}
+                        <div className="w-24 h-24 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 flex-shrink-0">
+                          <img
+                            src={booking.court.thumbnailUrl}
+                            alt={booking.court.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+
+                        {/* Thông tin */}
+                        <div className="flex-1 flex flex-col justify-start">
+                          {/* Tên sân */}
+                          <h4 className="font-semibold text-gray-900 text-lg mb-2 truncate">
+                            {booking.court.name}
+                          </h4>
+
+                          {/* Ngày (basic) */}
+                          <span className="inline-block px-2 py-1 text-gray-700 text-sm mb-2">
+                            <span className="font-bold">Ngày đặt:</span>{" "}
+                            {booking.court.date}
+                          </span>
+
+                          {/* Khung giờ */}
+                          <div className="flex flex-wrap gap-2">
+                            {booking.timeSlots.map((slot, idx) => (
+                              <span
+                                key={idx}
+                                className="px-3 py-1 border border-green-300 text-green-800 text-sm font-medium rounded-full"
+                              >
+                                {slot}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Footer */}
+                      <div className="flex justify-between items-center text-sm text-gray-600 flex-wrap gap-3">
+                        <div className="flex items-center gap-2 text-gray-700 flex-1 min-w-[120px]">
+                          <MapPin className="w-4 h-4 text-sky-600" />
+                          <span>Thanh toán:</span>
+                          <span className="font-medium text-gray-800">
+                            {booking.paymentBooking.paymentMethod}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sky-700 font-bold text-lg min-w-[120px]">
+                          <DollarSign className="w-4 h-4" />
+                          <span>
+                            {booking.totalAmount.toLocaleString("vi-VN")}₫
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Review */}
+                      <div className="mt-4">
+                        {booking.review !== undefined && (
+                          <div className="flex items-center gap-3 mt-2">
+                            {booking.review ? (
+                              <>
+                                <Edit2 size={16} className="text-green-500" />
+                                <p className="text-gray-700 text-sm font-medium">
+                                  Đã đánh giá sân
+                                </p>
+                                <button
+                                  onClick={() => {
+                                    setOpenReviewForm(true);
+                                    setBookingId(booking.id);
+                                    setUpdate(true);
+                                    setType("booking");
+                                  }}
+                                  className="ml-auto bg-gradient-to-r from-orange-400 to-orange-600 text-white px-3 py-1 rounded-lg shadow-sm hover:opacity-90 transition-opacity duration-200"
+                                >
+                                  Sửa đánh giá
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <Star size={16} className="text-yellow-400" />
+                                <p className="text-gray-700 text-sm font-medium">
+                                  Chưa đánh giá sân
+                                </p>
+                                <button
+                                  onClick={() => {
+                                    setOpenReviewForm(true);
+                                    setBookingId(booking.id);
+                                    setType("booking");
+                                    setCourtId(booking.court.id);
+                                  }}
+                                  className="ml-auto bg-gradient-to-r from-green-600 to-green-500 text-white px-3 py-1 rounded-lg shadow-sm hover:opacity-90 transition-opacity duration-200"
+                                >
+                                  Đánh giá
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </section>
       </div>
 

@@ -22,6 +22,8 @@ import initCourtAdminRoute from "./routes/admin/courtRoute.js";
 import initCourtCustomerRoute from "./routes/customer/courtRoute.js";
 import initDiscountBookingCustomerRoute from "./routes/customer/discountBooking.js";
 import initDiscountBookingAdminRoute from "./routes/admin/discountBookingRoute.js";
+import initBookingCustomerRoute from "./routes/customer/bookingRoute.js";
+import initBookingFeedbackCustomerRoute from "./routes/customer/bookingFeedbackRoute.js";
 
 dotenv.config();
 
@@ -47,6 +49,8 @@ initProductFeedbackCustomerRoute(app);
 initContactCustomerRoute(app);
 initCourtCustomerRoute(app);
 initDiscountBookingCustomerRoute(app);
+initBookingCustomerRoute(app);
+initBookingFeedbackCustomerRoute(app);
 
 // Admin
 initRoleRoute(app);

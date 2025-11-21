@@ -2,23 +2,33 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Clock, Star } from "lucide-react";
+
 import {
   FormRatingSchema,
   type formRating,
 } from "../../schemas/FormRatingSchema";
+
 import { useAppDispatch, useAppSelector } from "../../store/hook";
+
 import {
   clearProductFeedbackDetail,
   getProductFeedbackDetail,
 } from "../../store/slices/productFeedbackSlice";
+
 import type { ProductFeedbackDetailRequest } from "../../types/productFeedback";
+
+import { getBookingFeedbackDetail } from "../../store/slices/bookingFeedbackSlice";
+
+import type { BookingFeedbackDetailRequest } from "../../types/bookingFeedback";
 
 type ReviewFormProps = {
   setOpenReviewForm: (open: boolean) => void;
   onSubmit: (data: formRating) => void;
   update: boolean;
   setUpdate: (update: boolean) => void;
-  orderDetailId: number;
+  orderDetailId?: number;
+  bookingId?: number;
+  type: string;
 };
 
 const ReviewForm = (props: ReviewFormProps) => {
@@ -34,44 +44,83 @@ const ReviewForm = (props: ReviewFormProps) => {
     mode: "onChange",
   });
 
-  const { setOpenReviewForm, onSubmit, update, orderDetailId, setUpdate } =
-    props;
+  const {
+    setOpenReviewForm,
+    onSubmit,
+    update,
+    orderDetailId,
+    bookingId,
+    setUpdate,
+    type,
+  } = props;
 
   const [selected, setSelected] = useState<number>(0);
   const [hovered, setHovered] = useState<number>(0);
 
   const dispatch = useAppDispatch();
+
   const { productFeedbackDetail } = useAppSelector(
     (state) => state.productFeedback
   );
 
+  const { bookingFeedbackDetail } = useAppSelector(
+    (state) => state.bookingFeedback
+  );
+
+  /** ------------------------------------------------------
+   *  LẤY DỮ LIỆU CHI TIẾT KHI UPDATE
+   --------------------------------------------------------*/
+  useEffect(() => {
+    if (!update) {
+      dispatch(clearProductFeedbackDetail());
+      return;
+    }
+
+    if (type === "product" && orderDetailId) {
+      const data: ProductFeedbackDetailRequest = { orderDetailId };
+      dispatch(getProductFeedbackDetail({ data }));
+    }
+
+    if (type === "booking" && bookingId) {
+      const data: BookingFeedbackDetailRequest = { bookingId };
+      dispatch(getBookingFeedbackDetail({ data }));
+    }
+  }, [update, orderDetailId, bookingId, type, dispatch]);
+
+  /** ------------------------------------------------------
+   *  GÁN GIÁ TRỊ VÀO FORM KHI LOAD DETAIL
+   --------------------------------------------------------*/
+  useEffect(() => {
+    if (type === "product" && productFeedbackDetail) {
+      setValue("content", productFeedbackDetail.content);
+      setValue("rating", productFeedbackDetail.rating);
+      setSelected(productFeedbackDetail.rating);
+      return;
+    }
+
+    if (type === "booking" && bookingFeedbackDetail) {
+      setValue("content", bookingFeedbackDetail.content);
+      setValue("rating", bookingFeedbackDetail.rating);
+      setSelected(bookingFeedbackDetail.rating);
+      return;
+    }
+
+    // Khi ko có dữ liệu (tạo mới)
+    reset({ rating: 0, content: "" });
+    setSelected(0);
+  }, [type, productFeedbackDetail, bookingFeedbackDetail, setValue, reset]);
+
+  /** ------------------------------------------------------
+   *  SUBMIT
+   --------------------------------------------------------*/
   const handleFormSubmit = (data: formRating) => {
     onSubmit(data);
     setOpenReviewForm(false);
   };
-  const starLabels = ["Tệ", "Khá", "Bình thường", "Tốt", "Tuyệt vời"];
 
-  useEffect(() => {
-    if (update) {
-      const data: ProductFeedbackDetailRequest = { orderDetailId };
-      dispatch(getProductFeedbackDetail({ data }));
-    } else {
-      dispatch(clearProductFeedbackDetail());
-    }
-  }, [update, orderDetailId, dispatch]);
-
-  useEffect(() => {
-    if (productFeedbackDetail) {
-      // Gán giá trị ban đầu vào form
-      setValue("content", productFeedbackDetail.content);
-      setValue("rating", productFeedbackDetail.rating);
-      setSelected(productFeedbackDetail.rating);
-    } else {
-      reset({ rating: 0, content: "" }); // reset về mặc định
-      setSelected(0); // reset rating hiển thị
-    }
-  }, [productFeedbackDetail, setValue]);
-
+  /** ------------------------------------------------------
+   *  FORMAT DATE
+   --------------------------------------------------------*/
   const formatDateTime = (isoString: string) => {
     if (!isoString) return "";
     const date = new Date(isoString);
@@ -83,6 +132,16 @@ const ReviewForm = (props: ReviewFormProps) => {
       minute: "2-digit",
     });
   };
+
+  /** ------------------------------------------------------
+   *  CHỌN NGÀY UPDATED
+   --------------------------------------------------------*/
+  const updatedDate =
+    type === "product"
+      ? productFeedbackDetail?.updatedDate
+      : bookingFeedbackDetail?.updatedDate;
+
+  const starLabels = ["Tệ", "Khá", "Bình thường", "Tốt", "Tuyệt vời"];
 
   return (
     <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 sm:p-10 relative transform transition-all scale-95 animate-scaleIn">
@@ -102,10 +161,12 @@ const ReviewForm = (props: ReviewFormProps) => {
       {/* Header */}
       <div className="text-center mb-6">
         <h3 className="text-2xl font-bold text-gray-800 mt-2">
-          Đánh giá sản phẩm
+          {type === "product" ? "Đánh giá sản phẩm" : "Đánh giá sân đã đặt"}
         </h3>
         <p className="text-sm text-gray-500 mt-1">
-          Chia sẻ trải nghiệm của bạn về sản phẩm này
+          {type === "product"
+            ? "Chia sẻ trải nghiệm của bạn về sản phẩm này"
+            : "Chia sẻ cảm nhận về sân bạn đã đặt"}
         </p>
       </div>
 
@@ -114,7 +175,7 @@ const ReviewForm = (props: ReviewFormProps) => {
         onSubmit={handleSubmit(handleFormSubmit)}
         className="flex flex-col gap-6"
       >
-        {/* Star Rating */}
+        {/* Stars */}
         <div className="text-center">
           <label className="block text-lg font-semibold mb-3 text-gray-700">
             Chọn số sao
@@ -150,6 +211,7 @@ const ReviewForm = (props: ReviewFormProps) => {
               );
             })}
           </div>
+
           <p className="text-sm text-gray-500">
             {hovered
               ? starLabels[hovered - 1]
@@ -157,6 +219,7 @@ const ReviewForm = (props: ReviewFormProps) => {
               ? starLabels[selected - 1]
               : "Chọn số sao"}
           </p>
+
           <input
             type="hidden"
             {...register("rating", { valueAsNumber: true })}
@@ -175,9 +238,7 @@ const ReviewForm = (props: ReviewFormProps) => {
           <textarea
             rows={4}
             placeholder="Chia sẻ trải nghiệm của bạn..."
-            {...register("content", {
-              required: "Nội dung đánh giá là bắt buộc!",
-            })}
+            {...register("content")}
             className="w-full border border-gray-300 rounded-2xl p-3 resize-none outline-none shadow-sm focus:ring-2 focus:ring-green-400 focus:border-green-400 transition"
           />
           {errors.content && (
@@ -187,14 +248,15 @@ const ReviewForm = (props: ReviewFormProps) => {
           )}
         </div>
 
-        {productFeedbackDetail?.updatedDate && (
+        {/* Updated time */}
+        {updatedDate && (
           <div className="flex items-center justify-center mt-2 mb-[-10px]">
             <span className="flex items-center gap-2 text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full shadow-sm">
               <Clock size={14} className="text-gray-500" />
               <span>
                 Đã đánh giá vào:{" "}
                 <span className="font-medium text-gray-700">
-                  {formatDateTime(productFeedbackDetail.updatedDate)}
+                  {formatDateTime(updatedDate)}
                 </span>
               </span>
             </span>

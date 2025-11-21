@@ -7,6 +7,7 @@ import {
   LogOut,
   User,
   Package,
+  Calendar,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
@@ -62,7 +63,14 @@ const Header = () => {
 
         {/* Actions */}
         <div className="flex items-center gap-4">
-          {/* Ngôn ngữ */}
+          <NavLink
+            to="/bookings"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-gray-700 hover:bg-gray-100 transition text-sm font-medium"
+          >
+            <Calendar className="w-5 h-5 text-sky-600" />
+            <span>Lịch sân</span>
+          </NavLink>
+
           <NavLink
             to="/orders"
             className="flex items-center gap-1 px-3 py-1.5 rounded-full text-gray-700 hover:bg-gray-100 transition text-sm font-medium"

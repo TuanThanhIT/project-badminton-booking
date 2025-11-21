@@ -34,7 +34,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { addOrder, clearOrdersError } from "../../store/slices/orderSlice";
 import type { AddOrderRequest, MomoPaymentRequest } from "../../types/order";
-import OrderService from "../../services/orderService";
+import momoService from "../../services/momoService";
 
 const CheckoutPage = () => {
   const dispatch = useAppDispatch();
@@ -167,11 +167,12 @@ const CheckoutPage = () => {
         try {
           const momoOrderId = `${orderId}_${Date.now()}`;
           const data: MomoPaymentRequest = {
-            orderId: momoOrderId,
+            entityId: momoOrderId,
             amount: orderData.paymentAmount,
             orderInfo: `Thanh toán đơn hàng #${orderId}`,
+            type: "order",
           };
-          const res = await OrderService.createMoMoPaymentService(data);
+          const res = await momoService.createMoMoPaymentService(data);
           if (res.data.payUrl) {
             window.location.href = res.data.payUrl;
           } else {

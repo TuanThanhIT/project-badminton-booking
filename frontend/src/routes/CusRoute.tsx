@@ -17,12 +17,13 @@ import CustomerPublicLayout from "../components/layouts/CustomerPublicLayout";
 import AuthGuard from "../components/guards/AuthGuard";
 import GuestHomePage from "../pages/Customer/GuestHomePage";
 import ProductDetailPage from "../pages/Customer/ProductDetailPage";
-import PaymentResultPage from "../pages/Customer/PaymentResultPage";
 import CheckoutPage from "../pages/Customer/CheckoutPage";
 import OrderPage from "../pages/Customer/OrderPage";
 import OrderSuccessPage from "../pages/Customer/OrderSuccessPage";
 import MomoReturnPage from "../pages/Customer/MomoReturnPage";
 import BookingCourtDetailPage from "../pages/Customer/BooingCourtDetailPage";
+import BookingSuccessPage from "../pages/Customer/BookingSuccessPage";
+import BookingPage from "../pages/Customer/BookingPage";
 
 const CustomerRoute = () => {
   return (
@@ -52,11 +53,15 @@ const CustomerRoute = () => {
           <Route path="history" element={<HistoryPage />}></Route>
           <Route path="profile" element={<ProfilePage />}></Route>
           <Route path="cart" element={<CartPage />}></Route>
-          <Route path="payment-result" element={<PaymentResultPage />}></Route>
           <Route path="checkout" element={<CheckoutPage />}></Route>
           <Route path="orders" element={<OrderPage />}></Route>
+          <Route path="bookings" element={<BookingPage />}></Route>
           <Route path="orders/success" element={<OrderSuccessPage />}></Route>
-          <Route path="orders/momo-return" element={<MomoReturnPage />}></Route>
+          <Route
+            path="booking/success"
+            element={<BookingSuccessPage />}
+          ></Route>
+          <Route path="momo-return" element={<MomoReturnPage />}></Route>
           <Route
             path="booking/:id"
             element={<BookingCourtDetailPage />}

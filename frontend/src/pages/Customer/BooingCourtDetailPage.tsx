@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hook";
 import { toast } from "react-toastify";
 import {
@@ -25,7 +25,18 @@ import type {
 import {
   applyDiscountBooking,
   clearDiscountError,
+  updateDiscountBooking,
 } from "../../store/slices/discountSlice";
+import type { AddBookingRequest } from "../../types/booking";
+import { addBooking } from "../../store/slices/bookingSlice";
+import type { ApiErrorType } from "../../types/error";
+import type { MomoPaymentRequest } from "../../types/order";
+import momoService from "../../services/momoService";
+import {
+  clearBookingFeedbackError,
+  getBookingFeedback,
+} from "../../store/slices/bookingFeedbackSlice";
+import ReviewList from "../../components/ui/ReviewList";
 
 interface ProductFeedbackResponse {
   userId: number;
@@ -44,25 +55,38 @@ const BookingCourtDetailPage = () => {
   const weekday = searchParams.get("weekday") ?? "";
 
   const dispatch = useAppDispatch();
-  const { loading, courtSchedule, bookingAmount } = useAppSelector(
-    (state) => state.court
-  );
+  const navigate = useNavigate();
+  const courtLoading = useAppSelector((state) => state.court.loading);
+  const courtSchedule = useAppSelector((state) => state.court.courtSchedule);
+  const bookingAmount = useAppSelector((state) => state.court.bookingAmount);
   const discountError = useAppSelector((state) => state.discount.error);
   const courtError = useAppSelector((state) => state.court.error);
+  const bookingFeedbackLoading = useAppSelector(
+    (state) => state.bookingFeedback.loading
+  );
+  const bookingFeedbackError = useAppSelector(
+    (state) => state.bookingFeedback.error
+  );
+  const bookingFeedbacks = useAppSelector(
+    (state) => state.bookingFeedback.bookingFeedbacks
+  );
 
   const [selectedSlots, setSelectedSlots] = useState<CourtScheduleInfo[]>(
     () => {
-      const arr = JSON.parse(localStorage.getItem("selectedSlots") || "[]");
+      const arr = JSON.parse(
+        localStorage.getItem(`selectedSlots_${courtId}`) || "[]"
+      );
       return arr;
     }
   );
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "MOMO">("COD");
-  const [discountCode, setDiscountCode] = useState<string>("");
-  const [apply, setCheckApply] = useState<boolean>(false);
+  const [code, setCode] = useState<string>("");
+  const [note, setNote] = useState<string>("");
+  const [checkApply, setCheckApply] = useState<boolean>(false);
   const [finalPrice, setFinalPrice] = useState<number>();
 
   useEffect(() => {
-    const error = discountError || courtError;
+    const error = discountError || courtError || bookingFeedbackError;
     if (error) {
       toast.error(error);
       if (courtError) {
@@ -70,9 +94,13 @@ const BookingCourtDetailPage = () => {
       }
       if (discountError) {
         dispatch(clearDiscountError());
+        setCode("");
+      }
+      if (bookingFeedbackError) {
+        dispatch(clearBookingFeedbackError());
       }
     }
-  }, [discountError, courtError, dispatch]);
+  }, [discountError, courtError, bookingFeedbackError, dispatch]);
 
   useEffect(() => {
     const data = { courtId, date };
@@ -80,9 +108,14 @@ const BookingCourtDetailPage = () => {
     dispatch(getCourtPrice());
   }, [dispatch, courtId, date]);
 
+  useEffect(() => {
+    const data = { courtId };
+    dispatch(getBookingFeedback({ data }));
+  }, [dispatch]);
+
   // Lấy booking amount ra nếu có và dispatch để cập nhật lại state.bookingAmount
   useEffect(() => {
-    const savedAmount = localStorage.getItem("bookingAmount");
+    const savedAmount = localStorage.getItem(`bookingAmount_${courtId}`);
     const amount = Number(savedAmount);
     if (savedAmount) {
       dispatch(setBookingAmountLocal({ amount }));
@@ -106,18 +139,22 @@ const BookingCourtDetailPage = () => {
     }
 
     setSelectedSlots(newSelectedSlots);
-    localStorage.setItem("selectedSlots", JSON.stringify(newSelectedSlots));
+    localStorage.setItem(
+      `selectedSlots_${courtId}`,
+      JSON.stringify(newSelectedSlots)
+    );
 
     // Gửi luôn giá trị mới
     dispatch(
       updateBookingAmountLocal({
         selectedSlots: newSelectedSlots,
         weekday,
+        courtId,
       })
     );
   };
 
-  if (loading) {
+  if (courtLoading || bookingFeedbackLoading) {
     return (
       <div className="flex flex-col justify-center items-center h-[60vh] text-sky-700">
         <Loader2 className="w-10 h-10 animate-spin mb-3" />
@@ -145,27 +182,58 @@ const BookingCourtDetailPage = () => {
     }
   };
 
-  const court = courtSchedule as CourtScheduleResponse | undefined;
+  const handleCheckout = async () => {
+    if (checkApply && code) {
+      await dispatch(updateDiscountBooking({ code }));
+    }
 
-  // Dữ liệu giả cho review demo
-  const fakeReviews: ProductFeedbackResponse[] = [
-    {
-      userId: 1,
-      username: "Nguyen Van A",
-      avatar: "https://i.pravatar.cc/50?img=1",
-      content: "Sân rất đẹp, phục vụ tốt",
-      rating: 5,
-      updatedDate: new Date().toISOString(),
-    },
-    {
-      userId: 2,
-      username: "Tran Thi B",
-      avatar: "https://i.pravatar.cc/50?img=2",
-      content: "Giá hơi cao nhưng chất lượng ổn",
-      rating: 4,
-      updatedDate: new Date().toISOString(),
-    },
-  ];
+    const bookingDetails =
+      selectedSlots.map((slot) => ({
+        courtScheduleId: slot.id,
+      })) || [];
+
+    const bookingData: AddBookingRequest = {
+      bookingStatus: "Pending",
+      totalAmount: finalPrice ?? bookingAmount,
+      code,
+      note,
+      bookingDetails,
+      paymentAmount: finalPrice ?? bookingAmount,
+      paymentMethod,
+      paymentStatus: "Pending",
+    };
+
+    const resultAction = await dispatch(addBooking({ data: bookingData }));
+
+    if (addBooking.fulfilled.match(resultAction)) {
+      const bookingId = resultAction.payload.bookingId;
+      if (paymentMethod === "COD") {
+        toast.success(resultAction.payload.message);
+        setTimeout(() => navigate("/booking/success"), 2000);
+      } else if (paymentMethod === "MOMO") {
+        try {
+          const momoBookingId = `${bookingId}_${Date.now()}`;
+          const data: MomoPaymentRequest = {
+            entityId: momoBookingId,
+            amount: bookingData.paymentAmount,
+            orderInfo: `Thanh toán đơn đặt sân #${bookingId}`,
+            type: "booking",
+          };
+          const res = await momoService.createMoMoPaymentService(data);
+          if (res.data.payUrl) {
+            window.location.href = res.data.payUrl;
+          } else {
+            toast.error("Không tạo được đường dẫn thanh toán Momo");
+          }
+        } catch (error: any) {
+          const apiError = error as ApiErrorType;
+          toast.error(apiError.userMessage || "Tạo thanh toán Momo thất bại");
+        }
+      }
+    }
+  };
+
+  const court = courtSchedule as CourtScheduleResponse | undefined;
 
   return (
     <div className="p-4 grid grid-cols-7 gap-4">
@@ -261,61 +329,7 @@ const BookingCourtDetailPage = () => {
 
         {/* Reviews */}
         <div className="mt-10 p-4">
-          <h3 className="text-2xl font-bold mb-6 text-gray-700">
-            Đánh giá từ khách hàng
-          </h3>
-          <div className="space-y-6">
-            {fakeReviews.length === 0 && (
-              <p className="flex items-center gap-2 text-gray-600">
-                <Info className="w-5 h-5 text-gray-500" />
-                Sân chưa có đánh giá nào
-              </p>
-            )}
-            {fakeReviews.map((review) => {
-              const date = new Date(review.updatedDate);
-              const formatted = date.toLocaleString("vi-VN", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              });
-              return (
-                <div
-                  key={review.userId}
-                  className="flex gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200"
-                >
-                  <img
-                    src={review.avatar}
-                    alt={review.username}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <h6 className="font-semibold text-lg text-gray-700">
-                        {review.username}
-                      </h6>
-                      <span className="text-sm text-gray-500">{formatted}</span>
-                    </div>
-                    <div className="flex items-center mb-2">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          size={20}
-                          className={
-                            star <= review.rating
-                              ? "fill-yellow-400 stroke-yellow-400"
-                              : "stroke-gray-300"
-                          }
-                        />
-                      ))}
-                    </div>
-                    <p className="text-gray-700">{review.content}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <ReviewList bookingFeedbacks={bookingFeedbacks} type="booking" />
         </div>
       </div>
 
@@ -361,18 +375,29 @@ const BookingCourtDetailPage = () => {
             </div>
             <div className="flex flex-row justify-between gap-2">
               <input
-                value={discountCode}
-                onChange={(e) => setDiscountCode(e.target.value)}
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
                 placeholder="Nhập mã giảm giá"
                 className="flex-1 border border-gray-300 p-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-400 transition"
               />
               <button
                 className="bg-sky-600 hover:bg-sky-700 text-white font-semibold px-4 rounded-xl shadow-md transition"
-                onClick={() => handleDiscount(discountCode)}
+                onClick={() => handleDiscount(code)}
               >
                 Áp mã
               </button>
             </div>
+          </div>
+
+          {/* Ghi chú */}
+          <div className="flex flex-col gap-2 mt-4">
+            <label className="font-medium text-gray-700">Ghi chú</label>
+            <input
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Nhập ghi chú khi đặt sân"
+              className="border border-gray-300 p-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-400 transition"
+            />
           </div>
 
           {/* Phương thức thanh toán */}
@@ -451,7 +476,10 @@ const BookingCourtDetailPage = () => {
           </div>
 
           {/* Nút xác nhận */}
-          <button className="w-full mt-5 py-3 bg-[#0288D1] text-white rounded-xl font-semibold hover:bg-[#0277BD] transition flex items-center justify-center gap-2 shadow-md hover:shadow-lg">
+          <button
+            onClick={handleCheckout}
+            className="w-full mt-5 py-3 bg-[#0288D1] text-white rounded-xl font-semibold hover:bg-[#0277BD] transition flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+          >
             <CreditCard size={20} />
             {paymentMethod === "COD"
               ? "Đặt sân ngay - Thanh toán khi đến sân"

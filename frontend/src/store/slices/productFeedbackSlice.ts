@@ -85,7 +85,7 @@ export const getProductFeedback = createAsyncThunk<
   { data: ProductFeedbackRequest },
   { rejectValue: ApiErrorType }
 >(
-  "/productFeedback/getProductFeedback",
+  "productFeedback/getProductFeedback",
   async ({ data }, { rejectWithValue }) => {
     try {
       const res = await productFeedbackService.getProductFeedbackService(data);

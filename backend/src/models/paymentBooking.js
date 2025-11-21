@@ -5,7 +5,7 @@ const PaymentBooking = sequelize.define(
   "PaymentBooking",
   {
     paymentAmount: { type: DataTypes.DOUBLE, allowNull: false },
-    paymentMethod: { type: DataTypes.ENUM("COD", "Momo"), allowNull: false },
+    paymentMethod: { type: DataTypes.ENUM("COD", "MOMO"), allowNull: false },
     paymentStatus: {
       type: DataTypes.ENUM(
         "Pending",

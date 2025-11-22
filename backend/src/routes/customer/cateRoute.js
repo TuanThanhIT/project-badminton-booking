@@ -4,6 +4,10 @@ import categoryCustomerController from "../../controllers/customer/categoryContr
 const cateRoute = express.Router();
 
 const initCateCustomerRoute = (app) => {
+  cateRoute.get(
+    "/list/:group_name",
+    categoryCustomerController.getCatesByGroupName
+  );
   cateRoute.get("/list", categoryCustomerController.getCategoriesByGroupName);
   cateRoute.get(
     "/list/other/:cate_id",

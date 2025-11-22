@@ -17,7 +17,7 @@ const ProductPage: React.FC = () => {
 
   const category_name = searchParams.get("category_name") ?? "";
   const category_id = Number(searchParams.get("category_id") ?? 0);
-  const group = searchParams.get("group") ?? "";
+  const group_name = searchParams.get("group") ?? "";
   const price_range = searchParams.get("price_range") ?? undefined;
   const size = searchParams.get("size") ?? undefined;
   const material = searchParams.get("material") ?? undefined;
@@ -31,44 +31,67 @@ const ProductPage: React.FC = () => {
   useEffect(() => {
     const fetchOtherCategories = async () => {
       try {
-        const res = await categoryService.getOtherCategoriesService(
-          category_id
-        );
-        setCategories(res.data);
+        if (category_id !== 0) {
+          const res = await categoryService.getOtherCategoriesService(
+            category_id
+          );
+          setCategories(res.data);
+        } else {
+          const res = await categoryService.getCatesService(group_name);
+          setCategories(res.data);
+        }
       } catch (error) {
         const apiError = error as ApiErrorType;
         toast.error(apiError.userMessage);
       }
     };
-    if (category_id) fetchOtherCategories();
-  }, [category_id]);
+    fetchOtherCategories();
+  }, [category_id, group_name]);
 
   // Lấy danh sách sản phẩm theo bộ lọc
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const params: ProductParams = {
-          category_id,
-          price_range,
-          size,
-          material,
-          color,
-        };
-        const res = await productService.getProductByFiltersService(params);
-        setProducts(res.data);
+        if (category_id !== 0) {
+          const params: ProductParams = {
+            category_id,
+            price_range,
+            size,
+            material,
+            color,
+          };
+          const res = await productService.getProductByFiltersService(params);
+          setProducts(res.data);
+        } else {
+          const params: ProductParams = {
+            group_name,
+            price_range,
+            size,
+            material,
+            color,
+          };
+          const res = await productService.getProductByGroupAndFiltersService(
+            params
+          );
+          setProducts(res.data);
+        }
       } catch (error) {
         const apiError = error as ApiErrorType;
         toast.error(apiError.userMessage);
       }
     };
     fetchProducts();
-  }, [category_id, price_range, size, material, color]);
+  }, [category_id, group_name, price_range, size, material, color]);
 
   return (
     <div className="flex flex-col min-h-screen overflow-y-auto bg-white">
       {/* Breadcrumb */}
       <div className="bg-white px-6 py-4 border-b border-gray-400">
-        <Breadcrumb cate_id={category_id} cate_name={category_name} />
+        <Breadcrumb
+          cate_id={category_id}
+          cate_name={category_name}
+          group_name={group_name}
+        />
       </div>
 
       {/* Nội dung chính */}
@@ -90,7 +113,7 @@ const ProductPage: React.FC = () => {
                       cate.id
                     }&category_name=${encodeURIComponent(
                       cate.cateName
-                    )}&group=${group}`
+                    )}&group=${group_name}`
                   )
                 }
               >
@@ -104,7 +127,7 @@ const ProductPage: React.FC = () => {
         <div className="w-full md:w-4/5 p-6 shadow-sm rounded-xl">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900 relative inline-block after:content-[''] after:block after:w-20 after:h-1 after:bg-gray-400 after:mt-1 rounded-full">
-              {category_name || "Sản phẩm"}
+              {category_name || group_name}
             </h2>
             <button
               onClick={() => setIsFilterOpen(true)}
@@ -144,11 +167,11 @@ const ProductPage: React.FC = () => {
                   ✕
                 </button>
               </div>
-              {group && (
+              {group_name && (
                 <ProductFilter
                   cate_id={category_id}
                   cate_name={category_name}
-                  group_cate={group}
+                  group_cate={group_name}
                   setIsFilterOpen={setIsFilterOpen}
                 />
               )}

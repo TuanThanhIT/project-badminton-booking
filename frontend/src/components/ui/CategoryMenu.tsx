@@ -57,7 +57,7 @@ const CategoryMenu = () => {
         className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium cursor-pointer select-none transition-all duration-200
           ${
             isActive
-              ? "bg-white text-sky-600 shadow-md"
+              ? "text-white underline underline-offset-4 decoration-2 decoration-white"
               : "text-white hover:text-white hover:bg-sky-500/40"
           }`}
       >
@@ -80,7 +80,15 @@ const CategoryMenu = () => {
               {categories.map((group) => (
                 <div key={group.menuGroup}>
                   <div className="font-semibold text-sky-700 border-b border-sky-100 mb-3 pb-1 text-sm uppercase">
-                    {group.menuGroup}
+                    <NavLink
+                      to={`/products?group=${encodeURIComponent(
+                        group.menuGroup
+                      )}`}
+                      className="block px-2 py-1 text-gray-700 rounded-md hover:bg-sky-100 hover:text-sky-600 transition duration-150 text-sm whitespace-nowrap"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {group.menuGroup}
+                    </NavLink>
                   </div>
                   <div className="flex flex-col space-y-1">
                     {group.items.map((item) => (

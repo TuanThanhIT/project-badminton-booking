@@ -11,7 +11,8 @@ export type ProductResponse = {
 };
 
 export type ProductParams = {
-  category_id: number;
+  category_id?: number;
+  group_name?: string;
   price_range: string | undefined;
   size: string | undefined;
   color: string | undefined;

@@ -22,9 +22,22 @@ const getOtherCategoriesByGroupName = async (req, res, next) => {
   }
 };
 
+const getCatesByGroupName = async (req, res, next) => {
+  try {
+    const groupName = req.params.group_name;
+    const cates = await categoryCustomerService.getCatesByGroupNameService(
+      groupName
+    );
+    return res.status(200).json(cates);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const categoryCustomerController = {
   getCategoriesByGroupName,
   getOtherCategoriesByGroupName,
+  getCatesByGroupName,
 };
 
 export default categoryCustomerController;

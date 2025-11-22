@@ -102,6 +102,99 @@ const getProductsByFilterService = async (
   }
 };
 
+const getProductsByGroupNameAndFilterService = async (
+  groupName,
+  prices,
+  sizes,
+  colors,
+  materials,
+  excludeProductId
+) => {
+  try {
+    // 1. Tìm tất cả các danh mục của group name
+    const categories = await Category.findAll({
+      where: { menuGroup: groupName },
+    }); // thay findOne -> findAll
+
+    // Lấy danh sách id của tất cả category
+    const categoryIds = categories.map((cate) => cate.id);
+
+    // 2. Truy vấn sản phẩm + lấy giá thấp nhất (MIN) từ bảng biến thể
+    const productsFilter = await Product.findAll({
+      where: {
+        categoryId: { [Op.in]: categoryIds }, // dùng tất cả id category
+        ...(excludeProductId && { id: { [Op.ne]: excludeProductId } }),
+      },
+      attributes: [
+        "id",
+        "productName",
+        "brand",
+        "thumbnailUrl",
+        "createdDate",
+        "categoryId",
+        [fn("MIN", col("varients.price")), "minPrice"],
+      ],
+      include: [
+        {
+          model: ProductVarient,
+          as: "varients",
+          attributes: [],
+          where: {
+            ...(prices?.length > 0 && {
+              price: { [Op.between]: [prices[0], prices[1]] },
+            }),
+            ...(sizes?.length > 0 && { size: { [Op.in]: sizes } }),
+            ...(colors?.length > 0 && { color: { [Op.in]: colors } }),
+            ...(materials?.length > 0 && { material: { [Op.in]: materials } }),
+          },
+          required: true,
+        },
+      ],
+      group: ["Product.id"],
+      raw: false,
+      nest: true,
+    });
+
+    // 3. Xử lý song song từng sản phẩm
+    const productFormatted = await Promise.all(
+      productsFilter.map(async (p) => {
+        const minPrice = parseFloat(p.get("minPrice"));
+
+        const varient = await ProductVarient.findOne({
+          where: {
+            productId: p.id,
+            price: minPrice,
+          },
+          attributes: ["discount"],
+        });
+
+        const discount = varient ? varient.discount : 0;
+        const minDiscountedPrice = minPrice - (minPrice * discount) / 100;
+
+        const created = new Date(p.get("createdDate"));
+        const now = new Date();
+        const diffDays =
+          (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
+        const isNew = diffDays <= 10;
+
+        return {
+          ...p.toJSON(),
+          discount,
+          minDiscountedPrice,
+          isNew,
+        };
+      })
+    );
+
+    return productFormatted;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
+
 const getProductDetailService = async (productId) => {
   try {
     const product = await Product.findByPk(productId, {
@@ -147,5 +240,6 @@ const getProductDetailService = async (productId) => {
 const productCustomerService = {
   getProductsByFilterService,
   getProductDetailService,
+  getProductsByGroupNameAndFilterService,
 };
 export default productCustomerService;

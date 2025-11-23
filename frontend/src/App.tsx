@@ -1,3 +1,4 @@
+import "./App.css";
 import { BrowserRouter as Router } from "react-router-dom";
 import CustomerRoute from "./routes/CusRoute";
 import { AuthProvider } from "./components/contexts/authProvider";

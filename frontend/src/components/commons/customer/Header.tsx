@@ -6,6 +6,7 @@ import {
   ShoppingCart,
   LogOut,
   User,
+  Package,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
@@ -62,17 +63,20 @@ const Header = () => {
         {/* Actions */}
         <div className="flex items-center gap-4">
           {/* Ngôn ngữ */}
-          <button className="flex items-center gap-1 px-3 py-1.5 rounded-full text-gray-600 border border-gray-300 hover:bg-gray-100 transition text-sm font-medium">
-            <Languages className="w-4 h-4" />
-            VI
-          </button>
+          <NavLink
+            to="/orders"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-gray-700 hover:bg-gray-100 transition text-sm font-medium"
+          >
+            <Package className="w-5 h-5 text-sky-600" />
+            <span>Đơn hàng</span>
+          </NavLink>
 
           {/* Giỏ hàng */}
           <NavLink
             to="/cart"
             className="flex items-center gap-1 px-3 py-1.5 rounded-full text-gray-700 hover:bg-gray-100 transition text-sm font-medium"
           >
-            <ShoppingCart className="w-5 h-5" />
+            <ShoppingCart className="w-5 h-5 text-sky-600" />
             Giỏ hàng
           </NavLink>
 
@@ -83,14 +87,14 @@ const Header = () => {
                 to="/login"
                 className="flex items-center gap-1 px-4 py-1.5 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-100 transition text-sm font-medium"
               >
-                <LogIn className="w-4 h-4" />
+                <LogIn className="w-5 h-5" />
                 Đăng nhập
               </NavLink>
               <NavLink
                 to="/register"
                 className="flex items-center gap-1 px-4 py-1.5 rounded-full bg-sky-500 text-white hover:bg-sky-600 transition text-sm font-medium shadow-sm"
               >
-                <UserPlus className="w-4 h-4" />
+                <UserPlus className="w-5 h-5" />
                 Đăng ký
               </NavLink>
             </div>
@@ -98,9 +102,9 @@ const Header = () => {
             <div className="flex items-center gap-3">
               <NavLink
                 to="/profile"
-                className="flex items-center gap-1 px-4 py-1.5 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-100 transition text-sm font-medium"
+                className="flex items-center gap-1 px-4 py-1.5 rounded-full text-gray-700 hover:bg-gray-100 transition text-sm font-medium"
               >
-                <User className="w-4 h-4 text-sky-600" />
+                <User className="w-5 h-5 text-sky-600" />
                 {auth?.user?.username}
               </NavLink>
               <button
@@ -112,9 +116,9 @@ const Header = () => {
                   });
                   navigate("/login");
                 }}
-                className="flex items-center gap-1 px-4 py-1.5 rounded-full border border-gray-300 text-gray-700 hover:bg-red-50 hover:text-red-600 transition text-sm font-medium cursor-pointer"
+                className="flex items-center gap-1 px-4 py-1.5 rounded-full border border-gray-300 text-gray-700 hover:bg-red-50 hover:text-red-600 transition text-sm font-medium"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-5 h-5" />
                 Logout
               </button>
             </div>

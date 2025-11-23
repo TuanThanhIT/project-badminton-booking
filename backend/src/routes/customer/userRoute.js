@@ -17,6 +17,7 @@ const initUserRoute = (app) => {
     uploader.single("file"),
     userController.updateProfile
   );
+  userRoute.put("/profile/update/checkout", userController.updateUserInfo);
   app.use("/user", auth, userRoute);
 };
 export default initUserRoute;

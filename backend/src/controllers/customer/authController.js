@@ -20,11 +20,17 @@ const createUser = async (req, res, next) => {
 
 const verifyUserOtp = async (req, res, next) => {
   try {
-    const { email, otpCode } = req.body;
-    await authService.verifyOtpService(email, otpCode);
-    return res
-      .status(200)
-      .json({ message: "Tài khoản đã được xác thực thành công" });
+    const { email, otpCode, newPassword } = req.body;
+    await authService.verifyOtpService(email, otpCode, newPassword);
+    if (!newPassword) {
+      return res
+        .status(200)
+        .json({ message: "Tài khoản đã được xác thực thành công" });
+    } else {
+      return res
+        .status(200)
+        .json({ message: "Tài khoản đã được đổi mật khẩu thành công" });
+    }
   } catch (error) {
     next(error);
   }

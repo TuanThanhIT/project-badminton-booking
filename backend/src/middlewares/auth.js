@@ -26,13 +26,13 @@ const auth = (req, res, next) => {
         next();
       } catch (err) {
         return res.status(401).json({
-          message: "Token hết hạn/ hoặc không hợp lệ ",
+          message: "Vui lòng đăng nhập để tiếp tục.",
         });
       }
     } else {
       return res.status(401).json({
         message:
-          "Bạn chưa truyền Access Token ở headers/ hoặc Access Token hết hạn ",
+          "Phiên đăng nhập của bạn đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.",
       });
     }
   }

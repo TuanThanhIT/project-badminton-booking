@@ -95,9 +95,31 @@ const createProductImagesService = async (imageUrls, productId) => {
   }
 };
 
+const getAllProductsService = async () => {
+  try {
+    const products = await Product.findAll({
+      include: [
+        {
+          model: Category,
+          attributes: ["id", "cateName"],
+        },
+      ],
+      order: [["createdDate", "DESC"]],
+    });
+
+    return products;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
+
 const productAdminService = {
   createProductService,
   createProductVarientService,
   createProductImagesService,
+  getAllProductsService,
 };
 export default productAdminService;

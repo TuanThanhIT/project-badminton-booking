@@ -4,6 +4,9 @@ import "./index.css";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import CustomerRoute from "./routes/CusRoute";
 import AdminRoute from "./routes/AdminRoute";
+import { Provider } from "react-redux";
+import { persistor, store } from "./store/store";
+import { PersistGate } from "redux-persist/integration/react";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

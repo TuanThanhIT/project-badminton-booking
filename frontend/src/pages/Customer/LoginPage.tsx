@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FormLoginSchema, type formLogin } from "../../schemas/FormLoginSchema";
 import authService from "../../services/authService";
 import type { ApiErrorType } from "../../types/error";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import { useContext } from "react";
 import { AuthContext } from "../../components/contexts/authContext";
 
@@ -39,7 +39,10 @@ const LoginPage = () => {
         },
       });
 
-      navigate(from, { replace: true });
+      toast.success("Đăng nhập thành công! B-Hub rất vui được gặp lại bạn");
+      setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 2000);
     } catch (error) {
       const apiError = error as ApiErrorType;
       toast.error(apiError.userMessage);
@@ -98,7 +101,7 @@ const LoginPage = () => {
           </div>
           <button
             type="submit"
-            className="cursor-pointer bg-blue-500 rounded-2xl text-white py-1 hover:bg-blue-800 text-lg"
+            className="bg-blue-500 rounded-2xl text-white py-1 hover:bg-blue-800 text-lg"
             disabled={!isDirty && !isValid}
           >
             Đăng nhập
@@ -111,7 +114,6 @@ const LoginPage = () => {
           </label>
         </form>
       </div>
-      <ToastContainer />
     </div>
   );
 };

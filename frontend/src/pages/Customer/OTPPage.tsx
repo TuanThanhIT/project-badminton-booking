@@ -2,25 +2,43 @@
 import React, { useEffect, useState, useRef } from "react";
 import authService from "../../services/authService";
 import { useLocation, useNavigate } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import type { ApiErrorType } from "../../types/error";
 
 const OTPPage: React.FC = () => {
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
-  const [countdown, setCountdown] = useState(300); // 5 phút
+
+  const getInitialCountdown = () => {
+    const time = localStorage.getItem("countdown");
+    return time ? parseInt(time, 10) : 300;
+  };
+  const [countdown, setCountdown] = useState(getInitialCountdown); // 5 phút
+
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const location = useLocation();
   const email = location.state?.email;
+  const newPassword = location.state?.newPassword;
 
   const navigate = useNavigate();
 
   useEffect(() => {
     if (countdown <= 0) return;
     const timer = setInterval(() => {
-      setCountdown((c) => c - 1);
+      setCountdown((c) => {
+        const newValue = c - 1;
+        localStorage.setItem("countdown", newValue.toString());
+        return newValue;
+      });
     }, 1000);
     return () => clearInterval(timer);
+  }, [countdown]);
+
+  // Khi countdown = 0 → xóa localStorage
+  useEffect(() => {
+    if (countdown <= 0) {
+      localStorage.removeItem("countdown");
+    }
   }, [countdown]);
 
   const handleSubmitOpt = async () => {
@@ -29,6 +47,7 @@ const OTPPage: React.FC = () => {
       const dataOtp = {
         email,
         otpCode,
+        newPassword,
       };
       console.log("dataOtp", dataOtp);
       const res = await authService.verifyOtpService(dataOtp);
@@ -97,7 +116,9 @@ const OTPPage: React.FC = () => {
           {otp.map((digit, i) => (
             <input
               key={i}
-              ref={(el) => (inputRefs.current[i] = el)}
+              ref={(el) => {
+                inputRefs.current[i] = el;
+              }}
               type="text"
               maxLength={1}
               value={digit}
@@ -110,7 +131,7 @@ const OTPPage: React.FC = () => {
 
         <button
           onClick={handleSubmitOpt}
-          className="w-full bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white py-3 rounded-full font-medium shadow-md transition cursor-pointer"
+          className="w-full bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white py-3 rounded-full font-medium shadow-md transition"
         >
           Xác thực
         </button>
@@ -140,8 +161,6 @@ const OTPPage: React.FC = () => {
             Gửi lại OTP
           </button>
         </div>
-
-        <ToastContainer />
       </div>
     </div>
   );

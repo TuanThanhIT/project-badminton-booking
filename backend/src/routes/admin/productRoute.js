@@ -6,22 +6,36 @@ import auth from "../../middlewares/auth.js";
 const productRoute = express.Router();
 
 var uploader = multer({
-  storage: multer.diskStorage({}),
+  storage: multer.memoryStorage({}),
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
 const initProductAdminRoute = (app) => {
+  // Lấy tất cả product
+  productRoute.get("/", productController.getAllProducts);
+
+  // Tạo product (thumbnail)
   productRoute.post(
-    "/add",
-    uploader.single("file"),
+    "/",
+    uploader.single("thumbnail"),
     productController.createProduct
   );
-  productRoute.post("/varient/add", productController.createProductVarient);
+
+  // Tạo varient cho product
   productRoute.post(
-    "/images/add",
-    uploader.array("files", 5),
+    "/:productId/varients",
+    productController.createProductVarient
+  );
+
+  // Tạo images cho product
+  productRoute.post(
+    "/:productId/images",
+    uploader.array("images", 5),
     productController.createProductImages
   );
-  app.use("/admin/product", auth, productRoute);
+
+  // app.use("/admin/product", auth, productRoute);
+  app.use("/admin/product", productRoute);
 };
+
 export default initProductAdminRoute;

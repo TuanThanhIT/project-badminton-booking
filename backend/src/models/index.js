@@ -8,7 +8,6 @@ import Court from "./court.js";
 import CourtSchedule from "./courtSchedule.js";
 import Notification from "./notification.js";
 import Order from "./order.js";
-import Invoice from "./invoice.js";
 import Discount from "./discount.js";
 import OrderDetail from "./orderDetail.js";
 import Payment from "./payment.js";
@@ -57,12 +56,8 @@ Notification.belongsTo(User, { foreignKey: "userId" });
 User.hasMany(Order, { foreignKey: "userId" });
 Order.belongsTo(User, { foreignKey: "userId" });
 
-// Quan hệ 1-1 giữa Order và Invoice
-Order.hasOne(Invoice, { foreignKey: "orderId" });
-Invoice.belongsTo(Order, { foreignKey: "orderId" });
-
-// Quan hệ 1-n giữa Discount và Order
-Discount.hasMany(Order, { foreignKey: "discountId" });
+// Quan hệ 1-1 giữa Discount và Order
+Discount.hasOne(Order, { foreignKey: "discountId" });
 Order.belongsTo(Discount, { foreignKey: "discountId" });
 
 // Quan hệ 1-n giữa Order và OrderDetail
@@ -70,12 +65,12 @@ Order.hasMany(OrderDetail, { foreignKey: "orderId" });
 OrderDetail.belongsTo(Order, { foreignKey: "orderId" });
 
 // Quan hệ 1-n giữa Order và Payment
-Order.hasMany(Payment, { foreignKey: "orderId" });
+Order.hasOne(Payment, { foreignKey: "orderId" });
 Payment.belongsTo(Order, { foreignKey: "orderId" });
 
-//Quan hệ 1-1 giữa Product và OrderDetail
-Product.hasOne(OrderDetail, { foreignKey: "productId" });
-OrderDetail.belongsTo(Product, { foreignKey: "productId" });
+//Quan hệ 1-1 giữa ProductVarient và OrderDetail
+ProductVarient.hasOne(OrderDetail, { foreignKey: "varientId" });
+OrderDetail.belongsTo(ProductVarient, { foreignKey: "varientId" });
 
 // Quan hệ 1-n giữa Category và Product
 Category.hasMany(Product, { foreignKey: "categoryId" });
@@ -85,9 +80,13 @@ Product.belongsTo(Category, { foreignKey: "categoryId" });
 Cart.hasMany(CartItem, { foreignKey: "cartId" });
 CartItem.belongsTo(Cart, { foreignKey: "cartId" });
 
+// Quan hệ 1-1 giữa Card và User
+User.hasOne(Cart, { foreignKey: "userId" });
+Cart.belongsTo(User, { foreignKey: "userId" });
+
 // Quan hệ 1-1 giữa Product và CartItem
-Product.hasOne(CartItem, { foreignKey: "productId" });
-CartItem.belongsTo(Product, { foreignKey: "productId" });
+ProductVarient.hasOne(CartItem, { foreignKey: "varientId", as: "cartItem" });
+CartItem.belongsTo(ProductVarient, { foreignKey: "varientId", as: "varient" });
 
 // Quan hệ 1-n giữa Product và ProductVarient
 Product.hasMany(ProductVarient, { foreignKey: "productId", as: "varients" });
@@ -121,7 +120,6 @@ export {
   CourtSchedule,
   Notification,
   Order,
-  Invoice,
   Discount,
   OrderDetail,
   Payment,

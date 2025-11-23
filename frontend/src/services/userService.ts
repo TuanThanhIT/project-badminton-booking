@@ -1,8 +1,17 @@
-import type { ProfileRequest, ProfileResponse } from "../types/user";
+import { data } from "react-router-dom";
+import {
+  type CheckoutInfoResponse,
+  type ProfileRequest,
+  type ProfileResponse,
+  type UpdateUserInfoRequest,
+} from "../types/user";
 import instance from "../utils/axiosCustomize";
 
 const getProfileService = async () =>
   instance.get<ProfileResponse>("/user/profile");
+
+const getCheckoutInfoService = async () =>
+  instance.get<CheckoutInfoResponse>("/user/profile");
 
 const updateProfileService = async (data: ProfileRequest) => {
   const formData = new FormData();
@@ -19,8 +28,13 @@ const updateProfileService = async (data: ProfileRequest) => {
   });
 };
 
+const updateUserInfoService = async (data: UpdateUserInfoRequest) =>
+  instance.put("/user/profile/update/checkout", data);
+
 const userService = {
   getProfileService,
   updateProfileService,
+  getCheckoutInfoService,
+  updateUserInfoService,
 };
 export default userService;

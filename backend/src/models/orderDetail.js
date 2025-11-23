@@ -11,6 +11,11 @@ const OrderDetail = sequelize.define(
       references: { model: "Orders", key: "id" },
       allowNull: false,
     },
+    varientId: {
+      type: DataTypes.INTEGER,
+      references: { model: "ProductVarients", key: "id" },
+      allowNull: false,
+    },
   },
   {
     tableName: "OrderDetails",

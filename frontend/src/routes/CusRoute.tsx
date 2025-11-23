@@ -16,6 +16,11 @@ import CustomerPrivateLayout from "../components/layouts/CustomerPrivateLayout";
 import CustomerPublicLayout from "../components/layouts/CustomerPublicLayout";
 import AuthGuard from "../components/guards/AuthGuard";
 import GuestHomePage from "../pages/Customer/GuestHomePage";
+import ProductDetailPage from "../pages/Customer/ProductDetailPage";
+import PaymentResultPage from "../pages/Customer/PaymentResultPage";
+import CheckoutPage from "../pages/Customer/CheckoutPage";
+import OrderPage from "../pages/Customer/OrderPage";
+import OrderSuccessPage from "../pages/Customer/OrderSuccessPage";
 
 const CustomerRoute = () => {
   return (
@@ -40,10 +45,15 @@ const CustomerRoute = () => {
         >
           <Route path="home" element={<HomePage />}></Route>
           <Route path="products" element={<ProductPage />}></Route>
+          <Route path="product/:id" element={<ProductDetailPage />}></Route>
           <Route path="booking" element={<BookingCourtPage />}></Route>
           <Route path="history" element={<HistoryPage />}></Route>
           <Route path="profile" element={<ProfilePage />}></Route>
           <Route path="cart" element={<CartPage />}></Route>
+          <Route path="payment-result" element={<PaymentResultPage />}></Route>
+          <Route path="checkout" element={<CheckoutPage />}></Route>
+          <Route path="orders" element={<OrderPage />}></Route>
+          <Route path="orders/success" element={<OrderSuccessPage />}></Route>
         </Route>
 
         <Route path="*" element={<NotFoundPage />}></Route>

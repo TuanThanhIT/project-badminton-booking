@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const auth = (req, res, next) => {
+  const decodedUrl = decodeURIComponent(req.originalUrl);
   const white_list = [
     "/auth/login",
     "/auth/register",
@@ -10,9 +11,20 @@ const auth = (req, res, next) => {
     "/auth/verify-otp",
     "/auth/sent-otp",
     "/user/category/list",
+    "/user/discount/list",
+    "/user/discount/booking/list",
     "/user/momo/momo-webhook",
+    "/user/category/group/list",
+    "/user/product/group/list?group_name=Vợt+cầu+lông",
+    "/user/product/group/list?group_name=Giày+cầu+lông",
+    "/user/product/group/list?group_name=Áo+cầu+lông",
+    "/user/product/group/list?group_name=Váy+cầu+lông",
+    "/user/product/group/list?group_name=Quần+cầu+lông",
+    "/user/product/group/list?group_name=Túi+vợt+cầu+lông",
+    "/user/product/group/list?group_name=Balo+cầu+lông",
+    "/user/product/group/list?group_name=Phụ+kiện+cầu+lông",
   ];
-  if (white_list.find((item) => item === req.originalUrl)) {
+  if (white_list.find((item) => item === decodedUrl)) {
     next();
   } else {
     if (req.headers && req.headers.authorization) {

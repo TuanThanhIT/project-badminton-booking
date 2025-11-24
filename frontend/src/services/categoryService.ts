@@ -13,9 +13,13 @@ const getOtherCategoriesService = (cateId: number) =>
 const getCatesService = (groupName: string) =>
   instance.get<CategoryOtherResponse[]>(`/user/category/list/${groupName}`);
 
+const getAllGroupName = () =>
+  instance.get<string[]>(`/user/category/group/list`);
+
 const categoryService = {
   getCategoriesService,
   getOtherCategoriesService,
   getCatesService,
+  getAllGroupName,
 };
 export default categoryService;

@@ -22,3 +22,14 @@ export type UpdateDiscountRequest = {
 export type UpdateDiscountResponse = {
   message: string;
 };
+
+export type DiscountListResponse = {
+  id: number;
+  code: string;
+  type: string;
+  value: number;
+  startDate: string;
+  endDate: string;
+  minOrderAmount?: number;
+  minBookingAmount?: number;
+};

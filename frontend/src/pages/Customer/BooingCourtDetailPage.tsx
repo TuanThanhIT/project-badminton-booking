@@ -238,7 +238,7 @@ const BookingCourtDetailPage = () => {
   return (
     <div className="p-4 grid grid-cols-7 gap-4">
       {/* LEFT 70% */}
-      <div className="col-span-5 space-y-6 border border-gray-300 rounded-lg">
+      <div className="col-span-5 space-y-6 rounded-lg">
         {/* Court Info */}
         <div className="flex flex-col md:flex-row gap-6 items-center md:items-start bg-white p-4">
           {/* Ảnh sân */}
@@ -291,20 +291,33 @@ const BookingCourtDetailPage = () => {
                   onClick={() => toggleSlot(slot)}
                   disabled={disabled}
                   className={`
-        p-3 text-sm rounded-xl border shadow-md transition-all
-        ${
-          disabled
-            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-            : "hover:bg-green-50"
-        }
-        ${
-          isSelected
-            ? "bg-green-300 text-green-800 border-green-500 font-semibold"
-            : "bg-white text-gray-700"
-        }
-      `}
+    relative flex flex-col items-center justify-center p-4 rounded-2xl border border-gray-400 transition-all duration-200 transform
+    ${
+      disabled
+        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+        : "hover:scale-105 hover:border-green-500"
+    }
+    ${
+      isSelected
+        ? "bg-green-300 text-green-900 border-green-500 font-semibold"
+        : "bg-white text-gray-700 border-gray-200"
+    }
+  `}
                 >
-                  {slot.startTime.slice(0, 5)} - {slot.endTime.slice(0, 5)}
+                  {/* Thời gian */}
+                  <span className="font-medium mb-1">
+                    {slot.startTime.slice(0, 5)} - {slot.endTime.slice(0, 5)}
+                  </span>
+
+                  {/* Thời lượng */}
+                  <span
+                    className={`
+      text-xs font-semibold px-3 py-1 rounded-full
+      ${isSelected ? "bg-green-600 text-white" : "bg-gray-100 text-gray-700"}
+    `}
+                  >
+                    60'
+                  </span>
                 </button>
               );
             })}

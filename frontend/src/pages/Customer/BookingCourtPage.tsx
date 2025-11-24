@@ -14,7 +14,7 @@ const BookingCourtPage = () => {
   const navigate = useNavigate();
 
   const [page, setPage] = useState(1);
-  const limit = 9;
+  const limit = 8;
   const [date, setDate] = useState(() => {
     return localStorage.getItem("selectedBookingDate") || "";
   });
@@ -61,14 +61,14 @@ const BookingCourtPage = () => {
 
         {/* DANH SÁCH COURTS */}
         {courts && courts.courts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {courts.courts.map((court) => {
               const isAvailable = court.availableSlots > 0;
 
               return (
                 <div
                   key={court.id}
-                  className="bg-white rounded-lg shadow-md group hover:shadow-xl transform hover:scale-105 transition-all duration-300 overflow-hidden cursor-pointer flex flex-col relative"
+                  className="bg-white border border-gray-200 rounded-2xl group hover:shadow-lg transform hover:scale-105 transition-all duration-300 overflow-hidden cursor-pointer flex flex-col relative"
                 >
                   {/* Badge tình trạng sân */}
                   <div

@@ -64,10 +64,26 @@ const getCatesByGroupNameService = async (groupName) => {
   }
 };
 
+const getAllGroupNameService = async () => {
+  try {
+    const categories = await Category.findAll();
+    const cateGroups = [];
+    categories.map((cate) => {
+      if (!cateGroups.includes(cate.menuGroup)) {
+        cateGroups.push(cate.menuGroup);
+      }
+    });
+    return cateGroups;
+  } catch (error) {
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
+
 const categoryCustomerService = {
   getCategoriesByGroupNameService,
   getOtherCategoriesByGroupNameService,
   getCatesByGroupNameService,
+  getAllGroupNameService,
 };
 
 export default categoryCustomerService;

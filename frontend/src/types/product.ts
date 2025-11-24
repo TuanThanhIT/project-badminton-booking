@@ -1,4 +1,4 @@
-export type ProductResponse = {
+export type ProductInfo = {
   id: number;
   productName: string;
   brand: string;
@@ -7,16 +7,33 @@ export type ProductResponse = {
   minPrice: number;
   discount: number;
   minDiscountedPrice: number;
-  categoryId: number;
+  category: {
+    id: number;
+    cateName: string;
+  };
+};
+
+export type ProductResponse = {
+  products: ProductInfo[];
+  total: number;
+  page: number;
+  limit: number;
 };
 
 export type ProductParams = {
   category_id?: number;
   group_name?: string;
-  price_range: string | undefined;
-  size: string | undefined;
-  color: string | undefined;
-  material: string | undefined;
+  price_range?: string;
+  size?: string;
+  color?: string;
+  material?: string;
+  sort?: string;
+  page?: number;
+  limit?: number;
+};
+
+export type ProPrams = {
+  group_name: string;
 };
 
 export type ProductRelatedParams = {

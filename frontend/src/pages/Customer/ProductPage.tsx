@@ -10,6 +10,7 @@ import categoryService from "../../services/categoryService";
 import type { ProductParams, ProductResponse } from "../../types/product";
 import productService from "../../services/productService";
 import ProductCard from "../../components/ui/ProductCard";
+import PaginatedItems from "../../components/ui/PaginatedItems";
 
 const ProductPage: React.FC = () => {
   const navigate = useNavigate();
@@ -22,10 +23,14 @@ const ProductPage: React.FC = () => {
   const size = searchParams.get("size") ?? undefined;
   const material = searchParams.get("material") ?? undefined;
   const color = searchParams.get("color") ?? undefined;
+  const sort = searchParams.get("sort") ?? undefined;
 
   const [categories, setCategories] = useState<CategoryOtherResponse[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
-  const [products, setProducts] = useState<ProductResponse[]>([]);
+  const [products, setProducts] = useState<ProductResponse>();
+
+  const [page, setPage] = useState(1);
+  const limit = 8;
 
   // Lấy danh sách danh mục khác trong cùng nhóm
   useEffect(() => {
@@ -59,6 +64,9 @@ const ProductPage: React.FC = () => {
             size,
             material,
             color,
+            sort,
+            page,
+            limit,
           };
           const res = await productService.getProductByFiltersService(params);
           setProducts(res.data);
@@ -69,6 +77,9 @@ const ProductPage: React.FC = () => {
             size,
             material,
             color,
+            sort,
+            page,
+            limit,
           };
           const res = await productService.getProductByGroupAndFiltersService(
             params
@@ -81,7 +92,19 @@ const ProductPage: React.FC = () => {
       }
     };
     fetchProducts();
-  }, [category_id, group_name, price_range, size, material, color]);
+  }, [
+    category_id,
+    group_name,
+    price_range,
+    size,
+    material,
+    color,
+    sort,
+    page,
+    limit,
+  ]);
+
+  console.log("aaa>>", products?.total);
 
   return (
     <div className="flex flex-col min-h-screen overflow-y-auto bg-white">
@@ -137,12 +160,15 @@ const ProductPage: React.FC = () => {
               Bộ lọc
             </button>
           </div>
-
           {/* Danh sách sản phẩm */}
-          {products.length > 0 ? (
+          {products?.products && products.products.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
+              {products.products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  group_name={group_name}
+                />
               ))}
             </div>
           ) : (
@@ -151,6 +177,15 @@ const ProductPage: React.FC = () => {
                 Không tìm thấy sản phẩm phù hợp.
               </p>
             </div>
+          )}
+
+          {products && products.total > limit && (
+            <PaginatedItems
+              total={products.total ?? 0}
+              limit={products.limit ?? limit}
+              page={products.page ?? 1}
+              onPageChange={(newPage) => setPage(newPage)}
+            />
           )}
         </div>
 

@@ -1,5 +1,6 @@
 import type {
   DiscountBookingRequest,
+  DiscountListResponse,
   DiscountResponse,
   UpdateDiscountRequest,
   UpdateDiscountResponse,
@@ -19,9 +20,13 @@ const updateDiscountBookingService = (code: string) => {
   );
 };
 
+const getDiscountBookingService = () =>
+  instance.get<DiscountListResponse[]>("/user/discount/booking/list");
+
 const discountBookingService = {
   applyDiscountBookingService,
   updateDiscountBookingService,
+  getDiscountBookingService,
 };
 
 export default discountBookingService;

@@ -29,28 +29,46 @@ function PaginatedItems({
         nextLabel="❯"
         breakLabel="..."
         pageCount={pageCount}
-        marginPagesDisplayed={2}
-        pageRangeDisplayed={5}
+        marginPagesDisplayed={1}
+        pageRangeDisplayed={3}
         onPageChange={handlePageClick}
         forcePage={page - 1}
         renderOnZeroPageCount={null}
-        // === SIÊU QUAN TRỌNG: ép các <li> hiển thị ngang ===
-        containerClassName="flex items-center gap-3 flex-wrap justify-center select-none"
-        pageClassName="list-none" /* bỏ bullet */
+        containerClassName="flex flex-wrap gap-2 justify-center items-center select-none"
+        pageClassName="list-none"
         previousClassName="list-none"
         nextClassName="list-none"
         breakClassName="list-none"
-        disabledClassName="list-none"
-        // Nút số trang + prev/next
-        pageLinkClassName="flex items-center justify-center w-11 h-11 rounded-full border-2 border-sky-300 hover:border-sky-400 hover:bg-sky-50 text-gray-700 font-medium transition-all duration-200 cursor-pointer"
-        previousLinkClassName="flex items-center justify-center w-11 h-11 rounded-full border-2 border-sky-300 hover:border-sky-400 hover:bg-sky-50 text-gray-700 font-bold text-xl transition-all duration-200 cursor-pointer"
-        nextLinkClassName="flex items-center justify-center w-11 h-11 rounded-full border-2 border-sky-300 hover:border-sky-400 hover:bg-sky-50 text-gray-700 font-bold text-xl transition-all duration-200 cursor-pointer"
-        // Active
-        activeLinkClassName="!bg-sky-500 !border-sky-500 !text-white shadow-lg hover:!bg-sky-600"
+        // Nút số trang
+        pageLinkClassName="
+      flex items-center justify-center w-8 h-8 rounded-lg border border-gray-300
+      text-gray-700 font-medium transition-all duration-200
+      hover:bg-sky-50 hover:border-sky-400 cursor-pointer
+    "
+        previousLinkClassName="
+      flex items-center justify-center w-8 h-8 rounded-lg border border-gray-300
+      text-gray-700 font-bold text-base transition-all duration-200
+      hover:bg-sky-50 hover:border-sky-400 cursor-pointer
+    "
+        nextLinkClassName="
+      flex items-center justify-center w-8 h-8 rounded-lg border border-gray-300
+      text-gray-700 font-bold text-base transition-all duration-200
+      hover:bg-sky-50 hover:border-sky-400 cursor-pointer
+    "
+        // Active page
+        activeLinkClassName="
+      !bg-sky-500 !border-sky-500 !text-white shadow-md
+      hover:!bg-sky-600
+    "
         // Break (...)
-        breakLinkClassName="px-4 py-2 text-gray-400"
+        breakLinkClassName="
+      px-3 py-2 text-gray-400 font-semibold
+    "
         // Disabled
-        disabledLinkClassName="!text-gray-300 !border-gray-200 !cursor-not-allowed hover:!bg-white hover:!border-gray-200"
+        disabledLinkClassName="
+      !text-gray-300 !border-gray-200 !cursor-not-allowed
+      hover:!bg-white hover:!border-gray-200
+    "
       />
     </div>
   );

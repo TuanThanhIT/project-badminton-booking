@@ -115,8 +115,8 @@ OrderDetail.belongsTo(ProductVarient, {
 });
 
 // Quan hệ 1-n giữa Category và Product
-Category.hasMany(Product, { foreignKey: "categoryId" });
-Product.belongsTo(Category, { foreignKey: "categoryId" });
+Category.hasMany(Product, { foreignKey: "categoryId", as: "products" });
+Product.belongsTo(Category, { foreignKey: "categoryId", as: "category" });
 
 // Quan hệ 1-n giữa Cart và CartItem
 Cart.hasMany(CartItem, { foreignKey: "cartId" });

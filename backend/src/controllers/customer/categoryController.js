@@ -34,10 +34,20 @@ const getCatesByGroupName = async (req, res, next) => {
   }
 };
 
+const getAllGroupName = async (req, res, next) => {
+  try {
+    const groupName = await categoryCustomerService.getAllGroupNameService();
+    return res.status(200).json(groupName);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const categoryCustomerController = {
   getCategoriesByGroupName,
   getOtherCategoriesByGroupName,
   getCatesByGroupName,
+  getAllGroupName,
 };
 
 export default categoryCustomerController;

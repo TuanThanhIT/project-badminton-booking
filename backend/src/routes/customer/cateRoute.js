@@ -13,6 +13,7 @@ const initCateCustomerRoute = (app) => {
     "/list/other/:cate_id",
     categoryCustomerController.getOtherCategoriesByGroupName
   );
+  cateRoute.get("/group/list", categoryCustomerController.getAllGroupName);
   app.use("/user/category", cateRoute);
 };
 export default initCateCustomerRoute;

@@ -1,4 +1,5 @@
 import type {
+  DiscountListResponse,
   DiscountRequest,
   DiscountResponse,
   UpdateDiscountRequest,
@@ -16,9 +17,13 @@ const updateDiscountService = (code: string) => {
   return instance.patch<UpdateDiscountResponse>("/user/discount/update", data);
 };
 
+const getDiscountService = () =>
+  instance.get<DiscountListResponse[]>("/user/discount/list");
+
 const discountService = {
   applyDiscountService,
   updateDiscountService,
+  getDiscountService,
 };
 
 export default discountService;

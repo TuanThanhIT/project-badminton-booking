@@ -12,6 +12,10 @@ const initDiscountBookingCustomerRoute = (app) => {
     "/update",
     discountBookingController.updateDiscountBooking
   );
+  discountBookingRoute.get(
+    "/list",
+    discountBookingController.getDiscountBooking
+  );
   app.use("/user/discount/booking", discountBookingRoute);
 };
 export default initDiscountBookingCustomerRoute;

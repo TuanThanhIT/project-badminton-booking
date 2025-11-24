@@ -1,4 +1,8 @@
-import type { ProductParams, ProductRelatedParams } from "../types/product";
+import type {
+  ProductParams,
+  ProductRelatedParams,
+  ProPrams,
+} from "../types/product";
 import instance from "../utils/axiosCustomize";
 
 const getProductByFiltersService = (params: ProductParams) =>
@@ -13,10 +17,14 @@ const getProductDetailService = (productId: number) =>
 const getProductRelatedService = (params: ProductRelatedParams) =>
   instance.get("/user/product/list", { params });
 
+const getProductByGroupName = (params: ProPrams) =>
+  instance.get("/user/product/group/list", { params });
+
 const productService = {
   getProductByFiltersService,
   getProductDetailService,
   getProductRelatedService,
   getProductByGroupAndFiltersService,
+  getProductByGroupName,
 };
 export default productService;

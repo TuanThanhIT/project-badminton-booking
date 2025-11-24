@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type {
+  DiscountListResponse,
   DiscountResponse,
   UpdateDiscountResponse,
 } from "../../types/discount";
@@ -9,6 +10,8 @@ import discountBookingService from "../../services/discountBookingService";
 
 interface DiscountState {
   discount?: DiscountResponse;
+  discounts: DiscountListResponse[];
+  discountBookings: DiscountListResponse[];
   message?: string;
   loading: boolean;
   error: string | undefined;
@@ -16,6 +19,8 @@ interface DiscountState {
 
 const initialState: DiscountState = {
   discount: undefined,
+  discounts: [],
+  discountBookings: [],
   message: undefined,
   loading: false,
   error: undefined,
@@ -77,6 +82,32 @@ export const updateDiscountBooking = createAsyncThunk<
   try {
     const res = await discountBookingService.updateDiscountBookingService(code);
     return res.data as UpdateDiscountResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
+export const getDiscount = createAsyncThunk<
+  DiscountListResponse[],
+  void,
+  { rejectValue: ApiErrorType }
+>("discount/getDiscount", async (_, { rejectWithValue }) => {
+  try {
+    const res = await discountService.getDiscountService();
+    return res.data as DiscountListResponse[];
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
+export const getDiscountBooking = createAsyncThunk<
+  DiscountListResponse[],
+  void,
+  { rejectValue: ApiErrorType }
+>("discount/getDiscountBooking", async (_, { rejectWithValue }) => {
+  try {
+    const res = await discountBookingService.getDiscountBookingService();
+    return res.data as DiscountListResponse[];
   } catch (error) {
     return rejectWithValue(error as ApiErrorType);
   }
@@ -147,6 +178,18 @@ const discountSlice = createSlice({
       .addCase(updateDiscountBooking.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.userMessage;
+      })
+
+      // getDiscount
+      .addCase(getDiscount.fulfilled, (state, action) => {
+        state.loading = false;
+        state.discounts = action.payload;
+      })
+
+      // getDiscountBooking
+      .addCase(getDiscountBooking.fulfilled, (state, action) => {
+        state.loading = false;
+        state.discountBookings = action.payload;
       });
   },
 });

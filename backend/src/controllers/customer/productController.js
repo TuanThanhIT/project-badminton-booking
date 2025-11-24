@@ -3,7 +3,16 @@ import productCustomerService from "../../services/customer/productService.js";
 const getProductsByFilter = async (req, res, next) => {
   try {
     const cateId = req.query.category_id;
-    const { price_range, size, color, material, product_id, sort } = req.query;
+    const {
+      price_range,
+      size,
+      color,
+      material,
+      product_id,
+      sort,
+      page,
+      limit,
+    } = req.query;
     const prices = price_range ? price_range.split("-") : [];
     const sizes = size ? size.split(",") : [];
     const colors = color ? color.split(",") : [];
@@ -16,7 +25,10 @@ const getProductsByFilter = async (req, res, next) => {
         sizes,
         colors,
         materials,
-        excludeProductId
+        excludeProductId,
+        sort,
+        page,
+        limit
       );
     return res.status(200).json(productsFilter);
   } catch (error) {
@@ -27,7 +39,16 @@ const getProductsByFilter = async (req, res, next) => {
 const getProductsByGroupNameAndFilter = async (req, res, next) => {
   try {
     const groupName = req.query.group_name;
-    const { price_range, size, color, material, product_id, sort } = req.query;
+    const {
+      price_range,
+      size,
+      color,
+      material,
+      product_id,
+      sort,
+      page,
+      limit,
+    } = req.query;
     const prices = price_range ? price_range.split("-") : [];
     const sizes = size ? size.split(",") : [];
     const colors = color ? color.split(",") : [];
@@ -40,7 +61,10 @@ const getProductsByGroupNameAndFilter = async (req, res, next) => {
         sizes,
         colors,
         materials,
-        excludeProductId
+        excludeProductId,
+        sort,
+        page,
+        limit
       );
     return res.status(200).json(productsFilter);
   } catch (error) {

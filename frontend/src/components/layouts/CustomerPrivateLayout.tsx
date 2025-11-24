@@ -1,6 +1,7 @@
 import Header from "../commons/customer/Header";
 import Footer from "../commons/customer/Footer";
 import { Outlet } from "react-router-dom";
+import ScrollToTopButton from "../ui/ScrollToTopButton";
 
 const CustomerPrivateLayout = () => {
   return (
@@ -10,6 +11,7 @@ const CustomerPrivateLayout = () => {
         <Outlet />
       </main>
       <Footer />
+      <ScrollToTopButton />
     </div>
   );
 };

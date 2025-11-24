@@ -1,12 +1,13 @@
 import { Eye } from "lucide-react";
-import type { ProductResponse } from "../../types/product";
+import type { ProductInfo } from "../../types/product";
 import { useNavigate } from "react-router-dom";
 
 type ProductCardProps = {
-  product: ProductResponse;
+  product: ProductInfo;
+  group_name: string;
 };
 
-const ProductCard = ({ product }: ProductCardProps) => {
+const ProductCard = ({ product, group_name }: ProductCardProps) => {
   const navigate = useNavigate();
 
   return (
@@ -62,7 +63,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <button
             onClick={() =>
               navigate(
-                `/product/${product.id}?category_id=${product.categoryId}`
+                `/product/${product.id}?category_id=${
+                  product.category.id
+                }&category_name=${encodeURIComponent(
+                  product.category.cateName
+                )}&group=${encodeURIComponent(group_name)}`
               )
             }
             className="w-full bg-sky-100 text-sky-700 hover:bg-sky-200 hover:text-sky-800 text-sm font-semibold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all"

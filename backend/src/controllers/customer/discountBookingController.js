@@ -25,8 +25,19 @@ const updateDiscountBooking = async (req, res, next) => {
   }
 };
 
+const getDiscountBooking = async (req, res, next) => {
+  try {
+    const discountBookings =
+      await discountBookingService.getDiscountBookingService();
+    return res.status(200).json(discountBookings);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const discountBookingController = {
   applyDiscountBooking,
   updateDiscountBooking,
+  getDiscountBooking,
 };
 export default discountBookingController;

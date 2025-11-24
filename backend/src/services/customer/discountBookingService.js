@@ -96,9 +96,30 @@ const updateDiscountBookingService = async (code) => {
   }
 };
 
+const getDiscountBookingService = async () => {
+  try {
+    const discountBookings = await DiscountBooking.findAll({
+      where: { isUsed: false, isActive: true },
+      attributes: [
+        "id",
+        "code",
+        "type",
+        "value",
+        "startDate",
+        "endDate",
+        "minBookingAmount",
+      ],
+    });
+    return discountBookings;
+  } catch (error) {
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
+
 const discountBookingService = {
   applyDiscountBookingService,
   updateDiscountBookingService,
+  getDiscountBookingService,
 };
 
 export default discountBookingService;

@@ -30,6 +30,7 @@ export type ProductParams = {
   sort?: string;
   page?: number;
   limit?: number;
+  keyword?: string;
 };
 
 export type ProPrams = {

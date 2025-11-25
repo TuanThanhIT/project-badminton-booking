@@ -10,7 +10,7 @@ import {
   PaymentBooking,
   User,
 } from "../../models/index.js";
-import e from "express";
+import { where } from "sequelize";
 
 const createBookingService = async (
   bookingStatus,
@@ -36,6 +36,18 @@ const createBookingService = async (
     const user = await User.findByPk(userId);
     if (!user) {
       throw new ApiError(StatusCodes.NOT_FOUND, "Người dùng không tồn tại!");
+    }
+
+    if (bookingDetails.length === 0) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Chưa chọn khung giờ đặt sân nào!"
+      );
+    } else if (bookingDetails.length > 3) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Chỉ được chọn tối đa 3 khung giờ/sân/ngày!"
+      );
     }
 
     let booking;
@@ -73,6 +85,10 @@ const createBookingService = async (
     }));
 
     await BookingDetail.bulkCreate(detailsWithBookingId);
+
+    const ids = bookingDetails.map((detail) => detail.courtScheduleId);
+
+    await CourtSchedule.update({ isAvailable: false }, { where: { id: ids } });
 
     const methods = ["COD", "MOMO"];
     if (!methods.includes(paymentMethod)) {
@@ -214,6 +230,18 @@ const cancelBookingService = async (bookingId, cancelReason) => {
       cancelledBy: "User",
       cancelReason,
     });
+
+    const ids = await BookingDetail.findAll({
+      where: { bookingId },
+      attributes: ["courtScheduleId"],
+    });
+
+    const courtScheduleIds = ids.map((item) => item.courtScheduleId);
+
+    await CourtSchedule.update(
+      { isAvailable: true },
+      { where: { id: courtScheduleIds } }
+    );
 
     const paymentBooking = await PaymentBooking.findOne({
       where: { bookingId },

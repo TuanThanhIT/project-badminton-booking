@@ -22,7 +22,7 @@ const LoginPage = () => {
     formState: { errors, isDirty, isValid },
   } = useForm<formLogin>({
     resolver: zodResolver(FormLoginSchema),
-    defaultValues: { username: "user1", password: "123456" },
+    defaultValues: { username: "user1", password: "123456789" },
     mode: "onChange",
   });
 
@@ -74,6 +74,7 @@ const LoginPage = () => {
 
           <label>Mật khẩu</label>
           <input
+            type="password"
             placeholder="Mật khẩu"
             {...register("password")}
             className="border-0 p-2 px-4 rounded-md mb-3 shadow-sm outline-0"

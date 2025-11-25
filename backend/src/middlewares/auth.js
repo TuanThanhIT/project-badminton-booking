@@ -7,7 +7,6 @@ const auth = (req, res, next) => {
   const white_list = [
     "/auth/login",
     "/auth/register",
-    "/auth/abc",
     "/auth/verify-otp",
     "/auth/sent-otp",
     "/user/category/list",

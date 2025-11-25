@@ -12,6 +12,7 @@ const getProductsByFilter = async (req, res, next) => {
       sort,
       page,
       limit,
+      keyword,
     } = req.query;
     const prices = price_range ? price_range.split("-") : [];
     const sizes = size ? size.split(",") : [];
@@ -28,7 +29,8 @@ const getProductsByFilter = async (req, res, next) => {
         excludeProductId,
         sort,
         page,
-        limit
+        limit,
+        keyword
       );
     return res.status(200).json(productsFilter);
   } catch (error) {
@@ -48,6 +50,7 @@ const getProductsByGroupNameAndFilter = async (req, res, next) => {
       sort,
       page,
       limit,
+      keyword,
     } = req.query;
     const prices = price_range ? price_range.split("-") : [];
     const sizes = size ? size.split(",") : [];
@@ -64,7 +67,8 @@ const getProductsByGroupNameAndFilter = async (req, res, next) => {
         excludeProductId,
         sort,
         page,
-        limit
+        limit,
+        keyword
       );
     return res.status(200).json(productsFilter);
   } catch (error) {

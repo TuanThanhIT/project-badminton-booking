@@ -98,6 +98,10 @@ const cartSlice = createSlice({
       state.error = undefined;
     },
 
+    clearCart(state) {
+      state.cart = undefined;
+    },
+
     updateQuantityLocal(
       state,
       action: PayloadAction<{ cartItemId: number; quantity: number }>
@@ -237,5 +241,6 @@ const cartSlice = createSlice({
       });
   },
 });
-export const { clearCartError, updateQuantityLocal } = cartSlice.actions;
+export const { clearCartError, updateQuantityLocal, clearCart } =
+  cartSlice.actions;
 export default cartSlice.reducer;

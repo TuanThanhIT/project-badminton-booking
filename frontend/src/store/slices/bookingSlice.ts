@@ -71,6 +71,9 @@ const bookingSlice = createSlice({
     clearBookingsError(state) {
       state.error = undefined;
     },
+    clearBookings(state) {
+      state.bookings = [];
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -117,5 +120,5 @@ const bookingSlice = createSlice({
       });
   },
 });
-export const { clearBookingsError } = bookingSlice.actions;
+export const { clearBookingsError, clearBookings } = bookingSlice.actions;
 export default bookingSlice.reducer;

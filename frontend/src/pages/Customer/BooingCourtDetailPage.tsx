@@ -11,8 +11,6 @@ import {
 } from "../../store/slices/courtSlice";
 import {
   Loader2,
-  Info,
-  Star,
   CreditCard,
   Smartphone,
   DollarSign,
@@ -28,7 +26,10 @@ import {
   updateDiscountBooking,
 } from "../../store/slices/discountSlice";
 import type { AddBookingRequest } from "../../types/booking";
-import { addBooking } from "../../store/slices/bookingSlice";
+import {
+  addBooking,
+  clearBookingsError,
+} from "../../store/slices/bookingSlice";
 import type { ApiErrorType } from "../../types/error";
 import type { MomoPaymentRequest } from "../../types/order";
 import momoService from "../../services/momoService";
@@ -37,15 +38,7 @@ import {
   getBookingFeedback,
 } from "../../store/slices/bookingFeedbackSlice";
 import ReviewList from "../../components/ui/ReviewList";
-
-interface ProductFeedbackResponse {
-  userId: number;
-  username: string;
-  avatar: string;
-  content: string;
-  rating: number;
-  updatedDate: string;
-}
+import Swal from "sweetalert2";
 
 const BookingCourtDetailPage = () => {
   const { id } = useParams();
@@ -61,6 +54,7 @@ const BookingCourtDetailPage = () => {
   const bookingAmount = useAppSelector((state) => state.court.bookingAmount);
   const discountError = useAppSelector((state) => state.discount.error);
   const courtError = useAppSelector((state) => state.court.error);
+  const bookingError = useAppSelector((state) => state.booking.error);
   const bookingFeedbackLoading = useAppSelector(
     (state) => state.bookingFeedback.loading
   );
@@ -86,7 +80,8 @@ const BookingCourtDetailPage = () => {
   const [finalPrice, setFinalPrice] = useState<number>();
 
   useEffect(() => {
-    const error = discountError || courtError || bookingFeedbackError;
+    const error =
+      discountError || courtError || bookingFeedbackError || bookingError;
     if (error) {
       toast.error(error);
       if (courtError) {
@@ -99,8 +94,11 @@ const BookingCourtDetailPage = () => {
       if (bookingFeedbackError) {
         dispatch(clearBookingFeedbackError());
       }
+      if (bookingError) {
+        dispatch(clearBookingsError());
+      }
     }
-  }, [discountError, courtError, bookingFeedbackError, dispatch]);
+  }, [discountError, courtError, bookingFeedbackError, bookingError, dispatch]);
 
   useEffect(() => {
     const data = { courtId, date };
@@ -132,7 +130,7 @@ const BookingCourtDetailPage = () => {
       newSelectedSlots = selectedSlots.filter((x) => x.id !== slot.id);
     } else {
       if (selectedSlots.length >= 3) {
-        toast.error("Khách hàng được chọn tối đa 3 khung giờ một ngày!");
+        toast.error("Chỉ được chọn tối đa 3 khung giờ/sân/ngày!");
         return;
       }
       newSelectedSlots = [...selectedSlots, slot];
@@ -183,51 +181,61 @@ const BookingCourtDetailPage = () => {
   };
 
   const handleCheckout = async () => {
-    if (checkApply && code) {
-      await dispatch(updateDiscountBooking({ code }));
-    }
+    const result = await Swal.fire({
+      title: "Xác nhận đặt sân",
+      text: "Bạn có chắc chắn muốn đặt sân với các khung giờ đã lựa chọn?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Chắc chắn",
+      cancelButtonText: "Không",
+    });
+    if (result.isConfirmed) {
+      if (checkApply && code) {
+        await dispatch(updateDiscountBooking({ code }));
+      }
 
-    const bookingDetails =
-      selectedSlots.map((slot) => ({
-        courtScheduleId: slot.id,
-      })) || [];
+      const bookingDetails =
+        selectedSlots.map((slot) => ({
+          courtScheduleId: slot.id,
+        })) || [];
 
-    const bookingData: AddBookingRequest = {
-      bookingStatus: "Pending",
-      totalAmount: finalPrice ?? bookingAmount,
-      code,
-      note,
-      bookingDetails,
-      paymentAmount: finalPrice ?? bookingAmount,
-      paymentMethod,
-      paymentStatus: "Pending",
-    };
+      const bookingData: AddBookingRequest = {
+        bookingStatus: "Pending",
+        totalAmount: finalPrice ?? bookingAmount,
+        code,
+        note,
+        bookingDetails,
+        paymentAmount: finalPrice ?? bookingAmount,
+        paymentMethod,
+        paymentStatus: "Pending",
+      };
 
-    const resultAction = await dispatch(addBooking({ data: bookingData }));
+      const resultAction = await dispatch(addBooking({ data: bookingData }));
 
-    if (addBooking.fulfilled.match(resultAction)) {
-      const bookingId = resultAction.payload.bookingId;
-      if (paymentMethod === "COD") {
-        toast.success(resultAction.payload.message);
-        setTimeout(() => navigate("/booking/success"), 2000);
-      } else if (paymentMethod === "MOMO") {
-        try {
-          const momoBookingId = `${bookingId}_${Date.now()}`;
-          const data: MomoPaymentRequest = {
-            entityId: momoBookingId,
-            amount: bookingData.paymentAmount,
-            orderInfo: `Thanh toán đơn đặt sân #${bookingId}`,
-            type: "booking",
-          };
-          const res = await momoService.createMoMoPaymentService(data);
-          if (res.data.payUrl) {
-            window.location.href = res.data.payUrl;
-          } else {
-            toast.error("Không tạo được đường dẫn thanh toán Momo");
+      if (addBooking.fulfilled.match(resultAction)) {
+        const bookingId = resultAction.payload.bookingId;
+        if (paymentMethod === "COD") {
+          toast.success(resultAction.payload.message);
+          setTimeout(() => navigate("/booking/success"), 2000);
+        } else if (paymentMethod === "MOMO") {
+          try {
+            const momoBookingId = `${bookingId}_${Date.now()}`;
+            const data: MomoPaymentRequest = {
+              entityId: momoBookingId,
+              amount: bookingData.paymentAmount,
+              orderInfo: `Thanh toán đơn đặt sân #${bookingId}`,
+              type: "booking",
+            };
+            const res = await momoService.createMoMoPaymentService(data);
+            if (res.data.payUrl) {
+              window.location.href = res.data.payUrl;
+            } else {
+              toast.error("Không tạo được đường dẫn thanh toán Momo");
+            }
+          } catch (error: any) {
+            const apiError = error as ApiErrorType;
+            toast.error(apiError.userMessage || "Tạo thanh toán Momo thất bại");
           }
-        } catch (error: any) {
-          const apiError = error as ApiErrorType;
-          toast.error(apiError.userMessage || "Tạo thanh toán Momo thất bại");
         }
       }
     }
@@ -291,29 +299,35 @@ const BookingCourtDetailPage = () => {
                   onClick={() => toggleSlot(slot)}
                   disabled={disabled}
                   className={`
-    relative flex flex-col items-center justify-center p-4 rounded-2xl border border-gray-400 transition-all duration-200 transform
+    relative flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-200 transform
     ${
       disabled
-        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+        ? "bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed"
         : "hover:scale-105 hover:border-green-500"
     }
     ${
       isSelected
         ? "bg-green-300 text-green-900 border-green-500 font-semibold"
-        : "bg-white text-gray-700 border-gray-200"
+        : !disabled
+        ? "bg-white text-gray-700 border-gray-200"
+        : ""
     }
   `}
                 >
-                  {/* Thời gian */}
                   <span className="font-medium mb-1">
                     {slot.startTime.slice(0, 5)} - {slot.endTime.slice(0, 5)}
                   </span>
 
-                  {/* Thời lượng */}
                   <span
                     className={`
       text-xs font-semibold px-3 py-1 rounded-full
-      ${isSelected ? "bg-green-600 text-white" : "bg-gray-100 text-gray-700"}
+      ${
+        isSelected
+          ? "bg-green-600 text-white"
+          : disabled
+          ? "bg-gray-400 text-gray-200"
+          : "bg-gray-100 text-gray-700"
+      }
     `}
                   >
                     60'

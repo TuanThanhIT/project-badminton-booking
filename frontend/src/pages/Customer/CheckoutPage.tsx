@@ -35,6 +35,7 @@ import { useNavigate } from "react-router-dom";
 import { addOrder, clearOrdersError } from "../../store/slices/orderSlice";
 import type { AddOrderRequest, MomoPaymentRequest } from "../../types/order";
 import momoService from "../../services/momoService";
+import Swal from "sweetalert2";
 
 const CheckoutPage = () => {
   const dispatch = useAppDispatch();
@@ -134,53 +135,63 @@ const CheckoutPage = () => {
   };
 
   const handleCheckout = async () => {
-    if (checkApply && code) {
-      await dispatch(updateDiscount({ code }));
-    }
+    const result = await Swal.fire({
+      title: "Xác nhận đặt hàng",
+      text: "Bạn có chắc chắn muốn đặt hàng các sản phẩm đã lựa chọn?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Chắc chắn",
+      cancelButtonText: "Không",
+    });
+    if (result.isConfirmed) {
+      if (checkApply && code) {
+        await dispatch(updateDiscount({ code }));
+      }
 
-    const orderDetails =
-      cart?.cartItems?.map((item) => ({
-        quantity: item.quantity,
-        subTotal: item.subTotal,
-        varientId: item.varientId,
-      })) || [];
+      const orderDetails =
+        cart?.cartItems?.map((item) => ({
+          quantity: item.quantity,
+          subTotal: item.subTotal,
+          varientId: item.varientId,
+        })) || [];
 
-    const orderData: AddOrderRequest = {
-      orderStatus: "Pending",
-      totalAmount: discount?.finalPrice ?? cart?.totalAmount ?? 0,
-      code,
-      note,
-      orderDetails,
-      paymentAmount: discount?.finalPrice ?? cart?.totalAmount ?? 0,
-      paymentMethod,
-      paymentStatus: "Pending",
-    };
+      const orderData: AddOrderRequest = {
+        orderStatus: "Pending",
+        totalAmount: discount?.finalPrice ?? cart?.totalAmount ?? 0,
+        code,
+        note,
+        orderDetails,
+        paymentAmount: discount?.finalPrice ?? cart?.totalAmount ?? 0,
+        paymentMethod,
+        paymentStatus: "Pending",
+      };
 
-    const resultAction = await dispatch(addOrder({ data: orderData }));
+      const resultAction = await dispatch(addOrder({ data: orderData }));
 
-    if (addOrder.fulfilled.match(resultAction)) {
-      const orderId = resultAction.payload.orderId;
-      if (paymentMethod === "COD") {
-        toast.success(resultAction.payload.message);
-        setTimeout(() => navigate("/orders/success"), 2000);
-      } else if (paymentMethod === "MOMO") {
-        try {
-          const momoOrderId = `${orderId}_${Date.now()}`;
-          const data: MomoPaymentRequest = {
-            entityId: momoOrderId,
-            amount: orderData.paymentAmount,
-            orderInfo: `Thanh toán đơn hàng #${orderId}`,
-            type: "order",
-          };
-          const res = await momoService.createMoMoPaymentService(data);
-          if (res.data.payUrl) {
-            window.location.href = res.data.payUrl;
-          } else {
-            toast.error("Không tạo được đường dẫn thanh toán Momo");
+      if (addOrder.fulfilled.match(resultAction)) {
+        const orderId = resultAction.payload.orderId;
+        if (paymentMethod === "COD") {
+          toast.success(resultAction.payload.message);
+          setTimeout(() => navigate("/orders/success"), 2000);
+        } else if (paymentMethod === "MOMO") {
+          try {
+            const momoOrderId = `${orderId}_${Date.now()}`;
+            const data: MomoPaymentRequest = {
+              entityId: momoOrderId,
+              amount: orderData.paymentAmount,
+              orderInfo: `Thanh toán đơn hàng #${orderId}`,
+              type: "order",
+            };
+            const res = await momoService.createMoMoPaymentService(data);
+            if (res.data.payUrl) {
+              window.location.href = res.data.payUrl;
+            } else {
+              toast.error("Không tạo được đường dẫn thanh toán Momo");
+            }
+          } catch (error: any) {
+            const apiError = error as ApiErrorType;
+            toast.error(apiError.userMessage || "Tạo thanh toán Momo thất bại");
           }
-        } catch (error: any) {
-          const apiError = error as ApiErrorType;
-          toast.error(apiError.userMessage || "Tạo thanh toán Momo thất bại");
         }
       }
     }

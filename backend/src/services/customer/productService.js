@@ -29,25 +29,30 @@ const getProductsByFilterService = async (
   excludeProductId,
   sort,
   page,
-  limit
+  limit,
+  keyword // thêm tham số
 ) => {
   try {
     const p = page && page !== "null" ? parseInt(page) : 1;
     const l = limit && limit !== "null" ? parseInt(limit) : 10;
     const offset = (p - 1) * l;
 
-    // 1. Kiểm tra danh mục có tồn tại hay không
     const category = await Category.findByPk(cateId);
     if (!category) {
       throw new ApiError(StatusCodes.NOT_FOUND, "Danh mục không tồn tại!");
     }
 
-    // 2. Lấy product IDs phân trang
+    // Xử lý keyword
+    const kw = keyword && keyword !== "null" ? keyword : undefined;
+
+    const whereCondition = {
+      categoryId: cateId,
+      ...(excludeProductId && { id: { [Op.ne]: excludeProductId } }),
+      ...(kw && { productName: { [Op.like]: `%${kw}%` } }),
+    };
+
     const productIdsPage = await Product.findAll({
-      where: {
-        categoryId: cateId,
-        ...(excludeProductId && { id: { [Op.ne]: excludeProductId } }),
-      },
+      where: whereCondition,
       attributes: ["id"],
       limit: l,
       offset,
@@ -56,18 +61,11 @@ const getProductsByFilterService = async (
 
     const ids = productIdsPage.map((p) => p.id);
     if (ids.length === 0) {
-      return { productFormatted: [], total: 0, page: p, limit: l };
+      return { products: [], total: 0, page: p, limit: l };
     }
 
-    // 3. Lấy tổng số sản phẩm (count)
-    const total = await Product.count({
-      where: {
-        categoryId: cateId,
-        ...(excludeProductId && { id: { [Op.ne]: excludeProductId } }),
-      },
-    });
+    const total = await Product.count({ where: whereCondition });
 
-    // 4. Lấy Product + MIN(varients.price)
     const productsFilter = await Product.findAll({
       where: { id: { [Op.in]: ids } },
       attributes: [
@@ -106,16 +104,13 @@ const getProductsByFilterService = async (
       nest: true,
     });
 
-    // 5. Xử lý từng sản phẩm (discount, minDiscountedPrice, isNew)
     const productFormatted = await Promise.all(
       productsFilter.map(async (p) => {
         const minPrice = parseFloat(p.get("minPrice"));
-
         const varient = await ProductVarient.findOne({
           where: { productId: p.id, price: minPrice },
           attributes: ["discount"],
         });
-
         const discount = varient ? varient.discount : 0;
         const minDiscountedPrice = minPrice - (minPrice * discount) / 100;
 
@@ -125,12 +120,7 @@ const getProductsByFilterService = async (
           (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
         const isNew = diffDays <= 10;
 
-        return {
-          ...p.toJSON(),
-          discount,
-          minDiscountedPrice,
-          isNew,
-        };
+        return { ...p.toJSON(), discount, minDiscountedPrice, isNew };
       })
     );
 
@@ -150,30 +140,34 @@ const getProductsByGroupNameAndFilterService = async (
   excludeProductId,
   sort,
   page,
-  limit
+  limit,
+  keyword // thêm tham số
 ) => {
   try {
-    // 1. Chuyển page và limit về số hợp lệ
     const p = page && page !== "null" ? parseInt(page) : 1;
     const l = limit && limit !== "null" ? parseInt(limit) : 10;
     const offset = (p - 1) * l;
 
-    // 2. Lấy tất cả category của groupName
     const categories = await Category.findAll({
       where: { menuGroup: groupName },
     });
     const categoryIds = categories.map((c) => c.id);
 
     if (categoryIds.length === 0) {
-      return { productFormatted: [], total: 0, page: p, limit: l };
+      return { products: [], total: 0, page: p, limit: l };
     }
 
-    // 3. Lấy product ids theo phân trang trước
+    // Xử lý keyword
+    const kw = keyword && keyword !== "null" ? keyword : undefined;
+
+    const whereCondition = {
+      categoryId: { [Op.in]: categoryIds },
+      ...(excludeProductId && { id: { [Op.ne]: excludeProductId } }),
+      ...(kw && { productName: { [Op.like]: `%${kw}%` } }),
+    };
+
     const productIdsPage = await Product.findAll({
-      where: {
-        categoryId: { [Op.in]: categoryIds },
-        ...(excludeProductId && { id: { [Op.ne]: excludeProductId } }),
-      },
+      where: whereCondition,
       attributes: ["id"],
       limit: l,
       offset,
@@ -181,20 +175,12 @@ const getProductsByGroupNameAndFilterService = async (
     });
 
     const ids = productIdsPage.map((p) => p.id);
-
     if (ids.length === 0) {
-      return { productFormatted: [], total: 0, page: p, limit: l };
+      return { products: [], total: 0, page: p, limit: l };
     }
 
-    // 4. Lấy tổng số sản phẩm (count)
-    const total = await Product.count({
-      where: {
-        categoryId: { [Op.in]: categoryIds },
-        ...(excludeProductId && { id: { [Op.ne]: excludeProductId } }),
-      },
-    });
+    const total = await Product.count({ where: whereCondition });
 
-    // 5. Lấy Product + MIN(varients.price)
     const productsFilter = await Product.findAll({
       where: { id: { [Op.in]: ids } },
       attributes: [
@@ -233,19 +219,13 @@ const getProductsByGroupNameAndFilterService = async (
       nest: true,
     });
 
-    // 6. Xử lý từng sản phẩm (discount, minDiscountedPrice, isNew)
     const productFormatted = await Promise.all(
       productsFilter.map(async (p) => {
         const minPrice = parseFloat(p.get("minPrice"));
-
         const varient = await ProductVarient.findOne({
-          where: {
-            productId: p.id,
-            price: minPrice,
-          },
+          where: { productId: p.id, price: minPrice },
           attributes: ["discount"],
         });
-
         const discount = varient ? varient.discount : 0;
         const minDiscountedPrice = minPrice - (minPrice * discount) / 100;
 
@@ -255,20 +235,13 @@ const getProductsByGroupNameAndFilterService = async (
           (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
         const isNew = diffDays <= 10;
 
-        return {
-          ...p.toJSON(),
-          discount,
-          minDiscountedPrice,
-          isNew,
-        };
+        return { ...p.toJSON(), discount, minDiscountedPrice, isNew };
       })
     );
 
     return { products: productFormatted, total, page: p, limit: l };
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
+    if (error instanceof ApiError) throw error;
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };

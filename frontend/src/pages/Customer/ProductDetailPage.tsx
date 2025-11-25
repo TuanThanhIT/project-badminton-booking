@@ -1,9 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import { ShoppingCart } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../store/hook";
-import { addCart, clearCartError } from "../../store/slices/cartSlice";
+import {
+  addCart,
+  clearCartError,
+  deleteAllCart,
+} from "../../store/slices/cartSlice";
 import productService from "../../services/productService";
 import type { ApiErrorType } from "../../types/error";
 import type {
@@ -26,6 +31,7 @@ const formatPrice = (n: number) =>
 const ProductDetailPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const cartError = useAppSelector((state) => state.cart.error);
+  const navigate = useNavigate();
   const productFeedbacks = useAppSelector(
     (state) => state.productFeedback.productFeedbacks
   );
@@ -139,9 +145,30 @@ const ProductDetailPage: React.FC = () => {
     try {
       await dispatch(addCart({ quantity, varientId }));
       toast.success("Đã thêm vào giỏ hàng!");
-    } catch (err) {
-      const apiError = err as ApiErrorType;
-      toast.error(apiError?.userMessage ?? "Thêm giỏ hàng thất bại");
+    } catch (error) {
+      // Đã xử lý lỗi rồi
+    }
+  };
+
+  const handleBuyNow = async () => {
+    const result = await Swal.fire({
+      title: "Xác nhận mua ngay",
+      text: "Bạn có chắc chắn muốn mua ngay sản phẩm này?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Chắc chắn",
+      cancelButtonText: "Không",
+    });
+
+    if (result.isConfirmed) {
+      if (!selectedVariant) {
+        toast.error("Vui lòng chọn size và màu!");
+        return;
+      }
+      const varientId = selectedVariant.id;
+      await dispatch(deleteAllCart());
+      await dispatch(addCart({ quantity, varientId }));
+      navigate("/checkout");
     }
   };
 
@@ -323,9 +350,7 @@ const ProductDetailPage: React.FC = () => {
                 Thêm vào giỏ hàng
               </button>
               <button
-                onClick={() =>
-                  toast.info("⚡ Mua ngay xử lý sau (placeholder)!")
-                }
+                onClick={() => handleBuyNow()}
                 className="flex-1 border-2 border-sky-600 text-sky-600 px-6 py-4 rounded-2xl font-semibold text-lg hover:bg-sky-50 transition-all duration-300 hover:scale-[1.02]"
               >
                 Mua ngay

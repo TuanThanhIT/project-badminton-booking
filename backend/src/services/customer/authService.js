@@ -70,7 +70,7 @@ const createUserService = async (username, email, password) => {
       userId: user.id,
     });
 
-    sendOtpMail(email, otpCode);
+    mailer.sendOtpMail(email, otpCode);
 
     const safeUser = {
       id: user.id,
@@ -85,10 +85,7 @@ const createUserService = async (username, email, password) => {
     return { safeUser };
   } catch (error) {
     if (error instanceof ApiError) throw error;
-    throw new ApiError(
-      StatusCodes.INTERNAL_SERVER_ERROR,
-      "Đã xảy ra lỗi khi tạo tài khoản. Vui lòng thử lại sau!"
-    );
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
 

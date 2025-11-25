@@ -12,6 +12,7 @@ import { toast } from "react-toastify";
 import { ArrowRight, Loader2, ShoppingCart, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import debounce from "lodash/debounce";
+import Swal from "sweetalert2";
 
 const CartPage = () => {
   const dispatch = useAppDispatch();
@@ -55,8 +56,18 @@ const CartPage = () => {
     toast.success("Xóa tất cả sản phẩm khỏi giỏ hàng thành công");
   };
 
-  const handleCheckout = () => {
-    navigate("/checkout");
+  const handleCheckout = async () => {
+    const result = await Swal.fire({
+      title: "Xác nhận thanh toán",
+      text: "Bạn có chắc chắn thanh toán cho tất cả sản phẩm trong giỏ hàng?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Chắc chắn",
+      cancelButtonText: "Không",
+    });
+    if (result.isConfirmed) {
+      navigate("/checkout");
+    }
   };
 
   const handleQuantityChange = (item: any, val: number) => {

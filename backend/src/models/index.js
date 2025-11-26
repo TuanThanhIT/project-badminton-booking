@@ -23,6 +23,18 @@ import PaymentBooking from "./paymentBooking.js";
 import BookingFeedback from "./bookingFeedback.js";
 import CourtPrice from "./courtPrice.js";
 import BookingDetail from "./bookingDetail.js";
+import DraftBooking from "./draftBooking.js";
+import DraftBookingItem from "./draftBookingItem.js";
+import DraftProductItem from "./draftProductItem.js";
+import DraftBeverageItem from "./draftBeverageItem.js";
+import Beverage from "./beverage.js";
+import OfflineBooking from "./offlineBooking.js";
+import OfflineBookingItem from "./offlineBookingItem.js";
+import OfflineProductItem from "./offlineProductItem.js";
+import OfflineBeverageItem from "./offlineBeverageItem.js";
+import WorkShift from "./workShift.js";
+import WorkShiftEmployee from "./workShiftEmployee.js";
+import CashRegister from "./cashRegister.js";
 
 // Quan hệ n-1 giữa Role và User
 Role.hasMany(User, { foreignKey: "roleId" });
@@ -164,6 +176,184 @@ OrderDetail.hasOne(ProductFeedback, {
   as: "feedback",
 });
 
+// ======================= DRAFT =======================
+
+// DraftBooking ↔ DraftBookingItem (1-n)
+DraftBooking.hasMany(DraftBookingItem, {
+  foreignKey: "draftId",
+  as: "draftBookingItems",
+});
+DraftBookingItem.belongsTo(DraftBooking, {
+  foreignKey: "draftId",
+  as: "draftBooking",
+});
+
+// DraftBookingItem ↔ CourtSchedule (1-1)
+CourtSchedule.hasOne(DraftBookingItem, {
+  foreignKey: "courtScheduleId",
+  as: "draftBookingItem",
+});
+DraftBookingItem.belongsTo(CourtSchedule, {
+  foreignKey: "courtScheduleId",
+  as: "courtSchedule",
+});
+
+// DraftBooking ↔ DraftProductItem (1-n)
+DraftBooking.hasMany(DraftProductItem, {
+  foreignKey: "draftId",
+  as: "draftProductItems",
+});
+DraftProductItem.belongsTo(DraftBooking, {
+  foreignKey: "draftId",
+  as: "draftBooking",
+});
+
+// DraftProductItem ↔ ProductVarient (1-n)
+ProductVarient.hasMany(DraftProductItem, {
+  foreignKey: "productVarientId",
+  as: "draftProductItems",
+});
+DraftProductItem.belongsTo(ProductVarient, {
+  foreignKey: "productVarientId",
+  as: "productVarient",
+});
+
+// DraftBooking ↔ DraftBeverageItem (1-n)
+DraftBooking.hasMany(DraftBeverageItem, {
+  foreignKey: "draftId",
+  as: "draftBeverageItems",
+});
+DraftBeverageItem.belongsTo(DraftBooking, {
+  foreignKey: "draftId",
+  as: "draftBooking",
+});
+
+// DraftBeverageItem ↔ Beverage (1-n)
+Beverage.hasMany(DraftBeverageItem, {
+  foreignKey: "beverageId",
+  as: "draftBeverageItems",
+});
+DraftBeverageItem.belongsTo(Beverage, {
+  foreignKey: "beverageId",
+  as: "beverage",
+});
+
+// ======================= OFFLINE =======================
+
+// OfflineBooking ↔ OfflineBookingItem (1-n)
+OfflineBooking.hasMany(OfflineBookingItem, {
+  foreignKey: "offlineBookingId",
+  as: "offlineBookingItems",
+});
+OfflineBookingItem.belongsTo(OfflineBooking, {
+  foreignKey: "offlineBookingId",
+  as: "offlineBooking",
+});
+
+// OfflineBookingItem ↔ CourtSchedule (1-1)
+CourtSchedule.hasOne(OfflineBookingItem, {
+  foreignKey: "courtScheduleId",
+  as: "offlineBookingItem",
+});
+OfflineBookingItem.belongsTo(CourtSchedule, {
+  foreignKey: "courtScheduleId",
+  as: "courtSchedule",
+});
+
+// OfflineBooking ↔ OfflineProductItem (1-n)
+OfflineBooking.hasMany(OfflineProductItem, {
+  foreignKey: "offlineBookingId",
+  as: "offlineProductItems",
+});
+OfflineProductItem.belongsTo(OfflineBooking, {
+  foreignKey: "offlineBookingId",
+  as: "offlineBooking",
+});
+
+// OfflineProductItem ↔ ProductVarient (1-n)
+ProductVarient.hasMany(OfflineProductItem, {
+  foreignKey: "productVarientId",
+  as: "offlineProductItems",
+});
+OfflineProductItem.belongsTo(ProductVarient, {
+  foreignKey: "productVarientId",
+  as: "productVarient",
+});
+
+// OfflineBooking ↔ OfflineBeverageItem (1-n)
+OfflineBooking.hasMany(OfflineBeverageItem, {
+  foreignKey: "offlineBookingId",
+  as: "offlineBeverageItems",
+});
+OfflineBeverageItem.belongsTo(OfflineBooking, {
+  foreignKey: "offlineBookingId",
+  as: "offlineBooking",
+});
+
+// OfflineBeverageItem ↔ Beverage (1-n)
+Beverage.hasMany(OfflineBeverageItem, {
+  foreignKey: "beverageId",
+  as: "offlineBeverageItems",
+});
+OfflineBeverageItem.belongsTo(Beverage, {
+  foreignKey: "beverageId",
+  as: "beverage",
+});
+
+// ======================= WORKSHIFT =======================
+
+// WorkShift ↔ WorkShiftEmployee (1-n)
+WorkShift.hasMany(WorkShiftEmployee, {
+  foreignKey: "workShiftId",
+  as: "workShiftEmployees",
+});
+WorkShiftEmployee.belongsTo(WorkShift, {
+  foreignKey: "workShiftId",
+  as: "workShift",
+});
+
+// WorkShiftEmployee ↔ CashRegister (1-1)
+WorkShiftEmployee.hasOne(CashRegister, {
+  foreignKey: "workShiftEmployeeId",
+  as: "cashRegister",
+});
+CashRegister.belongsTo(WorkShiftEmployee, {
+  foreignKey: "workShiftEmployeeId",
+  as: "workShiftEmployee",
+});
+
+// ======================= USER =======================
+
+// User ↔ DraftBooking (1-n)
+User.hasMany(DraftBooking, { foreignKey: "employeeId", as: "draftBookings" });
+DraftBooking.belongsTo(User, { foreignKey: "employeeId", as: "employee" });
+
+// User ↔ OfflineBooking (1-n)
+User.hasMany(OfflineBooking, {
+  foreignKey: "employeeId",
+  as: "offlineBookings",
+});
+OfflineBooking.belongsTo(User, { foreignKey: "employeeId", as: "employee" });
+
+// User ↔ WorkShiftEmployee (1-n)
+User.hasMany(WorkShiftEmployee, {
+  foreignKey: "employeeId",
+  as: "workShiftAssignments",
+});
+WorkShiftEmployee.belongsTo(User, { foreignKey: "employeeId", as: "employee" });
+
+// ======================= DRAFT ↔ OFFLINE =======================
+
+// DraftBooking ↔ OfflineBooking (1-1)
+DraftBooking.hasOne(OfflineBooking, {
+  foreignKey: "draftId",
+  as: "offlineBooking",
+});
+OfflineBooking.belongsTo(DraftBooking, {
+  foreignKey: "draftId",
+  as: "draftBooking",
+});
+
 export {
   Role,
   User,
@@ -189,4 +379,15 @@ export {
   BookingFeedback,
   CourtPrice,
   BookingDetail,
+  DraftBooking,
+  DraftBeverageItem,
+  DraftProductItem,
+  DraftBookingItem,
+  OfflineBooking,
+  OfflineBeverageItem,
+  OfflineProductItem,
+  OfflineBookingItem,
+  WorkShift,
+  WorkShiftEmployee,
+  CashRegister,
 };

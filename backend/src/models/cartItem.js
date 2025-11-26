@@ -13,7 +13,7 @@ const CartItem = sequelize.define(
     },
     varientId: {
       type: DataTypes.INTEGER,
-      references: { model: "ProductVarient", key: "id" },
+      references: { model: "ProductVarients", key: "id" },
       allowNull: false,
     },
   },

@@ -1,4 +1,4 @@
-import { Profile, User } from "../../models/index.js";
+import { Profile, Role, User } from "../../models/index.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
@@ -195,7 +195,16 @@ const sentVerifyOtpService = async (email) => {
  */
 const handleLoginService = async (username, password) => {
   try {
-    const user = await User.findOne({ where: { username } });
+    const user = await User.findOne({
+      where: { username },
+      include: [
+        {
+          model: Role,
+          as: "role",
+          attributes: ["id", "roleName"],
+        },
+      ],
+    });
 
     // Không tiết lộ tài khoản có tồn tại hay không
     if (!user) {
@@ -224,6 +233,7 @@ const handleLoginService = async (username, password) => {
       id: user.id,
       username: user.username,
       email: user.email,
+      role: user.role.roleName,
     };
 
     const access_token = jwt.sign(payload, process.env.JWT_SECRET, {
@@ -236,6 +246,7 @@ const handleLoginService = async (username, password) => {
         id: user.id,
         email: user.email,
         username: user.username,
+        role: user.role.roleName,
       },
     };
   } catch (error) {

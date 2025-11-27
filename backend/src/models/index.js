@@ -37,8 +37,8 @@ import WorkShiftEmployee from "./workShiftEmployee.js";
 import CashRegister from "./cashRegister.js";
 
 // Quan hệ n-1 giữa Role và User
-Role.hasMany(User, { foreignKey: "roleId" });
-User.belongsTo(Role, { foreignKey: "roleId" });
+Role.hasMany(User, { foreignKey: "roleId", as: "users" });
+User.belongsTo(Role, { foreignKey: "roleId", as: "role" });
 
 // Quan hệ 1-1 giữa User và Profile
 User.hasOne(Profile, { foreignKey: "userId" });

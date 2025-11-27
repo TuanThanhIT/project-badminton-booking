@@ -1,6 +1,8 @@
 import express from "express";
 import courtController from "../../controllers/admin/courtController.js";
 import multer from "multer";
+import auth from "../../middlewares/auth.js";
+import authorize from "../../middlewares/authorize.js";
 
 const courtRoute = express.Router();
 
@@ -10,9 +12,20 @@ var uploader = multer({
 });
 
 const initCourtAdminRoute = (app) => {
-  courtRoute.post("/add", uploader.single("file"), courtController.createCourt);
-  courtRoute.post("/price/add", courtController.createCourtPrice);
-  courtRoute.post("/create-weekly-slots", courtController.createWeeklySlots);
+  courtRoute.post(
+    "/add",
+    auth,
+    authorize(),
+    uploader.single("file"),
+    courtController.createCourt
+  );
+  courtRoute.post("/price/add", auth, courtController.createCourtPrice);
+  courtRoute.post(
+    "/create-weekly-slots",
+    auth,
+    authorize(),
+    courtController.createWeeklySlots
+  );
   app.use("/admin/court", courtRoute);
 };
 export default initCourtAdminRoute;

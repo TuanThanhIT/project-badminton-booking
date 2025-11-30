@@ -3,7 +3,7 @@ import { useAppDispatch, useAppSelector } from "../../store/hook";
 import {
   getDiscount,
   getDiscountBooking,
-} from "../../store/slices/discountSlice";
+} from "../../store/slices/customer/discountSlice";
 import { toast } from "react-toastify";
 import { X, TicketPercent } from "lucide-react";
 import type { DiscountListResponse } from "../../types/discount";

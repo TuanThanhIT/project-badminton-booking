@@ -5,7 +5,7 @@ import {
   cancelOrder,
   clearOrdersError,
   getOrders,
-} from "../../store/slices/orderSlice";
+} from "../../store/slices/customer/orderSlice";
 import {
   Loader2,
   Package,
@@ -21,7 +21,7 @@ import type {
   OrderCancelRequest,
   OrderResponse,
 } from "../../types/order";
-import momoService from "../../services/momoService";
+import momoService from "../../services/Customer/momoService";
 import CancelForm from "../../components/ui/CancelForm";
 
 const statusColor = {
@@ -227,6 +227,13 @@ const OrderPage = () => {
               )}
             </div>
           </div>
+
+          {/* Ghi chú */}
+          {order.note && (
+            <div className="mt-4 p-3 bg-gray-50 border border-gray-100 rounded-lg text-gray-700 text-sm">
+              <span className="font-medium">Ghi chú:</span> {order.note}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -251,7 +258,7 @@ const OrderPage = () => {
     <CancelForm
       onSubmit={onSubmit}
       setOpenCancel={setOpenCancel}
-      type="booking"
+      type="product"
     />
   );
 

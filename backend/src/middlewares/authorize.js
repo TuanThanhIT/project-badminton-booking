@@ -9,7 +9,12 @@ const authorize = (...allowedRoles) => {
     if (req.user.role === "ADMIN") return next();
 
     if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ message: "Bạn không có quyền truy cập." });
+      return res
+        .status(403)
+        .json({
+          message:
+            "Tài khoản của bạn không hợp lệ. Bạn không có quyền truy cập.",
+        });
     }
 
     next();

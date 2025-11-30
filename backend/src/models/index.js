@@ -101,8 +101,8 @@ User.hasMany(Notification, { foreignKey: "userId" });
 Notification.belongsTo(User, { foreignKey: "userId" });
 
 // Quan hệ 1-n giữa User và Order
-User.hasMany(Order, { foreignKey: "userId" });
-Order.belongsTo(User, { foreignKey: "userId" });
+User.hasMany(Order, { foreignKey: "userId", as: "orders" });
+Order.belongsTo(User, { foreignKey: "userId", as: "user" });
 
 // Quan hệ 1-1 giữa Discount và Order
 Discount.hasOne(Order, { foreignKey: "discountId" });

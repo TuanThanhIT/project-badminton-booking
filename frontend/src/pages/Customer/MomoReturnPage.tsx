@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { CheckCircle, XCircle, Star, Sparkles } from "lucide-react";
 import { useEffect } from "react";
 import { useAppDispatch } from "../../store/hook";
-import { deleteAllCart } from "../../store/slices/cartSlice";
+import { deleteAllCart } from "../../store/slices/customer/cartSlice";
 
 const MomoReturnPage = () => {
   const navigate = useNavigate();

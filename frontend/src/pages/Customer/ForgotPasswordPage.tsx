@@ -9,7 +9,7 @@ import {
   type formForgotPassword,
 } from "../../schemas/FormForgotPasswordSchema";
 import type { ApiErrorType } from "../../types/error";
-import authService from "../../services/authService";
+import authService from "../../services/Customer/authService";
 
 const ForgotPasswordPage: React.FC = () => {
   const navigate = useNavigate();

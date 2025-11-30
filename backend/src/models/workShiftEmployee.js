@@ -6,23 +6,34 @@ const WorkShiftEmployee = sequelize.define(
   {
     workShiftId: {
       type: DataTypes.INTEGER,
-      references: { model: "WorkShifts", key: "id" },
       allowNull: false,
+      references: { model: "WorkShifts", key: "id" },
     },
     employeeId: {
       type: DataTypes.INTEGER,
+      allowNull: false,
       references: { model: "Users", key: "id" },
+    },
+
+    roleInShift: {
+      type: DataTypes.ENUM("Cashier", "Staff"),
+      defaultValue: "Staff",
       allowNull: false,
     },
+
     checkIn: {
-      type: DataTypes.DATE,
-      allowNull: false,
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     checkOut: {
-      type: DataTypes.DATE,
-      allowNull: false,
+      type: DataTypes.STRING,
+      allowNull: true,
     },
-    earnedWage: { type: DataTypes.DOUBLE, defaultValue: 0, allowNull: false },
+
+    earnedWage: {
+      type: DataTypes.DOUBLE,
+      defaultValue: 0,
+    },
   },
   {
     tableName: "WorkShiftEmployees",

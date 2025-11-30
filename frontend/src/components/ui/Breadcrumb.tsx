@@ -21,7 +21,7 @@ const Breadcrumb = ({
       aria-label="breadcrumb"
     >
       <NavLink to="/home" className="hover:text-sky-600">
-        Trang chủ
+        TRANG CHỦ
       </NavLink>
       <span className="mx-1">/</span>
 

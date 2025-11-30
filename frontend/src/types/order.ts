@@ -43,6 +43,15 @@ export type OrderPaymentInfo = {
   paymentMethod: string;
 };
 
+export type OrderUserInfo = {
+  username: string;
+  Profile: {
+    fullName: string;
+    address: string;
+    phoneNumber: string;
+  };
+};
+
 export type OrderResponse = {
   id: number;
   orderStatus: "Pending" | "Paid" | "Confirmed" | "Completed" | "Cancelled";
@@ -53,13 +62,57 @@ export type OrderResponse = {
   payment: OrderPaymentInfo;
 };
 
+export type OrderEplResponse = {
+  id: number;
+  orderStatus: "Pending" | "Paid" | "Confirmed" | "Completed" | "Cancelled";
+  totalAmount: number;
+  note: string | null;
+  createdDate: string;
+  orderDetails: OrderDetailInfo[];
+  payment: OrderPaymentInfo;
+  user: OrderUserInfo;
+};
+
 export type OrderListResponse = OrderResponse[];
+
+export type OrderListEplResponse = OrderEplResponse[];
+
+export type OrderEplRequest = {
+  status: string;
+  keyword: string;
+  date: string;
+};
 
 export type OrderCancelResponse = {
   message: string;
 };
 
 export type OrderCancelRequest = {
+  orderId: number;
+  cancelReason: string;
+};
+
+export type OrderConfirmRequest = {
+  orderId: number;
+};
+
+export type OrderConfirmResponse = {
+  message: string;
+};
+
+export type OrderCompleteRequest = {
+  orderId: number;
+};
+
+export type OrderCompleteResponse = {
+  message: string;
+};
+
+export type OrderCancelEplResponse = {
+  message: string;
+};
+
+export type OrderCancelEplRequest = {
   orderId: number;
   cancelReason: string;
 };

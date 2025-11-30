@@ -8,7 +8,6 @@ import HistoryPage from "../pages/Customer/HistoryPage";
 import LoginPage from "../pages/Customer/LoginPage";
 import RegisterPage from "../pages/Customer/RegisterPage";
 import ForgotPasswordPage from "../pages/Customer/ForgotPasswordPage";
-import NotFoundPage from "../pages/NotFoundPage";
 import OTPPage from "../pages/Customer/OTPPage";
 import ProfilePage from "../pages/Customer/ProfilePage";
 import CartPage from "../pages/Customer/CartPage";
@@ -67,8 +66,6 @@ const CustomerRoute = () => {
             element={<BookingCourtDetailPage />}
           ></Route>
         </Route>
-
-        <Route path="*" element={<NotFoundPage />}></Route>
       </Routes>
     </div>
   );

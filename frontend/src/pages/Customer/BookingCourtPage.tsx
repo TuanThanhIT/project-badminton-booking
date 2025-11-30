@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../store/hook";
-import { clearCourtError, getCourts } from "../../store/slices/courtSlice";
+import {
+  clearCourtError,
+  getCourts,
+} from "../../store/slices/customer/courtSlice";
 import { toast } from "react-toastify";
 import { Calendar, Loader2 } from "lucide-react";
 import type { CourtListRequest } from "../../types/court";

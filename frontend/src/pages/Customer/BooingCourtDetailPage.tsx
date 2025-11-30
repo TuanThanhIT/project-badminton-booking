@@ -8,7 +8,7 @@ import {
   getCourtSchedule,
   setBookingAmountLocal,
   updateBookingAmountLocal,
-} from "../../store/slices/courtSlice";
+} from "../../store/slices/customer/courtSlice";
 import {
   Loader2,
   CreditCard,
@@ -24,19 +24,19 @@ import {
   applyDiscountBooking,
   clearDiscountError,
   updateDiscountBooking,
-} from "../../store/slices/discountSlice";
+} from "../../store/slices/customer/discountSlice";
 import type { AddBookingRequest } from "../../types/booking";
 import {
   addBooking,
   clearBookingsError,
-} from "../../store/slices/bookingSlice";
+} from "../../store/slices/customer/bookingSlice";
 import type { ApiErrorType } from "../../types/error";
 import type { MomoPaymentRequest } from "../../types/order";
-import momoService from "../../services/momoService";
+import momoService from "../../services/Customer/momoService";
 import {
   clearBookingFeedbackError,
   getBookingFeedback,
-} from "../../store/slices/bookingFeedbackSlice";
+} from "../../store/slices/customer/bookingFeedbackSlice";
 import ReviewList from "../../components/ui/ReviewList";
 import Swal from "sweetalert2";
 

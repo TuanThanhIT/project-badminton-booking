@@ -7,7 +7,7 @@ import {
   fetchCart,
   updateQuantity,
   updateQuantityLocal,
-} from "../../store/slices/cartSlice";
+} from "../../store/slices/customer/cartSlice";
 import { toast } from "react-toastify";
 import { ArrowRight, Loader2, ShoppingCart, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";

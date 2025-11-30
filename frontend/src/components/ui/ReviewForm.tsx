@@ -13,11 +13,11 @@ import { useAppDispatch, useAppSelector } from "../../store/hook";
 import {
   clearProductFeedbackDetail,
   getProductFeedbackDetail,
-} from "../../store/slices/productFeedbackSlice";
+} from "../../store/slices/customer/productFeedbackSlice";
 
 import type { ProductFeedbackDetailRequest } from "../../types/productFeedback";
 
-import { getBookingFeedbackDetail } from "../../store/slices/bookingFeedbackSlice";
+import { getBookingFeedbackDetail } from "../../store/slices/customer/bookingFeedbackSlice";
 
 import type { BookingFeedbackDetailRequest } from "../../types/bookingFeedback";
 

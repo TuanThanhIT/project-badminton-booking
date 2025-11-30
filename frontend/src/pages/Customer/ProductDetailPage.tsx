@@ -8,8 +8,8 @@ import {
   addCart,
   clearCartError,
   deleteAllCart,
-} from "../../store/slices/cartSlice";
-import productService from "../../services/productService";
+} from "../../store/slices/customer/cartSlice";
+import productService from "../../services/Customer/productService";
 import type { ApiErrorType } from "../../types/error";
 import type {
   ProductDetailResponse,
@@ -21,7 +21,7 @@ import ProductReviewList from "../../components/ui/ReviewList";
 import {
   clearProductFeedbackError,
   getProductFeedback,
-} from "../../store/slices/productFeedbackSlice";
+} from "../../store/slices/customer/productFeedbackSlice";
 import Breadcrumb from "../../components/ui/Breadcrumb";
 
 // --- format tiền ---

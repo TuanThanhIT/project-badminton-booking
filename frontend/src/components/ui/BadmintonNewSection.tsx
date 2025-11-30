@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import type { ApiErrorType } from "../../types/error";
 import { toast } from "react-toastify";
-import categoryService from "../../services/categoryService";
-import productService from "../../services/productService";
+import categoryService from "../../services/Customer/categoryService";
+import productService from "../../services/Customer/productService";
 import type {
   ProductInfo,
   ProductResponse,

@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../store/hook";
 import { toast } from "react-toastify";
-import { clearOrdersError, getOrders } from "../../store/slices/orderSlice";
+import {
+  clearOrdersError,
+  getOrders,
+} from "../../store/slices/customer/orderSlice";
 import {
   Package,
   CalendarClock,
@@ -20,16 +23,16 @@ import {
   addProductFeedback,
   clearProductFeedbackError,
   updateProductFeedback,
-} from "../../store/slices/productFeedbackSlice";
+} from "../../store/slices/customer/productFeedbackSlice";
 import {
   clearBookingsError,
   getBookings,
-} from "../../store/slices/bookingSlice";
+} from "../../store/slices/customer/bookingSlice";
 import {
   addBookingFeedback,
   clearBookingFeedbackError,
   updateBookingFeedback,
-} from "../../store/slices/bookingFeedbackSlice";
+} from "../../store/slices/customer/bookingFeedbackSlice";
 
 const HistoryPage = () => {
   const dispatch = useAppDispatch();
@@ -392,6 +395,14 @@ const HistoryPage = () => {
                           </span>
                         </div>
                       </div>
+
+                      {/* Ghi chú */}
+                      {order.note && (
+                        <div className="mt-4 p-3 bg-gray-50 border border-gray-100 rounded-lg text-gray-700 text-sm">
+                          <span className="font-medium">Ghi chú:</span>{" "}
+                          {order.note}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -612,6 +623,14 @@ const HistoryPage = () => {
                           </div>
                         )}
                       </div>
+
+                      {/* Ghi chú */}
+                      {booking.note && (
+                        <div className="mt-4 p-3 bg-gray-50 border border-gray-100 rounded-lg text-gray-700 text-sm">
+                          <span className="font-medium">Ghi chú:</span>{" "}
+                          {booking.note}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

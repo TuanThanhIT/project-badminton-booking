@@ -14,12 +14,12 @@ import {
 
 import type { ApiErrorType } from "../../types/error";
 import type { MomoPaymentRequest } from "../../types/order";
-import momoService from "../../services/momoService";
+import momoService from "../../services/Customer/momoService";
 import {
   cancelBooking,
   clearBookingsError,
   getBookings,
-} from "../../store/slices/bookingSlice";
+} from "../../store/slices/customer/bookingSlice";
 import type {
   BookingCancelRequest,
   BookingResponse,
@@ -232,6 +232,13 @@ const BookingPage = () => {
               )}
             </div>
           </div>
+
+          {/* Ghi chú */}
+          {booking.note && (
+            <div className="mt-4 p-3 bg-gray-50 border border-gray-100 rounded-lg text-gray-700 text-sm">
+              <span className="font-medium">Ghi chú:</span> {booking.note}
+            </div>
+          )}
         </div>
       </div>
     );

@@ -1,13 +1,15 @@
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import storage from "redux-persist/lib/storage"; // dùng localStorage
 import { persistReducer, persistStore } from "redux-persist";
-import cartReducer from "./slices/cartSlice";
-import discountReducer from "./slices/discountSlice";
-import orderReducer from "./slices/orderSlice";
-import productFeedbackReducer from "./slices/productFeedbackSlice";
-import courtReducer from "./slices/courtSlice";
-import bookingReducer from "./slices/bookingSlice";
-import bookingFeedbackReducer from "./slices/bookingFeedbackSlice";
+import cartReducer from "./slices/customer/cartSlice";
+import discountReducer from "./slices/customer/discountSlice";
+import orderReducer from "./slices/customer/orderSlice";
+import productFeedbackReducer from "./slices/customer/productFeedbackSlice";
+import courtReducer from "./slices/customer/courtSlice";
+import bookingReducer from "./slices/customer/bookingSlice";
+import bookingFeedbackReducer from "./slices/customer/bookingFeedbackSlice";
+import workShiftReducer from "./slices/employee/workShiftSlice";
+import orderEplReducer from "./slices/employee/orderSlice";
 
 const persistConfig = {
   key: "root",
@@ -23,6 +25,8 @@ const rootReducer = combineReducers({
   court: courtReducer,
   booking: bookingReducer,
   bookingFeedback: bookingFeedbackReducer,
+  workShiftEpl: workShiftReducer,
+  orderEpl: orderEplReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

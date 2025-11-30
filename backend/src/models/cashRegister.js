@@ -11,10 +11,12 @@ const CashRegister = sequelize.define(
     },
     openingCash: {
       type: DataTypes.DOUBLE,
+      defaultValue: 0,
       allowNull: false,
     },
     closingCash: {
       type: DataTypes.DOUBLE,
+      defaultValue: 0,
       allowNull: false,
     },
     revenue: { type: DataTypes.DOUBLE, defaultValue: 0, allowNull: false },

@@ -1,11 +1,8 @@
 import {
-  Search,
-  Languages,
   LogIn,
   UserPlus,
   ShoppingCart,
   LogOut,
-  User,
   Package,
   Calendar,
 } from "lucide-react";
@@ -14,9 +11,15 @@ import Navbar from "./Navbar";
 import { useContext, useEffect } from "react";
 import { AuthContext } from "../../contexts/authContext";
 import { useAppDispatch, useAppSelector } from "../../../store/hook";
-import { clearCart, fetchCart } from "../../../store/slices/cartSlice";
-import { clearOrders, getOrders } from "../../../store/slices/orderSlice";
-import { clearBookings, getBookings } from "../../../store/slices/bookingSlice";
+import { clearCart, fetchCart } from "../../../store/slices/customer/cartSlice";
+import {
+  clearOrders,
+  getOrders,
+} from "../../../store/slices/customer/orderSlice";
+import {
+  clearBookings,
+  getBookings,
+} from "../../../store/slices/customer/bookingSlice";
 
 const Header = () => {
   const { auth, setAuth } = useContext(AuthContext);
@@ -52,7 +55,7 @@ const Header = () => {
 
     setAuth({
       isAuthenticated: false,
-      user: { id: 0, email: "", username: "" },
+      user: { id: 0, email: "", username: "", role: "" },
     });
 
     localStorage.clear();
@@ -168,7 +171,7 @@ const Header = () => {
                 className="flex items-center gap-2 px-5 py-2 rounded-full text-gray-700 hover:bg-gray-100 transition text-base font-medium"
               >
                 <UserPlus className="w-6 h-6 text-sky-600" />
-                {auth?.user?.username}
+                {auth.user.username}
               </NavLink>
 
               <button

@@ -1,13 +1,13 @@
 import "./App.css";
 import { BrowserRouter as Router } from "react-router-dom";
-import CustomerRoute from "./routes/CusRoute";
 import { AuthProvider } from "./components/contexts/authProvider";
 import { ToastContainer } from "react-toastify";
+import AllRoute from "./routes/AllRoute";
 
 const App = () => (
   <AuthProvider>
     <Router>
-      <CustomerRoute />
+      <AllRoute />
     </Router>
 
     {/* Container chung cho toàn bộ app */}

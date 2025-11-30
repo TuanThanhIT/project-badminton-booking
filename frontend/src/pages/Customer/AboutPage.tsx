@@ -7,7 +7,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { useEffect } from "react";
-import { getCourtPrice } from "../../store/slices/courtSlice";
+import { getCourtPrice } from "../../store/slices/customer/courtSlice";
 
 interface CourtPrice {
   dayOfWeek: string;

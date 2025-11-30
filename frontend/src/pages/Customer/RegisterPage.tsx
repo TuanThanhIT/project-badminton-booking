@@ -5,7 +5,7 @@ import {
   FormRegisterSchema,
   type formRegister,
 } from "../../schemas/FormRegisterSchema";
-import authService from "../../services/authService";
+import authService from "../../services/Customer/authService";
 import { toast } from "react-toastify";
 import type { ApiErrorType } from "../../types/error";
 

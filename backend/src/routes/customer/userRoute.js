@@ -12,18 +12,23 @@ var uploader = multer({
 });
 
 const initUserRoute = (app) => {
-  userRoute.get("/profile", auth, authorize("USER"), userController.getProfile);
+  userRoute.get(
+    "/profile",
+    auth,
+    authorize("USER", "EMPLOYEE"),
+    userController.getProfile
+  );
   userRoute.put(
     "/profile/update",
     auth,
-    authorize("USER"),
+    authorize("USER", "EMPLOYEE"),
     uploader.single("file"),
     userController.updateProfile
   );
   userRoute.put(
     "/profile/update/checkout",
     auth,
-    authorize("USER"),
+    authorize("USER", "EMPLOYEE"),
     userController.updateUserInfo
   );
   app.use("/user", userRoute);

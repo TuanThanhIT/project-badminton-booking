@@ -26,6 +26,10 @@ var _discountBooking = _interopRequireDefault(require("./routes/customer/discoun
 var _discountBookingRoute = _interopRequireDefault(require("./routes/admin/discountBookingRoute.js"));
 var _bookingRoute = _interopRequireDefault(require("./routes/customer/bookingRoute.js"));
 var _bookingFeedbackRoute = _interopRequireDefault(require("./routes/customer/bookingFeedbackRoute.js"));
+var _authRoute2 = _interopRequireDefault(require("./routes/employee/authRoute.js"));
+var _workShiftRoute = _interopRequireDefault(require("./routes/admin/workShiftRoute.js"));
+var _workShiftRoute2 = _interopRequireDefault(require("./routes/employee/workShiftRoute.js"));
+var _orderRoute2 = _interopRequireDefault(require("./routes/employee/orderRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -60,6 +64,12 @@ app.use((0, _cors["default"])());
 (0, _discountRoute["default"])(app);
 (0, _courtRoute["default"])(app);
 (0, _discountBookingRoute["default"])(app);
+(0, _workShiftRoute["default"])(app);
+
+// Employee
+(0, _authRoute2["default"])(app);
+(0, _workShiftRoute2["default"])(app);
+(0, _orderRoute2["default"])(app);
 app.use(_errorHandling.errorHandlingMiddleware);
 _db["default"].sync({
   force: false

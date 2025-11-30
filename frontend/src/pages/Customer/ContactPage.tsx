@@ -8,7 +8,7 @@ import { Contact2 } from "lucide-react";
 import { toast } from "react-toastify";
 import type { ApiErrorType } from "../../types/error";
 import type { ContactRequest, ContactResponse } from "../../types/contact";
-import contactService from "../../services/contactService";
+import contactService from "../../services/Customer/contactService";
 import { useState } from "react";
 
 const ContactPage = () => {

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { ProfileResponse, UpdateUserInfoRequest } from "../../types/user";
 import type { ApiErrorType } from "../../types/error";
 import { toast } from "react-toastify";
-import userService from "../../services/userService";
+import userService from "../../services/Customer/userService";
 import {
   FormUpdateUserInfoSchema,
   type formUpdateUserInfo,
@@ -25,16 +25,19 @@ import {
   Check,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../store/hook";
-import { clearCartError } from "../../store/slices/cartSlice";
+import { clearCartError } from "../../store/slices/customer/cartSlice";
 import {
   applyDiscount,
   clearDiscountError,
   updateDiscount,
-} from "../../store/slices/discountSlice";
+} from "../../store/slices/customer/discountSlice";
 import { useNavigate } from "react-router-dom";
-import { addOrder, clearOrdersError } from "../../store/slices/orderSlice";
+import {
+  addOrder,
+  clearOrdersError,
+} from "../../store/slices/customer/orderSlice";
 import type { AddOrderRequest, MomoPaymentRequest } from "../../types/order";
-import momoService from "../../services/momoService";
+import momoService from "../../services/Customer/momoService";
 import Swal from "sweetalert2";
 
 const CheckoutPage = () => {

@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormLoginSchema, type formLogin } from "../../schemas/FormLoginSchema";
-import authService from "../../services/authService";
+import authService from "../../services/Customer/authService";
 import type { ApiErrorType } from "../../types/error";
 import { toast } from "react-toastify";
 import { useContext } from "react";
@@ -36,6 +36,7 @@ const LoginPage = () => {
           id: res.data?.user?.id || 0,
           email: res.data?.user?.email || "",
           username: res.data?.user?.username || "",
+          role: res.data?.user?.role || "",
         },
       });
 

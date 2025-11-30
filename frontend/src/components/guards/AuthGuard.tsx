@@ -2,7 +2,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useContext } from "react";
 import Spinner from "../ui/SpinnerLoad";
 import { AuthContext } from "../contexts/authContext";
-import authService from "../../services/authService";
+import authService from "../../services/Customer/authService";
 import { toast } from "react-toastify";
 import type { ApiErrorType } from "../../types/error";
 
@@ -22,6 +22,7 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
             id: res.data.id,
             email: res.data.email,
             username: res.data.username,
+            role: res.data.role,
           },
         });
       } catch (error) {
@@ -30,7 +31,7 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
         localStorage.removeItem("access_token"); // 👈 token lỗi thì xoá luôn
         setAuth({
           isAuthenticated: false,
-          user: { id: 0, email: "", username: "" },
+          user: { id: 0, email: "", username: "", role: "" },
         });
       } finally {
         setAppLoading(false);

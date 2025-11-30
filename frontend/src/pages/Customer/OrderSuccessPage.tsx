@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { CheckCircle, Star, Sparkles } from "lucide-react";
 import { useEffect } from "react";
 import { useAppDispatch } from "../../store/hook";
-import { deleteAllCart } from "../../store/slices/cartSlice";
+import { deleteAllCart } from "../../store/slices/customer/cartSlice";
 
 const OrderSuccessPage = () => {
   const navigate = useNavigate();

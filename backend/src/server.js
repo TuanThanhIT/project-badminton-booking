@@ -24,6 +24,10 @@ import initDiscountBookingCustomerRoute from "./routes/customer/discountBooking.
 import initDiscountBookingAdminRoute from "./routes/admin/discountBookingRoute.js";
 import initBookingCustomerRoute from "./routes/customer/bookingRoute.js";
 import initBookingFeedbackCustomerRoute from "./routes/customer/bookingFeedbackRoute.js";
+import initAuthEmployeeRoute from "./routes/employee/authRoute.js";
+import initWorkShiftAdminRoute from "./routes/admin/workShiftRoute.js";
+import initWorkShiftEmployeeRoute from "./routes/employee/workShiftRoute.js";
+import initOrderEmployeeRoute from "./routes/employee/orderRoute.js";
 
 dotenv.config();
 
@@ -59,6 +63,12 @@ initProductAdminRoute(app);
 initDiscountAdminRoute(app);
 initCourtAdminRoute(app);
 initDiscountBookingAdminRoute(app);
+initWorkShiftAdminRoute(app);
+
+// Employee
+initAuthEmployeeRoute(app);
+initWorkShiftEmployeeRoute(app);
+initOrderEmployeeRoute(app);
 
 app.use(errorHandlingMiddleware);
 

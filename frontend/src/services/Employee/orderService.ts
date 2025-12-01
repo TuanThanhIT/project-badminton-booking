@@ -10,20 +10,20 @@ import type {
 } from "../../types/order";
 import instance from "../../utils/axiosCustomize";
 
-const getOrdersService = async (data: OrderEplRequest) => {
+const getOrdersService = (data: OrderEplRequest) => {
   return instance.get<OrderListEplResponse>("/employee/order/list", {
     params: data,
   });
 };
 
-const confirmOrderService = async (data: OrderConfirmRequest) => {
+const confirmOrderService = (data: OrderConfirmRequest) => {
   const { orderId } = data;
   return instance.patch<OrderConfirmResponse>(
     `/employee/order/confirm/${orderId}`
   );
 };
 
-const completeOrderService = async (data: OrderCompleteRequest) => {
+const completeOrderService = (data: OrderCompleteRequest) => {
   const { orderId } = data;
   return instance.patch<OrderCompleteResponse>(
     `/employee/order/complete/${orderId}`

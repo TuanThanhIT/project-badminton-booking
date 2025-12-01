@@ -12,6 +12,24 @@ const initBookingEmployeeRoute = (app) => {
     authorize("EMPLOYEE"),
     bookingController.getBookings
   );
+  bookingRoute.patch(
+    "/confirm/:id",
+    auth,
+    authorize("EMPLOYEE"),
+    bookingController.confirmedBooking
+  );
+  bookingRoute.patch(
+    "/complete/:id",
+    auth,
+    authorize("EMPLOYEE"),
+    bookingController.completedBooking
+  );
+  bookingRoute.patch(
+    "/cancel/:id",
+    auth,
+    authorize("EMPLOYEE"),
+    bookingController.cancelBooking
+  );
   app.use("/employee/booking", bookingRoute);
 };
 export default initBookingEmployeeRoute;

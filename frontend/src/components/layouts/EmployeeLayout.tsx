@@ -3,10 +3,9 @@ import { Outlet } from "react-router-dom";
 
 const EmployeeLayout = () => {
   return (
-    <div className="h-screen w-full flex flex-col">
+    <div className="min-h-screen w-full flex flex-col">
       <Header />
-      {/* Main scrollable nếu nội dung dài */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-visible">
         <Outlet />
       </main>
     </div>

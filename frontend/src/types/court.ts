@@ -56,3 +56,17 @@ export type CourtScheduleRequest = {
   courtId: number;
   date: string;
 };
+
+export type CourtScheduleEplRequest = {
+  date: string;
+};
+
+export type CourtScheduleEplResponse = {
+  id: number;
+  date: string;
+  startTime: string;
+  endTime: string;
+  court: {
+    name: string;
+  };
+}[];

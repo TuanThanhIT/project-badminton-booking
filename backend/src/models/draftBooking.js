@@ -10,6 +10,10 @@ const DraftBooking = sequelize.define(
       references: { model: "Users", key: "id" },
       allowNull: false,
     },
+    nameCustomer: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
     note: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -18,6 +22,10 @@ const DraftBooking = sequelize.define(
       type: DataTypes.ENUM("Draft", "Paid", "Cancelled"),
       defaultValue: "Draft",
       allowNull: false,
+    },
+    currentStatus: {
+      type: DataTypes.ENUM("Pending", "CheckedIn", "Playing", "Completed"),
+      defaultValue: "Pending",
     },
     total: { type: DataTypes.DOUBLE, defaultValue: 0 },
   },

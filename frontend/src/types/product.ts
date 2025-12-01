@@ -82,3 +82,18 @@ export type ProductVarient = {
   productId: number;
   discountPrice: number;
 };
+
+export type ProductEplResponse = {
+  productName: string;
+  thumbnailUrl: string;
+  sku: string;
+  price: number;
+  stock: number;
+  size: string;
+  color: string;
+  material: string;
+}[];
+
+export type ProductEplRequest = {
+  keyword: string;
+};

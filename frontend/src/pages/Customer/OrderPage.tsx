@@ -199,41 +199,40 @@ const OrderPage = () => {
               <DollarSign className="w-4 h-4" />
               <span>{order.totalAmount.toLocaleString("vi-VN")}₫</span>
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              {order.payment.paymentMethod === "Momo" &&
-                order.orderStatus === "Pending" && (
-                  <button
-                    onClick={() =>
-                      handlePaymentAgain(order.id, order.totalAmount)
-                    }
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 shadow-sm text-sm font-medium"
-                  >
-                    <CreditCard size={16} />
-                    Thanh toán
-                  </button>
-                )}
-              {(order.orderStatus === "Pending" ||
-                order.orderStatus === "Paid") && (
-                <button
-                  onClick={() => {
-                    setOrderId(order.id);
-                    setOpenCancel(true);
-                  }}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 shadow-sm text-sm font-medium"
-                >
-                  <XCircle size={16} />
-                  Hủy
-                </button>
-              )}
-            </div>
           </div>
 
-          {/* Ghi chú */}
-          {order.note && (
-            <div className="mt-4 p-3 bg-gray-50 border border-gray-100 rounded-lg text-gray-700 text-sm">
-              <span className="font-medium">Ghi chú:</span> {order.note}
-            </div>
-          )}
+          <div className="mt-4 p-3 bg-gray-50 border border-gray-100 rounded-lg text-gray-700 text-sm mb-4">
+            <span className="font-medium">Ghi chú:</span>{" "}
+            {order.note || "không có ghi chú nào"}
+          </div>
+
+          <div className="flex items-center justify-end gap-2 flex-wrap">
+            {order.payment.paymentMethod === "Momo" &&
+              order.orderStatus === "Pending" && (
+                <button
+                  onClick={() =>
+                    handlePaymentAgain(order.id, order.totalAmount)
+                  }
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 shadow-sm text-sm font-medium"
+                >
+                  <CreditCard size={16} />
+                  Thanh toán
+                </button>
+              )}
+            {(order.orderStatus === "Pending" ||
+              order.orderStatus === "Paid") && (
+              <button
+                onClick={() => {
+                  setOrderId(order.id);
+                  setOpenCancel(true);
+                }}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 shadow-sm text-sm font-medium"
+              >
+                <XCircle size={16} />
+                Hủy
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );

@@ -191,20 +191,30 @@ const BookingPage = () => {
           </div>
 
           {/* Footer */}
-          <div className="flex justify-between items-center text-sm text-gray-600 flex-wrap gap-3">
-            <div className="flex items-center gap-2 text-gray-700 flex-1 min-w-[120px]">
-              <MapPin className="w-4 h-4 text-sky-600" />
-              <span>Thanh toán:</span>
-              <span className="font-medium text-gray-800">
-                {booking.paymentBooking.paymentMethod}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-sky-700 font-bold text-lg min-w-[120px]">
-              <DollarSign className="w-4 h-4" />
-              <span>{booking.totalAmount.toLocaleString("vi-VN")}₫</span>
+          <div className="w-full mt-4 text-sm text-gray-700 space-y-4">
+            {/* Tổng tiền (để hẳn bên trái, một hàng riêng) */}
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2 text-gray-700">
+                <MapPin className="w-4 h-4 text-sky-600" />
+                <span>Thanh toán:</span>
+                <span className="font-medium">
+                  {booking.paymentBooking.paymentMethod}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-sky-700 font-bold text-xl">
+                <DollarSign className="w-5 h-5" />
+                <span>{booking.totalAmount.toLocaleString("vi-VN")}₫</span>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 flex-wrap">
+            {/* Ghi chú full width */}
+            <div className="p-3 bg-gray-50 border border-gray-100 rounded-lg text-gray-700">
+              <span className="font-medium">Ghi chú:</span>{" "}
+              {booking.note || "không có ghi chú nào"}
+            </div>
+
+            {/* Các nút bên phải */}
+            <div className="flex justify-end items-center gap-3">
               {booking.paymentBooking.paymentMethod === "Momo" &&
                 booking.bookingStatus === "Pending" && (
                   <button
@@ -217,6 +227,7 @@ const BookingPage = () => {
                     Thanh toán
                   </button>
                 )}
+
               {(booking.bookingStatus === "Pending" ||
                 booking.bookingStatus === "Paid") && (
                 <button
@@ -232,13 +243,6 @@ const BookingPage = () => {
               )}
             </div>
           </div>
-
-          {/* Ghi chú */}
-          {booking.note && (
-            <div className="mt-4 p-3 bg-gray-50 border border-gray-100 rounded-lg text-gray-700 text-sm">
-              <span className="font-medium">Ghi chú:</span> {booking.note}
-            </div>
-          )}
         </div>
       </div>
     );

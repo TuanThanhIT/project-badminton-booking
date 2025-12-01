@@ -61,8 +61,8 @@ Court.hasMany(BookingFeedback, { foreignKey: "courtId" });
 BookingFeedback.belongsTo(Court, { foreignKey: "courtId" });
 
 // Quan hệ 1-n giữa User và Booking
-User.hasMany(Booking, { foreignKey: "userId" });
-Booking.belongsTo(User, { foreignKey: "userId" });
+User.hasMany(Booking, { foreignKey: "userId", as: "booking" });
+Booking.belongsTo(User, { foreignKey: "userId", as: "user" });
 
 // Quan hệ 1-1 giữa Booking - Discount
 DiscountBooking.hasOne(Booking, { foreignKey: "discountId" });
@@ -360,6 +360,7 @@ export {
   Profile,
   Report,
   Booking,
+  Beverage,
   Court,
   CourtSchedule,
   PaymentBooking,

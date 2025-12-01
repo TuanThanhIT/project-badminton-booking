@@ -49,3 +49,57 @@ export type BookingCancelRequest = {
   bookingId: number;
   cancelReason: string;
 };
+
+export type BookingUserInfo = {
+  username: string;
+  Profile: {
+    fullName: string;
+    address: string;
+    phoneNumber: string;
+  };
+};
+
+export type BookingEplResponse = {
+  id: number;
+  bookingStatus: "Pending" | "Paid" | "Confirmed" | "Completed" | "Cancelled";
+  totalAmount: number;
+  note: string | null;
+  createdDate: string;
+  court: CourtInfo;
+  timeSlots: string[];
+  paymentBooking: BookingPaymentInfo;
+  user: BookingUserInfo;
+};
+
+export type BookingListEplResponse = BookingEplResponse[];
+
+export type BookingEplRequest = {
+  status: string;
+  keyword: string;
+  date: string;
+};
+
+export type BookingConfirmRequest = {
+  bookingId: number;
+};
+
+export type BookingConfirmResponse = {
+  message: string;
+};
+
+export type BookingCompleteRequest = {
+  bookingId: number;
+};
+
+export type BookingCompleteResponse = {
+  message: string;
+};
+
+export type BookingCancelEplResponse = {
+  message: string;
+};
+
+export type BookingCancelEplRequest = {
+  bookingId: number;
+  cancelReason: string;
+};

@@ -28,6 +28,11 @@ import initAuthEmployeeRoute from "./routes/employee/authRoute.js";
 import initWorkShiftAdminRoute from "./routes/admin/workShiftRoute.js";
 import initWorkShiftEmployeeRoute from "./routes/employee/workShiftRoute.js";
 import initOrderEmployeeRoute from "./routes/employee/orderRoute.js";
+import initBookingEmployeeRoute from "./routes/employee/bookingRoute.js";
+import initCourtEmployeeRoute from "./routes/employee/courtRoute.js";
+import initBeverageAdminRoute from "./routes/admin/beverageRoute.js";
+import initBeverageEmployeeRoute from "./routes/employee/beverageRoute.js";
+import initProductEmployeeRoute from "./routes/employee/productRoute.js";
 
 dotenv.config();
 
@@ -64,11 +69,16 @@ initDiscountAdminRoute(app);
 initCourtAdminRoute(app);
 initDiscountBookingAdminRoute(app);
 initWorkShiftAdminRoute(app);
+initBeverageAdminRoute(app);
 
 // Employee
 initAuthEmployeeRoute(app);
 initWorkShiftEmployeeRoute(app);
 initOrderEmployeeRoute(app);
+initBookingEmployeeRoute(app);
+initCourtEmployeeRoute(app);
+initBeverageEmployeeRoute(app);
+initProductEmployeeRoute(app);
 
 app.use(errorHandlingMiddleware);
 

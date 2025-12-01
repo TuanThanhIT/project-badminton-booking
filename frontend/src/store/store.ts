@@ -10,6 +10,10 @@ import bookingReducer from "./slices/customer/bookingSlice";
 import bookingFeedbackReducer from "./slices/customer/bookingFeedbackSlice";
 import workShiftReducer from "./slices/employee/workShiftSlice";
 import orderEplReducer from "./slices/employee/orderSlice";
+import bookingEplReducer from "./slices/employee/bookingSlice";
+import beverageEplReducer from "./slices/employee/beverageSlice";
+import courtEplReducer from "./slices/employee/courtSlice";
+import productEplReducer from "./slices/employee/productSlice";
 
 const persistConfig = {
   key: "root",
@@ -27,6 +31,10 @@ const rootReducer = combineReducers({
   bookingFeedback: bookingFeedbackReducer,
   workShiftEpl: workShiftReducer,
   orderEpl: orderEplReducer,
+  bookingEpl: bookingEplReducer,
+  courtEpl: courtEplReducer,
+  beverageEpl: beverageEplReducer,
+  productEpl: productEplReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

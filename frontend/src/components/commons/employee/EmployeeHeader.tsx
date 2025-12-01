@@ -22,7 +22,7 @@ const EmployeeHeader = () => {
   const { auth, setAuth } = useContext(AuthContext);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { workShifts, workShift, loading, error } = useAppSelector(
+  const { workShifts, workShift, error } = useAppSelector(
     (state) => state.workShiftEpl
   );
 
@@ -45,15 +45,6 @@ const EmployeeHeader = () => {
       dispatch(clearWorkShiftError());
     }
   }, [dispatch, error]);
-
-  if (loading) {
-    return (
-      <div className="flex flex-col justify-center items-center h-[60vh] text-sky-700">
-        <Loader2 className="w-10 h-10 animate-spin mb-3" />
-        <p className="text-lg font-semibold">Đang tải dữ liệu ca làm...</p>
-      </div>
-    );
-  }
 
   const handleLogout = () => {
     setAuth({

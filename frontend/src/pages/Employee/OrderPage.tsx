@@ -74,6 +74,16 @@ const OrderPage = () => {
     dispatch(getOrders({ data: params }));
   }, [activeTab, searchText, selectedDate, dispatch]);
 
+  const fetchOrders = () => {
+    const params: OrderEplRequest = {
+      status: activeTab === "All" ? "" : activeTab,
+      // Bạn sẽ gửi searchText và selectedDate cho backend nếu cần
+      keyword: searchText,
+      date: selectedDate,
+    };
+    dispatch(getOrders({ data: params }));
+  };
+
   const filteredOrders =
     activeTab === "All"
       ? orders
@@ -100,13 +110,7 @@ const OrderPage = () => {
         const data = { orderId };
         const res = await dispatch(confirmOrder({ data })).unwrap();
         toast.success(res.message);
-        const params: OrderEplRequest = {
-          status: activeTab === "All" ? "" : activeTab,
-          // Bạn sẽ gửi searchText và selectedDate cho backend nếu cần
-          keyword: searchText,
-          date: selectedDate,
-        };
-        dispatch(getOrders({ data: params }));
+        fetchOrders();
       }
     } catch (error) {
       // Không xử lý lỗi nữa
@@ -127,13 +131,7 @@ const OrderPage = () => {
         const data = { orderId };
         const res = await dispatch(completeOrder({ data })).unwrap();
         toast.success(res.message);
-        const params: OrderEplRequest = {
-          status: activeTab === "All" ? "" : activeTab,
-          // Bạn sẽ gửi searchText và selectedDate cho backend nếu cần
-          keyword: searchText,
-          date: selectedDate,
-        };
-        dispatch(getOrders({ data: params }));
+        fetchOrders();
       }
     } catch (error) {
       // Không xử lý lỗi nữa
@@ -148,15 +146,9 @@ const OrderPage = () => {
       };
       const res = await dispatch(cancelOrder({ data })).unwrap();
       toast.success(res.message);
-      const params: OrderEplRequest = {
-        status: activeTab === "All" ? "" : activeTab,
-        // Bạn sẽ gửi searchText và selectedDate cho backend nếu cần
-        keyword: searchText,
-        date: selectedDate,
-      };
-      dispatch(getOrders({ data: params }));
       setOpenCancel(false);
       setRefundAmount(undefined);
+      fetchOrders();
     } catch (error) {
       // không xử lý lỗi nữa
     }
@@ -286,7 +278,7 @@ const OrderPage = () => {
           </div>
 
           {/* Footer */}
-          <div className="flex justify-between items-center text-sm text-gray-600 flex-wrap gap-4">
+          <div className="flex justify-between items-center text-sm text-gray-600 flex-wrap gap-4 ">
             <div className="flex items-center gap-2 text-gray-700">
               <MapPin className="w-4 h-4 text-sky-600" />
               <span>Thanh toán:</span>
@@ -294,91 +286,89 @@ const OrderPage = () => {
                 {order.payment.paymentMethod}
               </span>
             </div>
-
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-sky-700 font-bold text-lg">
-                <DollarSign className="w-4 h-4" />
-                <span>{order.totalAmount.toLocaleString("vi-VN")}₫</span>
-              </div>
-
-              {/* Nút hành động theo trạng thái */}
-              <div className="flex gap-2">
-                {(order.orderStatus === "Pending" ||
-                  order.orderStatus === "Paid") && (
-                  <>
-                    {/* Nút Hủy */}
-                    <button
-                      onClick={() => {
-                        if (order.orderStatus === "Pending") {
-                          setOpenCancel(true);
-                          setOrderId(order.id);
-                        } else if (order.orderStatus === "Paid") {
-                          setRefundAmount(order.totalAmount);
-                          setOpenCancel(true);
-                          setOrderId(order.id);
-                        }
-                      }}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-red-50 text-red-700 border border-red-200 shadow-sm text-sm font-medium"
-                    >
-                      <XCircle size={16} />
-                      Hủy
-                    </button>
-
-                    {/* Nút Xác nhận */}
-                    <button
-                      onClick={() => {
-                        handleConfirmOrder(order.id);
-                      }}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-green-50 text-green-700 border border-green-200 shadow-sm text-sm font-medium"
-                    >
-                      <CheckCircle size={16} />
-                      Xác nhận
-                    </button>
-                  </>
-                )}
-
-                {order.orderStatus === "Confirmed" && (
-                  <>
-                    {/* Nút Hủy */}
-                    <button
-                      onClick={() => {
-                        if (order.payment.paymentMethod === "COD") {
-                          setOpenCancel(true);
-                          setOrderId(order.id);
-                        } else if (order.payment.paymentMethod === "MOMO") {
-                          setRefundAmount(order.totalAmount);
-                          setOpenCancel(true);
-                          setOrderId(order.id);
-                        }
-                      }}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-red-50 text-red-700 border border-red-200 shadow-sm text-sm font-medium"
-                    >
-                      <XCircle size={16} />
-                      Hủy
-                    </button>
-
-                    {/* Nút Hoàn Thành */}
-                    <button
-                      onClick={() => {
-                        handleCompleteOrder(order.id);
-                      }}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-green-50 text-green-700 border border-green-200 shadow-sm text-sm font-medium"
-                    >
-                      <CheckCircle size={16} />
-                      Hoàn Thành
-                    </button>
-                  </>
-                )}
-              </div>
+            <div className="flex items-center gap-2 text-sky-700 font-bold text-lg">
+              <DollarSign className="w-4 h-4" />
+              <span>{order.totalAmount.toLocaleString("vi-VN")}₫</span>
             </div>
           </div>
 
           {/* Note */}
-          {order.note && (
-            <div className="mt-4 p-3 bg-gray-50 border border-gray-100 rounded-lg text-gray-700 text-sm">
-              <span className="font-medium">Ghi chú:</span> {order.note}
+          <div className="mt-4 p-3 bg-gray-50 border border-gray-100 rounded-lg text-gray-700 text-sm mb-4">
+            <span className="font-medium">Ghi chú:</span>{" "}
+            {order.note || "không có ghi chú nào"}
+          </div>
+
+          <div className="flex justify-end items-center gap-3">
+            {/* Nút hành động theo trạng thái */}
+            <div className="flex gap-2">
+              {(order.orderStatus === "Pending" ||
+                order.orderStatus === "Paid") && (
+                <>
+                  {/* Nút Hủy */}
+                  <button
+                    onClick={() => {
+                      if (order.orderStatus === "Pending") {
+                        setOpenCancel(true);
+                        setOrderId(order.id);
+                      } else if (order.orderStatus === "Paid") {
+                        setRefundAmount(order.totalAmount);
+                        setOpenCancel(true);
+                        setOrderId(order.id);
+                      }
+                    }}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-red-50 text-red-700 border border-red-200 shadow-sm text-sm font-medium"
+                  >
+                    <XCircle size={16} />
+                    Hủy
+                  </button>
+
+                  {/* Nút Xác nhận */}
+                  <button
+                    onClick={() => {
+                      handleConfirmOrder(order.id);
+                    }}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200 shadow-sm text-sm font-medium"
+                  >
+                    <CheckCircle size={16} />
+                    Xác nhận
+                  </button>
+                </>
+              )}
+
+              {order.orderStatus === "Confirmed" && (
+                <>
+                  {/* Nút Hủy */}
+                  <button
+                    onClick={() => {
+                      if (order.payment.paymentMethod === "COD") {
+                        setOpenCancel(true);
+                        setOrderId(order.id);
+                      } else if (order.payment.paymentMethod === "MOMO") {
+                        setRefundAmount(order.totalAmount);
+                        setOpenCancel(true);
+                        setOrderId(order.id);
+                      }
+                    }}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-red-50 text-red-700 border border-red-200 shadow-sm text-sm font-medium"
+                  >
+                    <XCircle size={16} />
+                    Hủy
+                  </button>
+
+                  {/* Nút Hoàn Thành */}
+                  <button
+                    onClick={() => {
+                      handleCompleteOrder(order.id);
+                    }}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-green-50 text-green-700 border border-green-200 shadow-sm text-sm font-medium"
+                  >
+                    <CheckCircle size={16} />
+                    Hoàn Thành
+                  </button>
+                </>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     );
@@ -395,13 +385,16 @@ const OrderPage = () => {
         {/* Search + Date */}
         <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
           {/* Input ngày */}
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600">Ngày:</label>
+          <div className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-3 py-2">
+            <label htmlFor="date" className="text-gray-600 text-sm font-medium">
+              Chọn ngày:
+            </label>
             <input
+              id="date"
               type="date"
+              className="border-none focus:ring-0 focus:outline-none text-sm"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="border border-gray-300 rounded-full px-4 py-2 text-sm bg-white text-gray-700 cursor-pointer"
             />
           </div>
           {/* Input tìm kiếm */}
@@ -409,7 +402,7 @@ const OrderPage = () => {
             <Search className="w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Tìm theo tên hoặc SĐT khách hàng"
+              placeholder="Tìm theo tên hoặc SĐT khách hàng..."
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               className="flex-1 outline-none text-sm placeholder-gray-400"

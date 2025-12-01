@@ -16,9 +16,7 @@ const getBookingsService = async (bookingStatus, keyword, date) => {
     const where = {};
 
     // Filter trạng thái
-    if (bookingStatus) {
-      where.bookingStatus = bookingStatus;
-    }
+    if (bookingStatus) where.bookingStatus = bookingStatus;
 
     // Filter ngày
     if (date) {
@@ -30,17 +28,15 @@ const getBookingsService = async (bookingStatus, keyword, date) => {
       );
       const endOfDayUTC = new Date(endOfDayVN.getTime() - 7 * 60 * 60 * 1000);
 
-      where.createdDate = {
-        [Op.between]: [startOfDayUTC, endOfDayUTC],
-      };
+      where.createdDate = { [Op.between]: [startOfDayUTC, endOfDayUTC] };
     }
 
-    // Filter theo keyword
+    // include user + profile
     const userInclude = {
       model: User,
       as: "user",
       attributes: ["username"],
-      required: keyword ? true : false, // bắt buộc join khi tìm keyword
+      required: keyword ? true : false,
       include: [
         {
           model: Profile,
@@ -58,6 +54,7 @@ const getBookingsService = async (bookingStatus, keyword, date) => {
       ],
     };
 
+    // Query bookings
     const bookings = await Booking.findAll({
       where,
       attributes: ["id", "bookingStatus", "totalAmount", "note", "createdDate"],
@@ -88,17 +85,168 @@ const getBookingsService = async (bookingStatus, keyword, date) => {
         },
         userInclude,
       ],
-      booking: [["createdDate", "DESC"]],
+      order: [["createdDate", "DESC"]],
     });
 
-    return bookings;
+    // Format lại dữ liệu trả về
+    const formatted = bookings.map((booking) => {
+      const b = booking.toJSON();
+
+      const firstDetail = b.bookingDetails[0];
+
+      const courtInfo = firstDetail
+        ? {
+            id: firstDetail.courtSchedule.court.id,
+            name: firstDetail.courtSchedule.court.name,
+            thumbnailUrl: firstDetail.courtSchedule.court.thumbnailUrl,
+            date: firstDetail.courtSchedule.date,
+          }
+        : null;
+
+      const timeSlots = b.bookingDetails.map(
+        (d) => `${d.courtSchedule.startTime} → ${d.courtSchedule.endTime}`
+      );
+
+      return {
+        id: b.id,
+        bookingStatus: b.bookingStatus,
+        totalAmount: b.totalAmount,
+        note: b.note,
+        createdDate: b.createdDate,
+        court: courtInfo,
+        timeSlots,
+        paymentBooking: b.paymentBooking,
+        user: b.user,
+      };
+    });
+
+    return formatted;
   } catch (error) {
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
 
+const confirmedBookingService = async (bookingId) => {
+  try {
+    const booking = await Booking.findByPk(bookingId);
+    if (!booking) {
+      throw new ApiError(StatusCodes.NOT_FOUND, "Lịch đặt sân không tồn tại!");
+    }
+    if (booking.bookingStatus === "Cancelled") {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Lịch đặt sân đã hủy không thể xác nhận lại được nữa! Vui lòng đặt sân lại!"
+      );
+    } else if (booking.bookingStatus === "Completed") {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Lịch đặt sân đã hoàn thành không thể xác nhận lại được nữa! Vui lòng đặt sân lại!"
+      );
+    }
+
+    await booking.update({
+      bookingStatus: "Confirmed",
+    });
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
+
+const completedBookingService = async (bookingId) => {
+  try {
+    const booking = await Booking.findByPk(bookingId);
+    if (!booking) {
+      throw new ApiError(StatusCodes.NOT_FOUND, "Lịch đặt sân không tồn tại!");
+    }
+    if (booking.bookingStatus !== "Confirmed") {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Lịch đặt sân không thể hoàn thành nếu lịch đặt sân chưa được xác nhận! Vui lòng kiểm tra lại!"
+      );
+    }
+    const paymentBooking = await PaymentBooking.findOne({
+      where: { bookingId: booking.id, paymentMethod: "COD" },
+    });
+
+    await booking.update({
+      bookingStatus: "Completed",
+    });
+
+    if (paymentBooking) {
+      await paymentBooking.update({
+        paymentStatus: "Success",
+        paidAt: new Date(),
+      });
+    }
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
+
+const cancelBookingService = async (bookingId, cancelReason) => {
+  try {
+    const booking = await Booking.findByPk(bookingId);
+    if (!booking) {
+      throw new ApiError(StatusCodes.NOT_FOUND, "Lịch đặt sân không tồn tại!");
+    }
+    if (booking.bookingStatus === "Completed") {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Lịch đặt sân đã hoàn thành không thể hủy!"
+      );
+    }
+
+    const paymentBooking = await PaymentBooking.findOne({
+      where: { bookingId },
+    });
+
+    const oldStatus = booking.bookingStatus;
+
+    // xử lý paymentBooking trước
+    if (oldStatus === "Pending") {
+      await paymentBooking.update({ paymentStatus: "Cancelled" });
+    } else if (oldStatus === "Paid") {
+      await paymentBooking.update({
+        paymentStatus: "Cancelled",
+        refundAmount: paymentBooking.paymentAmount,
+        refundAt: new Date(),
+      });
+    } else if (oldStatus === "Confirmed") {
+      if (paymentBooking.paymentMethod === "COD") {
+        await paymentBooking.update({ paymentStatus: "Cancelled" });
+      } else {
+        await paymentBooking.update({
+          paymentStatus: "Cancelled",
+          refundAmount: paymentBooking.paymentAmount,
+          refundAt: new Date(),
+        });
+      }
+    }
+
+    // rồi mới update trạng thái booking
+    await booking.update({
+      bookingStatus: "Cancelled",
+      cancelledBy: "Employee",
+      cancelReason,
+    });
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
 const bookingService = {
   getBookingsService,
+  confirmedBookingService,
+  completedBookingService,
+  cancelBookingService,
 };
 
 export default bookingService;

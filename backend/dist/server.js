@@ -30,6 +30,11 @@ var _authRoute2 = _interopRequireDefault(require("./routes/employee/authRoute.js
 var _workShiftRoute = _interopRequireDefault(require("./routes/admin/workShiftRoute.js"));
 var _workShiftRoute2 = _interopRequireDefault(require("./routes/employee/workShiftRoute.js"));
 var _orderRoute2 = _interopRequireDefault(require("./routes/employee/orderRoute.js"));
+var _bookingRoute2 = _interopRequireDefault(require("./routes/employee/bookingRoute.js"));
+var _courtRoute3 = _interopRequireDefault(require("./routes/employee/courtRoute.js"));
+var _beverageRoute = _interopRequireDefault(require("./routes/admin/beverageRoute.js"));
+var _beverageRoute2 = _interopRequireDefault(require("./routes/employee/beverageRoute.js"));
+var _productRoute3 = _interopRequireDefault(require("./routes/employee/productRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -65,11 +70,16 @@ app.use((0, _cors["default"])());
 (0, _courtRoute["default"])(app);
 (0, _discountBookingRoute["default"])(app);
 (0, _workShiftRoute["default"])(app);
+(0, _beverageRoute["default"])(app);
 
 // Employee
 (0, _authRoute2["default"])(app);
 (0, _workShiftRoute2["default"])(app);
 (0, _orderRoute2["default"])(app);
+(0, _bookingRoute2["default"])(app);
+(0, _courtRoute3["default"])(app);
+(0, _beverageRoute2["default"])(app);
+(0, _productRoute3["default"])(app);
 app.use(_errorHandling.errorHandlingMiddleware);
 _db["default"].sync({
   force: false

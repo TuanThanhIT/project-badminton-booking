@@ -35,6 +35,8 @@ var _courtRoute3 = _interopRequireDefault(require("./routes/employee/courtRoute.
 var _beverageRoute = _interopRequireDefault(require("./routes/admin/beverageRoute.js"));
 var _beverageRoute2 = _interopRequireDefault(require("./routes/employee/beverageRoute.js"));
 var _productRoute3 = _interopRequireDefault(require("./routes/employee/productRoute.js"));
+var _draftRoute = _interopRequireDefault(require("./routes/employee/draftRoute.js"));
+var _offlineRoute = _interopRequireDefault(require("./routes/employee/offlineRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -80,6 +82,8 @@ app.use((0, _cors["default"])());
 (0, _courtRoute3["default"])(app);
 (0, _beverageRoute2["default"])(app);
 (0, _productRoute3["default"])(app);
+(0, _draftRoute["default"])(app);
+(0, _offlineRoute["default"])(app);
 app.use(_errorHandling.errorHandlingMiddleware);
 _db["default"].sync({
   force: false

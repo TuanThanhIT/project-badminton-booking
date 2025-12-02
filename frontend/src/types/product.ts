@@ -86,6 +86,7 @@ export type ProductVarient = {
 export type ProductEplResponse = {
   productName: string;
   thumbnailUrl: string;
+  id: number;
   sku: string;
   price: number;
   stock: number;

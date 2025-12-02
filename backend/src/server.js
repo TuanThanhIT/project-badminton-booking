@@ -33,6 +33,8 @@ import initCourtEmployeeRoute from "./routes/employee/courtRoute.js";
 import initBeverageAdminRoute from "./routes/admin/beverageRoute.js";
 import initBeverageEmployeeRoute from "./routes/employee/beverageRoute.js";
 import initProductEmployeeRoute from "./routes/employee/productRoute.js";
+import initDraftEmployeeRoute from "./routes/employee/draftRoute.js";
+import initOfflineEmployeeRoute from "./routes/employee/offlineRoute.js";
 
 dotenv.config();
 
@@ -79,6 +81,8 @@ initBookingEmployeeRoute(app);
 initCourtEmployeeRoute(app);
 initBeverageEmployeeRoute(app);
 initProductEmployeeRoute(app);
+initDraftEmployeeRoute(app);
+initOfflineEmployeeRoute(app);
 
 app.use(errorHandlingMiddleware);
 

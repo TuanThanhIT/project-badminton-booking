@@ -2,9 +2,10 @@ interface ItemListProps {
   items: any[];
   activeTab: "beverage" | "product";
   onAdd: (item: any) => void;
+  onRemove: (item: any) => void; // thêm prop để xóa
 }
 
-const ItemList = ({ items, activeTab, onAdd }: ItemListProps) => {
+const ItemList = ({ items, activeTab, onAdd, onRemove }: ItemListProps) => {
   return (
     <>
       {items.map((item) => (
@@ -25,7 +26,7 @@ const ItemList = ({ items, activeTab, onAdd }: ItemListProps) => {
             <p className="text-sm font-semibold text-gray-800">
               {activeTab === "beverage" ? item.name : item.productName}
             </p>
-            <p className="text-sm font-medium text-gray-600">
+            <div className="text-sm font-medium text-gray-600">
               {activeTab === "beverage" ? (
                 <span className="text-orange-600 font-bold">
                   {item.price.toLocaleString()}đ
@@ -49,7 +50,8 @@ const ItemList = ({ items, activeTab, onAdd }: ItemListProps) => {
                   </div>
                 </div>
               )}
-            </p>
+            </div>
+
             <p className="text-xs text-gray-500 font-medium">
               Còn lại:{" "}
               <span className="text-green-600 font-semibold">
@@ -57,15 +59,27 @@ const ItemList = ({ items, activeTab, onAdd }: ItemListProps) => {
               </span>
             </p>
           </div>
-          <button
-            className="px-4 py-1 bg-green-500 text-white rounded-lg text-sm font-semibold hover:bg-green-600 shadow transition"
-            onClick={() => onAdd(item)}
-          >
-            Thêm
-          </button>
+
+          {/* Nút Thêm / Xóa gọn trong 1 hàng */}
+          <div className="flex flex-col gap-1">
+            <button
+              className="w-7 h-7 flex items-center justify-center bg-green-500 text-white rounded-full text-xs hover:bg-green-600 transition"
+              onClick={() => onAdd(item)}
+            >
+              +
+            </button>
+
+            <button
+              className="w-7 h-7 flex items-center justify-center bg-red-500 text-white rounded-full text-xs hover:bg-red-600 transition"
+              onClick={() => onRemove(item)}
+            >
+              –
+            </button>
+          </div>
         </div>
       ))}
     </>
   );
 };
+
 export default ItemList;

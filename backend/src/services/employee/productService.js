@@ -16,7 +16,15 @@ const getProductsService = async (keyword) => {
         {
           model: ProductVarient,
           as: "varients",
-          attributes: ["sku", "price", "stock", "size", "color", "material"],
+          attributes: [
+            "id",
+            "sku",
+            "price",
+            "stock",
+            "size",
+            "color",
+            "material",
+          ],
         },
       ],
     });

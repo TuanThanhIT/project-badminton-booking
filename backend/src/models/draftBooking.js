@@ -19,13 +19,9 @@ const DraftBooking = sequelize.define(
       allowNull: true,
     },
     status: {
-      type: DataTypes.ENUM("Draft", "Paid", "Cancelled"),
+      type: DataTypes.ENUM("Draft", "Completed", "Cancelled"),
       defaultValue: "Draft",
       allowNull: false,
-    },
-    currentStatus: {
-      type: DataTypes.ENUM("Pending", "CheckedIn", "Playing", "Completed"),
-      defaultValue: "Pending",
     },
     total: { type: DataTypes.DOUBLE, defaultValue: 0 },
   },

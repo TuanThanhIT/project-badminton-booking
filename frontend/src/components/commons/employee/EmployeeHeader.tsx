@@ -1,12 +1,5 @@
 import { useContext, useEffect } from "react";
-import {
-  Calendar,
-  Home,
-  Loader2,
-  LogOut,
-  Package,
-  UserPlus,
-} from "lucide-react";
+import { Calendar, Home, LogOut, Package, UserPlus } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../contexts/authContext";
 import { useAppDispatch, useAppSelector } from "../../../store/hook";

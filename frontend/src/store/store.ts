@@ -14,11 +14,13 @@ import bookingEplReducer from "./slices/employee/bookingSlice";
 import beverageEplReducer from "./slices/employee/beverageSlice";
 import courtEplReducer from "./slices/employee/courtSlice";
 import productEplReducer from "./slices/employee/productSlice";
+import draftEplReducer from "./slices/employee/draftSlice";
+import offlineEplReducer from "./slices/employee/offlineSlice";
 
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["cart"],
+  whitelist: ["cart", "offlineEpl"],
 };
 
 const rootReducer = combineReducers({
@@ -35,6 +37,8 @@ const rootReducer = combineReducers({
   courtEpl: courtEplReducer,
   beverageEpl: beverageEplReducer,
   productEpl: productEplReducer,
+  draftEpl: draftEplReducer,
+  offlineEpl: offlineEplReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

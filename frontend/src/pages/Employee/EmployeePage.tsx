@@ -14,18 +14,47 @@ import {
   getProducts,
 } from "../../store/slices/employee/productSlice";
 import debounce from "lodash.debounce";
-import { Loader2, Search } from "lucide-react";
+import {
+  Check,
+  DollarSign,
+  Loader2,
+  Search,
+  Smartphone,
+  Wallet,
+} from "lucide-react";
 import ItemList from "../../components/ui/ItemList";
+import DraftBoxDemo from "../../components/ui/DraftBox";
+import type { CourtScheduleEplResponse } from "../../types/court";
+import type { ProductEplResponse } from "../../types/product";
+import type { BeverageEplResponse } from "../../types/beverage";
+import {
+  clearOfflineBooking,
+  clearOfflineError,
+  createOfflineBooking,
+  updateOfflineBooking,
+} from "../../store/slices/employee/offlineSlice";
+import type { UpdateOfflineBookingRequest } from "../../types/offline";
+import Swal from "sweetalert2";
+import { getDrafts } from "../../store/slices/employee/draftSlice";
 
 const EmployeePage = () => {
   const [date, setDate] = useState("");
   const [activeTab, setActiveTab] = useState<"beverage" | "product">(
     "beverage"
   );
-  const [selectedCourtSlots, setSelectedCourtSlots] = useState<number[]>([]);
+  const [selectedCourtSlots, setSelectedCourtSlots] =
+    useState<CourtScheduleEplResponse>([]);
+
+  const [selectedProducts, setSelectedProducts] = useState<ProductEplResponse>(
+    []
+  );
+  const [selectedBeverages, setSelectedBeverages] =
+    useState<BeverageEplResponse>([]);
+
   const [searchBeverage, setSearchBeverage] = useState("");
   const [searchProduct, setSearchProduct] = useState("");
   const [loadingInitial, setLoadingInitial] = useState(true);
+  const [paymentMethod, setPaymentMethod] = useState<"Cash" | "Momo">("Cash");
 
   const dispatch = useAppDispatch();
 
@@ -40,7 +69,10 @@ const EmployeePage = () => {
   const productError = useAppSelector((s) => s.productEpl.error);
   const productLoading = useAppSelector((s) => s.productEpl.loading);
 
-  // ------------------- INITIAL FETCH COURTS + EMPTY LIST -------------------
+  const offlineBooking = useAppSelector((s) => s.offlineEpl.offlineBooking);
+  const offlineError = useAppSelector((s) => s.offlineEpl.error);
+
+  // ------------------- INITIAL FETCH -------------------
   useEffect(() => {
     const fetchInitial = async () => {
       setLoadingInitial(true);
@@ -59,7 +91,7 @@ const EmployeePage = () => {
     fetchInitial();
   }, [dispatch, date]);
 
-  // ------------------- DEBOUNCE SEARCH FOR ACTIVE TAB -------------------
+  // ------------------- DEBOUNCE SEARCH -------------------
   const fetchDebounce = useCallback(
     debounce((tab: "beverage" | "product", keyword: string) => {
       if (tab === "beverage") dispatch(getBeverages({ dta: { keyword } }));
@@ -69,27 +101,24 @@ const EmployeePage = () => {
   );
 
   useEffect(() => {
-    if (activeTab === "beverage") {
-      fetchDebounce("beverage", searchBeverage);
-    }
+    if (activeTab === "beverage") fetchDebounce("beverage", searchBeverage);
   }, [searchBeverage, fetchDebounce]);
 
   useEffect(() => {
-    if (activeTab === "product") {
-      fetchDebounce("product", searchProduct);
-    }
+    if (activeTab === "product") fetchDebounce("product", searchProduct);
   }, [searchProduct, fetchDebounce]);
 
   // ------------------- HANDLE ERRORS -------------------
   useEffect(() => {
-    const error = courtError || beverageError || productError;
+    const error = courtError || beverageError || productError || offlineError;
     if (error) {
       toast.error(error);
       if (courtError) dispatch(clearCourtError());
       if (beverageError) dispatch(clearBeverageError());
       if (productError) dispatch(clearProductError());
+      if (offlineError) dispatch(clearOfflineError());
     }
-  }, [courtError, beverageError, productError, dispatch]);
+  }, [courtError, beverageError, productError, offlineError, dispatch]);
 
   // ------------------- GRID DATA -------------------
   const timeHeaders = Array.from(
@@ -99,18 +128,79 @@ const EmployeePage = () => {
     new Set(courtSchedules.map((s) => s.court.name))
   );
 
+  const handleAdd = (item: any) => {
+    if (activeTab === "beverage") {
+      setSelectedBeverages((prev) => [...prev, item]);
+    } else {
+      setSelectedProducts((prev) => [...prev, item]);
+    }
+  };
+
+  const handleRemove = (item: any) => {
+    if (activeTab === "beverage") {
+      setSelectedBeverages((prev) => prev.filter((i) => i.id !== item.id));
+    } else {
+      setSelectedProducts((prev) => prev.filter((i) => i.id !== item.id));
+    }
+  };
+
+  const handleCheckoutDraft = async (draftId: number) => {
+    const result = await Swal.fire({
+      title: "Xác nhận thanh toán",
+      text: "Bạn có chắc chắn muốn tạo thanh toán này không?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Chắc chắn",
+      cancelButtonText: "Không",
+    });
+    if (result.isConfirmed) {
+      const res = await dispatch(createOfflineBooking({ data: { draftId } }));
+
+      if (createOfflineBooking.fulfilled.match(res)) {
+        toast.success("Tạo thanh toán thành công!");
+        dispatch(getDrafts());
+      }
+    }
+  };
+
+  const handleCompletePayment = async () => {
+    try {
+      const result = await Swal.fire({
+        title: "Xác nhận hoàn thành thanh toán",
+        text: "Bạn có chắc chắn muốn hoàn thành thanh toán này không?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Chắc chắn",
+        cancelButtonText: "Không",
+      });
+      if (result.isConfirmed) {
+        if (offlineBooking === undefined) return;
+        const data: UpdateOfflineBookingRequest = {
+          offlineBookingId: offlineBooking.id,
+          paymentMethod,
+          total: offlineBooking.total,
+        };
+        const res = await dispatch(updateOfflineBooking({ data })).unwrap();
+        toast.success(res.message);
+        dispatch(clearOfflineBooking());
+      }
+    } catch {
+      // không xử lý lỗi ở đây
+    }
+  };
+
   // ------------------- RENDER -------------------
   return (
     <div className="w-full flex flex-col p-4 bg-gray-100 gap-4">
       <div className="flex-[0.5] flex gap-4">
         {/* Ô đồ uống / sản phẩm */}
         <div className="flex-1 bg-white rounded-xl shadow p-4 flex flex-col overflow-hidden">
-          <div className="text-lg font-bold mb-3 text-blue-900 tracking-wide">
+          <div className="text-2xl font-bold mb-4 text-blue-900 tracking-wide">
             Danh sách đồ uống / sản phẩm
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-3 border-b pb-2 mb-3">
+          <div className="flex gap-3 border-b border-gray-400 pb-2 mb-3">
             <button
               onClick={() => setActiveTab("beverage")}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
@@ -151,11 +241,8 @@ const EmployeePage = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           </div>
 
-          {/* Scroll list với chiều cao cố định */}
-          <div
-            className="overflow-y-auto flex flex-col gap-3"
-            style={{ minHeight: "220px", maxHeight: "220px" }}
-          >
+          {/* Scroll list linh hoạt */}
+          <div className="overflow-y-auto flex-1 flex flex-col gap-3 max-h-[410px]">
             {(activeTab === "beverage" ? beverageLoading : productLoading) ||
             loadingInitial ? (
               Array.from({ length: 5 }).map((_, idx) => (
@@ -168,24 +255,131 @@ const EmployeePage = () => {
               <ItemList
                 items={activeTab === "beverage" ? beverages : products}
                 activeTab={activeTab}
-                onAdd={(item) => console.log("Thêm:", item)}
+                onAdd={handleAdd}
+                onRemove={handleRemove}
               />
             )}
           </div>
         </div>
-
         {/* Draft */}
         <div className="flex-1 bg-white rounded-xl shadow p-4 overflow-y-auto">
-          <div className="text-lg font-semibold mb-3">
-            Draft Box / Thông tin
+          <div className="text-2xl font-bold mb-4 text-blue-900 tracking-wide">
+            Đơn tạm / Thông tin
           </div>
-          <div className="text-gray-500">Nội dung draft...</div>
+          <DraftBoxDemo
+            selectedCourtSlots={selectedCourtSlots}
+            selectedProducts={selectedProducts}
+            selectedBeverages={selectedBeverages}
+            checkOut={handleCheckoutDraft}
+          />
         </div>
 
         {/* Thanh toán */}
-        <div className="flex-1 bg-white rounded-xl shadow p-4">
-          <div className="text-lg font-semibold mb-3">Thanh toán</div>
-          <div className="text-gray-500">Chưa có giao dịch</div>
+        <div className="flex-1 bg-white rounded-xl shadow p-6">
+          {/* Tiêu đề */}
+          <div className="text-2xl font-bold mb-4 text-blue-900 tracking-wide">
+            Hoàn tất thanh toán
+          </div>
+
+          {/* Thông tin đơn hàng */}
+          <div className="bg-gray-50 p-4 rounded-xl shadow-inner mb-6 space-y-2">
+            <div className="text-gray-600 text-sm">Mã đơn</div>
+            <div className="text-lg font-semibold text-gray-900">
+              {offlineBooking?.id
+                ? `#ORD-${offlineBooking.id.toString().padStart(5, "0")}`
+                : "—"}
+            </div>
+
+            <div className="text-gray-600 text-sm mt-2">Khách hàng</div>
+            <div className="text-gray-800 font-medium">
+              {offlineBooking?.nameCustomer || "—"}
+            </div>
+
+            <div className="text-gray-600 text-sm mt-2">Tổng tiền</div>
+            <div className="text-green-700 font-bold text-lg">
+              {offlineBooking?.total?.toLocaleString() || "0"} đ
+            </div>
+          </div>
+
+          {/* Phương thức thanh toán */}
+          <div>
+            <div className="flex items-center gap-2 mb-3 text-[#0288D1] font-semibold text-lg">
+              <Wallet className="w-5 h-5 text-[#0288D1]" />
+              <span>Chọn phương thức thanh toán</span>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Tiền mặt */}
+              <label
+                className={`relative flex items-center gap-4 cursor-pointer border rounded-xl p-4 transition 
+          ${
+            paymentMethod === "Cash"
+              ? "bg-[#E3F2FD] border-[#0288D1] shadow-md"
+              : "hover:bg-[#E3F2FD] border-gray-300"
+          }`}
+              >
+                <input
+                  type="radio"
+                  checked={paymentMethod === "Cash"}
+                  onChange={() => setPaymentMethod("Cash")}
+                  className="absolute opacity-0 w-0 h-0"
+                />
+                <DollarSign className="w-8 h-8 text-[#0288D1] flex-shrink-0" />
+                <div className="flex flex-col">
+                  <span className="font-semibold text-gray-800 text-base">
+                    Thanh toán bằng tiền mặt
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    trực tiếp tại quầy
+                  </span>
+                </div>
+                {paymentMethod === "Cash" && (
+                  <div className="ml-auto text-white bg-[#0288D1] w-6 h-6 rounded-full flex items-center justify-center">
+                    <Check className="w-4 h-4" />
+                  </div>
+                )}
+              </label>
+
+              {/* MoMo */}
+              <label
+                className={`relative flex items-center gap-4 cursor-pointer border rounded-xl p-4 transition 
+          ${
+            paymentMethod === "Momo"
+              ? "bg-[#E3F2FD] border-[#0288D1] shadow-md"
+              : "hover:bg-[#E3F2FD] border-gray-300"
+          }`}
+              >
+                <input
+                  type="radio"
+                  checked={paymentMethod === "Momo"}
+                  onChange={() => setPaymentMethod("Momo")}
+                  className="absolute opacity-0 w-0 h-0"
+                />
+                <Smartphone className="w-8 h-8 text-[#0288D1] flex-shrink-0" />
+                <div className="flex flex-col">
+                  <span className="font-semibold text-gray-800 text-base">
+                    Thanh toán online
+                  </span>
+                  <span className="text-sm text-gray-500">qua MoMo</span>
+                </div>
+                {paymentMethod === "Momo" && (
+                  <div className="ml-auto text-white bg-[#0288D1] w-6 h-6 rounded-full flex items-center justify-center">
+                    <Check className="w-4 h-4" />
+                  </div>
+                )}
+              </label>
+            </div>
+          </div>
+
+          {/* Nút hoàn thành */}
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={handleCompletePayment}
+              className="px-6 py-2 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition text-lg"
+            >
+              Hoàn thành
+            </button>
+          </div>
         </div>
       </div>
 
@@ -240,33 +434,43 @@ const EmployeePage = () => {
                         s.court.name === courtName &&
                         s.startTime.startsWith(hour)
                     );
-                    const selected = slot
-                      ? selectedCourtSlots.includes(slot.id)
-                      : false;
-                    const isAvailable = !!slot;
+
+                    if (!slot)
+                      return (
+                        <div
+                          key={hour}
+                          className="h-10 rounded bg-gray-300 cursor-not-allowed"
+                          title="Không khả dụng"
+                        />
+                      );
+
+                    const isSelected = selectedCourtSlots.some(
+                      (s) => s.id === slot.id
+                    );
+                    const isDisabled = !slot.isAvailable;
+
                     return (
                       <div
                         key={hour}
                         onClick={() => {
-                          if (!isAvailable) return;
-                          if (selected)
+                          if (isDisabled) return;
+                          if (isSelected) {
                             setSelectedCourtSlots((prev) =>
-                              prev.filter((x) => x !== slot!.id)
+                              prev.filter((s) => s.id !== slot.id)
                             );
-                          else if (selectedCourtSlots.length < 3)
-                            setSelectedCourtSlots((prev) => [
-                              ...prev,
-                              slot!.id,
-                            ]);
+                          } else if (selectedCourtSlots.length < 3) {
+                            setSelectedCourtSlots((prev) => [...prev, slot]);
+                          }
                         }}
+                        title={isDisabled ? "Không khả dụng" : ""}
                         className={`h-10 rounded flex items-center justify-center cursor-pointer text-white font-medium transition
-                          ${
-                            !isAvailable
-                              ? "bg-gray-300 cursor-not-allowed"
-                              : selected
-                              ? "bg-green-500 hover:bg-green-600"
-                              : "bg-orange-100 hover:bg-green-300"
-                          }`}
+                    ${
+                      isDisabled
+                        ? "bg-gray-300 cursor-not-allowed"
+                        : isSelected
+                        ? "bg-green-500 hover:bg-green-600"
+                        : "bg-orange-100 hover:bg-green-300"
+                    }`}
                       ></div>
                     );
                   })}
@@ -280,7 +484,7 @@ const EmployeePage = () => {
         <div className="mt-10 text-sm flex gap-4">
           <span className="font-bold">Ghi chú:</span>
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-red-100 rounded"></div> Có thể chọn
+            <div className="w-4 h-4 bg-orange-100 rounded"></div> Có thể chọn
           </div>
           <div className="flex items-center gap-1">
             <div className="w-4 h-4 bg-green-500 rounded"></div> Đã chọn
@@ -290,7 +494,6 @@ const EmployeePage = () => {
           </div>
         </div>
 
-        {/* Optional initial loader */}
         {loadingInitial && (
           <div className="absolute inset-0 bg-white/50 flex flex-col justify-center items-center">
             <Loader2 className="w-12 h-12 animate-spin text-blue-500 mb-3" />

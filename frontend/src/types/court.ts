@@ -66,7 +66,9 @@ export type CourtScheduleEplResponse = {
   date: string;
   startTime: string;
   endTime: string;
+  isAvailable: boolean;
   court: {
     name: string;
   };
+  price: number;
 }[];

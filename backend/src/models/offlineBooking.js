@@ -17,11 +17,11 @@ const OfflineBooking = sequelize.define(
     },
     paymentMethod: {
       type: DataTypes.ENUM("Cash", "MOMO"),
-      allowNull: false,
+      allowNull: true,
     },
     paymentStatus: {
       type: DataTypes.ENUM("Paid", "Pending"),
-      defaultValue: "Paid",
+      defaultValue: "Pending",
       allowNull: false,
     },
     grandTotal: {
@@ -31,7 +31,7 @@ const OfflineBooking = sequelize.define(
     },
     paidAt: {
       type: DataTypes.DATE,
-      allowNull: false,
+      allowNull: true,
     },
   },
   {

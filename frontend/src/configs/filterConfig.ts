@@ -5,7 +5,7 @@ const filterConfig: Record<string, any[]> = {
       label: "Khoảng giá",
       type: "range",
       min: 50000,
-      max: 10000000,
+      max: 5000000,
     },
     {
       key: "size",
@@ -32,7 +32,7 @@ const filterConfig: Record<string, any[]> = {
       label: "Khoảng giá",
       type: "range",
       min: 50000,
-      max: 10000000,
+      max: 5000000,
     },
     {
       key: "size",
@@ -59,7 +59,7 @@ const filterConfig: Record<string, any[]> = {
       label: "Khoảng giá",
       type: "range",
       min: 50000,
-      max: 10000000,
+      max: 1000000,
     },
     {
       key: "size",
@@ -86,7 +86,7 @@ const filterConfig: Record<string, any[]> = {
       label: "Khoảng giá",
       type: "range",
       min: 50000,
-      max: 10000000,
+      max: 1000000,
     },
     {
       key: "size",
@@ -113,7 +113,7 @@ const filterConfig: Record<string, any[]> = {
       label: "Khoảng giá",
       type: "range",
       min: 50000,
-      max: 10000000,
+      max: 1000000,
     },
     {
       key: "size",
@@ -139,7 +139,7 @@ const filterConfig: Record<string, any[]> = {
       key: "priceRange",
       label: "Khoảng giá",
       type: "range",
-      min: 50000,
+      min: 100000,
       max: 10000000,
     },
     {
@@ -160,7 +160,7 @@ const filterConfig: Record<string, any[]> = {
       key: "priceRange",
       label: "Khoảng giá",
       type: "range",
-      min: 50000,
+      min: 200000,
       max: 10000000,
     },
     {
@@ -182,7 +182,7 @@ const filterConfig: Record<string, any[]> = {
       label: "Khoảng giá",
       type: "range",
       min: 50000,
-      max: 10000000,
+      max: 1000000,
     },
   ],
 };

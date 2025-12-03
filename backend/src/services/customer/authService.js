@@ -1,4 +1,4 @@
-import { Profile, User } from "../../models/index.js";
+import { Profile, Role, User } from "../../models/index.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
@@ -6,7 +6,7 @@ import ApiError from "../../utils/ApiError.js";
 import { StatusCodes } from "http-status-codes";
 import dotenv from "dotenv";
 import UserOtp from "../../models/userOtp.js";
-import sendOtpMail from "../../utils/mailer.js";
+import mailer from "../../utils/mailer.js";
 dotenv.config();
 const saltRounds = 10;
 
@@ -16,6 +16,20 @@ const saltRounds = 10;
 const createUserService = async (username, email, password) => {
   try {
     const existingUsername = await User.findOne({ where: { username } });
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email?.trim())) {
+      throw new ApiError(StatusCodes.BAD_REQUEST, "Email không hợp lệ!");
+    }
+
+    if (!username || !password) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Tên đăng nhập và mật khẩu không được để trống!"
+      );
+    }
+
     if (existingUsername) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
@@ -56,7 +70,7 @@ const createUserService = async (username, email, password) => {
       userId: user.id,
     });
 
-    sendOtpMail(email, otpCode);
+    mailer.sendOtpMail(email, otpCode);
 
     const safeUser = {
       id: user.id,
@@ -71,10 +85,7 @@ const createUserService = async (username, email, password) => {
     return { safeUser };
   } catch (error) {
     if (error instanceof ApiError) throw error;
-    throw new ApiError(
-      StatusCodes.INTERNAL_SERVER_ERROR,
-      "Đã xảy ra lỗi khi tạo tài khoản. Vui lòng thử lại sau!"
-    );
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
 
@@ -83,6 +94,11 @@ const createUserService = async (username, email, password) => {
  */
 const verifyOtpService = async (email, otpCode, newPassword) => {
   try {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email?.trim())) {
+      throw new ApiError(StatusCodes.BAD_REQUEST, "Email không hợp lệ!");
+    }
+
     const user = await User.findOne({ where: { email } });
     if (!user) {
       throw new ApiError(
@@ -142,6 +158,11 @@ const verifyOtpService = async (email, otpCode, newPassword) => {
  */
 const sentVerifyOtpService = async (email) => {
   try {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email?.trim())) {
+      throw new ApiError(StatusCodes.BAD_REQUEST, "Email không hợp lệ!");
+    }
     const user = await User.findOne({ where: { email } });
     if (!user) {
       throw new ApiError(
@@ -159,7 +180,7 @@ const sentVerifyOtpService = async (email) => {
       userId: user.id,
     });
 
-    sendOtpMail(email, otpCode);
+    await mailer.sendOtpMail(email, otpCode);
   } catch (error) {
     if (error instanceof ApiError) throw error;
     throw new ApiError(
@@ -174,7 +195,16 @@ const sentVerifyOtpService = async (email) => {
  */
 const handleLoginService = async (username, password) => {
   try {
-    const user = await User.findOne({ where: { username } });
+    const user = await User.findOne({
+      where: { username },
+      include: [
+        {
+          model: Role,
+          as: "role",
+          attributes: ["id", "roleName"],
+        },
+      ],
+    });
 
     // Không tiết lộ tài khoản có tồn tại hay không
     if (!user) {
@@ -203,6 +233,7 @@ const handleLoginService = async (username, password) => {
       id: user.id,
       username: user.username,
       email: user.email,
+      role: user.role.roleName,
     };
 
     const access_token = jwt.sign(payload, process.env.JWT_SECRET, {
@@ -215,6 +246,7 @@ const handleLoginService = async (username, password) => {
         id: user.id,
         email: user.email,
         username: user.username,
+        role: user.role.roleName,
       },
     };
   } catch (error) {

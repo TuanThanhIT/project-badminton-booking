@@ -8,6 +8,7 @@ export const defaultAuthState: AuthState = {
     id: 0,
     email: "",
     username: "",
+    role: "",
   },
 };
 

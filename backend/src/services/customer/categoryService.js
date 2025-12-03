@@ -1,7 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import ApiError from "../../utils/ApiError.js";
 import { Category } from "../../models/index.js";
-import { Op } from "sequelize";
+import { Op, where } from "sequelize";
 
 const getCategoriesByGroupNameService = async () => {
   try {
@@ -49,9 +49,41 @@ const getOtherCategoriesByGroupNameService = async (cateId) => {
   }
 };
 
+const getCatesByGroupNameService = async (groupName) => {
+  try {
+    const categories = await Category.findAll({
+      where: { menuGroup: groupName },
+      attributes: ["id", "cateName"],
+    });
+    return categories;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
+
+const getAllGroupNameService = async () => {
+  try {
+    const categories = await Category.findAll();
+    const cateGroups = [];
+    categories.map((cate) => {
+      if (!cateGroups.includes(cate.menuGroup)) {
+        cateGroups.push(cate.menuGroup);
+      }
+    });
+    return cateGroups;
+  } catch (error) {
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
+
 const categoryCustomerService = {
   getCategoriesByGroupNameService,
   getOtherCategoriesByGroupNameService,
+  getCatesByGroupNameService,
+  getAllGroupNameService,
 };
 
 export default categoryCustomerService;

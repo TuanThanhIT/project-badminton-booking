@@ -9,6 +9,7 @@ export type LoginResponse = {
     id: number;
     email: string;
     username: string;
+    role: string;
   };
 };
 
@@ -16,6 +17,7 @@ export type AccountResponse = {
   id: number;
   email: string;
   username: string;
+  role: string;
 };
 
 export type RegisterRequest = {
@@ -61,6 +63,7 @@ export interface AuthState {
     id: number;
     email: string;
     username: string;
+    role: string;
   };
 }
 

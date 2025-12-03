@@ -14,6 +14,27 @@ import initProductCustomerRoute from "./routes/customer/productRoute.js";
 import initCartCustomerRoute from "./routes/customer/cartRoute.js";
 import initDiscountAdminRoute from "./routes/admin/discountRoute.js";
 import initDiscountCustomerRoute from "./routes/customer/discountRoute.js";
+import initOrderCustomerRoute from "./routes/customer/orderRoute.js";
+import initMomoCustomerRoute from "./routes/customer/momoRoute.js";
+import initProductFeedbackCustomerRoute from "./routes/customer/productFeedbackRoute.js";
+import initContactCustomerRoute from "./routes/customer/contactRoute.js";
+import initCourtAdminRoute from "./routes/admin/courtRoute.js";
+import initCourtCustomerRoute from "./routes/customer/courtRoute.js";
+import initDiscountBookingCustomerRoute from "./routes/customer/discountBooking.js";
+import initDiscountBookingAdminRoute from "./routes/admin/discountBookingRoute.js";
+import initBookingCustomerRoute from "./routes/customer/bookingRoute.js";
+import initBookingFeedbackCustomerRoute from "./routes/customer/bookingFeedbackRoute.js";
+import initAuthEmployeeRoute from "./routes/employee/authRoute.js";
+import initWorkShiftAdminRoute from "./routes/admin/workShiftRoute.js";
+import initWorkShiftEmployeeRoute from "./routes/employee/workShiftRoute.js";
+import initOrderEmployeeRoute from "./routes/employee/orderRoute.js";
+import initBookingEmployeeRoute from "./routes/employee/bookingRoute.js";
+import initCourtEmployeeRoute from "./routes/employee/courtRoute.js";
+import initBeverageAdminRoute from "./routes/admin/beverageRoute.js";
+import initBeverageEmployeeRoute from "./routes/employee/beverageRoute.js";
+import initProductEmployeeRoute from "./routes/employee/productRoute.js";
+import initDraftEmployeeRoute from "./routes/employee/draftRoute.js";
+import initOfflineEmployeeRoute from "./routes/employee/offlineRoute.js";
 
 dotenv.config();
 
@@ -33,12 +54,35 @@ initCateCustomerRoute(app);
 initProductCustomerRoute(app);
 initCartCustomerRoute(app);
 initDiscountCustomerRoute(app);
+initOrderCustomerRoute(app);
+initMomoCustomerRoute(app);
+initProductFeedbackCustomerRoute(app);
+initContactCustomerRoute(app);
+initCourtCustomerRoute(app);
+initDiscountBookingCustomerRoute(app);
+initBookingCustomerRoute(app);
+initBookingFeedbackCustomerRoute(app);
 
 // Admin
 initRoleRoute(app);
 initCateAdminRoute(app);
 initProductAdminRoute(app);
 initDiscountAdminRoute(app);
+initCourtAdminRoute(app);
+initDiscountBookingAdminRoute(app);
+initWorkShiftAdminRoute(app);
+initBeverageAdminRoute(app);
+
+// Employee
+initAuthEmployeeRoute(app);
+initWorkShiftEmployeeRoute(app);
+initOrderEmployeeRoute(app);
+initBookingEmployeeRoute(app);
+initCourtEmployeeRoute(app);
+initBeverageEmployeeRoute(app);
+initProductEmployeeRoute(app);
+initDraftEmployeeRoute(app);
+initOfflineEmployeeRoute(app);
 
 app.use(errorHandlingMiddleware);
 

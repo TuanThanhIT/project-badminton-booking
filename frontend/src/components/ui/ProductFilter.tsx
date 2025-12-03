@@ -221,6 +221,8 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
           <option value="none">Không sắp xếp</option>
           <option value="price_asc">Giá tăng dần</option>
           <option value="price_desc">Giá giảm dần</option>
+          <option value="newest">Mới cập nhật</option>
+          <option value="oldest">Cũ hơn</option>
         </select>
       </div>
       <div className="flex gap-2">

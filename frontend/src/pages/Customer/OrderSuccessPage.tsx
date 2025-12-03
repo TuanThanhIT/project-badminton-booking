@@ -1,8 +1,16 @@
 import { useNavigate } from "react-router-dom";
 import { CheckCircle, Star, Sparkles } from "lucide-react";
+import { useEffect } from "react";
+import { useAppDispatch } from "../../store/hook";
+import { deleteAllCart } from "../../store/slices/customer/cartSlice";
 
 const OrderSuccessPage = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    dispatch(deleteAllCart());
+  }, [dispatch]);
 
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-[#E3F2FD] to-white p-6 overflow-hidden">

@@ -7,6 +7,9 @@ export type CartProductResponse = {
   thumbnailUrl: string;
   varientId: number;
   stock: number;
+  color: string;
+  size: string;
+  material: string;
   price: number;
 };
 

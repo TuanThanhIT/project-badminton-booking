@@ -6,7 +6,6 @@ const createDiscountService = async (
   code,
   type,
   value,
-  quantity,
   startDate,
   endDate,
   minOrderAmount
@@ -56,13 +55,6 @@ const createDiscountService = async (
       );
     }
 
-    // Kiểm tra số lượng và min order
-    if (quantity <= 0) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Số lượng mã giảm giá phải lớn hơn 0!"
-      );
-    }
     if (minOrderAmount < 0) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
@@ -75,7 +67,6 @@ const createDiscountService = async (
       code: code.trim().toUpperCase(),
       type,
       value,
-      quantity,
       startDate: start,
       endDate: end,
       minOrderAmount,

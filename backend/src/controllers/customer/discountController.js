@@ -13,7 +13,7 @@ const applyDiscount = async (req, res, next) => {
 const updateDiscount = async (req, res, next) => {
   try {
     const { code } = req.body;
-    const discount = await discountService.updateDiscountService(code);
+    await discountService.updateDiscountService(code);
     return res
       .status(200)
       .json({ message: "Mã giảm giá đã được ghi nhận và áp dụng." });
@@ -22,8 +22,18 @@ const updateDiscount = async (req, res, next) => {
   }
 };
 
+const getDiscount = async (req, res, next) => {
+  try {
+    const discounts = await discountService.getDiscountService();
+    return res.status(200).json(discounts);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const discountController = {
   applyDiscount,
   updateDiscount,
+  getDiscount,
 };
 export default discountController;

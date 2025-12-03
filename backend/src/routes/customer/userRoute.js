@@ -2,22 +2,35 @@ import express from "express";
 import auth from "../../middlewares/auth.js";
 import userController from "../../controllers/customer/userController.js";
 import multer from "multer";
+import authorize from "../../middlewares/authorize.js";
 
 const userRoute = express.Router();
 
 var uploader = multer({
   storage: multer.diskStorage({}),
-  limits: { fileSize: 1 * 1024 * 1024 },
+  limits: { fileSize: 2 * 1024 * 1024 },
 });
 
 const initUserRoute = (app) => {
-  userRoute.get("/profile", userController.getProfile);
+  userRoute.get(
+    "/profile",
+    auth,
+    authorize("USER", "EMPLOYEE"),
+    userController.getProfile
+  );
   userRoute.put(
     "/profile/update",
+    auth,
+    authorize("USER", "EMPLOYEE"),
     uploader.single("file"),
     userController.updateProfile
   );
-  userRoute.put("/profile/update/checkout", userController.updateUserInfo);
-  app.use("/user", auth, userRoute);
+  userRoute.put(
+    "/profile/update/checkout",
+    auth,
+    authorize("USER", "EMPLOYEE"),
+    userController.updateUserInfo
+  );
+  app.use("/user", userRoute);
 };
 export default initUserRoute;

@@ -16,6 +16,27 @@ var _productRoute2 = _interopRequireDefault(require("./routes/customer/productRo
 var _cartRoute = _interopRequireDefault(require("./routes/customer/cartRoute.js"));
 var _discountRoute = _interopRequireDefault(require("./routes/admin/discountRoute.js"));
 var _discountRoute2 = _interopRequireDefault(require("./routes/customer/discountRoute.js"));
+var _orderRoute = _interopRequireDefault(require("./routes/customer/orderRoute.js"));
+var _momoRoute = _interopRequireDefault(require("./routes/customer/momoRoute.js"));
+var _productFeedbackRoute = _interopRequireDefault(require("./routes/customer/productFeedbackRoute.js"));
+var _contactRoute = _interopRequireDefault(require("./routes/customer/contactRoute.js"));
+var _courtRoute = _interopRequireDefault(require("./routes/admin/courtRoute.js"));
+var _courtRoute2 = _interopRequireDefault(require("./routes/customer/courtRoute.js"));
+var _discountBooking = _interopRequireDefault(require("./routes/customer/discountBooking.js"));
+var _discountBookingRoute = _interopRequireDefault(require("./routes/admin/discountBookingRoute.js"));
+var _bookingRoute = _interopRequireDefault(require("./routes/customer/bookingRoute.js"));
+var _bookingFeedbackRoute = _interopRequireDefault(require("./routes/customer/bookingFeedbackRoute.js"));
+var _authRoute2 = _interopRequireDefault(require("./routes/employee/authRoute.js"));
+var _workShiftRoute = _interopRequireDefault(require("./routes/admin/workShiftRoute.js"));
+var _workShiftRoute2 = _interopRequireDefault(require("./routes/employee/workShiftRoute.js"));
+var _orderRoute2 = _interopRequireDefault(require("./routes/employee/orderRoute.js"));
+var _bookingRoute2 = _interopRequireDefault(require("./routes/employee/bookingRoute.js"));
+var _courtRoute3 = _interopRequireDefault(require("./routes/employee/courtRoute.js"));
+var _beverageRoute = _interopRequireDefault(require("./routes/admin/beverageRoute.js"));
+var _beverageRoute2 = _interopRequireDefault(require("./routes/employee/beverageRoute.js"));
+var _productRoute3 = _interopRequireDefault(require("./routes/employee/productRoute.js"));
+var _draftRoute = _interopRequireDefault(require("./routes/employee/draftRoute.js"));
+var _offlineRoute = _interopRequireDefault(require("./routes/employee/offlineRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -34,12 +55,35 @@ app.use((0, _cors["default"])());
 (0, _productRoute2["default"])(app);
 (0, _cartRoute["default"])(app);
 (0, _discountRoute2["default"])(app);
+(0, _orderRoute["default"])(app);
+(0, _momoRoute["default"])(app);
+(0, _productFeedbackRoute["default"])(app);
+(0, _contactRoute["default"])(app);
+(0, _courtRoute2["default"])(app);
+(0, _discountBooking["default"])(app);
+(0, _bookingRoute["default"])(app);
+(0, _bookingFeedbackRoute["default"])(app);
 
 // Admin
 (0, _roleRoute["default"])(app);
 (0, _cateRoute["default"])(app);
 (0, _productRoute["default"])(app);
 (0, _discountRoute["default"])(app);
+(0, _courtRoute["default"])(app);
+(0, _discountBookingRoute["default"])(app);
+(0, _workShiftRoute["default"])(app);
+(0, _beverageRoute["default"])(app);
+
+// Employee
+(0, _authRoute2["default"])(app);
+(0, _workShiftRoute2["default"])(app);
+(0, _orderRoute2["default"])(app);
+(0, _bookingRoute2["default"])(app);
+(0, _courtRoute3["default"])(app);
+(0, _beverageRoute2["default"])(app);
+(0, _productRoute3["default"])(app);
+(0, _draftRoute["default"])(app);
+(0, _offlineRoute["default"])(app);
 app.use(_errorHandling.errorHandlingMiddleware);
 _db["default"].sync({
   force: false

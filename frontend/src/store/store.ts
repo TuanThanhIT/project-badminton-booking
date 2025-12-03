@@ -1,18 +1,44 @@
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import storage from "redux-persist/lib/storage"; // dùng localStorage
 import { persistReducer, persistStore } from "redux-persist";
-import cartReducer from "./slices/cartSlice";
-import discountReducer from "./slices/discountSlice";
+import cartReducer from "./slices/customer/cartSlice";
+import discountReducer from "./slices/customer/discountSlice";
+import orderReducer from "./slices/customer/orderSlice";
+import productFeedbackReducer from "./slices/customer/productFeedbackSlice";
+import courtReducer from "./slices/customer/courtSlice";
+import bookingReducer from "./slices/customer/bookingSlice";
+import bookingFeedbackReducer from "./slices/customer/bookingFeedbackSlice";
+import workShiftReducer from "./slices/employee/workShiftSlice";
+import orderEplReducer from "./slices/employee/orderSlice";
+import bookingEplReducer from "./slices/employee/bookingSlice";
+import beverageEplReducer from "./slices/employee/beverageSlice";
+import courtEplReducer from "./slices/employee/courtSlice";
+import productEplReducer from "./slices/employee/productSlice";
+import draftEplReducer from "./slices/employee/draftSlice";
+import offlineEplReducer from "./slices/employee/offlineSlice";
 
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["cart"], // chỉ persist 2 slice này
+  whitelist: ["cart", "offlineEpl"],
 };
 
 const rootReducer = combineReducers({
   cart: cartReducer,
   discount: discountReducer,
+  order: orderReducer,
+  productFeedback: productFeedbackReducer,
+  court: courtReducer,
+  booking: bookingReducer,
+  bookingFeedback: bookingFeedbackReducer,
+  workShiftEpl: workShiftReducer,
+  orderEpl: orderEplReducer,
+  bookingEpl: bookingEplReducer,
+  courtEpl: courtEplReducer,
+  beverageEpl: beverageEplReducer,
+  productEpl: productEplReducer,
+  draftEpl: draftEplReducer,
+  offlineEpl: offlineEplReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

@@ -1,124 +1,184 @@
 import {
-  Search,
-  Languages,
   LogIn,
   UserPlus,
   ShoppingCart,
   LogOut,
-  User,
   Package,
+  Calendar,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { AuthContext } from "../../contexts/authContext";
+import { useAppDispatch, useAppSelector } from "../../../store/hook";
+import { clearCart, fetchCart } from "../../../store/slices/customer/cartSlice";
+import {
+  clearOrders,
+  getOrders,
+} from "../../../store/slices/customer/orderSlice";
+import {
+  clearBookings,
+  getBookings,
+} from "../../../store/slices/customer/bookingSlice";
 
 const Header = () => {
   const { auth, setAuth } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  const dispatch = useAppDispatch();
+  const cart = useAppSelector((state) => state.cart.cart);
+  const orders = useAppSelector((state) => state.order.orders);
+  const bookings = useAppSelector((state) => state.booking.bookings);
+
+  const ods = orders.filter(
+    (order) =>
+      order.orderStatus === "Pending" ||
+      order.orderStatus === "Paid" ||
+      order.orderStatus === "Confirmed"
+  );
+
+  const bks = bookings.filter(
+    (booking) =>
+      booking.bookingStatus === "Pending" ||
+      booking.bookingStatus === "Paid" ||
+      booking.bookingStatus === "Confirmed"
+  );
+
+  const countCartItems = cart?.cartItems.length || 0;
+  const countOrderItems = ods.length;
+  const countBookingItems = bks.length;
+
+  const handleLogout = () => {
+    dispatch(clearCart());
+    dispatch(clearOrders());
+    dispatch(clearBookings());
+
+    setAuth({
+      isAuthenticated: false,
+      user: { id: 0, email: "", username: "", role: "" },
+    });
+
+    localStorage.clear();
+    localStorage.removeItem("persist:root");
+    navigate("/login");
+  };
+
+  useEffect(() => {
+    if (auth.isAuthenticated) {
+      dispatch(fetchCart());
+      dispatch(getOrders());
+      dispatch(getBookings());
+    }
+  }, [auth.isAuthenticated, dispatch]);
+
   return (
     <header className="bg-white shadow-sm">
-      <div className="flex justify-between items-center px-8 py-4">
+      <div className="flex justify-between items-center px-10 py-5">
         {/* Logo + Hotline */}
         <div
-          className="flex items-center gap-20 cursor-pointer"
+          className="flex items-center gap-24 cursor-pointer"
           onClick={() => navigate("/")}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <img
               src="/img/logo_badminton.jpg"
               alt="Logo"
-              className="w-12 h-12 rounded-xl shadow-sm"
+              className="w-14 h-14 rounded-xl shadow-sm"
             />
-            <h1 className="text-2xl font-bold text-sky-600 tracking-wide">
+            <h1 className="text-3xl font-bold text-sky-600 tracking-wide">
               B-Hub
             </h1>
           </div>
 
-          {/* Hotline nổi bật */}
-          <div className="hidden md:flex items-center gap-2 bg-sky-100 px-3 py-1 rounded-full shadow-sm">
-            <span className="text-gray-700 font-normal">Hotline:</span>
+          <div className="hidden md:flex items-center gap-2 bg-sky-100 px-4 py-2 rounded-full shadow-sm">
+            <span className="text-gray-700 font-medium text-base">
+              Hotline:
+            </span>
             <a
               href="tel:0901234567"
-              className="text-red-600 font-bold text-sm hover:text-red-700"
+              className="text-red-600 font-semibold text-base hover:text-red-700"
             >
               0901 234 567
             </a>
           </div>
         </div>
 
-        {/* Search */}
-        <div className="flex items-center bg-gray-50 rounded-full px-4 py-2 shadow-inner w-[400px] border border-gray-200">
-          <input
-            type="text"
-            placeholder="Tìm sân hoặc dụng cụ..."
-            className="flex-1 bg-transparent outline-none text-sm text-gray-700 placeholder-gray-400"
-          />
-          <button className="ml-2 p-2 rounded-full bg-sky-500 hover:bg-sky-600 transition">
-            <Search className="w-4 h-4 text-white" />
-          </button>
-        </div>
-
         {/* Actions */}
-        <div className="flex items-center gap-4">
-          {/* Ngôn ngữ */}
+        <div className="flex items-center gap-5">
+          <NavLink
+            to="/bookings"
+            className="flex items-center gap-2 px-4 py-2 rounded-full text-gray-700 hover:bg-gray-100 transition text-base font-medium"
+          >
+            <div className="relative">
+              <Calendar className="w-6 h-6 text-sky-600" />
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md">
+                {countBookingItems}
+              </span>
+            </div>
+            <span>Lịch sân</span>
+          </NavLink>
+
           <NavLink
             to="/orders"
-            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-gray-700 hover:bg-gray-100 transition text-sm font-medium"
+            className="flex items-center gap-2 px-4 py-2 rounded-full text-gray-700 hover:bg-gray-100 transition text-base font-medium"
           >
-            <Package className="w-5 h-5 text-sky-600" />
+            <div className="relative">
+              <Package className="w-6 h-6 text-sky-600" />
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md">
+                {countOrderItems}
+              </span>
+            </div>
             <span>Đơn hàng</span>
           </NavLink>
 
-          {/* Giỏ hàng */}
+          {/* Cart */}
           <NavLink
             to="/cart"
-            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-gray-700 hover:bg-gray-100 transition text-sm font-medium"
+            className="flex items-center gap-2 px-4 py-2 rounded-full text-gray-700 hover:bg-gray-100 transition text-base font-medium"
           >
-            <ShoppingCart className="w-5 h-5 text-sky-600" />
-            Giỏ hàng
+            <div className="relative">
+              <ShoppingCart className="w-6 h-6 text-sky-600" />
+
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md">
+                {countCartItems}
+              </span>
+            </div>
+            <span>Giỏ hàng</span>
           </NavLink>
 
-          {/* Auth */}
           {!auth.isAuthenticated ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <NavLink
                 to="/login"
-                className="flex items-center gap-1 px-4 py-1.5 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-100 transition text-sm font-medium"
+                className="flex items-center gap-2 px-5 py-2 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-100 transition text-base font-medium"
               >
-                <LogIn className="w-5 h-5" />
+                <LogIn className="w-6 h-6" />
                 Đăng nhập
               </NavLink>
+
               <NavLink
                 to="/register"
-                className="flex items-center gap-1 px-4 py-1.5 rounded-full bg-sky-500 text-white hover:bg-sky-600 transition text-sm font-medium shadow-sm"
+                className="flex items-center gap-2 px-5 py-2 rounded-full bg-sky-500 text-white hover:bg-sky-600 transition text-base font-medium shadow"
               >
-                <UserPlus className="w-5 h-5" />
+                <UserPlus className="w-6 h-6" />
                 Đăng ký
               </NavLink>
             </div>
           ) : (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <NavLink
                 to="/profile"
-                className="flex items-center gap-1 px-4 py-1.5 rounded-full text-gray-700 hover:bg-gray-100 transition text-sm font-medium"
+                className="flex items-center gap-2 px-5 py-2 rounded-full text-gray-700 hover:bg-gray-100 transition text-base font-medium"
               >
-                <User className="w-5 h-5 text-sky-600" />
-                {auth?.user?.username}
+                <UserPlus className="w-6 h-6 text-sky-600" />
+                {auth.user.username}
               </NavLink>
+
               <button
-                onClick={() => {
-                  localStorage.clear(); // Xóa toàn bộ
-                  setAuth({
-                    isAuthenticated: false,
-                    user: { id: 0, email: "", username: "" },
-                  });
-                  navigate("/login");
-                }}
-                className="flex items-center gap-1 px-4 py-1.5 rounded-full border border-gray-300 text-gray-700 hover:bg-red-50 hover:text-red-600 transition text-sm font-medium"
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-5 py-2 rounded-full border border-gray-300 text-gray-700 hover:bg-red-50 hover:text-red-600 transition text-base font-medium"
               >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-6 h-6" />
                 Logout
               </button>
             </div>
@@ -126,7 +186,6 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Navbar dưới */}
       <Navbar />
     </header>
   );

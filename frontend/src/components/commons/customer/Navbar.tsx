@@ -9,15 +9,15 @@ const Navbar = () => {
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `group flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium transition-all duration-200
-     ${
-       isActive
-         ? "bg-white text-sky-600 shadow-md"
-         : "text-white hover:text-white hover:bg-sky-500/40"
-     }`;
+   ${
+     isActive
+       ? "text-white underline underline-offset-4 decoration-2 decoration-white"
+       : "text-white hover:text-white hover:bg-sky-500/40"
+   }`;
 
   const iconClass = ({ isActive }: { isActive: boolean }) =>
     `w-5 h-5 transition-colors duration-200 ${
-      isActive ? "text-sky-600" : "text-white group-hover:text-white"
+      isActive ? "text-white" : "text-white group-hover:text-white"
     }`;
 
   return (

@@ -5,7 +5,7 @@ import {
   FormRegisterSchema,
   type formRegister,
 } from "../../schemas/FormRegisterSchema";
-import authService from "../../services/authService";
+import authService from "../../services/Customer/authService";
 import { toast } from "react-toastify";
 import type { ApiErrorType } from "../../types/error";
 
@@ -37,7 +37,7 @@ const RegisterPage = () => {
 
   return (
     <div className="p-20 w-3/4 mx-auto">
-      <div className="grid grid-cols-2 shadow-md rounded-2xl gap-5 text-sm">
+      <div className="grid grid-cols-2 rounded-2xl gap-5 text-sm border border-gray-200">
         <div className="flex justify-center p-3">
           <img src="/img/register.jpg"></img>
         </div>
@@ -60,6 +60,7 @@ const RegisterPage = () => {
 
           <label>Mật khẩu</label>
           <input
+            type="password"
             placeholder="Mật khẩu"
             {...register("password")}
             className="border-0 p-2 px-4 rounded-md mb-3 shadow-sm outline-0"

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const FormRegisterSchema = z.object({
-  username: z.string().min(1, "Tên đăng nhập là bắt buộc!"),
+  username: z.string().min(1, "Tên đăng nhập không được để trống!"),
   email: z.string().trim().email("Email không hợp lệ!"),
   password: z
     .string()

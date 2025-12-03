@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormLoginSchema, type formLogin } from "../../schemas/FormLoginSchema";
-import authService from "../../services/authService";
+import authService from "../../services/Customer/authService";
 import type { ApiErrorType } from "../../types/error";
 import { toast } from "react-toastify";
 import { useContext } from "react";
@@ -22,7 +22,7 @@ const LoginPage = () => {
     formState: { errors, isDirty, isValid },
   } = useForm<formLogin>({
     resolver: zodResolver(FormLoginSchema),
-    defaultValues: { username: "user1", password: "123456" },
+    defaultValues: { username: "user1", password: "123456789" },
     mode: "onChange",
   });
 
@@ -36,6 +36,7 @@ const LoginPage = () => {
           id: res.data?.user?.id || 0,
           email: res.data?.user?.email || "",
           username: res.data?.user?.username || "",
+          role: res.data?.user?.role || "",
         },
       });
 
@@ -51,7 +52,7 @@ const LoginPage = () => {
 
   return (
     <div className="p-20 w-3/4 mx-auto">
-      <div className="grid grid-cols-2 shadow-md rounded-2xl gap-5 text-sm">
+      <div className="grid grid-cols-2 rounded-2xl gap-5 text-sm border border-gray-200">
         <div className="flex justify-center p-3">
           <img src="/img/login.jpg" alt="Đăng nhập"></img>
         </div>
@@ -74,6 +75,7 @@ const LoginPage = () => {
 
           <label>Mật khẩu</label>
           <input
+            type="password"
             placeholder="Mật khẩu"
             {...register("password")}
             className="border-0 p-2 px-4 rounded-md mb-3 shadow-sm outline-0"

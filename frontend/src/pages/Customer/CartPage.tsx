@@ -7,11 +7,12 @@ import {
   fetchCart,
   updateQuantity,
   updateQuantityLocal,
-} from "../../store/slices/cartSlice";
+} from "../../store/slices/customer/cartSlice";
 import { toast } from "react-toastify";
 import { ArrowRight, Loader2, ShoppingCart, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import debounce from "lodash/debounce";
+import Swal from "sweetalert2";
 
 const CartPage = () => {
   const dispatch = useAppDispatch();
@@ -55,8 +56,18 @@ const CartPage = () => {
     toast.success("Xóa tất cả sản phẩm khỏi giỏ hàng thành công");
   };
 
-  const handleCheckout = () => {
-    navigate("/checkout");
+  const handleCheckout = async () => {
+    const result = await Swal.fire({
+      title: "Xác nhận thanh toán",
+      text: "Bạn có chắc chắn thanh toán cho tất cả sản phẩm trong giỏ hàng?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Chắc chắn",
+      cancelButtonText: "Không",
+    });
+    if (result.isConfirmed) {
+      navigate("/checkout");
+    }
   };
 
   const handleQuantityChange = (item: any, val: number) => {
@@ -84,31 +95,30 @@ const CartPage = () => {
   // --- Empty cart ---
   if (!cart || cart.cartItems.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-[70vh] bg-gradient-to-b from-sky-50 to-white">
-        <div className="bg-white px-8 py-10 rounded-2xl shadow-lg border border-sky-100 flex flex-col items-center">
-          <div className="p-5 bg-sky-100 rounded-full mb-5">
-            <ShoppingCart size={60} className="text-sky-500" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            Giỏ hàng trống
-          </h2>
-          <p className="text-gray-500 text-sm mb-6 text-center max-w-xs">
-            Hãy thêm sản phẩm để tiếp tục mua sắm nhé! 💙
-          </p>
-          <button
-            onClick={() => navigate("/home")}
-            className="flex items-center gap-2 px-5 py-2 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg shadow-sm transition-all"
-          >
-            <span>Mua sắm ngay</span>
-            <ArrowRight size={18} />
-          </button>
-        </div>
+      <div className="flex-1 flex flex-col items-center justify-center w-full py-16">
+        <ShoppingCart size={64} className="text-sky-400 mb-6" />
+
+        <h3 className="text-2xl font-semibold text-gray-700 mb-3">
+          Giỏ hàng trống
+        </h3>
+
+        <p className="text-base text-gray-500 text-center max-w-md mb-6">
+          Hãy thêm sản phẩm để tiếp tục mua sắm nhé! 💙
+        </p>
+
+        <button
+          onClick={() => navigate("/home")}
+          className="flex items-center gap-2 px-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-medium rounded-lg transition"
+        >
+          <span>Mua sắm ngay</span>
+          <ArrowRight size={20} />
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#E3F2FD] to-white py-10 px-4">
+    <div className="min-h-screen bg-white py-10 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-10 text-center">
@@ -141,31 +151,60 @@ const CartPage = () => {
               </button>
             </div>
 
-            <div className="divide-y divide-gray-100">
-              {cart.cartItems.map((item) => (
+            <div className="space-y-4">
+              {cart.cartItems.map((item: any) => (
                 <div
                   key={item.id}
-                  className="flex flex-col sm:flex-row sm:items-center gap-4 py-5"
+                  className="flex items-stretch gap-5 bg-white p-4 rounded-2xl shadow-sm hover:shadow-md transition-all border border-gray-100"
                 >
-                  <img
-                    src={item.thumbnailUrl}
-                    alt={item.productName}
-                    className="w-30 h-30 object-cover rounded-xl border border-gray-100 shadow-sm"
-                  />
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-800 line-clamp-2">
-                      {item.productName}
-                    </h3>
-                    <p className="text-sky-600 font-bold mt-1">
-                      {item.price.toLocaleString()}₫
-                    </p>
+                  {/* Ảnh sản phẩm */}
+                  <div className="flex-shrink-0">
+                    <img
+                      src={item.thumbnailUrl}
+                      alt={item.productName}
+                      className="w-36 h-full object-cover rounded-xl border border-gray-100"
+                    />
+                  </div>
 
-                    {/* Số lượng + tồn kho */}
-                    <div className="mt-3">
-                      <div className="flex items-center gap-2">
-                        <label className="text-sm text-gray-600">
-                          Số lượng:
-                        </label>
+                  {/* Thông tin chính */}
+                  <div className="flex-1 flex flex-col justify-between py-2">
+                    <div>
+                      <h3 className="font-semibold text-gray-800 text-lg">
+                        {item.productName}
+                      </h3>
+
+                      {/* Thuộc tính */}
+                      <div className="flex flex-wrap items-center gap-x-5 text-sm text-gray-600 mt-1">
+                        <span>
+                          <span className="font-semibold text-gray-700">
+                            Size:
+                          </span>{" "}
+                          {item.size || "—"}
+                        </span>
+                        <span>
+                          <span className="font-semibold text-gray-700">
+                            Màu:
+                          </span>{" "}
+                          {item.color || "—"}
+                        </span>
+                        <span>
+                          <span className="font-semibold text-gray-700">
+                            Chất liệu:
+                          </span>{" "}
+                          {item.material || "—"}
+                        </span>
+                      </div>
+
+                      {/* Giá đơn vị */}
+                      <p className="text-sky-600 font-semibold mt-2 text-base">
+                        {item.price.toLocaleString()}₫
+                      </p>
+                    </div>
+
+                    {/* Số lượng */}
+                    <div className="flex items-center gap-3 mt-3">
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <label className="font-medium">Số lượng:</label>
                         <input
                           type="number"
                           min={1}
@@ -174,20 +213,18 @@ const CartPage = () => {
                           onChange={(e) =>
                             handleQuantityChange(item, Number(e.target.value))
                           }
-                          className="w-20 border border-gray-300 rounded-md px-2 py-1 text-center focus:ring-2 focus:ring-sky-400 outline-none text-gray-700 cursor-pointer"
+                          className="w-16 border border-gray-300 rounded-md px-2 py-1 text-center focus:ring-1 focus:ring-sky-400 outline-none text-gray-700"
                         />
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Tồn kho:{" "}
-                        <span className="text-gray-700 font-medium">
-                          {item.stock}
-                        </span>
-                      </p>
+                      <span className="text-xs text-gray-400">
+                        (Còn {item.stock})
+                      </span>
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-end gap-3">
-                    <p className="font-semibold text-gray-700">
+                  {/* Giá tổng + nút xóa */}
+                  <div className="flex flex-col items-end justify-between py-2">
+                    <p className="font-bold text-gray-800 text-lg">
                       {(item.price * item.quantity).toLocaleString()}₫
                     </p>
                     <button
@@ -203,21 +240,26 @@ const CartPage = () => {
           </div>
 
           {/* Tóm tắt đơn hàng */}
-          <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 h-fit sticky top-20">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-300 p-6 h-fit sticky top-20">
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">
               Tóm tắt đơn hàng
             </h2>
+
+            <div className="h-1 w-20 bg-gradient-to-r from-sky-400 to-sky-600 rounded-full mb-4"></div>
 
             <div className="space-y-3 text-sm text-gray-600">
               <div className="flex justify-between">
                 <span>Tạm tính</span>
                 <span>{cart.totalAmount.toLocaleString()}₫</span>
               </div>
+
               <div className="flex justify-between">
-                <span>Phí vận chuyển</span>
-                <span className="text-green-600 font-medium">Miễn phí</span>
+                <span>Tổng số mặt hàng</span>
+                <span>{cart.cartItems.length}</span>
               </div>
+
               <div className="border-t border-gray-200 my-3"></div>
+
               <div className="flex justify-between text-base font-semibold text-gray-800">
                 <span>Tổng cộng</span>
                 <span className="text-sky-600 text-lg font-bold">
@@ -230,7 +272,7 @@ const CartPage = () => {
               onClick={handleCheckout}
               className="w-full mt-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg shadow-sm transition"
             >
-              Mua hàng
+              Thanh toán
             </button>
           </div>
         </div>

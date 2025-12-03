@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import userService from "../../services/userService";
+import userService from "../../services/Customer/userService";
 import type { ProfileRequest, ProfileResponse } from "../../types/user";
 import EditProfileModal from "../../components/ui/EditProfileModal";
 import type { ApiErrorType } from "../../types/error";
+import { Loader2 } from "lucide-react";
 
 const ProfilePage = () => {
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
@@ -41,12 +42,19 @@ const ProfilePage = () => {
     }
   };
 
-  if (!profile) return <div className="p-6">Đang tải...</div>;
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-sky-50 to-white">
+        <Loader2 className="w-10 h-10 text-sky-600 animate-spin mb-3" />
+        <p className="text-gray-600 font-medium">Đang tải thông tin...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#E3F2FD] to-white p-6 py-10">
+    <div className="min-h-screen bg-white p-6 py-10">
       {/* Loading overlay */}
-      <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-2xl p-8">
+      <div className="max-w-3xl mx-auto bg-white border border-gray-300 rounded-2xl p-8">
         {/* Avatar + Tên */}
         <div className="flex flex-col items-center">
           <img

@@ -6,7 +6,18 @@ import {
   ProductImage,
   ProductVarient,
 } from "../../models/index.js";
-import { col, fn, Op } from "sequelize";
+import { col, fn, literal, Op } from "sequelize";
+
+const SORT_OPTIONS = {
+  price_asc: [[literal("minPrice"), "ASC"]],
+  price_desc: [[literal("minPrice"), "DESC"]],
+  newest: [["createdDate", "DESC"]],
+  oldest: [["createdDate", "ASC"]],
+};
+
+const getSortOption = (sort) => {
+  return SORT_OPTIONS[sort] || []; // không có thì không sort
+};
 
 // Đoạn code này hay vl
 const getProductsByFilterService = async (
@@ -15,21 +26,48 @@ const getProductsByFilterService = async (
   sizes,
   colors,
   materials,
-  excludeProductId
+  excludeProductId,
+  sort,
+  page,
+  limit,
+  keyword // thêm tham số
 ) => {
   try {
-    // 1. Kiểm tra danh mục có tồn tại hay không
+    const p = page && page !== "null" ? parseInt(page) : 1;
+    const l = limit && limit !== "null" ? parseInt(limit) : 10;
+    const offset = (p - 1) * l;
+
     const category = await Category.findByPk(cateId);
     if (!category) {
       throw new ApiError(StatusCodes.NOT_FOUND, "Danh mục không tồn tại!");
     }
 
-    // 2. Truy vấn sản phẩm + lấy giá thấp nhất (MIN) từ bảng biến thể
+    // Xử lý keyword
+    const kw = keyword && keyword !== "null" ? keyword : undefined;
+
+    const whereCondition = {
+      categoryId: cateId,
+      ...(excludeProductId && { id: { [Op.ne]: excludeProductId } }),
+      ...(kw && { productName: { [Op.like]: `%${kw}%` } }),
+    };
+
+    const productIdsPage = await Product.findAll({
+      where: whereCondition,
+      attributes: ["id"],
+      limit: l,
+      offset,
+      raw: true,
+    });
+
+    const ids = productIdsPage.map((p) => p.id);
+    if (ids.length === 0) {
+      return { products: [], total: 0, page: p, limit: l };
+    }
+
+    const total = await Product.count({ where: whereCondition });
+
     const productsFilter = await Product.findAll({
-      where: {
-        categoryId: cateId,
-        ...(excludeProductId && { id: { [Op.ne]: excludeProductId } }),
-      },
+      where: { id: { [Op.in]: ids } },
       attributes: [
         "id",
         "productName",
@@ -37,13 +75,13 @@ const getProductsByFilterService = async (
         "thumbnailUrl",
         "createdDate",
         "categoryId",
-        [fn("MIN", col("varients.price")), "minPrice"], // dùng hàm tổng hợp
+        [fn("MIN", col("varients.price")), "minPrice"],
       ],
       include: [
         {
           model: ProductVarient,
           as: "varients",
-          attributes: [], // không lấy dữ liệu biến thể, chỉ JOIN để lọc
+          attributes: [],
           where: {
             ...(prices?.length > 0 && {
               price: { [Op.between]: [prices[0], prices[1]] },
@@ -52,52 +90,158 @@ const getProductsByFilterService = async (
             ...(colors?.length > 0 && { color: { [Op.in]: colors } }),
             ...(materials?.length > 0 && { material: { [Op.in]: materials } }),
           },
-          required: true, // INNER JOIN (chỉ lấy sản phẩm có biến thể phù hợp)
+          required: true,
+        },
+        {
+          model: Category,
+          as: "category",
+          attributes: ["id", "cateName"],
         },
       ],
-      group: ["Product.id"], // bắt buộc khi dùng hàm tổng hợp (MIN)
+      group: ["Product.id"],
+      order: getSortOption(sort),
       raw: false,
       nest: true,
     });
 
-    // 3. Xử lý song song từng sản phẩm (Promise.all để đợi tất cả xong)
     const productFormatted = await Promise.all(
       productsFilter.map(async (p) => {
-        const minPrice = parseFloat(p.get("minPrice")); // 👉 lấy giá trị alias minPrice
-
-        // ✅ 4. Truy vấn thêm để tìm discount ứng với minPrice
+        const minPrice = parseFloat(p.get("minPrice"));
         const varient = await ProductVarient.findOne({
-          where: {
-            productId: p.id,
-            price: minPrice,
-          },
+          where: { productId: p.id, price: minPrice },
           attributes: ["discount"],
         });
-
         const discount = varient ? varient.discount : 0;
-        const minDiscountedPrice = minPrice - (minPrice * discount) / 100; // 👉 tính giá sau giảm
+        const minDiscountedPrice = minPrice - (minPrice * discount) / 100;
 
-        // Tính xem sản phẩm có mới hay không
         const created = new Date(p.get("createdDate"));
         const now = new Date();
-        const diffTime = now.getTime() - created.getTime(); //getTime() trả về số mili-giây kể từ 1/1/1970 (Unix timestamp) của ngày đó.
-        const diffDays = diffTime / (1000 * 60 * 60 * 24); // Chia số mili-giây cho (1000 * 60 * 60 * 24) để chuyển từ mili-giây sang số ngày.
+        const diffDays =
+          (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
         const isNew = diffDays <= 10;
 
-        return {
-          ...p.toJSON(), // 👉 chuyển về object thường
-          discount,
-          minDiscountedPrice,
-          isNew,
-        };
+        return { ...p.toJSON(), discount, minDiscountedPrice, isNew };
       })
     );
 
-    return productFormatted;
+    return { products: productFormatted, total, page: p, limit: l };
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
+
+const getProductsByGroupNameAndFilterService = async (
+  groupName,
+  prices,
+  sizes,
+  colors,
+  materials,
+  excludeProductId,
+  sort,
+  page,
+  limit,
+  keyword // thêm tham số
+) => {
+  try {
+    const p = page && page !== "null" ? parseInt(page) : 1;
+    const l = limit && limit !== "null" ? parseInt(limit) : 10;
+    const offset = (p - 1) * l;
+
+    const categories = await Category.findAll({
+      where: { menuGroup: groupName },
+    });
+    const categoryIds = categories.map((c) => c.id);
+
+    if (categoryIds.length === 0) {
+      return { products: [], total: 0, page: p, limit: l };
     }
+
+    // Xử lý keyword
+    const kw = keyword && keyword !== "null" ? keyword : undefined;
+
+    const whereCondition = {
+      categoryId: { [Op.in]: categoryIds },
+      ...(excludeProductId && { id: { [Op.ne]: excludeProductId } }),
+      ...(kw && { productName: { [Op.like]: `%${kw}%` } }),
+    };
+
+    const productIdsPage = await Product.findAll({
+      where: whereCondition,
+      attributes: ["id"],
+      limit: l,
+      offset,
+      raw: true,
+    });
+
+    const ids = productIdsPage.map((p) => p.id);
+    if (ids.length === 0) {
+      return { products: [], total: 0, page: p, limit: l };
+    }
+
+    const total = await Product.count({ where: whereCondition });
+
+    const productsFilter = await Product.findAll({
+      where: { id: { [Op.in]: ids } },
+      attributes: [
+        "id",
+        "productName",
+        "brand",
+        "thumbnailUrl",
+        "createdDate",
+        "categoryId",
+        [fn("MIN", col("varients.price")), "minPrice"],
+      ],
+      include: [
+        {
+          model: ProductVarient,
+          as: "varients",
+          attributes: [],
+          where: {
+            ...(prices?.length > 0 && {
+              price: { [Op.between]: [prices[0], prices[1]] },
+            }),
+            ...(sizes?.length > 0 && { size: { [Op.in]: sizes } }),
+            ...(colors?.length > 0 && { color: { [Op.in]: colors } }),
+            ...(materials?.length > 0 && { material: { [Op.in]: materials } }),
+          },
+          required: true,
+        },
+        {
+          model: Category,
+          as: "category",
+          attributes: ["id", "cateName"],
+        },
+      ],
+      group: ["Product.id"],
+      order: getSortOption(sort),
+      raw: false,
+      nest: true,
+    });
+
+    const productFormatted = await Promise.all(
+      productsFilter.map(async (p) => {
+        const minPrice = parseFloat(p.get("minPrice"));
+        const varient = await ProductVarient.findOne({
+          where: { productId: p.id, price: minPrice },
+          attributes: ["discount"],
+        });
+        const discount = varient ? varient.discount : 0;
+        const minDiscountedPrice = minPrice - (minPrice * discount) / 100;
+
+        const created = new Date(p.get("createdDate"));
+        const now = new Date();
+        const diffDays =
+          (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
+        const isNew = diffDays <= 10;
+
+        return { ...p.toJSON(), discount, minDiscountedPrice, isNew };
+      })
+    );
+
+    return { products: productFormatted, total, page: p, limit: l };
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
@@ -147,5 +291,6 @@ const getProductDetailService = async (productId) => {
 const productCustomerService = {
   getProductsByFilterService,
   getProductDetailService,
+  getProductsByGroupNameAndFilterService,
 };
 export default productCustomerService;

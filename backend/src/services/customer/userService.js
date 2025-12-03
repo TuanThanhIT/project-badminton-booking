@@ -30,7 +30,9 @@ const updateProfileService = async (updateData, userId) => {
     if (!profile) {
       throw new ApiError(StatusCodes.NOT_FOUND, "Profile chưa được tạo!");
     }
+
     profile.update(updateData);
+
     return profile;
   } catch (error) {
     if (error instanceof ApiError) {

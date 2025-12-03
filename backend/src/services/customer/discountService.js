@@ -88,9 +88,29 @@ const updateDiscountService = async (code) => {
   }
 };
 
+const getDiscountService = async () => {
+  try {
+    const discounts = await Discount.findAll({
+      where: { isUsed: false, isActive: true },
+      attributes: [
+        "id",
+        "code",
+        "type",
+        "value",
+        "startDate",
+        "endDate",
+        "minOrderAmount",
+      ],
+    });
+    return discounts;
+  } catch (error) {
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
 const discountService = {
   applyDiscountService,
   updateDiscountService,
+  getDiscountService,
 };
 
 export default discountService;

@@ -3,9 +3,11 @@ import type {
   ProductResponse,
   ProductDetailResponse,
   ProductVarient,
-  ProductParams,
   ProductRelatedParams,
+  ProductListResponse,
+  UpdateProductRequest,
 } from "../../types/product";
+import type { ProductVariant, CreateVariantInput } from "../../types/varient";
 
 // ------------------------------------------
 // 1. TẠO PRODUCT (không có file -> JSON)
@@ -65,8 +67,14 @@ const uploadProductImagesService = (productId: number, files: File[]) => {
 // ------------------------------------------
 // 5. LẤY DANH SÁCH SẢN PHẨM (lọc theo params)
 // ------------------------------------------
-const getProductsService = (params: ProductParams) => {
-  return instance.get<ProductResponse[]>("/admin/product", { params });
+const getProductsService = (
+  page: number = 1,
+  limit: number = 10,
+  search: string = ""
+) => {
+  return instance.get<ProductListResponse>("/admin/product", {
+    params: { page, limit, search },
+  });
 };
 
 // ------------------------------------------
@@ -84,6 +92,48 @@ const getProductDetailService = (id: number) => {
 };
 
 // ------------------------------------------
+// 8. CẬP NHẬT PRODUCT
+// ------------------------------------------
+const updateProductService = (id: number, data: UpdateProductRequest) => {
+  return instance.put<ProductResponse>(`/admin/product/${id}`, data);
+};
+
+// ------------------------------------------
+// 8. CẬP NHẬT PRODUCT CÓ FILE
+// ------------------------------------------
+const updateProductWithFileService = (id: number, formData: FormData) => {
+  return instance.put<ProductResponse>(`/admin/product/${id}`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+// ------------------------------------------
+// 9. LẤY VARIANTS THEO PRODUCT ID
+// ------------------------------------------
+export const getVariantsByProductIdService = (productId: number) => {
+  return instance.get<{ message: string; data: ProductVariant[] }>(
+    `/admin/product/${productId}/variants`
+  );
+};
+
+export const getVariantByIdService = (id: number) => {
+  return instance.get<ProductVariant>(`/admin/variants/${id}`);
+};
+
+export const createVariantService = (data: CreateVariantInput) => {
+  return instance.post<ProductVariant>(
+    `/admin/product/${data.productId}/variants`,
+    data
+  );
+};
+
+export const updateVariantService = (id: number, data: ProductVariant) => {
+  return instance.put<ProductVariant>(`/admin/variants/${id}`, data);
+};
+
+export const deleteVariantService = (id: number) => {
+  return instance.delete(`/admin/variants/${id}`);
+};
+// ------------------------------------------
 // EXPORT
 // ------------------------------------------
 const productService = {
@@ -94,6 +144,8 @@ const productService = {
   getProductsService,
   getRelatedProductsService,
   getProductDetailService,
+  updateProductService,
+  updateProductWithFileService,
 };
 
 export default productService;

@@ -56,7 +56,7 @@ const AddCategoryModal: React.FC<HandleCreateCategory> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/50 bg-opacity-40 flex items-center justify-center z-80">
       <div className="bg-white rounded-xl w-full max-w-md p-6 shadow-lg">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Thêm danh mục</h2>
 

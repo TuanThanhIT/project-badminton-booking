@@ -45,8 +45,8 @@ const Sidebar = () => {
             onClick={() => setExpanded((prev) => !prev)}
             className={
               expanded
-                ? "p-1.5 rounded-lg bg-gray-50 hover:bg-gray-100"
-                : "rounded-4xl bg-gray-50 hover:bg-gray-100 py-2 px-2 my-2 mx-3"
+                ? "p-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer"
+                : "rounded-4xl bg-gray-50 hover:bg-gray-100 py-2 px-2 my-2 mx-3 cursor-pointer"
             }
           >
             {expanded ? <ChevronFirst /> : <ChevronLast />}

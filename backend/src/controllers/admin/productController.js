@@ -32,12 +32,12 @@ const createProduct = async (req, res, next) => {
   }
 };
 
-const createProductVarient = async (req, res, next) => {
+const createProductVariant = async (req, res, next) => {
   try {
-    const { sku, price, stock, discount, color, size, material, productId } =
-      req.body;
+    const productId = req.params.productId;
+    const { sku, price, stock, discount, color, size, material } = req.body;
     const productVarient =
-      await productAdminService.createProductVarientService(
+      await productAdminService.createProductVariantService(
         sku,
         price,
         stock,
@@ -53,25 +53,41 @@ const createProductVarient = async (req, res, next) => {
   }
 };
 
+const getProductVariantsByProductId = async (req, res, next) => {
+  try {
+    const { productId } = req.params;
+
+    const variants =
+      await productAdminService.getProductVariantsByProductIdService(productId);
+
+    return res.status(200).json({
+      message: "Lấy danh sách biến thể thành công!",
+      data: variants,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const createProductImages = async (req, res, next) => {
   try {
     const { productId } = req.body;
-    const images = [];
-    const files = req.files;
-    // for (const file of files) {
-    //   const upload = await uploadFile(file.path);
-    //   const image = upload.secure_url || null;
-    //   images.push(image);
-    // }
+    const imageUrls = [];
+
     for (const file of req.files) {
       const uploaded = await uploadBuffer(file.buffer, "products/images");
       imageUrls.push(uploaded.secure_url);
     }
+
     const productImages = await productAdminService.createProductImagesService(
-      images,
+      imageUrls,
       productId
     );
-    return res.status(201).json(productImages);
+
+    return res.status(201).json({
+      message: "Thêm ảnh sản phẩm thành công!",
+      data: productImages,
+    });
   } catch (error) {
     next(error);
   }
@@ -90,10 +106,86 @@ const getAllProducts = async (req, res, next) => {
   }
 };
 
+export const getProductsWithPage = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 10, search = "" } = req.query;
+
+    const result = await productAdminService.getProductsService(
+      page,
+      limit,
+      search
+    );
+
+    res.status(StatusCodes.OK).json({
+      statusCode: StatusCodes.OK,
+      message: "Lấy danh sách product thành công",
+      ...result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getProductById = async (req, res, next) => {
+  try {
+    const { productId } = req.params;
+
+    const product = await productAdminService.getProductByIdService(productId);
+
+    return res.status(StatusCodes.OK).json({
+      message: "Lấy thông tin sản phẩm thành công!",
+      data: product,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateProduct = async (req, res, next) => {
+  try {
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
+
+    const { productName, brand, description, categoryId } = req.body;
+    const { productId } = req.params;
+
+    // Upload thumbnail mới nếu có
+    let thumbnailUrl = null;
+    if (req.file?.buffer) {
+      const uploaded = await uploadBuffer(
+        req.file.buffer,
+        "products/thumbnails"
+      );
+      thumbnailUrl = uploaded.secure_url;
+    }
+
+    const updated = await productAdminService.updateProductService(
+      productId,
+      productName,
+      brand,
+      description,
+      thumbnailUrl, // null nếu không upload ảnh → service giữ ảnh cũ
+      categoryId
+    );
+
+    return res.status(StatusCodes.OK).json({
+      message: "Cập nhật sản phẩm thành công!",
+      data: updated,
+    });
+  } catch (error) {
+    console.error("Update product error:", error);
+    next(error);
+  }
+};
+
 const productController = {
   createProduct,
-  createProductVarient,
+  createProductVariant,
   createProductImages,
   getAllProducts,
+  getProductVariantsByProductId,
+  getProductsWithPage,
+  getProductById,
+  updateProduct,
 };
 export default productController;

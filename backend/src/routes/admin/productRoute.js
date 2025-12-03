@@ -12,19 +12,32 @@ var uploader = multer({
 
 const initProductAdminRoute = (app) => {
   // Lấy tất cả product
-  productRoute.get("/", productController.getAllProducts);
+  productRoute.get("/", productController.getProductsWithPage);
+  productRoute.get("/:productId", productController.getProductById); // Lấy 1 sản phẩm theo ID
 
   // Tạo product (thumbnail)
   productRoute.post(
-    "/",
+    "/add",
     uploader.single("thumbnail"),
     productController.createProduct
   );
+  // Cập nhật product
+  productRoute.put(
+    "/:productId",
+    uploader.single("thumbnail"),
+    productController.updateProduct
+  );
 
-  // Tạo varient cho product
+  // Tạo variant cho product
   productRoute.post(
-    "/:productId/varients",
-    productController.createProductVarient
+    "/:productId/variants",
+    productController.createProductVariant
+  );
+
+  // Lấy variant theo productId
+  productRoute.get(
+    "/:productId/variants",
+    productController.getProductVariantsByProductId
   );
 
   // Tạo images cho product

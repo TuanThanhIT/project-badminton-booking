@@ -1,8 +1,12 @@
 import React from "react";
-import { Table, Tag, Form } from "antd";
+import { Table, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { Line, Doughnut } from "react-chartjs-2";
-import { useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { Pencil, CirclePlus } from "lucide-react";
+import IconButtonNonContent from "../../components/commons/admin/IconButton";
+import type { ProductAdminItem } from "../../types/product";
 import {
   Chart as ChartJS,
   ArcElement,
@@ -14,6 +18,8 @@ import {
   LineElement,
 } from "chart.js";
 import { Plus, Gift, Banknote, LineChart } from "lucide-react";
+import { useEffect, useState } from "react";
+import productService from "../../services/admin/productService";
 
 ChartJS.register(
   ArcElement,
@@ -24,120 +30,106 @@ ChartJS.register(
   PointElement,
   LineElement
 );
-interface ProductData {
-  key: string;
-  product: string;
-  sku: string;
-  stock: number;
-  price: string;
-  rating: number;
-  status: string;
-}
-const columns: ColumnsType<ProductData> = [
+
+const columns = (
+  handleEdit: (p: ProductAdminItem) => void,
+  handleAddVariant: (p: ProductAdminItem) => void
+): ColumnsType<ProductAdminItem> => [
   {
-    title: "Product",
-    dataIndex: "product",
-    key: "product",
-    render: (text) => <span className="font-medium">{text}</span>,
+    title: "Image",
+    dataIndex: "thumbnailUrl",
+    key: "thumbnailUrl",
+    align: "center",
+    render: (url) => (
+      <div className="flex justify-center">
+        <img
+          className="w-16 h-16 object-cover rounded-lg shadow-md border"
+          src={url}
+        />
+      </div>
+    ),
   },
   {
-    title: "SKU",
-    dataIndex: "sku",
-    key: "sku",
+    title: "Product",
+    dataIndex: "productName",
+    key: "productName",
+    align: "center",
+    render: (text) => (
+      <span className="font-semibold text-gray-800">{text}</span>
+    ),
+  },
+  {
+    title: "Brand",
+    dataIndex: "brand",
+    key: "brand",
+    align: "center",
+  },
+  {
+    title: "Category",
+    dataIndex: ["Category", "cateName"],
+    key: "category",
+    align: "center",
+    render: (c) => <span className="text-gray-700">{c}</span>,
   },
   {
     title: "Stock",
     dataIndex: "stock",
     key: "stock",
-    render: (stock) => {
-      if (stock > 30)
-        return <span className="text-green-500">{stock} in stock</span>;
-      if (stock === 0)
-        return <span className="text-gray-400">Out of stock</span>;
-      return <span className="text-amber-500">{stock} low stock</span>;
-    },
-  },
-  {
-    title: "Price",
-    dataIndex: "price",
-    key: "price",
-  },
-  {
-    title: "Rating",
-    dataIndex: "rating",
-    key: "rating",
-    render: (rating) => (
-      <span className="text-yellow-500 font-medium">{rating} ⭐</span>
-    ),
-  },
-  {
-    title: "Status",
-    dataIndex: "status",
-    key: "status",
-    render: (status) => {
-      const color =
-        status === "Publish"
-          ? "green"
-          : status === "Pending"
-          ? "orange"
-          : "default";
-      return <Tag color={color}>{status}</Tag>;
-    },
-  },
-  { title: "Action", key: "action", render: () => <a>Edit</a> },
-];
+    align: "center",
+    render: (stock: string) => {
+      const num = Number(stock);
 
-const data = [
-  {
-    key: "1",
-    product: "Tasty Metal Shirt",
-    sku: "SKU-52442",
-    stock: 30,
-    price: "$410.00",
-    rating: 3.5,
-    status: "Pending",
+      return (
+        <span
+          className={
+            num > 30
+              ? "text-green-500 font-semibold"
+              : num === 0
+              ? "text-red-500 font-semibold"
+              : "text-yellow-500 font-semibold"
+          }
+        >
+          {num > 30
+            ? `${num} in stock`
+            : num === 0
+            ? "Out of stock"
+            : `${num} low stock`}
+        </span>
+      );
+    },
   },
   {
-    key: "2",
-    product: "Modern Gloves",
-    sku: "SKU-98424",
-    stock: 0,
-    price: "$340.00",
-    rating: 4.5,
-    status: "Draft",
-  },
-  {
-    key: "3",
-    product: "Rustic Steel Computer",
-    sku: "SKU-78192",
-    stock: 50,
-    price: "$948.00",
-    rating: 3.8,
-    status: "Draft",
-  },
-  {
-    key: "4",
-    product: "Licensed Concrete Cheese",
-    sku: "SKU-86229",
-    stock: 0,
-    price: "$853.00",
-    rating: 2.5,
-    status: "Pending",
-  },
-  {
-    key: "5",
-    product: "Electronic Rubber Table",
-    sku: "SKU-89762",
-    stock: 18,
-    price: "$881.00",
-    rating: 4.0,
-    status: "Publish",
+    title: "Action",
+    key: "action",
+    align: "center",
+    render: (_, product) => (
+      <div className="flex justify-center gap-3">
+        <IconButtonNonContent
+          color="bg-green-400"
+          hoverColor="hover:bg-green-500"
+          onClick={() => handleEdit(product)}
+          icon={Pencil}
+        />
+        <IconButtonNonContent
+          color="bg-blue-500"
+          hoverColor="hover:bg-blue-600"
+          onClick={() => handleAddVariant(product)}
+          icon={CirclePlus}
+        />
+      </div>
+    ),
   },
 ];
 
 const ProductPage = () => {
   const navigate = useNavigate();
-  // Fake Data
+  const handleEdit = (product: ProductAdminItem) => {
+    navigate(`/admin/products/edit/${product.id}`);
+  };
+  const handleAddVariant = (product: ProductAdminItem) => {
+    navigate(`/admin/products/variants?productId=${product.id}`);
+  };
+
   const stats = [
     {
       title: "New Orders",
@@ -204,15 +196,54 @@ const ProductPage = () => {
     { name: "Apple Watch Strap", price: "$20.00", rating: 5, reviews: 13 },
   ];
 
+  const [products, setProducts] = useState<ProductAdminItem[]>([]);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+
+  const fetchProducts = async () => {
+    try {
+      const res = await productService.getProductsService(page, limit, search);
+      setProducts(res.data.products);
+      setTotalPages(res.data.pagination.totalPages);
+      setTotalItems(res.data.pagination.totalItems);
+    } catch (error) {
+      toast.error("Lỗi khi tải danh sách sản phẩm");
+    }
+  };
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const res = await productService.getProductsService();
+        setProducts(res.data.products);
+      } catch (error) {
+        console.error("Error loading products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   return (
     <div className="p-6 flex flex-col gap-6">
       {/* Header */}
       <div className="flex justify-between items-center bg-white shadow-md border-1 border-gray-200 rounded-xl p-6">
         <div>
-          <h1 className="text-2xl font-bold">Have a nice day, Sir 👋</h1>
+          <h1 className="text-2xl font-bold">
+            Xin chào hôm nay bạn thế nào 👋
+          </h1>
           <p className="text-gray-500">
-            Here’s what’s happening on your store today. See the statistics at
-            once.
+            Đây là tất cả thông tin của hàng của bạn hôm nay, bạn có thể xem để
+            biết thêm chi tiết.
           </p>
           <button
             onClick={() => navigate("/admin/products/add")}
@@ -271,46 +302,20 @@ const ProductPage = () => {
         </div>
       </div>
 
-      {/* Top Products */}
-      <div className="bg-white p-5 rounded-xl shadow">
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="font-semibold">Top Products</h2>
-          <a href="#" className="text-blue-500 text-sm hover:underline">
-            View All
-          </a>
-        </div>
-        <ul className="divide-y">
-          {topProducts.map((p, i) => (
-            <li key={i} className="py-3 flex justify-between items-center">
-              <div>
-                <p className="font-medium">{p.name}</p>
-                <p className="text-gray-500 text-sm">{p.price}</p>
-              </div>
-              <div className="flex flex-col items-end">
-                <span className="text-yellow-500">
-                  {"★".repeat(p.rating)}
-                  {"☆".repeat(5 - p.rating)}
-                </span>
-                <span className="text-sm text-gray-500">
-                  {p.reviews} reviews
-                </span>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
-
       {/* Stock Report */}
-      <div className="bg-white p-5 rounded-xl shadow">
+
+      <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
         <h2 className="font-semibold mb-4">Stock Report</h2>
         <Table
-          columns={columns}
-          dataSource={data}
+          columns={columns(handleEdit, handleAddVariant)}
+          dataSource={products}
+          loading={loading}
           pagination={false}
-          scroll={{ x: 800 }}
+          rowClassName={() => "text-center"}
         />
       </div>
     </div>
   );
 };
+
 export default ProductPage;

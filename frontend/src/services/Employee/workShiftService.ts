@@ -1,6 +1,6 @@
-import { data } from "react-router-dom";
 import type {
-  UpdateWorkShiftRequest,
+  UpdateCheckIntRequest,
+  UpdateCheckOutRequest,
   UpdateWorkShiftResponse,
   WorkShiftRequest,
   WorkShiftResponse,
@@ -12,18 +12,27 @@ const getWorkShiftByDateService = (data: WorkShiftRequest) => {
   return instance.get<WorkShiftResponse[]>(`/employee/work-shift/list/${date}`);
 };
 
-const updateWorkShiftEmployeeAndCashRegisterService = (
-  dt: UpdateWorkShiftRequest
-) => {
+const updateCheckInAndCashRegisterService = (dt: UpdateCheckIntRequest) => {
   const { workShiftId, checkInTime, openCash } = dt;
   const data = { checkInTime, openCash };
   return instance.patch<UpdateWorkShiftResponse>(
-    `/employee/work-shift/update/${workShiftId}`,
+    `/employee/work-shift/update/check-in/${workShiftId}`,
     data
   );
 };
+
+const updateCheckOutAndCashRegisterService = (dt: UpdateCheckOutRequest) => {
+  const { workShiftId, checkOutTime, closeCash } = dt;
+  const data = { checkOutTime, closeCash };
+  return instance.patch<UpdateWorkShiftResponse>(
+    `/employee/work-shift/update/check-out/${workShiftId}`,
+    data
+  );
+};
+
 const workShiftService = {
   getWorkShiftByDateService,
-  updateWorkShiftEmployeeAndCashRegisterService,
+  updateCheckInAndCashRegisterService,
+  updateCheckOutAndCashRegisterService,
 };
 export default workShiftService;

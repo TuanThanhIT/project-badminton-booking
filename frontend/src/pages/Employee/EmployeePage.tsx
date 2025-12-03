@@ -1,6 +1,21 @@
 import { useEffect, useState, useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "../../store/hook";
 import { toast } from "react-toastify";
+import debounce from "lodash.debounce";
+import Swal from "sweetalert2";
+
+import {
+  Check,
+  DollarSign,
+  Loader2,
+  Search,
+  Smartphone,
+  Wallet,
+} from "lucide-react";
+
+import ItemList from "../../components/ui/ItemList";
+import DraftBox from "../../components/ui/DraftBox";
+
 import {
   clearCourtError,
   getCourtSchedules,
@@ -13,51 +28,43 @@ import {
   clearProductError,
   getProducts,
 } from "../../store/slices/employee/productSlice";
-import debounce from "lodash.debounce";
-import {
-  Check,
-  DollarSign,
-  Loader2,
-  Search,
-  Smartphone,
-  Wallet,
-} from "lucide-react";
-import ItemList from "../../components/ui/ItemList";
-import DraftBoxDemo from "../../components/ui/DraftBox";
-import type { CourtScheduleEplResponse } from "../../types/court";
-import type { ProductEplResponse } from "../../types/product";
-import type { BeverageEplResponse } from "../../types/beverage";
 import {
   clearOfflineBooking,
   clearOfflineError,
   createOfflineBooking,
   updateOfflineBooking,
 } from "../../store/slices/employee/offlineSlice";
-import type { UpdateOfflineBookingRequest } from "../../types/offline";
-import Swal from "sweetalert2";
 import { getDrafts } from "../../store/slices/employee/draftSlice";
 
+import type { CourtScheduleEplResponse } from "../../types/court";
+import type { ProductEplResponse } from "../../types/product";
+import type { BeverageEplResponse } from "../../types/beverage";
+import type { UpdateOfflineBookingRequest } from "../../types/offline";
+
 const EmployeePage = () => {
+  const dispatch = useAppDispatch();
+
+  // ------------------- STATE -------------------
   const [date, setDate] = useState("");
   const [activeTab, setActiveTab] = useState<"beverage" | "product">(
     "beverage"
   );
+
+  const [searchBeverage, setSearchBeverage] = useState("");
+  const [searchProduct, setSearchProduct] = useState("");
+
   const [selectedCourtSlots, setSelectedCourtSlots] =
     useState<CourtScheduleEplResponse>([]);
-
   const [selectedProducts, setSelectedProducts] = useState<ProductEplResponse>(
     []
   );
   const [selectedBeverages, setSelectedBeverages] =
     useState<BeverageEplResponse>([]);
 
-  const [searchBeverage, setSearchBeverage] = useState("");
-  const [searchProduct, setSearchProduct] = useState("");
   const [loadingInitial, setLoadingInitial] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState<"Cash" | "Momo">("Cash");
 
-  const dispatch = useAppDispatch();
-
+  // ------------------- SELECTORS -------------------
   const courtSchedules = useAppSelector((s) => s.courtEpl.courtSchedules);
   const courtError = useAppSelector((s) => s.courtEpl.error);
 
@@ -72,7 +79,7 @@ const EmployeePage = () => {
   const offlineBooking = useAppSelector((s) => s.offlineEpl.offlineBooking);
   const offlineError = useAppSelector((s) => s.offlineEpl.error);
 
-  // ------------------- INITIAL FETCH -------------------
+  // ------------------- FETCH INITIAL DATA -------------------
   useEffect(() => {
     const fetchInitial = async () => {
       setLoadingInitial(true);
@@ -91,7 +98,7 @@ const EmployeePage = () => {
     fetchInitial();
   }, [dispatch, date]);
 
-  // ------------------- DEBOUNCE SEARCH -------------------
+  // ------------------- DEBOUNCED SEARCH -------------------
   const fetchDebounce = useCallback(
     debounce((tab: "beverage" | "product", keyword: string) => {
       if (tab === "beverage") dispatch(getBeverages({ dta: { keyword } }));
@@ -128,34 +135,31 @@ const EmployeePage = () => {
     new Set(courtSchedules.map((s) => s.court.name))
   );
 
+  // ------------------- HANDLERS -------------------
   const handleAdd = (item: any) => {
-    if (activeTab === "beverage") {
+    if (activeTab === "beverage")
       setSelectedBeverages((prev) => [...prev, item]);
-    } else {
-      setSelectedProducts((prev) => [...prev, item]);
-    }
+    else setSelectedProducts((prev) => [...prev, item]);
   };
 
   const handleRemove = (item: any) => {
-    if (activeTab === "beverage") {
+    if (activeTab === "beverage")
       setSelectedBeverages((prev) => prev.filter((i) => i.id !== item.id));
-    } else {
-      setSelectedProducts((prev) => prev.filter((i) => i.id !== item.id));
-    }
+    else setSelectedProducts((prev) => prev.filter((i) => i.id !== item.id));
   };
 
   const handleCheckoutDraft = async (draftId: number) => {
     const result = await Swal.fire({
       title: "Xác nhận thanh toán",
-      text: "Bạn có chắc chắn muốn tạo thanh toán này không?",
+      text: "Bạn có chắc chắn muốn thực hiện tạo thanh toán này?",
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Chắc chắn",
       cancelButtonText: "Không",
     });
+
     if (result.isConfirmed) {
       const res = await dispatch(createOfflineBooking({ data: { draftId } }));
-
       if (createOfflineBooking.fulfilled.match(res)) {
         toast.success("Tạo thanh toán thành công!");
         dispatch(getDrafts());
@@ -164,36 +168,35 @@ const EmployeePage = () => {
   };
 
   const handleCompletePayment = async () => {
-    try {
-      const result = await Swal.fire({
-        title: "Xác nhận hoàn thành thanh toán",
-        text: "Bạn có chắc chắn muốn hoàn thành thanh toán này không?",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Chắc chắn",
-        cancelButtonText: "Không",
-      });
-      if (result.isConfirmed) {
-        if (offlineBooking === undefined) return;
-        const data: UpdateOfflineBookingRequest = {
-          offlineBookingId: offlineBooking.id,
-          paymentMethod,
-          total: offlineBooking.total,
-        };
-        const res = await dispatch(updateOfflineBooking({ data })).unwrap();
-        toast.success(res.message);
-        dispatch(clearOfflineBooking());
-      }
-    } catch {
-      // không xử lý lỗi ở đây
+    if (!offlineBooking) return;
+
+    const result = await Swal.fire({
+      title: "Xác nhận hoàn thành thanh toán",
+      text: "Bạn có chắc chắn muốn hoàn thành thanh toán này không?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Chắc chắn",
+      cancelButtonText: "Không",
+    });
+
+    if (result.isConfirmed) {
+      const data: UpdateOfflineBookingRequest = {
+        offlineBookingId: offlineBooking.id,
+        paymentMethod,
+        total: offlineBooking.total,
+      };
+      const res = await dispatch(updateOfflineBooking({ data })).unwrap();
+      toast.success(res.message);
+      dispatch(clearOfflineBooking());
     }
   };
 
   // ------------------- RENDER -------------------
   return (
     <div className="w-full flex flex-col p-4 bg-gray-100 gap-4">
-      <div className="flex-[0.5] flex gap-4">
-        {/* Ô đồ uống / sản phẩm */}
+      {/* 3 Cột chính */}
+      <div className="flex gap-4 h-[600px] overflow-hidden">
+        {/* Cột 1: Danh sách đồ uống / sản phẩm */}
         <div className="flex-1 bg-white rounded-xl shadow p-4 flex flex-col overflow-hidden">
           <div className="text-2xl font-bold mb-4 text-blue-900 tracking-wide">
             Danh sách đồ uống / sản phẩm
@@ -201,26 +204,19 @@ const EmployeePage = () => {
 
           {/* Tabs */}
           <div className="flex gap-3 border-b border-gray-400 pb-2 mb-3">
-            <button
-              onClick={() => setActiveTab("beverage")}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
-                activeTab === "beverage"
-                  ? "bg-blue-600 text-white shadow"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              Nước uống
-            </button>
-            <button
-              onClick={() => setActiveTab("product")}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
-                activeTab === "product"
-                  ? "bg-blue-600 text-white shadow"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              Sản phẩm
-            </button>
+            {["beverage", "product"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab as any)}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
+                  activeTab === tab
+                    ? "bg-blue-600 text-white shadow"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                {tab === "beverage" ? "Nước uống" : "Sản phẩm"}
+              </button>
+            ))}
           </div>
 
           {/* Search */}
@@ -241,8 +237,8 @@ const EmployeePage = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           </div>
 
-          {/* Scroll list linh hoạt */}
-          <div className="overflow-y-auto flex-1 flex flex-col gap-3 max-h-[410px]">
+          {/* Scroll list */}
+          <div className="flex-1 overflow-y-auto flex flex-col gap-3">
             {(activeTab === "beverage" ? beverageLoading : productLoading) ||
             loadingInitial ? (
               Array.from({ length: 5 }).map((_, idx) => (
@@ -261,132 +257,121 @@ const EmployeePage = () => {
             )}
           </div>
         </div>
-        {/* Draft */}
-        <div className="flex-1 bg-white rounded-xl shadow p-4 overflow-y-auto">
+
+        {/* Cột 2: Đơn tạm / Thông tin */}
+        <div className="flex-1 bg-white rounded-xl shadow p-4 flex flex-col overflow-hidden">
           <div className="text-2xl font-bold mb-4 text-blue-900 tracking-wide">
             Đơn tạm / Thông tin
           </div>
-          <DraftBoxDemo
-            selectedCourtSlots={selectedCourtSlots}
-            selectedProducts={selectedProducts}
-            selectedBeverages={selectedBeverages}
-            checkOut={handleCheckoutDraft}
-          />
+          <div className="flex-1 overflow-y-auto">
+            <DraftBox
+              selectedCourtSlots={selectedCourtSlots}
+              selectedProducts={selectedProducts}
+              selectedBeverages={selectedBeverages}
+              checkOut={handleCheckoutDraft}
+              setSelectedCourtSlots={setSelectedCourtSlots}
+              setSelectedBeverages={setSelectedBeverages}
+              setSelectedProducts={setSelectedProducts}
+            />
+          </div>
         </div>
 
-        {/* Thanh toán */}
-        <div className="flex-1 bg-white rounded-xl shadow p-6">
-          {/* Tiêu đề */}
+        {/* Cột 3: Hoàn tất thanh toán */}
+        <div className="flex-1 bg-white rounded-xl shadow p-6 flex flex-col overflow-hidden">
           <div className="text-2xl font-bold mb-4 text-blue-900 tracking-wide">
             Hoàn tất thanh toán
           </div>
-
-          {/* Thông tin đơn hàng */}
-          <div className="bg-gray-50 p-4 rounded-xl shadow-inner mb-6 space-y-2">
-            <div className="text-gray-600 text-sm">Mã đơn</div>
-            <div className="text-lg font-semibold text-gray-900">
-              {offlineBooking?.id
-                ? `#ORD-${offlineBooking.id.toString().padStart(5, "0")}`
-                : "—"}
+          <div className="flex-1 overflow-y-auto flex flex-col gap-4">
+            {/* Thông tin đơn hàng */}
+            <div className="bg-gray-50 p-4 rounded-xl shadow-inner space-y-2">
+              <div className="text-gray-600 text-sm">Mã đơn</div>
+              <div className="text-lg font-semibold text-gray-900">
+                {offlineBooking?.id
+                  ? `#ORD-${offlineBooking.id.toString().padStart(5, "0")}`
+                  : "—"}
+              </div>
+              <div className="text-gray-600 text-sm mt-2">Khách hàng</div>
+              <div className="text-gray-800 font-medium">
+                {offlineBooking?.nameCustomer || "—"}
+              </div>
+              <div className="text-gray-600 text-sm mt-2">Tổng tiền</div>
+              <div className="text-green-700 font-bold text-lg">
+                {offlineBooking?.total?.toLocaleString() || "0"} đ
+              </div>
             </div>
 
-            <div className="text-gray-600 text-sm mt-2">Khách hàng</div>
-            <div className="text-gray-800 font-medium">
-              {offlineBooking?.nameCustomer || "—"}
+            {/* Phương thức thanh toán */}
+            <div>
+              <div className="flex items-center gap-2 mb-3 text-[#0288D1] font-semibold text-lg">
+                <Wallet className="w-5 h-5 text-[#0288D1]" />
+                <span>Chọn phương thức thanh toán</span>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4">
+                {[
+                  {
+                    id: "Cash",
+                    title: "Thanh toán bằng tiền mặt",
+                    subtitle: "trực tiếp tại quầy",
+                    icon: <DollarSign className="w-8 h-8 text-[#0288D1]" />,
+                  },
+                  {
+                    id: "Momo",
+                    title: "Thanh toán qua Momo",
+                    subtitle: "quét mã tại quầy",
+                    icon: <Smartphone className="w-8 h-8 text-[#0288D1]" />,
+                  },
+                ].map((method) => (
+                  <label
+                    key={method.id}
+                    className={`relative flex items-center gap-4 cursor-pointer border rounded-xl p-4 transition
+                      ${
+                        paymentMethod === method.id
+                          ? "bg-[#E3F2FD] border-[#0288D1] shadow-md"
+                          : "hover:bg-[#E3F2FD] border-gray-300"
+                      }`}
+                  >
+                    <input
+                      type="radio"
+                      checked={paymentMethod === method.id}
+                      onChange={() => setPaymentMethod(method.id as any)}
+                      className="absolute opacity-0 w-0 h-0"
+                    />
+                    {method.icon}
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-gray-800 text-base">
+                        {method.title}
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        {method.subtitle}
+                      </span>
+                    </div>
+                    {paymentMethod === method.id && (
+                      <div className="ml-auto text-white bg-[#0288D1] w-6 h-6 rounded-full flex items-center justify-center">
+                        <Check className="w-4 h-4" />
+                      </div>
+                    )}
+                  </label>
+                ))}
+              </div>
             </div>
 
-            <div className="text-gray-600 text-sm mt-2">Tổng tiền</div>
-            <div className="text-green-700 font-bold text-lg">
-              {offlineBooking?.total?.toLocaleString() || "0"} đ
-            </div>
-          </div>
-
-          {/* Phương thức thanh toán */}
-          <div>
-            <div className="flex items-center gap-2 mb-3 text-[#0288D1] font-semibold text-lg">
-              <Wallet className="w-5 h-5 text-[#0288D1]" />
-              <span>Chọn phương thức thanh toán</span>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              {/* Tiền mặt */}
-              <label
-                className={`relative flex items-center gap-4 cursor-pointer border rounded-xl p-4 transition 
-          ${
-            paymentMethod === "Cash"
-              ? "bg-[#E3F2FD] border-[#0288D1] shadow-md"
-              : "hover:bg-[#E3F2FD] border-gray-300"
-          }`}
+            {/* Nút hoàn thành */}
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={handleCompletePayment}
+                disabled={!offlineBooking}
+                className="px-6 py-2 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition text-lg"
               >
-                <input
-                  type="radio"
-                  checked={paymentMethod === "Cash"}
-                  onChange={() => setPaymentMethod("Cash")}
-                  className="absolute opacity-0 w-0 h-0"
-                />
-                <DollarSign className="w-8 h-8 text-[#0288D1] flex-shrink-0" />
-                <div className="flex flex-col">
-                  <span className="font-semibold text-gray-800 text-base">
-                    Thanh toán bằng tiền mặt
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    trực tiếp tại quầy
-                  </span>
-                </div>
-                {paymentMethod === "Cash" && (
-                  <div className="ml-auto text-white bg-[#0288D1] w-6 h-6 rounded-full flex items-center justify-center">
-                    <Check className="w-4 h-4" />
-                  </div>
-                )}
-              </label>
-
-              {/* MoMo */}
-              <label
-                className={`relative flex items-center gap-4 cursor-pointer border rounded-xl p-4 transition 
-          ${
-            paymentMethod === "Momo"
-              ? "bg-[#E3F2FD] border-[#0288D1] shadow-md"
-              : "hover:bg-[#E3F2FD] border-gray-300"
-          }`}
-              >
-                <input
-                  type="radio"
-                  checked={paymentMethod === "Momo"}
-                  onChange={() => setPaymentMethod("Momo")}
-                  className="absolute opacity-0 w-0 h-0"
-                />
-                <Smartphone className="w-8 h-8 text-[#0288D1] flex-shrink-0" />
-                <div className="flex flex-col">
-                  <span className="font-semibold text-gray-800 text-base">
-                    Thanh toán online
-                  </span>
-                  <span className="text-sm text-gray-500">qua MoMo</span>
-                </div>
-                {paymentMethod === "Momo" && (
-                  <div className="ml-auto text-white bg-[#0288D1] w-6 h-6 rounded-full flex items-center justify-center">
-                    <Check className="w-4 h-4" />
-                  </div>
-                )}
-              </label>
+                Hoàn thành
+              </button>
             </div>
-          </div>
-
-          {/* Nút hoàn thành */}
-          <div className="mt-6 flex justify-end">
-            <button
-              onClick={handleCompletePayment}
-              className="px-6 py-2 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition text-lg"
-            >
-              Hoàn thành
-            </button>
           </div>
         </div>
       </div>
-
       {/* COURT GRID */}
       <div className="bg-white rounded-xl shadow p-4 flex flex-col relative">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-blue-900 tracking-wide">
+          <h2 className="text-2xl font-bold mb-4 text-blue-900 tracking-wide">
             Danh sách sân cầu lông
           </h2>
           <div className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-3 py-2">
@@ -503,6 +488,7 @@ const EmployeePage = () => {
           </div>
         )}
       </div>
+      ;
     </div>
   );
 };

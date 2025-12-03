@@ -19,7 +19,6 @@ const CashRegister = sequelize.define(
       defaultValue: 0,
       allowNull: false,
     },
-    revenue: { type: DataTypes.DOUBLE, defaultValue: 0, allowNull: false },
   },
   {
     tableName: "CashRegisters",

@@ -24,18 +24,28 @@ interface DraftBoxProps {
   selectedProducts: ProductEplResponse;
   selectedBeverages: BeverageEplResponse;
   checkOut: (draftId: number) => void;
+  setSelectedCourtSlots: React.Dispatch<
+    React.SetStateAction<CourtScheduleEplResponse>
+  >;
+  setSelectedBeverages: React.Dispatch<
+    React.SetStateAction<BeverageEplResponse>
+  >;
+  setSelectedProducts: React.Dispatch<React.SetStateAction<ProductEplResponse>>;
 }
 
-const DraftBoxDemo = ({
+const DraftBox = ({
   selectedCourtSlots,
   selectedProducts,
   selectedBeverages,
   checkOut,
+  setSelectedBeverages,
+  setSelectedProducts,
+  setSelectedCourtSlots,
 }: DraftBoxProps) => {
   const dispatch = useAppDispatch();
-  const draftBookings = useAppSelector((state) => state.draftEpl.draftBookings);
-  const draftError = useAppSelector((state) => state.draftEpl.error);
-  const offlineError = useAppSelector((state) => state.offlineEpl.error);
+  const draftBookings = useAppSelector((s) => s.draftEpl.draftBookings);
+  const draftError = useAppSelector((s) => s.draftEpl.error);
+  const offlineError = useAppSelector((s) => s.offlineEpl.error);
 
   const [customerName, setCustomerName] = useState("");
   const [openDraftId, setOpenDraftId] = useState<number | null>(null);
@@ -47,95 +57,96 @@ const DraftBoxDemo = ({
     Record<number, number>
   >({});
   const [note, setNote] = useState("");
+  const [savedDrafts, setSavedDrafts] = useState<Record<number, boolean>>({}); // track saved drafts
 
-  // Fetch drafts
+  // ------------------- Fetch Drafts -------------------
   useEffect(() => {
     dispatch(getDrafts());
   }, [dispatch]);
 
-  // Fetch draft detail when open
+  // ------------------- Reset -------------------
+  const reset = () => {
+    setCustomerName("");
+    setOpenDraftId(null);
+    setCurrentDraft(null);
+    setProductQuantities({});
+    setBeverageQuantities({});
+    setNote("");
+    setSelectedBeverages([]);
+    setSelectedProducts([]);
+    setSelectedCourtSlots([]);
+  };
+
+  // ------------------- Fetch Draft Detail -------------------
   useEffect(() => {
-    if (openDraftId !== null) {
-      const data: DraftBookingRequest = { draftId: openDraftId };
-      dispatch(getDraft({ data }))
-        .unwrap()
-        .then((res) => {
-          setCurrentDraft(res);
+    if (openDraftId === null) return setCurrentDraft(null);
 
-          // Sync quantities
-          const prodQty: Record<number, number> = {};
-          res.products?.forEach((p: any) => {
-            prodQty[p.productVarientId] = p.quantity;
-          });
-          setProductQuantities(prodQty);
+    const fetchDraft = async () => {
+      try {
+        const data: DraftBookingRequest = { draftId: openDraftId };
+        const res = await dispatch(getDraft({ data })).unwrap();
+        setCurrentDraft(res);
 
-          const bevQty: Record<number, number> = {};
-          res.beverages?.forEach((b: any) => {
-            bevQty[b.beverageId] = b.quantity;
-          });
-          setBeverageQuantities(bevQty);
+        // Sync quantities
+        const prodQty: Record<number, number> = {};
+        res.products?.forEach(
+          (p: any) => (prodQty[p.productVarientId] = p.quantity)
+        );
+        setProductQuantities(prodQty);
 
-          setNote(res.note || "");
-        });
-    } else {
-      setCurrentDraft(null);
-    }
+        const bevQty: Record<number, number> = {};
+        res.beverages?.forEach((b: any) => (bevQty[b.beverageId] = b.quantity));
+        setBeverageQuantities(bevQty);
+
+        setNote(res.note || "");
+      } catch (err) {
+        // ignore
+      }
+    };
+
+    fetchDraft();
   }, [dispatch, openDraftId]);
 
-  // Handle error
+  // ------------------- Handle Errors -------------------
   useEffect(() => {
-    const error = offlineError || draftError;
+    const error = draftError || offlineError;
     if (error) {
       toast.error(error);
-      if (offlineError) {
-        dispatch(clearOfflineError());
-      }
-      if (draftError) {
-        dispatch(clearDraftError());
-      }
+      if (draftError) dispatch(clearDraftError());
+      if (offlineError) dispatch(clearOfflineError());
     }
-  }, [offlineError, draftError, dispatch]);
+  }, [draftError, offlineError, dispatch]);
 
-  // Create draft
+  // ------------------- Create Draft -------------------
   const handleCreateDraft = async () => {
     if (!customerName.trim()) return toast.error("Nhập tên khách hàng!");
     const data: AddDraftBookingRequest = { nameCustomer: customerName };
     try {
       const res = await dispatch(createDraft({ data })).unwrap();
       toast.success(res.message);
-
-      setCustomerName("");
-      setOpenDraftId(null);
-      setCurrentDraft(null);
-      setProductQuantities({});
-      setBeverageQuantities({});
-      setNote("");
-
+      reset();
       dispatch(getDrafts());
     } catch {
       // no-op
     }
   };
 
-  // Toggle draft content
-  const toggleDraft = (draftId: number) => {
+  // ------------------- Toggle Draft -------------------
+  const toggleDraft = (draftId: number) =>
     setOpenDraftId(openDraftId === draftId ? null : draftId);
-  };
 
-  // Determine what to show
+  // ------------------- Determine Items to Show -------------------
   const courtSlotsToShow = currentDraft?.courtSchedules?.length
     ? currentDraft.courtSchedules
     : selectedCourtSlots;
-
   const productsToShow = currentDraft?.products?.length
     ? currentDraft.products
     : selectedProducts;
-
   const beveragesToShow = currentDraft?.beverages?.length
     ? currentDraft.beverages
     : selectedBeverages;
 
-  // Totals
+  // ------------------- Totals -------------------
   const totalCourtPrice = courtSlotsToShow.reduce(
     (sum: any, x: any) => sum + x.price,
     0
@@ -152,65 +163,59 @@ const DraftBoxDemo = ({
   );
   const totalAll = totalCourtPrice + totalProductPrice + totalBeveragePrice;
 
-  // Prepare payload for save
-  const preparePayload = () => {
-    const productsForApi = productsToShow.map((p: any) => ({
+  // ------------------- Prepare Payload -------------------
+  const preparePayload = () => ({
+    productsForApi: productsToShow.map((p: any) => ({
       id: p.productVarientId || p.id,
       quantity: productQuantities[p.productVarientId || p.id] || 1,
       subTotal: p.price * (productQuantities[p.productVarientId || p.id] || 1),
-    }));
-
-    const beveragesForApi = beveragesToShow.map((b: any) => ({
+    })),
+    beveragesForApi: beveragesToShow.map((b: any) => ({
       id: b.beverageId || b.id,
       quantity: beverageQuantities[b.beverageId || b.id] || 1,
       subTotal: b.price * (beverageQuantities[b.beverageId || b.id] || 1),
-    }));
+    })),
+  });
 
-    return { productsForApi, beveragesForApi };
-  };
-
-  // Save draft
+  // ------------------- Save Draft -------------------
   const handleSaveDraft = async (draftId: number) => {
     try {
       const payload = preparePayload();
-      const courtSchedules = courtSlotsToShow.map((c: any) => ({
-        courtScheduleId: c.courtScheduleId || c.id,
-        price: c.price,
-      }));
-
-      const products = payload.productsForApi.map((p: any) => ({
-        productVarientId: p.id,
-        quantity: p.quantity,
-        subTotal: p.subTotal,
-      }));
-
-      const beverages = payload.beveragesForApi.map((b: any) => ({
-        beverageId: b.id,
-        quantity: b.quantity,
-        subTotal: b.subTotal,
-      }));
-
       const data: UpdateDraftBookingRequest = {
         draftId,
         total: totalAll,
         note,
-        courtSchedules,
-        products,
-        beverages,
+        courtSchedules: courtSlotsToShow.map((c: any) => ({
+          courtScheduleId: c.courtScheduleId || c.id,
+          price: c.price,
+        })),
+        products: payload.productsForApi.map((p: any) => ({
+          productVarientId: p.id,
+          quantity: p.quantity,
+          subTotal: p.subTotal,
+        })),
+        beverages: payload.beveragesForApi.map((b: any) => ({
+          beverageId: b.id,
+          quantity: b.quantity,
+          subTotal: b.subTotal,
+        })),
       };
 
       const res = await dispatch(createAndUpdateDraft({ data })).unwrap();
       toast.success(res.message);
-      const date = "";
-      dispatch(getCourtSchedules({ data: { date } }));
-    } catch (error) {
+      dispatch(getCourtSchedules({ data: { date: "" } }));
+
+      // mark this draft as saved => enable checkout
+      setSavedDrafts((prev) => ({ ...prev, [draftId]: true }));
+    } catch {
       // no-op
     }
   };
 
+  // ------------------- RENDER -------------------
   return (
     <div className="flex flex-col gap-4 bg-white p-5 rounded-xl max-w-md">
-      {/* Customer input + Create draft */}
+      {/* Customer input */}
       <div className="flex gap-3">
         <input
           type="text"
@@ -238,7 +243,7 @@ const DraftBoxDemo = ({
             key={d.id}
             className="border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition"
           >
-            {/* Draft header */}
+            {/* Header */}
             <div
               onClick={() => toggleDraft(d.id)}
               className="flex justify-between items-center p-3 cursor-pointer bg-gray-100 hover:bg-gray-200 transition"
@@ -251,15 +256,15 @@ const DraftBoxDemo = ({
               </span>
             </div>
 
-            {/* Draft content */}
+            {/* Content */}
             <div
-              className={`overflow-hidden transition-all duration-300 w-full ${
+              className={`overflow-hidden transition-all duration-300 ${
                 openDraftId === d.id ? "max-h-[60rem]" : "max-h-0"
               }`}
             >
-              <div className="flex flex-col gap-6 p-5 bg-gray-50 border-t border-gray-200 rounded-b-xl w-full">
-                {/* COURT SLOTS */}
-                <div className="bg-white rounded-lg shadow p-4 w-full">
+              <div className="flex flex-col gap-6 p-5 bg-gray-50 border-t border-gray-200 rounded-b-xl">
+                {/* Court Slots */}
+                <div className="bg-white rounded-lg shadow p-4">
                   <p className="font-semibold text-gray-800 mb-3 text-lg">
                     Sân đã chọn
                   </p>
@@ -270,17 +275,12 @@ const DraftBoxDemo = ({
                           key={slot.courtScheduleId || slot.id}
                           className="flex justify-between items-center text-sm text-gray-700"
                         >
-                          {/* Tên sân */}
                           <span className="font-medium text-gray-900">
                             {slot.courtName || slot.court?.name}
                           </span>
-
-                          {/* Khung giờ */}
                           <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
                             {slot.startTime} - {slot.endTime}
                           </span>
-
-                          {/* Giá */}
                           <span className="font-semibold text-blue-600 ml-2">
                             {slot.price.toLocaleString()} đ
                           </span>
@@ -295,8 +295,8 @@ const DraftBoxDemo = ({
                   )}
                 </div>
 
-                {/* PRODUCTS */}
-                <div className="bg-white rounded-lg shadow p-4 w-full">
+                {/* Products */}
+                <div className="bg-white rounded-lg shadow p-4">
                   <p className="font-semibold text-gray-800 mb-3 text-lg">
                     Sản phẩm đã chọn
                   </p>
@@ -354,8 +354,8 @@ const DraftBoxDemo = ({
                   )}
                 </div>
 
-                {/* BEVERAGES */}
-                <div className="bg-white rounded-lg shadow p-4 w-full">
+                {/* Beverages */}
+                <div className="bg-white rounded-lg shadow p-4">
                   <p className="font-semibold text-gray-800 mb-3 text-lg">
                     Đồ uống đã chọn
                   </p>
@@ -404,7 +404,7 @@ const DraftBoxDemo = ({
                   )}
                 </div>
 
-                {/* NOTE */}
+                {/* Note */}
                 <div className="bg-white rounded-lg shadow p-4 w-full">
                   <p className="font-semibold text-gray-800 mb-2 text-lg">
                     Ghi chú
@@ -417,7 +417,7 @@ const DraftBoxDemo = ({
                   />
                 </div>
 
-                {/* TOTAL & ACTIONS */}
+                {/* Total & Actions */}
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-2 w-full">
                   <div className="text-base font-semibold text-green-700">
                     Tổng cộng: {totalAll.toLocaleString()} đ
@@ -431,7 +431,12 @@ const DraftBoxDemo = ({
                     </button>
                     <button
                       onClick={() => checkOut(d.id)}
-                      className="px-4 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition text-sm"
+                      disabled={!savedDrafts[d.id]}
+                      className={`px-4 py-1.5 rounded-md text-sm transition ${
+                        savedDrafts[d.id]
+                          ? "bg-blue-600 text-white hover:bg-blue-700"
+                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      }`}
                     >
                       Thanh toán
                     </button>
@@ -446,4 +451,4 @@ const DraftBoxDemo = ({
   );
 };
 
-export default DraftBoxDemo;
+export default DraftBox;

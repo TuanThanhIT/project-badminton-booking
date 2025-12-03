@@ -11,10 +11,16 @@ export type WorkShiftRequest = {
   date: string;
 };
 
-export type UpdateWorkShiftRequest = {
+export type UpdateCheckIntRequest = {
   workShiftId: number;
   checkInTime: string;
   openCash: number;
+};
+
+export type UpdateCheckOutRequest = {
+  workShiftId: number;
+  checkOutTime: string;
+  closeCash: number;
 };
 
 export type UpdateWorkShiftResponse = {

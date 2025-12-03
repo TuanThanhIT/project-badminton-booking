@@ -5,7 +5,8 @@ import {
 } from "@reduxjs/toolkit";
 import type { ApiErrorType } from "../../../types/error";
 import type {
-  UpdateWorkShiftRequest,
+  UpdateCheckIntRequest,
+  UpdateCheckOutRequest,
   UpdateWorkShiftResponse,
   WorkShiftRequest,
   WorkShiftResponse,
@@ -41,16 +42,30 @@ export const getWorkShifts = createAsyncThunk<
   }
 });
 
-export const updateWorkShift = createAsyncThunk<
+export const updateCheckIn = createAsyncThunk<
   UpdateWorkShiftResponse,
-  { data: UpdateWorkShiftRequest },
+  { data: UpdateCheckIntRequest },
   { rejectValue: ApiErrorType }
->("workShift/updateWorkShift", async ({ data }, { rejectWithValue }) => {
+>("workShift/updateCheckIn", async ({ data }, { rejectWithValue }) => {
   try {
-    const res =
-      await workShiftService.updateWorkShiftEmployeeAndCashRegisterService(
-        data
-      );
+    const res = await workShiftService.updateCheckInAndCashRegisterService(
+      data
+    );
+    return res.data as UpdateWorkShiftResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
+export const updateCheckOut = createAsyncThunk<
+  UpdateWorkShiftResponse,
+  { data: UpdateCheckOutRequest },
+  { rejectValue: ApiErrorType }
+>("workShift/updateCheckOut", async ({ data }, { rejectWithValue }) => {
+  try {
+    const res = await workShiftService.updateCheckOutAndCashRegisterService(
+      data
+    );
     return res.data as UpdateWorkShiftResponse;
   } catch (error) {
     return rejectWithValue(error as ApiErrorType);
@@ -84,7 +99,7 @@ const workShiftSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // getProductFeedback
+      // getWorkShifts
       .addCase(getWorkShifts.pending, (state) => {
         state.loading = true;
         state.error = undefined;
@@ -98,16 +113,30 @@ const workShiftSlice = createSlice({
         state.error = action.payload?.userMessage;
       })
 
-      // updateWorkShift
-      .addCase(updateWorkShift.pending, (state) => {
+      // updateCheckIn
+      .addCase(updateCheckIn.pending, (state) => {
         state.loading = true;
         state.error = undefined;
       })
-      .addCase(updateWorkShift.fulfilled, (state, action) => {
+      .addCase(updateCheckIn.fulfilled, (state, action) => {
         state.loading = false;
         state.message = action.payload.message;
       })
-      .addCase(updateWorkShift.rejected, (state, action) => {
+      .addCase(updateCheckIn.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.userMessage;
+      })
+
+      // updateCheckout
+      .addCase(updateCheckOut.pending, (state) => {
+        state.loading = true;
+        state.error = undefined;
+      })
+      .addCase(updateCheckOut.fulfilled, (state, action) => {
+        state.loading = false;
+        state.message = action.payload.message;
+      })
+      .addCase(updateCheckOut.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.userMessage;
       });

@@ -1,21 +1,25 @@
-import { useEffect, useState } from "react";
-import { DollarSign, Loader2 } from "lucide-react";
+import { useContext, useEffect, useState } from "react";
+import { DollarSign, Loader2, LogOut } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../store/hook";
 import { toast } from "react-toastify";
 import {
   clearWorkShiftError,
   getWorkShift,
-  updateCheckIn,
+  updateCheckOut,
 } from "../../store/slices/employee/workShiftSlice";
+import { AuthContext } from "../../components/contexts/authContext";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
-const CashRegisterPage = () => {
+const CheckOutPage = () => {
+  const { setAuth } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [amount, setAmount] = useState("");
+  const [isConfirmed, setIsConfirmed] = useState(false); // trạng thái đã xác nhận
   const dispatch = useAppDispatch();
   const { workShift, error, loading } = useAppSelector(
     (state) => state.workShiftEpl
   );
-  const navigate = useNavigate();
 
   useEffect(() => {
     const nowTime = new Date().toTimeString().split(" ")[0];
@@ -24,35 +28,60 @@ const CashRegisterPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     try {
-      e.preventDefault();
-      if (!amount || Number(amount) <= 0) {
-        toast.error("Vui lòng nhập số tiền hợp lệ!");
-        return;
+      const result = await Swal.fire({
+        title: "Xác nhận Checkout",
+        text: "Bạn có chắc chắn muốn thực hiện Checkout ca làm?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Chắc chắn",
+        cancelButtonText: "Không",
+      });
+
+      if (result.isConfirmed) {
+        e.preventDefault();
+        if (!amount || Number(amount) <= 0) {
+          toast.error("Vui lòng nhập số tiền hợp lệ!");
+          return;
+        }
+        if (!workShift) {
+          toast.error("Không xác định được ca hiện tại!");
+          return;
+        }
+        const nowTime = new Date().toTimeString().split(" ")[0];
+        const id = workShift.id;
+        const data = {
+          workShiftId: id,
+          checkOutTime: nowTime,
+          closeCash: Number(amount),
+        };
+        const res = await dispatch(updateCheckOut({ data })).unwrap();
+        toast.success(res.message);
+
+        // Bật nút Logout sau khi xác nhận thành công
+        setIsConfirmed(true);
       }
-      if (!workShift) {
-        toast.error("Không xác định được ca hiện tại!");
-        return;
-      }
-      const nowTime = new Date().toTimeString().split(" ")[0];
-      const id = workShift.id;
-      const data = {
-        workShiftId: id,
-        checkInTime: nowTime,
-        openCash: Number(amount),
-      };
-      const res = await dispatch(updateCheckIn({ data })).unwrap();
-      toast.success(res.message);
-      setTimeout(() => {
-        navigate("/employee/home");
-      }, 2000);
     } catch (error) {
       // không xử lý nữa
     }
   };
 
+  const handleLogout = () => {
+    setAuth({
+      isAuthenticated: false,
+      user: { id: 0, email: "", username: "", role: "" },
+    });
+
+    localStorage.clear();
+    localStorage.removeItem("persist:root");
+    toast.success("Đăng xuất thành công!");
+    setTimeout(() => {
+      navigate("/employee/login");
+    }, 1000);
+  };
+
   useEffect(() => {
-    toast.error(error);
     if (error) {
+      toast.error(error);
       dispatch(clearWorkShiftError());
     }
   }, [dispatch, error]);
@@ -67,7 +96,23 @@ const CashRegisterPage = () => {
   }
 
   return (
-    <div className="flex-1 w-full bg-white flex items-center justify-center py-25">
+    <div className="flex-1 w-full bg-white flex flex-col items-center justify-center py-10 relative">
+      {/* Nút Logout ở góc phải */}
+      <button
+        onClick={handleLogout}
+        disabled={!isConfirmed} // khóa nếu chưa xác nhận
+        className={`absolute top-10 right-10 flex items-center gap-2 px-4 py-2 rounded-full 
+          transition shadow-md text-sm font-medium
+          ${
+            isConfirmed
+              ? "bg-green-500 hover:bg-green-700 text-white"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+          }`}
+      >
+        <LogOut className="w-5 h-5" />
+        Logout
+      </button>
+
       <div className="w-full max-w-4xl md:grid md:grid-cols-2 bg-white rounded-3xl border border-gray-300 overflow-hidden">
         {/* Hình minh họa */}
         <div className="hidden md:block">
@@ -85,7 +130,7 @@ const CashRegisterPage = () => {
             onSubmit={handleSubmit}
           >
             <h2 className="text-3xl font-extrabold text-sky-600 text-center mb-8">
-              Nhập tiền mặt hiện có tại quầy
+              Nhập tiền mặt hiện có quầy trước khi Đăng xuất
             </h2>
 
             <div className="flex flex-col gap-2">
@@ -118,4 +163,4 @@ const CashRegisterPage = () => {
   );
 };
 
-export default CashRegisterPage;
+export default CheckOutPage;

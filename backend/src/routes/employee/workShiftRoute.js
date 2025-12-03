@@ -13,10 +13,16 @@ const initWorkShiftEmployeeRoute = (app) => {
     workShiftController.getWorkShiftByDate
   );
   workShiftRoute.patch(
-    "/update/:id",
+    "/update/check-in/:id",
     auth,
     authorize("EMPLOYEE"),
-    workShiftController.updateWorkShiftEmployeeAndCashRegister
+    workShiftController.updateCheckInAndCashRegister
+  );
+  workShiftRoute.patch(
+    "/update/check-out/:id",
+    auth,
+    authorize("EMPLOYEE"),
+    workShiftController.updateCheckOutAndCashRegister
   );
   app.use("/employee/work-shift", workShiftRoute);
 };

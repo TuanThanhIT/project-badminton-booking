@@ -12,19 +12,38 @@ const getWorkShiftByDate = async (req, res, next) => {
   }
 };
 
-const updateWorkShiftEmployeeAndCashRegister = async (req, res, next) => {
+const updateCheckInAndCashRegister = async (req, res, next) => {
   try {
     const workShiftId = req.params.id;
     const { openCash, checkInTime } = req.body;
 
-    await workShiftService.updateWorkShiftEmployeeAndCashRegisterService(
+    await workShiftService.updateCheckInAndCashRegisterService(
       workShiftId,
       checkInTime,
       openCash
     );
     return res
       .status(200)
-      .json({ message: "Cập nhật thông tin ca làm thành công!" });
+      .json({ message: "Check-in thông tin ca làm thành công!" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateCheckOutAndCashRegister = async (req, res, next) => {
+  try {
+    const workShiftId = req.params.id;
+    const { closeCash, checkOutTime } = req.body;
+
+    await workShiftService.updateCheckoutAndCashRegisterService(
+      workShiftId,
+      checkOutTime,
+      closeCash
+    );
+    return res.status(200).json({
+      message:
+        "Bạn đã check-out thành công. Vui lòng Log-out để hoàn thành ca làm! ",
+    });
   } catch (error) {
     next(error);
   }
@@ -32,6 +51,7 @@ const updateWorkShiftEmployeeAndCashRegister = async (req, res, next) => {
 
 const workShiftController = {
   getWorkShiftByDate,
-  updateWorkShiftEmployeeAndCashRegister,
+  updateCheckInAndCashRegister,
+  updateCheckOutAndCashRegister,
 };
 export default workShiftController;

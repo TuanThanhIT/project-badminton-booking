@@ -7,6 +7,7 @@ import AuthEmployeeGuard from "../components/guards/AuthEmployeeGuard";
 import ProfilePage from "../pages/Customer/ProfilePage";
 import BookingPage from "../pages/Employee/BookingPage";
 import OrderPage from "../pages/Employee/OrderPage";
+import CheckOutPage from "../pages/Employee/CheckOutPage";
 
 const EmployeeRoute = () => {
   return (
@@ -28,6 +29,7 @@ const EmployeeRoute = () => {
         <Route path="profile" element={<ProfilePage />}></Route>
         <Route path="bookings" element={<BookingPage />}></Route>
         <Route path="orders" element={<OrderPage />}></Route>
+        <Route path="check-out" element={<CheckOutPage />}></Route>
       </Route>
     </Routes>
   );

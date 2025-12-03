@@ -1,5 +1,5 @@
-import { useContext, useEffect } from "react";
-import { Calendar, Home, LogOut, Package, UserPlus } from "lucide-react";
+import { useContext, useEffect, useState } from "react";
+import { Calendar, Home, LogOutIcon, Package, UserPlus } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../contexts/authContext";
 import { useAppDispatch, useAppSelector } from "../../../store/hook";
@@ -10,9 +10,10 @@ import {
   getWorkShifts,
 } from "../../../store/slices/employee/workShiftSlice";
 import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 
 const EmployeeHeader = () => {
-  const { auth, setAuth } = useContext(AuthContext);
+  const { auth } = useContext(AuthContext);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { workShifts, workShift, error } = useAppSelector(
@@ -33,22 +34,11 @@ const EmployeeHeader = () => {
   }, [workShifts, dispatch]);
 
   useEffect(() => {
-    toast.error(error);
     if (error) {
+      toast.error(error);
       dispatch(clearWorkShiftError());
     }
   }, [dispatch, error]);
-
-  const handleLogout = () => {
-    setAuth({
-      isAuthenticated: false,
-      user: { id: 0, email: "", username: "", role: "" },
-    });
-
-    localStorage.clear();
-    localStorage.removeItem("persist:root");
-    navigate("/employee/login");
-  };
 
   // Ngày hôm nay
   const today = new Date();
@@ -58,6 +48,21 @@ const EmployeeHeader = () => {
     month: "2-digit",
     year: "numeric",
   });
+
+  const handleCheckOut = async () => {
+    const result = await Swal.fire({
+      title: "Xác nhận Checkout",
+      text: "Bạn có chắc chắn muốn checkout ca làm này không?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Chắc chắn",
+      cancelButtonText: "Không",
+    });
+
+    if (result.isConfirmed) {
+      navigate("/employee/check-out");
+    }
+  };
 
   return (
     <header className="bg-[#1e3a8a] text-white flex justify-between items-center px-8 py-4 shadow-lg">
@@ -143,12 +148,13 @@ const EmployeeHeader = () => {
         </NavLink>
 
         <button
-          onClick={handleLogout}
-          className="flex items-center gap-2 px-4 py-2 rounded-full 
-               bg-red-500 hover:bg-red-600 transition shadow-md text-sm font-medium"
+          onClick={handleCheckOut}
+          className={
+            "flex items-center gap-2 px-4 py-2 rounded-full transition shadow-md text-sm font-medium bg-green-500 hover:bg-green-700 text-white"
+          }
         >
-          <LogOut className="w-5 h-5" />
-          Logout
+          <LogOutIcon className="w-5 h-5" />
+          Checkout
         </button>
       </div>
     </header>

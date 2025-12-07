@@ -13,7 +13,6 @@ import type {
 } from "../../../types/court";
 import type { ApiErrorType } from "../../../types/error";
 import courtService from "../../../services/Customer/courtService";
-import { sl } from "zod/v4/locales";
 
 interface CourtState {
   courts: CourtListResponse | undefined;

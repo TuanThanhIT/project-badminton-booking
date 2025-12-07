@@ -13,14 +13,14 @@ import type {
 import orderService from "../../../services/Employee/orderService";
 
 interface OrderState {
-  orders: OrderListEplResponse;
+  orders: OrderListEplResponse | undefined;
   message: string | undefined;
   loading: boolean;
   error: string | undefined;
 }
 
 const initialState: OrderState = {
-  orders: [],
+  orders: undefined,
   message: undefined,
   loading: false,
   error: undefined,

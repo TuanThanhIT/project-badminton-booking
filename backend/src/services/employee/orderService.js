@@ -11,9 +11,19 @@ import {
 } from "../../models/index.js";
 import ApiError from "../../utils/ApiError.js";
 
-const getOrdersService = async (orderStatus, keyword, date) => {
+const getOrdersService = async (
+  orderStatus,
+  keyword,
+  date,
+  page = 1,
+  limit = 5
+) => {
   try {
     const where = {};
+
+    const p = page && page !== "null" ? parseInt(page) : 1;
+    const l = limit && limit !== "null" ? parseInt(limit) : 10;
+    const offset = (p - 1) * l;
 
     // Filter trạng thái
     if (orderStatus) {
@@ -58,7 +68,7 @@ const getOrdersService = async (orderStatus, keyword, date) => {
       ],
     };
 
-    const orders = await Order.findAll({
+    const { rows, count } = await Order.findAndCountAll({
       where,
       attributes: ["id", "orderStatus", "totalAmount", "note", "createdDate"],
       include: [
@@ -88,10 +98,17 @@ const getOrdersService = async (orderStatus, keyword, date) => {
         },
         userInclude,
       ],
+      limit: l,
+      offset,
       order: [["createdDate", "DESC"]],
     });
 
-    return orders;
+    return {
+      orders: rows,
+      total: count,
+      page: p,
+      limit: l,
+    };
   } catch (error) {
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }

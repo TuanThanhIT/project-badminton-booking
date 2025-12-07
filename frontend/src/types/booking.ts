@@ -71,12 +71,19 @@ export type BookingEplResponse = {
   user: BookingUserInfo;
 };
 
-export type BookingListEplResponse = BookingEplResponse[];
+export type BookingListEplResponse = {
+  bookings: BookingEplResponse[];
+  total: number;
+  page: number;
+  limit: number;
+};
 
 export type BookingEplRequest = {
   status: string;
   keyword: string;
   date: string;
+  page: number | undefined;
+  limit: number | undefined;
 };
 
 export type BookingConfirmRequest = {

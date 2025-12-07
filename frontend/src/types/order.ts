@@ -75,12 +75,19 @@ export type OrderEplResponse = {
 
 export type OrderListResponse = OrderResponse[];
 
-export type OrderListEplResponse = OrderEplResponse[];
+export type OrderListEplResponse = {
+  orders: OrderEplResponse[];
+  total: number;
+  page: number;
+  limit: number;
+};
 
 export type OrderEplRequest = {
   status: string;
   keyword: string;
   date: string;
+  page: number | undefined;
+  limit: number | undefined;
 };
 
 export type OrderCancelResponse = {

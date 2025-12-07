@@ -13,14 +13,14 @@ import type {
 import bookingService from "../../../services/Employee/bookingService";
 
 interface OrderState {
-  bookings: BookingListEplResponse;
+  bookings: BookingListEplResponse | undefined;
   message: string | undefined;
   loading: boolean;
   error: string | undefined;
 }
 
 const initialState: OrderState = {
-  bookings: [],
+  bookings: undefined,
   message: undefined,
   loading: false,
   error: undefined,

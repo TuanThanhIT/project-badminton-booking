@@ -4,12 +4,12 @@ import {
   CalendarClock,
   DollarSign,
   MapPin,
-  Loader2,
   Search,
   XCircle,
   CheckCircle,
   Calendar1,
   Calendar,
+  Loader2,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import type {
@@ -26,6 +26,7 @@ import {
 } from "../../store/slices/employee/bookingSlice";
 import Swal from "sweetalert2";
 import CancelForm from "../../components/ui/CancelForm";
+import PaginatedItems from "../../components/ui/PaginatedItems";
 
 const TABS = [
   { key: "All", label: "Tất cả" },
@@ -66,15 +67,20 @@ const OrderPage = () => {
   const [searchText, setSearchText] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
 
+  const [page, setPage] = useState(1);
+  const limit = 5;
+
   useEffect(() => {
     const params: BookingEplRequest = {
       status: activeTab === "All" ? "" : activeTab,
       // Bạn sẽ gửi searchText và selectedDate cho backend nếu cần
       keyword: searchText,
       date: selectedDate,
+      page,
+      limit,
     };
     dispatch(getBookings({ data: params }));
-  }, [activeTab, searchText, selectedDate, dispatch]);
+  }, [activeTab, searchText, selectedDate, page, limit, dispatch]);
 
   const fetchBookings = () => {
     const params: BookingEplRequest = {
@@ -82,14 +88,16 @@ const OrderPage = () => {
       // Bạn sẽ gửi searchText và selectedDate cho backend nếu cần
       keyword: searchText,
       date: selectedDate,
+      page,
+      limit,
     };
     dispatch(getBookings({ data: params }));
   };
 
-  const filteredOrders =
+  const filteredBookings =
     activeTab === "All"
-      ? bookings
-      : bookings.filter((b) => b.bookingStatus === activeTab);
+      ? bookings?.bookings ?? []
+      : bookings?.bookings?.filter((b) => b.bookingStatus === activeTab) ?? [];
 
   useEffect(() => {
     if (error) {
@@ -154,15 +162,6 @@ const OrderPage = () => {
     } catch (error) {
       // không xử lý lỗi nữa
     }
-  };
-
-  const countByStatus = {
-    All: bookings.length,
-    Pending: bookings.filter((b) => b.bookingStatus === "Pending").length,
-    Paid: bookings.filter((b) => b.bookingStatus === "Paid").length,
-    Confirmed: bookings.filter((b) => b.bookingStatus === "Confirmed").length,
-    Completed: bookings.filter((b) => b.bookingStatus === "Completed").length,
-    Cancelled: bookings.filter((b) => b.bookingStatus === "Cancelled").length,
   };
 
   const renderFormCancel = () => (
@@ -429,14 +428,10 @@ const OrderPage = () => {
               }`}
             >
               <span>{STATUS_LABEL[t.key] || t.label}</span>
-              <span className="bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded-full">
-                {countByStatus[t.key as keyof typeof countByStatus] || 0}
-              </span>
             </button>
           ))}
         </div>
 
-        {/* Order list */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 className="w-10 h-10 text-sky-600 animate-spin mb-3" />
@@ -444,8 +439,8 @@ const OrderPage = () => {
               Đang tải lịch đặt sân...
             </p>
           </div>
-        ) : filteredOrders.length > 0 ? (
-          <div className="space-y-6">{filteredOrders.map(renderCard)}</div>
+        ) : filteredBookings.length > 0 ? (
+          <div className="space-y-6">{filteredBookings.map(renderCard)}</div>
         ) : (
           <div className="text-center py-16 bg-white rounded-2xl shadow-sm border border-gray-100">
             <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -460,6 +455,15 @@ const OrderPage = () => {
       </div>
 
       {openCancel && renderFormCancel()}
+
+      {bookings && bookings.total > limit && (
+        <PaginatedItems
+          total={bookings.total ?? 0}
+          limit={bookings.limit ?? limit}
+          page={bookings.page ?? 1}
+          onPageChange={(newPage) => setPage(newPage)}
+        />
+      )}
     </div>
   );
 };

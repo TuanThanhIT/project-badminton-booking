@@ -11,9 +11,20 @@ import {
 } from "../../models/index.js";
 import ApiError from "../../utils/ApiError.js";
 
-const getBookingsService = async (bookingStatus, keyword, date) => {
+const getBookingsService = async (
+  bookingStatus,
+  keyword,
+  date,
+  page = 1,
+  limit = 10
+) => {
   try {
     const where = {};
+
+    const p = page && page !== "null" ? parseInt(page) : 1;
+    const l = limit && limit !== "null" ? parseInt(limit) : 10;
+
+    const offset = (p - 1) * l;
 
     // Filter trạng thái
     if (bookingStatus) where.bookingStatus = bookingStatus;
@@ -55,7 +66,7 @@ const getBookingsService = async (bookingStatus, keyword, date) => {
     };
 
     // Query bookings
-    const bookings = await Booking.findAll({
+    const { rows, count } = await Booking.findAndCountAll({
       where,
       attributes: ["id", "bookingStatus", "totalAmount", "note", "createdDate"],
       include: [
@@ -85,11 +96,13 @@ const getBookingsService = async (bookingStatus, keyword, date) => {
         },
         userInclude,
       ],
+      limit: l,
+      offset,
       order: [["createdDate", "DESC"]],
     });
 
     // Format lại dữ liệu trả về
-    const formatted = bookings.map((booking) => {
+    const formatted = rows.map((booking) => {
       const b = booking.toJSON();
 
       const firstDetail = b.bookingDetails[0];
@@ -120,7 +133,12 @@ const getBookingsService = async (bookingStatus, keyword, date) => {
       };
     });
 
-    return formatted;
+    return {
+      bookings: formatted,
+      total: count,
+      page: p,
+      limit: l,
+    };
   } catch (error) {
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }

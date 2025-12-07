@@ -2,11 +2,13 @@ import bookingService from "../../services/employee/bookingService.js";
 
 const getBookings = async (req, res, next) => {
   try {
-    const { status, keyword, date } = req.query;
+    const { status, keyword, date, page, limit } = req.query;
     const bookings = await bookingService.getBookingsService(
       status,
       keyword,
-      date
+      date,
+      page,
+      limit
     );
     return res.status(200).json(bookings);
   } catch (error) {

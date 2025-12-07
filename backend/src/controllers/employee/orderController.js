@@ -2,8 +2,14 @@ import orderService from "../../services/employee/orderService.js";
 
 const getOrders = async (req, res, next) => {
   try {
-    const { status, keyword, date } = req.query;
-    const orders = await orderService.getOrdersService(status, keyword, date);
+    const { status, keyword, date, page, limit } = req.query;
+    const orders = await orderService.getOrdersService(
+      status,
+      keyword,
+      date,
+      page,
+      limit
+    );
     return res.status(200).json(orders);
   } catch (error) {
     next(error);

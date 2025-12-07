@@ -26,6 +26,7 @@ import {
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import CancelForm from "../../components/ui/CancelForm";
+import PaginatedItems from "../../components/ui/PaginatedItems";
 
 const TABS = [
   { key: "All", label: "Tất cả" },
@@ -64,15 +65,20 @@ const OrderPage = () => {
   const [searchText, setSearchText] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
 
+  const [page, setPage] = useState(1);
+  const limit = 5;
+
   useEffect(() => {
     const params: OrderEplRequest = {
       status: activeTab === "All" ? "" : activeTab,
       // Bạn sẽ gửi searchText và selectedDate cho backend nếu cần
       keyword: searchText,
       date: selectedDate,
+      page,
+      limit,
     };
     dispatch(getOrders({ data: params }));
-  }, [activeTab, searchText, selectedDate, dispatch]);
+  }, [activeTab, searchText, selectedDate, page, limit, dispatch]);
 
   const fetchOrders = () => {
     const params: OrderEplRequest = {
@@ -80,14 +86,18 @@ const OrderPage = () => {
       // Bạn sẽ gửi searchText và selectedDate cho backend nếu cần
       keyword: searchText,
       date: selectedDate,
+      page,
+      limit,
     };
     dispatch(getOrders({ data: params }));
   };
 
+  console.log("orders>>", orders);
+
   const filteredOrders =
     activeTab === "All"
-      ? orders
-      : orders.filter((o) => o.orderStatus === activeTab);
+      ? orders?.orders ?? []
+      : orders?.orders.filter((o: any) => o.orderStatus === activeTab) ?? [];
 
   useEffect(() => {
     if (error) {
@@ -152,15 +162,6 @@ const OrderPage = () => {
     } catch (error) {
       // không xử lý lỗi nữa
     }
-  };
-
-  const countByStatus = {
-    All: orders.length,
-    Pending: orders.filter((o) => o.orderStatus === "Pending").length,
-    Paid: orders.filter((o) => o.orderStatus === "Paid").length,
-    Confirmed: orders.filter((o) => o.orderStatus === "Confirmed").length,
-    Completed: orders.filter((o) => o.orderStatus === "Completed").length,
-    Cancelled: orders.filter((o) => o.orderStatus === "Cancelled").length,
   };
 
   const renderFormCancel = () => (
@@ -423,9 +424,6 @@ const OrderPage = () => {
               }`}
             >
               <span>{STATUS_LABEL[t.key] || t.label}</span>
-              <span className="bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded-full">
-                {countByStatus[t.key as keyof typeof countByStatus] || 0}
-              </span>
             </button>
           ))}
         </div>
@@ -452,6 +450,15 @@ const OrderPage = () => {
       </div>
 
       {openCancel && renderFormCancel()}
+
+      {orders && orders.total > limit && (
+        <PaginatedItems
+          total={orders.total ?? 0}
+          limit={orders.limit ?? limit}
+          page={orders.page ?? 1}
+          onPageChange={(newPage) => setPage(newPage)}
+        />
+      )}
     </div>
   );
 };

@@ -10,7 +10,10 @@ import {
   User,
   ProductFeedback,
   Profile,
+  Notification,
 } from "../../models/index.js";
+import { notifyEmployees } from "../../socket/emitter.js";
+import { sendEmployeesNotification } from "../../utils/sendNotification.js";
 
 const createOrderService = async (
   orderStatus,
@@ -120,6 +123,13 @@ const createOrderService = async (
       orderId: order.id,
     });
 
+    await sendEmployeesNotification(
+      "Có đơn hàng mới",
+      `Khách hàng vừa đặt đơn hàng #0${order.id}. Vui lòng kiểm tra và xác nhận đơn hàng.`,
+      "EMPLOYEE",
+      "create-order"
+    );
+
     return order.id;
   } catch (error) {
     if (error instanceof ApiError) {
@@ -220,6 +230,13 @@ const cancelOrderService = async (orderId, cancelReason) => {
 
     const payment = await Payment.findOne({ where: { orderId } });
     await payment.update({ paymentStatus: "Cancelled" });
+
+    await sendEmployeesNotification(
+      "Đơn hàng đã bị hủy",
+      `Khách hàng vừa hủy đơn #0${orderId}`,
+      "EMPLOYEE",
+      "cancel-order"
+    );
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;

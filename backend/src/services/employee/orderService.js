@@ -10,6 +10,7 @@ import {
   Profile,
 } from "../../models/index.js";
 import ApiError from "../../utils/ApiError.js";
+import { sendUserNotification } from "../../utils/sendNotification.js";
 
 const getOrdersService = async (
   orderStatus,
@@ -135,6 +136,13 @@ const confirmedOrderService = async (orderId) => {
     await order.update({
       orderStatus: "Confirmed",
     });
+
+    await sendUserNotification(
+      order.userId,
+      "epl-confirm-order",
+      "Đơn hàng đã được xác nhận",
+      `Đơn hàng #0${orderId} đã được xác nhận. B-Hub đang chuẩn bị để giao đến bạn nhanh nhất!`
+    );
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;
@@ -169,6 +177,13 @@ const completedOrderService = async (orderId) => {
         paidAt: new Date(),
       });
     }
+
+    await sendUserNotification(
+      order.userId,
+      "epl-complete-order",
+      "Đơn hàng đã hoàn thành",
+      `Đơn hàng #0${orderId} đã được hoàn thành. Cảm ơn bạn đã mua hàng tại B-Hub.`
+    );
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;
@@ -221,6 +236,13 @@ const cancelOrderService = async (orderId, cancelReason) => {
       cancelledBy: "Employee",
       cancelReason,
     });
+
+    await sendUserNotification(
+      order.userId,
+      "epl-cancel-order",
+      "Đơn hàng đã bị hủy",
+      `Đơn hàng #0${orderId} đã được cửa hàng hủy theo yêu cầu của khách hàng.`
+    );
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;

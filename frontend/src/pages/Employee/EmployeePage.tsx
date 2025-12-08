@@ -210,7 +210,7 @@ const EmployeePage = () => {
                 onClick={() => setActiveTab(tab as any)}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
                   activeTab === tab
-                    ? "bg-blue-600 text-white shadow"
+                    ? "bg-blue-800 text-white shadow"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >

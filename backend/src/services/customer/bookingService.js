@@ -10,7 +10,7 @@ import {
   PaymentBooking,
   User,
 } from "../../models/index.js";
-import { where } from "sequelize";
+import { sendEmployeesNotification } from "../../utils/sendNotification.js";
 
 const createBookingService = async (
   bookingStatus,
@@ -111,6 +111,13 @@ const createBookingService = async (
       paymentStatus,
       bookingId: booking.id,
     });
+
+    await sendEmployeesNotification(
+      "Có đặt sân mới",
+      `Khách hàng vừa đặt sân #0${booking.id}. Vui lòng kiểm tra và xác nhận lịch đặt.`,
+      "EMPLOYEE",
+      "create-booking"
+    );
 
     return booking.id;
   } catch (error) {
@@ -247,6 +254,13 @@ const cancelBookingService = async (bookingId, cancelReason) => {
       where: { bookingId },
     });
     await paymentBooking.update({ paymentStatus: "Cancelled" });
+
+    await sendEmployeesNotification(
+      "Lịch đặt sân đã bị hủy",
+      `Khách hàng vừa hủy lịch đặt sân #0${bookingId}`,
+      "EMPLOYEE",
+      "cancel-booking"
+    );
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;

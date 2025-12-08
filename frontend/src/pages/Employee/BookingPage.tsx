@@ -201,7 +201,7 @@ const OrderPage = () => {
           <div className="flex justify-between items-start mb-4 flex-wrap gap-2">
             <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
               <Calendar1 className="w-5 h-5 text-sky-600" />
-              Lịch đặt sân #{String(index + 1).padStart(3, "0")}
+              Lịch đặt sân #{String(booking.id).padStart(3, "0")}
             </h3>
             <div
               className={`px-4 py-1.5 rounded-full text-sm font-semibold border ${statusCardColor[status]}`}
@@ -415,21 +415,29 @@ const OrderPage = () => {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex flex-wrap gap-3 mb-6">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setActiveTab(t.key)}
-              className={`px-4 py-2 rounded-full text-sm font-medium border transition flex items-center gap-2 ${
-                activeTab === t.key
-                  ? "bg-sky-600 text-white border-sky-600 shadow"
-                  : "bg-white text-gray-700 border-gray-200 hover:bg-sky-50"
-              }`}
-            >
-              <span>{STATUS_LABEL[t.key] || t.label}</span>
-            </button>
-          ))}
+        {/* Tabs + Count */}
+        <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
+          {/* Tabs */}
+          <div className="flex flex-wrap gap-3">
+            {TABS.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setActiveTab(t.key)}
+                className={`px-4 py-2 rounded-full text-sm font-medium border transition flex items-center gap-2 ${
+                  activeTab === t.key
+                    ? "bg-sky-600 text-white border-sky-600 shadow"
+                    : "bg-white text-gray-700 border-gray-200 hover:bg-sky-50"
+                }`}
+              >
+                <span>{STATUS_LABEL[t.key] || t.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Count badge */}
+          <div className="px-3 py-1 border-2 border-sky-500 text-sky-600 rounded-full text-sm font-medium">
+            {filteredBookings.length} lịch đặt
+          </div>
         </div>
 
         {loading ? (

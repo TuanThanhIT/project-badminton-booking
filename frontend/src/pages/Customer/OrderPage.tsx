@@ -126,7 +126,7 @@ const OrderPage = () => {
             <div>
               <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
                 <Package className="w-5 h-5 text-sky-600" />
-                Đơn hàng #{String(index + 1).padStart(3, "0")}
+                Đơn hàng #{String(order.id).padStart(3, "0")}
               </h3>
               <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
                 <CalendarClock className="w-4 h-4 text-sky-600" />

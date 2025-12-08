@@ -129,7 +129,7 @@ const BookingPage = () => {
             <div className="flex-1 min-w-[200px]">
               <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
                 <Calendar1 className="w-5 h-5 text-sky-600" />
-                Lịch đặt sân #{String(index + 1).padStart(3, "0")}
+                Lịch đặt sân #{String(booking.id).padStart(3, "0")}
               </h3>
               <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
                 <CalendarClock className="w-4 h-4 text-sky-600" />

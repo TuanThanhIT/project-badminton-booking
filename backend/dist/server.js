@@ -4,6 +4,8 @@ var _express = _interopRequireDefault(require("express"));
 var _dotenv = _interopRequireDefault(require("dotenv"));
 var _cors = _interopRequireDefault(require("cors"));
 var _db = _interopRequireDefault(require("./config/db.js"));
+var _http = require("http");
+var _index = require("./socket/index.js");
 var _roleRoute = _interopRequireDefault(require("./routes/admin/roleRoute.js"));
 var _webRoute = _interopRequireDefault(require("./routes/customer/webRoute.js"));
 var _authRoute = _interopRequireDefault(require("./routes/customer/authRoute.js"));
@@ -37,6 +39,7 @@ var _beverageRoute2 = _interopRequireDefault(require("./routes/employee/beverage
 var _productRoute3 = _interopRequireDefault(require("./routes/employee/productRoute.js"));
 var _draftRoute = _interopRequireDefault(require("./routes/employee/draftRoute.js"));
 var _offlineRoute = _interopRequireDefault(require("./routes/employee/offlineRoute.js"));
+var _notificationRoute = _interopRequireDefault(require("./routes/employee/notificationRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -84,12 +87,19 @@ app.use((0, _cors["default"])());
 (0, _productRoute3["default"])(app);
 (0, _draftRoute["default"])(app);
 (0, _offlineRoute["default"])(app);
+(0, _notificationRoute["default"])(app);
+
+// create http server
+var httpServer = (0, _http.createServer)(app);
+
+// init socket
+(0, _index.initSocket)(httpServer);
 app.use(_errorHandling.errorHandlingMiddleware);
 _db["default"].sync({
   force: false
 }).then(function () {
   console.log("Database synced");
-  app.listen(PORT, function () {
+  httpServer.listen(PORT, function () {
     console.log("Server running on http://localhost:".concat(PORT));
   });
 });

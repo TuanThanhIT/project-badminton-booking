@@ -2,6 +2,8 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import sequelize from "./config/db.js";
+import { createServer } from "http";
+import { initSocket } from "./socket/index.js";
 import initRoleRoute from "./routes/admin/roleRoute.js";
 import initWebRoutes from "./routes/customer/webRoute.js";
 import initAuthRoute from "./routes/customer/authRoute.js";
@@ -35,6 +37,8 @@ import initBeverageEmployeeRoute from "./routes/employee/beverageRoute.js";
 import initProductEmployeeRoute from "./routes/employee/productRoute.js";
 import initDraftEmployeeRoute from "./routes/employee/draftRoute.js";
 import initOfflineEmployeeRoute from "./routes/employee/offlineRoute.js";
+import initNotificationEmployeeRoute from "./routes/employee/notificationRoute.js";
+import initNotificationCustomerRoute from "./routes/customer/notificationRoute.js";
 
 dotenv.config();
 
@@ -72,6 +76,7 @@ initCourtAdminRoute(app);
 initDiscountBookingAdminRoute(app);
 initWorkShiftAdminRoute(app);
 initBeverageAdminRoute(app);
+initNotificationCustomerRoute(app);
 
 // Employee
 initAuthEmployeeRoute(app);
@@ -83,12 +88,19 @@ initBeverageEmployeeRoute(app);
 initProductEmployeeRoute(app);
 initDraftEmployeeRoute(app);
 initOfflineEmployeeRoute(app);
+initNotificationEmployeeRoute(app);
+
+// create http server
+const httpServer = createServer(app);
+
+// init socket
+initSocket(httpServer);
 
 app.use(errorHandlingMiddleware);
 
 sequelize.sync({ force: false }).then(() => {
   console.log("Database synced");
-  app.listen(PORT, () => {
+  httpServer.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 });

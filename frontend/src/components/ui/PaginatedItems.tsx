@@ -25,8 +25,8 @@ function PaginatedItems({
   return (
     <div className="flex justify-center mt-10">
       <ReactPaginate
-        previousLabel="❮"
-        nextLabel="❯"
+        previousLabel="‹‹"
+        nextLabel="››"
         breakLabel="..."
         pageCount={pageCount}
         marginPagesDisplayed={1}

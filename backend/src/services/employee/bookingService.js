@@ -10,6 +10,7 @@ import {
   User,
 } from "../../models/index.js";
 import ApiError from "../../utils/ApiError.js";
+import { sendUserNotification } from "../../utils/sendNotification.js";
 
 const getBookingsService = async (
   bookingStatus,
@@ -165,6 +166,13 @@ const confirmedBookingService = async (bookingId) => {
     await booking.update({
       bookingStatus: "Confirmed",
     });
+
+    await sendUserNotification(
+      booking.userId,
+      "epl-confirm-booking",
+      "Lịch đặt sân đã được xác nhận",
+      `Lịch đặt sân #0${bookingId} đã được xác nhận. Hẹn gặp bạn tại sân!`
+    );
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;
@@ -199,6 +207,13 @@ const completedBookingService = async (bookingId) => {
         paidAt: new Date(),
       });
     }
+
+    await sendUserNotification(
+      booking.userId,
+      "epl-complete-booking",
+      "Lịch đặt sân đã hoàn thành",
+      `Lịch đặt sân #0${bookingId} đã hoàn thành. Rất vui được phục vụ bạn tại B-Hub!`
+    );
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;
@@ -253,6 +268,13 @@ const cancelBookingService = async (bookingId, cancelReason) => {
       cancelledBy: "Employee",
       cancelReason,
     });
+
+    await sendUserNotification(
+      booking.userId,
+      "epl-cancel-booking",
+      "Lịch đặt sân đã bị hủy",
+      `Lịch đặt sân #0${bookingId} đã được cửa hàng hủy theo yêu cầu của khách hàng.`
+    );
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;

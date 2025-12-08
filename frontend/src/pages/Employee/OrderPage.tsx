@@ -412,20 +412,27 @@ const OrderPage = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex flex-wrap gap-3 mb-6">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setActiveTab(t.key)}
-              className={`px-4 py-2 rounded-full text-sm font-medium border transition flex items-center gap-2 ${
-                activeTab === t.key
-                  ? "bg-sky-600 text-white border-sky-600 shadow"
-                  : "bg-white text-gray-700 border-gray-200 hover:bg-sky-50"
-              }`}
-            >
-              <span>{STATUS_LABEL[t.key] || t.label}</span>
-            </button>
-          ))}
+        {/* Tabs + Count đơn hàng */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <div className="flex flex-wrap gap-3">
+            {TABS.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setActiveTab(t.key)}
+                className={`px-4 py-2 rounded-full text-sm font-medium border transition flex items-center gap-2 ${
+                  activeTab === t.key
+                    ? "bg-sky-600 text-white border-sky-600 shadow"
+                    : "bg-white text-gray-700 border-gray-200 hover:bg-sky-50"
+                }`}
+              >
+                <span>{STATUS_LABEL[t.key] || t.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="px-3 py-1 border-2 border-sky-500 text-sky-600 rounded-full text-sm font-medium">
+            {filteredOrders.length} đơn hàng
+          </div>
         </div>
 
         {/* Order list */}

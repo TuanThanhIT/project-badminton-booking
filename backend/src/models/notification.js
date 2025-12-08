@@ -5,19 +5,37 @@ const Notification = sequelize.define(
   "Notification",
   {
     title: { type: DataTypes.STRING(255), allowNull: false },
+
     message: { type: DataTypes.STRING(1000) },
-    isRead: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+
+    isRead: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+
     userId: {
       type: DataTypes.INTEGER,
+      allowNull: true,
       references: { model: "Users", key: "id" },
-      allowNull: false,
+    },
+
+    role: {
+      type: DataTypes.ENUM("ADMIN", "EMPLOYEE", "USER"),
+      allowNull: true,
+    },
+
+    type: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
     },
   },
   {
     tableName: "Notifications",
-    timestamps: true, // bật tự động tạo
-    createdAt: "createdDate", // đổi tên createdAt
-    updatedAt: "updatedDate", // đổi tên updatedAt
+    timestamps: true,
+    createdAt: "createdDate",
+    updatedAt: "updatedDate",
   }
 );
+
 export default Notification;

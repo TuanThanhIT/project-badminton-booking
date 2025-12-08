@@ -9,6 +9,7 @@ import courtReducer from "./slices/customer/courtSlice";
 import bookingReducer from "./slices/customer/bookingSlice";
 import bookingFeedbackReducer from "./slices/customer/bookingFeedbackSlice";
 import workShiftReducer from "./slices/employee/workShiftSlice";
+import notificationReducer from "./slices/customer/notificationSlice";
 import orderEplReducer from "./slices/employee/orderSlice";
 import bookingEplReducer from "./slices/employee/bookingSlice";
 import beverageEplReducer from "./slices/employee/beverageSlice";
@@ -16,6 +17,7 @@ import courtEplReducer from "./slices/employee/courtSlice";
 import productEplReducer from "./slices/employee/productSlice";
 import draftEplReducer from "./slices/employee/draftSlice";
 import offlineEplReducer from "./slices/employee/offlineSlice";
+import notificationEplReducer from "./slices/employee/notificationSlice";
 
 const persistConfig = {
   key: "root",
@@ -39,6 +41,8 @@ const rootReducer = combineReducers({
   productEpl: productEplReducer,
   draftEpl: draftEplReducer,
   offlineEpl: offlineEplReducer,
+  notificationEpl: notificationEplReducer,
+  notification: notificationReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

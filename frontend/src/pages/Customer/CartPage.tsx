@@ -59,11 +59,11 @@ const CartPage = () => {
   const handleCheckout = async () => {
     const result = await Swal.fire({
       title: "Xác nhận thanh toán",
-      text: "Bạn có chắc chắn thanh toán cho tất cả sản phẩm trong giỏ hàng?",
-      icon: "warning",
+      text: "Bạn có chắc chắn thanh toán cho các sản phẩm trong giỏ hàng?",
+      icon: "question",
       showCancelButton: true,
       confirmButtonText: "Chắc chắn",
-      cancelButtonText: "Không",
+      cancelButtonText: "Hủy",
     });
     if (result.isConfirmed) {
       navigate("/checkout");

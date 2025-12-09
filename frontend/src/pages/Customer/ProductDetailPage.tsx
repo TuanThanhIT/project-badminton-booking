@@ -154,10 +154,10 @@ const ProductDetailPage: React.FC = () => {
     const result = await Swal.fire({
       title: "Xác nhận mua ngay",
       text: "Bạn có chắc chắn muốn mua ngay sản phẩm này?",
-      icon: "warning",
+      icon: "question",
       showCancelButton: true,
       confirmButtonText: "Chắc chắn",
-      cancelButtonText: "Không",
+      cancelButtonText: "Hủy",
     });
 
     if (result.isConfirmed) {

@@ -40,6 +40,7 @@ var _productRoute3 = _interopRequireDefault(require("./routes/employee/productRo
 var _draftRoute = _interopRequireDefault(require("./routes/employee/draftRoute.js"));
 var _offlineRoute = _interopRequireDefault(require("./routes/employee/offlineRoute.js"));
 var _notificationRoute = _interopRequireDefault(require("./routes/employee/notificationRoute.js"));
+var _notificationRoute2 = _interopRequireDefault(require("./routes/customer/notificationRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -76,6 +77,7 @@ app.use((0, _cors["default"])());
 (0, _discountBookingRoute["default"])(app);
 (0, _workShiftRoute["default"])(app);
 (0, _beverageRoute["default"])(app);
+(0, _notificationRoute2["default"])(app);
 
 // Employee
 (0, _authRoute2["default"])(app);

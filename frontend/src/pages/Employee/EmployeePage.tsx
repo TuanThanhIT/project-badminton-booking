@@ -5,9 +5,13 @@ import debounce from "lodash.debounce";
 import Swal from "sweetalert2";
 
 import {
+  CalendarClock,
   Check,
+  CheckCircle,
   DollarSign,
+  FileClock,
   Loader2,
+  Package2,
   Search,
   Smartphone,
   Wallet,
@@ -151,11 +155,11 @@ const EmployeePage = () => {
   const handleCheckoutDraft = async (draftId: number) => {
     const result = await Swal.fire({
       title: "Xác nhận thanh toán",
-      text: "Bạn có chắc chắn muốn thực hiện tạo thanh toán này?",
-      icon: "warning",
+      text: "Bạn có chắc muốn tiến hành thanh toán cho đơn này?",
+      icon: "question",
       showCancelButton: true,
       confirmButtonText: "Chắc chắn",
-      cancelButtonText: "Không",
+      cancelButtonText: "Hủy",
     });
 
     if (result.isConfirmed) {
@@ -173,10 +177,10 @@ const EmployeePage = () => {
     const result = await Swal.fire({
       title: "Xác nhận hoàn thành thanh toán",
       text: "Bạn có chắc chắn muốn hoàn thành thanh toán này không?",
-      icon: "warning",
+      icon: "question",
       showCancelButton: true,
       confirmButtonText: "Chắc chắn",
-      cancelButtonText: "Không",
+      cancelButtonText: "Hủy",
     });
 
     if (result.isConfirmed) {
@@ -198,7 +202,8 @@ const EmployeePage = () => {
       <div className="flex gap-4 h-[600px] overflow-hidden">
         {/* Cột 1: Danh sách đồ uống / sản phẩm */}
         <div className="flex-1 bg-white rounded-xl shadow p-4 flex flex-col overflow-hidden">
-          <div className="text-2xl font-bold mb-4 text-blue-900 tracking-wide">
+          <div className="flex items-center gap-2 text-2xl font-bold mb-4 text-blue-900 tracking-wide">
+            <Package2 className="w-7 h-7" />
             Danh sách đồ uống / sản phẩm
           </div>
 
@@ -260,8 +265,9 @@ const EmployeePage = () => {
 
         {/* Cột 2: Đơn tạm / Thông tin */}
         <div className="flex-1 bg-white rounded-xl shadow p-4 flex flex-col overflow-hidden">
-          <div className="text-2xl font-bold mb-4 text-blue-900 tracking-wide">
-            Đơn tạm / Thông tin
+          <div className="flex items-center gap-2 text-2xl font-bold mb-4 text-blue-900 tracking-wide">
+            <FileClock className="w-7 h-7" />
+            Đơn tạm thời
           </div>
           <div className="flex-1 overflow-y-auto">
             <DraftBox
@@ -278,7 +284,8 @@ const EmployeePage = () => {
 
         {/* Cột 3: Hoàn tất thanh toán */}
         <div className="flex-1 bg-white rounded-xl shadow p-6 flex flex-col overflow-hidden">
-          <div className="text-2xl font-bold mb-4 text-blue-900 tracking-wide">
+          <div className="flex items-center gap-2 text-2xl font-bold mb-4 text-blue-900 tracking-wide">
+            <CheckCircle className="w-7 h-7" />
             Hoàn tất thanh toán
           </div>
           <div className="flex-1 overflow-y-auto flex flex-col gap-4">
@@ -371,8 +378,9 @@ const EmployeePage = () => {
       {/* COURT GRID */}
       <div className="bg-white rounded-xl shadow p-4 flex flex-col relative">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold mb-4 text-blue-900 tracking-wide">
-            Danh sách sân cầu lông
+          <h2 className="flex items-center gap-2 text-2xl font-bold mb-4 text-blue-900 tracking-wide">
+            <CalendarClock className="w-7 h-7" />
+            Chọn sân & khung giờ
           </h2>
           <div className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-3 py-2">
             <label htmlFor="date" className="text-gray-600 text-sm font-medium">
@@ -453,8 +461,8 @@ const EmployeePage = () => {
                       isDisabled
                         ? "bg-gray-300 cursor-not-allowed"
                         : isSelected
-                        ? "bg-green-500 hover:bg-green-600"
-                        : "bg-orange-100 hover:bg-green-300"
+                        ? "bg-green-600 hover:bg-green-700"
+                        : "bg-blue-200 hover:bg-green-400"
                     }`}
                       ></div>
                     );

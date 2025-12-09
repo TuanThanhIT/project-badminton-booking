@@ -10,9 +10,7 @@ import {
   User,
   ProductFeedback,
   Profile,
-  Notification,
 } from "../../models/index.js";
-import { notifyEmployees } from "../../socket/emitter.js";
 import { sendEmployeesNotification } from "../../utils/sendNotification.js";
 
 const createOrderService = async (

@@ -111,10 +111,10 @@ const OrderPage = () => {
       const result = await Swal.fire({
         title: "Xác nhận đặt sân",
         text: "Bạn có chắc chắn muốn xác nhận lịch đặt sân này không?",
-        icon: "warning",
+        icon: "question",
         showCancelButton: true,
         confirmButtonText: "Chắc chắn",
-        cancelButtonText: "Không",
+        cancelButtonText: "Hủy",
       });
       if (result.isConfirmed) {
         const data = { bookingId };
@@ -132,10 +132,10 @@ const OrderPage = () => {
       const result = await Swal.fire({
         title: "Xác nhận hoàn thành đặt sân",
         text: "Bạn có chắc chắn muốn hoàn thành lịch đặt sân này không?",
-        icon: "warning",
+        icon: "question",
         showCancelButton: true,
         confirmButtonText: "Chắc chắn",
-        cancelButtonText: "Không",
+        cancelButtonText: "Hủy",
       });
       if (result.isConfirmed) {
         const data = { bookingId };

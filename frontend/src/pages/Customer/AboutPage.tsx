@@ -49,7 +49,7 @@ const AboutPage = () => {
       {/* Header / Banner */}
       <div className="flex items-center gap-3">
         <Target className="w-8 h-8 text-sky-700" />
-        <h1 className="text-3xl font-bold text-sky-800">
+        <h1 className="text-3xl font-bold text-sky-800 border-b-2">
           B-Hub | Đặt Sân & Mua Sắm Cầu Lông Chất Lượng
         </h1>
       </div>

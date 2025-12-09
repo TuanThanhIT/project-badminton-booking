@@ -137,6 +137,22 @@ const confirmedOrderService = async (orderId) => {
       orderStatus: "Confirmed",
     });
 
+    // update lại số lượng sản phẩm khi xác nhận
+    const details = await OrderDetail.findAll({
+      where: { orderId },
+      attributes: ["varientId", "quantity"],
+    });
+
+    // increment() dùng để tăng hoặc giảm giá trị một cột (như stock) trực tiếp trong DB.
+    await Promise.all(
+      details.map(async ({ varientId, quantity }) => {
+        await ProductVarient.increment(
+          { stock: -quantity },
+          { where: { id: varientId } }
+        );
+      })
+    );
+
     await sendUserNotification(
       order.userId,
       "epl-confirm-order",
@@ -236,6 +252,21 @@ const cancelOrderService = async (orderId, cancelReason) => {
       cancelledBy: "Employee",
       cancelReason,
     });
+
+    // update lại số lượng sản phẩm khi hủy đơn
+    const details = await OrderDetail.findAll({
+      where: { orderId },
+      attributes: ["varientId", "quantity"],
+    });
+
+    await Promise.all(
+      details.map(async ({ varientId, quantity }) => {
+        await ProductVarient.increment(
+          { stock: +quantity },
+          { where: { id: varientId } }
+        );
+      })
+    );
 
     await sendUserNotification(
       order.userId,

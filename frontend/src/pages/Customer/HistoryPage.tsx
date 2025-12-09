@@ -181,7 +181,7 @@ const HistoryPage = () => {
         <section>
           <div className="flex items-center gap-3 mb-8">
             <Package className="w-8 h-8 text-sky-700" />
-            <h1 className="text-3xl font-bold text-sky-800">
+            <h1 className="text-3xl font-bold text-sky-800 border-b-2">
               Lịch sử đơn hàng
             </h1>
           </div>
@@ -415,7 +415,7 @@ const HistoryPage = () => {
         <section className="mt-20">
           <div className="flex items-center gap-3 mb-8">
             <Calendar className="w-8 h-8 text-emerald-700" />
-            <h2 className="text-3xl font-bold text-emerald-800">
+            <h2 className="text-3xl font-bold text-emerald-800 border-b-2">
               Lịch sử đặt sân
             </h2>
           </div>

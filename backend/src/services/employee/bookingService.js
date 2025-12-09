@@ -269,6 +269,19 @@ const cancelBookingService = async (bookingId, cancelReason) => {
       cancelReason,
     });
 
+    // update lại mở lại các khung giờ đã hủy
+    const ids = await BookingDetail.findAll({
+      where: { bookingId },
+      attributes: ["courtScheduleId"],
+    });
+
+    const courtScheduleIds = ids.map((item) => item.courtScheduleId);
+
+    await CourtSchedule.update(
+      { isAvailable: true },
+      { where: { id: courtScheduleIds } }
+    );
+
     await sendUserNotification(
       booking.userId,
       "epl-cancel-booking",

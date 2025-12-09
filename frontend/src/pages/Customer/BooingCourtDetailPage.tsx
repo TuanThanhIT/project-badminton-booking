@@ -183,11 +183,11 @@ const BookingCourtDetailPage = () => {
   const handleCheckout = async () => {
     const result = await Swal.fire({
       title: "Xác nhận đặt sân",
-      text: "Bạn có chắc chắn muốn đặt sân với các khung giờ đã lựa chọn?",
-      icon: "warning",
+      text: "Bạn có chắc chắn đặt sân với các khung giờ đã lựa chọn?",
+      icon: "question",
       showCancelButton: true,
       confirmButtonText: "Chắc chắn",
-      cancelButtonText: "Không",
+      cancelButtonText: "Hủy",
     });
     if (result.isConfirmed) {
       if (checkApply && code) {

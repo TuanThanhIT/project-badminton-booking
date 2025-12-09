@@ -43,7 +43,9 @@ const ContactPage = () => {
       {/* Title */}
       <div className="flex items-center gap-3">
         <Contact2 className="w-8 h-8 text-sky-700" />
-        <h1 className="text-3xl font-bold text-sky-800">Liên hệ B-Hub</h1>
+        <h1 className="text-3xl font-bold text-sky-800 border-b-2">
+          Liên hệ B-Hub
+        </h1>
       </div>
 
       {/* Grid container */}

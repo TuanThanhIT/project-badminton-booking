@@ -31,10 +31,10 @@ const CheckOutPage = () => {
       const result = await Swal.fire({
         title: "Xác nhận Checkout",
         text: "Bạn có chắc chắn muốn thực hiện Checkout ca làm?",
-        icon: "warning",
+        icon: "question",
         showCancelButton: true,
         confirmButtonText: "Chắc chắn",
-        cancelButtonText: "Không",
+        cancelButtonText: "Hủy",
       });
 
       if (result.isConfirmed) {

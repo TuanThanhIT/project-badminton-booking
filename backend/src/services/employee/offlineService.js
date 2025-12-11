@@ -12,6 +12,8 @@ import {
 } from "../../models/index.js";
 
 const createOfflineService = async (draftId, employeeId) => {
+  const transaction = await sequelize.transaction();
+
   try {
     const draftBooking = await DraftBooking.findByPk(draftId, {
       attributes: ["id", "note", "total", "nameCustomer"],
@@ -32,20 +34,26 @@ const createOfflineService = async (draftId, employeeId) => {
           attributes: ["productVarientId", "quantity", "subTotal"],
         },
       ],
+      transaction,
     });
 
     if (!draftBooking) {
       throw new ApiError(StatusCodes.NOT_FOUND, "Đơn tạm chưa được tạo!");
     }
 
-    await draftBooking.update({ status: "Completed" });
+    // Cập nhật trạng thái Draft → Completed
+    await draftBooking.update({ status: "Completed" }, { transaction });
 
-    const offlineBooking = await OfflineBooking.create({
-      draftId,
-      employeeId,
-    });
+    // Tạo OfflineBooking
+    const offlineBooking = await OfflineBooking.create(
+      {
+        draftId,
+        employeeId,
+      },
+      { transaction }
+    );
 
-    // --- Flatten data ---
+    // Flatten data
     const courtSchedules = draftBooking.draftBookingItems.map((item) => ({
       offlineBookingId: offlineBooking.id,
       courtScheduleId: item.courtScheduleId,
@@ -66,9 +74,21 @@ const createOfflineService = async (draftId, employeeId) => {
       subTotal: item.subTotal,
     }));
 
-    await OfflineBookingItem.bulkCreate(courtSchedules);
-    await OfflineBeverageItem.bulkCreate(beverages);
-    await OfflineProductItem.bulkCreate(products);
+    // Insert all items
+    if (courtSchedules.length > 0) {
+      await OfflineBookingItem.bulkCreate(courtSchedules, { transaction });
+    }
+
+    if (beverages.length > 0) {
+      await OfflineBeverageItem.bulkCreate(beverages, { transaction });
+    }
+
+    if (products.length > 0) {
+      await OfflineProductItem.bulkCreate(products, { transaction });
+    }
+
+    // ---- Commit Transaction ----
+    await transaction.commit();
 
     return {
       id: offlineBooking.id,
@@ -76,13 +96,13 @@ const createOfflineService = async (draftId, employeeId) => {
       nameCustomer: draftBooking.nameCustomer,
     };
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
+    await transaction.rollback();
+
+    if (error instanceof ApiError) throw error;
+
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
-
 const updateOfflineService = async (offlineBookingId, paymentMethod, total) => {
   try {
     const offlineBooking = await OfflineBooking.findByPk(offlineBookingId);

@@ -5,8 +5,9 @@ import { Notification } from "../../models/index.js";
 const getNotificationsService = async (userId) => {
   try {
     const notifications = await Notification.findAll({
-      where: { userId },
+      where: { role: "EMPLOYEE" },
       attributes: ["id", "title", "message", "isRead", "type", "createdDate"],
+      order: [["createdDate", "DESC"]],
     });
     return notifications;
   } catch (error) {

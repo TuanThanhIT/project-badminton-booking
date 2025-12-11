@@ -11,6 +11,26 @@ import {
 } from "../../models/index.js";
 import ApiError from "../../utils/ApiError.js";
 import { sendUserNotification } from "../../utils/sendNotification.js";
+import mailer from "../../utils/mailer.js";
+import sequelize from "../../config/db.js";
+
+const handleSendOrderMail = (order, type) => {
+  const orderProducts = order.orderDetails.map((item) => {
+    return {
+      productName: item.varient.product.productName,
+      color: item.varient.color,
+      size: item.varient.size,
+      material: item.varient.material,
+      quantity: item.quantity,
+      subTotal: item.subTotal,
+    };
+  });
+
+  const totalAmount = order.totalAmount;
+  const email = order.user.email;
+
+  return mailer.sendOrderMail(email, orderProducts, totalAmount, type);
+};
 
 const getOrdersService = async (
   orderStatus,
@@ -116,168 +136,289 @@ const getOrdersService = async (
 };
 
 const confirmedOrderService = async (orderId) => {
-  try {
-    const order = await Order.findByPk(orderId);
-    if (!order) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Đơn hàng không tồn tại!");
-    }
-    if (order.orderStatus === "Cancelled") {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Đơn hàng đã hủy không thể xác nhận lại được nữa! Vui lòng đặt hàng lại!"
-      );
-    } else if (order.orderStatus === "Completed") {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Đơn hàng đã hoàn thành không thể xác nhận lại được nữa! Vui lòng đặt hàng lại!"
-      );
-    }
+  const t = await sequelize.transaction();
 
-    await order.update({
-      orderStatus: "Confirmed",
+  try {
+    const order = await Order.findByPk(orderId, {
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["email"],
+        },
+        {
+          model: OrderDetail,
+          as: "orderDetails",
+          attributes: ["quantity", "subTotal"],
+          include: [
+            {
+              model: ProductVarient,
+              as: "varient",
+              attributes: ["color", "size", "material"],
+              include: [
+                {
+                  model: Product,
+                  as: "product",
+                  attributes: ["productName"],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      transaction: t,
+      lock: t.LOCK.UPDATE,
     });
 
-    // update lại số lượng sản phẩm khi xác nhận
+    if (!order)
+      throw new ApiError(StatusCodes.NOT_FOUND, "Đơn hàng không tồn tại!");
+
+    if (order.orderStatus === "Cancelled")
+      throw new ApiError(StatusCodes.BAD_REQUEST, "Đơn hàng đã bị hủy!");
+
+    if (order.orderStatus === "Completed")
+      throw new ApiError(StatusCodes.BAD_REQUEST, "Đơn hàng đã hoàn thành!");
+
+    // cập nhật trạng thái
+    await order.update({ orderStatus: "Confirmed" }, { transaction: t });
+
+    // trừ stock
     const details = await OrderDetail.findAll({
       where: { orderId },
       attributes: ["varientId", "quantity"],
+      transaction: t,
+      lock: t.LOCK.UPDATE,
     });
 
-    // increment() dùng để tăng hoặc giảm giá trị một cột (như stock) trực tiếp trong DB.
     await Promise.all(
       details.map(async ({ varientId, quantity }) => {
         await ProductVarient.increment(
           { stock: -quantity },
-          { where: { id: varientId } }
+          { where: { id: varientId }, transaction: t }
         );
       })
     );
 
+    await t.commit();
+
+    // các tác vụ ngoài transaction
     await sendUserNotification(
       order.userId,
       "epl-confirm-order",
       "Đơn hàng đã được xác nhận",
-      `Đơn hàng #0${orderId} đã được xác nhận. B-Hub đang chuẩn bị để giao đến bạn nhanh nhất!`
+      `Đơn hàng #0${orderId} đã được xác nhận.`
     );
+
+    await handleSendOrderMail(order, "confirm");
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
+    await t.rollback();
+    if (error instanceof ApiError) throw error;
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
 
 const completedOrderService = async (orderId) => {
+  const t = await sequelize.transaction();
+
   try {
-    const order = await Order.findByPk(orderId);
-    if (!order) {
+    const order = await Order.findByPk(orderId, {
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["email"],
+        },
+        {
+          model: OrderDetail,
+          as: "orderDetails",
+          attributes: ["quantity", "subTotal"],
+          include: [
+            {
+              model: ProductVarient,
+              as: "varient",
+              attributes: ["color", "size", "material"],
+              include: [
+                {
+                  model: Product,
+                  as: "product",
+                  attributes: ["productName"],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+
+    if (!order)
       throw new ApiError(StatusCodes.NOT_FOUND, "Đơn hàng không tồn tại!");
-    }
-    if (order.orderStatus !== "Confirmed") {
+
+    if (order.orderStatus !== "Confirmed")
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Đơn hàng không thể hoàn thành nếu đơn hàng chưa được xác nhận! Vui lòng kiểm tra lại!"
+        "Đơn hàng chưa được xác nhận!"
       );
-    }
+
+    // tìm payment (COD nếu có)
     const payment = await Payment.findOne({
       where: { orderId: order.id, paymentMethod: "COD" },
+      transaction: t,
+      lock: t.LOCK.UPDATE,
     });
 
-    await order.update({
-      orderStatus: "Completed",
-    });
+    await order.update({ orderStatus: "Completed" }, { transaction: t });
 
     if (payment) {
-      await payment.update({
-        paymentStatus: "Success",
-        paidAt: new Date(),
-      });
+      await payment.update(
+        {
+          paymentStatus: "Success",
+          paidAt: new Date(),
+        },
+        { transaction: t }
+      );
     }
+
+    await t.commit();
 
     await sendUserNotification(
       order.userId,
       "epl-complete-order",
       "Đơn hàng đã hoàn thành",
-      `Đơn hàng #0${orderId} đã được hoàn thành. Cảm ơn bạn đã mua hàng tại B-Hub.`
+      `Đơn hàng #0${orderId} đã được hoàn thành.`
     );
+
+    await handleSendOrderMail(order, "complete");
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
+    await t.rollback();
+    if (error instanceof ApiError) throw error;
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
 
 const cancelOrderService = async (orderId, cancelReason) => {
+  const t = await sequelize.transaction();
+
   try {
-    const order = await Order.findByPk(orderId);
-    if (!order) {
+    const order = await Order.findByPk(orderId, {
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["email"],
+        },
+        {
+          model: OrderDetail,
+          as: "orderDetails",
+          attributes: ["quantity", "subTotal"],
+          include: [
+            {
+              model: ProductVarient,
+              as: "varient",
+              attributes: ["color", "size", "material"],
+              include: [
+                {
+                  model: Product,
+                  as: "product",
+                  attributes: ["productName"],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+
+    if (!order)
       throw new ApiError(StatusCodes.NOT_FOUND, "Đơn hàng không tồn tại!");
-    }
-    if (order.orderStatus === "Completed") {
+
+    if (order.orderStatus === "Completed")
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
         "Đơn hàng đã hoàn thành không thể hủy!"
       );
-    }
 
-    const payment = await Payment.findOne({ where: { orderId } });
+    const payment = await Payment.findOne({
+      where: { orderId },
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
 
     const oldStatus = order.orderStatus;
 
-    // xử lý payment trước
+    // xử lý payment
     if (oldStatus === "Pending") {
-      await payment.update({ paymentStatus: "Cancelled" });
+      await payment.update({ paymentStatus: "Cancelled" }, { transaction: t });
     } else if (oldStatus === "Paid") {
-      await payment.update({
-        paymentStatus: "Cancelled",
-        refundAmount: payment.paymentAmount,
-        refundAt: new Date(),
-      });
-    } else if (oldStatus === "Confirmed") {
-      if (payment.paymentMethod === "COD") {
-        await payment.update({ paymentStatus: "Cancelled" });
-      } else {
-        await payment.update({
+      await payment.update(
+        {
           paymentStatus: "Cancelled",
           refundAmount: payment.paymentAmount,
           refundAt: new Date(),
-        });
+        },
+        { transaction: t }
+      );
+    } else if (oldStatus === "Confirmed") {
+      if (payment.paymentMethod === "COD") {
+        await payment.update(
+          { paymentStatus: "Cancelled" },
+          { transaction: t }
+        );
+      } else {
+        await payment.update(
+          {
+            paymentStatus: "Cancelled",
+            refundAmount: payment.paymentAmount,
+            refundAt: new Date(),
+          },
+          { transaction: t }
+        );
       }
     }
 
-    // rồi mới update trạng thái order
-    await order.update({
-      orderStatus: "Cancelled",
-      cancelledBy: "Employee",
-      cancelReason,
-    });
+    // update trạng thái order
+    await order.update(
+      {
+        orderStatus: "Cancelled",
+        cancelledBy: "Employee",
+        cancelReason,
+      },
+      { transaction: t }
+    );
 
-    // update lại số lượng sản phẩm khi hủy đơn
+    // hoàn stock
     const details = await OrderDetail.findAll({
       where: { orderId },
       attributes: ["varientId", "quantity"],
+      transaction: t,
+      lock: t.LOCK.UPDATE,
     });
 
     await Promise.all(
       details.map(async ({ varientId, quantity }) => {
         await ProductVarient.increment(
           { stock: +quantity },
-          { where: { id: varientId } }
+          { where: { id: varientId }, transaction: t }
         );
       })
     );
+
+    await t.commit();
 
     await sendUserNotification(
       order.userId,
       "epl-cancel-order",
       "Đơn hàng đã bị hủy",
-      `Đơn hàng #0${orderId} đã được cửa hàng hủy theo yêu cầu của khách hàng.`
+      `Đơn hàng #0${orderId} đã được cửa hàng hủy.`
     );
+
+    await handleSendOrderMail(order, "cancel");
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
+    await t.rollback();
+    if (error instanceof ApiError) throw error;
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };

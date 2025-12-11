@@ -11,6 +11,7 @@ import {
   User,
 } from "../../models/index.js";
 import { sendEmployeesNotification } from "../../utils/sendNotification.js";
+import sequelize from "../../config/db.js";
 
 const createBookingService = async (
   bookingStatus,
@@ -23,6 +24,7 @@ const createBookingService = async (
   paymentMethod,
   paymentStatus
 ) => {
+  const t = await sequelize.transaction();
   try {
     const status = ["Pending", "Paid", "Completed", "Cancelled"];
     const checkStatus = status.includes(bookingStatus);
@@ -33,7 +35,7 @@ const createBookingService = async (
       );
     }
 
-    const user = await User.findByPk(userId);
+    const user = await User.findByPk(userId, { transaction: t });
     if (!user) {
       throw new ApiError(StatusCodes.NOT_FOUND, "Người dùng không tồn tại!");
     }
@@ -55,40 +57,46 @@ const createBookingService = async (
     if (code) {
       const discountBooking = await DiscountBooking.findOne({
         where: { code },
+        transaction: t,
       });
+
       if (!discountBooking) {
         throw new ApiError(
           StatusCodes.NOT_FOUND,
           "Mã giảm giá không chính xác!"
         );
       }
-      booking = await Booking.create({
-        bookingStatus,
-        totalAmount,
-        userId,
-        discountId: discountBooking.id,
-        note,
-      });
+
+      booking = await Booking.create(
+        {
+          bookingStatus,
+          totalAmount,
+          userId,
+          discountId: discountBooking.id,
+          note,
+        },
+        { transaction: t }
+      );
     } else {
-      booking = await Booking.create({
-        bookingStatus,
-        totalAmount,
-        userId,
-        note,
-      });
+      booking = await Booking.create(
+        { bookingStatus, totalAmount, userId, note },
+        { transaction: t }
+      );
     }
 
-    // Gắn thêm orderId vào từng phần tử
     const detailsWithBookingId = bookingDetails.map((detail) => ({
       ...detail,
       bookingId: booking.id,
     }));
 
-    await BookingDetail.bulkCreate(detailsWithBookingId);
+    await BookingDetail.bulkCreate(detailsWithBookingId, { transaction: t });
 
     const ids = bookingDetails.map((detail) => detail.courtScheduleId);
 
-    await CourtSchedule.update({ isAvailable: false }, { where: { id: ids } });
+    await CourtSchedule.update(
+      { isAvailable: false },
+      { where: { id: ids }, transaction: t }
+    );
 
     const methods = ["COD", "MOMO"];
     if (!methods.includes(paymentMethod)) {
@@ -97,6 +105,7 @@ const createBookingService = async (
         "Phương thức thanh toán không hợp lệ!"
       );
     }
+
     const pStatus = ["Pending", "Success", "Cancelled"];
     if (!pStatus.includes(paymentStatus)) {
       throw new ApiError(
@@ -105,13 +114,19 @@ const createBookingService = async (
       );
     }
 
-    await PaymentBooking.create({
-      paymentAmount,
-      paymentMethod,
-      paymentStatus,
-      bookingId: booking.id,
-    });
+    await PaymentBooking.create(
+      {
+        paymentAmount,
+        paymentMethod,
+        paymentStatus,
+        bookingId: booking.id,
+      },
+      { transaction: t }
+    );
 
+    await t.commit(); // CHỈ commit các thao tác có gắn { transaction: t }
+
+    // Gửi thông báo KHÔNG nằm trong transaction
     await sendEmployeesNotification(
       "Có đặt sân mới",
       `Khách hàng vừa đặt sân #0${booking.id}. Vui lòng kiểm tra và xác nhận lịch đặt.`,
@@ -121,9 +136,8 @@ const createBookingService = async (
 
     return booking.id;
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
+    await t.rollback();
+    if (error instanceof ApiError) throw error;
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
@@ -215,46 +229,64 @@ const getBookingsService = async (userId) => {
 };
 
 const cancelBookingService = async (bookingId, cancelReason) => {
+  const t = await sequelize.transaction();
   try {
-    const booking = await Booking.findByPk(bookingId);
+    const booking = await Booking.findByPk(bookingId, { transaction: t });
     if (!booking) {
       throw new ApiError(StatusCodes.NOT_FOUND, "Lịch đặt sân không tồn tại!");
     }
+
     if (booking.bookingStatus === "Paid") {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
         "Sân đã thanh toán không thể hủy trực tiếp. Vui lòng liên hệ cửa hàng để hỗ trợ!"
       );
-    } else if (booking.bookingStatus === "Confirmed") {
+    }
+
+    if (booking.bookingStatus === "Confirmed") {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
         "Sân đã xác nhận không thể hủy trực tiếp. Vui lòng liên hệ cửa hàng để hỗ trợ!"
       );
     }
 
-    await booking.update({
-      bookingStatus: "Cancelled",
-      cancelledBy: "User",
-      cancelReason,
-    });
+    await booking.update(
+      {
+        bookingStatus: "Cancelled",
+        cancelledBy: "User",
+        cancelReason,
+      },
+      { transaction: t }
+    );
 
     const ids = await BookingDetail.findAll({
       where: { bookingId },
       attributes: ["courtScheduleId"],
+      transaction: t,
     });
 
     const courtScheduleIds = ids.map((item) => item.courtScheduleId);
 
     await CourtSchedule.update(
       { isAvailable: true },
-      { where: { id: courtScheduleIds } }
+      { where: { id: courtScheduleIds }, transaction: t }
     );
 
     const paymentBooking = await PaymentBooking.findOne({
       where: { bookingId },
+      transaction: t,
     });
-    await paymentBooking.update({ paymentStatus: "Cancelled" });
 
+    if (paymentBooking) {
+      await paymentBooking.update(
+        { paymentStatus: "Cancelled" },
+        { transaction: t }
+      );
+    }
+
+    await t.commit();
+
+    // Không nằm trong transaction
     await sendEmployeesNotification(
       "Lịch đặt sân đã bị hủy",
       `Khách hàng vừa hủy lịch đặt sân #0${bookingId}`,
@@ -262,9 +294,8 @@ const cancelBookingService = async (bookingId, cancelReason) => {
       "cancel-booking"
     );
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
+    await t.rollback();
+    if (error instanceof ApiError) throw error;
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };

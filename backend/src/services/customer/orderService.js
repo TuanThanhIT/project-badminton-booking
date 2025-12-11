@@ -12,6 +12,7 @@ import {
   Profile,
 } from "../../models/index.js";
 import { sendEmployeesNotification } from "../../utils/sendNotification.js";
+import sequelize from "../../config/db.js";
 
 const createOrderService = async (
   orderStatus,
@@ -24,10 +25,11 @@ const createOrderService = async (
   paymentMethod,
   paymentStatus
 ) => {
+  const t = await sequelize.transaction();
+
   try {
     const status = ["Pending", "Paid", "Completed", "Cancelled"];
-    const checkStatus = status.includes(orderStatus);
-    if (!checkStatus) {
+    if (!status.includes(orderStatus)) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
         "Trạng thái đơn hàng không hợp lệ!"
@@ -40,7 +42,7 @@ const createOrderService = async (
       ],
     });
 
-    if (!user.Profile) {
+    if (!user?.Profile) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
         "Thông tin giao hàng chưa được cập nhật!"
@@ -52,52 +54,59 @@ const createOrderService = async (
     if (!fullName)
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Tên khách hàng không hợp lệ. Vui lòng cập nhật lại thông tin giao hàng!"
+        "Tên khách hàng không hợp lệ!"
       );
     if (!address)
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Địa chỉ khách hàng không hợp lệ. Vui lòng cập nhật lại thông tin giao hàng!"
+        "Địa chỉ khách hàng không hợp lệ!"
       );
     if (!phoneNumber || !/^\d{10}$/.test(phoneNumber))
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Số điện thoại khách hàng không hợp lệ. Vui lòng cập nhật lại thông tin giao hàng!"
+        "Số điện thoại khách hàng không hợp lệ!"
       );
 
     let order;
 
     if (code) {
       const discount = await Discount.findOne({ where: { code } });
+
       if (!discount) {
         throw new ApiError(
           StatusCodes.NOT_FOUND,
           "Mã giảm giá không chính xác!"
         );
       }
-      order = await Order.create({
-        orderStatus,
-        totalAmount,
-        userId,
-        discountId: discount.id,
-        note,
-      });
+
+      order = await Order.create(
+        {
+          orderStatus,
+          totalAmount,
+          userId,
+          discountId: discount.id,
+          note,
+        },
+        { transaction: t }
+      );
     } else {
-      order = await Order.create({
-        orderStatus,
-        totalAmount,
-        userId,
-        note,
-      });
+      order = await Order.create(
+        {
+          orderStatus,
+          totalAmount,
+          userId,
+          note,
+        },
+        { transaction: t }
+      );
     }
 
-    // Gắn thêm orderId vào từng phần tử
     const detailsWithOrderId = orderDetails.map((detail) => ({
       ...detail,
       orderId: order.id,
     }));
 
-    await OrderDetail.bulkCreate(detailsWithOrderId);
+    await OrderDetail.bulkCreate(detailsWithOrderId, { transaction: t });
 
     const methods = ["COD", "MOMO"];
     if (!methods.includes(paymentMethod)) {
@@ -106,6 +115,7 @@ const createOrderService = async (
         "Phương thức thanh toán không hợp lệ!"
       );
     }
+
     const pStatus = ["Pending", "Success", "Cancelled"];
     if (!pStatus.includes(paymentStatus)) {
       throw new ApiError(
@@ -114,12 +124,17 @@ const createOrderService = async (
       );
     }
 
-    await Payment.create({
-      paymentAmount,
-      paymentMethod,
-      paymentStatus,
-      orderId: order.id,
-    });
+    await Payment.create(
+      {
+        paymentAmount,
+        paymentMethod,
+        paymentStatus,
+        orderId: order.id,
+      },
+      { transaction: t }
+    );
+
+    await t.commit();
 
     await sendEmployeesNotification(
       "Có đơn hàng mới",
@@ -130,9 +145,9 @@ const createOrderService = async (
 
     return order.id;
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
+    await t.rollback(); // rollback nếu có lỗi
+
+    if (error instanceof ApiError) throw error;
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
@@ -202,43 +217,49 @@ const getOrdersService = async (userId) => {
   }
 };
 
-const cancelOrderService = async (orderId, cancelReason) => {
+const cancelOrderService = async (orderId, body) => {
+  const transaction = await sequelize.transaction();
   try {
-    const order = await Order.findByPk(orderId);
-    if (!order) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Đơn hàng không tồn tại!");
-    }
-    if (order.orderStatus === "Paid") {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Đơn hàng đã thanh toán không thể hủy trực tiếp. Vui lòng liên hệ cửa hàng để hỗ trợ!"
-      );
-    } else if (order.orderStatus === "Confirmed") {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Đơn hàng đã xác nhận không thể hủy trực tiếp. Vui lòng liên hệ cửa hàng để hỗ trợ!"
-      );
-    }
+    const { reason } = body;
 
-    await order.update({
-      orderStatus: "Cancelled",
-      cancelledBy: "User",
-      cancelReason,
+    // Tìm order kèm payment
+    const order = await Order.findByPk(orderId, {
+      include: [{ model: Payment }],
+      transaction,
+      lock: true,
     });
 
-    const payment = await Payment.findOne({ where: { orderId } });
-    await payment.update({ paymentStatus: "Cancelled" });
-
-    await sendEmployeesNotification(
-      "Đơn hàng đã bị hủy",
-      `Khách hàng vừa hủy đơn #0${orderId}`,
-      "EMPLOYEE",
-      "cancel-order"
-    );
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
+    if (!order) {
+      throw new ApiError(StatusCodes.NOT_FOUND, "Đơn hàng không tồn tại");
     }
+
+    if (order.status !== "PENDING") {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Chỉ có thể hủy đơn hàng đang ở trạng thái PENDING"
+      );
+    }
+
+    // Update order → CANCELED
+    await order.update(
+      {
+        status: "CANCELED",
+        cancelReason: reason,
+        cancelDate: new Date(),
+      },
+      { transaction }
+    );
+
+    // Update payment → FAILED nếu có
+    if (order.Payment) {
+      await order.Payment.update({ status: "FAILED" }, { transaction });
+    }
+
+    await transaction.commit();
+    return { message: "Hủy đơn hàng thành công!" };
+  } catch (error) {
+    await transaction.rollback();
+    if (error instanceof ApiError) throw error;
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };

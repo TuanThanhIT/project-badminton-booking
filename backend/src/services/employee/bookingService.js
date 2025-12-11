@@ -11,6 +11,25 @@ import {
 } from "../../models/index.js";
 import ApiError from "../../utils/ApiError.js";
 import { sendUserNotification } from "../../utils/sendNotification.js";
+import mailer from "../../utils/mailer.js";
+import sequelize from "../../config/db.js";
+
+// Gửi mail đặt sân về cho khách
+const handleSendBookingMail = (booking, type) => {
+  const email = booking?.user?.email;
+  const date = booking.bookingDetails[0].courtSchedule.date;
+  const time = booking.bookingDetails
+    .map(
+      (d) =>
+        `${d.courtSchedule.startTime.substring(
+          0,
+          5
+        )} - ${d.courtSchedule.endTime.substring(0, 5)}`
+    )
+    .join(", ");
+
+  return mailer.sendBookingMail(email, time, date, type);
+};
 
 const getBookingsService = async (
   bookingStatus,
@@ -22,8 +41,8 @@ const getBookingsService = async (
   try {
     const where = {};
 
-    const p = page && page !== "null" ? parseInt(page) : 1;
-    const l = limit && limit !== "null" ? parseInt(limit) : 10;
+    const p = parseInt(page) || 1;
+    const l = parseInt(limit) || 10;
 
     const offset = (p - 1) * l;
 
@@ -43,7 +62,6 @@ const getBookingsService = async (
       where.createdDate = { [Op.between]: [startOfDayUTC, endOfDayUTC] };
     }
 
-    // include user + profile
     const userInclude = {
       model: User,
       as: "user",
@@ -66,7 +84,6 @@ const getBookingsService = async (
       ],
     };
 
-    // Query bookings
     const { rows, count } = await Booking.findAndCountAll({
       where,
       attributes: ["id", "bookingStatus", "totalAmount", "note", "createdDate"],
@@ -102,7 +119,6 @@ const getBookingsService = async (
       order: [["createdDate", "DESC"]],
     });
 
-    // Format lại dữ liệu trả về
     const formatted = rows.map((booking) => {
       const b = booking.toJSON();
 
@@ -147,19 +163,39 @@ const getBookingsService = async (
 
 const confirmedBookingService = async (bookingId) => {
   try {
-    const booking = await Booking.findByPk(bookingId);
+    const booking = await Booking.findByPk(bookingId, {
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["email"],
+        },
+        {
+          model: BookingDetail,
+          as: "bookingDetails",
+          attributes: ["courtScheduleId"],
+          include: [
+            {
+              model: CourtSchedule,
+              as: "courtSchedule",
+              attributes: ["date", "startTime", "endTime"],
+            },
+          ],
+        },
+      ],
+    });
     if (!booking) {
       throw new ApiError(StatusCodes.NOT_FOUND, "Lịch đặt sân không tồn tại!");
     }
     if (booking.bookingStatus === "Cancelled") {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Lịch đặt sân đã hủy không thể xác nhận lại được nữa! Vui lòng đặt sân lại!"
+        "Lịch đặt sân đã hủy không thể xác nhận lại được nữa!"
       );
     } else if (booking.bookingStatus === "Completed") {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Lịch đặt sân đã hoàn thành không thể xác nhận lại được nữa! Vui lòng đặt sân lại!"
+        "Lịch đặt sân đã hoàn thành không thể xác nhận lại được nữa!"
       );
     }
 
@@ -171,130 +207,204 @@ const confirmedBookingService = async (bookingId) => {
       booking.userId,
       "epl-confirm-booking",
       "Lịch đặt sân đã được xác nhận",
-      `Lịch đặt sân #0${bookingId} đã được xác nhận. Hẹn gặp bạn tại sân!`
+      `Lịch đặt sân #0${bookingId} đã được xác nhận.`
     );
+
+    await handleSendBookingMail(booking, "confirm");
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
 
 const completedBookingService = async (bookingId) => {
+  const transaction = await sequelize.transaction();
   try {
-    const booking = await Booking.findByPk(bookingId);
+    const booking = await Booking.findByPk(bookingId, {
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["email"],
+        },
+        {
+          model: BookingDetail,
+          as: "bookingDetails",
+          attributes: ["courtScheduleId"],
+          include: [
+            {
+              model: CourtSchedule,
+              as: "courtSchedule",
+              attributes: ["date", "startTime", "endTime"],
+            },
+          ],
+        },
+      ],
+      transaction,
+    });
+
     if (!booking) {
       throw new ApiError(StatusCodes.NOT_FOUND, "Lịch đặt sân không tồn tại!");
     }
     if (booking.bookingStatus !== "Confirmed") {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Lịch đặt sân không thể hoàn thành nếu lịch đặt sân chưa được xác nhận! Vui lòng kiểm tra lại!"
+        "Lịch đặt sân chưa được xác nhận!"
       );
     }
+
     const paymentBooking = await PaymentBooking.findOne({
       where: { bookingId: booking.id, paymentMethod: "COD" },
+      transaction,
     });
 
-    await booking.update({
-      bookingStatus: "Completed",
-    });
+    await booking.update(
+      {
+        bookingStatus: "Completed",
+      },
+      { transaction }
+    );
 
     if (paymentBooking) {
-      await paymentBooking.update({
-        paymentStatus: "Success",
-        paidAt: new Date(),
-      });
+      await paymentBooking.update(
+        {
+          paymentStatus: "Success",
+          paidAt: new Date(),
+        },
+        { transaction }
+      );
     }
+
+    await transaction.commit();
 
     await sendUserNotification(
       booking.userId,
       "epl-complete-booking",
       "Lịch đặt sân đã hoàn thành",
-      `Lịch đặt sân #0${bookingId} đã hoàn thành. Rất vui được phục vụ bạn tại B-Hub!`
+      `Lịch đặt sân #0${bookingId} đã hoàn thành.`
     );
+
+    await handleSendBookingMail(booking, "complete");
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
+    await transaction.rollback();
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
 
 const cancelBookingService = async (bookingId, cancelReason) => {
+  const transaction = await sequelize.transaction();
   try {
-    const booking = await Booking.findByPk(bookingId);
+    const booking = await Booking.findByPk(bookingId, {
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["email"],
+        },
+        {
+          model: BookingDetail,
+          as: "bookingDetails",
+          include: [
+            {
+              model: CourtSchedule,
+              as: "courtSchedule",
+            },
+          ],
+        },
+      ],
+      transaction,
+    });
+
     if (!booking) {
       throw new ApiError(StatusCodes.NOT_FOUND, "Lịch đặt sân không tồn tại!");
     }
     if (booking.bookingStatus === "Completed") {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Lịch đặt sân đã hoàn thành không thể hủy!"
+        "Lịch đặt sân đã hoàn thành!"
       );
     }
 
     const paymentBooking = await PaymentBooking.findOne({
       where: { bookingId },
+      transaction,
     });
 
     const oldStatus = booking.bookingStatus;
 
-    // xử lý paymentBooking trước
+    // Xử lý thanh toán
     if (oldStatus === "Pending") {
-      await paymentBooking.update({ paymentStatus: "Cancelled" });
+      await paymentBooking.update(
+        { paymentStatus: "Cancelled" },
+        { transaction }
+      );
     } else if (oldStatus === "Paid") {
-      await paymentBooking.update({
-        paymentStatus: "Cancelled",
-        refundAmount: paymentBooking.paymentAmount,
-        refundAt: new Date(),
-      });
-    } else if (oldStatus === "Confirmed") {
-      if (paymentBooking.paymentMethod === "COD") {
-        await paymentBooking.update({ paymentStatus: "Cancelled" });
-      } else {
-        await paymentBooking.update({
+      await paymentBooking.update(
+        {
           paymentStatus: "Cancelled",
           refundAmount: paymentBooking.paymentAmount,
           refundAt: new Date(),
-        });
+        },
+        { transaction }
+      );
+    } else if (oldStatus === "Confirmed") {
+      if (paymentBooking.paymentMethod === "COD") {
+        await paymentBooking.update(
+          { paymentStatus: "Cancelled" },
+          { transaction }
+        );
+      } else {
+        await paymentBooking.update(
+          {
+            paymentStatus: "Cancelled",
+            refundAmount: paymentBooking.paymentAmount,
+            refundAt: new Date(),
+          },
+          { transaction }
+        );
       }
     }
 
-    // rồi mới update trạng thái booking
-    await booking.update({
-      bookingStatus: "Cancelled",
-      cancelledBy: "Employee",
-      cancelReason,
-    });
+    // hủy booking
+    await booking.update(
+      {
+        bookingStatus: "Cancelled",
+        cancelledBy: "Employee",
+        cancelReason,
+      },
+      { transaction }
+    );
 
-    // update lại mở lại các khung giờ đã hủy
-    const ids = await BookingDetail.findAll({
-      where: { bookingId },
-      attributes: ["courtScheduleId"],
-    });
-
-    const courtScheduleIds = ids.map((item) => item.courtScheduleId);
+    // mở lại lịch sân
+    const courtScheduleIds = booking.bookingDetails.map(
+      (item) => item.courtScheduleId
+    );
 
     await CourtSchedule.update(
-      { isAvailable: true },
-      { where: { id: courtScheduleIds } }
+      {
+        isAvailable: true,
+      },
+      {
+        where: { id: courtScheduleIds },
+        transaction,
+      }
     );
+
+    await transaction.commit();
 
     await sendUserNotification(
       booking.userId,
       "epl-cancel-booking",
       "Lịch đặt sân đã bị hủy",
-      `Lịch đặt sân #0${bookingId} đã được cửa hàng hủy theo yêu cầu của khách hàng.`
+      `Lịch đặt sân #0${bookingId} đã bị hủy.`
     );
+
+    await handleSendBookingMail(booking, "cancel");
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
+    await transaction.rollback();
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
+
 const bookingService = {
   getBookingsService,
   confirmedBookingService,

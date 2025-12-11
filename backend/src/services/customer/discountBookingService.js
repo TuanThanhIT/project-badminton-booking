@@ -68,7 +68,7 @@ const applyDiscountBookingService = async (code, bookingAmount) => {
       originalPrice: bookingAmount,
       finalPrice,
       discountValue: discountBooking.value,
-      type: discountBooking.value,
+      type: discountBooking.type,
     };
   } catch (error) {
     if (error instanceof ApiError) {

@@ -9,21 +9,22 @@ import {
   Profile,
   User,
 } from "../../models/index.js";
+import sequelize from "../../config/db.js";
 
 const createFeedbackService = async (content, rate, userId, orderDetailId) => {
+  const t = await sequelize.transaction();
+
   try {
     const user = await User.findByPk(userId);
-    if (!user) {
+    if (!user)
       throw new ApiError(StatusCodes.NOT_FOUND, "Người dùng không tồn tại!");
-    }
+
     const rating = Number(rate);
-    if (Number.isInteger(rating) === false) {
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Sao đánh giá phải là số nguyên!"
+        "Số sao đánh giá không hợp lệ!"
       );
-    } else if (rating < 1 || rating > 5) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Sao đánh giá không hợp lệ!");
     }
 
     const orderDetail = await OrderDetail.findByPk(orderDetailId);
@@ -34,10 +35,10 @@ const createFeedbackService = async (content, rate, userId, orderDetailId) => {
       );
     }
 
-    const productFeedback = await ProductFeedback.findOne({
+    const existingFeedback = await ProductFeedback.findOne({
       where: { userId, orderDetailId },
     });
-    if (productFeedback) {
+    if (existingFeedback) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
         "Bạn đã đánh giá sản phẩm này rồi!"
@@ -47,26 +48,30 @@ const createFeedbackService = async (content, rate, userId, orderDetailId) => {
     const order = await Order.findByPk(orderDetail.orderId);
     if (!order) {
       throw new ApiError(StatusCodes.NOT_FOUND, "Đơn hàng không tồn tại!");
-    } else {
-      if (order.orderStatus !== "Completed") {
-        throw new ApiError(
-          StatusCodes.BAD_REQUEST,
-          "Đơn hàng của bạn không hợp lệ, không thể đánh giá sản phẩm!"
-        );
-      }
+    }
+    if (order.orderStatus !== "Completed") {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Đơn hàng chưa hoàn thành, không thể đánh giá!"
+      );
     }
 
-    await ProductFeedback.create({
-      content,
-      rating,
-      userId,
-      orderDetailId,
-      varientId: orderDetail.varientId,
-    });
+    await ProductFeedback.create(
+      {
+        content,
+        rating,
+        userId,
+        orderDetailId,
+        varientId: orderDetail.varientId,
+      },
+      { transaction: t }
+    );
+
+    await t.commit();
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
+    await t.rollback();
+
+    if (error instanceof ApiError) throw error;
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
@@ -74,9 +79,9 @@ const createFeedbackService = async (content, rate, userId, orderDetailId) => {
 const getFeedbackUpdateService = async (orderDetailId, userId) => {
   try {
     const user = await User.findByPk(userId);
-    if (!user) {
+    if (!user)
       throw new ApiError(StatusCodes.NOT_FOUND, "Người dùng không tồn tại!");
-    }
+
     const orderDetail = await OrderDetail.findByPk(orderDetailId);
     if (!orderDetail) {
       throw new ApiError(
@@ -90,41 +95,34 @@ const getFeedbackUpdateService = async (orderDetailId, userId) => {
     });
 
     if (!productFeedback) {
-      throw new ApiError(
-        StatusCodes.NOT_FOUND,
-        "Đánh giá cho sản phẩm không tồn tại!"
-      );
+      throw new ApiError(StatusCodes.NOT_FOUND, "Đánh giá không tồn tại!");
     }
 
-    const proFeedback = {
+    return {
       content: productFeedback.content,
       rating: productFeedback.rating,
       updatedDate: productFeedback.updatedDate,
     };
-
-    return proFeedback;
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
+    if (error instanceof ApiError) throw error;
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
 
 const updateFeedbackService = async (content, rate, userId, orderDetailId) => {
+  const t = await sequelize.transaction();
+
   try {
     const user = await User.findByPk(userId);
-    if (!user) {
+    if (!user)
       throw new ApiError(StatusCodes.NOT_FOUND, "Người dùng không tồn tại!");
-    }
+
     const rating = Number(rate);
-    if (Number.isInteger(rating) === false) {
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Sao đánh giá phải là số nguyên!"
+        "Số sao đánh giá không hợp lệ!"
       );
-    } else if (rating < 1 || rating > 5) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Sao đánh giá không hợp lệ!");
     }
 
     const orderDetail = await OrderDetail.findByPk(orderDetailId);
@@ -138,28 +136,28 @@ const updateFeedbackService = async (content, rate, userId, orderDetailId) => {
     const productFeedback = await ProductFeedback.findOne({
       where: { userId, orderDetailId },
     });
+
     if (!productFeedback) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Đánh giá không tồn tại");
-    } else {
-      if (
-        productFeedback.content === content &&
-        productFeedback.rating === rating
-      ) {
-        throw new ApiError(
-          StatusCodes.BAD_REQUEST,
-          "Bạn chưa thay đổi nội dung hoặc số sao đánh giá."
-        );
-      }
+      throw new ApiError(StatusCodes.NOT_FOUND, "Đánh giá không tồn tại!");
     }
 
-    await productFeedback.update({
-      content,
-      rating,
-    });
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
+    if (
+      productFeedback.content === content &&
+      productFeedback.rating === rating
+    ) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Bạn chưa thay đổi nội dung hoặc số sao đánh giá!"
+      );
     }
+
+    await productFeedback.update({ content, rating }, { transaction: t });
+
+    await t.commit();
+  } catch (error) {
+    await t.rollback();
+
+    if (error instanceof ApiError) throw error;
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
@@ -181,7 +179,6 @@ const getFeedbackProductService = async (productId) => {
       throw new ApiError(StatusCodes.NOT_FOUND, "Sản phẩm không tồn tại!");
     }
 
-    // Lấy toàn bộ feedback theo varient
     const productFeedbackList = await Promise.all(
       product.varients.map((varient) =>
         ProductFeedback.findAll({
@@ -193,28 +190,22 @@ const getFeedbackProductService = async (productId) => {
 
     const productFeedbacks = productFeedbackList.flat();
 
-    // Lấy thêm user + avatar
-    const productFeedbacksResult = await Promise.all(
+    const result = await Promise.all(
       productFeedbacks.map(async (pf) => {
         const user = await User.findByPk(pf.userId, {
           attributes: ["username"],
-          include: [
-            {
-              model: Profile,
-              attributes: ["avatar"],
-            },
-          ],
+          include: [{ model: Profile, attributes: ["avatar"] }],
         });
 
         return {
-          ...pf.dataValues, // Lấy đúng data Feedback
+          ...pf.dataValues,
           username: user?.username || null,
           avatar: user?.Profile?.avatar || null,
         };
       })
     );
 
-    return productFeedbacksResult;
+    return result;
   } catch (error) {
     if (error instanceof ApiError) throw error;
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
@@ -227,4 +218,5 @@ const productFeedbackService = {
   updateFeedbackService,
   getFeedbackProductService,
 };
+
 export default productFeedbackService;

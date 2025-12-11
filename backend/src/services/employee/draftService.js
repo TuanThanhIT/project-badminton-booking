@@ -12,6 +12,7 @@ import {
   ProductVarient,
 } from "../../models/index.js";
 import { Op } from "sequelize";
+import sequelize from "../../config/db.js";
 
 const createDraftService = async (employeeId, nameCustomer) => {
   try {
@@ -56,54 +57,46 @@ const createAndUpdateDraftService = async (
   beverages,
   products
 ) => {
+  const transaction = await sequelize.transaction();
   try {
-    const draftBooking = await DraftBooking.findByPk(draftId);
+    const draftBooking = await DraftBooking.findByPk(draftId, { transaction });
     if (!draftBooking) {
       throw new ApiError(StatusCodes.NOT_FOUND, "Đơn tạm chưa được tạo!");
-    } else {
-      await draftBooking.update({ note, total });
     }
+
+    await draftBooking.update({ note, total }, { transaction });
 
     // Court schedules
     if (courtSchedules.length !== 0) {
-      const cSchedules = courtSchedules.map((courtSchedule) => ({
-        ...courtSchedule,
-        draftId,
-      }));
-      await DraftBookingItem.bulkCreate(cSchedules);
+      const cSchedules = courtSchedules.map((c) => ({ ...c, draftId }));
+      await DraftBookingItem.bulkCreate(cSchedules, { transaction });
 
       const courtScheduleIds = courtSchedules.map((c) => c.courtScheduleId);
-      console.log("id", courtScheduleIds);
 
       await CourtSchedule.update(
         { isAvailable: false },
-        { where: { id: { [Op.in]: courtScheduleIds } } }
+        { where: { id: { [Op.in]: courtScheduleIds } }, transaction }
       );
     }
 
     // Beverages
-    await DraftBeverageItem.destroy({ where: { draftId } });
+    await DraftBeverageItem.destroy({ where: { draftId }, transaction });
     if (beverages.length !== 0) {
-      const bes = beverages.map((beverage) => ({
-        ...beverage,
-        draftId,
-      }));
-      await DraftBeverageItem.bulkCreate(bes);
+      const bes = beverages.map((b) => ({ ...b, draftId }));
+      await DraftBeverageItem.bulkCreate(bes, { transaction });
     }
 
     // Products
-    await DraftProductItem.destroy({ where: { draftId } });
+    await DraftProductItem.destroy({ where: { draftId }, transaction });
     if (products.length !== 0) {
-      const prods = products.map((product) => ({
-        ...product,
-        draftId,
-      }));
-      await DraftProductItem.bulkCreate(prods);
+      const prods = products.map((p) => ({ ...p, draftId }));
+      await DraftProductItem.bulkCreate(prods, { transaction });
     }
+
+    await transaction.commit();
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
+    await transaction.rollback();
+    if (error instanceof ApiError) throw error;
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };

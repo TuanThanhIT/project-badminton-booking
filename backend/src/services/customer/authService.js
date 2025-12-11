@@ -7,22 +7,19 @@ import { StatusCodes } from "http-status-codes";
 import dotenv from "dotenv";
 import UserOtp from "../../models/userOtp.js";
 import mailer from "../../utils/mailer.js";
+import sequelize from "../../config/db.js";
+
 dotenv.config();
+
 const saltRounds = 10;
 
-/**
- * Đăng ký tài khoản mới
- */
 const createUserService = async (username, email, password) => {
+  let transaction;
   try {
-    const existingUsername = await User.findOne({ where: { username } });
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
     if (!emailRegex.test(email?.trim())) {
       throw new ApiError(StatusCodes.BAD_REQUEST, "Email không hợp lệ!");
     }
-
     if (!username || !password) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
@@ -30,13 +27,13 @@ const createUserService = async (username, email, password) => {
       );
     }
 
+    const existingUsername = await User.findOne({ where: { username } });
     if (existingUsername) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
         "Tên đăng nhập không khả dụng. Vui lòng chọn tên khác!"
       );
     }
-
     const existingEmail = await User.findOne({ where: { email } });
     if (existingEmail) {
       throw new ApiError(
@@ -45,32 +42,43 @@ const createUserService = async (username, email, password) => {
       );
     }
 
-    // hash mật khẩu
     const hashPassword = await bcrypt.hash(password, saltRounds);
 
-    // tạo tài khoản
-    const user = await User.create({
-      username,
-      email,
-      password: hashPassword,
-      roleId: 2,
-    });
+    transaction = await sequelize.transaction();
 
-    await Profile.create({
-      userId: user.id,
-    });
+    const user = await User.create(
+      {
+        username,
+        email,
+        password: hashPassword,
+        roleId: 2,
+      },
+      { transaction }
+    );
 
-    // tạo OTP xác thực
+    await Profile.create(
+      {
+        userId: user.id,
+      },
+      { transaction }
+    );
+
     const otpCode = crypto.randomInt(100000, 999999).toString();
     const otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 phút
 
-    await UserOtp.create({
-      otpCode,
-      otpExpiry,
-      userId: user.id,
-    });
+    await UserOtp.create(
+      {
+        otpCode,
+        otpExpiry,
+        userId: user.id,
+      },
+      { transaction }
+    );
 
-    mailer.sendOtpMail(email, otpCode);
+    await transaction.commit();
+
+    // gửi mail OTP tách riêng
+    await mailer.sendOtpMail(email, otpCode);
 
     const safeUser = {
       id: user.id,
@@ -81,18 +89,16 @@ const createUserService = async (username, email, password) => {
       isActive: user.isActive,
       createdDate: user.createdDate,
     };
-
     return { safeUser };
   } catch (error) {
+    if (transaction) await transaction.rollback();
     if (error instanceof ApiError) throw error;
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
 
-/**
- * Xác thực OTP
- */
 const verifyOtpService = async (email, otpCode, newPassword) => {
+  let transaction;
   try {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email?.trim())) {
@@ -133,18 +139,22 @@ const verifyOtpService = async (email, otpCode, newPassword) => {
       );
     }
 
+    transaction = await sequelize.transaction();
+
     if (!newPassword) {
       user.isVerified = true;
     } else {
-      // hash mật khẩu
       const hashNewPassword = await bcrypt.hash(newPassword, saltRounds);
       user.password = hashNewPassword;
     }
-    await user.save();
+    await user.save({ transaction });
 
     userOtp.isUsed = true;
-    await userOtp.save();
+    await userOtp.save({ transaction });
+
+    await transaction.commit();
   } catch (error) {
+    if (transaction) await transaction.rollback();
     if (error instanceof ApiError) throw error;
     throw new ApiError(
       StatusCodes.INTERNAL_SERVER_ERROR,
@@ -153,16 +163,13 @@ const verifyOtpService = async (email, otpCode, newPassword) => {
   }
 };
 
-/**
- * Gửi lại OTP
- */
 const sentVerifyOtpService = async (email) => {
   try {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
     if (!emailRegex.test(email?.trim())) {
       throw new ApiError(StatusCodes.BAD_REQUEST, "Email không hợp lệ!");
     }
+
     const user = await User.findOne({ where: { email } });
     if (!user) {
       throw new ApiError(
@@ -172,7 +179,7 @@ const sentVerifyOtpService = async (email) => {
     }
 
     const otpCode = crypto.randomInt(100000, 999999).toString();
-    const otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 phút
+    const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
 
     await UserOtp.create({
       otpCode,
@@ -180,7 +187,11 @@ const sentVerifyOtpService = async (email) => {
       userId: user.id,
     });
 
-    await mailer.sendOtpMail(email, otpCode);
+    try {
+      await mailer.sendOtpMail(email, otpCode);
+    } catch (mailErr) {
+      console.error("Gửi OTP mail thất bại:", mailErr);
+    }
   } catch (error) {
     if (error instanceof ApiError) throw error;
     throw new ApiError(
@@ -190,9 +201,6 @@ const sentVerifyOtpService = async (email) => {
   }
 };
 
-/**
- * Đăng nhập
- */
 const handleLoginService = async (username, password) => {
   try {
     const user = await User.findOne({
@@ -206,7 +214,6 @@ const handleLoginService = async (username, password) => {
       ],
     });
 
-    // Không tiết lộ tài khoản có tồn tại hay không
     if (!user) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,

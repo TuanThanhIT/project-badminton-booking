@@ -7,17 +7,18 @@ import {
   ProductVarient,
   User,
 } from "../../models/index.js";
+import sequelize from "../../config/db.js";
 
 const addItemToCartService = async (userId, quantity, varientId) => {
+  const t = await sequelize.transaction();
   try {
     const q = Number(quantity);
     const vaId = Number(varientId);
     if (q < 1)
       throw new ApiError(StatusCodes.BAD_REQUEST, "Số lượng không hợp lệ!");
 
-    // Lấy user & varient (kèm product trong 1 lần truy vấn)
     const [user, varient] = await Promise.all([
-      User.findByPk(userId),
+      User.findByPk(userId, { transaction: t }),
       ProductVarient.findOne({
         where: { id: vaId },
         include: {
@@ -25,6 +26,7 @@ const addItemToCartService = async (userId, quantity, varientId) => {
           as: "product",
           attributes: ["productName", "thumbnailUrl"],
         },
+        transaction: t,
       }),
     ]);
 
@@ -32,29 +34,29 @@ const addItemToCartService = async (userId, quantity, varientId) => {
     if (!varient)
       throw new ApiError(StatusCodes.NOT_FOUND, "Sản phẩm không tồn tại!");
 
-    // Tạo cart nếu chưa có
-    const cart = await Cart.findOrCreate({ where: { userId } }).then(
-      ([c]) => c
-    );
+    const cart = await Cart.findOrCreate({
+      where: { userId },
+      transaction: t,
+    }).then(([c]) => c);
 
-    // Tính giá thực tế
     const price = varient.price * (1 - (varient.discount || 0) / 100);
     if (isNaN(price))
       throw new ApiError(StatusCodes.BAD_REQUEST, "Giá sản phẩm không hợp lệ!");
 
-    // Cập nhật hoặc thêm mới cartItem
     const [cartItem, created] = await CartItem.findOrCreate({
       where: { cartId: cart.id, varientId: vaId },
       defaults: { quantity: q, subTotal: price * q },
+      transaction: t,
     });
 
     if (!created) {
       cartItem.quantity += q;
       cartItem.subTotal = price * cartItem.quantity;
-      await cartItem.save();
+      await cartItem.save({ transaction: t });
     }
 
-    // Chuẩn hóa response
+    await t.commit();
+
     return {
       id: cartItem.id,
       quantity: cartItem.quantity,
@@ -66,6 +68,7 @@ const addItemToCartService = async (userId, quantity, varientId) => {
       price,
     };
   } catch (error) {
+    await t.rollback();
     if (error instanceof ApiError) throw error;
     throw new ApiError(
       StatusCodes.INTERNAL_SERVER_ERROR,
@@ -79,7 +82,6 @@ const getCartItemService = async (userId) => {
     const user = await User.findByPk(userId);
     if (!user) throw new ApiError(StatusCodes.NOT_FOUND, "User không tồn tại!");
 
-    // Lấy hoặc tạo cart, chỉ lấy những thuộc tính cần
     let cart = await Cart.findOne({
       where: { userId },
       attributes: ["id", "totalAmount"],
@@ -89,7 +91,6 @@ const getCartItemService = async (userId) => {
       await cart.reload({ attributes: ["id", "totalAmount"] });
     }
 
-    // Lấy cartItems kèm thông tin variant + product
     const cartItems = await CartItem.findAll({
       where: { cartId: cart.id },
       include: [
@@ -116,7 +117,6 @@ const getCartItemService = async (userId) => {
       ],
     });
 
-    // Convert sang plain object và tính giá sau discount
     const updatedCartItems = cartItems.map((item) => {
       const obj = item.get({ plain: true });
       const price =
@@ -138,18 +138,15 @@ const getCartItemService = async (userId) => {
       };
     });
 
-    // Tính tổng tiền
     const totalAmount = updatedCartItems.reduce(
       (sum, item) => sum + item.subTotal,
       0
     );
 
-    // Convert cart thành plain object và gắn cartItems + totalAmount
     const cartObj = cart.get({ plain: true });
     cartObj.cartItems = updatedCartItems;
     cartObj.totalAmount = totalAmount;
 
-    // Lưu tổng tiền vào DB
     await cart.update({ totalAmount });
 
     return cartObj;
@@ -160,18 +157,23 @@ const getCartItemService = async (userId) => {
 };
 
 const updateQuantityService = async (cartItemId, quantity) => {
+  const t = await sequelize.transaction();
   try {
-    const cartItem = await CartItem.findByPk(cartItemId);
+    const cartItem = await CartItem.findByPk(cartItemId, { transaction: t });
     if (!cartItem) {
       throw new ApiError(
         StatusCodes.NOT_FOUND,
         "Sản phẩm không tồn tại trong giỏ hàng!"
       );
     }
-    const varient = await ProductVarient.findByPk(cartItem.varientId);
+
+    const varient = await ProductVarient.findByPk(cartItem.varientId, {
+      transaction: t,
+    });
     if (!varient) {
       throw new ApiError(StatusCodes.NOT_FOUND, "Sản phẩm không tồn tại!");
     }
+
     if (quantity < 1) {
       throw new ApiError(StatusCodes.BAD_REQUEST, "Số lượng không hợp lệ!");
     }
@@ -186,12 +188,14 @@ const updateQuantityService = async (cartItemId, quantity) => {
     cartItem.quantity = quantity;
     cartItem.subTotal =
       (varient.price - (varient.price * varient.discount) / 100) * quantity;
-    cartItem.save();
+
+    await cartItem.save({ transaction: t });
+
+    await t.commit();
     return cartItem;
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
+    await t.rollback();
+    if (error instanceof ApiError) throw error;
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
@@ -205,12 +209,9 @@ const deleteCartItemService = async (cartItemId) => {
         "Sản phẩm không tồn tại trong giỏ hàng!"
       );
     }
-    const item = await cartItem.destroy();
-    return item;
+    return await cartItem.destroy();
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
+    if (error instanceof ApiError) throw error;
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
@@ -221,12 +222,9 @@ const deleteAllCartItemService = async (userId) => {
     if (!cart) {
       throw new ApiError(StatusCodes.NOT_FOUND, "Giỏ hàng không tồn tại!");
     }
-    const deleteCount = await CartItem.destroy({ where: { cartId: cart.id } });
-    return deleteCount;
+    return await CartItem.destroy({ where: { cartId: cart.id } });
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
+    if (error instanceof ApiError) throw error;
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };

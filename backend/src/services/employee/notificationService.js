@@ -7,6 +7,7 @@ const getNotificationsService = async () => {
     const notifications = await Notification.findAll({
       where: { role: "EMPLOYEE" },
       attributes: ["id", "title", "message", "isRead", "type", "createdDate"],
+      order: [["createdDate", "DESC"]],
     });
     return notifications;
   } catch (error) {

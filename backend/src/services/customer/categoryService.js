@@ -1,7 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import ApiError from "../../utils/ApiError.js";
 import { Category } from "../../models/index.js";
-import { Op, where } from "sequelize";
+import { Op } from "sequelize";
 
 const getCategoriesByGroupNameService = async () => {
   try {

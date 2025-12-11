@@ -79,7 +79,7 @@ const notificationSlice = createSlice({
     ) {
       const notifications = state.notifications;
       const notification = action.payload.notification;
-      notifications.push(notification);
+      notifications.unshift(notification);
     },
     updateLocalNotification(
       state,

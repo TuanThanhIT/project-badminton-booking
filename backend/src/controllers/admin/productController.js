@@ -27,7 +27,7 @@ const createProduct = async (req, res, next) => {
     );
     return res.status(201).json(product);
   } catch (error) {
-    console.error("Create product error:", err);
+    console.error("Create product error:", error);
     next(error);
   }
 };
@@ -68,25 +68,55 @@ const getProductVariantsByProductId = async (req, res, next) => {
     next(error);
   }
 };
-
-const createProductImages = async (req, res, next) => {
+const getProductVariantById = async (req, res, next) => {
   try {
-    const { productId } = req.body;
-    const imageUrls = [];
+    const { variantId } = req.params;
 
-    for (const file of req.files) {
-      const uploaded = await uploadBuffer(file.buffer, "products/images");
-      imageUrls.push(uploaded.secure_url);
-    }
-
-    const productImages = await productAdminService.createProductImagesService(
-      imageUrls,
-      productId
+    const variant = await productAdminService.getProductVariantByIdService(
+      variantId
     );
 
-    return res.status(201).json({
-      message: "Thêm ảnh sản phẩm thành công!",
-      data: productImages,
+    return res.status(200).json({
+      message: "Lấy thông tin biến thể thành công!",
+      data: variant,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+const updateProductVariant = async (req, res, next) => {
+  try {
+    const { variantId } = req.params;
+    const { sku, price, stock, discount, color, size, material } = req.body;
+
+    const updated = await productAdminService.updateProductVariantService(
+      variantId,
+      sku,
+      price,
+      stock,
+      discount,
+      color,
+      size,
+      material
+    );
+
+    res.status(200).json({
+      message: "Cập nhật biến thể thành công!",
+      data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteProductVariant = async (req, res, next) => {
+  try {
+    const { variantId } = req.params;
+
+    await productAdminService.deleteProductVariantService(variantId);
+
+    return res.status(StatusCodes.OK).json({
+      message: "Xóa biến thể thành công!",
     });
   } catch (error) {
     next(error);
@@ -177,15 +207,99 @@ const updateProduct = async (req, res, next) => {
     next(error);
   }
 };
+const createProductImages = async (req, res, next) => {
+  try {
+    const { productId } = req.params;
+
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: "Bạn chưa upload ảnh nào!" });
+    }
+
+    const imageUrls = [];
+
+    for (const file of req.files) {
+      const uploaded = await uploadBuffer(file.buffer, "products/images");
+      imageUrls.push(uploaded.secure_url);
+    }
+
+    const productImages = await productAdminService.createProductImagesService(
+      imageUrls,
+      productId
+    );
+
+    return res.status(201).json({
+      message: "Thêm ảnh sản phẩm thành công!",
+      data: productImages,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+const getProductImages = async (req, res, next) => {
+  try {
+    const { productId } = req.params;
+
+    const images = await productAdminService.getProductImagesService(productId);
+
+    return res.status(200).json({
+      message: "Lấy danh sách ảnh thành công!",
+      data: images,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+const deleteProductImage = async (req, res, next) => {
+  try {
+    const { imageId } = req.params;
+
+    await productAdminService.deleteProductImageService(imageId);
+
+    return res.status(200).json({
+      message: "Xóa ảnh thành công!",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+const updateProductImage = async (req, res, next) => {
+  try {
+    const { imageId } = req.params;
+
+    if (!req.file?.buffer) {
+      return res.status(400).json({ message: "Bạn chưa upload ảnh!" });
+    }
+
+    const uploaded = await uploadBuffer(req.file.buffer, "products/images");
+
+    const updated = await productAdminService.updateProductImageService(
+      imageId,
+      uploaded.secure_url
+    );
+
+    return res.status(200).json({
+      message: "Cập nhật ảnh thành công!",
+      data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 const productController = {
   createProduct,
   createProductVariant,
   createProductImages,
+  getProductImages,
   getAllProducts,
   getProductVariantsByProductId,
+  getProductVariantById,
+  updateProductVariant,
+  updateProductImage,
   getProductsWithPage,
   getProductById,
   updateProduct,
+  deleteProductVariant,
+  deleteProductImage,
 };
 export default productController;

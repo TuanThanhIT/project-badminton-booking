@@ -1,9 +1,14 @@
 import express from "express";
 import usersController from "../../controllers/admin/usersController.js";
 import auth from "../../middlewares/auth.js";
-const authRoute = express.Router();
-const initAdminAuthRoute = (app) => {
-  authRoute.post("/createUsers", usersController.createUserController);
-  app.use("/admin/users", auth, authRoute);
+const usersRoute = express.Router();
+const initUserAdminAuthRoute = (app) => {
+  usersRoute.post("/createUsers", usersController.createUserController);
+  usersRoute.put("/lock/:userId", usersController.lockUserController);
+  usersRoute.put("/unlock/:userId", usersController.unlockUserController);
+  usersRoute.get("/", usersController.getAllUsersController);
+  usersRoute.get("/role/:roleId", usersController.getUsersByRoleController);
+
+  app.use("/admin/users", usersRoute);
 };
-export default initAdminAuthRoute;
+export default initUserAdminAuthRoute;

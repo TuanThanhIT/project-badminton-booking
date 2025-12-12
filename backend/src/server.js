@@ -35,6 +35,7 @@ import initBeverageEmployeeRoute from "./routes/employee/beverageRoute.js";
 import initProductEmployeeRoute from "./routes/employee/productRoute.js";
 import initDraftEmployeeRoute from "./routes/employee/draftRoute.js";
 import initOfflineEmployeeRoute from "./routes/employee/offlineRoute.js";
+import initUserAdminAuthRoute from "./routes/admin/usersRoute.js";
 
 dotenv.config();
 
@@ -67,6 +68,7 @@ initBookingFeedbackCustomerRoute(app);
 initRoleRoute(app);
 initCateAdminRoute(app);
 initProductAdminRoute(app);
+initUserAdminAuthRoute(app);
 initDiscountAdminRoute(app);
 initCourtAdminRoute(app);
 initDiscountBookingAdminRoute(app);

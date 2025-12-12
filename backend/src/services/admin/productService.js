@@ -71,6 +71,59 @@ const createProductVariantService = async (
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
+const getProductVariantByIdService = async (variantId) => {
+  try {
+    const variant = await ProductVarient.findByPk(variantId);
+
+    if (!variant) {
+      throw new ApiError(StatusCodes.NOT_FOUND, "Biến thể không tồn tại!");
+    }
+
+    return variant;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
+const updateProductVariantService = async (
+  variantId,
+  sku,
+  price,
+  stock,
+  discount,
+  color,
+  size,
+  material
+) => {
+  try {
+    const variant = await ProductVarient.findByPk(variantId);
+
+    if (!variant) {
+      throw new ApiError(StatusCodes.NOT_FOUND, "Biến thể không tồn tại!");
+    }
+
+    // Update trường
+    await variant.update({
+      sku,
+      price,
+      stock,
+      discount,
+      color,
+      size,
+      material,
+    });
+
+    return variant;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
+
 const getProductVariantsByProductIdService = async (productId) => {
   try {
     const product = await Product.findByPk(productId);
@@ -90,6 +143,17 @@ const getProductVariantsByProductIdService = async (productId) => {
     }
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
+};
+const deleteProductVariantService = async (variantId) => {
+  const variant = await ProductVarient.findByPk(variantId);
+
+  if (!variant) {
+    throw new ApiError(StatusCodes.NOT_FOUND, "Biến thể không tồn tại!");
+  }
+
+  await variant.destroy();
+
+  return true;
 };
 
 const createProductImagesService = async (imageUrls, productId) => {
@@ -169,7 +233,7 @@ export const getProductsService = async (page = 1, limit = 10, search = "") => {
       ],
       include: [
         {
-          association: "Category",
+          association: "category",
           attributes: ["id", "cateName"],
         },
       ],
@@ -204,6 +268,7 @@ const getProductByIdService = async (productId) => {
       include: [
         {
           model: Category,
+          as: "category",
           attributes: ["id", "cateName"],
         },
       ],
@@ -258,15 +323,64 @@ const updateProductService = async (
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
+const deleteProductImageService = async (imageId) => {
+  try {
+    const image = await ProductImage.findByPk(imageId);
+
+    if (!image) {
+      throw new ApiError(StatusCodes.NOT_FOUND, "Ảnh không tồn tại!");
+    }
+
+    await image.destroy();
+
+    return true;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
+const updateProductImageService = async (imageId, imageUrl) => {
+  try {
+    const image = await ProductImage.findByPk(imageId);
+
+    if (!image) {
+      throw new ApiError(StatusCodes.NOT_FOUND, "Ảnh không tồn tại!");
+    }
+
+    await image.update({ imageUrl });
+
+    return image;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
+const getProductImagesService = async (productId) => {
+  try {
+    const images = await ProductImage.findAll({
+      where: { productId },
+    });
+
+    return images;
+  } catch (error) {
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
 
 const productAdminService = {
   createProductService,
   createProductVariantService,
+  getProductVariantByIdService,
+  updateProductVariantService,
   createProductImagesService,
   getAllProductsService,
   getProductVariantsByProductIdService,
   getProductsService,
+  getProductImagesService,
   getProductByIdService,
   updateProductService,
+  updateProductImageService,
+  deleteProductVariantService,
+  deleteProductImageService,
 };
 export default productAdminService;

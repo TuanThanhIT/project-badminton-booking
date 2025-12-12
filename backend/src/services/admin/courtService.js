@@ -19,6 +19,37 @@ const createCourtService = async (name, location, thumbnailUrl) => {
   }
 };
 
+const updateCourtService = async (courtId, data) => {
+  const court = await Court.findByPk(courtId);
+
+  if (!court) {
+    throw new ApiError(StatusCodes.NOT_FOUND, "Không tìm thấy sân!");
+  }
+
+  await court.update(data);
+
+  return {
+    message: "Cập nhật sân thành công!",
+    court,
+  };
+};
+
+const getAllCourtsService = async () => {
+  return Court.findAll({
+    order: [["name", "ASC"]],
+  });
+};
+
+const getCourtByIdService = async (courtId) => {
+  const court = await Court.findByPk(courtId);
+
+  if (!court) {
+    throw new ApiError(StatusCodes.NOT_FOUND, "Không tìm thấy sân!");
+  }
+
+  return court;
+};
+
 const createCourtPriceService = async (
   dayOfWeek,
   startTime,
@@ -119,5 +150,8 @@ const courtService = {
   createCourtService,
   createCourtPriceService,
   createWeeklySlotsService,
+  updateCourtService,
+  getAllCourtsService,
+  getCourtByIdService,
 };
 export default courtService;

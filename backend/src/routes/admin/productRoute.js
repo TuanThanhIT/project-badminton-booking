@@ -19,10 +19,7 @@ const initProductAdminRoute = (app) => {
   // T?o product (thumbnail)
   productRoute.post(
     "/add",
-uploader.single("thumbnail"),
-    auth,
-    authorize(),
-    uploader.single("file"),
+    uploader.single("thumbnail"),
     productController.createProduct
   );
   // C?p nh?t product
@@ -34,18 +31,7 @@ uploader.single("thumbnail"),
 
   // T?o variant cho product
   productRoute.post(
-    "/images/add",
-    auth,
-    authorize(),
-    uploader.array("files", 5),
-
     "/:productId/variants",
-    productController.createProductVariant
-  );
-"/:productId/variants",
-    productController.createProductVariant
-  );
-"/:productId/variants",
     productController.createProductVariant
   );
 
@@ -55,25 +41,39 @@ uploader.single("thumbnail"),
     productController.getProductVariantsByProductId
   );
 
-  // T?o images cho product
-  productRoute.post(
-    "/:productId/images",
-    uploader.array("images", 5),
-  // L?y variant theo productId
+  // Lấy 1 variant
   productRoute.get(
-    "/:productId/variants",
-    productController.getProductVariantsByProductId
+    "/variant/:variantId",
+    productController.getProductVariantById
   );
 
-  // T?o images cho product
+  // Cập nhật variant
+  productRoute.put(
+    "/variant/:variantId",
+    productController.updateProductVariant
+  );
+  productRoute.delete(
+    "/variant/:variantId",
+    productController.deleteProductVariant
+  );
+
+  // Thêm nhiều ảnh cho product
   productRoute.post(
     "/:productId/images",
     uploader.array("images", 5),
     productController.createProductImages
   );
+  // Lấy ảnh theo productId
+  productRoute.get("/:productId/images", productController.getProductImages);
+  productRoute.delete("/images/:imageId", productController.deleteProductImage);
+  productRoute.put(
+    "/images/:imageId",
+    uploader.single("image"),
+    productController.updateProductImage
+  );
+
   app.use("/admin/product", productRoute);
   // app.use("/admin/product", auth, productRoute);
-  app.use("/admin/product", productRoute);
 };
 
 export default initProductAdminRoute;

@@ -10,4 +10,13 @@ export type ProductVariant = {
   productId: number;
   discountPrice?: number;
 };
-export type CreateVariantInput = Omit<ProductVariant, "id" | "discountPrice">;
+export type CreateVariantInput = {
+  sku: string;
+  price: number;
+  stock: number;
+  discount: number;
+  color?: string;
+  size?: string;
+  material?: string;
+  productId: number;
+};

@@ -8,6 +8,7 @@ import {
   ChevronLast,
   Headset,
   Grid2X2,
+  Rows3,
 } from "lucide-react";
 import { createContext, useState } from "react";
 type SideBarContextType = {
@@ -97,6 +98,16 @@ const Sidebar = () => {
                   <SidebarElement
                     icon={Headset}
                     text="Support"
+                    active={isActive}
+                    alert={true}
+                  />
+                )}
+              </NavLink>
+              <NavLink to={"/admin/courts"} end>
+                {({ isActive }) => (
+                  <SidebarElement
+                    icon={Rows3}
+                    text="Courts"
                     active={isActive}
                     alert={true}
                   />

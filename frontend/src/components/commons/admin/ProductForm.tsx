@@ -5,7 +5,6 @@ import type { ProductFormData } from "../../../types/formData";
 import IconButton from "./IconButton";
 interface Props {
   title: string;
-  submitLabel: string;
   formData: ProductFormData;
   errors: Record<string, string>;
   categories: SimpleCategory[];
@@ -22,7 +21,6 @@ interface Props {
 
 const ProductForm: React.FC<Props> = ({
   title,
-  submitLabel,
   formData,
   errors,
   categories,

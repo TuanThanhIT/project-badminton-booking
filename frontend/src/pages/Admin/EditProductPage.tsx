@@ -160,7 +160,6 @@ const EditProductPage = () => {
   return (
     <ProductForm
       title="Edit Product"
-      submitLabel="Update Product"
       formData={formData}
       errors={errors}
       categories={categories}

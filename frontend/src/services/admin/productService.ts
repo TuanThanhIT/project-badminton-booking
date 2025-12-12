@@ -54,12 +54,12 @@ const createProductVarientService = (data: CreateVarientRequest) => {
 // ------------------------------------------
 // 4. UPLOAD NHIỀU HÌNH ẢNH PRODUCT
 // ------------------------------------------
+// services/productService.ts
 const uploadProductImagesService = (productId: number, files: File[]) => {
   const formData = new FormData();
-  formData.append("productId", String(productId));
   files.forEach((f) => formData.append("images", f));
 
-  return instance.post("/admin/product/images/add", formData, {
+  return instance.post(`/admin/product/${productId}/images`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
 };
@@ -109,30 +109,63 @@ const updateProductWithFileService = (id: number, formData: FormData) => {
 // ------------------------------------------
 // 9. LẤY VARIANTS THEO PRODUCT ID
 // ------------------------------------------
-export const getVariantsByProductIdService = (productId: number) => {
+const getVariantsByProductIdService = (productId: number) => {
   return instance.get<{ message: string; data: ProductVariant[] }>(
     `/admin/product/${productId}/variants`
   );
 };
-
-export const getVariantByIdService = (id: number) => {
-  return instance.get<ProductVariant>(`/admin/variants/${id}`);
+// ------------------------------------------
+// 10. LẤY VARIANTS THEO ID
+// ------------------------------------------
+const getVariantByIdService = (variantId: number) => {
+  return instance.get<{ message: string; data: ProductVariant }>(
+    `/admin/product/variant/${variantId}`
+  );
 };
-
-export const createVariantService = (data: CreateVariantInput) => {
-  return instance.post<ProductVariant>(
+// ------------------------------------------
+// 11. TẠO VARIANTS
+// ------------------------------------------
+const createVariantService = (data: CreateVariantInput) => {
+  return instance.post<{ message: string; data: ProductVariant }>(
     `/admin/product/${data.productId}/variants`,
     data
   );
 };
-
-export const updateVariantService = (id: number, data: ProductVariant) => {
-  return instance.put<ProductVariant>(`/admin/variants/${id}`, data);
+// ------------------------------------------
+// 12. EDIT VARIANTS
+// ------------------------------------------
+const updateVariantService = (
+  variantId: number,
+  data: Partial<ProductVariant>
+) => {
+  return instance.put<{ message: string; data: ProductVariant }>(
+    `/admin/product/variant/${variantId}`,
+    data
+  );
+};
+// ------------------------------------------
+// 12. DELETE VARIANTS
+// ------------------------------------------
+const deleteVariantService = (variantId: number) => {
+  return instance.delete(`/admin/product/variant/${variantId}`);
+};
+// Lấy ảnh
+const getProductImagesService = (pid: number) => {
+  return instance.get(`/admin/product/${pid}/images`);
 };
 
-export const deleteVariantService = (id: number) => {
-  return instance.delete(`/admin/variants/${id}`);
+// Xóa ảnh
+const deleteProductImageService = (imageId: number) => {
+  return instance.delete(`/admin/product/images/${imageId}`);
 };
+
+// Edit ảnh
+const updateProductImageService = (imageId: number, file: File) => {
+  const fd = new FormData();
+  fd.append("image", file);
+  return instance.put(`/admin/product/images/${imageId}`, fd);
+};
+
 // ------------------------------------------
 // EXPORT
 // ------------------------------------------
@@ -146,6 +179,14 @@ const productService = {
   getProductDetailService,
   updateProductService,
   updateProductWithFileService,
+  updateVariantService,
+  updateProductImageService,
+  getVariantsByProductIdService,
+  getVariantByIdService,
+  createVariantService,
+  deleteVariantService,
+  getProductImagesService,
+  deleteProductImageService,
 };
 
 export default productService;

@@ -128,7 +128,6 @@ const AddProductPage = () => {
   return (
     <ProductForm
       title="Add New Product"
-      submitLabel="Save Product"
       formData={formData}
       errors={errors}
       categories={categories}

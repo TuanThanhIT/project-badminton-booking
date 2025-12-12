@@ -1,5 +1,5 @@
 import type { LucideProps } from "lucide-react";
-import { SideBarContext } from "./Sidebar";
+import { SideBarContext } from "../../contexts/sidebarContext";
 import { useContext } from "react";
 type SidebarElementProps = {
   icon: React.ComponentType<LucideProps>;

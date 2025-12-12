@@ -32,27 +32,11 @@ const ThemeToggle = () => {
     </button>
   );
 };
-const SearchBar = () => {
-  return (
-    <button className="flex items-center w-full max-w-md border-solid rounded-lg px-3 py-2 bg-white shadow-sm hover:border-blue-500 hover:border">
-      <Search className="w-5 h-5 text-gray-800 mr-2"></Search>
-      <label className=" outline-none text-gray-700 text-gray-400">
-        Search your page...
-      </label>
-      <div className="ml-auto px-2 py-1 text-xs front-medium bg-gray-100 text-gray-600 rounded-md border">
-        Search
-      </div>
-    </button>
-  );
-};
+
 const Header = () => {
   return (
     <div>
-      <header className="flex justify-between items-center p-4 bg-white shadow ">
-        {/* <h1 className="text-xl font-bold text-blue-600">
-          The Logo will be there
-        </h1> */}
-        <SearchBar />
+      <header className="flex justify-end items-center p-4 bg-white shadow ">
         <nav className="flex items-center space-x-4">
           <div className="">
             <NavLink
@@ -69,36 +53,7 @@ const Header = () => {
               <span>Notification</span>
             </NavLink>
           </div>
-          <div className="">
-            <NavLink
-              to="/#"
-              className={({ isActive }) =>
-                `flex items-center gap-2 transition-colors ${
-                  isActive
-                    ? "text-blue-700"
-                    : "text-gray-700 hover:text-blue-600"
-                }`
-              }
-            >
-              <CircleUserRound />
-              <span>Edit PF</span>
-            </NavLink>
-          </div>
-          <div className="">
-            <NavLink
-              to="/#"
-              className={({ isActive }) =>
-                `group flex items-center gap-2 transition-colors ${
-                  isActive
-                    ? "text-blue-700"
-                    : "text-gray-700 hover:text-blue-600"
-                }`
-              }
-            >
-              <Settings className="w-6 h-6 text-gray-700 group-hover:animate-spin group-hover:text-blue-600" />
-              <span>Setting</span>
-            </NavLink>
-          </div>
+
           <div className="">
             <NavLink
               to="/#"

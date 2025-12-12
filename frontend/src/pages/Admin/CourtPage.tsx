@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import Swal from "sweetalert2";
 
 import courtService from "../../services/admin/courtService";
 import IconButton from "../../components/commons/admin/IconButton";

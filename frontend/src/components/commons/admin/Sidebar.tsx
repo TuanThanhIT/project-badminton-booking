@@ -6,18 +6,12 @@ import {
   UsersRound,
   ChevronFirst,
   ChevronLast,
-  Headset,
   Grid2X2,
   Rows3,
+  Percent,
 } from "lucide-react";
-import { createContext, useState } from "react";
-type SideBarContextType = {
-  expanded: boolean;
-  setExpanded: React.Dispatch<React.SetStateAction<boolean>>;
-};
-export const SideBarContext = createContext<SideBarContextType | undefined>(
-  undefined
-);
+import { useState } from "react";
+import { SideBarContext } from "../../contexts/sidebarContext";
 
 const Sidebar = () => {
   const [expanded, setExpanded] = useState(true);
@@ -70,7 +64,7 @@ const Sidebar = () => {
                 {({ isActive }) => (
                   <SidebarElement
                     icon={Package}
-                    text="Products"
+                    text="Sản phẩm"
                     active={isActive}
                   />
                 )}
@@ -79,7 +73,7 @@ const Sidebar = () => {
                 {({ isActive }) => (
                   <SidebarElement
                     icon={Grid2X2}
-                    text="Categories"
+                    text="Danh mục"
                     active={isActive}
                   />
                 )}
@@ -88,18 +82,8 @@ const Sidebar = () => {
                 {({ isActive }) => (
                   <SidebarElement
                     icon={UsersRound}
-                    text="Users"
+                    text="Người dùng"
                     active={isActive}
-                  />
-                )}
-              </NavLink>
-              <NavLink to={"/admin/support"} end>
-                {({ isActive }) => (
-                  <SidebarElement
-                    icon={Headset}
-                    text="Support"
-                    active={isActive}
-                    alert={true}
                   />
                 )}
               </NavLink>
@@ -107,7 +91,17 @@ const Sidebar = () => {
                 {({ isActive }) => (
                   <SidebarElement
                     icon={Rows3}
-                    text="Courts"
+                    text="Sân cầu lông"
+                    active={isActive}
+                    alert={true}
+                  />
+                )}
+              </NavLink>
+              <NavLink to={"/admin/discount"} end>
+                {({ isActive }) => (
+                  <SidebarElement
+                    icon={Percent}
+                    text="Khuyến mãi"
                     active={isActive}
                     alert={true}
                   />

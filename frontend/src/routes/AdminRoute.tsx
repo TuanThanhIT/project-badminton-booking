@@ -12,6 +12,7 @@ import WorkShiftPage from "../pages/Admin/WorkShiftPage";
 import EditProductPage from "../pages/Admin/EditProductPage";
 import VariantPage from "../pages/Admin/VariantPage";
 import CourtPage from "../pages/Admin/CourtPage";
+import DiscountPage from "../pages/Admin/DiscountPage";
 const AdminRoute = () => {
   return (
     <div>
@@ -24,7 +25,7 @@ const AdminRoute = () => {
           <Route path="/admin/support" element={<SupportPage />}></Route>
           <Route path="/admin/workshift" element={<WorkShiftPage />}></Route>
           <Route path="/admin/products/variants" element={<VariantPage />} />
-
+          <Route path="/admin/discount" element={<DiscountPage />}></Route>
           <Route
             path="/admin/products/add"
             element={<AddProductPage />}

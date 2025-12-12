@@ -2,7 +2,7 @@ import Header from "../commons/admin/Header";
 import Footer from "../commons/admin/Footer";
 import Sidebar from "../commons/admin/Sidebar";
 import { Outlet } from "react-router-dom";
-import { SideBarContext } from "../commons/admin/Sidebar";
+import { SideBarContext } from "../contexts/sidebarContext";
 import { useContext } from "react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";

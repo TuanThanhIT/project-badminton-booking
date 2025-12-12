@@ -1,3 +1,7 @@
+import type { SimpleCategory } from "./category";
+import type { ProductVariant } from "./varient";
+import type { ProductImage } from "./productImages";
+export type ProductResponse = {
 export type ProductInfo = {
   id: number;
   productName: string;
@@ -42,34 +46,6 @@ export type ProductRelatedParams = {
   product_id: number;
 };
 
-export type ProductDetailResponse = {
-  id: number;
-  productName: string;
-  brand: string;
-  description: string;
-  varients: [
-    {
-      id: number;
-      sku: string;
-      price: number;
-      stock: number;
-      discount: number;
-      color: string;
-      size: string;
-      material: string;
-      productId: number;
-      discountPrice: number;
-    }
-  ];
-  images: [
-    {
-      id: number;
-      imageUrl: string;
-      productId: number;
-    }
-  ];
-};
-
 export type ProductVarient = {
   id: number;
   sku: string;
@@ -82,7 +58,6 @@ export type ProductVarient = {
   productId: number;
   discountPrice: number;
 };
-
 export type ProductEplResponse = {
   productName: string;
   thumbnailUrl: string;
@@ -97,4 +72,57 @@ export type ProductEplResponse = {
 
 export type ProductEplRequest = {
   keyword: string;
+};
+//// ADMIN TYPES //////
+export type ProductAdminItem = {
+  id: number;
+  productName: string;
+  brand: string;
+  thumbnailUrl: string;
+  categoryId: number;
+  stock: string;
+  Category: SimpleCategory;
+};
+
+export type Pagination = {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+};
+
+export type ProductListResponse = {
+  statusCode: number;
+  message: string;
+  products: ProductAdminItem[];
+  pagination: Pagination;
+};
+
+export type UpdateProductRequest = {
+  productName: string;
+  brand: string;
+  description: string;
+  thumbnailUrl?: string; // backend s? gi? ?nh cu n?u không g?i
+  categoryId: number;
+};
+
+export type ProductDetailData = {
+  id: number;
+  productName: string;
+  brand: string;
+  description: string;
+  thumbnailUrl?: string | null;
+  categoryId: number;
+  createdDate?: string;
+  updatedDate?: string;
+  Category?: SimpleCategory | null;
+  varients?: ProductVariant[]; // optional array
+  images?: ProductImage[]; // optional array
+};
+
+export type ProductDetailResponse = {
+  message: string;
+  data: ProductDetailData;
 };

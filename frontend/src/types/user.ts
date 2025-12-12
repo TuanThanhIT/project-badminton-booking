@@ -30,3 +30,39 @@ export type CheckoutInfoResponse = {
   address: string;
   phoneNumber: string;
 };
+//admin
+export type UserResponse = {
+  id: number;
+  fullName: string;
+  email: string;
+  roleId: number;
+  isActive: boolean;
+  createdDate: string;
+};
+export type CreatedUser = {
+  id: number;
+  fullName: string;
+  email: string;
+  roleId: number;
+  isActive: boolean;
+  createdDate: string;
+};
+export type UserItem = {
+  id: number;
+  username: string;
+  email: string;
+  isVerified: boolean;
+  isActive: boolean;
+  roleId: number;
+  createdDate: string;
+  updatedDate: string;
+  Role?: {
+    id: number;
+    roleName: string;
+  };
+};
+export type CreateUserRequest = {
+  username: string;
+  password: string;
+  email: string;
+};

@@ -71,6 +71,7 @@ initBookingFeedbackCustomerRoute(app);
 initRoleRoute(app);
 initCateAdminRoute(app);
 initProductAdminRoute(app);
+initUserAdminAuthRoute(app);
 initDiscountAdminRoute(app);
 initCourtAdminRoute(app);
 initDiscountBookingAdminRoute(app);

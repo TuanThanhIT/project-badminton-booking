@@ -4,6 +4,7 @@ import {
 } from "../../types/category";
 import instance from "../../utils/axiosCustomize";
 
+// User Category Services
 const getCategoriesService = () =>
   instance.get<CategoryResponse[]>("/user/category/list");
 
@@ -17,9 +18,11 @@ const getAllGroupName = () =>
   instance.get<string[]>(`/user/category/group/list`);
 
 const categoryService = {
+  // User services
   getCategoriesService,
   getOtherCategoriesService,
   getCatesService,
   getAllGroupName,
 };
+
 export default categoryService;

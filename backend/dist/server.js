@@ -72,6 +72,7 @@ app.use((0, _cors["default"])());
 (0, _roleRoute["default"])(app);
 (0, _cateRoute["default"])(app);
 (0, _productRoute["default"])(app);
+(0, _usersRoute["default"])(app);
 (0, _discountRoute["default"])(app);
 (0, _courtRoute["default"])(app);
 (0, _discountBookingRoute["default"])(app);

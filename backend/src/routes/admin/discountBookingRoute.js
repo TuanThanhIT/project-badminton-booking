@@ -9,7 +9,7 @@ const initDiscountBookingAdminRoute = (app) => {
   discountBookingRoute.post(
     "/add",
     auth,
-    authorize(),
+    authorize("ADMIN"),
     discountBookingController.createDiscountBooking
   );
   app.use("/admin/discount/booking", discountBookingRoute);

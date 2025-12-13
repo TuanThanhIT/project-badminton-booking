@@ -6,10 +6,30 @@ import authorize from "../../middlewares/authorize.js";
 const cateRoute = express.Router();
 
 const initCateAdminRoute = (app) => {
-  cateRoute.post("/add", categoryAdminController.createCategory);
-  cateRoute.get("/", categoryAdminController.getCategories);
-  cateRoute.put("/edit/:id", categoryAdminController.updateCategory);
-  cateRoute.get("/list", categoryAdminController.getListCategory);
+  cateRoute.post(
+    "/add",
+    auth,
+    authorize("ADMIN"),
+    categoryAdminController.createCategory
+  );
+  cateRoute.get(
+    "/",
+    auth,
+    authorize("ADMIN"),
+    categoryAdminController.getCategories
+  );
+  cateRoute.put(
+    "/edit/:id",
+    auth,
+    authorize("ADMIN"),
+    categoryAdminController.updateCategory
+  );
+  cateRoute.get(
+    "/list",
+    auth,
+    authorize("ADMIN"),
+    categoryAdminController.getListCategory
+  );
   app.use("/admin/category", cateRoute);
 };
 export default initCateAdminRoute;

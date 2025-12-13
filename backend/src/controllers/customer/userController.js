@@ -1,5 +1,5 @@
 import userService from "../../services/customer/userService.js";
-import uploadFile from "../../utils/upload.js";
+import uploadBuffer from "../../utils/cloudinary.js";
 
 const getProfile = async (req, res, next) => {
   try {
@@ -15,12 +15,11 @@ const updateProfile = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { fullName, dob, gender, address, phoneNumber } = req.body;
-
     // Nếu có file avatar
     let avatar;
-    if (req.file?.path) {
-      const upload = await uploadFile(req.file.path);
-      avatar = upload.secure_url;
+    if (req.file?.buffer) {
+      const uploaded = await uploadBuffer(req.file.buffer, "profiles");
+      avatar = uploaded.secure_url;
     }
 
     // Tạo object chứa những trường tồn tại trong req.body

@@ -4,7 +4,7 @@ import type { ColumnsType } from "antd/es/table";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import type { ProductVariant } from "../../../src/types/varient";
-import productService from "../../services/admin/productService";
+import productService from "../../services/Admin/productService";
 import IconButton from "../../components/commons/admin/IconButton";
 import AddVariantModal from "../../components/commons/admin/AddVariantModal";
 import EditVariantModal from "../../components/commons/admin/EditVariantModal";

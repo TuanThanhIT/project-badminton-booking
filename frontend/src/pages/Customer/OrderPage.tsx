@@ -73,7 +73,7 @@ const OrderPage = () => {
   const filteredOrders =
     filterStatus === "All"
       ? activeOrders
-      : activeOrders.filter((o) => o.orderStatus === filterStatus);
+      : activeOrders.filter((o: any) => o.orderStatus === filterStatus);
 
   const handlePaymentAgain = async (orderId: number, totalAmount: number) => {
     try {

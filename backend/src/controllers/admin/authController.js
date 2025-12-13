@@ -1,4 +1,5 @@
-import authService from "../../services/admin/authService";
+import authService from "../../services/admin/authService.js";
+
 const createAdminController = async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
@@ -12,7 +13,20 @@ const createAdminController = async (req, res, next) => {
     next(error);
   }
 };
+
+const handleLogin = async (req, res) => {
+  const { username, password } = req.body;
+  const data = await authService.handleLoginService(username, password);
+  return res.status(200).json(data);
+};
+
+const getAdminAccount = async (req, res) => {
+  return res.status(200).json(req.user);
+};
+
 const authController = {
   createAdminController,
+  handleLogin,
+  getAdminAccount,
 };
 export default authController;

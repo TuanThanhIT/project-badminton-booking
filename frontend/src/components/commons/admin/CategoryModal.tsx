@@ -5,7 +5,7 @@ import {
 } from "../../../schemas/FormCreateCategorySchema";
 import type { HandleCreateCategory } from "../../../types/category";
 import { toast } from "react-toastify";
-import categoryService from "../../../services/admin/categoryService";
+import categoryService from "../../../services/Admin/categoryService";
 
 const AddCategoryModal: React.FC<HandleCreateCategory> = ({
   isOpen,

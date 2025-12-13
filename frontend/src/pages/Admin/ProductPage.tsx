@@ -19,7 +19,7 @@ import {
 } from "chart.js";
 import { Plus, Gift, Banknote, LineChart } from "lucide-react";
 import { useEffect, useState } from "react";
-import productService from "../../services/admin/productService";
+import productService from "../../services/Admin/productService";
 
 ChartJS.register(
   ArcElement,

@@ -9,8 +9,26 @@ const initDiscountAdminRoute = (app) => {
   discountRoute.post(
     "/add",
     auth,
-    authorize(),
+    authorize("ADMIN"),
     discountController.createDiscount
+  );
+  discountRoute.delete(
+    "/delete/:id",
+    auth,
+    authorize("ADMIN"),
+    discountController.deleteDiscount
+  );
+  discountRoute.patch(
+    "/update/:id",
+    auth,
+    authorize("ADMIN"),
+    discountController.updateDiscount
+  );
+  discountRoute.get(
+    "/list",
+    auth,
+    authorize("ADMIN"),
+    discountController.getDiscounts
   );
   app.use("/admin/discount", discountRoute);
 };

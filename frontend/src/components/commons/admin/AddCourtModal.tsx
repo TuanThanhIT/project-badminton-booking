@@ -1,6 +1,6 @@
 import React from "react";
 import CourtForm from "./CourtForm";
-import courtService from "../../../services/admin/courtService";
+import courtService from "../../../services/Admin/courtService";
 import type { CreateCourtRequest } from "../../../types/court";
 
 interface Props {

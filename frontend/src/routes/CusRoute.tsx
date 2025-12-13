@@ -26,48 +26,43 @@ import BookingPage from "../pages/Customer/BookingPage";
 
 const CustomerRoute = () => {
   return (
-    <div>
-      <Routes>
-        <Route path="/" element={<CustomerPublicLayout />}>
-          <Route index element={<GuestHomePage />}></Route>
-          <Route path="contact" element={<ContactPage />}></Route>
-          <Route path="about" element={<AboutPage />}></Route>
-          <Route path="login" element={<LoginPage />}></Route>
-          <Route path="register" element={<RegisterPage />}></Route>
-          <Route path="verify-otp" element={<OTPPage />}></Route>
-          <Route path="forgotpass" element={<ForgotPasswordPage />}></Route>
-        </Route>
-        <Route
-          path="/"
-          element={
-            <AuthGuard>
-              <CustomerPrivateLayout />
-            </AuthGuard>
-          }
-        >
-          <Route path="home" element={<HomePage />}></Route>
-          <Route path="products" element={<ProductPage />}></Route>
-          <Route path="product/:id" element={<ProductDetailPage />}></Route>
-          <Route path="booking" element={<BookingCourtPage />}></Route>
-          <Route path="history" element={<HistoryPage />}></Route>
-          <Route path="profile" element={<ProfilePage />}></Route>
-          <Route path="cart" element={<CartPage />}></Route>
-          <Route path="checkout" element={<CheckoutPage />}></Route>
-          <Route path="orders" element={<OrderPage />}></Route>
-          <Route path="bookings" element={<BookingPage />}></Route>
-          <Route path="orders/success" element={<OrderSuccessPage />}></Route>
-          <Route
-            path="booking/success"
-            element={<BookingSuccessPage />}
-          ></Route>
-          <Route path="momo-return" element={<MomoReturnPage />}></Route>
-          <Route
-            path="booking/:id"
-            element={<BookingCourtDetailPage />}
-          ></Route>
-        </Route>
-      </Routes>
-    </div>
+    <Routes>
+      {/* Public */}
+      <Route element={<CustomerPublicLayout />}>
+        <Route index element={<GuestHomePage />} />
+        <Route path="contact" element={<ContactPage />} />
+        <Route path="about" element={<AboutPage />} />
+        <Route path="login" element={<LoginPage />} />
+        <Route path="register" element={<RegisterPage />} />
+        <Route path="verify-otp" element={<OTPPage />} />
+        <Route path="forgotpass" element={<ForgotPasswordPage />} />
+      </Route>
+
+      {/* Private */}
+      <Route
+        element={
+          <AuthGuard>
+            <CustomerPrivateLayout />
+          </AuthGuard>
+        }
+      >
+        <Route path="home" element={<HomePage />} />
+        <Route path="products" element={<ProductPage />} />
+        <Route path="product/:id" element={<ProductDetailPage />} />
+        <Route path="booking" element={<BookingCourtPage />} />
+        <Route path="history" element={<HistoryPage />} />
+        <Route path="profile" element={<ProfilePage />} />
+        <Route path="cart" element={<CartPage />} />
+        <Route path="checkout" element={<CheckoutPage />} />
+        <Route path="orders" element={<OrderPage />} />
+        <Route path="bookings" element={<BookingPage />} />
+        <Route path="orders/success" element={<OrderSuccessPage />} />
+        <Route path="booking/success" element={<BookingSuccessPage />} />
+        <Route path="momo-return" element={<MomoReturnPage />} />
+        <Route path="booking/:id" element={<BookingCourtDetailPage />} />
+      </Route>
+    </Routes>
   );
 };
+
 export default CustomerRoute;

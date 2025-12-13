@@ -1,7 +1,7 @@
 import type { SimpleCategory } from "./category";
 import type { ProductVariant } from "./varient";
 import type { ProductImage } from "./productImages";
-export type ProductResponse = {
+
 export type ProductInfo = {
   id: number;
   productName: string;
@@ -104,7 +104,7 @@ export type UpdateProductRequest = {
   productName: string;
   brand: string;
   description: string;
-  thumbnailUrl?: string; // backend s? gi? ?nh cu n?u không g?i
+  thumbnailUrl?: string; // backend s? gi? ?nh cu n?u khï¿½ng g?i
   categoryId: number;
 };
 

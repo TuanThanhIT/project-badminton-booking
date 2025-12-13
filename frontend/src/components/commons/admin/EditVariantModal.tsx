@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import productService from "../../../services/admin/productService";
+import productService from "../../../services/Admin/productService";
 import VariantForm from "./VariantForm";
 
 type EditVariantModalProps = {

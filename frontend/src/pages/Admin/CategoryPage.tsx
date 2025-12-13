@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { PlusCircle, Search } from "lucide-react";
 import { toast } from "react-toastify";
-import categoryService from "../../services/admin/categoryService";
+import categoryService from "../../services/Admin/categoryService";
 import type { CategoryItem } from "../../types/category";
 import type { ApiErrorType } from "../../types/error";
 import AddCategoryModal from "../../components/commons/admin/CategoryModal";

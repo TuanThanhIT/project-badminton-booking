@@ -1,26 +1,21 @@
-import { NavLink } from "react-router-dom";
-import {
-  CircleUserRound,
-  Settings,
-  LogOut,
-  Sun,
-  Moon,
-  BellRing,
-  Search,
-} from "lucide-react";
-import { useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { LogOut, Sun, Moon, BellRing, UserPlus, Search } from "lucide-react";
+import { useContext, useState } from "react";
+import { AuthContext } from "../../contexts/authContext";
+
 const ThemeToggle = () => {
   const [darkMode, setDarkMode] = useState(false);
+
   return (
     <button
       onClick={() => setDarkMode(!darkMode)}
-      className={`relative w-12 h-6 flex items-center rounded-full p-1 border-1 border-gray-700 transition-colors ${
+      className={`relative w-12 h-6 flex items-center rounded-full p-1 border transition-colors ${
         darkMode ? "bg-gray-600" : "bg-gray-200"
-      } hover:border-blue-500`}
+      }`}
     >
       <span
-        className={`absolute flex left-0 items-center justify-center w-5 h-5 rounded-full transition-transform duration-300 ${
-          darkMode ? "translate-x-6.5 bg-black" : "translate-x-0 bg-gray-100"
+        className={`absolute flex items-center justify-center w-5 h-5 rounded-full transition-transform duration-300 ${
+          darkMode ? "translate-x-6.5 bg-black" : "translate-x-0 bg-white"
         }`}
       >
         {darkMode ? (
@@ -34,49 +29,103 @@ const ThemeToggle = () => {
 };
 
 const Header = () => {
-  return (
-    <div>
-      <header className="flex justify-end items-center p-4 bg-white shadow ">
-        <nav className="flex items-center space-x-4">
-          <div className="">
-            <NavLink
-              to="/#"
-              className={({ isActive }) =>
-                `group flex items-center gap-2 transition-colors ${
-                  isActive
-                    ? "text-blue-700"
-                    : "text-gray-700 hover:text-blue-600"
-                }`
-              }
-            >
-              <BellRing className="w-6 h-6 group-hover:animate-bounce group-hover:text-blue-600" />
-              <span>Notification</span>
-            </NavLink>
-          </div>
+  const navigate = useNavigate();
+  const { auth, setAuth } = useContext(AuthContext);
 
-          <div className="">
-            <NavLink
-              to="/#"
-              className={({ isActive }) =>
-                `flex items-center gap-2 transition-colors ${
-                  isActive
-                    ? "text-blue-700"
-                    : "text-gray-700 hover:text-blue-600"
-                }`
-              }
-            >
-              <LogOut />
-              <span>Logout</span>
-            </NavLink>
+  const handleLogout = () => {
+    setAuth({
+      isAuthenticated: false,
+      user: { id: 0, email: "", username: "", role: "" },
+    });
+
+    localStorage.clear();
+    localStorage.removeItem("persist:root");
+    navigate("/admin/login");
+  };
+
+  return (
+    <header className="flex justify-between items-center px-6 py-3 bg-white shadow">
+      {/* LEFT */}
+      <div className="flex items-center w-full max-w-md">
+        <div
+          className="
+      flex items-center w-full
+      px-4 py-2.5
+      bg-white
+      border border-gray-200
+      rounded-xl
+      shadow-sm
+      transition-all
+      focus-within:border-sky-500
+      focus-within:shadow-md
+    "
+        >
+          <Search className="w-5 h-5 text-gray-500 mr-3" />
+
+          <input
+            type="text"
+            placeholder="Tìm kiếm nhanh trong trang..."
+            className="
+        flex-1
+        text-sm
+        text-gray-700
+        placeholder-gray-400
+        outline-none
+        bg-transparent
+      "
+          />
+
+          <div
+            className="
+        ml-3
+        px-2 py-1
+        text-xs font-medium
+        bg-gray-100
+        text-gray-600
+        rounded-md
+        border
+        select-none
+      "
+          >
+            Tìm kiếm
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-px h-6 bg-gray-400"></div>
-            <ThemeToggle />
-            <div className="w-px h-6 bg-gray-400"></div>
-          </div>
-        </nav>
-      </header>
-    </div>
+        </div>
+      </div>
+
+      {/* RIGHT */}
+      <nav className="flex items-center space-x-4">
+        <NavLink
+          to="/#"
+          className="group flex items-center gap-2 text-gray-700 hover:text-sky-600"
+        >
+          <BellRing className="w-6 h-6 group-hover:animate-bounce" />
+          <span className="font-medium">Thông báo</span>
+        </NavLink>
+
+        <NavLink
+          to="/admin/profile"
+          className="group flex items-center gap-2 text-gray-700 hover:text-sky-600"
+        >
+          <UserPlus className="w-5 h-5" />
+          <span className="font-medium">{auth.user.username}</span>
+        </NavLink>
+
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 text-gray-700 hover:text-sky-600"
+        >
+          <LogOut className="w-5 h-5" />
+          Logout
+        </button>
+
+        <div className="flex items-center gap-3">
+          <div className="w-px h-6 bg-gray-300" />
+          <ThemeToggle />
+          <div className="w-px h-6 bg-gray-300" />
+        </div>
+      </nav>
+    </header>
   );
 };
+
 export default Header;

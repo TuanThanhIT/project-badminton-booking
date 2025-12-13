@@ -1,141 +1,126 @@
-import React, { useState } from "react";
-import { UserRound, Lock } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { FormLoginSchema, type formLogin } from "../../schemas/FormLoginSchema";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../../components/contexts/authContext";
+import type { ApiErrorType } from "../../types/error";
+import authService from "../../services/Admin/authService";
 
-const LoginPage = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+const AdminLoginPage = () => {
+  const navigate = useNavigate();
+  const { setAuth } = useContext(AuthContext);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isDirty, isValid },
+  } = useForm<formLogin>({
+    resolver: zodResolver(FormLoginSchema),
+    defaultValues: { username: "admin", password: "123456789" },
+    mode: "onChange",
+  });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const onSubmit = async (data: formLogin) => {
+    try {
+      const res = await authService.loginAdminService(data);
+      localStorage.setItem("access_token", res.data.access_token);
 
-    if (!username || !password) {
-      setError("Please fill in both username and password.");
-      return;
+      setAuth({
+        isAuthenticated: true,
+        user: {
+          id: res.data?.user?.id || 0,
+          email: res.data?.user?.email || "",
+          username: res.data?.user?.username || "",
+          role: res.data?.user?.role || "",
+        },
+      });
+
+      toast.success("Đăng nhập thành công! B-Hub rất vui được gặp lại bạn");
+      setTimeout(() => {
+        navigate("/admin/dashboard");
+      }, 2000);
+    } catch (error) {
+      const apiError = error as ApiErrorType;
+      toast.error(apiError.userMessage);
     }
-
-    setError("");
-    alert("Đăng nhập thành công!");
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gradient-to-r from-blue-400 to-blue-100">
-      <div className="bg-white w-[90%] max-w-5xl h-[80%] rounded-2xl shadow-2xl flex overflow-hidden">
-        {/* Left side */}
-        <div className="relative w-1/2">
+    <div className="min-h-screen flex items-center justify-center p-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 bg-white border border-gray-300 rounded-2xl w-full max-w-4xl">
+        {/* Bên hình minh họa */}
+        <div className="flex items-center justify-center bg-sky-600 rounded-l-2xl">
           <img
-            src="/img/bg-admin-login.jpg"
-            alt="House background"
-            className="w-full h-[80%] object-cover"
+            src="/img/logo-admin.webp"
+            alt="Đăng nhập nhân viên"
+            className="w-full h-full object-cover rounded-l-2xl"
           />
+        </div>
 
-          {/* Overlay gradient */}
-          <div className="absolute inset-0 bg-black/50"></div>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex flex-col justify-center gap-4 p-10"
+        >
+          <h1 className="text-3xl font-bold text-sky-700 mb-6 text-center">
+            Chào mừng quản trị viên của B-Hub
+          </h1>
 
-          {/* Logo + Text content */}
-          <div className="absolute top-8 left-8 text-white flex items-center gap-2">
-            <div className="bg-white/20 p-2 rounded-full">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-6 h-6 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 12l2-2m0 0l7-7 7 7M13 5v6h6"
-                />
-              </svg>
-            </div>
-            <span className="text-2xl font-bold tracking-wide">B-Hub</span>
-          </div>
-
-          {/* Slogan */}
-          <div className="absolute bottom-12 left-10 text-white">
-            <h2 className="text-3xl font-bold mb-2">
-              Find Your <span className="text-blue-400">Perfect</span> Space
-            </h2>
-            <p className="text-white/80 w-3/4">
-              Connect to your personal entertainment space—simple, reliable, and
-              inspiring.
+          {/* Username */}
+          <div className="flex flex-col gap-1">
+            <label className="font-medium">Tên đăng nhập</label>
+            <input
+              placeholder="Tên đăng nhập"
+              {...register("username")}
+              className="rounded-md shadow-sm p-2 px-4 outline-none border border-gray-300 focus:ring-2 focus:ring-sky-400"
+            />
+            {/* Dành trước không gian cho lỗi */}
+            <p className="text-red-500 text-sm h-5">
+              {errors.username ? errors.username.message : ""}
             </p>
           </div>
-        </div>
 
-        {/* Right side */}
-        <div className="w-1/2 flex flex-col justify-center items-center px-10">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2 pb-3">
-            Get Started
-          </h1>
-          <p className="text-gray-500 mb-6">
-            Welcome back! Please log in to continue.
+          {/* Password */}
+          <div className="flex flex-col gap-1">
+            <label className="font-medium">Mật khẩu</label>
+            <input
+              type="password"
+              placeholder="Mật khẩu"
+              {...register("password")}
+              className="rounded-md shadow-sm p-2 px-4 outline-none border border-gray-300 focus:ring-2 focus:ring-sky-400"
+            />
+            <p className="text-red-500 text-sm h-5">
+              {errors.password ? errors.password.message : ""}
+            </p>
+          </div>
+
+          {/* Remember me */}
+          <div className="flex items-center mb-4">
+            <input
+              type="checkbox"
+              id="rememberMe"
+              name="rememberMe"
+              className="mr-1 cursor-pointer"
+            />
+            <label htmlFor="rememberMe">Ghi nhớ đăng nhập</label>
+          </div>
+
+          {/* Submit */}
+          <button
+            type="submit"
+            className="bg-sky-600 hover:bg-sky-700 text-white py-2 rounded-2xl font-semibold text-lg transition"
+            disabled={!isDirty && !isValid}
+          >
+            Đăng nhập
+          </button>
+
+          <p className="text-center text-gray-500 text-sm mt-3">
+            Tài khoản admin được cấp bởi quản lý.
           </p>
-
-          <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-5">
-            {/* Username */}
-            <div
-              className={`flex items-center border rounded-lg px-3 py-2 ${
-                error && !username ? "border-red-500" : "border-gray-300"
-              } focus-within:border-blue-500`}
-            >
-              <UserRound className="text-gray-400 mr-2" />
-              <input
-                type="text"
-                placeholder="Enter your username"
-                className="w-full outline-none text-gray-700"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-            </div>
-
-            {/* Password */}
-            <div
-              className={`flex items-center border rounded-lg px-3 py-2 ${
-                error && !password ? "border-red-500" : "border-gray-300"
-              } focus-within:border-blue-500`}
-            >
-              <Lock className="text-gray-400 mr-2" />
-              <input
-                type="password"
-                placeholder="Enter your password"
-                className="w-full outline-none text-gray-700"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-
-            {/* Remember + Forgot */}
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center space-x-2 text-gray-600">
-                <input type="checkbox" className="accent-blue-600 w-4 h-4" />
-                <span>Remember me</span>
-              </label>
-
-              <a href="#" className="text-blue-600 hover:underline">
-                Forgot password?
-              </a>
-            </div>
-
-            {/* Error */}
-            {error && (
-              <p className="text-red-500 text-sm text-center">{error}</p>
-            )}
-
-            {/* Submit */}
-            <button
-              type="submit"
-              className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
-            >
-              Login
-            </button>
-          </form>
-        </div>
+        </form>
       </div>
     </div>
   );
 };
 
-export default LoginPage;
+export default AdminLoginPage;

@@ -1,13 +1,13 @@
 import beverageService from "../../services/admin/beverageService.js";
-import uploadFile from "../../utils/upload.js";
+import uploadBuffer from "../../utils/cloudinary.js";
 
 const addBeverage = async (req, res, next) => {
   try {
     const { name, price, stock } = req.body;
     let thumbnailUrl;
-    if (req.file?.path) {
-      const upload = await uploadFile(req.file.path);
-      thumbnailUrl = upload.secure_url;
+    if (req.file?.buffer) {
+      const uploaded = await uploadBuffer(req.file.buffer, "beverages");
+      thumbnailUrl = uploaded.secure_url;
     }
     const beverage = await beverageService.addBeverageService(
       name,

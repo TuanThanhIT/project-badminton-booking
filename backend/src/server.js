@@ -39,6 +39,8 @@ import initDraftEmployeeRoute from "./routes/employee/draftRoute.js";
 import initOfflineEmployeeRoute from "./routes/employee/offlineRoute.js";
 import initNotificationEmployeeRoute from "./routes/employee/notificationRoute.js";
 import initNotificationCustomerRoute from "./routes/customer/notificationRoute.js";
+import initAdminAuthRoute from "./routes/admin/authRoute.js";
+import initUserAdminAuthRoute from "./routes/admin/usersRoute.js";
 
 dotenv.config();
 
@@ -68,16 +70,17 @@ initBookingCustomerRoute(app);
 initBookingFeedbackCustomerRoute(app);
 
 // Admin
+initAdminAuthRoute(app);
 initRoleRoute(app);
 initCateAdminRoute(app);
 initProductAdminRoute(app);
-initUserAdminAuthRoute(app);
 initDiscountAdminRoute(app);
 initCourtAdminRoute(app);
 initDiscountBookingAdminRoute(app);
 initWorkShiftAdminRoute(app);
 initBeverageAdminRoute(app);
 initNotificationCustomerRoute(app);
+initUserAdminAuthRoute(app);
 
 // Employee
 initAuthEmployeeRoute(app);

@@ -1,5 +1,4 @@
 import { NavLink } from "react-router-dom";
-import { SidebarElement } from "./SidebarElement";
 import {
   LayoutDashboard,
   Package,
@@ -10,108 +9,106 @@ import {
   Rows3,
   Percent,
 } from "lucide-react";
-import { useState } from "react";
+import { useContext } from "react";
 import { SideBarContext } from "../../contexts/sidebarContext";
+import { SidebarElement } from "./SidebarElement";
 
 const Sidebar = () => {
-  const [expanded, setExpanded] = useState(true);
+  const { expanded, setExpanded } = useContext(SideBarContext)!;
+
   return (
-    <aside className="h-screen sticky top-0">
-      <nav className="h-full flex flex-col border-r border-gray-200 shadow-sm">
-        <div className="p-2 pb-2 flex justify-between items-center">
-          <div className="flex items-center gap-2 h-20">
+    <aside className="h-screen bg-white border-r border-gray-200 overflow-hidden">
+      <nav className="h-full flex flex-col">
+        {/* LOGO + TOGGLE */}
+        <div className="flex items-center justify-between px-3 py-4">
+          <div className="flex items-center gap-2 overflow-hidden">
             <img
               src="/img/logo_badminton.jpg"
-              className={
-                expanded ? "w-18 border rounded-xl border-gray-200 " : "w-0"
-              }
-              alt=""
+              alt="logo"
+              className={`transition-all duration-300 rounded-xl border ${
+                expanded ? "w-12 h-12" : "w-10 h-10"
+              }`}
             />
-            <h1
-              className={
-                expanded ? "text-xl font-bold text-blue-600" : "hidden"
-              }
-            >
-              B-Hub
-            </h1>
+            {expanded && (
+              <span className="text-lg font-bold text-blue-600 whitespace-nowrap">
+                B-Hub
+              </span>
+            )}
           </div>
 
           <button
-            onClick={() => setExpanded((prev) => !prev)}
-            className={
-              expanded
-                ? "p-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer"
-                : "rounded-4xl bg-gray-50 hover:bg-gray-100 py-2 px-2 my-2 mx-3 cursor-pointer"
-            }
+            onClick={() => setExpanded((p) => !p)}
+            className="p-1.5 rounded-lg hover:bg-gray-100"
           >
             {expanded ? <ChevronFirst /> : <ChevronLast />}
           </button>
         </div>
-        <SideBarContext.Provider value={{ expanded, setExpanded }}>
-          <ul className="flex-1 px-3 bg-white">
-            <div className="">
-              <NavLink to={"/admin"} end>
-                {({ isActive }) => (
-                  <SidebarElement
-                    icon={LayoutDashboard}
-                    text="Dashboard"
-                    active={isActive}
-                    alert={true}
-                  />
-                )}
-              </NavLink>
-              <NavLink to={"/admin/products"}>
-                {({ isActive }) => (
-                  <SidebarElement
-                    icon={Package}
-                    text="Sản phẩm"
-                    active={isActive}
-                  />
-                )}
-              </NavLink>
-              <NavLink to={"/admin/categories"}>
-                {({ isActive }) => (
-                  <SidebarElement
-                    icon={Grid2X2}
-                    text="Danh mục"
-                    active={isActive}
-                  />
-                )}
-              </NavLink>
-              <NavLink to={"/admin/users"}>
-                {({ isActive }) => (
-                  <SidebarElement
-                    icon={UsersRound}
-                    text="Người dùng"
-                    active={isActive}
-                  />
-                )}
-              </NavLink>
-              <NavLink to={"/admin/courts"} end>
-                {({ isActive }) => (
-                  <SidebarElement
-                    icon={Rows3}
-                    text="Sân cầu lông"
-                    active={isActive}
-                    alert={true}
-                  />
-                )}
-              </NavLink>
-              <NavLink to={"/admin/discount"} end>
-                {({ isActive }) => (
-                  <SidebarElement
-                    icon={Percent}
-                    text="Khuyến mãi"
-                    active={isActive}
-                    alert={true}
-                  />
-                )}
-              </NavLink>
-            </div>
-          </ul>
-        </SideBarContext.Provider>
+
+        {/* MENU */}
+        <ul className="px-3 space-y-1">
+          <NavLink to="/admin" end>
+            {({ isActive }) => (
+              <SidebarElement
+                icon={LayoutDashboard}
+                text="Dashboard"
+                active={isActive}
+              />
+            )}
+          </NavLink>
+
+          <NavLink to="/admin/products">
+            {({ isActive }) => (
+              <SidebarElement
+                icon={Package}
+                text="Quản lý sản phẩm"
+                active={isActive}
+              />
+            )}
+          </NavLink>
+
+          <NavLink to="/admin/categories">
+            {({ isActive }) => (
+              <SidebarElement
+                icon={Grid2X2}
+                text="Quản lý danh mục"
+                active={isActive}
+              />
+            )}
+          </NavLink>
+
+          <NavLink to="/admin/users">
+            {({ isActive }) => (
+              <SidebarElement
+                icon={UsersRound}
+                text="Quản lý người dùng"
+                active={isActive}
+              />
+            )}
+          </NavLink>
+
+          <NavLink to="/admin/courts">
+            {({ isActive }) => (
+              <SidebarElement
+                icon={Rows3}
+                text="Quản lý sân"
+                active={isActive}
+              />
+            )}
+          </NavLink>
+
+          <NavLink to="/admin/discount">
+            {({ isActive }) => (
+              <SidebarElement
+                icon={Percent}
+                text="Quản lý khuyến mãi"
+                active={isActive}
+              />
+            )}
+          </NavLink>
+        </ul>
       </nav>
     </aside>
   );
 };
+
 export default Sidebar;

@@ -2,7 +2,6 @@ import { StatusCodes } from "http-status-codes";
 import { User, Role } from "../../models/index.js";
 import ApiError from "../../utils/ApiError.js";
 import bcrypt from "bcrypt";
-import crypto from "crypto";
 const createUser = async (username, password, email) => {
   try {
     const existingUser = await User.findOne({ where: { username } });
@@ -121,8 +120,6 @@ const getUsersByRoleService = async (roleId) => {
 
     return users;
   } catch (error) {
-    console.error("ERROR getAllUsers:", error);
-
     if (error instanceof ApiError) throw error;
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }

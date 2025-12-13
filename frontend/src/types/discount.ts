@@ -33,3 +33,60 @@ export type DiscountListResponse = {
   minOrderAmount?: number;
   minBookingAmount?: number;
 };
+
+export type AdminDiscountListResponse = {
+  total: number;
+  page: number;
+  limit: number;
+  discounts: AdminDiscountResponse[];
+};
+
+export type AdminDiscountResponse = {
+  id: number;
+  code: string;
+  type: string;
+  value: number;
+  isActive: boolean;
+  isUsed: boolean;
+  startDate: string;
+  endDate: string;
+  minOrderAmount?: number;
+  createdDate: string;
+  updatedDate: string;
+};
+
+export type AdminDiscountRequest = {
+  page?: number;
+  limit?: number;
+  type?: string;
+  isUsed?: boolean;
+};
+
+export type AdminAddDiscountRequest = {
+  code: string;
+  type: string;
+  value: number;
+  startDate: string;
+  endDate: string;
+  minOrderAmount?: number;
+};
+
+export type AdminAddDiscountResponse = {
+  message: string;
+};
+
+export type AdminUpdateDiscountRequest = {
+  discountId: number;
+};
+
+export type AdminDeleteDiscountRequest = {
+  discountId: number;
+};
+
+export type AdminUpdateDiscountResponse = {
+  message: string;
+};
+
+export type AdminDeleteDiscountResponse = {
+  message: string;
+};

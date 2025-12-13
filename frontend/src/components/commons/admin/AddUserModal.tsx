@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import userService from "../../../services/admin/usersService";
+import userService from "../../../services/Admin/usersService";
 
 interface Props {
   isOpen: boolean;

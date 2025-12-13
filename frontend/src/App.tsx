@@ -12,7 +12,7 @@ const App = () => (
     </Router>
     {/* Container chung cho toàn bộ app */}
     <ToastContainer
-      position="bottom-right"
+      position="top-right"
       autoClose={3000}
       hideProgressBar={false}
       newestOnTop={false}

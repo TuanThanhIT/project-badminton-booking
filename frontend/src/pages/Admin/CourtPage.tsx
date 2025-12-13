@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 
-import courtService from "../../services/admin/courtService";
+import courtService from "../../services/Admin/courtService";
 import IconButton from "../../components/commons/admin/IconButton";
 import { Plus } from "lucide-react";
 import AddCourtModal from "../../components/commons/admin/AddCourtModal";

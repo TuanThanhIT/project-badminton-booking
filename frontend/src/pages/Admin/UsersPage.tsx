@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Swal from "sweetalert2";
 import { Lock, Unlock, Plus } from "lucide-react";
 
-import userService from "../../services/admin/usersService";
+import userService from "../../services/Admin/usersService";
 import IconButton from "../../components/commons/admin/IconButton";
 import type { UserItem } from "../../types/user";
 import AddUserModal from "../../components/commons/admin/AddUserModal";

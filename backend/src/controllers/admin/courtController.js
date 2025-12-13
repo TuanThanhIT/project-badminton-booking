@@ -1,15 +1,15 @@
 import courtService from "../../services/admin/courtService.js";
-import uploadFile from "../../utils/upload.js";
 import { StatusCodes } from "http-status-codes";
+import uploadBuffer from "../../utils/cloudinary.js";
 
 const createCourt = async (req, res, next) => {
   try {
     const { name, location } = req.body;
     // Nếu có file avatar
     let thumbnailUrl;
-    if (req.file?.path) {
-      const upload = await uploadFile(req.file.path);
-      thumbnailUrl = upload.secure_url;
+    if (req.file?.buffer) {
+      const uploaded = await uploadBuffer(req.file.buffer, "courts");
+      thumbnailUrl = uploaded.secure_url;
     }
 
     const court = await courtService.createCourtService(

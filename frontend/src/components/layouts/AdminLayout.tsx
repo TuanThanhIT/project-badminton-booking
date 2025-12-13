@@ -3,45 +3,43 @@ import Footer from "../commons/admin/Footer";
 import Sidebar from "../commons/admin/Sidebar";
 import { Outlet } from "react-router-dom";
 import { SideBarContext } from "../contexts/sidebarContext";
-import { useContext } from "react";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { useState } from "react";
+
 const AdminLayout = () => {
-  const sideBarContext = useContext(SideBarContext);
-  const expanded = sideBarContext?.expanded;
+  const [expanded, setExpanded] = useState(true);
+
   return (
-    <>
+    <SideBarContext.Provider value={{ expanded, setExpanded }}>
+      {/* CHỈ 1 h-screen */}
       <div
-        className={
-          expanded
-            ? "h-screen grid grid-cols-[1fr_5fr] w-screen "
-            : "h-screen grid grid-cols-[auto_5fr] w-screen"
-        }
+        className={`h-screen grid overflow-hidden ${
+          expanded ? "grid-cols-[260px_1fr]" : "grid-cols-[80px_1fr]"
+        }`}
       >
-        <div className="z-70">
-          <Sidebar />
-        </div>
-        <div className="grid grid-rows-[auto_1fr_auto] h-screen overflow-x-hidden   ">
-          <div className="sticky top-0 bg-background shadow-sm z-70">
+        {/* SIDEBAR */}
+        <Sidebar />
+
+        {/* MAIN */}
+        <div className="flex flex-col min-h-screen">
+          {/* HEADER */}
+          <div className="sticky top-0 z-40 bg-white shadow-sm">
             <Header />
           </div>
-          <div>
-            <main className=" p-4 h-full min-h-0 overflow-y-auto  ">
+
+          {/* CONTENT + FOOTER */}
+          <div className="flex-1 flex flex-col overflow-y-auto">
+            {/* Outlet chiếm không gian còn lại */}
+            <div className="flex-1 p-4">
               <Outlet />
-            </main>
-          </div>
-          <div className="">
+            </div>
+
+            {/* Footer */}
             <Footer />
           </div>
         </div>
       </div>
-      <ToastContainer
-        position="top-right"
-        autoClose={2500}
-        pauseOnHover
-        closeOnClick
-      />
-    </>
+    </SideBarContext.Provider>
   );
 };
+
 export default AdminLayout;

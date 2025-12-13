@@ -18,6 +18,7 @@ import productEplReducer from "./slices/employee/productSlice";
 import draftEplReducer from "./slices/employee/draftSlice";
 import offlineEplReducer from "./slices/employee/offlineSlice";
 import notificationEplReducer from "./slices/employee/notificationSlice";
+import discountAdminReducer from "./slices/admin/discountSlice";
 
 const persistConfig = {
   key: "root",
@@ -43,6 +44,7 @@ const rootReducer = combineReducers({
   offlineEpl: offlineEplReducer,
   notificationEpl: notificationEplReducer,
   notification: notificationReducer,
+  discountAdmin: discountAdminReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

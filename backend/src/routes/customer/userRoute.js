@@ -6,11 +6,10 @@ import authorize from "../../middlewares/authorize.js";
 
 const userRoute = express.Router();
 
-var uploader = multer({
-  storage: multer.diskStorage({}),
+const uploader = multer({
+  storage: multer.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 },
 });
-
 const initUserRoute = (app) => {
   userRoute.get(
     "/profile",

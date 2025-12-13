@@ -5,12 +5,23 @@ import ScrollToTopButton from "../ui/ScrollToTopButton";
 
 const CustomerPrivateLayout = () => {
   return (
-    <div className="min-h-screen flex flex-col w-full overflow-x-hidden">
-      <Header />
-      <main className="flex-1">
-        <Outlet />
-      </main>
-      <Footer />
+    // CHỈ 1 h-screen
+    <div className="h-screen flex flex-col overflow-hidden">
+      {/* HEADER – FIXED */}
+      <div className="sticky top-0 z-40 bg-white shadow-sm">
+        <Header />
+      </div>
+
+      {/* 🔥 SCROLL AREA (MAIN + FOOTER) */}
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+        <main className="min-h-0">
+          <Outlet />
+        </main>
+
+        {/* FOOTER NẰM TRONG SCROLL */}
+        <Footer />
+      </div>
+
       <ScrollToTopButton />
     </div>
   );

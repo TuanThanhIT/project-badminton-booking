@@ -4,8 +4,6 @@ import { StatusCodes } from "http-status-codes";
 
 const createProduct = async (req, res, next) => {
   try {
-    console.log("BODY:", req.body);
-    console.log("FILE:", req.file);
     const { productName, brand, description, categoryId } = req.body;
 
     // Nếu có file avatar

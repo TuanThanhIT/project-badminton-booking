@@ -1,22 +1,25 @@
-import { Route, Routes } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import CustomerRoute from "./CusRoute";
 import EmployeeRoute from "./EmployeeRoute";
+import AdminRoute from "./AdminRoute";
 import NotFoundPage from "../pages/NotFoundPage";
 
 const AllRoute = () => {
   return (
-    <div>
-      <Routes>
-        {/* Route khách */}
-        <Route path="/*" element={<CustomerRoute />} />
+    <Routes>
+      {/* Admin */}
+      <Route path="/admin/*" element={<AdminRoute />} />
 
-        {/* Route nhân viên */}
-        <Route path="/employee/*" element={<EmployeeRoute />} />
+      {/* Employee */}
+      <Route path="/employee/*" element={<EmployeeRoute />} />
 
-        {/* 404 chung */}
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-    </div>
+      {/* Customer */}
+      <Route path="/*" element={<CustomerRoute />} />
+
+      {/* 404 */}
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
   );
 };
+
 export default AllRoute;

@@ -18,7 +18,9 @@ import {
   Star,
   Calendar1,
 } from "lucide-react";
-import ReviewForm, { type formRating } from "../../components/ui/ReviewForm";
+import ReviewForm, {
+  type formRating,
+} from "../../components/ui/customer+employee/ReviewForm";
 import {
   addProductFeedback,
   clearProductFeedbackError,

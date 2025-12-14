@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import type { ApiErrorType } from "../../types/error";
+import type { ApiErrorType } from "../../../types/error";
 import { toast } from "react-toastify";
-import categoryService from "../../services/Customer/categoryService";
-import productService from "../../services/Customer/productService";
+import categoryService from "../../../services/Customer/categoryService";
+import productService from "../../../services/Customer/productService";
 import type {
   ProductInfo,
   ProductResponse,
   ProPrams,
-} from "../../types/product";
+} from "../../../types/product";
 import ProductsRelated from "./ProductsRelated";
 import { useNavigate } from "react-router-dom";
 import { Box } from "lucide-react";

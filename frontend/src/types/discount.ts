@@ -38,7 +38,8 @@ export type AdminDiscountListResponse = {
   total: number;
   page: number;
   limit: number;
-  discounts: AdminDiscountResponse[];
+  discounts?: AdminDiscountResponse[];
+  discountBookings: AdminDiscountResponse[];
 };
 
 export type AdminDiscountResponse = {
@@ -51,6 +52,7 @@ export type AdminDiscountResponse = {
   startDate: string;
   endDate: string;
   minOrderAmount?: number;
+  minBookingAmount?: number;
   createdDate: string;
   updatedDate: string;
 };
@@ -69,6 +71,7 @@ export type AdminAddDiscountRequest = {
   startDate: string;
   endDate: string;
   minOrderAmount?: number;
+  minBookingAmount?: number;
 };
 
 export type AdminAddDiscountResponse = {

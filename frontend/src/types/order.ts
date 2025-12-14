@@ -146,3 +146,12 @@ export type MomoPaymentRequest = {
   orderInfo: string;
   type: string;
 };
+
+export type CountOrderRequest = {
+  date?: string;
+};
+
+export type CountOrderResponse = {
+  status: string;
+  count: number;
+}[];

@@ -1,6 +1,8 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { ApiErrorType } from "../../../types/error";
 import type {
+  CountOrderRequest,
+  CountOrderResponse,
   OrderCancelEplRequest,
   OrderCancelEplResponse,
   OrderCompleteRequest,
@@ -11,9 +13,11 @@ import type {
   OrderListEplResponse,
 } from "../../../types/order";
 import orderService from "../../../services/Employee/orderService";
+import orderAdminService from "../../../services/Admin/orderService";
 
 interface OrderState {
   orders: OrderListEplResponse | undefined;
+  countOrders: CountOrderResponse;
   message: string | undefined;
   loading: boolean;
   error: string | undefined;
@@ -21,6 +25,7 @@ interface OrderState {
 
 const initialState: OrderState = {
   orders: undefined,
+  countOrders: [],
   message: undefined,
   loading: false,
   error: undefined,
@@ -73,6 +78,19 @@ export const cancelOrder = createAsyncThunk<
   try {
     const res = await orderService.cancelOrderService(data);
     return res.data as OrderCancelEplResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
+export const countOrderByStatus = createAsyncThunk<
+  CountOrderResponse,
+  { data: CountOrderRequest },
+  { rejectValue: ApiErrorType }
+>("order/countOrderByStatus", async ({ data }, { rejectWithValue }) => {
+  try {
+    const res = await orderAdminService.countOrderByOrderStatusService(data);
+    return res.data as CountOrderResponse;
   } catch (error) {
     return rejectWithValue(error as ApiErrorType);
   }
@@ -142,6 +160,11 @@ const orderSlice = createSlice({
       .addCase(cancelOrder.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.userMessage;
+      })
+
+      // countOrderByStatus
+      .addCase(countOrderByStatus.fulfilled, (state, action) => {
+        state.countOrders = action.payload;
       });
   },
 });

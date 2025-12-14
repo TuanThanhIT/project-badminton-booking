@@ -101,8 +101,8 @@ const DiscountTable: React.FC<DiscountTableProps> = ({
           }),
       },
       {
-        header: "Đơn tối thiểu",
-        accessorKey: "minOrderAmount",
+        header: "Ngưỡng áp dụng",
+        accessorFn: (row) => row.minBookingAmount ?? row.minOrderAmount ?? 0,
         cell: (info) =>
           info.getValue()
             ? (info.getValue() as number).toLocaleString("vi-VN") + " đ"
@@ -123,7 +123,7 @@ const DiscountTable: React.FC<DiscountTableProps> = ({
                     : "bg-yellow-500 hover:bg-yellow-600"
                 }`}
               >
-                {isActive ? "Mở" : "Khóa"}
+                {isActive ? "Khóa" : "Mở"}
               </button>
               <button
                 onClick={() => onDeleteDiscount(row.original.id)}

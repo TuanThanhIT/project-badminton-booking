@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { ChevronDown, Package } from "lucide-react";
-import categoryService from "../../services/Customer/categoryService";
-import type { CategoryResponse } from "../../types/category";
+import categoryService from "../../../services/Customer/categoryService";
+import type { CategoryResponse } from "../../../types/category";
 
 const CategoryMenu = () => {
   const [categories, setCategories] = useState<CategoryResponse[]>([]);

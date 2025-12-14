@@ -1,7 +1,7 @@
 import Header from "../commons/customer/Header";
 import Footer from "../commons/customer/Footer";
 import { Outlet } from "react-router-dom";
-import ScrollToTopButton from "../ui/ScrollToTopButton";
+import ScrollToTopButton from "../ui/customer+employee/ScrollToTopButton";
 
 const CustomerPrivateLayout = () => {
   return (

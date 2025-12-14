@@ -13,6 +13,9 @@ import CourtPage from "../pages/Admin/CourtPage";
 import DiscountPage from "../pages/Admin/DiscountPage";
 import AuthAdminGuard from "../components/guards/AuthAdminGuard";
 import ProfilePage from "../pages/Customer/ProfilePage";
+import OrderPage from "../pages/Admin/OrderPage";
+import BookingPage from "../pages/Admin/BookingPage";
+
 const AdminRoute = () => {
   return (
     <Routes>
@@ -33,6 +36,8 @@ const AdminRoute = () => {
         <Route path="workshift" element={<WorkShiftPage />}></Route>
         <Route path="products/variants" element={<VariantPage />} />
         <Route path="discount" element={<DiscountPage />}></Route>
+        <Route path="order" element={<OrderPage />}></Route>
+        <Route path="booking" element={<BookingPage />}></Route>
         <Route path="products/add" element={<AddProductPage />}></Route>
         <Route path="products/edit/:id" element={<EditProductPage />}></Route>
         <Route path="courts" element={<CourtPage />}></Route>

@@ -22,7 +22,7 @@ import type {
   OrderResponse,
 } from "../../types/order";
 import momoService from "../../services/Customer/momoService";
-import CancelForm from "../../components/ui/CancelForm";
+import CancelForm from "../../components/ui/customer+employee/CancelForm";
 
 const statusColor = {
   Pending: "bg-yellow-50 text-yellow-700 border-yellow-200",

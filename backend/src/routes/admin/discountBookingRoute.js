@@ -12,6 +12,24 @@ const initDiscountBookingAdminRoute = (app) => {
     authorize("ADMIN"),
     discountBookingController.createDiscountBooking
   );
+  discountBookingRoute.delete(
+    "/delete/:id",
+    auth,
+    authorize("ADMIN"),
+    discountBookingController.deleteDiscountBooking
+  );
+  discountBookingRoute.patch(
+    "/update/:id",
+    auth,
+    authorize("ADMIN"),
+    discountBookingController.updateDiscountBooking
+  );
+  discountBookingRoute.get(
+    "/list",
+    auth,
+    authorize("ADMIN"),
+    discountBookingController.getDiscountBookings
+  );
   app.use("/admin/discount/booking", discountBookingRoute);
 };
 export default initDiscountBookingAdminRoute;

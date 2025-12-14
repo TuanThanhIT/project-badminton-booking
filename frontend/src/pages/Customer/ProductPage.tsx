@@ -3,15 +3,15 @@ import debounce from "lodash.debounce";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Folder, Filter, Search } from "lucide-react";
 import { toast } from "react-toastify";
-import Breadcrumb from "../../components/ui/Breadcrumb";
-import ProductFilter from "../../components/ui/ProductFilter";
+import Breadcrumb from "../../components/ui/customer+employee/Breadcrumb";
+import ProductFilter from "../../components/ui/customer+employee/ProductFilter";
 import type { CategoryOtherResponse } from "../../types/category";
 import type { ApiErrorType } from "../../types/error";
 import categoryService from "../../services/Customer/categoryService";
 import type { ProductParams, ProductResponse } from "../../types/product";
 import productService from "../../services/Customer/productService";
-import ProductCard from "../../components/ui/ProductCard";
-import PaginatedItems from "../../components/ui/PaginatedItems";
+import ProductCard from "../../components/ui/customer+employee/ProductCard";
+import PaginatedItems from "../../components/ui/customer+employee/PaginatedItems";
 
 const ProductPage: React.FC = () => {
   const navigate = useNavigate();

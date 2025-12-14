@@ -51,32 +51,27 @@ const getOrdersService = async (
       where.orderStatus = orderStatus;
     }
 
-    // Filter ngày
+    // ✅ Filter ngày – chuẩn giờ Việt Nam
     if (date) {
-      const startOfDayVN = new Date(`${date}T00:00:00`);
-      const endOfDayVN = new Date(`${date}T23:59:59`);
-
-      const startOfDayUTC = new Date(
-        startOfDayVN.getTime() - 7 * 60 * 60 * 1000
-      );
-      const endOfDayUTC = new Date(endOfDayVN.getTime() - 7 * 60 * 60 * 1000);
+      const startVN = new Date(`${date}T00:00:00+07:00`);
+      const endVN = new Date(`${date}T23:59:59.999+07:00`);
 
       where.createdDate = {
-        [Op.between]: [startOfDayUTC, endOfDayUTC],
+        [Op.between]: [startVN, endVN],
       };
     }
 
-    // Filter theo keyword
+    // Filter keyword
     const userInclude = {
       model: User,
       as: "user",
       attributes: ["username"],
-      required: keyword ? true : false, // bắt buộc join khi tìm keyword
+      required: !!keyword,
       include: [
         {
           model: Profile,
           attributes: ["fullName", "address", "phoneNumber"],
-          required: keyword ? true : false,
+          required: !!keyword,
           where: keyword
             ? {
                 [Op.or]: [

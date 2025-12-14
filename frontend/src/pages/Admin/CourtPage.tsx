@@ -3,9 +3,9 @@ import { Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 
 import courtService from "../../services/Admin/courtService";
-import IconButton from "../../components/commons/admin/IconButton";
+import IconButton from "../../components/ui/admin/IconButton";
 import { Plus } from "lucide-react";
-import AddCourtModal from "../../components/commons/admin/AddCourtModal";
+import AddCourtModal from "../../components/ui/admin/AddCourtModal";
 
 export default function CourtPage() {
   const [courts, setCourts] = useState<any[]>([]);

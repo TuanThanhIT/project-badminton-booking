@@ -11,24 +11,28 @@ import type {
   AdminDeleteDiscountResponse,
   AdminDiscountListResponse,
   AdminDiscountRequest,
-  AdminDiscountResponse,
   AdminUpdateDiscountRequest,
   AdminUpdateDiscountResponse,
 } from "../../../types/discount";
 import discountService from "../../../services/Admin/discountService";
+import discountBookingService from "../../../services/Admin/discountBookingService";
 
 interface DiscountState {
   discounts: AdminDiscountListResponse | undefined;
+  discountBookings: AdminDiscountListResponse | undefined;
   message: string | undefined;
-  loading: boolean;
+  loadingDiscount: boolean;
+  loadingDiscountBooking: boolean;
   loadingAdd: boolean;
   error: string | undefined;
 }
 
 const initialState: DiscountState = {
   discounts: undefined,
+  discountBookings: undefined,
   message: undefined,
-  loading: false,
+  loadingDiscount: false,
+  loadingDiscountBooking: false,
   loadingAdd: false,
   error: undefined,
 };
@@ -40,6 +44,19 @@ export const getDiscounts = createAsyncThunk<
 >("discount/getDiscounts", async ({ data }, { rejectWithValue }) => {
   try {
     const res = await discountService.getDiscountsService(data);
+    return res.data as AdminDiscountListResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
+export const getDiscountBookings = createAsyncThunk<
+  AdminDiscountListResponse,
+  { data: AdminDiscountRequest },
+  { rejectValue: ApiErrorType }
+>("discount/getDiscountBookings", async ({ data }, { rejectWithValue }) => {
+  try {
+    const res = await discountBookingService.getDiscountBookingsService(data);
     return res.data as AdminDiscountListResponse;
   } catch (error) {
     return rejectWithValue(error as ApiErrorType);
@@ -59,6 +76,19 @@ export const addDiscount = createAsyncThunk<
   }
 });
 
+export const addDiscountBooking = createAsyncThunk<
+  AdminAddDiscountResponse,
+  { data2: AdminAddDiscountRequest },
+  { rejectValue: ApiErrorType }
+>("discount/addDiscountBooking", async ({ data2 }, { rejectWithValue }) => {
+  try {
+    const res = await discountBookingService.addDiscountBookingService(data2);
+    return res.data as AdminAddDiscountResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
 export const updateDiscountActive = createAsyncThunk<
   AdminUpdateDiscountResponse,
   { data: AdminUpdateDiscountRequest },
@@ -72,6 +102,24 @@ export const updateDiscountActive = createAsyncThunk<
   }
 });
 
+export const updateDiscountBookingActive = createAsyncThunk<
+  AdminUpdateDiscountResponse,
+  { data: AdminUpdateDiscountRequest },
+  { rejectValue: ApiErrorType }
+>(
+  "discount/updateDiscountBookingActive",
+  async ({ data }, { rejectWithValue }) => {
+    try {
+      const res = await discountBookingService.updateDiscountDiscountService(
+        data
+      );
+      return res.data as AdminUpdateDiscountResponse;
+    } catch (error) {
+      return rejectWithValue(error as ApiErrorType);
+    }
+  }
+);
+
 export const deleteDiscount = createAsyncThunk<
   AdminDeleteDiscountResponse,
   { data: AdminDeleteDiscountRequest },
@@ -79,6 +127,19 @@ export const deleteDiscount = createAsyncThunk<
 >("discount/deleteDiscount", async ({ data }, { rejectWithValue }) => {
   try {
     const res = await discountService.deleteDiscountService(data);
+    return res.data as AdminDeleteDiscountResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
+export const deleteDiscountBooking = createAsyncThunk<
+  AdminDeleteDiscountResponse,
+  { data: AdminDeleteDiscountRequest },
+  { rejectValue: ApiErrorType }
+>("discount/deleteDiscountBooking", async ({ data }, { rejectWithValue }) => {
+  try {
+    const res = await discountBookingService.deleteDiscountBookingService(data);
     return res.data as AdminDeleteDiscountResponse;
   } catch (error) {
     return rejectWithValue(error as ApiErrorType);
@@ -123,20 +184,55 @@ const discountSlice = createSlice({
     ) {
       state.discounts = action.payload.prevDiscounts;
     },
+    updateDiscountBookingActiveLocal(
+      state,
+      action: PayloadAction<{ discountId: number }>
+    ) {
+      const discountBookings = state.discountBookings?.discountBookings;
+      const discountId = action.payload.discountId;
+      if (!discountBookings) return;
+
+      const index = discountBookings.findIndex((d) => d.id === discountId);
+      if (index !== -1) {
+        if (!discountBookings[index].isActive) {
+          discountBookings[index].isActive = true;
+        } else {
+          discountBookings[index].isActive = false;
+        }
+      }
+    },
+    deleteDiscountBookingLocal(
+      state,
+      action: PayloadAction<{ discountId: number }>
+    ) {
+      const discountId = action.payload.discountId;
+      if (!state.discountBookings?.discountBookings) return;
+
+      state.discountBookings.discountBookings =
+        state.discountBookings.discountBookings.filter(
+          (d) => d.id !== discountId
+        );
+    },
+    setDiscountBookingsLocal(
+      state,
+      action: PayloadAction<{ prevDiscounts: AdminDiscountListResponse }>
+    ) {
+      state.discountBookings = action.payload.prevDiscounts;
+    },
   },
   extraReducers: (builder) => {
     builder
       // getDiscount
       .addCase(getDiscounts.pending, (state) => {
-        state.loading = true;
+        state.loadingDiscount = true;
         state.error = undefined;
       })
       .addCase(getDiscounts.fulfilled, (state, action) => {
-        state.loading = false;
+        state.loadingDiscount = false;
         state.discounts = action.payload;
       })
       .addCase(getDiscounts.rejected, (state, action) => {
-        state.loading = false;
+        state.loadingDiscount = false;
         state.error = action.payload?.userMessage;
       })
 
@@ -162,6 +258,44 @@ const discountSlice = createSlice({
       // deleteDiscount
       .addCase(deleteDiscount.fulfilled, (state, action) => {
         state.message = action.payload.message;
+      })
+
+      // getDiscountBooking
+      .addCase(getDiscountBookings.pending, (state) => {
+        state.loadingDiscountBooking = true;
+        state.error = undefined;
+      })
+      .addCase(getDiscountBookings.fulfilled, (state, action) => {
+        state.loadingDiscountBooking = false;
+        state.discountBookings = action.payload;
+      })
+      .addCase(getDiscountBookings.rejected, (state, action) => {
+        state.loadingDiscountBooking = false;
+        state.error = action.payload?.userMessage;
+      })
+
+      //addDiscountBooking
+      .addCase(addDiscountBooking.pending, (state) => {
+        state.loadingAdd = true;
+        state.error = undefined;
+      })
+      .addCase(addDiscountBooking.fulfilled, (state, action) => {
+        state.loadingAdd = false;
+        state.message = action.payload.message;
+      })
+      .addCase(addDiscountBooking.rejected, (state, action) => {
+        state.loadingAdd = false;
+        state.error = action.payload?.userMessage;
+      })
+
+      // updateDiscount
+      .addCase(updateDiscountBookingActive.fulfilled, (state, action) => {
+        state.message = action.payload.message;
+      })
+
+      // deleteDiscount
+      .addCase(deleteDiscountBooking.fulfilled, (state, action) => {
+        state.message = action.payload.message;
       });
   },
 });
@@ -170,5 +304,8 @@ export const {
   updateDiscountActiveLocal,
   deleteDiscountLocal,
   setDiscountsLocal,
+  updateDiscountBookingActiveLocal,
+  deleteDiscountBookingLocal,
+  setDiscountBookingsLocal,
 } = discountSlice.actions;
 export default discountSlice.reducer;

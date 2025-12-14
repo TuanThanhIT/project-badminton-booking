@@ -37,7 +37,7 @@ import {
   clearBookingFeedbackError,
   getBookingFeedback,
 } from "../../store/slices/customer/bookingFeedbackSlice";
-import ReviewList from "../../components/ui/ReviewList";
+import ReviewList from "../../components/ui/customer+employee/ReviewList";
 import Swal from "sweetalert2";
 
 const BookingCourtDetailPage = () => {

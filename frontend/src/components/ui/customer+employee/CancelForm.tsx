@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import {
   FormCancelOrderSchema,
   type formCancelOrder,
-} from "../../schemas/FormCancelOrderSchema";
+} from "../../../schemas/FormCancelOrderSchema";
 import { X } from "lucide-react";
 
 type CancelFormProps = {

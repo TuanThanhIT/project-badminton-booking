@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { ProductInfo } from "../../types/product";
+import type { ProductInfo } from "../../../types/product";
 import ProductCard from "./ProductCard";
 
 type ProductsRelatedProps = {

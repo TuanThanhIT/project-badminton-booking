@@ -5,9 +5,9 @@ import Swal from "sweetalert2";
 import { Lock, Unlock, Plus } from "lucide-react";
 
 import userService from "../../services/Admin/usersService";
-import IconButton from "../../components/commons/admin/IconButton";
+import IconButton from "../../components/ui/admin/IconButton";
 import type { UserItem } from "../../types/user";
-import AddUserModal from "../../components/commons/admin/AddUserModal";
+import AddUserModal from "../../components/ui/admin/AddUserModal";
 
 export default function UserPage() {
   const [users, setUsers] = useState<UserItem[]>([]);

@@ -9,11 +9,15 @@ import type {
   BookingConfirmResponse,
   BookingEplRequest,
   BookingListEplResponse,
+  CountBookingRequest,
+  CountBookingResponse,
 } from "../../../types/booking";
 import bookingService from "../../../services/Employee/bookingService";
+import bookingAdminService from "../../../services/Admin/bookingService";
 
 interface OrderState {
   bookings: BookingListEplResponse | undefined;
+  countBookings: CountBookingResponse;
   message: string | undefined;
   loading: boolean;
   error: string | undefined;
@@ -21,6 +25,7 @@ interface OrderState {
 
 const initialState: OrderState = {
   bookings: undefined,
+  countBookings: [],
   message: undefined,
   loading: false,
   error: undefined,
@@ -73,6 +78,21 @@ export const cancelBooking = createAsyncThunk<
   try {
     const res = await bookingService.cancelBookingService(data);
     return res.data as BookingCancelEplResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
+export const countBookingByStatus = createAsyncThunk<
+  CountBookingResponse,
+  { data: CountBookingRequest },
+  { rejectValue: ApiErrorType }
+>("booking/countBookingByStatus", async ({ data }, { rejectWithValue }) => {
+  try {
+    const res = await bookingAdminService.countBookingByBookingStatusService(
+      data
+    );
+    return res.data as CountBookingResponse;
   } catch (error) {
     return rejectWithValue(error as ApiErrorType);
   }
@@ -142,6 +162,11 @@ const bookingSlice = createSlice({
       .addCase(cancelBooking.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.userMessage;
+      })
+
+      // countBooking
+      .addCase(countBookingByStatus.fulfilled, (state, action) => {
+        state.countBookings = action.payload;
       });
   },
 });

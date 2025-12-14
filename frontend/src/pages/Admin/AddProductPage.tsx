@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import ProductForm from "../../components/commons/admin/ProductForm";
+import ProductForm from "../../components/ui/admin/ProductForm";
 import categoryService from "../../services/Admin/categoryService";
 import productService from "../../services/Admin/productService";
 import { FormCreateProductSchema } from "../../schemas/FormCreateProductSchema";

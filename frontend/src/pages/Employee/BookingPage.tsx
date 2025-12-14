@@ -25,8 +25,8 @@ import {
   getBookings,
 } from "../../store/slices/employee/bookingSlice";
 import Swal from "sweetalert2";
-import CancelForm from "../../components/ui/CancelForm";
-import PaginatedItems from "../../components/ui/PaginatedItems";
+import CancelForm from "../../components/ui/customer+employee/CancelForm";
+import PaginatedItems from "../../components/ui/customer+employee/PaginatedItems";
 
 const TABS = [
   { key: "All", label: "Tất cả" },
@@ -53,7 +53,7 @@ const statusCardColor: Record<string, string> = {
   Cancelled: "bg-red-50 text-red-700 border-red-200",
 };
 
-const OrderPage = () => {
+const BookingPage = () => {
   const dispatch = useAppDispatch();
   const { bookings, loading, error } = useAppSelector(
     (state) => state.bookingEpl
@@ -476,4 +476,4 @@ const OrderPage = () => {
   );
 };
 
-export default OrderPage;
+export default BookingPage;

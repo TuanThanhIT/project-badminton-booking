@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom";
 import { Calendar, Contact, History, Home, Info } from "lucide-react";
 import { useContext } from "react";
 import { AuthContext } from "../../contexts/authContext";
-import CategoryMenu from "../../ui/CategoryMenu";
+import CategoryMenu from "../../ui/customer+employee/CategoryMenu";
 
 const Navbar = () => {
   const { auth } = useContext(AuthContext);

@@ -5,7 +5,7 @@ import { Line, Doughnut } from "react-chartjs-2";
 import { NavLink, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Pencil, CirclePlus } from "lucide-react";
-import IconButtonNonContent from "../../components/commons/admin/IconButton";
+import IconButtonNonContent from "../../components/ui/admin/IconButton";
 import type { ProductAdminItem } from "../../types/product";
 import {
   Chart as ChartJS,

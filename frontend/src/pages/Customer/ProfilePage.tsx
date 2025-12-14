@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import userService from "../../services/Customer/userService";
 import type { ProfileRequest, ProfileResponse } from "../../types/user";
-import EditProfileModal from "../../components/ui/EditProfileModal";
+import EditProfileModal from "../../components/ui/customer+employee/EditProfileModal";
 import type { ApiErrorType } from "../../types/error";
 import { Loader2 } from "lucide-react";
 

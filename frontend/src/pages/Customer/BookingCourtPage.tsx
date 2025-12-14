@@ -7,8 +7,8 @@ import {
 import { toast } from "react-toastify";
 import { Calendar, Loader2 } from "lucide-react";
 import type { CourtListRequest } from "../../types/court";
-import PaginatedItems from "../../components/ui/PaginatedItems";
-import WeekDateSelector from "../../components/ui/WeekDateSelector";
+import PaginatedItems from "../../components/ui/customer+employee/PaginatedItems";
+import WeekDateSelector from "../../components/ui/customer+employee/WeekDateSelector";
 import { useNavigate } from "react-router-dom";
 
 const BookingCourtPage = () => {

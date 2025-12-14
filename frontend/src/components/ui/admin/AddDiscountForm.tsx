@@ -10,7 +10,6 @@ type AddDiscountFormProps = {
   setOpenAdd: (open: boolean) => void;
   onSubmit: (data: formAddDiscountSchema) => void;
   loadingAdd: boolean;
- 
 };
 
 const AddDiscountForm = ({
@@ -129,11 +128,11 @@ const AddDiscountForm = ({
           {/* Min Order */}
           <div className="flex flex-col">
             <label className="text-sm text-gray-600 mb-0.5">
-              Đơn tối thiểu
+              Ngưỡng áp dụng
             </label>
             <input
               {...register("minOrderAmount")}
-              placeholder="Nhập đơn tối thiểu"
+              placeholder="Nhập ngưỡng áp dụng tối thiểu"
               className="w-full rounded-2xl p-2.5 border border-gray-300 bg-gray-50 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-300"
             />
             {errors.minOrderAmount && (

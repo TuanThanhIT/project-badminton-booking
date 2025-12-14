@@ -25,8 +25,8 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
-import CancelForm from "../../components/ui/CancelForm";
-import PaginatedItems from "../../components/ui/PaginatedItems";
+import CancelForm from "../../components/ui/customer+employee/CancelForm";
+import PaginatedItems from "../../components/ui/customer+employee/PaginatedItems";
 
 const TABS = [
   { key: "All", label: "Tất cả" },

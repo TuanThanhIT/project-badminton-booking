@@ -5,14 +5,14 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 import type { ProductVariant } from "../../../src/types/varient";
 import productService from "../../services/Admin/productService";
-import IconButton from "../../components/commons/admin/IconButton";
-import AddVariantModal from "../../components/commons/admin/AddVariantModal";
-import EditVariantModal from "../../components/commons/admin/EditVariantModal";
+import IconButton from "../../components/ui/admin/IconButton";
+import AddVariantModal from "../../components/ui/admin/AddVariantModal";
+import EditVariantModal from "../../components/ui/admin/EditVariantModal";
 import { toast } from "react-toastify";
-import UploadImageModal from "../../components/commons/admin/UploadImageModal";
+import UploadImageModal from "../../components/ui/admin/UploadImageModal";
 import { ImagePlus } from "lucide-react";
 import Swal from "sweetalert2";
-import EditImageModal from "../../components/commons/admin/EditImageModal";
+import EditImageModal from "../../components/ui/admin/EditImageModal";
 
 import { Plus } from "lucide-react";
 export default function VariantPage() {

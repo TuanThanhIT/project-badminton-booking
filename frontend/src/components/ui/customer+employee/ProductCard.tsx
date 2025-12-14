@@ -1,5 +1,5 @@
 import { Eye } from "lucide-react";
-import type { ProductInfo } from "../../types/product";
+import type { ProductInfo } from "../../../types/product";
 import { useNavigate } from "react-router-dom";
 
 type ProductCardProps = {

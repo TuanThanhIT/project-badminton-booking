@@ -1,10 +1,10 @@
-import AboutUsSection from "../../components/ui/AboutUsSection";
-import BadmintonNewSection from "../../components/ui/BadmintonNewSection";
-import BadmintonSection from "../../components/ui/BadmintonSection";
-import ContactSection from "../../components/ui/ContactSection";
-import CourtSection from "../../components/ui/CourtSection";
-import DiscountSection from "../../components/ui/DiscountSection";
-import HeroBanner from "../../components/ui/HeroBanner";
+import AboutUsSection from "../../components/ui/customer+employee/AboutUsSection";
+import BadmintonNewSection from "../../components/ui/customer+employee/BadmintonNewSection";
+import BadmintonSection from "../../components/ui/customer+employee/BadmintonSection";
+import ContactSection from "../../components/ui/customer+employee/ContactSection";
+import CourtSection from "../../components/ui/customer+employee/CourtSection";
+import DiscountSection from "../../components/ui/customer+employee/DiscountSection";
+import HeroBanner from "../../components/ui/customer+employee/HeroBanner";
 
 const HomePage = () => {
   return (

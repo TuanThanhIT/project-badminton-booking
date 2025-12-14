@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import categoryService from "../../services/Admin/categoryService";
 import type { CategoryItem } from "../../types/category";
 import type { ApiErrorType } from "../../types/error";
-import AddCategoryModal from "../../components/commons/admin/CategoryModal";
+import AddCategoryModal from "../../components/ui/admin/CategoryModal";
 
 const CategoryPage: React.FC = () => {
   const [categories, setCategories] = useState<CategoryItem[]>([]);

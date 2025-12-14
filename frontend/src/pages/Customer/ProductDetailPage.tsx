@@ -16,13 +16,13 @@ import type {
   ProductResponse,
   ProductVarient,
 } from "../../types/product";
-import ProductsRelated from "../../components/ui/ProductsRelated";
-import ProductReviewList from "../../components/ui/ReviewList";
+import ProductsRelated from "../../components/ui/customer+employee/ProductsRelated";
+import ProductReviewList from "../../components/ui/customer+employee/ReviewList";
 import {
   clearProductFeedbackError,
   getProductFeedback,
 } from "../../store/slices/customer/productFeedbackSlice";
-import Breadcrumb from "../../components/ui/Breadcrumb";
+import Breadcrumb from "../../components/ui/customer+employee/Breadcrumb";
 
 // --- format tiền ---
 const formatPrice = (n: number) =>

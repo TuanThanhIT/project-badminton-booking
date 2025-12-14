@@ -1,3 +1,4 @@
+// Sidebar.tsx
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -8,6 +9,8 @@ import {
   Grid2X2,
   Rows3,
   Percent,
+  ListOrdered,
+  Calendar,
 } from "lucide-react";
 import { useContext } from "react";
 import { SideBarContext } from "../../contexts/sidebarContext";
@@ -17,11 +20,15 @@ const Sidebar = () => {
   const { expanded, setExpanded } = useContext(SideBarContext)!;
 
   return (
-    <aside className="h-screen bg-white border-r border-gray-200 overflow-hidden">
+    <aside
+      className={`h-screen bg-white border-r border-gray-300 transition-all duration-300 ${
+        expanded ? "w-full" : "w-20"
+      }`}
+    >
       <nav className="h-full flex flex-col">
         {/* LOGO + TOGGLE */}
-        <div className="flex items-center justify-between px-3 py-4">
-          <div className="flex items-center gap-2 overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-4 border-b border-gray-300">
+          <div className="flex items-center gap-3 overflow-hidden">
             <img
               src="/img/logo_badminton.jpg"
               alt="logo"
@@ -30,22 +37,22 @@ const Sidebar = () => {
               }`}
             />
             {expanded && (
-              <span className="text-lg font-bold text-blue-600 whitespace-nowrap">
-                B-Hub
+              <span className="text-lg font-extrabold text-sky-600 tracking-wide">
+                B-Hub Admin
               </span>
             )}
           </div>
 
           <button
             onClick={() => setExpanded((p) => !p)}
-            className="p-1.5 rounded-lg hover:bg-gray-100"
+            className="p-2 rounded-lg hover:bg-sky-50 text-sky-600 transition"
           >
-            {expanded ? <ChevronFirst /> : <ChevronLast />}
+            {expanded ? <ChevronFirst size={20} /> : <ChevronLast size={20} />}
           </button>
         </div>
 
         {/* MENU */}
-        <ul className="px-3 space-y-1">
+        <ul className="flex-1 px-3 py-4 space-y-1">
           <NavLink to="/admin" end>
             {({ isActive }) => (
               <SidebarElement
@@ -55,7 +62,6 @@ const Sidebar = () => {
               />
             )}
           </NavLink>
-
           <NavLink to="/admin/products">
             {({ isActive }) => (
               <SidebarElement
@@ -65,7 +71,6 @@ const Sidebar = () => {
               />
             )}
           </NavLink>
-
           <NavLink to="/admin/categories">
             {({ isActive }) => (
               <SidebarElement
@@ -75,7 +80,6 @@ const Sidebar = () => {
               />
             )}
           </NavLink>
-
           <NavLink to="/admin/users">
             {({ isActive }) => (
               <SidebarElement
@@ -85,7 +89,6 @@ const Sidebar = () => {
               />
             )}
           </NavLink>
-
           <NavLink to="/admin/courts">
             {({ isActive }) => (
               <SidebarElement
@@ -95,7 +98,6 @@ const Sidebar = () => {
               />
             )}
           </NavLink>
-
           <NavLink to="/admin/discount">
             {({ isActive }) => (
               <SidebarElement
@@ -105,7 +107,31 @@ const Sidebar = () => {
               />
             )}
           </NavLink>
+          <NavLink to="/admin/order">
+            {({ isActive }) => (
+              <SidebarElement
+                icon={ListOrdered}
+                text="Quản lý đơn hàng"
+                active={isActive}
+              />
+            )}
+          </NavLink>
+          <NavLink to="/admin/booking">
+            {({ isActive }) => (
+              <SidebarElement
+                icon={Calendar}
+                text="Quản lý đặt sân"
+                active={isActive}
+              />
+            )}
+          </NavLink>
         </ul>
+
+        {expanded && (
+          <div className="px-4 py-3 text-xs text-gray-500 border-t border-gray-200">
+            © 2025 B-Hub Management
+          </div>
+        )}
       </nav>
     </aside>
   );

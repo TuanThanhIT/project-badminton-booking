@@ -1,5 +1,5 @@
-import type { ProductFeedbackResponse } from "../../types/productFeedback";
-import type { BookingFeedbackResponse } from "../../types/bookingFeedback";
+import type { ProductFeedbackResponse } from "../../../types/productFeedback";
+import type { BookingFeedbackResponse } from "../../../types/bookingFeedback";
 import { Info, Star } from "lucide-react";
 
 type ReviewListProps = {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from "../../store/hook";
+import { useAppDispatch, useAppSelector } from "../../../store/hook";
 import { toast } from "react-toastify";
 import {
   clearDraftError,
@@ -7,17 +7,17 @@ import {
   createDraft,
   getDraft,
   getDrafts,
-} from "../../store/slices/employee/draftSlice";
+} from "../../../store/slices/employee/draftSlice";
 import type {
   AddDraftBookingRequest,
   DraftBookingRequest,
   UpdateDraftBookingRequest,
-} from "../../types/draft";
-import type { CourtScheduleEplResponse } from "../../types/court";
-import type { ProductEplResponse } from "../../types/product";
-import type { BeverageEplResponse } from "../../types/beverage";
-import { getCourtSchedules } from "../../store/slices/employee/courtSlice";
-import { clearOfflineError } from "../../store/slices/employee/offlineSlice";
+} from "../../../types/draft";
+import type { CourtScheduleEplResponse } from "../../../types/court";
+import type { ProductEplResponse } from "../../../types/product";
+import type { BeverageEplResponse } from "../../../types/beverage";
+import { getCourtSchedules } from "../../../store/slices/employee/courtSlice";
+import { clearOfflineError } from "../../../store/slices/employee/offlineSlice";
 
 interface DraftBoxProps {
   selectedCourtSlots: CourtScheduleEplResponse;

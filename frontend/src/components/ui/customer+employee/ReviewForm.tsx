@@ -6,20 +6,20 @@ import { Clock, Star } from "lucide-react";
 import {
   FormRatingSchema,
   type formRating,
-} from "../../schemas/FormRatingSchema";
+} from "../../../schemas/FormRatingSchema";
 
-import { useAppDispatch, useAppSelector } from "../../store/hook";
+import { useAppDispatch, useAppSelector } from "../../../store/hook";
 
 import {
   clearProductFeedbackDetail,
   getProductFeedbackDetail,
-} from "../../store/slices/customer/productFeedbackSlice";
+} from "../../../store/slices/customer/productFeedbackSlice";
 
-import type { ProductFeedbackDetailRequest } from "../../types/productFeedback";
+import type { ProductFeedbackDetailRequest } from "../../../types/productFeedback";
 
-import { getBookingFeedbackDetail } from "../../store/slices/customer/bookingFeedbackSlice";
+import { getBookingFeedbackDetail } from "../../../store/slices/customer/bookingFeedbackSlice";
 
-import type { BookingFeedbackDetailRequest } from "../../types/bookingFeedback";
+import type { BookingFeedbackDetailRequest } from "../../../types/bookingFeedback";
 
 type ReviewFormProps = {
   setOpenReviewForm: (open: boolean) => void;

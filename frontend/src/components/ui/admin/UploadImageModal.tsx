@@ -1,6 +1,6 @@
 // components/commons/admin/UploadImageModal.tsx   // ⭐ NEW
 import React from "react";
-import UploadProductImages from "../admin/UploadProductImages";
+import UploadProductImages from "./UploadProductImages";
 
 interface Props {
   isOpen: boolean;

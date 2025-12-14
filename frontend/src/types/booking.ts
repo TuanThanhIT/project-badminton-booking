@@ -110,3 +110,12 @@ export type BookingCancelEplRequest = {
   bookingId: number;
   cancelReason: string;
 };
+
+export type CountBookingRequest = {
+  date?: string;
+};
+
+export type CountBookingResponse = {
+  status: string;
+  count: number;
+}[];

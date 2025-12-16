@@ -26,95 +26,149 @@ const getWorkShiftByDateService = async (workDate) => {
   }
 };
 
-const updateCheckInAndCashRegisterService = async (
-  workShiftEmployeeId,
-  checkInData,
-  openingCashData
+export const updateCheckInAndCashRegisterService = async (
+  workShiftId,
+  checkInTime,
+  openingCash
 ) => {
   const t = await sequelize.transaction();
-
   try {
-    const workShiftEmployee = await WorkShiftEmployee.findByPk(
-      workShiftEmployeeId,
-      { transaction: t, lock: t.LOCK.UPDATE }
-    );
+    const workShift = await WorkShift.findByPk(workShiftId);
+    if (!workShift) {
+      throw new ApiError(StatusCodes.NOT_FOUND, "Ca làm không tồn tại!");
+    }
 
+    if (!checkInTime || !/^\d{1,2}:\d{2}(:\d{2})?$/.test(checkInTime)) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Giờ checkIn không hợp lệ! (HH:MM hoặc HH:MM:SS)"
+      );
+    }
+
+    const workShiftEmployee = await WorkShiftEmployee.findOne({
+      where: { workShiftId },
+    });
     if (!workShiftEmployee) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Không tìm thấy ca làm!");
+      throw new ApiError("Ca làm chưa được phân cho nhân viên!");
+    } else {
+      if (!workShiftEmployee.checkIn) {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, "0");
+        const dd = String(today.getDate()).padStart(2, "0");
+
+        const checkInDateStr = `${yyyy}-${mm}-${dd} ${checkInTime}`;
+
+        await workShiftEmployee.update(
+          { checkIn: checkInDateStr },
+          { transaction: t }
+        );
+
+        await CashRegister.create(
+          {
+            workShiftEmployeeId: workShiftEmployee.id,
+            openingCash,
+          },
+          { transaction: t }
+        );
+      } else {
+        throw new ApiError(
+          StatusCodes.BAD_REQUEST,
+          "Mỗi ca chỉ được check in 1 lần! Không thể check in lại!"
+        );
+      }
+      await t.commit();
     }
-
-    if (workShiftEmployee.checkIn) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Bạn đã điểm danh vào rồi!");
-    }
-
-    // Update check-in
-    await workShiftEmployee.update(checkInData, { transaction: t });
-
-    // Mở cash register
-    await CashRegister.create(
-      { ...openingCashData, workShiftEmployeeId },
-      { transaction: t }
-    );
-
-    await t.commit();
   } catch (error) {
     await t.rollback();
-
     if (error instanceof ApiError) throw error;
-
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
 
-const updateCheckoutAndCashRegisterService = async (
-  workShiftEmployeeId,
-  checkoutData,
-  closingCashData
+export const updateCheckoutAndCashRegisterService = async (
+  workShiftId,
+  checkOutTime,
+  closingCash
 ) => {
-  const t = await sequelize.transaction();
-
+  const t = await t.transaction();
   try {
-    const workShiftEmployee = await WorkShiftEmployee.findByPk(
-      workShiftEmployeeId,
-      { transaction: t, lock: t.LOCK.UPDATE }
-    );
+    const workShift = await WorkShift.findByPk(workShiftId);
+    if (!workShift) {
+      throw new ApiError(StatusCodes.NOT_FOUND, "Ca làm không tồn tại!");
+    }
+
+    if (!checkOutTime || !/^\d{1,2}:\d{2}(:\d{2})?$/.test(checkOutTime)) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Giờ checkOut không hợp lệ! (HH:MM hoặc HH:MM:SS)"
+      );
+    }
+
+    const workShiftEmployee = await WorkShiftEmployee.findOne({
+      where: { workShiftId },
+    });
 
     if (!workShiftEmployee) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Không tìm thấy ca làm!");
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Ca làm chưa được phân cho nhân viên!"
+      );
     }
 
     if (workShiftEmployee.checkOut) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Bạn đã điểm danh ra rồi!");
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Mỗi ca chỉ được check out 1 lần! Không thể check out lại!"
+      );
     }
 
-    // Tính lương earnedWage
-    const checkInTime = new Date(workShiftEmployee.checkIn);
-    const checkOutTime = new Date(checkoutData.checkOut);
+    // ------------------- Tạo datetime string -------------------
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    const checkOutDateStr = `${yyyy}-${mm}-${dd} ${checkOutTime}`;
 
-    const hours = (checkOutTime - checkInTime) / (1000 * 60 * 60);
-    const earnedWage = hours * workShiftEmployee.hourlyWage;
+    // ------------------- Tính earnedWage -------------------
+    if (!workShiftEmployee.checkIn) {
+      throw new ApiError(StatusCodes.BAD_REQUEST, "Chưa có thời gian checkIn!");
+    }
 
-    // Update checkout + earnedWage
+    const checkInDate = new Date(workShiftEmployee.checkIn);
+    const checkOutDate = new Date(checkOutDateStr);
+
+    if (checkOutDate <= checkInDate) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Thời gian checkOut phải lớn hơn checkIn!"
+      );
+    }
+
+    const hoursWorked = (checkOutDate - checkInDate) / 1000 / 3600; // giờ làm việc
+    const earnedWage = Math.round(hoursWorked * workShift.shiftWage); // làm tròn số
+
+    // ------------------- Cập nhật checkOut và earnedWage -------------------
     await workShiftEmployee.update(
       {
-        ...checkoutData,
+        checkOut: checkOutDateStr,
         earnedWage,
       },
       { transaction: t }
     );
 
-    // Closing cash
+    // ------------------- Tạo CashRegister -------------------
     await CashRegister.create(
-      { ...closingCashData, workShiftEmployeeId },
+      {
+        workShiftEmployeeId: workShiftEmployee.id,
+        closingCash,
+      },
       { transaction: t }
     );
-
-    await t.commit();
+    t.commit();
   } catch (error) {
-    await t.rollback();
-
+    t.rollback();
     if (error instanceof ApiError) throw error;
-
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };

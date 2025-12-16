@@ -10,6 +10,7 @@ import {
   OfflineBookingItem,
   OfflineProductItem,
 } from "../../models/index.js";
+import sequelize from "../../config/db.js";
 
 const createOfflineService = async (draftId, employeeId) => {
   const transaction = await sequelize.transaction();

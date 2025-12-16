@@ -22,7 +22,7 @@ import {
 } from "../../store/slices/employee/bookingSlice";
 
 import PaginatedItems from "../../components/ui/customer+employee/PaginatedItems";
-import NiceBarChart from "../../components/ui/admin/BarChart";
+import NiceBarChart from "../../components/ui/admin/Charts/NiceBarChart";
 
 const TABS = [
   { key: "All", label: "Tất cả" },

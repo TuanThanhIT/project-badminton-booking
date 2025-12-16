@@ -11,6 +11,7 @@ import {
   Percent,
   ListOrdered,
   Calendar,
+  DollarSign,
 } from "lucide-react";
 import { useContext } from "react";
 import { SideBarContext } from "../../contexts/sidebarContext";
@@ -121,6 +122,15 @@ const Sidebar = () => {
               <SidebarElement
                 icon={Calendar}
                 text="Quản lý đặt sân"
+                active={isActive}
+              />
+            )}
+          </NavLink>
+          <NavLink to="/admin/revenue">
+            {({ isActive }) => (
+              <SidebarElement
+                icon={DollarSign}
+                text="Quản lý doanh thu"
                 active={isActive}
               />
             )}

@@ -43,6 +43,8 @@ import initAdminAuthRoute from "./routes/admin/authRoute.js";
 import initUserAdminAuthRoute from "./routes/admin/usersRoute.js";
 import initOrderAdminRoute from "./routes/admin/orderRoute.js";
 import initBookingAdminRoute from "./routes/admin/bookingRoute.js";
+import initRevenueAdminRoute from "./routes/admin/revenueRoute.js";
+import initDashboardAdminRoute from "./routes/admin/dashboardRoute.js";
 
 dotenv.config();
 
@@ -85,6 +87,8 @@ initNotificationCustomerRoute(app);
 initUserAdminAuthRoute(app);
 initOrderAdminRoute(app);
 initBookingAdminRoute(app);
+initRevenueAdminRoute(app);
+initDashboardAdminRoute(app);
 
 // Employee
 initAuthEmployeeRoute(app);

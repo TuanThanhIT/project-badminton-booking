@@ -8,7 +8,7 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
-import type { CountOrderResponse } from "../../../types/order";
+import type { CountOrderResponse } from "../../../../types/order";
 
 interface BarChartProps {
   data: CountOrderResponse;

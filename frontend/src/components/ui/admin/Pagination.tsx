@@ -1,51 +1,35 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-type PaginationProps = {
+const LIMIT = 10;
+
+interface PaginationProps {
   page: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-};
+  total: number;
+  onPrev: () => void;
+  onNext: () => void;
+}
 
-const Pagination = ({ page, totalPages, onPageChange }: PaginationProps) => {
-  if (totalPages <= 1) return null;
-
+const Pagination = ({ page, total, onPrev, onNext }: PaginationProps) => {
   return (
-    <div className="flex items-center justify-end gap-2 mt-4">
+    <div className="flex justify-center items-center gap-3 text-sm mt-2">
       <button
         disabled={page === 1}
-        onClick={() => onPageChange(page - 1)}
-        className="p-2 border rounded-lg disabled:opacity-40 hover:bg-gray-100"
+        onClick={onPrev}
+        className="p-1.5 border rounded-md disabled:opacity-40"
       >
-        <ChevronLeft size={18} />
+        <ChevronLeft size={16} />
       </button>
 
-      {Array.from({ length: totalPages }).map((_, i) => {
-        const p = i + 1;
-        return (
-          <button
-            key={p}
-            onClick={() => onPageChange(p)}
-            className={`px-3 py-1.5 rounded-lg border text-sm
-              ${
-                p === page
-                  ? "bg-sky-600 text-white border-sky-600"
-                  : "hover:bg-gray-100"
-              }`}
-          >
-            {p}
-          </button>
-        );
-      })}
+      <span className="text-gray-600">Trang {page}</span>
 
       <button
-        disabled={page === totalPages}
-        onClick={() => onPageChange(page + 1)}
-        className="p-2 border rounded-lg disabled:opacity-40 hover:bg-gray-100"
+        disabled={page * LIMIT >= total}
+        onClick={onNext}
+        className="p-1.5 border rounded-md disabled:opacity-40"
       >
-        <ChevronRight size={18} />
+        <ChevronRight size={16} />
       </button>
     </div>
   );
 };
-
 export default Pagination;

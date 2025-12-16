@@ -4,30 +4,16 @@ import { Loader2, Plus } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../store/hook";
 import { toast } from "react-toastify";
 import {
-  addDiscount,
-  addDiscountBooking,
   clearDiscountError,
-  deleteDiscount,
-  deleteDiscountBooking,
-  deleteDiscountBookingLocal,
   deleteDiscountLocal,
   getDiscountBookings,
   getDiscounts,
-  setDiscountBookingsLocal,
-  setDiscountsLocal,
-  updateDiscountActive,
   updateDiscountActiveLocal,
-  updateDiscountBookingActive,
-  updateDiscountBookingActiveLocal,
 } from "../../store/slices/admin/discountSlice";
-import type {
-  AdminAddDiscountRequest,
-  AdminDiscountRequest,
-} from "../../types/discount";
+import type { AdminDiscountRequest } from "../../types/discount";
 import DiscountTable from "../../components/ui/admin/DiscountTable";
 import AddDiscountForm from "../../components/ui/admin/AddDiscountForm";
-import type { formAddDiscountSchema } from "../../schemas/FormAddDiscountSchema";
-import { Pagination } from "antd";
+import Pagination from "../../components/ui/admin/Pagination";
 
 const DiscountPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -154,43 +140,16 @@ const DiscountPage: React.FC = () => {
           />
         )}
         {/* --- Pagination Backend --- */}{" "}
-        <div className="flex items-center justify-between py-4">
-          {" "}
-          <div className="flex items-center gap-2">
-            {" "}
-            <button
-              className="px-3 py-1 bg-gray-200 rounded-md hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition"
-              onClick={() => setPageDiscount((prev) => Math.max(prev - 1, 1))}
-              disabled={pageDiscount <= 1}
-              title="Trang trước"
-            >
-              {" "}
-              « Trước{" "}
-            </button>{" "}
-            <button
-              className="px-3 py-1 bg-gray-200 rounded-md hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition"
-              onClick={() =>
-                setPageDiscount((prev) =>
-                  prev < Math.ceil((discounts?.total || 0) / limit)
-                    ? prev + 1
-                    : prev
-                )
-              }
-              disabled={
-                pageDiscount >= Math.ceil((discounts?.total || 0) / limit)
-              }
-              title="Trang sau"
-            >
-              {" "}
-              Sau »{" "}
-            </button>{" "}
-          </div>{" "}
-          <div className="text-sm text-gray-600">
-            {" "}
-            Trang {pageDiscount} /{" "}
-            {Math.max(Math.ceil((discounts?.total || 0) / limit), 1)}{" "}
-          </div>{" "}
-        </div>
+        <Pagination
+          page={pageDiscount}
+          total={discounts?.total || 0}
+          onPrev={() => setPageDiscount((prev) => Math.max(prev - 1, 1))}
+          onNext={() =>
+            setPageDiscount((prev) =>
+              prev * limit < (discounts?.total || 0) ? prev + 1 : prev
+            )
+          }
+        />
       </section>
 
       <section className="bg-white rounded-2xl border border-gray-200 p-10 space-y-6">
@@ -255,43 +214,16 @@ const DiscountPage: React.FC = () => {
           />
         )}
         {/* --- Pagination Backend --- */}{" "}
-        <div className="flex items-center justify-between py-4">
-          {" "}
-          <div className="flex items-center gap-2">
-            {" "}
-            <button
-              className="px-3 py-1 bg-gray-200 rounded-md hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition"
-              onClick={() => setPageBooking((prev) => Math.max(prev - 1, 1))}
-              disabled={pageBooking <= 1}
-              title="Trang trước"
-            >
-              {" "}
-              « Trước{" "}
-            </button>{" "}
-            <button
-              className="px-3 py-1 bg-gray-200 rounded-md hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition"
-              onClick={() =>
-                setPageBooking((prev) =>
-                  prev < Math.ceil((discounts?.total || 0) / limit)
-                    ? prev + 1
-                    : prev
-                )
-              }
-              disabled={
-                pageBooking >= Math.ceil((discounts?.total || 0) / limit)
-              }
-              title="Trang sau"
-            >
-              {" "}
-              Sau »{" "}
-            </button>{" "}
-          </div>{" "}
-          <div className="text-sm text-gray-600">
-            {" "}
-            Trang {pageBooking} /{" "}
-            {Math.max(Math.ceil((discounts?.total || 0) / limit), 1)}{" "}
-          </div>{" "}
-        </div>
+        <Pagination
+          page={pageBooking}
+          total={discountBookings?.total || 0}
+          onPrev={() => setPageBooking((prev) => Math.max(prev - 1, 1))}
+          onNext={() =>
+            setPageBooking((prev) =>
+              prev * limit < (discountBookings?.total || 0) ? prev + 1 : prev
+            )
+          }
+        />
       </section>
 
       {openAdd && (

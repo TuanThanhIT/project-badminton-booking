@@ -9,7 +9,7 @@ const PARTNER_CODE = process.env.PARTNER_CODE;
 const ACCESS_KEY = process.env.ACCESS_KEY;
 const SECRET_KEY = process.env.SECRET_KEY;
 
-const IPN_URL = "https://772322c3b18b.ngrok-free.app/user/momo/momo-webhook";
+const IPN_URL = "https://4e19788eee03.ngrok-free.app/user/momo/momo-webhook";
 
 const createPaymentService = async (
   entityId,

@@ -15,6 +15,7 @@ import AuthAdminGuard from "../components/guards/AuthAdminGuard";
 import ProfilePage from "../pages/Customer/ProfilePage";
 import OrderPage from "../pages/Admin/OrderPage";
 import BookingPage from "../pages/Admin/BookingPage";
+import RevenuePage from "../pages/Admin/RevenuePage";
 
 const AdminRoute = () => {
   return (
@@ -38,6 +39,7 @@ const AdminRoute = () => {
         <Route path="discount" element={<DiscountPage />}></Route>
         <Route path="order" element={<OrderPage />}></Route>
         <Route path="booking" element={<BookingPage />}></Route>
+        <Route path="revenue" element={<RevenuePage />}></Route>
         <Route path="products/add" element={<AddProductPage />}></Route>
         <Route path="products/edit/:id" element={<EditProductPage />}></Route>
         <Route path="courts" element={<CourtPage />}></Route>

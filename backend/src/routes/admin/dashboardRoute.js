@@ -54,6 +54,13 @@ const initDashboardAdminRoute = (app) => {
     dashboardController.getLowStockWarning
   );
 
+  dashboardRoute.get(
+    "/work-shift-current",
+    auth,
+    authorize("ADMIN"),
+    dashboardController.getTodayWorkShift
+  );
+
   // Gắn route vào app
   app.use("/admin/dashboard", dashboardRoute);
 };

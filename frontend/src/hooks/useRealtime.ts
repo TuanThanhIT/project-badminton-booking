@@ -15,16 +15,30 @@ export const useRealtime = (token: string) => {
 
     // Danh sách event
     const events = [
-      "cancel-order",
-      "create-order",
-      "create-booking",
-      "cancel-booking",
-      "epl-confirm-order",
-      "epl-complete-order",
       "epl-cancel-order",
-      "epl-confirm-booking",
-      "epl-complete-booking",
+      "epl-create-order",
+      "epl-create-booking",
       "epl-cancel-booking",
+
+      "us-confirm-order",
+      "us-complete-order",
+      "us-cancel-order",
+      "us-confirm-booking",
+      "us-complete-booking",
+      "us-cancel-booking",
+
+      "adm-cancel-order",
+      "adm-create-order",
+      "adm-create-booking",
+      "adm-cancel-booking",
+      "adm-confirm-order",
+      "adm-complete-order",
+      "adm-cancel-order",
+      "adm-confirm-booking",
+      "adm-complete-booking",
+      "adm-cancel-booking",
+      "adm-check-in",
+      "adm-check-out",
     ] as const;
 
     // Lắng nghe tất cả event

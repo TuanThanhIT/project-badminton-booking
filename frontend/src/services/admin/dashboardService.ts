@@ -5,6 +5,7 @@ import type {
   DashboardRevenue7DaysResponse,
   DashboardTopBeveragesResponse,
   DashboardTopProductsResponse,
+  DashboardWorkShiftResponse,
 } from "../../types/dashboard";
 import instance from "../../utils/axiosCustomize";
 
@@ -37,6 +38,12 @@ const getLowStockService = () => {
   return instance.get<DashboardLowStockResponse>("/admin/dashboard/low-stock");
 };
 
+const getWorkShiftService = () => {
+  return instance.get<DashboardWorkShiftResponse>(
+    "/admin/dashboard/work-shift-current"
+  );
+};
+
 const dashboardService = {
   getDashboardBookingService,
   getDashboardRetailOrderService,
@@ -44,6 +51,7 @@ const dashboardService = {
   getLowStockService,
   getTopProductsService,
   getTopBeveragesService,
+  getWorkShiftService,
 };
 
 export default dashboardService;

@@ -11,7 +11,10 @@ import {
   ProductFeedback,
   Profile,
 } from "../../models/index.js";
-import { sendEmployeesNotification } from "../../utils/sendNotification.js";
+import {
+  sendAdminNotification,
+  sendEmployeesNotification,
+} from "../../utils/sendNotification.js";
 import sequelize from "../../config/db.js";
 
 const createOrderService = async (
@@ -140,7 +143,14 @@ const createOrderService = async (
       "Có đơn hàng mới",
       `Khách hàng vừa đặt đơn hàng #0${order.id}. Vui lòng kiểm tra và xác nhận đơn hàng.`,
       "EMPLOYEE",
-      "create-order"
+      "epl-create-order"
+    );
+
+    await sendAdminNotification(
+      "Có đơn hàng mới",
+      `Khách hàng vừa đặt đơn hàng #0${order.id}. `,
+      "ADMIN",
+      "adm-create-order"
     );
 
     return order.id;

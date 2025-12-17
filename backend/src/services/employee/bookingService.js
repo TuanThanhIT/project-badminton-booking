@@ -10,7 +10,10 @@ import {
   User,
 } from "../../models/index.js";
 import ApiError from "../../utils/ApiError.js";
-import { sendUserNotification } from "../../utils/sendNotification.js";
+import {
+  sendAdminNotification,
+  sendUserNotification,
+} from "../../utils/sendNotification.js";
 import mailer from "../../utils/mailer.js";
 import sequelize from "../../config/db.js";
 
@@ -205,9 +208,16 @@ const confirmedBookingService = async (bookingId) => {
 
     await sendUserNotification(
       booking.userId,
-      "epl-confirm-booking",
+      "us-confirm-booking",
       "Lịch đặt sân đã được xác nhận",
       `Lịch đặt sân #0${bookingId} đã được xác nhận.`
+    );
+
+    await sendAdminNotification(
+      "Lịch đặt sân đã được xác nhận",
+      `Lịch đặt sân #0${bookingId} đã được nhân viên xác nhận.`,
+      "ADMIN",
+      "adm-confirm-booking"
     );
 
     await handleSendBookingMail(booking, "confirm");
@@ -278,9 +288,16 @@ const completedBookingService = async (bookingId) => {
 
     await sendUserNotification(
       booking.userId,
-      "epl-complete-booking",
+      "us-complete-booking",
       "Lịch đặt sân đã hoàn thành",
       `Lịch đặt sân #0${bookingId} đã hoàn thành.`
+    );
+
+    await sendAdminNotification(
+      "Lịch đặt sân đã hoàn thành",
+      `Lịch đặt sân #0${bookingId} đã được hoàn thành.`,
+      "ADMIN",
+      "adm-complete-booking"
     );
 
     await handleSendBookingMail(booking, "complete");
@@ -393,9 +410,16 @@ const cancelBookingService = async (bookingId, cancelReason) => {
 
     await sendUserNotification(
       booking.userId,
-      "epl-cancel-booking",
+      "us-cancel-booking",
       "Lịch đặt sân đã bị hủy",
       `Lịch đặt sân #0${bookingId} đã bị hủy.`
+    );
+
+    await sendAdminNotification(
+      "Lịch đặt sân đã bị hủy",
+      `Lịch đặt sân #0${bookingId} đã được nhân viên hủy theo yêu cầu khách hàng.`,
+      "ADMIN",
+      "adm-cancel-booking"
     );
 
     await handleSendBookingMail(booking, "cancel");

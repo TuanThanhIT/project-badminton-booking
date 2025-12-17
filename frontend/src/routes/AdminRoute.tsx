@@ -16,6 +16,7 @@ import ProfilePage from "../pages/Customer/ProfilePage";
 import OrderPage from "../pages/Admin/OrderPage";
 import BookingPage from "../pages/Admin/BookingPage";
 import RevenuePage from "../pages/Admin/RevenuePage";
+import DashboardPage from "../pages/Admin/DashboardPage";
 
 const AdminRoute = () => {
   return (
@@ -30,7 +31,7 @@ const AdminRoute = () => {
           </AuthAdminGuard>
         }
       >
-        <Route path="dashboard" element={<HomePage />}></Route>
+        <Route path="dashboard" element={<DashboardPage />}></Route>
         <Route path="users" element={<UsersPage />}></Route>
         <Route path="products" element={<ProductPage />}></Route>
         <Route path="categories" element={<CategoryPage />}></Route>

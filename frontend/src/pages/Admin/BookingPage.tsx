@@ -272,7 +272,7 @@ const BookingPage = () => {
           </div>
 
           {/* ===== SECTION HEADER ===== */}
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-800 mb-5 mt-5">
+          <h2 className="flex items-center gap-2 text-xl font-semibold text-sky-700 mb-5 mt-5">
             Danh sách lịch đặt sân
           </h2>
 

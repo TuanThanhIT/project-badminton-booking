@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Outlet } from "react-router-dom";
 import LoginPage from "../pages/Employee/LoginPage";
 import EmployeeLayout from "../components/layouts/EmployeeLayout";
 import CashRegisterPage from "../pages/Employee/CashRegisterPage";
@@ -12,24 +12,30 @@ import CheckOutPage from "../pages/Employee/CheckOutPage";
 const EmployeeRoute = () => {
   return (
     <Routes>
-      {/* Public route */}
-      <Route path="login" element={<LoginPage />}></Route>
+      <Route path="login" element={<LoginPage />} />
 
-      {/* Protected routes */}
       <Route
-        path=""
         element={
           <AuthEmployeeGuard>
             <EmployeeLayout />
           </AuthEmployeeGuard>
         }
       >
-        <Route path="home" element={<EmployeePage />}></Route>
-        <Route path="cash-register" element={<CashRegisterPage />}></Route>
-        <Route path="profile" element={<ProfilePage />}></Route>
-        <Route path="bookings" element={<BookingPage />}></Route>
-        <Route path="orders" element={<OrderPage />}></Route>
-        <Route path="check-out" element={<CheckOutPage />}></Route>
+        <Route path="home" element={<EmployeePage />} />
+        <Route path="profile" element={<ProfilePage />} />
+        <Route path="bookings" element={<BookingPage />} />
+        <Route path="orders" element={<OrderPage />} />
+      </Route>
+
+      <Route
+        element={
+          <AuthEmployeeGuard>
+            <Outlet />
+          </AuthEmployeeGuard>
+        }
+      >
+        <Route path="cash-register" element={<CashRegisterPage />} />
+        <Route path="check-out" element={<CheckOutPage />} />
       </Route>
     </Routes>
   );

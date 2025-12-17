@@ -1,4 +1,8 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import {
+  createAsyncThunk,
+  createSlice,
+  type PayloadAction,
+} from "@reduxjs/toolkit";
 import type { ApiErrorType } from "../../../types/error";
 import type {
   CountOrderRequest,
@@ -30,6 +34,8 @@ const initialState: OrderState = {
   loading: false,
   error: undefined,
 };
+
+type OrderStatus = "Pending" | "Paid" | "Confirmed" | "Completed" | "Cancelled";
 
 export const getOrders = createAsyncThunk<
   OrderListEplResponse,
@@ -103,6 +109,26 @@ const orderSlice = createSlice({
     clearOrdersError(state) {
       state.error = undefined;
     },
+    updateOrderStatusLocal(
+      state,
+      action: PayloadAction<{ orderId: number; orderStatus: OrderStatus }>
+    ) {
+      if (!state.orders) return;
+
+      const { orderId, orderStatus } = action.payload;
+      const index = state.orders.orders.findIndex((n) => n.id === orderId);
+
+      if (index !== -1) {
+        state.orders.orders[index].orderStatus = orderStatus;
+      }
+    },
+
+    setOrdersLocal(
+      state,
+      action: PayloadAction<{ prevOrders: OrderListEplResponse }>
+    ) {
+      state.orders = action.payload.prevOrders;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -168,5 +194,6 @@ const orderSlice = createSlice({
       });
   },
 });
-export const { clearOrdersError } = orderSlice.actions;
+export const { clearOrdersError, updateOrderStatusLocal, setOrdersLocal } =
+  orderSlice.actions;
 export default orderSlice.reducer;

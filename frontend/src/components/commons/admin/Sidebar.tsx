@@ -54,7 +54,7 @@ const Sidebar = () => {
 
         {/* MENU */}
         <ul className="flex-1 px-3 py-4 space-y-1">
-          <NavLink to="/admin" end>
+          <NavLink to="/admin/dashboard" end>
             {({ isActive }) => (
               <SidebarElement
                 icon={LayoutDashboard}

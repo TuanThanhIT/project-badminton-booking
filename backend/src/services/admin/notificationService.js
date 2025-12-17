@@ -2,10 +2,10 @@ import { StatusCodes } from "http-status-codes";
 import ApiError from "../../utils/ApiError.js";
 import { Notification } from "../../models/index.js";
 
-const getNotificationsService = async (userId) => {
+const getNotificationsService = async () => {
   try {
     const notifications = await Notification.findAll({
-      where: { userId },
+      where: { role: "ADMIN" },
       attributes: ["id", "title", "message", "isRead", "type", "createdDate"],
       order: [["createdDate", "DESC"]],
     });
@@ -38,10 +38,10 @@ const updateNotificationService = async (notificationId) => {
   }
 };
 
-const updateAllNotificationService = async (userId) => {
+const updateAllNotificationService = async () => {
   try {
     const notifications = await Notification.findAll({
-      where: { userId, isRead: false },
+      where: { role: "ADMIN", isRead: false },
     });
     if (notifications.length === 0) {
       throw new ApiError(
@@ -51,7 +51,7 @@ const updateAllNotificationService = async (userId) => {
     } else {
       await Notification.update(
         { isRead: true },
-        { where: { role: "EMPLOYEE", isRead: false } }
+        { where: { role: "ADMIN", isRead: false } }
       );
     }
   } catch (error) {

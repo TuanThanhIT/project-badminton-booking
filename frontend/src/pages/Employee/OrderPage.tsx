@@ -6,6 +6,8 @@ import {
   completeOrder,
   confirmOrder,
   getOrders,
+  setOrdersLocal,
+  updateOrderStatusLocal,
 } from "../../store/slices/employee/orderSlice";
 import type {
   OrderCancelEplRequest,
@@ -107,44 +109,50 @@ const OrderPage = () => {
   }, [error, dispatch]);
 
   const handleConfirmOrder = async (orderId: number) => {
-    try {
-      const result = await Swal.fire({
-        title: "Xác nhận đơn hàng",
-        text: "Bạn có chắc chắn muốn xác nhận đơn hàng này không?",
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: "Chắc chắn",
-        cancelButtonText: "Hủy",
-      });
-      if (result.isConfirmed) {
+    const result = await Swal.fire({
+      title: "Xác nhận đơn hàng",
+      text: "Bạn có chắc chắn muốn xác nhận đơn hàng này không?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Chắc chắn",
+      cancelButtonText: "Hủy",
+    });
+    if (result.isConfirmed) {
+      if (!orders) return;
+      const prevOrders = { ...orders };
+      dispatch(updateOrderStatusLocal({ orderId, orderStatus: "Confirmed" }));
+      try {
         const data = { orderId };
         const res = await dispatch(confirmOrder({ data })).unwrap();
         toast.success(res.message);
         fetchOrders();
+      } catch (error) {
+        dispatch(setOrdersLocal({ prevOrders }));
       }
-    } catch (error) {
-      // Không xử lý lỗi nữa
     }
   };
 
   const handleCompleteOrder = async (orderId: number) => {
-    try {
-      const result = await Swal.fire({
-        title: "Xác nhận hoàn thành đơn hàng",
-        text: "Bạn có chắc chắn muốn hoàn thành đơn hàng này không?",
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: "Chắc chắn",
-        cancelButtonText: "Hủy",
-      });
-      if (result.isConfirmed) {
+    const result = await Swal.fire({
+      title: "Xác nhận hoàn thành đơn hàng",
+      text: "Bạn có chắc chắn muốn hoàn thành đơn hàng này không?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Chắc chắn",
+      cancelButtonText: "Hủy",
+    });
+    if (result.isConfirmed) {
+      if (!orders) return;
+      const prevOrders = { ...orders };
+      dispatch(updateOrderStatusLocal({ orderId, orderStatus: "Completed" }));
+      try {
         const data = { orderId };
         const res = await dispatch(completeOrder({ data })).unwrap();
         toast.success(res.message);
         fetchOrders();
+      } catch (error) {
+        dispatch(setOrdersLocal({ prevOrders }));
       }
-    } catch (error) {
-      // Không xử lý lỗi nữa
     }
   };
 

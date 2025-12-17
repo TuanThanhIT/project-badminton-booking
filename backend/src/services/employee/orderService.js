@@ -10,7 +10,10 @@ import {
   Profile,
 } from "../../models/index.js";
 import ApiError from "../../utils/ApiError.js";
-import { sendUserNotification } from "../../utils/sendNotification.js";
+import {
+  sendAdminNotification,
+  sendUserNotification,
+} from "../../utils/sendNotification.js";
 import mailer from "../../utils/mailer.js";
 import sequelize from "../../config/db.js";
 
@@ -199,9 +202,16 @@ const confirmedOrderService = async (orderId) => {
     // các tác vụ ngoài transaction
     await sendUserNotification(
       order.userId,
-      "epl-confirm-order",
+      "us-confirm-order",
       "Đơn hàng đã được xác nhận",
       `Đơn hàng #0${orderId} đã được xác nhận.`
+    );
+
+    await sendAdminNotification(
+      "Đơn hàng đã được xác nhận",
+      `Đơn hàng #0${orderId} đã được nhân viên xác nhận.`,
+      "ADMIN",
+      "adm-confirm-order"
     );
 
     await handleSendOrderMail(order, "confirm");
@@ -279,9 +289,16 @@ const completedOrderService = async (orderId) => {
 
     await sendUserNotification(
       order.userId,
-      "epl-complete-order",
+      "us-complete-order",
       "Đơn hàng đã hoàn thành",
       `Đơn hàng #0${orderId} đã được hoàn thành.`
+    );
+
+    await sendAdminNotification(
+      "Đơn hàng đã hoàn thành",
+      `Đơn hàng #0${orderId} đã được hoàn thành`,
+      "ADMIN",
+      "adm-complete-order"
     );
 
     await handleSendOrderMail(order, "complete");
@@ -405,9 +422,16 @@ const cancelOrderService = async (orderId, cancelReason) => {
 
     await sendUserNotification(
       order.userId,
-      "epl-cancel-order",
+      "us-cancel-order",
       "Đơn hàng đã bị hủy",
       `Đơn hàng #0${orderId} đã được cửa hàng hủy.`
+    );
+
+    await sendAdminNotification(
+      "Đơn hàng đã bị hủy",
+      `Đơn hàng #0${orderId} đã được nhân viên hủy theo yêu cầu của khách hàng.`,
+      "ADMIN",
+      "adm-cancel-order"
     );
 
     await handleSendOrderMail(order, "cancel");

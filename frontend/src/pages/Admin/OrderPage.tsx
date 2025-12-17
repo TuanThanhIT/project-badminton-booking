@@ -270,7 +270,7 @@ const OrderPage = () => {
           </div>
 
           {/* ===== SECTION HEADER ===== */}
-          <h2 className="flex items-center gap-2 text-xl font-semibold text-gray-800 mb-5 mt-5">
+          <h2 className="flex items-center gap-2 text-xl font-semibold text-sky-700 mb-5 mt-5">
             Danh sách đơn hàng
           </h2>
 

@@ -62,3 +62,19 @@ export type DashboardLowStockResponse = {
     stock: number;
   }[];
 };
+
+export type DashboardWorkShiftResponse = {
+  id: number;
+  name: string;
+  workDate: string;
+  startTime: string;
+  endTime: string;
+  employees: {
+    id: number;
+    username: string;
+    fullName: string | null;
+    checkIn: string | null;
+    checkOut: string | null;
+    roleInShift: string;
+  }[];
+}[];

@@ -1,4 +1,8 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import {
+  createAsyncThunk,
+  createSlice,
+  type PayloadAction,
+} from "@reduxjs/toolkit";
 import type { ApiErrorType } from "../../../types/error";
 import type {
   BookingCancelEplRequest,
@@ -15,6 +19,12 @@ import type {
 import bookingService from "../../../services/Employee/bookingService";
 import bookingAdminService from "../../../services/Admin/bookingService";
 
+type BookingStatus =
+  | "Pending"
+  | "Paid"
+  | "Confirmed"
+  | "Completed"
+  | "Cancelled";
 interface OrderState {
   bookings: BookingListEplResponse | undefined;
   countBookings: CountBookingResponse;
@@ -105,7 +115,31 @@ const bookingSlice = createSlice({
     clearBookingsError(state) {
       state.error = undefined;
     },
+
+    updateBookingStatusLocal(
+      state,
+      action: PayloadAction<{ bookingId: number; bookingStatus: BookingStatus }>
+    ) {
+      if (!state.bookings) return;
+
+      const { bookingId, bookingStatus } = action.payload;
+      const index = state.bookings.bookings.findIndex(
+        (n) => n.id === bookingId
+      );
+
+      if (index !== -1) {
+        state.bookings.bookings[index].bookingStatus = bookingStatus;
+      }
+    },
+
+    setBookingsLocal(
+      state,
+      action: PayloadAction<{ prevBookings: BookingListEplResponse }>
+    ) {
+      state.bookings = action.payload.prevBookings;
+    },
   },
+
   extraReducers: (builder) => {
     builder
       // getBookings
@@ -170,5 +204,10 @@ const bookingSlice = createSlice({
       });
   },
 });
-export const { clearBookingsError } = bookingSlice.actions;
+
+export const {
+  clearBookingsError,
+  updateBookingStatusLocal,
+  setBookingsLocal,
+} = bookingSlice.actions;
 export default bookingSlice.reducer;

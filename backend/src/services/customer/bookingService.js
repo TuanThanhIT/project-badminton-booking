@@ -10,7 +10,10 @@ import {
   PaymentBooking,
   User,
 } from "../../models/index.js";
-import { sendEmployeesNotification } from "../../utils/sendNotification.js";
+import {
+  sendAdminNotification,
+  sendEmployeesNotification,
+} from "../../utils/sendNotification.js";
 import sequelize from "../../config/db.js";
 
 const createBookingService = async (
@@ -131,7 +134,14 @@ const createBookingService = async (
       "Có đặt sân mới",
       `Khách hàng vừa đặt sân #0${booking.id}. Vui lòng kiểm tra và xác nhận lịch đặt.`,
       "EMPLOYEE",
-      "create-booking"
+      "epl-create-booking"
+    );
+
+    await sendAdminNotification(
+      "Có đặt sân mới",
+      `Khách hàng vừa đặt sân #0${booking.id}.`,
+      "ADMIN",
+      "adm-create-booking"
     );
 
     return booking.id;
@@ -291,7 +301,14 @@ const cancelBookingService = async (bookingId, cancelReason) => {
       "Lịch đặt sân đã bị hủy",
       `Khách hàng vừa hủy lịch đặt sân #0${bookingId}`,
       "EMPLOYEE",
-      "cancel-booking"
+      "epl-cancel-booking"
+    );
+
+    await sendAdminNotification(
+      "Lịch đặt sân đã bị hủy",
+      `Khách hàng vừa hủy lịch đặt sân #0${bookingId}.`,
+      "ADMIN",
+      "adm-cancel-booking"
     );
   } catch (error) {
     await t.rollback();

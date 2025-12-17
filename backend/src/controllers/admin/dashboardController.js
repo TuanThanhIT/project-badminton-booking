@@ -31,7 +31,7 @@ const getTodayRetailOrder = async (req, res, next) => {
   }
 };
 
-/* ===================== 5. Top sản phẩm bán chạy ===================== */
+/* ===================== 4. Top sản phẩm bán chạy ===================== */
 const getTopProduct = async (req, res, next) => {
   try {
     const data = await dashboardService.getTopProductService();
@@ -41,7 +41,7 @@ const getTopProduct = async (req, res, next) => {
   }
 };
 
-/* ===================== 6. Top đồ uống bán chạy ===================== */
+/* ===================== 5. Top đồ uống bán chạy ===================== */
 const getTopBeverage = async (req, res, next) => {
   try {
     const data = await dashboardService.getTopBeverageService();
@@ -51,10 +51,19 @@ const getTopBeverage = async (req, res, next) => {
   }
 };
 
-/* ===================== 7. Cảnh báo tồn kho thấp ===================== */
+/* ===================== 6. Cảnh báo tồn kho thấp ===================== */
 const getLowStockWarning = async (req, res, next) => {
   try {
     const data = await dashboardService.getLowStockWarningService();
+    res.status(StatusCodes.OK).json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getTodayWorkShift = async (req, res, next) => {
+  try {
+    const data = await dashboardService.getTodayWorkShiftService();
     res.status(StatusCodes.OK).json(data);
   } catch (error) {
     next(error);
@@ -68,6 +77,7 @@ const dashboardController = {
   getTopProduct,
   getTopBeverage,
   getLowStockWarning,
+  getTodayWorkShift,
 };
 
 export default dashboardController;

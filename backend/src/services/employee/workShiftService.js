@@ -6,6 +6,7 @@ import {
   WorkShiftEmployee,
 } from "../../models/index.js";
 import sequelize from "../../config/db.js";
+import { sendAdminNotification } from "../../utils/sendNotification.js";
 
 const getWorkShiftByDateService = async (workDate) => {
   try {
@@ -78,6 +79,13 @@ export const updateCheckInAndCashRegisterService = async (
         );
       }
       await t.commit();
+
+      await sendAdminNotification(
+        "Check-in ca làm",
+        `Nhân viên có id là ${workShiftEmployee.employeeId} vừa check-in vào ${workShift.name} ngày ${workShift.workDate}`,
+        "ADMIN",
+        "adm-check-in"
+      );
     }
   } catch (error) {
     await t.rollback();
@@ -91,7 +99,7 @@ export const updateCheckoutAndCashRegisterService = async (
   checkOutTime,
   closingCash
 ) => {
-  const t = await t.transaction();
+  const t = await sequelize.transaction();
   try {
     const workShift = await WorkShift.findByPk(workShiftId);
     if (!workShift) {
@@ -166,6 +174,13 @@ export const updateCheckoutAndCashRegisterService = async (
       { transaction: t }
     );
     t.commit();
+
+    await sendAdminNotification(
+      "Check-out ca làm",
+      `Nhân viên có id là ${workShiftEmployee.employeeId} vừa check-out khỏi ${workShift.name} ngày ${workShift.workDate}`,
+      "ADMIN",
+      "adm-check-out"
+    );
   } catch (error) {
     t.rollback();
     if (error instanceof ApiError) throw error;

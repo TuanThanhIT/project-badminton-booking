@@ -23,6 +23,8 @@ import {
   completeBooking,
   confirmBooking,
   getBookings,
+  setBookingsLocal,
+  updateBookingStatusLocal,
 } from "../../store/slices/employee/bookingSlice";
 import Swal from "sweetalert2";
 import CancelForm from "../../components/ui/customer+employee/CancelForm";
@@ -107,44 +109,54 @@ const BookingPage = () => {
   }, [error, dispatch]);
 
   const handleConfirmBooking = async (bookingId: number) => {
-    try {
-      const result = await Swal.fire({
-        title: "Xác nhận đặt sân",
-        text: "Bạn có chắc chắn muốn xác nhận lịch đặt sân này không?",
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: "Chắc chắn",
-        cancelButtonText: "Hủy",
-      });
-      if (result.isConfirmed) {
+    if (!bookings) return;
+    const prevBookings = { ...bookings };
+    const result = await Swal.fire({
+      title: "Xác nhận đặt sân",
+      text: "Bạn có chắc chắn muốn xác nhận lịch đặt sân này không?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Chắc chắn",
+      cancelButtonText: "Hủy",
+    });
+    if (result.isConfirmed) {
+      dispatch(
+        updateBookingStatusLocal({ bookingId, bookingStatus: "Confirmed" })
+      );
+      try {
         const data = { bookingId };
         const res = await dispatch(confirmBooking({ data })).unwrap();
         toast.success(res.message);
         fetchBookings();
+      } catch (error) {
+        dispatch(setBookingsLocal({ prevBookings }));
       }
-    } catch (error) {
-      // Không xử lý lỗi nữa
     }
   };
 
   const handleCompleteBooking = async (bookingId: number) => {
-    try {
-      const result = await Swal.fire({
-        title: "Xác nhận hoàn thành đặt sân",
-        text: "Bạn có chắc chắn muốn hoàn thành lịch đặt sân này không?",
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: "Chắc chắn",
-        cancelButtonText: "Hủy",
-      });
-      if (result.isConfirmed) {
+    if (!bookings) return;
+    const result = await Swal.fire({
+      title: "Xác nhận hoàn thành đặt sân",
+      text: "Bạn có chắc chắn muốn hoàn thành lịch đặt sân này không?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Chắc chắn",
+      cancelButtonText: "Hủy",
+    });
+    if (result.isConfirmed) {
+      const prevBookings = { ...bookings };
+      dispatch(
+        updateBookingStatusLocal({ bookingId, bookingStatus: "Completed" })
+      );
+      try {
         const data = { bookingId };
         const res = await dispatch(completeBooking({ data })).unwrap();
         toast.success(res.message);
         fetchBookings();
+      } catch (error) {
+        dispatch(setBookingsLocal({ prevBookings }));
       }
-    } catch (error) {
-      // Không xử lý lỗi nữa
     }
   };
 

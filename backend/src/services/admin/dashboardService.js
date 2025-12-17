@@ -10,12 +10,13 @@ import {
   OrderDetail,
   Product,
   ProductVarient,
+  Profile,
+  User,
   WorkShift,
   WorkShiftEmployee,
 } from "../../models/index.js";
 import ApiError from "../../utils/ApiError.js";
 import { StatusCodes } from "http-status-codes";
-import { User } from "lucide-react";
 
 const buildDayRange = (date) => {
   const d = date ? new Date(date) : new Date();
@@ -444,6 +445,56 @@ const getLowStockWarningService = async () => {
   };
 };
 
+const getTodayWorkShiftService = async () => {
+  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
+  const workShifts = await WorkShift.findAll({
+    where: { workDate: today },
+    include: [
+      {
+        model: WorkShiftEmployee,
+        as: "workShiftEmployees",
+        required: false, // hiển thị ca ngay cả khi chưa có nhân viên check-in
+        where: {
+          checkIn: { [Op.ne]: null },
+        },
+        include: [
+          {
+            model: User,
+            as: "employee",
+            attributes: ["id", "username"],
+            include: [
+              {
+                model: Profile,
+                attributes: ["fullName"],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    order: [["startTime", "ASC"]],
+  });
+
+  const result = workShifts.map((shift) => ({
+    id: shift.id,
+    name: shift.name,
+    workDate: shift.workDate,
+    startTime: shift.startTime,
+    endTime: shift.endTime,
+    employees: shift.workShiftEmployees.map((we) => ({
+      id: we.employee.id,
+      username: we.employee.username,
+      fullName: we.employee.profile?.fullName || null, // thêm fullName
+      checkIn: we.checkIn,
+      checkOut: we.checkOut,
+      roleInShift: we.roleInShift,
+    })),
+  }));
+
+  return result;
+};
+
 const dashboardService = {
   getLowStockWarningService,
   getRevenueLast7DaysService,
@@ -451,6 +502,7 @@ const dashboardService = {
   getTodayRetailOrderService,
   getTopBeverageService,
   getTopProductService,
+  getTodayWorkShiftService,
 };
 
 export default dashboardService;

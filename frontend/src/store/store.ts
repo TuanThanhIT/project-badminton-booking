@@ -20,6 +20,8 @@ import offlineEplReducer from "./slices/employee/offlineSlice";
 import notificationEplReducer from "./slices/employee/notificationSlice";
 import discountAdminReducer from "./slices/admin/discountSlice";
 import revenueAdminReducer from "./slices/admin/revenueSlice";
+import dashboardAdminReducer from "./slices/admin/dashboardSlice";
+import notificationAdmReducer from "./slices/admin/notificationSlice";
 
 const persistConfig = {
   key: "root",
@@ -47,6 +49,8 @@ const rootReducer = combineReducers({
   notification: notificationReducer,
   discountAdmin: discountAdminReducer,
   revenueAdmin: revenueAdminReducer,
+  dashboardAdmin: dashboardAdminReducer,
+  notificationAdm: notificationAdmReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

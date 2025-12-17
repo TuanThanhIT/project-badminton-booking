@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { ProfileResponse, UpdateUserInfoRequest } from "../../types/user";
 import type { ApiErrorType } from "../../types/error";
 import { toast } from "react-toastify";
-import userService from "../../services/Customer/userService";
+import userService from "../../services/customer/userService";
 import {
   FormUpdateUserInfoSchema,
   type formUpdateUserInfo,
@@ -37,7 +37,7 @@ import {
   clearOrdersError,
 } from "../../store/slices/customer/orderSlice";
 import type { AddOrderRequest, MomoPaymentRequest } from "../../types/order";
-import momoService from "../../services/Customer/momoService";
+import momoService from "../../services/customer/momoService";
 import Swal from "sweetalert2";
 
 const CheckoutPage = () => {

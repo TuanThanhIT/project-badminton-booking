@@ -35,7 +35,7 @@ const IconButton: React.FC<Props> = ({
         loading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
       }`}
     >
-      <Icon size={18} />
+      <Icon size={16} />
       {loading ? loadingText : text}
     </button>
   );

@@ -12,7 +12,7 @@ import type {
   CourtScheduleResponse,
 } from "../../../types/court";
 import type { ApiErrorType } from "../../../types/error";
-import courtService from "../../../services/Customer/courtService";
+import courtService from "../../../services/customer/courtService";
 
 interface CourtState {
   courts: CourtListResponse | undefined;

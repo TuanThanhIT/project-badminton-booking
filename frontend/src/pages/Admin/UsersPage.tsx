@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { Table } from "antd";
+import { Table, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Swal from "sweetalert2";
 import { Lock, Unlock, Plus } from "lucide-react";
 
-import userService from "../../services/Admin/usersService";
+import userService from "../../services/admin/usersService";
 import IconButton from "../../components/ui/admin/IconButton";
 import type { UserItem } from "../../types/user";
 import AddUserModal from "../../components/ui/admin/AddUserModal";
@@ -14,16 +14,11 @@ export default function UserPage() {
   const [loading, setLoading] = useState(true);
   const [isAddOpen, setIsAddOpen] = useState(false);
 
+  /* ================= FETCH ================= */
   const fetchUsers = async () => {
     try {
       const res = await userService.getAllUsersService();
-
-      const data = (res.data.users || [])
-        .filter((u) => u != null)
-        .map((u) => ({
-          ...u,
-          locked: !u.isActive,
-        }));
+      const data = (res.data.users || []).filter(Boolean);
       setUsers(data);
     } finally {
       setLoading(false);
@@ -34,24 +29,24 @@ export default function UserPage() {
     fetchUsers();
   }, []);
 
+  /* ================= LOCK / UNLOCK ================= */
   const handleLock = async (user: UserItem) => {
     const result = await Swal.fire({
-      title: user.isActive ? "Khóa người dùng?" : "Mở khóa người dùng này?",
+      title: user.isActive ? "Khóa người dùng?" : "Mở khóa người dùng?",
       text: user.isActive
-        ? "Người dùng không thể đăng nhập!"
-        : "Người dùng sẽ được mở khóa!",
+        ? "Người dùng sẽ không thể đăng nhập!"
+        : "Người dùng sẽ được phép đăng nhập lại!",
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: user.isActive ? "Khóa" : "Mở khóa",
       cancelButtonText: "Hủy",
-      confirmButtonColor: user.isActive ? "#e3342f" : "#38a169",
+      confirmButtonColor: user.isActive ? "#ef4444" : "#22c55e",
     });
 
     if (!result.isConfirmed) return;
 
     try {
       await userService.toggleLock(user.id, user.isActive);
-      console.log(user.isActive);
       Swal.fire(
         "Thành công!",
         user.isActive ? "Đã khóa người dùng." : "Đã mở khóa người dùng.",
@@ -63,107 +58,122 @@ export default function UserPage() {
     }
   };
 
+  /* ================= TABLE COLUMNS ================= */
   const columns: ColumnsType<UserItem> = [
     {
       title: "Họ tên",
       dataIndex: "fullName",
-      key: "fullName",
       align: "center",
-      render: (text) => <span className="font-medium">{text}</span>,
+      render: (text) => (
+        <span className="font-medium text-gray-800">{text || "-"}</span>
+      ),
     },
     {
       title: "Email",
       dataIndex: "email",
-      key: "email",
       align: "center",
+      render: (email) => <span className="text-gray-600">{email}</span>,
     },
     {
-      title: "SĐT",
+      title: "Số điện thoại",
       dataIndex: "phone",
-      key: "phone",
       align: "center",
+      render: (p) => <span className="text-gray-600">{p || "-"}</span>,
     },
     {
-      title: "Role",
+      title: "Vai trò",
       dataIndex: "roleId",
-      key: "roleId",
       align: "center",
       render: (r) =>
         r === 1 ? (
-          <span className="text-blue-500 font-semibold">Admin</span>
+          <Tag color="blue">Quản trị viên</Tag>
         ) : (
-          <span className="text-green-600 font-semibold">User</span>
+          <Tag color="green">Người dùng</Tag>
         ),
     },
     {
       title: "Trạng thái",
-      dataIndex: "locked",
-      key: "locked",
+      dataIndex: "isActive",
       align: "center",
-      render: (locked) =>
-        locked ? (
-          <span className="text-red-500 font-semibold">Đã khóa</span>
+      render: (active) =>
+        active ? (
+          <Tag color="green">Hoạt động</Tag>
         ) : (
-          <span className="text-green-500 font-semibold">Hoạt động</span>
+          <Tag color="red">Đã khóa</Tag>
         ),
     },
     {
-      title: "Actions",
-      key: "actions",
+      title: "Thao tác",
       align: "center",
       render: (_, user) => (
-        <div className="flex justify-center gap-3">
-          <button
-            onClick={() => handleLock(user)}
-            className={`px-3 py-1 text-white rounded-md ${
-              user.isActive ? "bg-green-500" : "bg-red-500"
-            }`}
-          >
-            {user.isActive ? (
-              <div className="flex items-center gap-1">
-                <Unlock size={16} /> Lock
-              </div>
-            ) : (
-              <div className="flex items-center gap-1">
-                <Lock size={16} /> Unlock
-              </div>
-            )}
-          </button>
-        </div>
+        <button
+          onClick={() => handleLock(user)}
+          className={`
+            inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm text-white
+            ${
+              user.isActive
+                ? "bg-red-500 hover:bg-red-600"
+                : "bg-green-500 hover:bg-green-600"
+            }
+          `}
+        >
+          {user.isActive ? (
+            <>
+              <Lock size={14} /> Khóa
+            </>
+          ) : (
+            <>
+              <Unlock size={14} /> Mở khóa
+            </>
+          )}
+        </button>
       ),
     },
   ];
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="font-semibold text-lg">User Management</h2>
-        <div className="z-100">
-          <AddUserModal
-            isOpen={isAddOpen}
-            onClose={() => setIsAddOpen(false)}
-            onSuccess={fetchUsers}
-          />
-        </div>
-        <div className="flex gap-3">
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="bg-white rounded-2xl border border-gray-200 p-8 space-y-6">
+        {/* ===== HEADER ===== */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-sky-700 relative">
+            Quản lý người dùng
+            <span className="absolute left-0 -bottom-2 w-1/2 h-1 bg-sky-400 rounded-sm"></span>
+          </h1>
+
           <IconButton
             type="button"
             icon={Plus}
-            text="Thêm user"
-            color="bg-blue-500"
+            text="Thêm người dùng"
+            color="bg-blue-600"
             hoverColor="hover:bg-blue-700"
             onClick={() => setIsAddOpen(true)}
           />
         </div>
+
+        {/* ===== TABLE WRAPPER ===== */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+          <Table
+            columns={columns}
+            dataSource={users}
+            loading={loading}
+            rowKey="id"
+            pagination={{
+              pageSize: 8,
+              showSizeChanger: false,
+            }}
+            rowClassName={() => "hover:bg-gray-50 transition-colors"}
+            locale={{ emptyText: "Không có người dùng nào" }}
+          />
+        </div>
+
+        {/* ===== MODAL ===== */}
+        <AddUserModal
+          isOpen={isAddOpen}
+          onClose={() => setIsAddOpen(false)}
+          onSuccess={fetchUsers}
+        />
       </div>
-      <Table
-        columns={columns}
-        dataSource={users}
-        loading={loading}
-        pagination={false}
-        rowKey="id"
-        rowClassName={() => "text-center"}
-      />
     </div>
   );
 }

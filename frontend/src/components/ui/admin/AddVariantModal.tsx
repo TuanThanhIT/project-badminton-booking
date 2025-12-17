@@ -1,6 +1,5 @@
-import React from "react";
 import VariantForm from "./VariantForm";
-import productService from "../../../services/Admin/productService";
+import productService from "../../../services/admin/productService";
 import type {
   CreateVariantInput,
   ProductVariant,

@@ -34,34 +34,48 @@ export default function WorkShiftEmployeeForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {/* ===== ROLE ===== */}
       <div>
-        <label className="font-medium">Vai trò</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Vai trò trong ca
+        </label>
         <select
           value={form.roleInShift}
           onChange={(e) =>
             setForm({ ...form, roleInShift: e.target.value as any })
           }
-          className="w-full border p-2 rounded"
+          className="
+            w-full rounded-lg border border-gray-300 
+            px-3 py-2 text-sm
+            focus:outline-none focus:ring-2 focus:ring-sky-400
+          "
         >
-          <option value="Staff">Staff</option>
-          <option value="Cashier">Cashier</option>
+          <option value="Staff">Nhân viên</option>
+          <option value="Cashier">Thu ngân</option>
         </select>
       </div>
 
-      <div className="flex justify-end gap-3 mt-4">
+      {/* ===== ACTIONS ===== */}
+      <div className="flex justify-end gap-3 pt-4 border-t">
+        {/* HỦY */}
         <IconButton
+          type="button"
           icon={X}
           text="Hủy"
           onClick={onCancel}
           color="bg-white"
-          border="border"
+          border="border border-gray-300"
+          textColor="text-gray-700"
         />
+
+        {/* THÊM / LƯU */}
         <IconButton
           icon={Save}
           text={loading ? "Đang lưu..." : mode === "add" ? "Thêm" : "Lưu"}
           type="submit"
           color="bg-blue-500"
+          hoverColor="hover:bg-blue-600"
           loading={loading}
         />
       </div>

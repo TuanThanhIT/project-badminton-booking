@@ -4,7 +4,7 @@ import type {
   ProductEplRequest,
   ProductEplResponse,
 } from "../../../types/product";
-import productService from "../../../services/Employee/productService";
+import productService from "../../../services/employee/productService";
 
 interface ProductState {
   products: ProductEplResponse;

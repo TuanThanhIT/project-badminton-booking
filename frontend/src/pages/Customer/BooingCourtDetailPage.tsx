@@ -32,7 +32,7 @@ import {
 } from "../../store/slices/customer/bookingSlice";
 import type { ApiErrorType } from "../../types/error";
 import type { MomoPaymentRequest } from "../../types/order";
-import momoService from "../../services/Customer/momoService";
+import momoService from "../../services/customer/momoService";
 import {
   clearBookingFeedbackError,
   getBookingFeedback,

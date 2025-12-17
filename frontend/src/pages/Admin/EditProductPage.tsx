@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import ProductForm from "../../components/ui/admin/ProductForm";
-import categoryService from "../../services/Admin/categoryService";
-import productService from "../../services/Admin/productService";
+import categoryService from "../../services/admin/categoryService";
+import productService from "../../services/admin/productService";
 import { FormCreateProductSchema } from "../../schemas/FormCreateProductSchema";
 import type { SimpleCategory } from "../../types/category";
 import type { ProductFormData } from "../../types/formData";

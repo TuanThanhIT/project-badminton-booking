@@ -47,6 +47,8 @@ var _orderRoute3 = _interopRequireDefault(require("./routes/admin/orderRoute.js"
 var _bookingRoute3 = _interopRequireDefault(require("./routes/admin/bookingRoute.js"));
 var _revenueRoute = _interopRequireDefault(require("./routes/admin/revenueRoute.js"));
 var _dashboardRoute = _interopRequireDefault(require("./routes/admin/dashboardRoute.js"));
+var _notificationRoute3 = _interopRequireDefault(require("./routes/admin/notificationRoute.js"));
+var _workShiftEmployeeRoute = _interopRequireDefault(require("./routes/admin/workShiftEmployeeRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -90,6 +92,8 @@ app.use((0, _cors["default"])());
 (0, _bookingRoute3["default"])(app);
 (0, _revenueRoute["default"])(app);
 (0, _dashboardRoute["default"])(app);
+(0, _notificationRoute3["default"])(app);
+(0, _workShiftEmployeeRoute["default"])(app);
 
 // Employee
 (0, _authRoute2["default"])(app);

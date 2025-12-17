@@ -1,19 +1,20 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import type { WorkShiftItem } from "../../types/workShift";
 import workShiftService from "../../services/admin/workShiftService";
-import IconButton from "../../components/commons/admin/IconButton";
-import AddWorkShiftModal from "../../components/commons/admin/AddWorkShiftModal";
-import { useNavigate } from "react-router-dom";
+import IconButton from "../../components/ui/admin/IconButton";
+import AddWorkShiftModal from "../../components/ui/admin/AddWorkShiftModal";
 
 export default function WorkShiftPage() {
   const [data, setData] = useState<WorkShiftItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
   const navigate = useNavigate();
+
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
@@ -29,7 +30,6 @@ export default function WorkShiftPage() {
       });
 
       setData(res.data.workShifts);
-
       setPagination({
         current: page,
         pageSize: limit,
@@ -48,43 +48,50 @@ export default function WorkShiftPage() {
     {
       title: "Ngày",
       dataIndex: "workDate",
-      key: "workDate",
       align: "center",
+      render: (d) => new Date(d).toLocaleDateString("vi-VN"),
     },
     {
       title: "Tên ca",
       dataIndex: "name",
-      key: "name",
       align: "center",
+      render: (v) => <span className="font-medium text-gray-800">{v}</span>,
     },
     {
       title: "Bắt đầu",
       dataIndex: "startTime",
-      key: "startTime",
       align: "center",
     },
     {
       title: "Kết thúc",
       dataIndex: "endTime",
-      key: "endTime",
       align: "center",
     },
     {
       title: "Lương (VNĐ)",
       dataIndex: "shiftWage",
-      key: "shiftWage",
       align: "center",
-      render: (v) => v.toLocaleString(),
+      render: (v) => (
+        <span className="font-semibold text-green-600">
+          {v.toLocaleString()} ₫
+        </span>
+      ),
     },
     {
       title: "Nhân viên",
       align: "center",
       render: (_, record) => (
         <button
-          className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
           onClick={() =>
             navigate(`/admin/workShift/employees?workShiftId=${record.id}`)
           }
+          className="
+            px-3 py-1
+            bg-green-500 hover:bg-green-600
+            text-white text-sm
+            rounded-md
+            transition
+          "
         >
           Xem
         </button>
@@ -93,45 +100,56 @@ export default function WorkShiftPage() {
   ];
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="font-semibold text-lg">Danh sách ca làm việc</h2>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="bg-white rounded-2xl border border-gray-200 p-8 space-y-6">
+        {/* ===== HEADER ===== */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-sky-700 relative">
+            Quản lý ca làm
+            <span className="block w-1/3 h-1 bg-sky-400 rounded mt-1"></span>
+          </h1>
+
+          <IconButton
+            icon={Plus}
+            text="Tạo ca làm"
+            color="bg-blue-500"
+            hoverColor="hover:bg-blue-700"
+            onClick={() => setOpenModal(true)}
+          />
+        </div>
+
+        {/* ===== MODAL ===== */}
         {openModal && (
-          <div className="z-80">
-            <AddWorkShiftModal
-              isOpen={openModal}
-              onClose={() => setOpenModal(false)}
-              onSuccess={() => {
-                fetchWorkShifts();
-                setOpenModal(false);
-              }}
-            />
-          </div>
+          <AddWorkShiftModal
+            isOpen={openModal}
+            onClose={() => setOpenModal(false)}
+            onSuccess={() => {
+              fetchWorkShifts();
+              setOpenModal(false);
+            }}
+          />
         )}
-        <IconButton
-          icon={Plus}
-          text="Tạo ca cho ngày"
-          color="bg-blue-500"
-          hoverColor="hover:bg-blue-700"
-          onClick={() => setOpenModal(true)}
+
+        {/* ===== TABLE ===== */}
+        <Table
+          columns={columns}
+          dataSource={data}
+          loading={loading}
+          rowKey="id"
+          bordered
+          pagination={{
+            current: pagination.current,
+            pageSize: pagination.pageSize,
+            total: pagination.total,
+            showSizeChanger: true,
+            showTotal: (total) => `Tổng ${total} ca làm`,
+            onChange: (page, pageSize) => {
+              fetchWorkShifts(page, pageSize);
+            },
+          }}
+          className="rounded-xl overflow-hidden"
         />
       </div>
-
-      <Table
-        columns={columns}
-        dataSource={data}
-        loading={loading}
-        rowKey="id"
-        pagination={{
-          current: pagination.current,
-          pageSize: pagination.pageSize,
-          total: pagination.total,
-          showSizeChanger: true,
-          onChange: (page, pageSize) => {
-            fetchWorkShifts(page, pageSize);
-          },
-        }}
-      />
     </div>
   );
 }

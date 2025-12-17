@@ -4,7 +4,7 @@ import Spinner from "../ui/customer+employee/SpinnerLoad";
 import { AuthContext } from "../contexts/authContext";
 import { toast } from "react-toastify";
 import type { ApiErrorType } from "../../types/error";
-import authService from "../../services/Employee/authService";
+import authService from "../../services/employee/authService";
 
 const AuthEmployeeGuard = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();

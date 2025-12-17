@@ -9,6 +9,7 @@ interface Props {
   onSubmit: (data: CreateCourtPriceRequest) => Promise<void>;
   onCancel?: () => void;
 }
+
 const DAYS_OF_WEEK = [
   { label: "Thứ hai", value: "Monday" },
   { label: "Thứ ba", value: "Tuesday" },
@@ -52,52 +53,10 @@ export default function CourtPriceForm({
     }));
   };
 
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-
-  //   if (
-  //     !form.dayOfWeek ||
-  //     !form.startTime ||
-  //     !form.endTime ||
-  //     !form.periodType
-  //   ) {
-  //     toast.error("Vui lòng nhập đầy đủ thông tin");
-  //     return;
-  //   }
-
-  //   if (form.startTime >= form.endTime) {
-  //     toast.error("Giờ kết thúc phải lớn hơn giờ bắt đầu");
-  //     return;
-  //   }
-
-  //   setLoading(true);
-
-  //   try {
-  //     const payload: CreateCourtPriceRequest = {
-  //       ...form,
-  //       startTime: `${form.startTime}:00`,
-  //       endTime: `${form.endTime}:00`,
-  //     };
-
-  //     console.log("COURT PRICE PAYLOAD:", payload);
-
-  //     await onSubmit(payload);
-  //     toast.success("Tạo giá sân thành công");
-  //   } catch (error) {
-  //     toast.error("Có lỗi xảy ra");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (
-      !form.dayOfWeek ||
-      !form.startTime ||
-      !form.endTime ||
-      !form.periodType
-    ) {
+    if (!form.dayOfWeek || !form.startTime || !form.endTime) {
       toast.error("Vui lòng nhập đầy đủ thông tin");
       return;
     }
@@ -107,61 +66,64 @@ export default function CourtPriceForm({
       return;
     }
 
-    if (loading) return;
-
     setLoading(true);
-
     try {
-      const payload: CreateCourtPriceRequest = {
-        ...form,
-        startTime:
-          form.startTime.length === 5 ? `${form.startTime}:00` : form.startTime,
-        endTime:
-          form.endTime.length === 5 ? `${form.endTime}:00` : form.endTime,
-      };
-
-      console.log("COURT PRICE PAYLOAD:", payload);
-
-      await onSubmit(payload);
+      await onSubmit(form);
       toast.success("Tạo giá sân thành công");
-    } catch (error: any) {
-      toast.error(
-        error?.response?.data?.message || "Có lỗi xảy ra khi tạo giá sân"
-      );
+    } catch {
+      toast.error("Có lỗi xảy ra");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      {/* Thứ */}
-      <div>
-        <label className="font-medium">Thứ trong tuần</label>
-        <select
-          name="dayOfWeek"
-          value={form.dayOfWeek}
-          onChange={handleChange}
-          className="w-full border rounded p-2"
-        >
-          <option value="">-- Chọn thứ --</option>
-          {DAYS_OF_WEEK.map((d) => (
-            <option key={d.value} value={d.value}>
-              {d.label}
-            </option>
-          ))}
-        </select>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Thứ */}
+        <div>
+          <label className="block mb-1 font-medium">Thứ trong tuần</label>
+          <select
+            name="dayOfWeek"
+            value={form.dayOfWeek}
+            onChange={handleChange}
+            className="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-green-400"
+          >
+            {DAYS_OF_WEEK.map((d) => (
+              <option key={d.value} value={d.value}>
+                {d.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Loại khung */}
+        <div>
+          <label className="block mb-1 font-medium">Loại khung giờ</label>
+          <select
+            name="periodType"
+            value={form.periodType}
+            onChange={handleChange}
+            className="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-green-400"
+          >
+            {PERIOD_TYPES.map((p) => (
+              <option key={p.value} value={p.value}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      {/* Khung giờ */}
+      {/* Giờ */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="font-medium">Giờ bắt đầu</label>
+          <label className="block mb-1 font-medium">Giờ bắt đầu</label>
           <select
             name="startTime"
             value={form.startTime}
             onChange={handleChange}
-            className="w-full border rounded p-2"
+            className="w-full rounded-lg border px-3 py-2"
           >
             <option value="">-- Chọn giờ --</option>
             {HOURS.map((h) => (
@@ -173,12 +135,12 @@ export default function CourtPriceForm({
         </div>
 
         <div>
-          <label className="font-medium">Giờ kết thúc</label>
+          <label className="block mb-1 font-medium">Giờ kết thúc</label>
           <select
             name="endTime"
             value={form.endTime}
             onChange={handleChange}
-            className="w-full border rounded p-2"
+            className="w-full rounded-lg border px-3 py-2"
           >
             <option value="">-- Chọn giờ --</option>
             {HOURS.map((h) => (
@@ -190,39 +152,21 @@ export default function CourtPriceForm({
         </div>
       </div>
 
-      {/* Loại khung */}
-      <div>
-        <label className="font-medium">Loại khung giờ</label>
-        <select
-          name="periodType"
-          value={form.periodType}
-          onChange={handleChange}
-          className="w-full border rounded p-2"
-        >
-          <option value="">-- Chọn loại --</option>
-          {PERIOD_TYPES.map((p) => (
-            <option key={p.value} value={p.value}>
-              {p.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
       {/* Giá */}
       <div>
-        <label className="font-medium">Giá (VNĐ)</label>
+        <label className="block mb-1 font-medium">Giá (VNĐ)</label>
         <input
           type="number"
-          name="price"
           min={0}
+          name="price"
           value={form.price}
           onChange={handleChange}
-          className="w-full border rounded p-2"
+          className="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-green-400"
         />
       </div>
 
       {/* Actions */}
-      <div className="flex justify-end gap-3 mt-4">
+      <div className="flex justify-end gap-3 pt-2">
         {onCancel && (
           <IconButton
             type="button"
@@ -234,7 +178,6 @@ export default function CourtPriceForm({
             textColor="text-gray-700"
           />
         )}
-
         <IconButton
           type="submit"
           icon={Save}

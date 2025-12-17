@@ -9,7 +9,7 @@ import {
   clearCartError,
   deleteAllCart,
 } from "../../store/slices/customer/cartSlice";
-import productService from "../../services/Customer/productService";
+import productService from "../../services/customer/productService";
 import type { ApiErrorType } from "../../types/error";
 import type {
   ProductDetailResponse,

@@ -4,7 +4,7 @@ import type {
   BeverageEplRequest,
   BeverageEplResponse,
 } from "../../../types/beverage";
-import beverageService from "../../../services/Employee/beverageService";
+import beverageService from "../../../services/employee/beverageService";
 
 interface BeverageState {
   beverages: BeverageEplResponse;

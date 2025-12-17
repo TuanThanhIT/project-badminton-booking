@@ -1,4 +1,3 @@
-import Chart from "chart.js/auto";
 import type { ChartData } from "chart.js";
 import { Doughnut } from "react-chartjs-2";
 
@@ -35,7 +34,6 @@ function HomeDataCard({
   value,
   comparison_percentage,
   chart_data,
-  center_text,
 }: HomeDataCardProps) {
   return (
     <div className="grid grid-cols-2 border-2 rounded-md border-gray-100 h-32 w-68 place-items-center">

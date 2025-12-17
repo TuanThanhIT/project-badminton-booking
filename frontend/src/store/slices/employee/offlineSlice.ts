@@ -6,7 +6,7 @@ import type {
   UpdateOfflineBookingRequest,
   UpdateOfflineBookingResponse,
 } from "../../../types/offline";
-import offlineBookingService from "../../../services/Employee/offlineService";
+import offlineBookingService from "../../../services/employee/offlineService";
 
 interface OfflineState {
   offlineBooking: AddOfflineBookingResponse | undefined;

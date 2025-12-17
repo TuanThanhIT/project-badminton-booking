@@ -1,8 +1,7 @@
-import React from "react";
-import { Table, Tag } from "antd";
+import { Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { Line, Doughnut } from "react-chartjs-2";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Pencil, CirclePlus } from "lucide-react";
 import IconButtonNonContent from "../../components/ui/admin/IconButton";
@@ -19,7 +18,7 @@ import {
 } from "chart.js";
 import { Plus, Gift, Banknote, LineChart } from "lucide-react";
 import { useEffect, useState } from "react";
-import productService from "../../services/Admin/productService";
+import productService from "../../services/admin/productService";
 
 ChartJS.register(
   ArcElement,

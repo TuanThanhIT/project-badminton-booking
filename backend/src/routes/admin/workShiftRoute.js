@@ -8,15 +8,15 @@ const workShiftRoute = express.Router();
 const initWorkShiftAdminRoute = (app) => {
   workShiftRoute.post(
     "/add",
-    // auth,
-    // authorize(),
+    auth,
+    authorize("ADMIN"),
     workShiftController.createWorkShifts
   );
 
   workShiftRoute.get(
     "/",
-    // auth,
-    // authorize(),
+    auth,
+    authorize("ADMIN"),
     workShiftController.getAllWorkShifts
   );
 

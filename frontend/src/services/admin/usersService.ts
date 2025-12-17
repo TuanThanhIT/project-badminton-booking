@@ -1,8 +1,5 @@
 import instance from "../../utils/axiosCustomize";
-<<<<<<< HEAD
-import type { CreateUserRequest, UserItem } from "../../types/user";
 
-=======
 import type {
   CreateUserRequest,
   UserItem,
@@ -12,7 +9,7 @@ import type {
 // 1. TẠO USER
 // POST /admin/users/createUsers
 // ================================
->>>>>>> dev_admin_thaitoan
+
 const createUserService = (data: CreateUserRequest) => {
   return instance.post<{ message: string; data: UserItem }>(
     "/admin/users/createUsers",

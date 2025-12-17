@@ -28,7 +28,6 @@ const initCourtAdminRoute = (app) => {
   );
   courtRoute.put(
     "/update/:courtId",
-<<<<<<< HEAD
     auth,
     authorize("ADMIN"),
     courtController.updateCourt
@@ -47,14 +46,7 @@ const initCourtAdminRoute = (app) => {
     authorize("ADMIN"),
     courtController.getCourtById
   );
-=======
-    uploader.single("file"),
-    courtController.updateCourt
-  );
 
-  courtRoute.get("/", courtController.getAllCourts);
-  courtRoute.get("/:courtId", courtController.getCourtById);
->>>>>>> dev_admin_thaitoan
   app.use("/admin/court", courtRoute);
 };
 export default initCourtAdminRoute;

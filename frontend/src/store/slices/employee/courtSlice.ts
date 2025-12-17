@@ -4,7 +4,7 @@ import type {
   CourtScheduleEplRequest,
   CourtScheduleEplResponse,
 } from "../../../types/court";
-import courtService from "../../../services/Employee/courtService";
+import courtService from "../../../services/employee/courtService";
 
 interface CourtState {
   courtSchedules: CourtScheduleEplResponse;

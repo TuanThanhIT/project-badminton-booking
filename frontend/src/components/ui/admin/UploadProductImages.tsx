@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import productService from "../../../services/Admin/productService";
+import productService from "../../../services/admin/productService";
 import { toast } from "react-toastify";
 
 interface Props {

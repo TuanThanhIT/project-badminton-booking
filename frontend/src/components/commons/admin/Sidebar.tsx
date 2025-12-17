@@ -8,15 +8,12 @@ import {
   ChevronLast,
   Grid2X2,
   Rows3,
-<<<<<<< HEAD
   Percent,
   ListOrdered,
   Calendar,
   DollarSign,
-=======
   Wine,
   Briefcase,
->>>>>>> dev_admin_thaitoan
 } from "lucide-react";
 import { useContext } from "react";
 import { SideBarContext } from "../../contexts/sidebarContext";
@@ -56,7 +53,6 @@ const Sidebar = () => {
             {expanded ? <ChevronFirst size={20} /> : <ChevronLast size={20} />}
           </button>
         </div>
-<<<<<<< HEAD
 
         {/* MENU */}
         <ul className="flex-1 px-3 py-4 space-y-1">
@@ -65,51 +61,6 @@ const Sidebar = () => {
               <SidebarElement
                 icon={LayoutDashboard}
                 text="Dashboard"
-                active={isActive}
-              />
-            )}
-          </NavLink>
-          <NavLink to="/admin/products">
-            {({ isActive }) => (
-              <SidebarElement
-                icon={Package}
-                text="Quản lý sản phẩm"
-                active={isActive}
-              />
-            )}
-          </NavLink>
-          <NavLink to="/admin/categories">
-            {({ isActive }) => (
-              <SidebarElement
-                icon={Grid2X2}
-                text="Quản lý danh mục"
-                active={isActive}
-              />
-            )}
-          </NavLink>
-          <NavLink to="/admin/users">
-            {({ isActive }) => (
-              <SidebarElement
-                icon={UsersRound}
-                text="Quản lý người dùng"
-                active={isActive}
-              />
-            )}
-          </NavLink>
-          <NavLink to="/admin/courts">
-            {({ isActive }) => (
-              <SidebarElement
-                icon={Rows3}
-                text="Quản lý sân"
-                active={isActive}
-              />
-            )}
-          </NavLink>
-          <NavLink to="/admin/discount">
-            {({ isActive }) => (
-              <SidebarElement
-                icon={Percent}
-                text="Quản lý khuyến mãi"
                 active={isActive}
               />
             )}
@@ -132,6 +83,70 @@ const Sidebar = () => {
               />
             )}
           </NavLink>
+          <NavLink to={"/admin/beverages"} end>
+            {({ isActive }) => (
+              <SidebarElement
+                icon={Wine}
+                text="Quản lý đồ uống"
+                active={isActive}
+              />
+            )}
+          </NavLink>
+          <NavLink to={"/admin/workShift"} end>
+            {({ isActive }) => (
+              <SidebarElement
+                icon={Briefcase}
+                text="Quản lý ca làm"
+                active={isActive}
+              />
+            )}
+          </NavLink>
+          <NavLink to="/admin/categories">
+            {({ isActive }) => (
+              <SidebarElement
+                icon={Grid2X2}
+                text="Quản lý danh mục"
+                active={isActive}
+              />
+            )}
+          </NavLink>
+          <NavLink to="/admin/products">
+            {({ isActive }) => (
+              <SidebarElement
+                icon={Package}
+                text="Quản lý sản phẩm"
+                active={isActive}
+              />
+            )}
+          </NavLink>
+
+          <NavLink to="/admin/users">
+            {({ isActive }) => (
+              <SidebarElement
+                icon={UsersRound}
+                text="Quản lý người dùng"
+                active={isActive}
+              />
+            )}
+          </NavLink>
+          <NavLink to="/admin/courts">
+            {({ isActive }) => (
+              <SidebarElement
+                icon={Rows3}
+                text="Quản lý sân cầu lông"
+                active={isActive}
+              />
+            )}
+          </NavLink>
+          <NavLink to="/admin/discount">
+            {({ isActive }) => (
+              <SidebarElement
+                icon={Percent}
+                text="Quản lý khuyến mãi"
+                active={isActive}
+              />
+            )}
+          </NavLink>
           <NavLink to="/admin/revenue">
             {({ isActive }) => (
               <SidebarElement
@@ -148,91 +163,6 @@ const Sidebar = () => {
             © 2025 B-Hub Management
           </div>
         )}
-=======
-        <SideBarContext.Provider value={{ expanded, setExpanded }}>
-          <ul className="flex-1 px-3 bg-white">
-            <div className="">
-              <NavLink to={"/admin"} end>
-                {({ isActive }) => (
-                  <SidebarElement
-                    icon={LayoutDashboard}
-                    text="Bảng điều khiển"
-                    active={isActive}
-                    alert={false}
-                  />
-                )}
-              </NavLink>
-              <NavLink to={"/admin/products"}>
-                {({ isActive }) => (
-                  <SidebarElement
-                    icon={Package}
-                    text="Sản phẩm"
-                    active={isActive}
-                  />
-                )}
-              </NavLink>
-              <NavLink to={"/admin/categories"}>
-                {({ isActive }) => (
-                  <SidebarElement
-                    icon={Grid2X2}
-                    text="Danh mục"
-                    active={isActive}
-                  />
-                )}
-              </NavLink>
-              <NavLink to={"/admin/users"}>
-                {({ isActive }) => (
-                  <SidebarElement
-                    icon={UsersRound}
-                    text="Người dùng"
-                    active={isActive}
-                  />
-                )}
-              </NavLink>
-              <NavLink to={"/admin/support"} end>
-                {({ isActive }) => (
-                  <SidebarElement
-                    icon={Headset}
-                    text="Support"
-                    active={isActive}
-                    alert={false}
-                  />
-                )}
-              </NavLink>
-              <NavLink to={"/admin/courts"} end>
-                {({ isActive }) => (
-                  <SidebarElement
-                    icon={Rows3}
-                    text="Sân đấu"
-                    active={isActive}
-                    alert={false}
-                  />
-                )}
-              </NavLink>
-              <NavLink to={"/admin/beverages"} end>
-                {({ isActive }) => (
-                  <SidebarElement
-                    icon={Wine}
-                    text="Đồ uống"
-                    active={isActive}
-                    alert={false}
-                  />
-                )}
-              </NavLink>
-              <NavLink to={"/admin/workShift"} end>
-                {({ isActive }) => (
-                  <SidebarElement
-                    icon={Briefcase}
-                    text="Ca làm"
-                    active={isActive}
-                    alert={false}
-                  />
-                )}
-              </NavLink>
-            </div>
-          </ul>
-        </SideBarContext.Provider>
->>>>>>> dev_admin_thaitoan
       </nav>
     </aside>
   );

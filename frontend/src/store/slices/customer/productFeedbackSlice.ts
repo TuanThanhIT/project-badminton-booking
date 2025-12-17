@@ -8,7 +8,7 @@ import type {
   ProductFeedbackRequest,
   ProductFeedbackResponse,
 } from "../../../types/productFeedback";
-import productFeedbackService from "../../../services/Customer/productFeedbackService";
+import productFeedbackService from "../../../services/customer/productFeedbackService";
 
 interface ProductFeedbackState {
   productFeedbackDetail: ProductFeedBackDetailResponse | undefined;

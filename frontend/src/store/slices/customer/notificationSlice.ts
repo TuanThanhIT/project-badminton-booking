@@ -11,7 +11,7 @@ import type {
   UpdateNotificationResponse,
 } from "../../../types/notification";
 import _ from "lodash";
-import notificationService from "../../../services/Customer/notificationService";
+import notificationService from "../../../services/customer/notificationService";
 
 interface NotificationState {
   notifications: NotificationListResponse;

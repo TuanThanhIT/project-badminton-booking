@@ -1,31 +1,34 @@
 import React, { useEffect, useState } from "react";
 import { PlusCircle, Search } from "lucide-react";
 import { toast } from "react-toastify";
-import categoryService from "../../services/Admin/categoryService";
+
+import categoryService from "../../services/admin/categoryService";
 import type { CategoryItem } from "../../types/category";
 import type { ApiErrorType } from "../../types/error";
+
 import AddCategoryModal from "../../components/ui/admin/CategoryModal";
+import Pagination from "../../components/ui/admin/Pagination";
+
+const LIMIT = 10;
 
 const CategoryPage: React.FC = () => {
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
   const [showModal, setShowModal] = useState(false);
 
-  const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
-  // Fetch categories
+  /* ================= FETCH DATA ================= */
   const fetchCategories = async () => {
     try {
       const res = await categoryService.getCategoriesService(
         page,
-        limit,
+        LIMIT,
         search
       );
+
       setCategories(res.data.data);
-      setTotalPages(res.data.pagination.totalPages);
       setTotalItems(res.data.pagination.totalItems);
     } catch (error) {
       const apiError = error as ApiErrorType;
@@ -37,121 +40,121 @@ const CategoryPage: React.FC = () => {
     fetchCategories();
   }, [page, search]);
 
+  /* ================= HANDLERS ================= */
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
-    setPage(1); // reset về trang 1 khi tìm kiếm
+    setPage(1);
   };
 
+  /* ================= RENDER ================= */
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Quản lý danh mục</h1>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="bg-white rounded-2xl border border-gray-200 p-10 space-y-6">
+        {/* ===== HEADER ===== */}
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="inline-flex items-center gap-2 text-2xl font-bold text-sky-700 relative">
+            Quản lý danh mục
+            <span className="absolute left-0 -bottom-3 w-1/2 h-1 bg-sky-400 rounded-sm"></span>
+          </h1>
 
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-lg shadow-md transition-all"
-        >
-          <PlusCircle size={20} />
-          Thêm danh mục
-        </button>
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 px-2 py-2 bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-lg shadow-md transition-all"
+          >
+            <PlusCircle size={20} />
+            Thêm danh mục
+          </button>
+        </div>
+
+        {/* ===== SEARCH ===== */}
+        <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-gray-300 w-full md:w-1/3 focus-within:border-sky-400 transition">
+          <Search className="text-gray-400" size={16} />
+          <input
+            type="text"
+            placeholder="Tìm kiếm danh mục..."
+            value={search}
+            onChange={handleSearchChange}
+            className="w-full bg-transparent outline-none text-sm text-gray-700 placeholder-gray-400"
+          />
+        </div>
+
+        {/* ===== TABLE ===== */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="bg-gray-50 text-gray-600 uppercase text-xs tracking-wide">
+                <th className="px-6 py-4 border-b w-14 text-center">#</th>
+                <th className="px-6 py-4 border-b">Tên danh mục</th>
+                <th className="px-6 py-4 border-b">Nhóm menu</th>
+                <th className="px-6 py-4 border-b text-right">Ngày tạo</th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-gray-100">
+              {categories.length > 0 ? (
+                categories.map((cate, index) => (
+                  <tr
+                    key={cate.id}
+                    className="group hover:bg-sky-50/60 transition-all duration-200"
+                  >
+                    {/* STT */}
+                    <td className="px-6 py-4 text-center text-gray-500">
+                      {(page - 1) * LIMIT + index + 1}
+                    </td>
+
+                    {/* Tên danh mục */}
+                    <td className="px-6 py-4">
+                      <p className="font-semibold text-gray-800">
+                        {cate.cateName}
+                      </p>
+                    </td>
+
+                    {/* Nhóm menu */}
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-sky-100 text-sky-700">
+                        {cate.menuGroup}
+                      </span>
+                    </td>
+
+                    {/* Ngày tạo */}
+                    <td className="px-6 py-4 text-right text-gray-500">
+                      {new Date(cate.createdDate).toLocaleDateString("vi-VN")}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="py-10 text-center text-gray-400 italic"
+                  >
+                    Không có danh mục nào
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* ===== PAGINATION ===== */}
+        {totalItems > LIMIT && (
+          <div className="flex justify-end">
+            <Pagination
+              page={page}
+              total={totalItems}
+              onPrev={() => setPage((prev) => Math.max(1, prev - 1))}
+              onNext={() => setPage((prev) => prev + 1)}
+            />
+          </div>
+        )}
+
+        {/* ===== MODAL ===== */}
         <AddCategoryModal
           isOpen={showModal}
           onClose={() => setShowModal(false)}
           onSuccess={fetchCategories}
         />
       </div>
-
-      {/* Thanh tìm kiếm */}
-      <div className="flex items-center gap-2 mb-6 bg-white p-3 rounded-xl shadow-sm border border-gray-200 w-full md:w-1/2">
-        <Search className="text-gray-500" size={20} />
-        <input
-          type="text"
-          placeholder="Tìm kiếm danh mục..."
-          value={search}
-          onChange={handleSearchChange}
-          className="w-full outline-none bg-transparent text-gray-700 placeholder-gray-400"
-        />
-      </div>
-
-      {/* Bảng danh mục */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="bg-gray-100 text-gray-700 font-semibold">
-              <th className="px-6 py-3 border-b">#</th>
-              <th className="px-6 py-3 border-b">Tên danh mục</th>
-              <th className="px-6 py-3 border-b">Nhóm menu</th>
-              <th className="px-6 py-3 border-b">Ngày tạo</th>
-            </tr>
-          </thead>
-          <tbody>
-            {categories.length > 0 ? (
-              categories.map((cate, index) => (
-                <tr
-                  key={cate.id}
-                  className="hover:bg-sky-50 transition-colors duration-200"
-                >
-                  <td className="px-6 py-3 border-b">
-                    {(page - 1) * limit + index + 1}
-                  </td>
-                  <td className="px-6 py-3 border-b font-medium text-gray-900">
-                    {cate.cateName}
-                  </td>
-                  <td className="px-6 py-3 border-b text-gray-700">
-                    {cate.menuGroup}
-                  </td>
-                  <td className="px-6 py-3 border-b text-gray-500 text-sm">
-                    {new Date(cate.createdDate).toLocaleDateString("vi-VN")}
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td
-                  colSpan={4}
-                  className="text-center text-gray-500 italic py-6"
-                >
-                  Không có danh mục nào
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Phân trang */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-3 mt-6">
-          <button
-            disabled={page <= 1}
-            onClick={() => setPage((prev) => prev - 1)}
-            className={`px-4 py-2 rounded-lg border ${
-              page <= 1
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                : "bg-white hover:bg-gray-100 text-gray-700"
-            }`}
-          >
-            Trang trước
-          </button>
-
-          <span className="text-gray-700 font-medium">
-            Trang {page} / {totalPages}
-          </span>
-
-          <button
-            disabled={page >= totalPages}
-            onClick={() => setPage((prev) => prev + 1)}
-            className={`px-4 py-2 rounded-lg border ${
-              page >= totalPages
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                : "bg-white hover:bg-gray-100 text-gray-700"
-            }`}
-          >
-            Trang sau
-          </button>
-        </div>
-      )}
     </div>
   );
 };

@@ -2,7 +2,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useContext } from "react";
 import Spinner from "../ui/customer+employee/SpinnerLoad";
 import { AuthContext } from "../contexts/authContext";
-import authService from "../../services/Customer/authService";
+import authService from "../../services/customer/authService";
 import { toast } from "react-toastify";
 import type { ApiErrorType } from "../../types/error";
 

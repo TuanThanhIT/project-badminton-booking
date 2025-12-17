@@ -7,7 +7,7 @@ import type {
   OrderCancelResponse,
   OrderListResponse,
 } from "../../../types/order";
-import orderService from "../../../services/Customer/orderService";
+import orderService from "../../../services/customer/orderService";
 
 interface OrderState {
   orders: OrderListResponse;

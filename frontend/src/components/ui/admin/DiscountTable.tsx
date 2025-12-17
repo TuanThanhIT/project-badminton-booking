@@ -1,4 +1,3 @@
-// src/components/admin/DiscountTable.tsx
 import React, { useMemo } from "react";
 import {
   useReactTable,

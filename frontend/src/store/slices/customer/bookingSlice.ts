@@ -7,7 +7,7 @@ import type {
   BookingCancelResponse,
   BookingListResponse,
 } from "../../../types/booking";
-import bookingService from "../../../services/Customer/bookingService";
+import bookingService from "../../../services/customer/bookingService";
 
 interface OrderState {
   bookings: BookingListResponse;

@@ -16,8 +16,8 @@ import type {
   CountBookingRequest,
   CountBookingResponse,
 } from "../../../types/booking";
-import bookingService from "../../../services/Employee/bookingService";
-import bookingAdminService from "../../../services/Admin/bookingService";
+import bookingService from "../../../services/employee/bookingService";
+import bookingAdminService from "../../../services/admin/bookingService";
 
 type BookingStatus =
   | "Pending"

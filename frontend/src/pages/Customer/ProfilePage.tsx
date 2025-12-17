@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import userService from "../../services/Customer/userService";
+import userService from "../../services/customer/userService";
 import type { ProfileRequest, ProfileResponse } from "../../types/user";
 import EditProfileModal from "../../components/ui/customer+employee/EditProfileModal";
 import type { ApiErrorType } from "../../types/error";

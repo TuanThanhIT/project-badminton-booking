@@ -7,9 +7,9 @@ import Breadcrumb from "../../components/ui/customer+employee/Breadcrumb";
 import ProductFilter from "../../components/ui/customer+employee/ProductFilter";
 import type { CategoryOtherResponse } from "../../types/category";
 import type { ApiErrorType } from "../../types/error";
-import categoryService from "../../services/Customer/categoryService";
+import categoryService from "../../services/customer/categoryService";
 import type { ProductParams, ProductResponse } from "../../types/product";
-import productService from "../../services/Customer/productService";
+import productService from "../../services/customer/productService";
 import ProductCard from "../../components/ui/customer+employee/ProductCard";
 import PaginatedItems from "../../components/ui/customer+employee/PaginatedItems";
 

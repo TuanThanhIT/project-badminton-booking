@@ -10,7 +10,7 @@ import type {
   UpdateFeedbackRequest,
   UpdateFeedbackResponse,
 } from "../../../types/bookingFeedback";
-import bookingFeedbackService from "../../../services/Customer/bookingFeedbackService";
+import bookingFeedbackService from "../../../services/customer/bookingFeedbackService";
 
 interface BookingFeedbackState {
   bookingFeedbackDetail: BookingFeedBackDetailResponse | undefined;

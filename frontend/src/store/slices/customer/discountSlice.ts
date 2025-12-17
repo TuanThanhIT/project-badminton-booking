@@ -5,8 +5,8 @@ import type {
   UpdateDiscountResponse,
 } from "../../../types/discount";
 import type { ApiErrorType } from "../../../types/error";
-import discountService from "../../../services/Customer/discountService";
-import discountBookingService from "../../../services/Customer/discountBookingService";
+import discountService from "../../../services/customer/discountService";
+import discountBookingService from "../../../services/customer/discountBookingService";
 
 interface DiscountState {
   discount?: DiscountResponse;

@@ -1,52 +1,60 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
-<<<<<<< HEAD
-
-import courtService from "../../services/Admin/courtService";
-import IconButton from "../../components/ui/admin/IconButton";
-import { Plus } from "lucide-react";
-import AddCourtModal from "../../components/ui/admin/AddCourtModal";
-
-=======
-import Swal from "sweetalert2";
 import type { CourtItem } from "../../../src/types/court";
 import courtService from "../../services/admin/courtService";
-import IconButton from "../../components/commons/admin/IconButton";
-import { Plus } from "lucide-react";
-import AddCourtModal from "../../components/commons/admin/AddCourtModal";
-import EditCourtModal from "../../components/commons/admin/EditCourtModal";
-import { useSearchParams } from "react-router-dom";
-import { CirclePlus, DollarSign } from "lucide-react";
-import AddScheduleModal from "../../components/commons/admin/AddScheduleModal";
-import CourtPriceModal from "../../components/commons/admin/CourtPriceModal";
->>>>>>> dev_admin_thaitoan
+import IconButton from "../../components/ui/admin/IconButton";
+import { Plus, CirclePlus, DollarSign, Pencil } from "lucide-react";
+import AddCourtModal from "../../components/ui/admin/AddCourtModal";
+import EditCourtModal from "../../components/ui/admin/EditCourtModal";
+import AddScheduleModal from "../../components/ui/admin/AddScheduleModal";
+import CourtPriceModal from "../../components/ui/admin/CourtPriceModal";
+
 export default function CourtPage() {
-  const [courts, setCourts] = useState<any[]>([]);
+  const [courts, setCourts] = useState<CourtItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [openModal, setOpenModal] = useState(false);
-  const [openEditCourtModal, setOpenEditCourtModal] = useState(false);
-  const [openAddScheduleModal, setOpenAddScheduleModal] = useState(false);
+
+  const [openAddCourt, setOpenAddCourt] = useState(false);
+  const [openEditCourt, setOpenEditCourt] = useState(false);
+  const [openAddSchedule, setOpenAddSchedule] = useState(false);
+  const [openAddPrice, setOpenAddPrice] = useState(false);
+
   const [selectedCourt, setSelectedCourt] = useState<CourtItem | null>(null);
-  const [openAddPriceModal, setOpenAddPriceModal] = useState(false);
 
-  const [searchParams] = useSearchParams();
+  const fetchCourts = async () => {
+    try {
+      const res = await courtService.getAllCourtsService();
+      setCourts(res.data.courts || []);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const getColumns = (): ColumnsType<CourtItem> => [
+  useEffect(() => {
+    fetchCourts();
+  }, []);
+
+  const handleEdit = (court: CourtItem) => {
+    setSelectedCourt(court);
+    setOpenEditCourt(true);
+  };
+
+  const columns: ColumnsType<CourtItem> = [
     {
-      title: "Ảnh",
+      title: "Hình ảnh",
       dataIndex: "thumbnailUrl",
       key: "thumbnailUrl",
       align: "center",
+      width: 120,
       render: (thumb: string) =>
         thumb ? (
           <img
             src={thumb}
-            alt="court"
-            className="w-16 h-16 object-cover rounded-md mx-auto"
+            alt="Sân"
+            className="w-14 h-14 object-cover rounded-lg mx-auto border"
           />
         ) : (
-          <span className="text-gray-400 italic">Không có ảnh</span>
+          <span className="text-gray-400 italic">Chưa có</span>
         ),
     },
     {
@@ -54,114 +62,52 @@ export default function CourtPage() {
       dataIndex: "name",
       key: "name",
       align: "center",
+      render: (text) => (
+        <span className="font-medium text-gray-800">{text}</span>
+      ),
     },
     {
       title: "Vị trí",
       dataIndex: "location",
       key: "location",
       align: "center",
+      render: (text) => <span className="text-gray-600">{text}</span>,
     },
     {
-      title: "Actions",
+      title: "Thao tác",
       key: "actions",
       align: "center",
+      width: 120,
       render: (_, court) => (
-        <div className="flex justify-center gap-3">
-          <button
-            className="px-3 py-1 bg-blue-500 text-white rounded-md"
-            onClick={() => handleEdit(court)}
-          >
-            Edit
-          </button>
-        </div>
+        <button
+          onClick={() => handleEdit(court)}
+          className="inline-flex items-center gap-1 px-3 py-1.5 text-sm
+                     bg-sky-500 hover:bg-sky-600 text-white rounded-md transition"
+        >
+          <Pencil size={14} />
+          Sửa
+        </button>
       ),
     },
   ];
 
-  const handleEdit = (court: CourtItem) => {
-    setSelectedCourt(court);
-    setOpenEditCourtModal(true);
-  };
-
-  const fetchCourt = async () => {
-    try {
-      const res = await courtService.getAllCourtsService();
-      setCourts(res.data.courts);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCourt();
-  }, []);
-
   return (
-    <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="font-semibold text-lg">Danh sách sân</h2>
-        {openAddScheduleModal && (
-          <div className="z-80">
-            <AddScheduleModal
-              isOpen={openAddScheduleModal}
-              onClose={() => setOpenAddScheduleModal(false)}
-              onSuccess={() => {
-                fetchCourt();
-                setOpenAddScheduleModal(false);
-              }}
-            />
-          </div>
-        )}
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="bg-white rounded-2xl border border-gray-200 p-8 space-y-6">
+        {/* ===== TIÊU ĐỀ ===== */}
+        <h1 className="inline-flex items-center gap-2 text-2xl font-bold text-sky-700 relative">
+          Quản lý sân cầu lông
+          <span className="absolute left-0 -bottom-3 w-1/2 h-1 bg-sky-400 rounded-sm"></span>
+        </h1>
 
-        {openModal && (
-          <div className="z-80">
-            <AddCourtModal
-              isOpen={openModal}
-              onClose={() => setOpenModal(false)}
-              onSuccess={() => {
-                fetchCourt();
-                setOpenModal(false);
-              }}
-            />
-          </div>
-        )}
-        {openEditCourtModal && selectedCourt && (
-          <div className="z-80">
-            <EditCourtModal
-              isOpen={openEditCourtModal}
-              onClose={() => setOpenEditCourtModal(false)}
-              courtId={selectedCourt.id}
-              onSuccess={async () => {
-                const res = await courtService.getCourtByIdService(
-                  selectedCourt.id
-                );
-                setCourts((prev) =>
-                  prev.map((c) =>
-                    c.id === res.data.court.id ? res.data.court : c
-                  )
-                );
-
-                setOpenEditCourtModal(false);
-              }}
-            />
-          </div>
-        )}
-        {openAddPriceModal && (
-          <div className="z-80">
-            <CourtPriceModal
-              isOpen={openAddPriceModal}
-              onClose={() => setOpenAddPriceModal(false)}
-            />
-          </div>
-        )}
-        <div className="flex gap-2">
+        {/* ===== BUTTON TOOLBAR ===== */}
+        <div className="flex justify-end gap-2">
           <IconButton
-            type="button"
             icon={Plus}
             text="Thêm sân"
-            color="bg-blue-500"
-            hoverColor="hover:bg-blue-700"
-            onClick={() => setOpenModal(true)}
+            color="bg-sky-500"
+            hoverColor="hover:bg-sky-600"
+            onClick={() => setOpenAddCourt(true)}
           />
 
           <IconButton
@@ -169,25 +115,71 @@ export default function CourtPage() {
             text="Tạo lịch tuần"
             color="bg-green-500"
             hoverColor="hover:bg-green-600"
-            onClick={() => setOpenAddScheduleModal(true)}
+            onClick={() => setOpenAddSchedule(true)}
           />
+
           <IconButton
             icon={DollarSign}
             text="Thiết lập giá"
             color="bg-orange-500"
             hoverColor="hover:bg-orange-600"
-            onClick={() => setOpenAddPriceModal(true)}
+            onClick={() => setOpenAddPrice(true)}
           />
         </div>
+
+        {/* ===== BẢNG ===== */}
+        <Table
+          columns={columns}
+          dataSource={courts}
+          loading={loading}
+          rowKey="id"
+          pagination={false}
+          bordered
+          className="rounded-xl overflow-hidden"
+          rowClassName={(_, index) =>
+            index % 2 === 0 ? "bg-white" : "bg-gray-50"
+          }
+        />
       </div>
 
-      <Table
-        columns={getColumns()}
-        dataSource={courts}
-        loading={loading}
-        pagination={false}
-        rowKey="id"
-      />
+      {/* ===== MODALS ===== */}
+      {openAddCourt && (
+        <AddCourtModal
+          isOpen={openAddCourt}
+          onClose={() => setOpenAddCourt(false)}
+          onSuccess={() => {
+            fetchCourts();
+            setOpenAddCourt(false);
+          }}
+        />
+      )}
+
+      {openEditCourt && selectedCourt && (
+        <EditCourtModal
+          isOpen={openEditCourt}
+          courtId={selectedCourt.id}
+          onClose={() => setOpenEditCourt(false)}
+          onSuccess={fetchCourts}
+        />
+      )}
+
+      {openAddSchedule && (
+        <AddScheduleModal
+          isOpen={openAddSchedule}
+          onClose={() => setOpenAddSchedule(false)}
+          onSuccess={() => {
+            fetchCourts();
+            setOpenAddSchedule(false);
+          }}
+        />
+      )}
+
+      {openAddPrice && (
+        <CourtPriceModal
+          isOpen={openAddPrice}
+          onClose={() => setOpenAddPrice(false)}
+        />
+      )}
     </div>
   );
 }

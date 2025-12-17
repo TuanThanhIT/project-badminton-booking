@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import productService from "../../../services/Admin/productService";
+import { useEffect, useState } from "react";
+import productService from "../../../services/admin/productService";
 import VariantForm from "./VariantForm";
 
 type EditVariantModalProps = {
@@ -45,13 +45,6 @@ export default function EditVariantModal({
           onCancel={onClose}
           mode="edit"
         />
-
-        {/* <button
-          className="mt-4 px-4 py-2 bg-gray-300 rounded"
-          onClick={onClose}
-        >
-          Đóng
-        </button> */}
       </div>
     </div>
   );

@@ -9,7 +9,7 @@ import type {
   DashboardTopProductsResponse,
   DashboardWorkShiftResponse,
 } from "../../../types/dashboard";
-import dashboardService from "../../../services/Admin/dashboardService";
+import dashboardService from "../../../services/admin/dashboardService";
 
 interface DashboardState {
   dashboardRevenue: DashboardRevenue7DaysResponse;

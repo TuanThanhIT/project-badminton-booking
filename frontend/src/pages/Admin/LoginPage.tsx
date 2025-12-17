@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../../components/contexts/authContext";
 import type { ApiErrorType } from "../../types/error";
-import authService from "../../services/Admin/authService";
+import authService from "../../services/admin/authService";
 
 const AdminLoginPage = () => {
   const navigate = useNavigate();

@@ -14,24 +14,31 @@ var uploader = multer({
 const initBeverageAdminRoute = (app) => {
   beverageRoute.post(
     "/add",
-<<<<<<< HEAD
     auth,
     authorize("ADMIN"),
-=======
-    // auth,
-    // authorize(),
->>>>>>> dev_admin_thaitoan
     uploader.single("file"),
     beverageController.addBeverage
   );
   beverageRoute.put(
     "/update/:beverageId",
+    auth,
+    authorize("ADMIN"),
     uploader.single("file"),
     beverageController.updateBeverage
   );
 
-  beverageRoute.get("/", beverageController.getAllBeverages);
-  beverageRoute.get("/:beverageId", beverageController.getBeverageById);
+  beverageRoute.get(
+    "/",
+    auth,
+    authorize("ADMIN"),
+    beverageController.getAllBeverages
+  );
+  beverageRoute.get(
+    "/:beverageId",
+    auth,
+    authorize("ADMIN"),
+    beverageController.getBeverageById
+  );
 
   app.use("/admin/beverage", beverageRoute);
 };

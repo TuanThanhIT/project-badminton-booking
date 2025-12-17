@@ -2,9 +2,7 @@ import instance from "../../utils/axiosCustomize";
 import type {
   CourtItem,
   CreateCourtRequest,
-  CourtPriceItem,
   CreateCourtPriceRequest,
-  CreateWeeklySlotsRequest,
   CreateCourtPriceResponse,
   CreateWeeklySlotsForm,
 } from "../../types/court";

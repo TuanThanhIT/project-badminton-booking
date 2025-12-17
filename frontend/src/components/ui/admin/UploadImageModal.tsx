@@ -1,5 +1,3 @@
-// components/commons/admin/UploadImageModal.tsx   // ⭐ NEW
-import React from "react";
 import UploadProductImages from "./UploadProductImages";
 
 interface Props {

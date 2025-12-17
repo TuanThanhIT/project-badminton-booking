@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import userService from "../../../services/Admin/usersService";
+import { useState } from "react";
+import { X, User, Mail, Lock } from "lucide-react";
+import userService from "../../../services/admin/usersService";
 
 interface Props {
   isOpen: boolean;
@@ -8,8 +9,6 @@ interface Props {
 }
 
 export default function AddUserModal({ isOpen, onClose, onSuccess }: Props) {
-  if (!isOpen) return null;
-
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -22,20 +21,22 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: Props) {
     password: "",
   });
 
+  if (!isOpen) return null;
+
   const validate = () => {
     const newErr = { username: "", email: "", password: "" };
     let ok = true;
 
     if (!form.username.trim()) {
-      newErr.username = "Không được bỏ trống!";
+      newErr.username = "Không được bỏ trống";
       ok = false;
     }
     if (!form.email.trim()) {
-      newErr.email = "Không được bỏ trống!";
+      newErr.email = "Không được bỏ trống";
       ok = false;
     }
     if (!form.password.trim()) {
-      newErr.password = "Không được bỏ trống!";
+      newErr.password = "Không được bỏ trống";
       ok = false;
     }
 
@@ -47,16 +48,11 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: Props) {
     if (!validate()) return;
 
     try {
-      await userService.createUserService({
-        username: form.username,
-        email: form.email,
-        password: form.password,
-      });
-
+      await userService.createUserService(form);
       onSuccess();
       onClose();
     } catch (err: any) {
-      alert(err.response?.data?.message || "Lỗi tạo user");
+      alert(err.response?.data?.message || "Tạo tài khoản thất bại");
     }
   };
 
@@ -65,68 +61,110 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-lg w-full max-w-lg p-6">
-        <h2 className="text-lg font-bold mb-4">Thêm User</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* ===== OVERLAY ===== */}
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
-        {/* 🔵 MARK: form UI */}
-        <div className="flex flex-col gap-4">
+      {/* ===== MODAL ===== */}
+      <div className="relative bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
+        {/* ===== HEADER ===== */}
+        <div className="flex items-center justify-between px-6 py-4 border-b bg-gray-50">
+          <h2 className="text-lg font-semibold text-gray-800">
+            Thêm tài khoản người dùng
+          </h2>
+          <button onClick={onClose} className="p-1 rounded hover:bg-gray-200">
+            <X className="w-5 h-5 text-gray-600" />
+          </button>
+        </div>
+
+        {/* ===== BODY ===== */}
+        <div className="p-6 space-y-4">
+          {/* Username */}
           <div>
-            <label className="font-medium">Username</label>
-            <input
-              name="username"
-              value={form.username}
-              onChange={handleChange}
-              className="w-full p-2 border rounded mt-1"
-              placeholder="Nhập username..."
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tên đăng nhập
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                name="username"
+                value={form.username}
+                onChange={handleChange}
+                placeholder="Nhập tên đăng nhập"
+                className="
+                  w-full rounded-lg border border-gray-300
+                  pl-9 pr-3 py-2 text-sm
+                  focus:outline-none focus:ring-2 focus:ring-blue-400
+                "
+              />
+            </div>
             {errors.username && (
-              <p className="text-red-500 text-sm">{errors.username}</p>
+              <p className="text-red-500 text-sm mt-1">{errors.username}</p>
             )}
           </div>
 
+          {/* Email (giữ nguyên tiếng Anh) */}
           <div>
-            <label className="font-medium">Email</label>
-            <input
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              className="w-full p-2 border rounded mt-1"
-              placeholder="Nhập email..."
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="example@email.com"
+                className="
+                  w-full rounded-lg border border-gray-300
+                  pl-9 pr-3 py-2 text-sm
+                  focus:outline-none focus:ring-2 focus:ring-blue-400
+                "
+              />
+            </div>
             {errors.email && (
-              <p className="text-red-500 text-sm">{errors.email}</p>
+              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
             )}
           </div>
 
+          {/* Password */}
           <div>
-            <label className="font-medium">Password</label>
-            <input
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={handleChange}
-              className="w-full p-2 border rounded mt-1"
-              placeholder="Nhập mật khẩu..."
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Mật khẩu
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                name="password"
+                type="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="Nhập mật khẩu"
+                className="
+                  w-full rounded-lg border border-gray-300
+                  pl-9 pr-3 py-2 text-sm
+                  focus:outline-none focus:ring-2 focus:ring-blue-400
+                "
+              />
+            </div>
             {errors.password && (
-              <p className="text-red-500 text-sm">{errors.password}</p>
+              <p className="text-red-500 text-sm mt-1">{errors.password}</p>
             )}
           </div>
         </div>
 
-        {/* 🔵 MARK: buttons */}
-        <div className="flex justify-end gap-3 mt-6">
+        {/* ===== FOOTER ===== */}
+        <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded"
+            className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100"
           >
             Hủy
           </button>
-
           <button
             onClick={handleSubmit}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
           >
             Lưu
           </button>

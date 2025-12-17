@@ -292,7 +292,7 @@ const DiscountPage: React.FC = () => {
                 setOpenAdd(true);
                 setAddType("ORDER");
               }}
-              className="flex items-center px-5 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700"
+              className="flex items-center px-2 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700"
             >
               <Plus className="w-4 h-4 mr-2" />
               Thêm khuyến mãi
@@ -368,7 +368,7 @@ const DiscountPage: React.FC = () => {
                 setOpenAdd(true);
                 setAddType("BOOKING");
               }}
-              className="flex items-center px-5 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700"
+              className="flex items-center px-2 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700"
             >
               <Plus className="w-4 h-4 mr-2" />
               Thêm khuyến mãi

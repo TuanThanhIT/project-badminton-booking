@@ -4,7 +4,7 @@ import Spinner from "../ui/customer+employee/SpinnerLoad";
 import { AuthContext } from "../contexts/authContext";
 import { toast } from "react-toastify";
 import type { ApiErrorType } from "../../types/error";
-import authService from "../../services/Admin/authService";
+import authService from "../../services/admin/authService";
 
 const AuthAdminGuard = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();

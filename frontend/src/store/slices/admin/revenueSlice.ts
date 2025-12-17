@@ -8,7 +8,7 @@ import type {
   RevenueRequest,
   RevenueTransactionResponse,
 } from "../../../types/revenue";
-import revenueService from "../../../services/Admin/revenueService";
+import revenueService from "../../../services/admin/revenueService";
 
 interface RevenueState {
   revenueOverview: RevenueOverviewResponse | undefined;

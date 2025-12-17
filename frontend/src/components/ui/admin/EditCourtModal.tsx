@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import courtService from "../../../services/admin/courtService";
 import CourtForm from "./CourtForm";
+import { X } from "lucide-react";
 
 type EditCourtModalProps = {
   isOpen: boolean;
@@ -36,9 +37,17 @@ export default function EditCourtModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-xl shadow max-w-xl w-full">
-        <h2 className="text-xl font-bold mb-4">Chỉnh sửa thông tin sân</h2>
+    <div className="fixed inset-0 z-100 bg-black/40 flex items-center justify-center">
+      <div className="bg-white p-6 rounded-2xl shadow-xl max-w-xl w-full">
+        {/* HEADER */}
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-semibold text-gray-800">
+            Chỉnh sửa thông tin sân
+          </h2>
+          <button onClick={onClose} className="p-1 rounded hover:bg-gray-100">
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
 
         <CourtForm
           initialData={court}

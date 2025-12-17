@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FormLoginSchema, type formLogin } from "../../schemas/FormLoginSchema";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import authService from "../../services/Employee/authService";
+import authService from "../../services/employee/authService";
 import { useContext } from "react";
 import { AuthContext } from "../../components/contexts/authContext";
 import type { ApiErrorType } from "../../types/error";

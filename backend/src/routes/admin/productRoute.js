@@ -12,7 +12,6 @@ var uploader = multer({
 });
 
 const initProductAdminRoute = (app) => {
-  // L?y t?t c? product
   productRoute.get(
     "/",
     auth,
@@ -24,9 +23,8 @@ const initProductAdminRoute = (app) => {
     auth,
     authorize("ADMIN"),
     productController.getProductById
-  ); // L?y 1 s?n ph?m theo ID
+  );
 
-  // T?o product (thumbnail)
   productRoute.post(
     "/add",
     auth,
@@ -34,7 +32,7 @@ const initProductAdminRoute = (app) => {
     uploader.single("thumbnail"),
     productController.createProduct
   );
-  // C?p nh?t product
+
   productRoute.put(
     "/:productId",
     auth,
@@ -43,7 +41,6 @@ const initProductAdminRoute = (app) => {
     productController.updateProduct
   );
 
-  // T?o variant cho product
   productRoute.post(
     "/:productId/variants",
     auth,
@@ -51,7 +48,6 @@ const initProductAdminRoute = (app) => {
     productController.createProductVariant
   );
 
-  // L?y variant theo productId
   productRoute.get(
     "/:productId/variants",
     auth,
@@ -59,7 +55,6 @@ const initProductAdminRoute = (app) => {
     productController.getProductVariantsByProductId
   );
 
-  // Lấy 1 variant
   productRoute.get(
     "/variant/:variantId",
     auth,
@@ -67,7 +62,6 @@ const initProductAdminRoute = (app) => {
     productController.getProductVariantById
   );
 
-  // Cập nhật variant
   productRoute.put(
     "/variant/:variantId",
     auth,
@@ -81,7 +75,6 @@ const initProductAdminRoute = (app) => {
     productController.deleteProductVariant
   );
 
-  // Thêm nhiều ảnh cho product
   productRoute.post(
     "/:productId/images",
     auth,
@@ -89,9 +82,19 @@ const initProductAdminRoute = (app) => {
     uploader.array("images", 5),
     productController.createProductImages
   );
-  // Lấy ảnh theo productId
-  productRoute.get("/:productId/images", productController.getProductImages);
-  productRoute.delete("/images/:imageId", productController.deleteProductImage);
+
+  productRoute.get(
+    "/:productId/images",
+    auth,
+    authorize("ADMIN"),
+    productController.getProductImages
+  );
+  productRoute.delete(
+    "/images/:imageId",
+    auth,
+    authorize("ADMIN"),
+    productController.deleteProductImage
+  );
   productRoute.put(
     "/images/:imageId",
     auth,

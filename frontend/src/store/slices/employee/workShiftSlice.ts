@@ -11,7 +11,7 @@ import type {
   WorkShiftRequest,
   WorkShiftResponse,
 } from "../../../types/workShift";
-import workShiftService from "../../../services/Employee/workShiftService";
+import workShiftService from "../../../services/employee/workShiftService";
 
 interface WorkShiftState {
   workShifts: WorkShiftResponse[];

@@ -16,8 +16,8 @@ import type {
   OrderEplRequest,
   OrderListEplResponse,
 } from "../../../types/order";
-import orderService from "../../../services/Employee/orderService";
-import orderAdminService from "../../../services/Admin/orderService";
+import orderService from "../../../services/employee/orderService";
+import orderAdminService from "../../../services/admin/orderService";
 
 interface OrderState {
   orders: OrderListEplResponse | undefined;

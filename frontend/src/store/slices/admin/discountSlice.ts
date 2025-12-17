@@ -14,8 +14,8 @@ import type {
   AdminUpdateDiscountRequest,
   AdminUpdateDiscountResponse,
 } from "../../../types/discount";
-import discountService from "../../../services/Admin/discountService";
-import discountBookingService from "../../../services/Admin/discountBookingService";
+import discountService from "../../../services/admin/discountService";
+import discountBookingService from "../../../services/admin/discountBookingService";
 
 interface DiscountState {
   discounts: AdminDiscountListResponse | undefined;

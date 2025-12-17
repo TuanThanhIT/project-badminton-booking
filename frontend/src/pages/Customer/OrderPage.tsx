@@ -21,7 +21,7 @@ import type {
   OrderCancelRequest,
   OrderResponse,
 } from "../../types/order";
-import momoService from "../../services/Customer/momoService";
+import momoService from "../../services/customer/momoService";
 import CancelForm from "../../components/ui/customer+employee/CancelForm";
 
 const statusColor = {

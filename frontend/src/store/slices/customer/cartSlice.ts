@@ -9,7 +9,7 @@ import type {
   CartResponse,
 } from "../../../types/cart";
 import type { ApiErrorType } from "../../../types/error";
-import cartService from "../../../services/Customer/cartService";
+import cartService from "../../../services/customer/cartService";
 
 interface CartState {
   cart?: CartResponse;

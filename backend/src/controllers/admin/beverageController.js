@@ -1,10 +1,7 @@
 import beverageService from "../../services/admin/beverageService.js";
-<<<<<<< HEAD
 import uploadBuffer from "../../utils/cloudinary.js";
-=======
 import uploadFile from "../../utils/upload.js";
 import { StatusCodes } from "http-status-codes";
->>>>>>> dev_admin_thaitoan
 
 const addBeverage = async (req, res, next) => {
   try {

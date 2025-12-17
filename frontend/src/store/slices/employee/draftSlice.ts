@@ -9,7 +9,7 @@ import type {
   UpdateDraftBookingRequest,
   UpdateDraftBookingResponse,
 } from "../../../types/draft";
-import draftService from "../../../services/Employee/draftService";
+import draftService from "../../../services/employee/draftService";
 
 interface DraftState {
   draftBookings: DraftBookingListResponse;

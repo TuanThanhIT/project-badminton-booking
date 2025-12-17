@@ -81,65 +81,94 @@ export default function CourtForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* name */}
         <div className="md:col-span-2">
-          <label className="font-medium">Tên sân</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">
+            Tên sân
+          </label>
           <input
             type="text"
             name="name"
-            placeholder="Tên sân..."
+            placeholder="Nhập tên sân"
             value={form.name || ""}
             onChange={handleChange}
-            className="w-full border rounded p-2"
+            className="
+          w-full rounded-lg border border-gray-300
+          px-3 py-2 text-sm
+          focus:outline-none focus:ring-2 focus:ring-sky-400
+        "
           />
-          {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+          {errors.name && (
+            <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+          )}
         </div>
 
         {/* location */}
         <div className="md:col-span-2">
-          <label className="font-medium">Vị trí</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">
+            Vị trí sân
+          </label>
           <input
             type="text"
             name="location"
-            placeholder="Vị trí sân..."
+            placeholder="Ví dụ: Tầng 2 – Khu A"
             value={form.location || ""}
             onChange={handleChange}
-            className="w-full border rounded p-2"
+            className="
+          w-full rounded-lg border border-gray-300
+          px-3 py-2 text-sm
+          focus:outline-none focus:ring-2 focus:ring-sky-400
+        "
           />
           {errors.location && (
-            <p className="text-red-500 text-sm">{errors.location}</p>
+            <p className="text-red-500 text-sm mt-1">{errors.location}</p>
           )}
         </div>
 
         {/* thumbnail upload */}
         <div className="md:col-span-2">
-          <label className="font-medium">Ảnh sân (thumbnail)</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">
+            Ảnh sân (thumbnail)
+          </label>
           <input
             type="file"
             accept="image/*"
             onChange={handleFileChange}
-            className="w-full border rounded p-2"
+            className="
+          w-full rounded-lg border border-gray-300
+          px-3 py-2 text-sm
+          file:mr-3 file:px-3 file:py-1
+          file:rounded file:border-0
+          file:bg-sky-50 file:text-sky-600
+        "
           />
         </div>
+
+        {/* Preview */}
         {file ? (
-          <div className="flex justify-center">
+          <div className="md:col-span-2 flex justify-center">
             <img
               src={URL.createObjectURL(file)}
-              className="w-32 h-32 object-cover rounded-lg mt-4 border border-blue-300"
+              className="
+            w-36 h-36 object-cover rounded-xl
+            border border-gray-300 shadow-sm
+          "
               alt="New Preview"
             />
           </div>
         ) : (
-          // Nếu chưa chọn ảnh mới thì hiển thị ảnh cũ
           mode === "edit" &&
           "thumbnailUrl" in initialData &&
           initialData.thumbnailUrl && (
-            <div className="flex justify-center">
+            <div className="md:col-span-2 flex justify-center">
               <img
                 src={initialData.thumbnailUrl}
-                className="w-32 h-32 object-cover rounded-lg mt-4 border border-blue-300"
+                className="
+              w-36 h-36 object-cover rounded-xl
+              border border-gray-300 shadow-sm
+            "
                 alt="Old Preview"
               />
             </div>
@@ -147,7 +176,8 @@ export default function CourtForm({
         )}
       </div>
 
-      <div className="flex justify-end gap-3 mt-4">
+      {/* ACTION */}
+      <div className="flex justify-end gap-3 pt-4 border-t">
         {onCancel && (
           <IconButton
             type="button"

@@ -57,12 +57,23 @@ const getUsersByRoleController = async (req, res, next) => {
     next(error);
   }
 };
+const getAllEmployees = async (req, res, next) => {
+  try {
+    const employees = await userService.getAllEmployeesService();
+    res.status(StatusCodes.OK).json({
+      data: employees,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 const usersController = {
   createUserController,
   lockUserController,
   unlockUserController,
   getAllUsersController,
   getUsersByRoleController,
+  getAllEmployees,
 };
 
 export default usersController;

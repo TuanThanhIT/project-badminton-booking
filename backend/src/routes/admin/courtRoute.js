@@ -19,14 +19,19 @@ const initCourtAdminRoute = (app) => {
     uploader.single("file"),
     courtController.createCourt
   );
-  courtRoute.post("/price/add", auth, courtController.createCourtPrice);
+  courtRoute.post("/price/add", courtController.createCourtPrice);
   courtRoute.post(
     "/create-weekly-slots",
     // auth,
     // authorize(),
     courtController.createWeeklySlots
   );
-  courtRoute.put("/update/:courtId", courtController.updateCourt);
+  courtRoute.put(
+    "/update/:courtId",
+    uploader.single("file"),
+    courtController.updateCourt
+  );
+
   courtRoute.get("/", courtController.getAllCourts);
   courtRoute.get("/:courtId", courtController.getCourtById);
   app.use("/admin/court", courtRoute);

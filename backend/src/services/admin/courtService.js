@@ -1,7 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import ApiError from "../../utils/ApiError.js";
 import { Court, CourtPrice, CourtSchedule } from "../../models/index.js";
-import { PawPrint } from "lucide-react";
+import { Op } from "sequelize";
 
 const createCourtService = async (name, location, thumbnailUrl) => {
   try {
@@ -82,16 +82,51 @@ const createCourtPriceService = async (
         "Giá trị của kiểu khung giờ không hợp lệ!"
       );
     }
+    const timeRegex = /^\d{2}:\d{2}(:\d{2})?$/;
 
-    const courtPrice = await CourtPrice.create({
+    if (!timeRegex.test(startTime) || !timeRegex.test(endTime)) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Định dạng giờ không hợp lệ!"
+      );
+    }
+
+    if (!startTime.endsWith(":00") && !startTime.endsWith(":00:00")) {
+      throw new ApiError(StatusCodes.BAD_REQUEST, "Giờ phải tròn giờ!");
+    }
+    if (startTime >= endTime) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Giờ kết thúc phải lớn hơn giờ bắt đầu!"
+      );
+    }
+    const existed = await CourtPrice.findOne({
+      where: {
+        dayOfWeek,
+        startTime,
+        endTime,
+        periodType,
+      },
+    });
+
+    if (existed) {
+      throw new ApiError(StatusCodes.CONFLICT, "Khung giờ này đã có giá!");
+    }
+
+    const result = await CourtPrice.create({
       dayOfWeek,
       startTime,
       endTime,
       price,
       periodType,
     });
-    return courtPrice;
+
+    return {
+      message: "Tạo giá cho tất cả sân thành công!",
+      prices: [result],
+    };
   } catch (error) {
+    console.error("CREATE COURT PRICE ERROR:", error);
     if (error instanceof ApiError) {
       throw error;
     }
@@ -105,7 +140,6 @@ export const createWeeklySlotsService = async (startDate) => {
       throw new ApiError(StatusCodes.BAD_REQUEST, "Ngày tạo là bắt buộc!");
     }
 
-    // Validate định dạng YYYY-MM-DD
     if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
@@ -113,11 +147,64 @@ export const createWeeklySlotsService = async (startDate) => {
       );
     }
 
-    const courts = await Court.findAll();
-
     const start = new Date(startDate);
     if (isNaN(start.getTime())) {
       throw new ApiError(StatusCodes.BAD_REQUEST, "startDate không hợp lệ!");
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (start < today) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Không thể tạo lịch cho ngày trong quá khứ!"
+      );
+    }
+
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+
+    const courts = await Court.findAll({
+      attributes: ["id"],
+    });
+
+    if (!courts.length) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Chưa có sân nào trong hệ thống!"
+      );
+    }
+
+    const courtIds = courts.map((c) => c.id);
+
+    const scheduledCourts = await CourtSchedule.findAll({
+      attributes: ["courtId"],
+      where: {
+        courtId: {
+          [Op.in]: courtIds,
+        },
+        date: {
+          [Op.between]: [
+            start.toISOString().split("T")[0],
+            end.toISOString().split("T")[0],
+          ],
+        },
+      },
+      group: ["courtId"],
+    });
+
+    const scheduledCourtIds = scheduledCourts.map((s) => s.courtId);
+
+    const availableCourts = courts.filter(
+      (c) => !scheduledCourtIds.includes(c.id)
+    );
+
+    if (!availableCourts.length) {
+      throw new ApiError(
+        StatusCodes.CONFLICT,
+        "Tất cả sân đã có lịch trong tuần này!"
+      );
     }
 
     const slots = [];
@@ -125,9 +212,9 @@ export const createWeeklySlotsService = async (startDate) => {
     for (let i = 0; i < 7; i++) {
       const date = new Date(start);
       date.setDate(start.getDate() + i);
-      const dateStr = date.toISOString().split("T")[0]; // YYYY-MM-DD
+      const dateStr = date.toISOString().split("T")[0];
 
-      for (const court of courts) {
+      for (const court of availableCourts) {
         for (let hour = 7; hour < 22; hour++) {
           slots.push({
             date: dateStr,
@@ -141,8 +228,15 @@ export const createWeeklySlotsService = async (startDate) => {
     }
 
     await CourtSchedule.bulkCreate(slots);
+
+    return {
+      message: "Tạo lịch tuần thành công!",
+      createdCourts: availableCourts.length,
+      skippedCourts: scheduledCourtIds.length,
+    };
   } catch (error) {
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error.message);
   }
 };
 

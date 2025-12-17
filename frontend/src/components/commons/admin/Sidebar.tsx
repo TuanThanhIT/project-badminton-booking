@@ -9,6 +9,8 @@ import {
   Headset,
   Grid2X2,
   Rows3,
+  Wine,
+  Briefcase,
 } from "lucide-react";
 import { createContext, useState } from "react";
 type SideBarContextType = {
@@ -60,9 +62,9 @@ const Sidebar = () => {
                 {({ isActive }) => (
                   <SidebarElement
                     icon={LayoutDashboard}
-                    text="Dashboard"
+                    text="Bảng điều khiển"
                     active={isActive}
-                    alert={true}
+                    alert={false}
                   />
                 )}
               </NavLink>
@@ -70,7 +72,7 @@ const Sidebar = () => {
                 {({ isActive }) => (
                   <SidebarElement
                     icon={Package}
-                    text="Products"
+                    text="Sản phẩm"
                     active={isActive}
                   />
                 )}
@@ -79,7 +81,7 @@ const Sidebar = () => {
                 {({ isActive }) => (
                   <SidebarElement
                     icon={Grid2X2}
-                    text="Categories"
+                    text="Danh mục"
                     active={isActive}
                   />
                 )}
@@ -88,7 +90,7 @@ const Sidebar = () => {
                 {({ isActive }) => (
                   <SidebarElement
                     icon={UsersRound}
-                    text="Users"
+                    text="Người dùng"
                     active={isActive}
                   />
                 )}
@@ -99,7 +101,7 @@ const Sidebar = () => {
                     icon={Headset}
                     text="Support"
                     active={isActive}
-                    alert={true}
+                    alert={false}
                   />
                 )}
               </NavLink>
@@ -107,9 +109,29 @@ const Sidebar = () => {
                 {({ isActive }) => (
                   <SidebarElement
                     icon={Rows3}
-                    text="Courts"
+                    text="Sân đấu"
                     active={isActive}
-                    alert={true}
+                    alert={false}
+                  />
+                )}
+              </NavLink>
+              <NavLink to={"/admin/beverages"} end>
+                {({ isActive }) => (
+                  <SidebarElement
+                    icon={Wine}
+                    text="Đồ uống"
+                    active={isActive}
+                    alert={false}
+                  />
+                )}
+              </NavLink>
+              <NavLink to={"/admin/workShift"} end>
+                {({ isActive }) => (
+                  <SidebarElement
+                    icon={Briefcase}
+                    text="Ca làm"
+                    active={isActive}
+                    alert={false}
                   />
                 )}
               </NavLink>

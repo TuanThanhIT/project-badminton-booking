@@ -8,6 +8,7 @@ const initUserAdminAuthRoute = (app) => {
   usersRoute.put("/unlock/:userId", usersController.unlockUserController);
   usersRoute.get("/", usersController.getAllUsersController);
   usersRoute.get("/role/:roleId", usersController.getUsersByRoleController);
+  usersRoute.get("/employees", usersController.getAllEmployees);
 
   app.use("/admin/users", usersRoute);
 };

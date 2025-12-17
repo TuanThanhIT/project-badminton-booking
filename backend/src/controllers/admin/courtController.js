@@ -25,6 +25,7 @@ const createCourt = async (req, res, next) => {
 
 const createCourtPrice = async (req, res, next) => {
   try {
+    console.log("COURT PRICE PAYLOAD:", req.body);
     const { dayOfWeek, startTime, endTime, price, periodType } = req.body;
     const courtPrice = await courtService.createCourtPriceService(
       dayOfWeek,
@@ -55,7 +56,13 @@ const updateCourt = async (req, res, next) => {
     const { courtId } = req.params;
     const data = req.body;
 
-    const result = await courtService.updateCourt(courtId, data);
+    // Nếu có file upload thì upload lên Cloudinary
+    if (req.file?.path) {
+      const upload = await uploadFile(req.file.path);
+      data.thumbnailUrl = upload.secure_url;
+    }
+
+    const result = await courtService.updateCourtService(courtId, data);
 
     return res.status(StatusCodes.OK).json(result);
   } catch (error) {
@@ -79,7 +86,7 @@ const getAllCourts = async (req, res, next) => {
 const getCourtById = async (req, res, next) => {
   try {
     const { courtId } = req.params;
-    const court = await courtService.getCourtById(courtId);
+    const court = await courtService.getCourtByIdService(courtId);
 
     return res.status(StatusCodes.OK).json({
       message: "Lấy thông tin sân thành công!",

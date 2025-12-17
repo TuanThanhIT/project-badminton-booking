@@ -2,7 +2,7 @@ import React from "react";
 import { Phone, Mail, MessageCircle } from "lucide-react";
 const Footer = () => {
   return (
-    <footer className="bg-blue-400 px-4 md:px-16 lg:px-28 py-3">
+    <footer className="bg-[#1e3a8a] px-4 md:px-16 lg:px-28 py-3">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div>
           <h2 className="text-lg font-bold mb-4 text-white">About us</h2>

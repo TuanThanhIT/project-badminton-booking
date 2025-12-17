@@ -36,6 +36,7 @@ import initProductEmployeeRoute from "./routes/employee/productRoute.js";
 import initDraftEmployeeRoute from "./routes/employee/draftRoute.js";
 import initOfflineEmployeeRoute from "./routes/employee/offlineRoute.js";
 import initUserAdminAuthRoute from "./routes/admin/usersRoute.js";
+import initAdminWorkShiftEmployeeRoute from "./routes/admin/workShiftEmployeeRoute.js";
 
 dotenv.config();
 
@@ -74,6 +75,7 @@ initCourtAdminRoute(app);
 initDiscountBookingAdminRoute(app);
 initWorkShiftAdminRoute(app);
 initBeverageAdminRoute(app);
+initAdminWorkShiftEmployeeRoute(app);
 
 // Employee
 initAuthEmployeeRoute(app);

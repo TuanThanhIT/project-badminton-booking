@@ -66,7 +66,7 @@ const columns = (
   },
   {
     title: "Category",
-    dataIndex: ["Category", "cateName"],
+    dataIndex: ["category", "cateName"],
     key: "category",
     align: "center",
     render: (c) => <span className="text-gray-700">{c}</span>,

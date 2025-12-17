@@ -1,5 +1,9 @@
 import instance from "../../utils/axiosCustomize";
-import type { CreateUserRequest, UserItem } from "../../types/user";
+import type {
+  CreateUserRequest,
+  UserItem,
+  GetEmployeesResponse,
+} from "../../types/user";
 // ================================
 // 1. TẠO USER
 // POST /admin/users/createUsers
@@ -50,6 +54,9 @@ const toggleLock = (userId: number, isActive: boolean) => {
   }
   return unlockUserService(userId);
 };
+const getEmployeesService = () => {
+  return instance.get<GetEmployeesResponse>("/admin/users/employees");
+};
 
 // ================================
 // EXPORT
@@ -61,6 +68,7 @@ const usersService = {
   getAllUsersService,
   getUsersByRoleService,
   toggleLock,
+  getEmployeesService,
 };
 
 export default usersService;

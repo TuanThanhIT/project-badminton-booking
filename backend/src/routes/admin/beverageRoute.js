@@ -14,11 +14,19 @@ var uploader = multer({
 const initBeverageAdminRoute = (app) => {
   beverageRoute.post(
     "/add",
-    auth,
-    authorize(),
+    // auth,
+    // authorize(),
     uploader.single("file"),
     beverageController.addBeverage
   );
+  beverageRoute.put(
+    "/update/:beverageId",
+    uploader.single("file"),
+    beverageController.updateBeverage
+  );
+
+  beverageRoute.get("/", beverageController.getAllBeverages);
+  beverageRoute.get("/:beverageId", beverageController.getBeverageById);
 
   app.use("/admin/beverage", beverageRoute);
 };

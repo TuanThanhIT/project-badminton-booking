@@ -12,32 +12,45 @@ import WorkShiftPage from "../pages/Admin/WorkShiftPage";
 import EditProductPage from "../pages/Admin/EditProductPage";
 import VariantPage from "../pages/Admin/VariantPage";
 import CourtPage from "../pages/Admin/CourtPage";
+import BeveragePage from "../pages/Admin/BeveragePage";
+import AddBeveragePage from "../pages/Admin/AddBeveragePage";
+import EditBeveragePage from "../pages/Admin/EditBeveragePage";
+import WorkShiftEmployeePage from "../pages/Admin/WorkShiftEmployeePage";
 const AdminRoute = () => {
   return (
     <div>
       <Routes>
         <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<HomePage />}></Route>
-          <Route path="/admin/users" element={<UsersPage />}></Route>
-          <Route path="/admin/products" element={<ProductPage />}></Route>
-          <Route path="/admin/categories" element={<CategoryPage />}></Route>
-          <Route path="/admin/support" element={<SupportPage />}></Route>
-          <Route path="/admin/workshift" element={<WorkShiftPage />}></Route>
-          <Route path="/admin/products/variants" element={<VariantPage />} />
+          <Route index element={<HomePage />} />
 
+          <Route path="users" element={<UsersPage />} />
+          <Route path="products" element={<ProductPage />} />
+          <Route path="categories" element={<CategoryPage />} />
+          <Route path="support" element={<SupportPage />} />
+
+          {/* ================= WORK SHIFT ================= */}
+          <Route path="workShift" element={<WorkShiftPage />} />
           <Route
-            path="/admin/products/add"
-            element={<AddProductPage />}
-          ></Route>
-          <Route
-            path="/admin/products/edit/:id"
-            element={<EditProductPage />}
-          ></Route>
-          <Route path="/admin/courts" element={<CourtPage />}></Route>
+            path="workShift/employees"
+            element={<WorkShiftEmployeePage />}
+          />
+
+          {/* ================= PRODUCTS ================= */}
+          <Route path="products/add" element={<AddProductPage />} />
+          <Route path="products/edit/:id" element={<EditProductPage />} />
+          <Route path="products/variants" element={<VariantPage />} />
+
+          {/* ================= COURTS ================= */}
+          <Route path="courts" element={<CourtPage />} />
+
+          {/* ================= BEVERAGES ================= */}
+          <Route path="beverages" element={<BeveragePage />} />
+          <Route path="beverages/add" element={<AddBeveragePage />} />
+          <Route path="beverages/edit/:id" element={<EditBeveragePage />} />
         </Route>
 
-        <Route path="/admin/login" element={<LoginPage />}></Route>
-        <Route path="*" element={<NotFoundPage />}></Route>
+        <Route path="/admin/login" element={<LoginPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </div>
   );

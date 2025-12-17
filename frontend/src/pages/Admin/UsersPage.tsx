@@ -36,15 +36,15 @@ export default function UserPage() {
 
   const handleLock = async (user: UserItem) => {
     const result = await Swal.fire({
-      title: user.isActive ? "Mở khóa người dùng?" : "Khóa người dùng này?",
+      title: user.isActive ? "Khóa người dùng?" : "Mở khóa người dùng này?",
       text: user.isActive
-        ? "Người dùng sẽ được mở khóa!"
-        : "Người dùng sẽ không thể đăng nhập!",
+        ? "Người dùng không thể đăng nhập!"
+        : "Người dùng sẽ được mở khóa!",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: user.isActive ? "Mở khóa" : "Khóa",
+      confirmButtonText: user.isActive ? "Khóa" : "Mở khóa",
       cancelButtonText: "Hủy",
-      confirmButtonColor: user.isActive ? "#38a169" : "#e3342f",
+      confirmButtonColor: user.isActive ? "#e3342f" : "#38a169",
     });
 
     if (!result.isConfirmed) return;
@@ -54,7 +54,7 @@ export default function UserPage() {
       console.log(user.isActive);
       Swal.fire(
         "Thành công!",
-        user.isActive ? "Đã mở khóa." : "Đã khóa người dùng.",
+        user.isActive ? "Đã khóa người dùng." : "Đã mở khóa người dùng.",
         "success"
       );
       fetchUsers();
@@ -121,11 +121,11 @@ export default function UserPage() {
           >
             {user.isActive ? (
               <div className="flex items-center gap-1">
-                <Unlock size={16} /> Unlock
+                <Unlock size={16} /> Lock
               </div>
             ) : (
               <div className="flex items-center gap-1">
-                <Lock size={16} /> Lock
+                <Lock size={16} /> Unlock
               </div>
             )}
           </button>

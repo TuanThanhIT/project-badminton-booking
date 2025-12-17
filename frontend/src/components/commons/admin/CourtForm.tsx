@@ -123,6 +123,28 @@ export default function CourtForm({
             className="w-full border rounded p-2"
           />
         </div>
+        {file ? (
+          <div className="flex justify-center">
+            <img
+              src={URL.createObjectURL(file)}
+              className="w-32 h-32 object-cover rounded-lg mt-4 border border-blue-300"
+              alt="New Preview"
+            />
+          </div>
+        ) : (
+          // Nếu chưa chọn ảnh mới thì hiển thị ảnh cũ
+          mode === "edit" &&
+          "thumbnailUrl" in initialData &&
+          initialData.thumbnailUrl && (
+            <div className="flex justify-center">
+              <img
+                src={initialData.thumbnailUrl}
+                className="w-32 h-32 object-cover rounded-lg mt-4 border border-blue-300"
+                alt="Old Preview"
+              />
+            </div>
+          )
+        )}
       </div>
 
       <div className="flex justify-end gap-3 mt-4">

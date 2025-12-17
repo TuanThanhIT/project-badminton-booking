@@ -90,9 +90,78 @@ const createWorkShiftService = async (
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error.message);
   }
 };
+const createWorkShiftsService = async (workDate, shiftWage) => {
+  // Kiểm tra đã tồn tại ca trong ngày chưa
+  const existed = await WorkShift.findOne({
+    where: { workDate },
+  });
+
+  if (existed) {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      "Ngày này đã được tạo ca làm việc!"
+    );
+  }
+
+  const shifts = [
+    {
+      name: "Ca sáng",
+      workDate,
+      startTime: "07:00",
+      endTime: "12:00",
+      shiftWage,
+    },
+    {
+      name: "Ca chiều",
+      workDate,
+      startTime: "12:00",
+      endTime: "17:00",
+      shiftWage,
+    },
+    {
+      name: "Ca tối",
+      workDate,
+      startTime: "17:00",
+      endTime: "22:00",
+      shiftWage,
+    },
+  ];
+
+  const createdShifts = await WorkShift.bulkCreate(shifts);
+
+  return createdShifts;
+};
+
+const getAllWorkShiftsService = async ({ page = 1, limit = 10, workDate }) => {
+  const offset = (page - 1) * limit;
+
+  const whereCondition = workDate ? { workDate } : {};
+
+  const { rows, count } = await WorkShift.findAndCountAll({
+    where: whereCondition,
+    order: [
+      ["workDate", "DESC"],
+      ["startTime", "ASC"],
+    ],
+    limit,
+    offset,
+  });
+
+  return {
+    workShifts: rows,
+    pagination: {
+      total: count,
+      page,
+      limit,
+      totalPages: Math.ceil(count / limit),
+    },
+  };
+};
 
 const workShiftService = {
   createWorkShiftService,
+  createWorkShiftsService,
+  getAllWorkShiftsService,
 };
 
 export default workShiftService;

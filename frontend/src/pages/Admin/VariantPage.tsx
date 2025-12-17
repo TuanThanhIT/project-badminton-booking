@@ -227,18 +227,20 @@ export default function VariantPage() {
           </div>
         )}
         {openEditVariantModal && selectedVariant && (
-          <EditVariantModal
-            isOpen={openEditVariantModal}
-            onClose={() => setOpenEditVariantModal(false)}
-            variantId={selectedVariant.id}
-            onSuccess={async () => {
-              const res = await productService.getVariantsByProductIdService(
-                productId
-              );
-              setVariants(res.data.data || []);
-              setOpenEditVariantModal(false);
-            }}
-          />
+          <div className="z-80">
+            <EditVariantModal
+              isOpen={openEditVariantModal}
+              onClose={() => setOpenEditVariantModal(false)}
+              variantId={selectedVariant.id}
+              onSuccess={async () => {
+                const res = await productService.getVariantsByProductIdService(
+                  productId
+                );
+                setVariants(res.data.data || []);
+                setOpenEditVariantModal(false);
+              }}
+            />
+          </div>
         )}
         {openUploadModal && (
           <div className="z-80">

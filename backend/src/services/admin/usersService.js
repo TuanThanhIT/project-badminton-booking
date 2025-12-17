@@ -1,6 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import { User, Role } from "../../models/index.js";
 import ApiError from "../../utils/ApiError.js";
+import { Profile } from "../../models/index.js";
 import bcrypt from "bcrypt";
 const createUser = async (username, password, email) => {
   try {
@@ -124,6 +125,24 @@ const getUsersByRoleService = async (roleId) => {
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
+const getAllEmployeesService = async () => {
+  const employees = await User.findAll({
+    where: {
+      roleId: 2, // ✅ NHÂN VIÊN
+      isActive: true,
+    },
+    attributes: ["id", "username"],
+    include: [
+      {
+        model: Profile,
+        attributes: ["fullName"],
+      },
+    ],
+    order: [["createdDate", "DESC"]],
+  });
+
+  return employees;
+};
 
 const userService = {
   createUser,
@@ -131,5 +150,6 @@ const userService = {
   unlockUserService,
   getAllUsersService,
   getUsersByRoleService,
+  getAllEmployeesService,
 };
 export default userService;

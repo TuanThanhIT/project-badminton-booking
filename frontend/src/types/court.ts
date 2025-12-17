@@ -120,5 +120,14 @@ export type CourtScheduleItem = {
 };
 
 export type CreateWeeklySlotsRequest = {
-  startDate: string; // YYYY-MM-DD
+  courtId: number;
+  startDate: string; // yyyy-mm-dd
+};
+export type CreateWeeklySlotsForm = {
+  startDate: string;
+};
+export type CreateCourtPriceResponse = {
+  message: string;
+  totalCourts: number;
+  prices: CourtPriceItem[];
 };

@@ -41,11 +41,15 @@ import initNotificationEmployeeRoute from "./routes/employee/notificationRoute.j
 import initNotificationCustomerRoute from "./routes/customer/notificationRoute.js";
 import initAdminAuthRoute from "./routes/admin/authRoute.js";
 import initUserAdminAuthRoute from "./routes/admin/usersRoute.js";
+<<<<<<< HEAD
 import initOrderAdminRoute from "./routes/admin/orderRoute.js";
 import initBookingAdminRoute from "./routes/admin/bookingRoute.js";
 import initRevenueAdminRoute from "./routes/admin/revenueRoute.js";
 import initDashboardAdminRoute from "./routes/admin/dashboardRoute.js";
 import initNotificationAdminRoute from "./routes/admin/notificationRoute.js";
+=======
+import initAdminWorkShiftEmployeeRoute from "./routes/admin/workShiftEmployeeRoute.js";
+>>>>>>> dev_admin_thaitoan
 
 dotenv.config();
 
@@ -84,6 +88,7 @@ initCourtAdminRoute(app);
 initDiscountBookingAdminRoute(app);
 initWorkShiftAdminRoute(app);
 initBeverageAdminRoute(app);
+<<<<<<< HEAD
 initNotificationCustomerRoute(app);
 initUserAdminAuthRoute(app);
 initOrderAdminRoute(app);
@@ -91,6 +96,9 @@ initBookingAdminRoute(app);
 initRevenueAdminRoute(app);
 initDashboardAdminRoute(app);
 initNotificationAdminRoute(app);
+=======
+initAdminWorkShiftEmployeeRoute(app);
+>>>>>>> dev_admin_thaitoan
 
 // Employee
 initAuthEmployeeRoute(app);

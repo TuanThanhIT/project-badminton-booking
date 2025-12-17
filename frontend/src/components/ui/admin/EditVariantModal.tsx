@@ -42,15 +42,16 @@ export default function EditVariantModal({
         <VariantForm
           initialData={variant}
           onSubmit={handleSubmit}
+          onCancel={onClose}
           mode="edit"
         />
 
-        <button
+        {/* <button
           className="mt-4 px-4 py-2 bg-gray-300 rounded"
           onClick={onClose}
         >
           Đóng
-        </button>
+        </button> */}
       </div>
     </div>
   );

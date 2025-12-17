@@ -2,8 +2,13 @@ import { Facebook, Twitter, Instagram, Youtube } from "lucide-react";
 
 const Footer = () => {
   return (
+<<<<<<< HEAD
     <footer className="bg-white border-t border-gray-300 text-gray-600">
       <div className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+=======
+    <footer className="bg-[#1e3a8a] px-4 md:px-16 lg:px-28 py-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+>>>>>>> dev_admin_thaitoan
         <div>
           <h3 className="text-base font-semibold text-sky-600 mb-3">
             B-Hub Management

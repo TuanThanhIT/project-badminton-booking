@@ -5,6 +5,7 @@ import authorize from "../../middlewares/authorize.js";
 
 const usersRoute = express.Router();
 const initUserAdminAuthRoute = (app) => {
+<<<<<<< HEAD
   usersRoute.post(
     "/createUsers",
     auth,
@@ -35,6 +36,14 @@ const initUserAdminAuthRoute = (app) => {
     authorize("ADMIN"),
     usersController.getUsersByRoleController
   );
+=======
+  usersRoute.post("/createUsers", usersController.createUserController);
+  usersRoute.put("/lock/:userId", usersController.lockUserController);
+  usersRoute.put("/unlock/:userId", usersController.unlockUserController);
+  usersRoute.get("/", usersController.getAllUsersController);
+  usersRoute.get("/role/:roleId", usersController.getUsersByRoleController);
+  usersRoute.get("/employees", usersController.getAllEmployees);
+>>>>>>> dev_admin_thaitoan
 
   app.use("/admin/users", usersRoute);
 };

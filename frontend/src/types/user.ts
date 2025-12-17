@@ -66,3 +66,16 @@ export type CreateUserRequest = {
   password: string;
   email: string;
 };
+export type EmployeeProfile = {
+  fullName: string;
+} | null;
+
+export type EmployeeItem = {
+  id: number;
+  username: string;
+  Profile: EmployeeProfile;
+};
+
+export type GetEmployeesResponse = {
+  data: EmployeeItem[];
+};

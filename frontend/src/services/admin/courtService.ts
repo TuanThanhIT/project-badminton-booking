@@ -5,6 +5,8 @@ import type {
   CourtPriceItem,
   CreateCourtPriceRequest,
   CreateWeeklySlotsRequest,
+  CreateCourtPriceResponse,
+  CreateWeeklySlotsForm,
 } from "../../types/court";
 
 // ===================================================
@@ -25,8 +27,23 @@ const createCourtService = (data: CreateCourtRequest) => {
 // ===================================================
 // 2. CẬP NHẬT SÂN — PUT /admin/court/update/:courtId
 // ===================================================
-const updateCourtService = (courtId: number, data: Partial<CourtItem>) => {
-  return instance.put(`/admin/court/update/${courtId}`, data);
+const updateCourtService = (
+  courtId: number,
+  data: Partial<CourtItem> & { file?: File }
+) => {
+  const formData = new FormData();
+
+  Object.entries(data).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      formData.append(key, value as any);
+    }
+  });
+
+  return instance.put(`/admin/court/update/${courtId}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 };
 
 // ===================================================
@@ -51,13 +68,16 @@ const getCourtByIdService = (courtId: number) => {
 // 5. TẠO GIÁ SÂN — POST /admin/court/price/add
 // ===================================================
 const createCourtPriceService = (data: CreateCourtPriceRequest) => {
-  return instance.post<CourtPriceItem>("/admin/court/price/add", data);
+  return instance.post<CreateCourtPriceResponse>(
+    "/admin/court/price/add",
+    data
+  );
 };
 
 // ===================================================
 // 6. TẠO SLOT 7 NGÀY — POST /admin/court/create-weekly-slots
 // ===================================================
-const createWeeklySlotsService = (data: CreateWeeklySlotsRequest) => {
+const createWeeklySlotsService = (data: CreateWeeklySlotsForm) => {
   return instance.post("/admin/court/create-weekly-slots", data);
 };
 

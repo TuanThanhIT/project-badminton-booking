@@ -19,32 +19,46 @@ export default function EditVariantModal({
 
   useEffect(() => {
     if (!isOpen) return;
-    const fetch = async () => {
+
+    const fetchVariant = async () => {
       const res = await productService.getVariantByIdService(variantId);
       setVariant(res.data.data);
     };
-    fetch();
+
+    fetchVariant();
   }, [isOpen, variantId]);
 
   if (!isOpen) return null;
-  if (!variant) return <div className="p-4">Đang tải...</div>;
-
-  const handleSubmit = async (data: any) => {
-    await productService.updateVariantService(variantId, data);
-    await onSuccess();
-  };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-xl shadow max-w-xl w-full">
-        <h2 className="text-xl font-bold mb-4">Chỉnh sửa biến thể</h2>
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl shadow-xl max-w-xl w-full p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-gray-800">
+            Chỉnh sửa biến thể
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-700"
+          >
+            ✕
+          </button>
+        </div>
 
-        <VariantForm
-          initialData={variant}
-          onSubmit={handleSubmit}
-          onCancel={onClose}
-          mode="edit"
-        />
+        {!variant ? (
+          <p className="text-sm text-gray-500">Đang tải dữ liệu...</p>
+        ) : (
+          <VariantForm
+            initialData={variant}
+            onSubmit={async (data) => {
+              await productService.updateVariantService(variantId, data);
+              await onSuccess();
+              onClose();
+            }}
+            onCancel={onClose}
+            mode="edit"
+          />
+        )}
       </div>
     </div>
   );

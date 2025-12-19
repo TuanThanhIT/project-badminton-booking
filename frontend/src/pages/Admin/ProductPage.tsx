@@ -1,11 +1,25 @@
+import { useEffect, useState } from "react";
 import { Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { Line, Doughnut } from "react-chartjs-2";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { Pencil, CirclePlus } from "lucide-react";
+import {
+  Pencil,
+  CirclePlus,
+  Plus,
+  Gift,
+  Banknote,
+  LineChart,
+} from "lucide-react";
+
 import IconButtonNonContent from "../../components/ui/admin/IconButton";
 import type { ProductAdminItem } from "../../types/product";
+import productService from "../../services/admin/productService";
+
+import AddProductModal from "../../components/ui/admin/AddProductModal";
+import EditProductModal from "../../components/ui/admin/EditProductModal";
+
 import {
   Chart as ChartJS,
   ArcElement,
@@ -16,9 +30,6 @@ import {
   PointElement,
   LineElement,
 } from "chart.js";
-import { Plus, Gift, Banknote, LineChart } from "lucide-react";
-import { useEffect, useState } from "react";
-import productService from "../../services/admin/productService";
 
 ChartJS.register(
   ArcElement,
@@ -30,26 +41,25 @@ ChartJS.register(
   LineElement
 );
 
+/* ================== TABLE COLUMNS ================== */
 const columns = (
   handleEdit: (p: ProductAdminItem) => void,
   handleAddVariant: (p: ProductAdminItem) => void
 ): ColumnsType<ProductAdminItem> => [
   {
-    title: "Image",
+    title: "Hình ảnh",
     dataIndex: "thumbnailUrl",
     key: "thumbnailUrl",
     align: "center",
     render: (url) => (
-      <div className="flex justify-center">
-        <img
-          className="w-16 h-16 object-cover rounded-lg shadow-md border"
-          src={url}
-        />
-      </div>
+      <img
+        src={url}
+        className="w-16 h-16 object-cover rounded-lg border shadow"
+      />
     ),
   },
   {
-    title: "Product",
+    title: "Sản phẩm",
     dataIndex: "productName",
     key: "productName",
     align: "center",
@@ -58,111 +68,135 @@ const columns = (
     ),
   },
   {
-    title: "Brand",
+    title: "Thương hiệu",
     dataIndex: "brand",
     key: "brand",
     align: "center",
   },
   {
-    title: "Category",
+    title: "Danh mục",
     dataIndex: ["category", "cateName"],
     key: "category",
     align: "center",
-    render: (c) => <span className="text-gray-700">{c}</span>,
   },
   {
-    title: "Stock",
+    title: "Tồn kho",
     dataIndex: "stock",
     key: "stock",
     align: "center",
-    render: (stock: string) => {
-      const num = Number(stock);
-
-      return (
-        <span
-          className={
-            num > 30
-              ? "text-green-500 font-semibold"
-              : num === 0
-              ? "text-red-500 font-semibold"
-              : "text-yellow-500 font-semibold"
-          }
-        >
-          {num > 30
-            ? `${num} in stock`
-            : num === 0
-            ? "Out of stock"
-            : `${num} low stock`}
-        </span>
-      );
-    },
+    render: (stock: number) => (
+      <span
+        className={
+          stock > 30
+            ? "text-green-600 font-semibold"
+            : stock === 0
+            ? "text-red-500 font-semibold"
+            : "text-yellow-500 font-semibold"
+        }
+      >
+        {stock > 30
+          ? `${stock} còn hàng`
+          : stock === 0
+          ? "Hết hàng"
+          : `${stock} sắp hết`}
+      </span>
+    ),
   },
   {
-    title: "Action",
+    title: "Thao tác",
     key: "action",
     align: "center",
     render: (_, product) => (
       <div className="flex justify-center gap-3">
         <IconButtonNonContent
-          color="bg-green-400"
-          hoverColor="hover:bg-green-500"
-          onClick={() => handleEdit(product)}
+          color="bg-green-500"
+          hoverColor="hover:bg-green-600"
           icon={Pencil}
+          onClick={() => handleEdit(product)}
         />
         <IconButtonNonContent
           color="bg-blue-500"
           hoverColor="hover:bg-blue-600"
-          onClick={() => handleAddVariant(product)}
           icon={CirclePlus}
+          onClick={() => handleAddVariant(product)}
         />
       </div>
     ),
   },
 ];
 
+/* ================== PAGE ================== */
 const ProductPage = () => {
   const navigate = useNavigate();
-  const handleEdit = (product: ProductAdminItem) => {
-    navigate(`/admin/products/edit/${product.id}`);
+
+  /* ---------- STATE ---------- */
+  const [products, setProducts] = useState<ProductAdminItem[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const [openAdd, setOpenAdd] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+
+  /* ---------- FETCH PRODUCTS ---------- */
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const res = await productService.getProductsService();
+      setProducts(res.data.products);
+    } catch (err) {
+      toast.error("Lỗi khi tải danh sách sản phẩm");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  /* ---------- HANDLERS ---------- */
+  const handleEdit = (product: ProductAdminItem) => {
+    setEditId(product.id);
+  };
+
   const handleAddVariant = (product: ProductAdminItem) => {
     navigate(`/admin/products/variants?productId=${product.id}`);
   };
 
+  /* ---------- STATS (UI ONLY) ---------- */
   const stats = [
     {
-      title: "New Orders",
+      title: "Đơn hàng mới",
       value: "1,390",
-      change: "+32.40%",
+      change: "+32.4%",
       icon: <Gift className="text-blue-500" />,
       up: true,
     },
     {
-      title: "Sales",
+      title: "Doanh số",
       value: "$57,890",
-      change: "-4.40%",
+      change: "-4.4%",
       icon: <LineChart className="text-green-500" />,
       up: false,
     },
     {
-      title: "Revenue",
+      title: "Doanh thu",
       value: "$12,390",
-      change: "+32.40%",
+      change: "+32.4%",
       icon: <Banknote className="text-purple-500" />,
       up: true,
     },
   ];
 
   const profitChart = {
-    labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+    labels: ["T2", "T3", "T4", "T5", "T6"],
     datasets: [
       {
-        label: "Profit",
+        label: "Lợi nhuận",
         data: [2000, 1500, 3200, 2800, 3600],
         borderColor: "#22C55E",
-        fill: true,
         backgroundColor: "rgba(34,197,94,0.1)",
         tension: 0.4,
+        fill: true,
       },
     ],
   };
@@ -177,142 +211,90 @@ const ProductPage = () => {
     ],
   };
 
-  const topProducts = [
-    { name: "Classic Casio Watch", price: "$1,290.00", rating: 5, reviews: 13 },
-    {
-      name: "New Wireless Headphone",
-      price: "$1,000.00",
-      rating: 4,
-      reviews: 12,
-    },
-    { name: "Marc Jacob’s Decadent", price: "$220.00", rating: 3, reviews: 10 },
-    {
-      name: "Classic Heels For Women",
-      price: "$150.90",
-      rating: 5,
-      reviews: 13,
-    },
-    { name: "Apple Watch Strap", price: "$20.00", rating: 5, reviews: 13 },
-  ];
-
-  const [products, setProducts] = useState<ProductAdminItem[]>([]);
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [limit] = useState(10);
-  const [showModal, setShowModal] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-
-  const fetchProducts = async () => {
-    try {
-      const res = await productService.getProductsService(page, limit, search);
-      setProducts(res.data.products);
-      setTotalPages(res.data.pagination.totalPages);
-      setTotalItems(res.data.pagination.totalItems);
-    } catch (error) {
-      toast.error("Lỗi khi tải danh sách sản phẩm");
-    }
-  };
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const res = await productService.getProductsService();
-        setProducts(res.data.products);
-      } catch (error) {
-        console.error("Error loading products:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, []);
-
+  /* ================== RENDER ================== */
   return (
     <div className="p-6 flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex justify-between items-center bg-white shadow-md border-1 border-gray-200 rounded-xl p-6">
+      {/* HEADER */}
+      <div className="bg-white rounded-xl shadow p-6 flex justify-between">
         <div>
           <h1 className="text-2xl font-bold">
-            Xin chào hôm nay bạn thế nào 👋
+            Xin chào 👋 Chúc bạn một ngày làm việc hiệu quả
           </h1>
-          <p className="text-gray-500">
-            Đây là tất cả thông tin của hàng của bạn hôm nay, bạn có thể xem để
-            biết thêm chi tiết.
+          <p className="text-gray-500 mt-1">
+            Quản lý toàn bộ sản phẩm của cửa hàng tại đây
           </p>
+
           <button
-            onClick={() => navigate("/admin/products/add")}
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg flex items-center gap-2 hover:bg-blue-600 cursor-pointer"
+            onClick={() => setOpenAdd(true)}
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg flex items-center gap-2 hover:bg-blue-600"
           >
-            <Plus size={18} /> Add Product
+            <Plus size={18} /> Thêm sản phẩm
           </button>
         </div>
+
         <img
           src="/img/admin_product_cover.jpg"
-          alt="Dashboard Illustration"
-          className="w-60 mr-8"
+          className="w-56 hidden md:block"
         />
       </div>
 
-      {/* Stats */}
+      {/* STATS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {stats.map((s, i) => (
-          <div
-            key={i}
-            className="bg-white p-4 rounded-xl shadow flex flex-col gap-3"
-          >
+          <div key={i} className="bg-white p-4 rounded-xl shadow">
             <div className="flex items-center gap-3">
               {s.icon}
-              <h2 className="text-gray-700 font-medium">{s.title}</h2>
+              <span className="font-medium text-gray-700">{s.title}</span>
             </div>
-            <p className="text-2xl font-bold">{s.value}</p>
-            <p
+            <div className="text-2xl font-bold mt-2">{s.value}</div>
+            <div
               className={`text-sm ${s.up ? "text-green-500" : "text-red-500"}`}
             >
               {s.change}
-            </p>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Charts */}
+      {/* CHARTS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white p-5 rounded-xl shadow">
-          <h2 className="font-semibold mb-3">Total Profit</h2>
-          <h3 className="text-2xl font-bold mb-4">$8,950.00</h3>
+          <h2 className="font-semibold mb-3">Tổng lợi nhuận</h2>
           <Line data={profitChart} />
-          <p className="text-gray-500 text-sm mt-3">
-            Total profit without tax included.
-          </p>
         </div>
+
         <div className="bg-white p-5 rounded-xl shadow">
-          <h2 className="font-semibold mb-3">Promotional Sales</h2>
+          <h2 className="font-semibold mb-3">Kênh bán hàng</h2>
           <Doughnut data={promoChart} />
-          <div className="flex justify-center gap-4 mt-4 text-sm">
-            <span className="text-red-500">● YouTube</span>
-            <span className="text-pink-500">● Instagram</span>
-            <span className="text-blue-400">● Twitter</span>
-            <span className="text-blue-700">● Facebook</span>
-          </div>
         </div>
       </div>
 
-      {/* Stock Report */}
+      {/* TABLE */}
+      <div className="bg-white p-6 rounded-xl shadow">
+        <h2 className="font-semibold mb-4">Danh sách sản phẩm</h2>
 
-      <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
-        <h2 className="font-semibold mb-4">Stock Report</h2>
         <Table
           columns={columns(handleEdit, handleAddVariant)}
           dataSource={products}
           loading={loading}
+          rowKey="id"
           pagination={false}
-          rowClassName={() => "text-center"}
         />
       </div>
+
+      {/* MODALS */}
+      <AddProductModal
+        open={openAdd}
+        onClose={() => setOpenAdd(false)}
+        onSuccess={fetchProducts}
+      />
+
+      <EditProductModal
+        open={!!editId}
+        productId={editId}
+        onClose={() => setEditId(null)}
+        onSuccess={fetchProducts}
+      />
     </div>
   );
 };

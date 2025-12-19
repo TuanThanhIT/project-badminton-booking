@@ -33,6 +33,13 @@ interface DraftBoxProps {
   setSelectedProducts: React.Dispatch<React.SetStateAction<ProductEplResponse>>;
 }
 
+/* ================= LOCAL DRAFT STATE ================= */
+type DraftLocalState = {
+  productQuantities: Record<number, number>;
+  beverageQuantities: Record<number, number>;
+  note: string;
+};
+
 const DraftBox = ({
   selectedCourtSlots,
   selectedProducts,
@@ -50,6 +57,7 @@ const DraftBox = ({
   const [customerName, setCustomerName] = useState("");
   const [openDraftId, setOpenDraftId] = useState<number | null>(null);
   const [currentDraft, setCurrentDraft] = useState<any | null>(null);
+
   const [productQuantities, setProductQuantities] = useState<
     Record<number, number>
   >({});
@@ -57,14 +65,20 @@ const DraftBox = ({
     Record<number, number>
   >({});
   const [note, setNote] = useState("");
-  const [savedDrafts, setSavedDrafts] = useState<Record<number, boolean>>({}); // track saved drafts
 
-  // ------------------- Fetch Drafts -------------------
+  const [savedDrafts, setSavedDrafts] = useState<Record<number, boolean>>({});
+
+  // 👉 cache state theo từng draft
+  const [draftLocalState, setDraftLocalState] = useState<
+    Record<number, DraftLocalState>
+  >({});
+
+  /* ================= FETCH DRAFT LIST ================= */
   useEffect(() => {
     dispatch(getDrafts());
   }, [dispatch]);
 
-  // ------------------- Reset -------------------
+  /* ================= RESET ================= */
   const reset = () => {
     setCustomerName("");
     setOpenDraftId(null);
@@ -77,9 +91,12 @@ const DraftBox = ({
     setSelectedCourtSlots([]);
   };
 
-  // ------------------- Fetch Draft Detail -------------------
+  /* ================= FETCH DRAFT DETAIL ================= */
   useEffect(() => {
-    if (openDraftId === null) return setCurrentDraft(null);
+    if (openDraftId === null) {
+      setCurrentDraft(null);
+      return;
+    }
 
     const fetchDraft = async () => {
       try {
@@ -87,27 +104,43 @@ const DraftBox = ({
         const res = await dispatch(getDraft({ data })).unwrap();
         setCurrentDraft(res);
 
-        // Sync quantities
         const prodQty: Record<number, number> = {};
         res.products?.forEach(
           (p: any) => (prodQty[p.productVarientId] = p.quantity)
         );
-        setProductQuantities(prodQty);
 
         const bevQty: Record<number, number> = {};
         res.beverages?.forEach((b: any) => (bevQty[b.beverageId] = b.quantity));
-        setBeverageQuantities(bevQty);
 
-        setNote(res.note || "");
-      } catch (err) {
+        const cached = draftLocalState[openDraftId];
+
+        if (cached) {
+          setProductQuantities(cached.productQuantities);
+          setBeverageQuantities(cached.beverageQuantities);
+          setNote(cached.note);
+        } else {
+          setProductQuantities(prodQty);
+          setBeverageQuantities(bevQty);
+          setNote(res.note || "");
+
+          setDraftLocalState((prev) => ({
+            ...prev,
+            [openDraftId]: {
+              productQuantities: prodQty,
+              beverageQuantities: bevQty,
+              note: res.note || "",
+            },
+          }));
+        }
+      } catch {
         // ignore
       }
     };
 
     fetchDraft();
-  }, [dispatch, openDraftId]);
+  }, [dispatch, openDraftId, draftLocalState]);
 
-  // ------------------- Handle Errors -------------------
+  /* ================= HANDLE ERRORS ================= */
   useEffect(() => {
     const error = draftError || offlineError;
     if (error) {
@@ -117,7 +150,7 @@ const DraftBox = ({
     }
   }, [draftError, offlineError, dispatch]);
 
-  // ------------------- Create Draft -------------------
+  /* ================= CREATE DRAFT ================= */
   const handleCreateDraft = async () => {
     if (!customerName.trim()) return toast.error("Nhập tên khách hàng!");
     const data: AddDraftBookingRequest = { nameCustomer: customerName };
@@ -131,39 +164,57 @@ const DraftBox = ({
     }
   };
 
-  // ------------------- Toggle Draft -------------------
-  const toggleDraft = (draftId: number) =>
-    setOpenDraftId(openDraftId === draftId ? null : draftId);
+  /* ================= TOGGLE DRAFT ================= */
+  const toggleDraft = (draftId: number) => {
+    // lưu state draft hiện tại
+    if (openDraftId !== null) {
+      setDraftLocalState((prev) => ({
+        ...prev,
+        [openDraftId]: {
+          productQuantities,
+          beverageQuantities,
+          note,
+        },
+      }));
+    }
 
-  // ------------------- Determine Items to Show -------------------
+    setOpenDraftId(openDraftId === draftId ? null : draftId);
+  };
+
+  /* ================= DETERMINE ITEMS ================= */
   const courtSlotsToShow = currentDraft?.courtSchedules?.length
     ? currentDraft.courtSchedules
     : selectedCourtSlots;
+
   const productsToShow = currentDraft?.products?.length
     ? currentDraft.products
     : selectedProducts;
+
   const beveragesToShow = currentDraft?.beverages?.length
     ? currentDraft.beverages
     : selectedBeverages;
 
-  // ------------------- Totals -------------------
+  /* ================= TOTALS ================= */
   const totalCourtPrice = courtSlotsToShow.reduce(
     (sum: any, x: any) => sum + x.price,
     0
   );
+
   const totalProductPrice = productsToShow.reduce(
     (sum: any, p: any) =>
       sum + p.price * (productQuantities[p.productVarientId || p.id] || 1),
     0
   );
+
   const totalBeveragePrice = beveragesToShow.reduce(
     (sum: any, b: any) =>
       sum + b.price * (beverageQuantities[b.beverageId || b.id] || 1),
     0
   );
+
   const totalAll = totalCourtPrice + totalProductPrice + totalBeveragePrice;
 
-  // ------------------- Prepare Payload -------------------
+  /* ================= PREPARE PAYLOAD ================= */
   const preparePayload = () => ({
     productsForApi: productsToShow.map((p: any) => ({
       id: p.productVarientId || p.id,
@@ -177,7 +228,7 @@ const DraftBox = ({
     })),
   });
 
-  // ------------------- Save Draft -------------------
+  /* ================= SAVE DRAFT ================= */
   const handleSaveDraft = async (draftId: number) => {
     try {
       const payload = preparePayload();
@@ -205,8 +256,17 @@ const DraftBox = ({
       toast.success(res.message);
       dispatch(getCourtSchedules({ data: { date: "" } }));
 
-      // mark this draft as saved => enable checkout
       setSavedDrafts((prev) => ({ ...prev, [draftId]: true }));
+
+      // update cache
+      setDraftLocalState((prev) => ({
+        ...prev,
+        [draftId]: {
+          productQuantities,
+          beverageQuantities,
+          note,
+        },
+      }));
     } catch {
       // no-op
     }

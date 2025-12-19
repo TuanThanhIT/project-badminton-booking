@@ -15,13 +15,17 @@ export default function UploadImageModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-xl w-[500px] shadow-xl relative">
+      <div className="bg-white rounded-2xl p-6 w-[520px] shadow-xl relative">
         <button
           onClick={onClose}
-          className="absolute right-3 top-3 text-gray-500 hover:text-black"
+          className="absolute right-4 top-4 text-gray-400 hover:text-gray-700"
         >
           ✕
         </button>
+
+        <h2 className="text-xl font-semibold mb-4 text-gray-800">
+          Quản lý hình ảnh sản phẩm
+        </h2>
 
         <UploadProductImages productId={productId} />
       </div>

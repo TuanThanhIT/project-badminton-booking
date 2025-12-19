@@ -39,8 +39,18 @@ export default function AddVariantModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-lg w-full max-w-lg p-6">
-        <h2 className="text-xl font-bold mb-4">Thêm Biến Thể</h2>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-xl p-6 animate-fadeIn">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-gray-800">
+            Thêm biến thể sản phẩm
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-700"
+          >
+            ✕
+          </button>
+        </div>
 
         <VariantForm
           initialData={initialData}

@@ -227,49 +227,43 @@ const getOrdersService = async (userId) => {
   }
 };
 
-const cancelOrderService = async (orderId, body) => {
-  const transaction = await sequelize.transaction();
+const cancelOrderService = async (orderId, cancelReason) => {
   try {
-    const { reason } = body;
-
-    // Tìm order kèm payment
-    const order = await Order.findByPk(orderId, {
-      include: [{ model: Payment }],
-      transaction,
-      lock: true,
-    });
-
+    const order = await Order.findByPk(orderId);
     if (!order) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Đơn hàng không tồn tại");
+      throw new ApiError(StatusCodes.NOT_FOUND, "Đơn hàng không tồn tại!");
     }
-
-    if (order.status !== "PENDING") {
+    if (order.orderStatus === "Paid") {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Chỉ có thể hủy đơn hàng đang ở trạng thái PENDING"
+        "Đơn hàng đã thanh toán không thể hủy trực tiếp. Vui lòng liên hệ cửa hàng để hỗ trợ!"
+      );
+    } else if (order.orderStatus === "Confirmed") {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Đơn hàng đã xác nhận không thể hủy trực tiếp. Vui lòng liên hệ cửa hàng để hỗ trợ!"
       );
     }
 
-    // Update order → CANCELED
-    await order.update(
-      {
-        status: "CANCELED",
-        cancelReason: reason,
-        cancelDate: new Date(),
-      },
-      { transaction }
+    await order.update({
+      orderStatus: "Cancelled",
+      cancelledBy: "User",
+      cancelReason,
+    });
+
+    const payment = await Payment.findOne({ where: { orderId } });
+    await payment.update({ paymentStatus: "Cancelled" });
+
+    await sendEmployeesNotification(
+      "Đơn hàng đã bị hủy",
+      `Khách hàng vừa hủy đơn #0${orderId}`,
+      "EMPLOYEE",
+      "cancel-order"
     );
-
-    // Update payment → FAILED nếu có
-    if (order.Payment) {
-      await order.Payment.update({ status: "FAILED" }, { transaction });
-    }
-
-    await transaction.commit();
-    return { message: "Hủy đơn hàng thành công!" };
   } catch (error) {
-    await transaction.rollback();
-    if (error instanceof ApiError) throw error;
+    if (error instanceof ApiError) {
+      throw error;
+    }
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };

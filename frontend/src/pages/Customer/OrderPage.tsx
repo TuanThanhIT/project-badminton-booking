@@ -207,7 +207,7 @@ const OrderPage = () => {
           </div>
 
           <div className="flex items-center justify-end gap-2 flex-wrap">
-            {order.payment.paymentMethod === "Momo" &&
+            {order.payment.paymentMethod === "MOMO" &&
               order.orderStatus === "Pending" && (
                 <button
                   onClick={() =>

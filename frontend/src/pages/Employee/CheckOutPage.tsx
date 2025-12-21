@@ -30,6 +30,7 @@ const CheckOutPage = () => {
 
   useEffect(() => {
     const nowTime = new Date().toTimeString().split(" ")[0];
+
     dispatch(getWorkShift({ nowTime }));
   }, [dispatch]);
 

@@ -22,8 +22,13 @@ const CashRegisterPage = () => {
 
   const [amount, setAmount] = useState("");
 
+  console.log("workshifts>>", workShifts);
+
   useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toLocaleDateString("en-CA", {
+      timeZone: "Asia/Ho_Chi_Minh",
+    });
+
     const data: WorkShiftRequest = { date: today };
     dispatch(getWorkShifts({ data }));
   }, [dispatch]);

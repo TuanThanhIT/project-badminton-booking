@@ -181,9 +181,8 @@ export default function VariantPage() {
 
   /* ================== UI ================== */
   return (
-    <div className="bg-white rounded-xl p-6 shadow border border-gray-100">
-      {/* HEADER */}
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-6 space-y-10 bg-gray-50 min-h-screen">
+      <div className="bg-white rounded-2xl border border-gray-200 p-10 space-y-6">
         <div>
           <h2 className="text-2xl font-bold text-sky-700">
             Quản lý biến thể sản phẩm
@@ -211,55 +210,54 @@ export default function VariantPage() {
             onClick={() => setOpenModal(true)}
           />
         </div>
-      </div>
+        {/* TABLE */}
+        <Table
+          columns={columns}
+          dataSource={variants}
+          loading={loading}
+          pagination={false}
+          rowKey="id"
+        />
 
-      {/* TABLE */}
-      <Table
-        columns={columns}
-        dataSource={variants}
-        loading={loading}
-        pagination={false}
-        rowKey="id"
-      />
+        {/* IMAGE SECTION */}
+        <h3 className="text-lg font-semibold mt-8 mb-3">Hình ảnh sản phẩm</h3>
 
-      {/* IMAGE SECTION */}
-      <h3 className="text-lg font-semibold mt-8 mb-3">Hình ảnh sản phẩm</h3>
+        <div className="grid grid-cols-6 gap-4">
+          {images.map((img) => (
+            <div
+              key={img.id}
+              className="border rounded-lg p-2 flex flex-col items-center hover:shadow"
+            >
+              <img
+                src={img.imageUrl}
+                className="w-24 h-24 object-cover rounded border"
+              />
 
-      <div className="grid grid-cols-6 gap-4">
-        {images.map((img) => (
-          <div
-            key={img.id}
-            className="border rounded-lg p-2 flex flex-col items-center hover:shadow"
-          >
-            <img
-              src={img.imageUrl}
-              className="w-24 h-24 object-cover rounded border"
-            />
+              <div className="flex gap-2 mt-3">
+                <button
+                  className="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs"
+                  onClick={() => {
+                    setSelectedImage(img);
+                    setOpenEditImageModal(true);
+                  }}
+                >
+                  Sửa
+                </button>
 
-            <div className="flex gap-2 mt-3">
-              <button
-                className="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs"
-                onClick={() => {
-                  setSelectedImage(img);
-                  setOpenEditImageModal(true);
-                }}
-              >
-                Sửa
-              </button>
-
-              <button
-                className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs"
-                onClick={async () => {
-                  await productService.deleteProductImageService(img.id);
-                  toast.success("Đã xóa hình ảnh");
-                  fetchImages();
-                }}
-              >
-                Xóa
-              </button>
+                <button
+                  className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs"
+                  onClick={async () => {
+                    await productService.deleteProductImageService(img.id);
+                    toast.success("Đã xóa hình ảnh");
+                    fetchImages();
+                  }}
+                >
+                  Xóa
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* MODAL */}

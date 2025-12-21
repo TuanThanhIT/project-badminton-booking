@@ -62,11 +62,18 @@ export default function UserPage() {
   const columns: ColumnsType<UserItem> = [
     {
       title: "Họ tên",
-      dataIndex: "fullName",
       align: "center",
-      render: (text) => (
-        <span className="font-medium text-gray-800">{text || "-"}</span>
+      render: (_, user) => (
+        <span className="font-medium text-gray-800">
+          {user.Profile?.fullName || "-"}
+        </span>
       ),
+    },
+    {
+      title: "Tên đăng nhập",
+      dataIndex: "username",
+      align: "center",
+      render: (u) => <span className="text-gray-700">{u}</span>,
     },
     {
       title: "Email",
@@ -76,19 +83,42 @@ export default function UserPage() {
     },
     {
       title: "Số điện thoại",
-      dataIndex: "phone",
       align: "center",
-      render: (p) => <span className="text-gray-600">{p || "-"}</span>,
+      render: (_, user) => (
+        <span className="text-gray-600">
+          {user.Profile?.phoneNumber || "-"}
+        </span>
+      ),
+    },
+    {
+      title: "Giới tính",
+      align: "center",
+      render: (_, user) => {
+        const g = user.Profile?.gender;
+        if (g === "male") return <Tag color="blue">Nam</Tag>;
+        if (g === "female") return <Tag color="pink">Nữ</Tag>;
+        return <Tag>Khác</Tag>;
+      },
     },
     {
       title: "Vai trò",
-      dataIndex: "roleId",
       align: "center",
-      render: (r) =>
-        r === 1 ? (
-          <Tag color="blue">Quản trị viên</Tag>
+      render: (_, user) => {
+        const role = user.role?.roleName;
+        if (role === "ADMIN") return <Tag color="red">Quản trị viên</Tag>;
+        if (role === "EMPLOYEE") return <Tag color="orange">Nhân viên</Tag>;
+        return <Tag color="green">Người dùng</Tag>;
+      },
+    },
+    {
+      title: "Xác thực",
+      dataIndex: "isVerified",
+      align: "center",
+      render: (v) =>
+        v ? (
+          <Tag color="green">Đã xác thực</Tag>
         ) : (
-          <Tag color="green">Người dùng</Tag>
+          <Tag color="red">Chưa xác thực</Tag>
         ),
     },
     {
@@ -109,13 +139,13 @@ export default function UserPage() {
         <button
           onClick={() => handleLock(user)}
           className={`
-            inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm text-white
-            ${
-              user.isActive
-                ? "bg-red-500 hover:bg-red-600"
-                : "bg-green-500 hover:bg-green-600"
-            }
-          `}
+          inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm text-white
+          ${
+            user.isActive
+              ? "bg-red-500 hover:bg-red-600"
+              : "bg-green-500 hover:bg-green-600"
+          }
+        `}
         >
           {user.isActive ? (
             <>

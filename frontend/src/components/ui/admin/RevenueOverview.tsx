@@ -5,19 +5,26 @@ import BarChartBox from "./Charts/BarChartBox";
 export const SectionHeader = ({ title, start, end, onStart, onEnd }: any) => (
   <div className="flex items-end justify-between">
     <h2 className="text-xl font-semibold text-sky-700">{title}</h2>
-    <div className="flex gap-2">
-      <input
-        type="date"
-        value={start}
-        onChange={(e) => onStart(e.target.value)}
-        className="border border-gray-500 px-3 py-2 rounded-lg text-sm"
-      />
-      <input
-        type="date"
-        value={end}
-        onChange={(e) => onEnd(e.target.value)}
-        className="border border-gray-500 px-3 py-2 rounded-lg text-sm"
-      />
+    <div className="flex gap-5">
+      <div className="flex items-center gap-2">
+        <label className="text-sm font-medium text-gray-600">Từ ngày:</label>
+        <input
+          type="date"
+          value={start}
+          onChange={(e) => onStart(e.target.value)}
+          className="border border-gray-500 px-3 py-2 rounded-lg text-sm"
+        />
+      </div>
+
+      <div className="flex items-center gap-2">
+        <label className="text-sm font-medium text-gray-600">đến ngày:</label>
+        <input
+          type="date"
+          value={end}
+          onChange={(e) => onEnd(e.target.value)}
+          className="border border-gray-500 px-3 py-2 rounded-lg text-sm"
+        />
+      </div>
     </div>
   </div>
 );

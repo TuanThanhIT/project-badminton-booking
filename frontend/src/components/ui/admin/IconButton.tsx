@@ -24,7 +24,7 @@ const IconButton: React.FC<Props> = ({
   onClick,
   type = "button",
   loading = false,
-  loadingText = "Saving...",
+  loadingText = "Lưu...",
 }) => {
   return (
     <button

@@ -254,6 +254,7 @@ const EmployeePage = () => {
               ))
             ) : (
               <ItemList
+                key={activeTab} // ⭐ FIX LẪN DATA
                 items={activeTab === "beverage" ? beverages : products}
                 activeTab={activeTab}
                 onAdd={handleAdd}

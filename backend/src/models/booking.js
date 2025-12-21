@@ -23,7 +23,7 @@ const Booking = sequelize.define(
     },
     discountId: {
       type: DataTypes.INTEGER,
-      references: { model: "Discounts", key: "id" },
+      references: { model: "DiscountBookings", key: "id" },
       allowNull: true,
     },
     note: { type: DataTypes.STRING(1000), allowNull: true }, // giữ note ở đây

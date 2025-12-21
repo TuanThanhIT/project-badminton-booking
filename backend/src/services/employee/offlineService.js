@@ -1,6 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import ApiError from "../../utils/ApiError.js";
 import {
+  Beverage,
   DraftBeverageItem,
   DraftBooking,
   DraftBookingItem,
@@ -9,6 +10,7 @@ import {
   OfflineBooking,
   OfflineBookingItem,
   OfflineProductItem,
+  ProductVarient,
 } from "../../models/index.js";
 import sequelize from "../../config/db.js";
 
@@ -104,26 +106,86 @@ const createOfflineService = async (draftId, employeeId) => {
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
+
 const updateOfflineService = async (offlineBookingId, paymentMethod, total) => {
+  const t = await sequelize.transaction();
+
   try {
-    const offlineBooking = await OfflineBooking.findByPk(offlineBookingId);
+    const offlineBooking = await OfflineBooking.findByPk(offlineBookingId, {
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+
     if (!offlineBooking) {
       throw new ApiError(
         StatusCodes.NOT_FOUND,
         "Đơn thanh toán trực tiếp chưa được tạo!"
       );
     }
-    await offlineBooking.update({
-      paymentMethod,
-      grandTotal: total,
-      paymentStatus: "Paid",
-      paidAt: new Date(),
+
+    await offlineBooking.update(
+      {
+        paymentMethod,
+        grandTotal: total,
+        paymentStatus: "Paid",
+        paidAt: new Date(),
+      },
+      { transaction: t }
+    );
+
+    /* ========= TRỪ STOCK SẢN PHẨM ========= */
+    const detailProducts = await OfflineProductItem.findAll({
+      where: { offlineBookingId: offlineBooking.id },
+      attributes: ["productVarientId", "quantity"],
+      transaction: t,
+      lock: t.LOCK.UPDATE,
     });
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
+
+    if (detailProducts.length > 0) {
+      await Promise.all(
+        detailProducts.map(({ productVarientId, quantity }) =>
+          ProductVarient.increment(
+            { stock: -quantity },
+            {
+              where: { id: productVarientId },
+              transaction: t,
+              lock: t.LOCK.UPDATE,
+            }
+          )
+        )
+      );
     }
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+
+    /* ========= TRỪ STOCK NƯỚC ========= */
+    const detailBeverages = await OfflineBeverageItem.findAll({
+      where: { offlineBookingId: offlineBooking.id },
+      attributes: ["beverageId", "quantity"],
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+
+    if (detailBeverages.length > 0) {
+      await Promise.all(
+        detailBeverages.map(({ beverageId, quantity }) =>
+          Beverage.increment(
+            { stock: -quantity },
+            {
+              where: { id: beverageId },
+              transaction: t,
+              lock: t.LOCK.UPDATE,
+            }
+          )
+        )
+      );
+    }
+
+    await t.commit();
+    return offlineBooking;
+  } catch (error) {
+    await t.rollback();
+
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error.message);
   }
 };
 

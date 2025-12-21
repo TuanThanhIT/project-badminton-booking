@@ -249,11 +249,166 @@ ${formattedProducts}
   });
 };
 
+const sendWorkShiftMail = async (
+  email,
+  fullName,
+  shiftName,
+  workDate,
+  startTime,
+  endTime,
+  roleInShift
+) => {
+  await transporter.sendMail({
+    from: `"Hỗ trợ B-Hub" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: "Thông báo ca làm việc – B-Hub",
+    text: `
+Chào ${fullName},
+
+B-Hub xin thông báo lịch làm việc của bạn như sau:
+
+• Ca làm việc: ${shiftName}
+• Ngày làm việc: ${workDate}
+• Thời gian: ${startTime} - ${endTime}
+• Vị trí công việc: ${roleInShift}
+
+Vui lòng có mặt đúng giờ để đảm bảo công việc diễn ra thuận lợi.
+Nếu có thắc mắc hoặc không thể tham gia ca làm, hãy liên hệ quản lý sớm nhất.
+
+Trân trọng,
+B-Hub Support
+    `,
+    html: `
+      <p>Chào <strong>${fullName}</strong>,</p>
+
+      <p>B-Hub xin thông báo lịch làm việc của bạn như sau:</p>
+
+      <ul>
+        <li><strong>Ca làm việc:</strong> ${shiftName}</li>
+        <li><strong>Ngày làm việc:</strong> ${workDate}</li>
+        <li><strong>Thời gian:</strong> ${startTime} - ${endTime}</li>
+        <li><strong>Vị trí công việc:</strong> ${roleInShift}</li>
+      </ul>
+
+      <p>
+        Vui lòng có mặt <strong>đúng giờ</strong> để đảm bảo công việc diễn ra thuận lợi.
+        Nếu có thắc mắc hoặc không thể tham gia ca làm, hãy liên hệ quản lý sớm nhất.
+      </p>
+
+      <p>
+        Trân trọng,<br />
+        <strong>B-Hub Support</strong>
+      </p>
+    `,
+  });
+};
+
+const sendLockAccountMail = async (email, username) => {
+  await transporter.sendMail({
+    from: `"Hỗ trợ B-Hub" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: "Thông báo khóa tài khoản – B-Hub",
+    text: `
+Chào ${username},
+
+B-Hub xin thông báo tài khoản của bạn đã tạm thời bị khóa.
+
+Nguyên nhân có thể do:
+• Vi phạm chính sách sử dụng
+• Hoạt động bất thường hoặc nghi ngờ mất an toàn
+• Yêu cầu từ quản trị viên hệ thống
+
+Trong thời gian tài khoản bị khóa, bạn sẽ không thể đăng nhập hoặc sử dụng các dịch vụ của B-Hub.
+
+Nếu bạn cho rằng đây là nhầm lẫn hoặc cần hỗ trợ thêm, vui lòng liên hệ với bộ phận hỗ trợ của B-Hub để được giải quyết.
+
+Trân trọng,
+B-Hub Support
+    `,
+    html: `
+      <p>Chào <strong>${username}</strong>,</p>
+
+      <p>
+        B-Hub xin thông báo <strong>tài khoản của bạn đã tạm thời bị khóa</strong>.
+      </p>
+
+      <p>Nguyên nhân có thể bao gồm:</p>
+      <ul>
+        <li>Vi phạm chính sách sử dụng</li>
+        <li>Hoạt động bất thường hoặc nghi ngờ mất an toàn</li>
+        <li>Yêu cầu từ quản trị viên hệ thống</li>
+      </ul>
+
+      <p>
+        Trong thời gian tài khoản bị khóa, bạn sẽ <strong>không thể đăng nhập</strong>
+        hoặc sử dụng các dịch vụ của B-Hub.
+      </p>
+
+      <p>
+        Nếu bạn cho rằng đây là nhầm lẫn hoặc cần hỗ trợ thêm, vui lòng liên hệ
+        bộ phận hỗ trợ của B-Hub.
+      </p>
+
+      <p>
+        Trân trọng,<br />
+        <strong>B-Hub Support</strong>
+      </p>
+    `,
+  });
+};
+
+const sendUnlockAccountMail = async (email, username) => {
+  await transporter.sendMail({
+    from: `"Hỗ trợ B-Hub" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: "Thông báo mở khóa tài khoản – B-Hub",
+    text: `
+Chào ${username},
+
+B-Hub xin thông báo tài khoản của bạn đã được mở khóa và có thể sử dụng bình thường.
+
+Bạn hiện có thể đăng nhập và tiếp tục sử dụng các dịch vụ của B-Hub.
+Vui lòng tuân thủ các chính sách sử dụng để đảm bảo trải nghiệm tốt nhất.
+
+Nếu bạn gặp bất kỳ vấn đề nào trong quá trình đăng nhập, đừng ngần ngại liên hệ bộ phận hỗ trợ của chúng tôi.
+
+Trân trọng,
+B-Hub Support
+    `,
+    html: `
+      <p>Chào <strong>${username}</strong>,</p>
+
+      <p>
+        B-Hub xin thông báo <strong>tài khoản của bạn đã được mở khóa</strong>
+        và có thể sử dụng bình thường.
+      </p>
+
+      <p>
+        Bạn hiện có thể đăng nhập và tiếp tục sử dụng các dịch vụ của B-Hub.
+        Vui lòng tuân thủ các chính sách sử dụng để đảm bảo trải nghiệm tốt nhất.
+      </p>
+
+      <p>
+        Nếu bạn gặp bất kỳ vấn đề nào trong quá trình đăng nhập,
+        đừng ngần ngại liên hệ bộ phận hỗ trợ của chúng tôi.
+      </p>
+
+      <p>
+        Trân trọng,<br />
+        <strong>B-Hub Support</strong>
+      </p>
+    `,
+  });
+};
+
 const mailer = {
   sendContactMail,
   sendOtpMail,
   sendBookingMail,
   sendOrderMail,
+  sendWorkShiftMail,
+  sendLockAccountMail,
+  sendUnlockAccountMail,
 };
 
 export default mailer;

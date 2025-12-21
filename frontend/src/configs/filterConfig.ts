@@ -71,7 +71,7 @@ const filterConfig: Record<string, any[]> = {
       key: "color",
       label: "Màu sắc",
       type: "checkbox",
-      options: ["Đen", "Trắng", "Xanh dương", "Vàng"],
+      options: ["Đen", "Trắng", "Xanh dương", "Vàng", "Đỏ"],
     },
     {
       key: "material",

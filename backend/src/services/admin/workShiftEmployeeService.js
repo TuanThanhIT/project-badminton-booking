@@ -6,6 +6,7 @@ import {
   User,
   Profile,
 } from "../../models/index.js";
+import mailer from "../../utils/mailer.js";
 
 const assignEmployeeToShiftService = async (
   workShiftId,
@@ -18,7 +19,14 @@ const assignEmployeeToShiftService = async (
       throw new ApiError(StatusCodes.NOT_FOUND, "Không tìm thấy ca làm!");
     }
 
-    const user = await User.findByPk(employeeId);
+    const user = await User.findByPk(employeeId, {
+      include: [
+        {
+          model: Profile,
+          attributes: ["fullName"],
+        },
+      ],
+    });
     if (!user) {
       throw new ApiError(StatusCodes.NOT_FOUND, "Không tìm thấy nhân viên!");
     }
@@ -40,6 +48,16 @@ const assignEmployeeToShiftService = async (
       roleInShift,
       earnedWage: shift.shiftWage,
     });
+
+    await mailer.sendWorkShiftMail(
+      user.email,
+      user.Profile.fullName,
+      shift.name,
+      shift.workDate,
+      shift.startTime,
+      shift.endTime,
+      roleInShift
+    );
 
     return {
       message: "Phân ca cho nhân viên thành công!",

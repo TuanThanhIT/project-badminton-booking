@@ -275,6 +275,23 @@ const completedOrderService = async (orderId) => {
 
     await order.update({ orderStatus: "Completed" }, { transaction: t });
 
+    // hoàn stock
+    const details = await OrderDetail.findAll({
+      where: { orderId },
+      attributes: ["varientId", "quantity"],
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+
+    await Promise.all(
+      details.map(async ({ varientId, quantity }) => {
+        await ProductVarient.increment(
+          { stock: -quantity },
+          { where: { id: varientId }, transaction: t }
+        );
+      })
+    );
+
     if (payment) {
       await payment.update(
         {

@@ -213,9 +213,8 @@ const ProductPage = () => {
 
   /* ================== RENDER ================== */
   return (
-    <div className="p-6 flex flex-col gap-6">
-      {/* HEADER */}
-      <div className="bg-white rounded-xl shadow p-6 flex justify-between">
+    <div className="p-6 space-y-10 bg-gray-50 min-h-screen">
+      <div className="bg-white rounded-2xl border border-gray-200 p-10 space-y-6">
         <div>
           <h1 className="text-2xl font-bold">
             Xin chào 👋 Chúc bạn một ngày làm việc hiệu quả

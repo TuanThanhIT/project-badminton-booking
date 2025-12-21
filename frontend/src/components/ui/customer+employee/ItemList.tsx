@@ -2,7 +2,7 @@ interface ItemListProps {
   items: any[];
   activeTab: "beverage" | "product";
   onAdd: (item: any) => void;
-  onRemove: (item: any) => void; // thêm prop để xóa
+  onRemove: (item: any) => void;
 }
 
 const ItemList = ({ items, activeTab, onAdd, onRemove }: ItemListProps) => {
@@ -10,7 +10,7 @@ const ItemList = ({ items, activeTab, onAdd, onRemove }: ItemListProps) => {
     <>
       {items.map((item) => (
         <div
-          key={activeTab === "beverage" ? item.id : item.sku}
+          key={item.id}
           className={`w-full p-3 rounded-xl border flex items-center gap-4 ${
             activeTab === "beverage"
               ? "bg-blue-50 border-blue-200"
@@ -19,59 +19,37 @@ const ItemList = ({ items, activeTab, onAdd, onRemove }: ItemListProps) => {
         >
           <img
             src={item.thumbnailUrl}
-            alt="thumbnail"
-            className="w-16 h-16 rounded-lg object-cover border border-gray-200"
+            className="w-16 h-16 rounded-lg object-cover"
           />
-          <div className="flex-1 flex flex-col gap-1">
-            <p className="text-sm font-semibold text-gray-800">
+
+          <div className="flex-1">
+            <p className="font-semibold">
               {activeTab === "beverage" ? item.name : item.productName}
             </p>
-            <div className="text-sm font-medium text-gray-600">
-              {activeTab === "beverage" ? (
-                <span className="text-orange-600 font-bold">
-                  {item.price.toLocaleString()}đ
-                </span>
-              ) : (
-                <div className="flex flex-col gap-1 text-sm text-gray-700">
-                  <span className="font-semibold text-orange-600">
-                    {item.price?.toLocaleString()}đ
-                  </span>
-                  <div className="flex flex-wrap gap-2 text-xs text-gray-500">
-                    <span>
-                      <span className="font-bold">Size:</span> {item.size}
-                    </span>
-                    <span>
-                      <span className="font-bold">Màu:</span> {item.color}
-                    </span>
-                    <span>
-                      <span className="font-bold">Chất liệu:</span>{" "}
-                      {item.material}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <p className="text-xs text-gray-500 font-medium">
-              Còn lại:{" "}
-              <span className="text-green-600 font-semibold">
-                {item.stock ?? 0}
-              </span>
+            <p className="text-orange-600 font-bold">
+              {item.price?.toLocaleString()}đ
+            </p>
+            <p className="text-xs text-gray-500">
+              Còn lại: <b>{item.stock ?? 0}</b>
             </p>
           </div>
 
-          {/* Nút Thêm / Xóa gọn trong 1 hàng */}
-          <div className="flex flex-col gap-1">
+          {/* === BUTTONS: DỄ BẤM HƠN === */}
+          <div className="flex flex-col gap-2">
             <button
-              className="w-7 h-7 flex items-center justify-center bg-green-500 text-white rounded-full text-xs hover:bg-green-600 transition"
               onClick={() => onAdd(item)}
+              className="w-10 h-10 rounded-full bg-green-600 text-white 
+                         flex items-center justify-center text-lg font-bold
+                         hover:bg-green-700 active:scale-95 transition"
             >
               +
             </button>
 
             <button
-              className="w-7 h-7 flex items-center justify-center bg-red-500 text-white rounded-full text-xs hover:bg-red-600 transition"
               onClick={() => onRemove(item)}
+              className="w-10 h-10 rounded-full bg-red-500 text-white 
+                         flex items-center justify-center text-lg font-bold
+                         hover:bg-red-600 active:scale-95 transition"
             >
               –
             </button>

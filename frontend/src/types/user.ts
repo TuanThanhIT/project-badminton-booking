@@ -50,17 +50,23 @@ export type CreatedUser = {
 export type UserItem = {
   id: number;
   username: string;
+  password: string;
   email: string;
   isVerified: boolean;
   isActive: boolean;
-  roleId: number;
-  createdDate: string;
-  updatedDate: string;
-  Role?: {
+  role: {
     id: number;
     roleName: string;
   };
+  Profile?: {
+    fullName: string;
+    dob: string; // ISO date string
+    gender: "male" | "female";
+    address: string;
+    phoneNumber: string;
+  };
 };
+
 export type CreateUserRequest = {
   username: string;
   password: string;

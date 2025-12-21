@@ -3,6 +3,7 @@ import { User, Role } from "../../models/index.js";
 import ApiError from "../../utils/ApiError.js";
 import { Profile } from "../../models/index.js";
 import bcrypt from "bcrypt";
+import mailer from "../../utils/mailer.js";
 const createUser = async (username, password, email) => {
   try {
     const existingUser = await User.findOne({ where: { username } });
@@ -25,7 +26,7 @@ const createUser = async (username, password, email) => {
       username,
       email,
       password: hashPassword,
-      roleId: 2,
+      roleId: 3,
     });
     const safeUser = {
       id: user.id,
@@ -54,6 +55,7 @@ const lockUser = async (userId) => {
       throw new ApiError(StatusCodes.NOT_FOUND, "Người dùng không tồn tại!");
     }
     await user.update({ isActive: false });
+    await mailer.sendLockAccountMail(user.email, user.username);
     return {
       success: true,
       message: "Tài khoản đã bị khóa thành công!",
@@ -74,7 +76,7 @@ const unlockUserService = async (userId) => {
     }
 
     await user.update({ isActive: true });
-
+    await mailer.sendLockAccountMail(user.email, user.username);
     return {
       success: true,
       message: "Tài khoản đã được mở khóa thành công!",
@@ -87,12 +89,23 @@ const unlockUserService = async (userId) => {
 const getAllUsersService = async () => {
   try {
     const users = await User.findAll({
+      attributes: [
+        "id",
+        "username",
+        "password",
+        "email",
+        "isVerified",
+        "isActive",
+      ],
       include: [
         {
           model: Role,
           as: "role",
-
           attributes: ["id", "roleName"],
+        },
+        {
+          model: Profile,
+          attributes: ["fullName", "dob", "gender", "address", "phoneNumber"],
         },
       ],
       order: [["createdDate", "DESC"]],
@@ -100,8 +113,6 @@ const getAllUsersService = async () => {
 
     return users;
   } catch (error) {
-    console.error("ERROR getAllUsers:", error);
-
     if (error instanceof ApiError) throw error;
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
@@ -128,7 +139,7 @@ const getUsersByRoleService = async (roleId) => {
 const getAllEmployeesService = async () => {
   const employees = await User.findAll({
     where: {
-      roleId: 2, // ✅ NHÂN VIÊN
+      roleId: 3,
       isActive: true,
     },
     attributes: ["id", "username"],

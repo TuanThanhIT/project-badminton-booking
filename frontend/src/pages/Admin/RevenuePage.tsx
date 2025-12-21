@@ -188,12 +188,15 @@ export default function RevenuePage() {
               )}
             </div>
 
-            <input
-              type="date"
-              value={dateDaily}
-              onChange={(e) => setDateDaily(e.target.value)}
-              className="border border-gray-500 px-3 py-2 rounded-lg text-sm"
-            />
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-600">Ngày:</label>
+              <input
+                type="date"
+                value={dateDaily}
+                onChange={(e) => setDateDaily(e.target.value)}
+                className="border border-gray-500 px-3 py-2 rounded-lg text-sm"
+              />
+            </div>
           </div>
 
           {revenueDate && (

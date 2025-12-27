@@ -12,7 +12,7 @@ const ACCESS_KEY = process.env.ACCESS_KEY;
 const SECRET_KEY = process.env.SECRET_KEY;
 
 // URL IPN MoMo gọi về server backend
-const IPN_URL = "https://370032c4c32f.ngrok-free.app/user/momo/momo-webhook";
+const IPN_URL = "https://4d6ede5e68ae.ngrok-free.app/user/momo/momo-webhook";
 
 /**
  * Tạo giao dịch thanh toán MoMo

@@ -228,8 +228,9 @@ const getOrdersService = async (userId) => {
 };
 
 const cancelOrderService = async (orderId, cancelReason) => {
+  const t = await sequelize.transaction();
   try {
-    const order = await Order.findByPk(orderId);
+    const order = await Order.findByPk(orderId, { transaction: t });
     if (!order) {
       throw new ApiError(StatusCodes.NOT_FOUND, "Đơn hàng không tồn tại!");
     }
@@ -245,14 +246,25 @@ const cancelOrderService = async (orderId, cancelReason) => {
       );
     }
 
-    await order.update({
-      orderStatus: "Cancelled",
-      cancelledBy: "User",
-      cancelReason,
+    await order.update(
+      {
+        orderStatus: "Cancelled",
+        cancelledBy: "User",
+        cancelReason,
+      },
+      { transaction: t }
+    );
+
+    const payment = await Payment.findOne({
+      where: { orderId },
+      transaction: t,
     });
 
-    const payment = await Payment.findOne({ where: { orderId } });
-    await payment.update({ paymentStatus: "Cancelled" });
+    if (payment) {
+      await payment.update({ paymentStatus: "Cancelled" }, { transaction: t });
+    }
+
+    await t.commit();
 
     await sendEmployeesNotification(
       "Đơn hàng đã bị hủy",
@@ -261,6 +273,7 @@ const cancelOrderService = async (orderId, cancelReason) => {
       "cancel-order"
     );
   } catch (error) {
+    await t.rollback();
     if (error instanceof ApiError) {
       throw error;
     }

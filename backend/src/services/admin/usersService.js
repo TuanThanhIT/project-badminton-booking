@@ -76,7 +76,7 @@ const unlockUserService = async (userId) => {
     }
 
     await user.update({ isActive: true });
-    await mailer.sendLockAccountMail(user.email, user.username);
+    await mailer.sendUnlockAccountMail(user.email, user.username);
     return {
       success: true,
       message: "Tài khoản đã được mở khóa thành công!",

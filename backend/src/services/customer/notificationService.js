@@ -49,10 +49,7 @@ const updateAllNotificationService = async (userId) => {
         "Không có thông báo mới. Tất cả thông báo đã được đánh dấu là đã đọc!"
       );
     } else {
-      await Notification.update(
-        { isRead: true },
-        { where: { role: "EMPLOYEE", isRead: false } }
-      );
+      await Notification.update({ isRead: true }, { where: { isRead: false } });
     }
   } catch (error) {
     if (error instanceof ApiError) {

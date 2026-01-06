@@ -20,34 +20,50 @@ const createCourtService = async (name, location, thumbnailUrl) => {
 };
 
 const updateCourtService = async (courtId, data) => {
-  const court = await Court.findByPk(courtId);
-
-  if (!court) {
-    throw new ApiError(StatusCodes.NOT_FOUND, "Không tìm thấy sân!");
+  try {
+    const court = await Court.findByPk(courtId);
+    if (!court) {
+      throw new ApiError(StatusCodes.NOT_FOUND, "Không tìm thấy sân!");
+    }
+    await court.update(data);
+    return {
+      message: "Cập nhật sân thành công!",
+      court,
+    };
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
-
-  await court.update(data);
-
-  return {
-    message: "Cập nhật sân thành công!",
-    court,
-  };
 };
 
 const getAllCourtsService = async () => {
-  return Court.findAll({
-    order: [["name", "ASC"]],
-  });
+  try {
+    return Court.findAll({
+      order: [["name", "ASC"]],
+    });
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
 };
 
 const getCourtByIdService = async (courtId) => {
-  const court = await Court.findByPk(courtId);
-
-  if (!court) {
-    throw new ApiError(StatusCodes.NOT_FOUND, "Không tìm thấy sân!");
+  try {
+    const court = await Court.findByPk(courtId);
+    if (!court) {
+      throw new ApiError(StatusCodes.NOT_FOUND, "Không tìm thấy sân!");
+    }
+    return court;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
-
-  return court;
 };
 
 const createCourtPriceService = async (

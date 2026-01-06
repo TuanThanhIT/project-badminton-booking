@@ -1,4 +1,4 @@
-import BarChartBox from "./Charts/BarChartBox";
+import BarChartBox from "./charts/BarChartBox";
 
 /* ================= HEADER ================= */
 

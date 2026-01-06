@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { Plus } from "lucide-react";
+import { Plus, Wallet } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import type { WorkShiftItem } from "../../types/workShift";
@@ -104,18 +104,29 @@ export default function WorkShiftPage() {
       <div className="bg-white rounded-2xl border border-gray-200 p-8 space-y-6">
         {/* ===== HEADER ===== */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-sky-700 relative">
+          <h1 className="inline-flex items-center gap-2 text-2xl font-bold text-sky-700 mb-10 relative">
             Quản lý ca làm
-            <span className="block w-1/3 h-1 bg-sky-400 rounded mt-1"></span>
+            <span className="absolute left-0 -bottom-4 w-1/2 h-1 bg-sky-400 rounded-sm"></span>
           </h1>
 
-          <IconButton
-            icon={Plus}
-            text="Tạo ca làm"
-            color="bg-blue-500"
-            hoverColor="hover:bg-blue-700"
-            onClick={() => setOpenModal(true)}
-          />
+          {/* ===== ACTION BUTTONS ===== */}
+          <div className="flex gap-3">
+            <IconButton
+              icon={Wallet}
+              text="Bảng lương"
+              color="bg-emerald-500"
+              hoverColor="hover:bg-emerald-600"
+              onClick={() => navigate("/admin/workshift/monthly-salary")}
+            />
+
+            <IconButton
+              icon={Plus}
+              text="Tạo ca làm"
+              color="bg-blue-500"
+              hoverColor="hover:bg-blue-700"
+              onClick={() => setOpenModal(true)}
+            />
+          </div>
         </div>
 
         {/* ===== MODAL ===== */}
@@ -142,6 +153,7 @@ export default function WorkShiftPage() {
             pageSize: pagination.pageSize,
             total: pagination.total,
             showSizeChanger: true,
+            showLessItems: true,
             showTotal: (total) => `Tổng ${total} ca làm`,
             onChange: (page, pageSize) => {
               fetchWorkShifts(page, pageSize);

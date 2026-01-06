@@ -1,13 +1,13 @@
 import { Routes, Route, Outlet } from "react-router-dom";
-import LoginPage from "../pages/Employee/LoginPage";
+import LoginPage from "../pages/employee/LoginPage";
 import EmployeeLayout from "../components/layouts/EmployeeLayout";
-import CashRegisterPage from "../pages/Employee/CashRegisterPage";
-import EmployeePage from "../pages/Employee/EmployeePage";
+import CashRegisterPage from "../pages/employee/CashRegisterPage";
+import EmployeePage from "../pages/employee/EmployeePage";
 import AuthEmployeeGuard from "../components/guards/AuthEmployeeGuard";
-import ProfilePage from "../pages/Customer/ProfilePage";
-import BookingPage from "../pages/Employee/BookingPage";
-import OrderPage from "../pages/Employee/OrderPage";
-import CheckOutPage from "../pages/Employee/CheckOutPage";
+import ProfilePage from "../pages/customer/ProfilePage";
+import BookingPage from "../pages/employee/BookingPage";
+import OrderPage from "../pages/employee/OrderPage";
+import CheckOutPage from "../pages/employee/CheckOutPage";
 
 const EmployeeRoute = () => {
   return (

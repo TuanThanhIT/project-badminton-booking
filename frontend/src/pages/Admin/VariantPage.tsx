@@ -3,7 +3,7 @@ import { Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useSearchParams } from "react-router-dom";
 
-import type { ProductVariant } from "../../../src/types/varient";
+import type { ProductVariant } from "../../types/varient";
 import productService from "../../services/admin/productService";
 import IconButton from "../../components/ui/admin/IconButton";
 import AddVariantModal from "../../components/ui/admin/AddVariantModal";

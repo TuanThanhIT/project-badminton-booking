@@ -34,6 +34,19 @@ const initWorkShiftEmployeeRoute = (app) => {
     workShiftEmployeeController.removeEmployeeFromShift
   );
 
+  router.get(
+    "/all/monthly-salary",
+    auth,
+    authorize("ADMIN"),
+    workShiftEmployeeController.getAllEmployeesMonthlySalary
+  );
+
+  router.get(
+    "/detail/:id",
+    auth,
+    authorize("ADMIN"),
+    workShiftEmployeeController.getWorkShiftEmployeeDetail
+  );
   app.use("/admin/work-shift-employee", router);
 };
 

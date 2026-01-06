@@ -65,9 +65,25 @@ export default function WorkShiftEmployeePage() {
       render: (_, r) => r.employee?.email ?? "—",
     },
     {
+      title: "Thời gian check-in",
+      render: (_, r) => r.checkIn ?? "-",
+    },
+    {
+      title: "Thời gian check-out",
+      render: (_, r) => r.checkOut ?? "-",
+    },
+    {
       title: "Vai trò trong ca",
       dataIndex: "roleInShift",
       align: "center",
+      render: (role: string) => {
+        const roleMap: Record<string, string> = {
+          Cashier: "Thu ngân",
+          Staff: "Nhân viên",
+        };
+
+        return roleMap[role] ?? "—";
+      },
     },
     {
       title: "Tiền công ca",

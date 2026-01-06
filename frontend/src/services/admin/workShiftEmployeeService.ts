@@ -2,6 +2,10 @@ import instance from "../../utils/axiosCustomize";
 import type {
   WorkShiftEmployee,
   CreateWorkShiftEmployeeInput,
+  MonthlySalaryRequest,
+  MonthlySalaryResponse,
+  WorkShiftDetailRequest,
+  WorkShiftDetailResponse,
 } from "../../types/workShiftEmployee";
 
 // Phân nhân viên vào ca
@@ -30,11 +34,29 @@ const removeEmployeeFromShiftService = (id: number) => {
   return instance.delete(`/admin/work-shift-employee/remove/${id}`);
 };
 
+const getAllEmployeesMonthlySalaryService = (data: MonthlySalaryRequest) => {
+  return instance.get<MonthlySalaryResponse>(
+    "/admin/work-shift-employee/all/monthly-salary",
+    {
+      params: data,
+    }
+  );
+};
+
+const getWorkShiftEmployeeDetailService = (data: WorkShiftDetailRequest) => {
+  const employeeId = data.employeeId;
+  return instance.get<WorkShiftDetailResponse>(
+    `/admin/work-shift-employee/detail/${employeeId}`
+  );
+};
+
 const workShiftEmployeeService = {
   assignEmployeeService,
   getEmployeesByShiftService,
   updateEmployeeInShiftService,
   removeEmployeeFromShiftService,
+  getAllEmployeesMonthlySalaryService,
+  getWorkShiftEmployeeDetailService,
 };
 
 export default workShiftEmployeeService;

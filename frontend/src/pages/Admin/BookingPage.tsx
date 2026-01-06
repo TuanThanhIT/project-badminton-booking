@@ -22,7 +22,7 @@ import {
 } from "../../store/slices/employee/bookingSlice";
 
 import PaginatedItems from "../../components/ui/customer+employee/PaginatedItems";
-import NiceBarChart from "../../components/ui/admin/Charts/NiceBarChart";
+import NiceBarChart from "../../components/ui/admin/charts/NiceBarChart";
 
 const TABS = [
   { key: "All", label: "Tất cả" },
@@ -227,12 +227,12 @@ const BookingPage = () => {
   };
 
   return (
-    <div className="p-6 space-y-14 bg-gray-50 min-h-screen">
+    <div className="p-6 space-y-10 bg-gray-50 min-h-screen">
       <div className="bg-white rounded-2xl border border-gray-200 p-10 space-y-6">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="inline-flex items-center gap-2 text-2xl font-bold text-sky-700 mb-8 relative">
+        <div className="max-w-8xl mx-auto">
+          <h1 className="inline-flex items-center gap-2 text-2xl font-bold text-sky-700 mb-10 relative">
             Quản lý lịch đặt sân
-            <span className="absolute left-0 -bottom-3 w-1/2 h-1 bg-sky-400 rounded-sm"></span>
+            <span className="absolute left-0 -bottom-4 w-1/2 h-1 bg-sky-400 rounded-sm"></span>
           </h1>
           {/* Search + Date */}
           <div className="flex flex-wrap justify-between items-center gap-4 mb-6">

@@ -29,7 +29,7 @@ const countOrderByOrderStatusService = async (date) => {
     const endVN = new Date(targetDate);
     endVN.setHours(23, 59, 59, 999);
 
-    // ❗ KHÔNG trừ 7 tiếng nữa
+    // KHÔNG trừ 7 tiếng nữa
     const result = await Order.findAll({
       attributes: ["orderStatus", [fn("COUNT", col("id")), "count"]],
       where: {

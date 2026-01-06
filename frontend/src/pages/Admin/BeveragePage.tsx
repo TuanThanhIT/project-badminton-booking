@@ -14,23 +14,33 @@ export default function BeveragePage() {
   const [openModal, setOpenModal] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  const fetchData = async () => {
+  /* ================= PAGINATION STATE ================= */
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+
+  const fetchData = async (pageParam = page, limitParam = limit) => {
     setLoading(true);
     try {
       const res = await beverageService.getAllBeveragesService({
-        page: 1,
-        limit: 50,
+        page: pageParam,
+        limit: limitParam,
       });
+
       setBeverages(res.data.beverages);
+      setTotal(res.data.pagination.total);
+      setPage(res.data.pagination.page);
+      setLimit(res.data.pagination.limit);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    fetchData(1, limit);
   }, []);
 
+  /* ================= TABLE COLUMNS ================= */
   const columns: ColumnsType<BeverageItem> = [
     {
       title: "Hình ảnh",
@@ -96,7 +106,7 @@ export default function BeveragePage() {
         <div className="flex justify-between items-center">
           <h1 className="inline-flex items-center gap-2 text-2xl font-bold text-sky-700 mb-8 relative">
             Quản lý đồ uống
-            <span className="absolute left-0 -bottom-3 w-1/2 h-1 bg-sky-400 rounded-sm"></span>
+            <span className="absolute left-0 -bottom-4 w-1/2 h-1 bg-sky-400 rounded-sm"></span>
           </h1>
 
           <IconButton
@@ -116,17 +126,27 @@ export default function BeveragePage() {
           dataSource={beverages}
           loading={loading}
           rowKey="id"
-          pagination={false}
           bordered
           locale={{ emptyText: "Không có đồ uống nào" }}
+          pagination={{
+            current: page,
+            pageSize: limit,
+            total,
+            showSizeChanger: true,
+            showLessItems: true,
+            showTotal: (total) => `Tổng ${total} đồ uống`,
+            onChange: (newPage, newPageSize) => {
+              fetchData(newPage, newPageSize);
+            },
+          }}
         />
       </div>
 
       <BeverageModal
         isOpen={openModal}
-        beverageId={selectedId} // null = thêm
+        beverageId={selectedId}
         onClose={() => setOpenModal(false)}
-        onSuccess={fetchData}
+        onSuccess={() => fetchData(page, limit)}
       />
     </div>
   );

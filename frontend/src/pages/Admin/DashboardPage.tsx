@@ -7,7 +7,7 @@ import {
 } from "../../store/slices/admin/revenueSlice";
 import { toast } from "react-toastify";
 import { Loader2 } from "lucide-react";
-import PieChartBox from "../../components/ui/admin/Charts/PieChartBox";
+import PieChartBox from "../../components/ui/admin/charts/PieChartBox";
 import {
   ApiTimeRange,
   RevenueOverviewBlock,
@@ -23,7 +23,7 @@ import {
   getDashboardTopProducts,
   getDashboardWorkShift,
 } from "../../store/slices/admin/dashboardSlice";
-import LineChartBox from "../../components/ui/admin/Charts/LineChartBox";
+import LineChartBox from "../../components/ui/admin/charts/LineChartBox";
 
 const DashboardPage = () => {
   const dispatch = useAppDispatch();
@@ -138,9 +138,9 @@ const DashboardPage = () => {
   return (
     <div className="p-6 space-y-10 bg-gray-50 min-h-screen">
       <div className="bg-white rounded-2xl border border-gray-200 p-10 space-y-6">
-        <h1 className="inline-flex items-center gap-2 text-2xl font-bold text-sky-700 mb-8 relative">
+        <h1 className="inline-flex items-center gap-2 text-2xl font-bold text-sky-700 mb-10 relative">
           Dashboard
-          <span className="absolute left-0 -bottom-3 w-1/2 h-1 bg-sky-400 rounded-sm"></span>
+          <span className="absolute left-0 -bottom-4 w-1/2 h-1 bg-sky-400 rounded-sm"></span>
         </h1>
 
         {/* ================= TỔNG QUAN ================= */}
@@ -477,7 +477,9 @@ const DashboardPage = () => {
                                 {emp.fullName}
                               </span>
                               <span className="text-gray-500 text-xs">
-                                {emp.roleInShift}
+                                {emp.roleInShift === "Cashier"
+                                  ? "Thu ngân"
+                                  : "Nhân viên"}
                               </span>
                               <span className="text-gray-400 text-xs">
                                 {emp.username}

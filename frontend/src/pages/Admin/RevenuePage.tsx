@@ -10,7 +10,7 @@ import {
 } from "../../store/slices/admin/revenueSlice";
 import { Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
-import PieChartBox from "../../components/ui/admin/Charts/PieChartBox";
+import PieChartBox from "../../components/ui/admin/charts/PieChartBox";
 import Pagination from "../../components/ui/admin/Pagination";
 import {
   ApiTimeRange,
@@ -147,7 +147,7 @@ export default function RevenuePage() {
       <div className="bg-white rounded-2xl border border-gray-200 p-10 space-y-6">
         <h1 className="inline-flex items-center gap-2 text-2xl font-bold text-sky-700 mb-8 relative">
           Quản lý doanh thu
-          <span className="absolute left-0 -bottom-3 w-1/2 h-1 bg-sky-400 rounded-sm"></span>
+          <span className="absolute left-0 -bottom-4 w-1/2 h-1 bg-sky-400 rounded-sm"></span>
         </h1>
 
         {/* ================= TỔNG QUAN ================= */}

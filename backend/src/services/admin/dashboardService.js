@@ -485,7 +485,7 @@ const getTodayWorkShiftService = async () => {
     employees: shift.workShiftEmployees.map((we) => ({
       id: we.employee.id,
       username: we.employee.username,
-      fullName: we.employee.profile?.fullName || null, // thêm fullName
+      fullName: we.employee.Profile?.fullName || null, // thêm fullName
       checkIn: we.checkIn,
       checkOut: we.checkOut,
       roleInShift: we.roleInShift,

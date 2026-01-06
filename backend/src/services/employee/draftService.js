@@ -1,4 +1,4 @@
-import { StatusCodes } from "http-status-codes";
+import { BAD_REQUEST, StatusCodes } from "http-status-codes";
 import ApiError from "../../utils/ApiError.js";
 import {
   Beverage,
@@ -204,10 +204,33 @@ const getDraftService = async (draftId) => {
   }
 };
 
+const deleteDraftService = async (draftId) => {
+  try {
+    const draftBooking = await DraftBooking.findByPk(draftId);
+    if (!draftBooking) {
+      throw new ApiError(StatusCodes.NOT_FOUND, "Đơn tạm thời không tồn tại!");
+    }
+
+    if (draftBooking.status === "Completed") {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        "Đơn tạm thời đã hoàn thành không thể xóa!"
+      );
+    }
+    await draftBooking.destroy();
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
+};
+
 const draftService = {
   createDraftService,
   getDraftsService,
   createAndUpdateDraftService,
   getDraftService,
+  deleteDraftService,
 };
 export default draftService;

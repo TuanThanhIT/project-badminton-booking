@@ -69,3 +69,11 @@ export type DraftBookingResponse = {
     subTotal: number;
   }[];
 };
+
+export type DeleteDraftRequest = {
+  draftId: number;
+};
+
+export type DeleteDraftResponse = {
+  message: string;
+};

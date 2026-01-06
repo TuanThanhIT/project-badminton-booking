@@ -1,23 +1,24 @@
 import { Routes, Route } from "react-router-dom";
 import AdminLayout from "../components/layouts/AdminLayout";
-import UsersPage from "../pages/Admin/UsersPage";
-import ProductPage from "../pages/Admin/ProductPage";
-import LoginPage from "../pages/Admin/LoginPage";
-import AddProductPage from "../pages/Admin/AddProductPage";
-import CategoryPage from "../pages/Admin/CategoryPage";
-import WorkShiftPage from "../pages/Admin/WorkShiftPage";
-import EditProductPage from "../pages/Admin/EditProductPage";
-import VariantPage from "../pages/Admin/VariantPage";
-import CourtPage from "../pages/Admin/CourtPage";
-import DiscountPage from "../pages/Admin/DiscountPage";
+import UsersPage from "../pages/admin/UsersPage";
+import ProductPage from "../pages/admin/ProductPage";
+import LoginPage from "../pages/admin/LoginPage";
+import AddProductPage from "../pages/admin/AddProductPage";
+import CategoryPage from "../pages/admin/CategoryPage";
+import WorkShiftPage from "../pages/admin/WorkShiftPage";
+import EditProductPage from "../pages/admin/EditProductPage";
+import VariantPage from "../pages/admin/VariantPage";
+import CourtPage from "../pages/admin/CourtPage";
+import DiscountPage from "../pages/admin/DiscountPage";
 import AuthAdminGuard from "../components/guards/AuthAdminGuard";
-import ProfilePage from "../pages/Customer/ProfilePage";
-import OrderPage from "../pages/Admin/OrderPage";
-import BookingPage from "../pages/Admin/BookingPage";
-import RevenuePage from "../pages/Admin/RevenuePage";
-import DashboardPage from "../pages/Admin/DashboardPage";
-import WorkShiftEmployeePage from "../pages/Admin/WorkShiftEmployeePage";
-import BeveragePage from "../pages/Admin/BeveragePage";
+import ProfilePage from "../pages/customer/ProfilePage";
+import OrderPage from "../pages/admin/OrderPage";
+import BookingPage from "../pages/admin/BookingPage";
+import RevenuePage from "../pages/admin/RevenuePage";
+import DashboardPage from "../pages/admin/DashboardPage";
+import WorkShiftEmployeePage from "../pages/admin/WorkShiftEmployeePage";
+import BeveragePage from "../pages/admin/BeveragePage";
+import MonthlySalaryPage from "../pages/admin/MonthlySalaryPage";
 
 const AdminRoute = () => {
   return (
@@ -50,6 +51,10 @@ const AdminRoute = () => {
         <Route
           path="workShift/employees"
           element={<WorkShiftEmployeePage />}
+        ></Route>
+        <Route
+          path="workShift/monthly-salary"
+          element={<MonthlySalaryPage />}
         ></Route>
         <Route path="beverages" element={<BeveragePage />}></Route>
       </Route>

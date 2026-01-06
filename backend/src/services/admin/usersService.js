@@ -4,6 +4,7 @@ import ApiError from "../../utils/ApiError.js";
 import { Profile } from "../../models/index.js";
 import bcrypt from "bcrypt";
 import mailer from "../../utils/mailer.js";
+
 const createUser = async (username, password, email) => {
   try {
     const existingUser = await User.findOne({ where: { username } });
@@ -40,7 +41,6 @@ const createUser = async (username, password, email) => {
     };
     return safeUser;
   } catch (error) {
-    console.error("ERROR IN createUser:", error);
     if (error instanceof ApiError) throw error;
     throw new ApiError(
       StatusCodes.INTERNAL_SERVER_ERROR,
@@ -48,6 +48,7 @@ const createUser = async (username, password, email) => {
     );
   }
 };
+
 const lockUser = async (userId) => {
   try {
     const user = await User.findByPk(userId);
@@ -68,6 +69,7 @@ const lockUser = async (userId) => {
     );
   }
 };
+
 const unlockUserService = async (userId) => {
   try {
     const user = await User.findByPk(userId);
@@ -86,6 +88,7 @@ const unlockUserService = async (userId) => {
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
+
 const getAllUsersService = async () => {
   try {
     const users = await User.findAll({
@@ -117,6 +120,7 @@ const getAllUsersService = async () => {
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
+
 const getUsersByRoleService = async (roleId) => {
   try {
     const users = await User.findAll({
@@ -137,22 +141,26 @@ const getUsersByRoleService = async (roleId) => {
   }
 };
 const getAllEmployeesService = async () => {
-  const employees = await User.findAll({
-    where: {
-      roleId: 3,
-      isActive: true,
-    },
-    attributes: ["id", "username"],
-    include: [
-      {
-        model: Profile,
-        attributes: ["fullName"],
+  try {
+    const employees = await User.findAll({
+      where: {
+        roleId: 3,
+        isActive: true,
       },
-    ],
-    order: [["createdDate", "DESC"]],
-  });
+      attributes: ["id", "username"],
+      include: [
+        {
+          model: Profile,
+          attributes: ["fullName"],
+        },
+      ],
+      order: [["createdDate", "DESC"]],
+    });
 
-  return employees;
+    return employees;
+  } catch (error) {
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  }
 };
 
 const userService = {

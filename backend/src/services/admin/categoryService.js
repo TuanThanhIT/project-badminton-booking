@@ -22,7 +22,6 @@ const createCategoryService = async (cateName, menuGroup) => {
 const getCategoriesService = async (page = 1, limit = 10, search = "") => {
   try {
     const offset = (page - 1) * limit;
-
     const whereCondition = search
       ? {
           [Op.or]: [

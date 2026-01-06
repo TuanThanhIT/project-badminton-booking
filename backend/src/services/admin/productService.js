@@ -71,6 +71,7 @@ const createProductVariantService = async (
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
+
 const getProductVariantByIdService = async (variantId) => {
   try {
     const variant = await ProductVarient.findByPk(variantId);
@@ -87,6 +88,7 @@ const getProductVariantByIdService = async (variantId) => {
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
+
 const updateProductVariantService = async (
   variantId,
   sku,
@@ -144,6 +146,7 @@ const getProductVariantsByProductIdService = async (productId) => {
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
+
 const deleteProductVariantService = async (variantId) => {
   const variant = await ProductVarient.findByPk(variantId);
 
@@ -323,6 +326,7 @@ const updateProductService = async (
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
+
 const deleteProductImageService = async (imageId) => {
   try {
     const image = await ProductImage.findByPk(imageId);
@@ -339,6 +343,7 @@ const deleteProductImageService = async (imageId) => {
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
+
 const updateProductImageService = async (imageId, imageUrl) => {
   try {
     const image = await ProductImage.findByPk(imageId);
@@ -355,6 +360,7 @@ const updateProductImageService = async (imageId, imageUrl) => {
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
 };
+
 const getProductImagesService = async (productId) => {
   try {
     const images = await ProductImage.findAll({

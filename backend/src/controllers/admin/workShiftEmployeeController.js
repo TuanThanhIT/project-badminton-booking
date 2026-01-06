@@ -60,11 +60,40 @@ const removeEmployeeFromShift = async (req, res, next) => {
   }
 };
 
+const getAllEmployeesMonthlySalary = async (req, res, next) => {
+  try {
+    const { month, year } = req.query;
+    const data =
+      await workShiftEmployeeService.getAllEmployeesMonthlySalaryService(
+        month,
+        year
+      );
+    return res.status(200).json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getWorkShiftEmployeeDetail = async (req, res, next) => {
+  try {
+    const employeeId = req.params.id;
+    const workShiftEmployees =
+      await workShiftEmployeeService.getWorkShiftEmployeeDetailService(
+        employeeId
+      );
+    return res.status(200).json(workShiftEmployees);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const workShiftEmployeeController = {
   assignEmployeeToShift,
   getEmployeesByShift,
   updateEmployeeInShift,
   removeEmployeeFromShift,
+  getAllEmployeesMonthlySalary,
+  getWorkShiftEmployeeDetail,
 };
 
 export default workShiftEmployeeController;

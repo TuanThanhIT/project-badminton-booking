@@ -120,6 +120,7 @@ const createDiscountService = async (
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error.message);
   }
 };
+
 const getDiscountsService = async (filters = {}, page, limit) => {
   try {
     const p = Number(page) || 1;

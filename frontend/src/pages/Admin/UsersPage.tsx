@@ -165,10 +165,10 @@ export default function UserPage() {
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="bg-white rounded-2xl border border-gray-200 p-8 space-y-6">
         {/* ===== HEADER ===== */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-10">
           <h1 className="text-2xl font-bold text-sky-700 relative">
             Quản lý người dùng
-            <span className="absolute left-0 -bottom-2 w-1/2 h-1 bg-sky-400 rounded-sm"></span>
+            <span className="absolute left-0 -bottom-4 w-1/2 h-1 bg-sky-400 rounded-sm"></span>
           </h1>
 
           <IconButton

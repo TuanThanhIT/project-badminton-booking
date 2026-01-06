@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import type { CourtItem } from "../../../src/types/court";
+import type { CourtItem } from "../../types/court";
 import courtService from "../../services/admin/courtService";
 import IconButton from "../../components/ui/admin/IconButton";
 import { Plus, CirclePlus, DollarSign, Pencil } from "lucide-react";
@@ -94,37 +94,39 @@ export default function CourtPage() {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="bg-white rounded-2xl border border-gray-200 p-8 space-y-6">
-        {/* ===== TIÊU ĐỀ ===== */}
-        <h1 className="inline-flex items-center gap-2 text-2xl font-bold text-sky-700 relative">
-          Quản lý sân cầu lông
-          <span className="absolute left-0 -bottom-3 w-1/2 h-1 bg-sky-400 rounded-sm"></span>
-        </h1>
+        <div className="flex items-center justify-between mb-10">
+          {/* ===== TIÊU ĐỀ ===== */}
+          <h1 className="inline-flex items-center gap-2 text-2xl font-bold text-sky-700 relative">
+            Quản lý sân cầu lông
+            <span className="absolute left-0 -bottom-4 w-1/2 h-1 bg-sky-400 rounded-sm"></span>
+          </h1>
 
-        {/* ===== BUTTON TOOLBAR ===== */}
-        <div className="flex justify-end gap-2">
-          <IconButton
-            icon={Plus}
-            text="Thêm sân"
-            color="bg-sky-500"
-            hoverColor="hover:bg-sky-600"
-            onClick={() => setOpenAddCourt(true)}
-          />
+          {/* ===== BUTTON TOOLBAR ===== */}
+          <div className="flex justify-end gap-2">
+            <IconButton
+              icon={Plus}
+              text="Thêm sân"
+              color="bg-sky-500"
+              hoverColor="hover:bg-sky-600"
+              onClick={() => setOpenAddCourt(true)}
+            />
 
-          <IconButton
-            icon={CirclePlus}
-            text="Tạo lịch tuần"
-            color="bg-green-500"
-            hoverColor="hover:bg-green-600"
-            onClick={() => setOpenAddSchedule(true)}
-          />
+            <IconButton
+              icon={CirclePlus}
+              text="Tạo lịch"
+              color="bg-green-500"
+              hoverColor="hover:bg-green-600"
+              onClick={() => setOpenAddSchedule(true)}
+            />
 
-          <IconButton
-            icon={DollarSign}
-            text="Thiết lập giá"
-            color="bg-orange-500"
-            hoverColor="hover:bg-orange-600"
-            onClick={() => setOpenAddPrice(true)}
-          />
+            <IconButton
+              icon={DollarSign}
+              text="Tạo giá"
+              color="bg-orange-500"
+              hoverColor="hover:bg-orange-600"
+              onClick={() => setOpenAddPrice(true)}
+            />
+          </div>
         </div>
 
         {/* ===== BẢNG ===== */}

@@ -50,10 +50,20 @@ const getDraft = async (req, res, next) => {
   }
 };
 
+const deleteDraft = async (req, res, next) => {
+  try {
+    const draftId = req.params.id;
+    await draftService.deleteDraftService(draftId);
+    return res.status(200).json({ message: "Xóa đơn tạm thời thành công!" });
+  } catch (error) {
+    next(error);
+  }
+};
 const draftController = {
   createDraft,
   getDrafts,
   createAndUpdateDraft,
   getDraft,
+  deleteDraft,
 };
 export default draftController;

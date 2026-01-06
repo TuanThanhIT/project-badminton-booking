@@ -5,11 +5,16 @@ import {
   clearDraftError,
   createAndUpdateDraft,
   createDraft,
+  deleteDraft,
+  deleteDraftLocal,
   getDraft,
   getDrafts,
+  resetDraftLocal,
 } from "../../../store/slices/employee/draftSlice";
 import type {
   AddDraftBookingRequest,
+  DeleteDraftRequest,
+  DraftBookingListResponse,
   DraftBookingRequest,
   UpdateDraftBookingRequest,
 } from "../../../types/draft";
@@ -18,6 +23,7 @@ import type { ProductEplResponse } from "../../../types/product";
 import type { BeverageEplResponse } from "../../../types/beverage";
 import { getCourtSchedules } from "../../../store/slices/employee/courtSlice";
 import { clearOfflineError } from "../../../store/slices/employee/offlineSlice";
+import { FileClock, Trash2 } from "lucide-react";
 
 interface DraftBoxProps {
   selectedCourtSlots: CourtScheduleEplResponse;
@@ -68,7 +74,7 @@ const DraftBox = ({
 
   const [savedDrafts, setSavedDrafts] = useState<Record<number, boolean>>({});
 
-  // 👉 cache state theo từng draft
+  // cache state theo từng draft
   const [draftLocalState, setDraftLocalState] = useState<
     Record<number, DraftLocalState>
   >({});
@@ -272,9 +278,21 @@ const DraftBox = ({
     }
   };
 
+  const handleDeleteDraft = async (draftId: number) => {
+    const prevDraftBookings: DraftBookingListResponse = [...draftBookings];
+    try {
+      const data: DeleteDraftRequest = { draftId };
+      dispatch(deleteDraftLocal({ data }));
+      const res = await dispatch(deleteDraft({ data })).unwrap();
+      toast.success(res.message);
+    } catch (error) {
+      dispatch(resetDraftLocal({ prevDraftBookings }));
+    }
+  };
+
   // ------------------- RENDER -------------------
   return (
-    <div className="flex flex-col gap-4 bg-white p-5 rounded-xl max-w-md">
+    <div className="flex flex-col gap-4 bg-white p-5 rounded-xl flex-1">
       {/* Customer input */}
       <div className="flex gap-3">
         <input
@@ -286,7 +304,7 @@ const DraftBox = ({
         />
         <button
           onClick={handleCreateDraft}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-800 transition"
+          className="px-4 py-2 bg-blue-700 text-white rounded-lg font-semibold hover:bg-blue-800 transition"
         >
           Tạo đơn
         </button>
@@ -295,7 +313,15 @@ const DraftBox = ({
       {/* Draft list */}
       <div className="flex flex-col gap-2 max-h-[26rem] overflow-y-auto">
         {draftBookings.length === 0 && (
-          <div className="text-gray-400 text-center py-4">Chưa có đơn nào</div>
+          <div className="flex flex-col items-center justify-center py-10 text-gray-500">
+            <div className="w-14 h-14 mb-3 rounded-full bg-blue-50 flex items-center justify-center">
+              <FileClock className="w-7 h-7 text-blue-500" />
+            </div>
+            <p className="text-base font-medium">Chưa có đơn tạm nào</p>
+            <p className="text-sm text-gray-400 mt-1">
+              Nhập tên khách hàng để tạo đơn mới
+            </p>
+          </div>
         )}
 
         {draftBookings.map((d) => (
@@ -311,9 +337,25 @@ const DraftBox = ({
               <span className="font-medium text-gray-800">
                 {d.nameCustomer}
               </span>
-              <span className="font-semibold text-gray-700">
-                {openDraftId === d.id ? "▲" : "▼"}
-              </span>
+
+              <div className="flex items-center gap-3">
+                {/* Nút xóa */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteDraft(d.id);
+                  }}
+                  className="p-1 rounded-full hover:bg-red-100 text-red-500 hover:text-red-600 transition"
+                  title="Xóa draft"
+                >
+                  <Trash2 size={16} />
+                </button>
+
+                {/* Mũi tên */}
+                <span className="font-semibold text-gray-700">
+                  {openDraftId === d.id ? "▲" : "▼"}
+                </span>
+              </div>
             </div>
 
             {/* Content */}

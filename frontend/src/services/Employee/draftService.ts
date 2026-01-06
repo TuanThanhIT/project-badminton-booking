@@ -1,10 +1,12 @@
-import type {
-  AddDraftBookingRequest,
-  AddDraftBookingResponse,
-  DraftBookingListResponse,
-  DraftBookingRequest,
-  DraftBookingResponse,
-  UpdateDraftBookingRequest,
+import {
+  type AddDraftBookingRequest,
+  type AddDraftBookingResponse,
+  type DeleteDraftRequest,
+  type DeleteDraftResponse,
+  type DraftBookingListResponse,
+  type DraftBookingRequest,
+  type DraftBookingResponse,
+  type UpdateDraftBookingRequest,
 } from "../../types/draft";
 import instance from "../../utils/axiosCustomize";
 
@@ -22,10 +24,18 @@ const getDraftService = (data: DraftBookingRequest) => {
   return instance.get<DraftBookingResponse>(`/employee/draft/${draftId}`);
 };
 
+const deleteDraftService = (data: DeleteDraftRequest) => {
+  const draftId = data.draftId;
+  return instance.delete<DeleteDraftResponse>(
+    `/employee/draft/delete/${draftId}`
+  );
+};
+
 const draftService = {
   createDraftService,
   getDraftsService,
   createAndUpdateDraftService,
   getDraftService,
+  deleteDraftService,
 };
 export default draftService;

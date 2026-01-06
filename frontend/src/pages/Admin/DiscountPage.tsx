@@ -256,7 +256,7 @@ const DiscountPage: React.FC = () => {
         <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
           <h1 className="inline-flex items-center gap-2 text-2xl font-bold text-sky-700 mb-8 relative">
             Khuyến mãi đơn hàng
-            <span className="absolute left-0 -bottom-3 w-1/2 h-1 bg-sky-400 rounded-sm"></span>
+            <span className="absolute left-0 -bottom-4 w-1/2 h-1 bg-sky-400 rounded-sm"></span>
           </h1>
           <div className="flex flex-wrap items-end gap-4">
             <div className="flex flex-col">
@@ -328,7 +328,7 @@ const DiscountPage: React.FC = () => {
         <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
           <h1 className="inline-flex items-center gap-2 text-2xl font-bold text-sky-700 mb-8 relative">
             Khuyến mãi đặt sân
-            <span className="absolute left-0 -bottom-3 w-1/2 h-1 bg-sky-400 rounded-sm"></span>
+            <span className="absolute left-0 -bottom-4 w-1/2 h-1 bg-sky-400 rounded-sm"></span>
           </h1>
 
           <div className="flex flex-wrap items-end gap-4">

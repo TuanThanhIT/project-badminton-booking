@@ -202,7 +202,7 @@ const EmployeePage = () => {
       <div className="flex gap-4 h-[600px] overflow-hidden">
         {/* Cột 1: Danh sách đồ uống / sản phẩm */}
         <div className="flex-1 bg-white rounded-xl shadow p-4 flex flex-col overflow-hidden">
-          <div className="flex items-center gap-2 text-2xl font-bold mb-4 text-blue-900 tracking-wide">
+          <div className="flex items-center gap-2 text-2xl font-bold mb-4 text-sky-700 tracking-wide">
             <Package2 className="w-7 h-7" />
             Danh sách đồ uống / sản phẩm
           </div>
@@ -215,7 +215,7 @@ const EmployeePage = () => {
                 onClick={() => setActiveTab(tab as any)}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
                   activeTab === tab
-                    ? "bg-blue-800 text-white shadow"
+                    ? "bg-blue-700 text-white shadow"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
@@ -266,7 +266,7 @@ const EmployeePage = () => {
 
         {/* Cột 2: Đơn tạm / Thông tin */}
         <div className="flex-1 bg-white rounded-xl shadow p-4 flex flex-col overflow-hidden">
-          <div className="flex items-center gap-2 text-2xl font-bold mb-4 text-blue-900 tracking-wide">
+          <div className="flex items-center gap-2 text-2xl font-bold mb-4 text-sky-700 tracking-wide">
             <FileClock className="w-7 h-7" />
             Đơn tạm thời
           </div>
@@ -285,7 +285,7 @@ const EmployeePage = () => {
 
         {/* Cột 3: Hoàn tất thanh toán */}
         <div className="flex-1 bg-white rounded-xl shadow p-6 flex flex-col overflow-hidden">
-          <div className="flex items-center gap-2 text-2xl font-bold mb-4 text-blue-900 tracking-wide">
+          <div className="flex items-center gap-2 text-2xl font-bold mb-4 text-sky-700 tracking-wide">
             <CheckCircle className="w-7 h-7" />
             Hoàn tất thanh toán
           </div>
@@ -379,7 +379,7 @@ const EmployeePage = () => {
       {/* COURT GRID */}
       <div className="bg-white rounded-xl shadow p-4 flex flex-col relative">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="flex items-center gap-2 text-2xl font-bold mb-4 text-blue-900 tracking-wide">
+          <h2 className="flex items-center gap-2 text-2xl font-bold mb-4 text-sky-700 tracking-wide">
             <CalendarClock className="w-7 h-7" />
             Chọn sân & khung giờ
           </h2>

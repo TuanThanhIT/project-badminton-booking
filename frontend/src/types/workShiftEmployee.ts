@@ -33,3 +33,39 @@ export type WorkShiftEmployee = {
   earnedWage: number;
   employee: Employee;
 };
+
+export type MonthlySalaryResponse = {
+  month: number;
+  year: number;
+  totalEmployees: number;
+  totalPayroll: number;
+  employees: {
+    employeeId: number;
+    username: string;
+    email: string;
+    fullName: string;
+    totalShifts: number;
+    totalWage: number;
+  }[];
+};
+
+export type MonthlySalaryRequest = {
+  month: number;
+  year: number;
+};
+
+export type WorkShiftDetailResponse = {
+  id: number;
+  checkIn: string;
+  checkOut: string;
+  workShift: {
+    name: string;
+    workDate: string;
+    startTime: string;
+    endTime: string;
+  };
+}[];
+
+export type WorkShiftDetailRequest = {
+  employeeId: number;
+};

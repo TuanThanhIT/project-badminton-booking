@@ -1,8 +1,14 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import {
+  createAsyncThunk,
+  createSlice,
+  type PayloadAction,
+} from "@reduxjs/toolkit";
 import type { ApiErrorType } from "../../../types/error";
 import type {
   AddDraftBookingRequest,
   AddDraftBookingResponse,
+  DeleteDraftRequest,
+  DeleteDraftResponse,
   DraftBookingListResponse,
   DraftBookingRequest,
   DraftBookingResponse,
@@ -10,6 +16,7 @@ import type {
   UpdateDraftBookingResponse,
 } from "../../../types/draft";
 import draftService from "../../../services/employee/draftService";
+import { data } from "react-router-dom";
 
 interface DraftState {
   draftBookings: DraftBookingListResponse;
@@ -79,12 +86,43 @@ export const createAndUpdateDraft = createAsyncThunk<
   }
 });
 
+export const deleteDraft = createAsyncThunk<
+  DeleteDraftResponse,
+  { data: DeleteDraftRequest },
+  { rejectValue: ApiErrorType }
+>("draft/deleteDraft", async ({ data }, { rejectWithValue }) => {
+  try {
+    const res = await draftService.deleteDraftService(data);
+    return res.data as DeleteDraftResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
 const draftSlice = createSlice({
   name: "draft",
   initialState,
   reducers: {
     clearDraftError(state) {
       state.error = undefined;
+    },
+
+    deleteDraftLocal(
+      state,
+      action: PayloadAction<{ data: DeleteDraftRequest }>
+    ) {
+      const draftId = action.payload.data.draftId;
+      const newDraftBookings = state.draftBookings.filter(
+        (drb) => drb.id !== draftId
+      );
+      state.draftBookings = newDraftBookings;
+    },
+
+    resetDraftLocal(
+      state,
+      action: PayloadAction<{ prevDraftBookings: DraftBookingListResponse }>
+    ) {
+      state.draftBookings = action.payload.prevDraftBookings;
     },
   },
   extraReducers: (builder) => {
@@ -143,8 +181,23 @@ const draftSlice = createSlice({
       .addCase(getDraft.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.userMessage;
+      })
+
+      // deleteDraft
+      .addCase(deleteDraft.pending, (state) => {
+        state.loading = true;
+        state.error = undefined;
+      })
+      .addCase(deleteDraft.fulfilled, (state, action) => {
+        state.message = action.payload.message;
+        state.loading = false;
+      })
+      .addCase(deleteDraft.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.userMessage;
       });
   },
 });
-export const { clearDraftError } = draftSlice.actions;
+export const { clearDraftError, deleteDraftLocal, resetDraftLocal } =
+  draftSlice.actions;
 export default draftSlice.reducer;

@@ -1,17 +1,9 @@
 import { useEffect, useState } from "react";
 import { Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { Line, Doughnut } from "react-chartjs-2";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import {
-  Pencil,
-  CirclePlus,
-  Plus,
-  Gift,
-  Banknote,
-  LineChart,
-} from "lucide-react";
+import { Pencil, CirclePlus, Plus } from "lucide-react";
 
 import IconButtonNonContent from "../../components/ui/admin/IconButton";
 import type { ProductAdminItem } from "../../types/product";
@@ -162,61 +154,12 @@ const ProductPage = () => {
     navigate(`/admin/products/variants?productId=${product.id}`);
   };
 
-  /* ---------- STATS (UI ONLY) ---------- */
-  const stats = [
-    {
-      title: "Đơn hàng mới",
-      value: "1,390",
-      change: "+32.4%",
-      icon: <Gift className="text-blue-500" />,
-      up: true,
-    },
-    {
-      title: "Doanh số",
-      value: "$57,890",
-      change: "-4.4%",
-      icon: <LineChart className="text-green-500" />,
-      up: false,
-    },
-    {
-      title: "Doanh thu",
-      value: "$12,390",
-      change: "+32.4%",
-      icon: <Banknote className="text-purple-500" />,
-      up: true,
-    },
-  ];
-
-  const profitChart = {
-    labels: ["T2", "T3", "T4", "T5", "T6"],
-    datasets: [
-      {
-        label: "Lợi nhuận",
-        data: [2000, 1500, 3200, 2800, 3600],
-        borderColor: "#22C55E",
-        backgroundColor: "rgba(34,197,94,0.1)",
-        tension: 0.4,
-        fill: true,
-      },
-    ],
-  };
-
-  const promoChart = {
-    labels: ["YouTube", "Instagram", "Twitter", "Facebook"],
-    datasets: [
-      {
-        data: [31.47, 26.69, 15.69, 8.22],
-        backgroundColor: ["#FF0000", "#E1306C", "#1DA1F2", "#1877F2"],
-      },
-    ],
-  };
-
   /* ================== RENDER ================== */
   return (
     <div className="p-6 space-y-10 bg-gray-50 min-h-screen">
       <div className="bg-white rounded-2xl border border-gray-200 p-10 space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">
+          <h1 className="inline-flex items-center gap-2 text-2xl font-bold text-sky-700 relative">
             Xin chào 👋 Chúc bạn một ngày làm việc hiệu quả
           </h1>
           <p className="text-gray-500 mt-1">
@@ -237,40 +180,12 @@ const ProductPage = () => {
         />
       </div>
 
-      {/* STATS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {stats.map((s, i) => (
-          <div key={i} className="bg-white p-4 rounded-xl shadow">
-            <div className="flex items-center gap-3">
-              {s.icon}
-              <span className="font-medium text-gray-700">{s.title}</span>
-            </div>
-            <div className="text-2xl font-bold mt-2">{s.value}</div>
-            <div
-              className={`text-sm ${s.up ? "text-green-500" : "text-red-500"}`}
-            >
-              {s.change}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* CHARTS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white p-5 rounded-xl shadow">
-          <h2 className="font-semibold mb-3">Tổng lợi nhuận</h2>
-          <Line data={profitChart} />
-        </div>
-
-        <div className="bg-white p-5 rounded-xl shadow">
-          <h2 className="font-semibold mb-3">Kênh bán hàng</h2>
-          <Doughnut data={promoChart} />
-        </div>
-      </div>
-
       {/* TABLE */}
       <div className="bg-white p-6 rounded-xl shadow">
-        <h2 className="font-semibold mb-4">Danh sách sản phẩm</h2>
+        <h1 className="inline-flex items-center gap-2 text-2xl font-bold text-sky-700 mb-10 relative">
+          Quản lý sản phẩm
+          <span className="absolute left-0 -bottom-4 w-1/2 h-1 bg-sky-400 rounded-sm"></span>
+        </h1>
 
         <Table
           columns={columns(handleEdit, handleAddVariant)}

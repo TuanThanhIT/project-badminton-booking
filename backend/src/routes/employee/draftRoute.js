@@ -25,6 +25,12 @@ const initDraftEmployeeRoute = (app) => {
     draftController.createAndUpdateDraft
   );
   draftRoute.get("/:id", auth, authorize("EMPLOYEE"), draftController.getDraft);
+  draftRoute.delete(
+    "/delete/:id",
+    auth,
+    authorize("EMPLOYEE"),
+    draftController.deleteDraft
+  );
   app.use("/employee/draft", draftRoute);
 };
 export default initDraftEmployeeRoute;

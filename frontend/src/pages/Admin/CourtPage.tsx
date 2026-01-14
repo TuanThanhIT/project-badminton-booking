@@ -135,12 +135,16 @@ export default function CourtPage() {
           dataSource={courts}
           loading={loading}
           rowKey="id"
-          pagination={false}
+          pagination={{
+            pageSize: 8,
+            showSizeChanger: false,
+          }}
           bordered
           className="rounded-xl overflow-hidden"
           rowClassName={(_, index) =>
             index % 2 === 0 ? "bg-white" : "bg-gray-50"
           }
+          locale={{ emptyText: "Không có sân nào" }}
         />
       </div>
 

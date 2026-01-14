@@ -192,7 +192,12 @@ const ProductPage = () => {
           dataSource={products}
           loading={loading}
           rowKey="id"
-          pagination={false}
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: false,
+          }}
+          rowClassName={() => "hover:bg-gray-50 transition-colors"}
+          locale={{ emptyText: "Không có sản phẩm nào" }}
         />
       </div>
 

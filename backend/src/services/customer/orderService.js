@@ -270,7 +270,7 @@ const cancelOrderService = async (orderId, cancelReason) => {
       "Đơn hàng đã bị hủy",
       `Khách hàng vừa hủy đơn #0${orderId}`,
       "EMPLOYEE",
-      "cancel-order"
+      "epl-cancel-order"
     );
   } catch (error) {
     await t.rollback();

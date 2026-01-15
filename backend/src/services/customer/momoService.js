@@ -45,15 +45,6 @@ const createPaymentService = async (
      * rawSignature tạo theo đúng thứ tự của MoMo
      * KHÔNG ĐƯỢC đổi vị trí tham số
      */
-
-    console.log("===== MOMO DEBUG =====");
-    console.log("PARTNER_CODE:", PARTNER_CODE);
-    console.log("ACCESS_KEY:", ACCESS_KEY);
-    console.log("SECRET_KEY:", SECRET_KEY?.slice(0, 6) + "***");
-    console.log("amount:", intAmount);
-    console.log("orderInfo:", orderInfo);
-    console.log("extraData:", extraData);
-
     const rawSignature =
       `accessKey=${ACCESS_KEY}&amount=${intAmount}&extraData=${extraData}` +
       `&ipnUrl=${IPN_URL}&orderId=${momoOrderId}&orderInfo=${orderInfo}` +
@@ -75,7 +66,7 @@ const createPaymentService = async (
       orderInfo,
       redirectUrl: REDIRECT_URL,
       ipnUrl: IPN_URL,
-      extraData, // ⭐ Base64 encoded
+      extraData,
       requestType,
       signature,
       lang: "vi",
@@ -87,9 +78,6 @@ const createPaymentService = async (
       body,
       { headers: { "Content-Type": "application/json" } }
     );
-    // ⭐ LOG RESPONSE
-    console.log("===== MOMO RESPONSE =====");
-    console.log(momoRes.data);
 
     return momoRes.data;
   } catch (error) {

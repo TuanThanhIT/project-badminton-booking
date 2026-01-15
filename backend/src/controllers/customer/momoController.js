@@ -73,12 +73,8 @@ const handleMoMoWebhook = async (req, res) => {
     .update(rawSignature)
     .digest("hex");
 
-  console.log("expectedSignature:", expectedSignature);
-  console.log("signature:", signature);
-
   // Sai signature → từ chối webhook
   if (expectedSignature !== signature) {
-    console.log("❌ Sai chữ ký, từ chối webhook");
     return res.status(400).json({ message: "Invalid signature" });
   }
 
@@ -90,7 +86,7 @@ const handleMoMoWebhook = async (req, res) => {
   try {
     type = JSON.parse(Buffer.from(extraData, "base64").toString()).type;
   } catch (err) {
-    console.log("⚠️ extraData decode error:", err);
+    console.log("extraData decode error:", err);
   }
 
   // Nếu thanh toán thành công

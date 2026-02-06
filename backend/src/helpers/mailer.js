@@ -152,7 +152,7 @@ const formatProductInfo = (products) => {
               p.quantity
             }</td>
             <td style="padding:8px; text-align:right; border-bottom:1px solid #eee;">${p.subTotal.toLocaleString()}đ</td>
-          </tr>`
+          </tr>`,
           )
           .join("")}
       </tbody>
@@ -164,7 +164,7 @@ const sendOrderMail = async (
   email,
   orderProducts,
   totalAmount,
-  type = "confirm"
+  type = "confirm",
 ) => {
   const formattedProducts = formatProductInfo(orderProducts);
 
@@ -256,7 +256,7 @@ const sendWorkShiftMail = async (
   workDate,
   startTime,
   endTime,
-  roleInShift
+  roleInShift,
 ) => {
   await transporter.sendMail({
     from: `"Hỗ trợ B-Hub" <${process.env.EMAIL_USER}>`,

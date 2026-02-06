@@ -2,7 +2,7 @@ import { Server as IOServer } from "socket.io";
 import { StatusCodes } from "http-status-codes";
 import jwt from "jsonwebtoken";
 
-import ApiError from "../utils/ApiError.js";
+import ApiError from "../errors/ApiError.js";
 
 let io = null;
 export const initSocket = (httpServer) => {

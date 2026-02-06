@@ -33,6 +33,7 @@
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "http-status-codes": "^2.3.0",
+    "joi": "^18.0.2",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",

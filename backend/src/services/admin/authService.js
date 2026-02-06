@@ -2,7 +2,7 @@ import { User, Profile, Role } from "../../models/index.js";
 import ApiError from "../../utils/ApiError.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
-import sendOtpMail from "../../utils/mailer.js";
+import sendOtpMail from "../../helpers/mailer.js";
 import dotenv from "dotenv";
 import { StatusCodes } from "http-status-codes";
 import jwt from "jsonwebtoken";
@@ -15,14 +15,14 @@ const createAdminService = async (username, email, password) => {
     if (existingUser) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác!"
+        "Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác!",
       );
     }
     const existingEmail = await User.findOne({ where: { email } });
     if (existingEmail) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Email đã được sử dụng cho tài khoản khác!"
+        "Email đã được sử dụng cho tài khoản khác!",
       );
     }
     const hashPassword = await bcrypt.hash(password, saltRounds);
@@ -58,7 +58,7 @@ const createAdminService = async (username, email, password) => {
     if (error instanceof ApiError) throw error;
     throw new ApiError(
       StatusCodes.INTERNAL_SERVER_ERROR,
-      "Đã xảy ra lỗi khi tạo tài khoản. Vui lòng thử lại sau!"
+      "Đã xảy ra lỗi khi tạo tài khoản. Vui lòng thử lại sau!",
     );
   }
 };
@@ -80,14 +80,14 @@ const handleLoginService = async (username, password) => {
     if (!employee) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Thông tin đăng nhập không chính xác!"
+        "Thông tin đăng nhập không chính xác!",
       );
     }
 
     if (!employee.isVerified || !employee.isActive) {
       throw new ApiError(
         StatusCodes.FORBIDDEN,
-        "Tài khoản hiện không thể đăng nhập. Vui lòng liên hệ hỗ trợ!"
+        "Tài khoản hiện không thể đăng nhập. Vui lòng liên hệ hỗ trợ!",
       );
     }
 
@@ -95,7 +95,7 @@ const handleLoginService = async (username, password) => {
     if (!isMatchPassword) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Thông tin đăng nhập không chính xác!"
+        "Thông tin đăng nhập không chính xác!",
       );
     }
 

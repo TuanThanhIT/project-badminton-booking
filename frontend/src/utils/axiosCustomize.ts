@@ -13,14 +13,14 @@ instance.interceptors.request.use(
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // Xử lý lỗi tập trung
 instance.interceptors.response.use(
   (response: AxiosResponse) => response,
   (
-    error: AxiosError<{ statusCode: number; message: string; stack?: string }>
+    error: AxiosError<{ statusCode: number; message: string; stack?: string }>,
   ) => {
     const statusCode = error.response?.status;
     const backendMessage = error.response?.data?.message;
@@ -48,7 +48,7 @@ instance.interceptors.response.use(
       userMessage, // thông báo để show cho người dùng
       developerMessage, // thông báo kỹ thuật (có thể log ra console)
     });
-  }
+  },
 );
 
 export default instance;

@@ -9,7 +9,7 @@ var _index = require("./socket/index.js");
 var _roleRoute = _interopRequireDefault(require("./routes/admin/roleRoute.js"));
 var _webRoute = _interopRequireDefault(require("./routes/customer/webRoute.js"));
 var _authRoute = _interopRequireDefault(require("./routes/customer/authRoute.js"));
-var _errorHandling = require("./middlewares/errorHandling.js");
+var _errorHandler = _interopRequireDefault(require("./middlewares/errorHandler.js"));
 var _userRoute = _interopRequireDefault(require("./routes/customer/userRoute.js"));
 var _cateRoute = _interopRequireDefault(require("./routes/admin/cateRoute.js"));
 var _cateRoute2 = _interopRequireDefault(require("./routes/customer/cateRoute.js"));
@@ -112,7 +112,7 @@ var httpServer = (0, _http.createServer)(app);
 
 // init socket
 (0, _index.initSocket)(httpServer);
-app.use(_errorHandling.errorHandlingMiddleware);
+app.use(_errorHandler["default"]);
 _db["default"].sync({
   force: false
 }).then(function () {

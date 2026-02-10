@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import {
   CashRegister,
   WorkShift,
@@ -30,7 +30,7 @@ const getWorkShiftByDateService = async (workDate) => {
 export const updateCheckInAndCashRegisterService = async (
   workShiftId,
   checkInTime,
-  openingCash
+  openingCash,
 ) => {
   const t = await sequelize.transaction();
   try {
@@ -42,7 +42,7 @@ export const updateCheckInAndCashRegisterService = async (
     if (!checkInTime || !/^\d{1,2}:\d{2}(:\d{2})?$/.test(checkInTime)) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Giờ checkIn không hợp lệ! (HH:MM hoặc HH:MM:SS)"
+        "Giờ checkIn không hợp lệ! (HH:MM hoặc HH:MM:SS)",
       );
     }
 
@@ -62,7 +62,7 @@ export const updateCheckInAndCashRegisterService = async (
 
         await workShiftEmployee.update(
           { checkIn: checkInDateStr },
-          { transaction: t }
+          { transaction: t },
         );
 
         await CashRegister.create(
@@ -70,12 +70,12 @@ export const updateCheckInAndCashRegisterService = async (
             workShiftEmployeeId: workShiftEmployee.id,
             openingCash,
           },
-          { transaction: t }
+          { transaction: t },
         );
       } else {
         throw new ApiError(
           StatusCodes.BAD_REQUEST,
-          "Mỗi ca chỉ được check in 1 lần! Không thể check in lại!"
+          "Mỗi ca chỉ được check in 1 lần! Không thể check in lại!",
         );
       }
       await t.commit();
@@ -84,7 +84,7 @@ export const updateCheckInAndCashRegisterService = async (
         "Check-in ca làm",
         `Nhân viên có id là ${workShiftEmployee.employeeId} vừa check-in vào ${workShift.name} ngày ${workShift.workDate}`,
         "ADMIN",
-        "adm-check-in"
+        "adm-check-in",
       );
     }
   } catch (error) {
@@ -97,7 +97,7 @@ export const updateCheckInAndCashRegisterService = async (
 export const updateCheckoutAndCashRegisterService = async (
   workShiftId,
   checkOutTime,
-  closingCash
+  closingCash,
 ) => {
   const t = await sequelize.transaction();
   try {
@@ -109,7 +109,7 @@ export const updateCheckoutAndCashRegisterService = async (
     if (!checkOutTime || !/^\d{1,2}:\d{2}(:\d{2})?$/.test(checkOutTime)) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Giờ checkOut không hợp lệ! (HH:MM hoặc HH:MM:SS)"
+        "Giờ checkOut không hợp lệ! (HH:MM hoặc HH:MM:SS)",
       );
     }
 
@@ -120,14 +120,14 @@ export const updateCheckoutAndCashRegisterService = async (
     if (!workShiftEmployee) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Ca làm chưa được phân cho nhân viên!"
+        "Ca làm chưa được phân cho nhân viên!",
       );
     }
 
     if (workShiftEmployee.checkOut) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Mỗi ca chỉ được check out 1 lần! Không thể check out lại!"
+        "Mỗi ca chỉ được check out 1 lần! Không thể check out lại!",
       );
     }
 
@@ -149,7 +149,7 @@ export const updateCheckoutAndCashRegisterService = async (
     if (checkOutDate <= checkInDate) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Thời gian checkOut phải lớn hơn checkIn!"
+        "Thời gian checkOut phải lớn hơn checkIn!",
       );
     }
 
@@ -162,7 +162,7 @@ export const updateCheckoutAndCashRegisterService = async (
         checkOut: checkOutDateStr,
         earnedWage,
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     // ------------------- Tạo CashRegister -------------------
@@ -171,7 +171,7 @@ export const updateCheckoutAndCashRegisterService = async (
         workShiftEmployeeId: workShiftEmployee.id,
         closingCash,
       },
-      { transaction: t }
+      { transaction: t },
     );
     t.commit();
 
@@ -179,7 +179,7 @@ export const updateCheckoutAndCashRegisterService = async (
       "Check-out ca làm",
       `Nhân viên có id là ${workShiftEmployee.employeeId} vừa check-out khỏi ${workShift.name} ngày ${workShift.workDate}`,
       "ADMIN",
-      "adm-check-out"
+      "adm-check-out",
     );
   } catch (error) {
     t.rollback();

@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import sequelize from "../../config/db.js";
 import { Op } from "sequelize";
 import {
@@ -14,7 +14,7 @@ const createProductService = async (
   brand,
   description,
   thumbnailUrl,
-  categoryId
+  categoryId,
 ) => {
   try {
     const category = await Category.findByPk(categoryId);
@@ -46,7 +46,7 @@ const createProductVariantService = async (
   color,
   size,
   material,
-  productId
+  productId,
 ) => {
   try {
     const product = await Product.findByPk(productId);
@@ -97,7 +97,7 @@ const updateProductVariantService = async (
   discount,
   color,
   size,
-  material
+  material,
 ) => {
   try {
     const variant = await ProductVarient.findByPk(variantId);
@@ -171,8 +171,8 @@ const createProductImagesService = async (imageUrls, productId) => {
         ProductImage.create({
           imageUrl,
           productId,
-        })
-      )
+        }),
+      ),
     );
 
     return productImages;
@@ -229,7 +229,7 @@ export const getProductsService = async (page = 1, limit = 10, search = "") => {
         "categoryId",
         [
           sequelize.literal(
-            `(SELECT IFNULL(SUM(stock), 0) FROM ProductVarients WHERE ProductVarients.productId = Product.id)`
+            `(SELECT IFNULL(SUM(stock), 0) FROM ProductVarients WHERE ProductVarients.productId = Product.id)`,
           ),
           "stock",
         ],
@@ -296,7 +296,7 @@ const updateProductService = async (
   brand,
   description,
   thumbnailUrl,
-  categoryId
+  categoryId,
 ) => {
   try {
     // Kiểm tra sản phẩm

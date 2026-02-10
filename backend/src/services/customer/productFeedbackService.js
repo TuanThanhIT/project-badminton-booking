@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import {
   Order,
   OrderDetail,
@@ -23,7 +23,7 @@ const createFeedbackService = async (content, rate, userId, orderDetailId) => {
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Số sao đánh giá không hợp lệ!"
+        "Số sao đánh giá không hợp lệ!",
       );
     }
 
@@ -31,7 +31,7 @@ const createFeedbackService = async (content, rate, userId, orderDetailId) => {
     if (!orderDetail) {
       throw new ApiError(
         StatusCodes.NOT_FOUND,
-        "Chi tiết đơn hàng không tồn tại!"
+        "Chi tiết đơn hàng không tồn tại!",
       );
     }
 
@@ -41,7 +41,7 @@ const createFeedbackService = async (content, rate, userId, orderDetailId) => {
     if (existingFeedback) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Bạn đã đánh giá sản phẩm này rồi!"
+        "Bạn đã đánh giá sản phẩm này rồi!",
       );
     }
 
@@ -52,7 +52,7 @@ const createFeedbackService = async (content, rate, userId, orderDetailId) => {
     if (order.orderStatus !== "Completed") {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Đơn hàng chưa hoàn thành, không thể đánh giá!"
+        "Đơn hàng chưa hoàn thành, không thể đánh giá!",
       );
     }
 
@@ -64,7 +64,7 @@ const createFeedbackService = async (content, rate, userId, orderDetailId) => {
         orderDetailId,
         varientId: orderDetail.varientId,
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     await t.commit();
@@ -86,7 +86,7 @@ const getFeedbackUpdateService = async (orderDetailId, userId) => {
     if (!orderDetail) {
       throw new ApiError(
         StatusCodes.NOT_FOUND,
-        "Chi tiết đơn hàng không tồn tại!"
+        "Chi tiết đơn hàng không tồn tại!",
       );
     }
 
@@ -121,7 +121,7 @@ const updateFeedbackService = async (content, rate, userId, orderDetailId) => {
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Số sao đánh giá không hợp lệ!"
+        "Số sao đánh giá không hợp lệ!",
       );
     }
 
@@ -129,7 +129,7 @@ const updateFeedbackService = async (content, rate, userId, orderDetailId) => {
     if (!orderDetail) {
       throw new ApiError(
         StatusCodes.NOT_FOUND,
-        "Chi tiết đơn hàng không tồn tại!"
+        "Chi tiết đơn hàng không tồn tại!",
       );
     }
 
@@ -147,7 +147,7 @@ const updateFeedbackService = async (content, rate, userId, orderDetailId) => {
     ) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Bạn chưa thay đổi nội dung hoặc số sao đánh giá!"
+        "Bạn chưa thay đổi nội dung hoặc số sao đánh giá!",
       );
     }
 
@@ -184,8 +184,8 @@ const getFeedbackProductService = async (productId) => {
         ProductFeedback.findAll({
           where: { varientId: varient.id },
           attributes: ["rating", "content", "updatedDate", "userId"],
-        })
-      )
+        }),
+      ),
     );
 
     const productFeedbacks = productFeedbackList.flat();
@@ -202,7 +202,7 @@ const getFeedbackProductService = async (productId) => {
           username: user?.username || null,
           avatar: user?.Profile?.avatar || null,
         };
-      })
+      }),
     );
 
     return result;

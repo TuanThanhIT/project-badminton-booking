@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import {
   Discount,
   Order,
@@ -26,7 +26,7 @@ const createOrderService = async (
   orderDetails,
   paymentAmount,
   paymentMethod,
-  paymentStatus
+  paymentStatus,
 ) => {
   const t = await sequelize.transaction();
 
@@ -35,7 +35,7 @@ const createOrderService = async (
     if (!status.includes(orderStatus)) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Trạng thái đơn hàng không hợp lệ!"
+        "Trạng thái đơn hàng không hợp lệ!",
       );
     }
 
@@ -48,7 +48,7 @@ const createOrderService = async (
     if (!user?.Profile) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Thông tin giao hàng chưa được cập nhật!"
+        "Thông tin giao hàng chưa được cập nhật!",
       );
     }
 
@@ -57,17 +57,17 @@ const createOrderService = async (
     if (!fullName)
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Tên khách hàng không hợp lệ!"
+        "Tên khách hàng không hợp lệ!",
       );
     if (!address)
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Địa chỉ khách hàng không hợp lệ!"
+        "Địa chỉ khách hàng không hợp lệ!",
       );
     if (!phoneNumber || !/^\d{10}$/.test(phoneNumber))
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Số điện thoại khách hàng không hợp lệ!"
+        "Số điện thoại khách hàng không hợp lệ!",
       );
 
     let order;
@@ -78,7 +78,7 @@ const createOrderService = async (
       if (!discount) {
         throw new ApiError(
           StatusCodes.NOT_FOUND,
-          "Mã giảm giá không chính xác!"
+          "Mã giảm giá không chính xác!",
         );
       }
 
@@ -90,7 +90,7 @@ const createOrderService = async (
           discountId: discount.id,
           note,
         },
-        { transaction: t }
+        { transaction: t },
       );
     } else {
       order = await Order.create(
@@ -100,7 +100,7 @@ const createOrderService = async (
           userId,
           note,
         },
-        { transaction: t }
+        { transaction: t },
       );
     }
 
@@ -115,7 +115,7 @@ const createOrderService = async (
     if (!methods.includes(paymentMethod)) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Phương thức thanh toán không hợp lệ!"
+        "Phương thức thanh toán không hợp lệ!",
       );
     }
 
@@ -123,7 +123,7 @@ const createOrderService = async (
     if (!pStatus.includes(paymentStatus)) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Trạng thái thanh toán không hợp lệ!"
+        "Trạng thái thanh toán không hợp lệ!",
       );
     }
 
@@ -134,7 +134,7 @@ const createOrderService = async (
         paymentStatus,
         orderId: order.id,
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     await t.commit();
@@ -143,14 +143,14 @@ const createOrderService = async (
       "Có đơn hàng mới",
       `Khách hàng vừa đặt đơn hàng #0${order.id}. Vui lòng kiểm tra và xác nhận đơn hàng.`,
       "EMPLOYEE",
-      "epl-create-order"
+      "epl-create-order",
     );
 
     await sendAdminNotification(
       "Có đơn hàng mới",
       `Khách hàng vừa đặt đơn hàng #0${order.id}. `,
       "ADMIN",
-      "adm-create-order"
+      "adm-create-order",
     );
 
     return order.id;
@@ -210,12 +210,12 @@ const getOrdersService = async (userId) => {
                 ...orderDetail,
                 review: !!review,
               };
-            })
+            }),
           );
           orderData.orderDetails = newOrderDetails;
         }
         return orderData;
-      })
+      }),
     );
 
     return newOrders;
@@ -237,12 +237,12 @@ const cancelOrderService = async (orderId, cancelReason) => {
     if (order.orderStatus === "Paid") {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Đơn hàng đã thanh toán không thể hủy trực tiếp. Vui lòng liên hệ cửa hàng để hỗ trợ!"
+        "Đơn hàng đã thanh toán không thể hủy trực tiếp. Vui lòng liên hệ cửa hàng để hỗ trợ!",
       );
     } else if (order.orderStatus === "Confirmed") {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Đơn hàng đã xác nhận không thể hủy trực tiếp. Vui lòng liên hệ cửa hàng để hỗ trợ!"
+        "Đơn hàng đã xác nhận không thể hủy trực tiếp. Vui lòng liên hệ cửa hàng để hỗ trợ!",
       );
     }
 
@@ -252,7 +252,7 @@ const cancelOrderService = async (orderId, cancelReason) => {
         cancelledBy: "User",
         cancelReason,
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     const payment = await Payment.findOne({
@@ -270,7 +270,7 @@ const cancelOrderService = async (orderId, cancelReason) => {
       "Đơn hàng đã bị hủy",
       `Khách hàng vừa hủy đơn #0${orderId}`,
       "EMPLOYEE",
-      "epl-cancel-order"
+      "epl-cancel-order",
     );
   } catch (error) {
     await t.rollback();

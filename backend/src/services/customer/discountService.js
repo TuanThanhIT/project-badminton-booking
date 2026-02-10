@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import { Discount } from "../../models/index.js";
 
 const applyDiscountService = async (code, orderAmount) => {
@@ -14,14 +14,14 @@ const applyDiscountService = async (code, orderAmount) => {
     if (!discount.isActive) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Mã giảm giá không thể sử dụng!"
+        "Mã giảm giá không thể sử dụng!",
       );
     }
 
     if (discount.isUsed) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Mã giảm giá đã được sử dụng!"
+        "Mã giảm giá đã được sử dụng!",
       );
     }
     // Chuyển sang Date để so sánh
@@ -36,14 +36,14 @@ const applyDiscountService = async (code, orderAmount) => {
     if (start > now) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Mã giảm giá chưa thể áp dụng!"
+        "Mã giảm giá chưa thể áp dụng!",
       );
     }
 
     if (orderAmount < discount.minOrderAmount) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Giá trị của đơn hàng chưa đủ để áp dụng giảm giá!"
+        "Giá trị của đơn hàng chưa đủ để áp dụng giảm giá!",
       );
     }
 

@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import { DiscountBooking } from "../../models/index.js";
 
 const applyDiscountBookingService = async (code, bookingAmount) => {
@@ -7,7 +7,7 @@ const applyDiscountBookingService = async (code, bookingAmount) => {
     if (bookingAmount === 0) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Vui lòng chọn khung giờ đặt sân trước khi áp mã giảm giá!"
+        "Vui lòng chọn khung giờ đặt sân trước khi áp mã giảm giá!",
       );
     }
 
@@ -21,14 +21,14 @@ const applyDiscountBookingService = async (code, bookingAmount) => {
     if (!discountBooking.isActive) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Mã giảm giá không thể sử dụng!"
+        "Mã giảm giá không thể sử dụng!",
       );
     }
 
     if (discountBooking.isUsed) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Mã giảm giá đã được sử dụng!"
+        "Mã giảm giá đã được sử dụng!",
       );
     }
     // Chuyển sang Date để so sánh
@@ -43,14 +43,14 @@ const applyDiscountBookingService = async (code, bookingAmount) => {
     if (start > now) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Mã giảm giá chưa thể áp dụng!"
+        "Mã giảm giá chưa thể áp dụng!",
       );
     }
 
     if (bookingAmount < discountBooking.minBookingAmount) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Giá trị chưa đủ để áp dụng giảm giá!"
+        "Giá trị chưa đủ để áp dụng giảm giá!",
       );
     }
 

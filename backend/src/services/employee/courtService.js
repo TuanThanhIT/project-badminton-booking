@@ -1,6 +1,6 @@
 import { StatusCodes } from "http-status-codes";
 import { Court, CourtPrice, CourtSchedule } from "../../models/index.js";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 
 const getCourtScheduleByDateService = async (date) => {
   try {
@@ -48,7 +48,7 @@ const getCourtScheduleByDateService = async (date) => {
 
     const result = courtSchedules.map((cs) => {
       const priceObj = courtPrices.find(
-        (p) => cs.startTime >= p.startTime && cs.endTime <= p.endTime
+        (p) => cs.startTime >= p.startTime && cs.endTime <= p.endTime,
       );
 
       return {

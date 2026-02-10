@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import {
   Beverage,
   DraftBeverageItem,
@@ -53,7 +53,7 @@ const createOfflineService = async (draftId, employeeId) => {
         draftId,
         employeeId,
       },
-      { transaction }
+      { transaction },
     );
 
     // Flatten data
@@ -119,7 +119,7 @@ const updateOfflineService = async (offlineBookingId, paymentMethod, total) => {
     if (!offlineBooking) {
       throw new ApiError(
         StatusCodes.NOT_FOUND,
-        "Đơn thanh toán trực tiếp chưa được tạo!"
+        "Đơn thanh toán trực tiếp chưa được tạo!",
       );
     }
 
@@ -130,7 +130,7 @@ const updateOfflineService = async (offlineBookingId, paymentMethod, total) => {
         paymentStatus: "Paid",
         paidAt: new Date(),
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     /* ========= TRỪ STOCK SẢN PHẨM ========= */
@@ -150,9 +150,9 @@ const updateOfflineService = async (offlineBookingId, paymentMethod, total) => {
               where: { id: productVarientId },
               transaction: t,
               lock: t.LOCK.UPDATE,
-            }
-          )
-        )
+            },
+          ),
+        ),
       );
     }
 
@@ -173,9 +173,9 @@ const updateOfflineService = async (offlineBookingId, paymentMethod, total) => {
               where: { id: beverageId },
               transaction: t,
               lock: t.LOCK.UPDATE,
-            }
-          )
-        )
+            },
+          ),
+        ),
       );
     }
 

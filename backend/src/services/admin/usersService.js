@@ -1,9 +1,9 @@
 import { StatusCodes } from "http-status-codes";
 import { User, Role } from "../../models/index.js";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import { Profile } from "../../models/index.js";
 import bcrypt from "bcrypt";
-import mailer from "../../utils/mailer.js";
+import mailer from "../../helpers/mailer.js";
 
 const createUser = async (username, password, email) => {
   try {
@@ -11,14 +11,14 @@ const createUser = async (username, password, email) => {
     if (existingUser) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác!"
+        "Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác!",
       );
     }
     const existingEmail = await User.findOne({ where: { email } });
     if (existingEmail) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Email đã được sử dụng cho tài khoản khác!"
+        "Email đã được sử dụng cho tài khoản khác!",
       );
     }
     const saltRounds = 10;
@@ -44,7 +44,7 @@ const createUser = async (username, password, email) => {
     if (error instanceof ApiError) throw error;
     throw new ApiError(
       StatusCodes.INTERNAL_SERVER_ERROR,
-      "Đã xảy ra lỗi khi tạo tài khoản. Vui lòng thử lại sau!"
+      "Đã xảy ra lỗi khi tạo tài khoản. Vui lòng thử lại sau!",
     );
   }
 };
@@ -65,7 +65,7 @@ const lockUser = async (userId) => {
     if (error instanceof ApiError) throw error;
     throw new ApiError(
       StatusCodes.INTERNAL_SERVER_ERROR,
-      "Đã xảy ra lỗi khi chặn tài khoản. Vui lòng thử lại sau!"
+      "Đã xảy ra lỗi khi chặn tài khoản. Vui lòng thử lại sau!",
     );
   }
 };

@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import { Op } from "sequelize";
 import { WorkShift } from "../../models/index.js";
 
@@ -8,7 +8,7 @@ const createWorkShiftService = async (
   workDate,
   startTime,
   endTime,
-  shiftWage
+  shiftWage,
 ) => {
   try {
     // 1. Validate ngày
@@ -25,7 +25,7 @@ const createWorkShiftService = async (
     if (shiftDate < today) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Không thể tạo ca làm cho ngày đã qua!"
+        "Không thể tạo ca làm cho ngày đã qua!",
       );
     }
 
@@ -36,14 +36,14 @@ const createWorkShiftService = async (
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Thời gian bắt đầu hoặc kết thúc không hợp lệ!"
+        "Thời gian bắt đầu hoặc kết thúc không hợp lệ!",
       );
     }
 
     if (start >= end) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc!"
+        "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc!",
       );
     }
 
@@ -51,7 +51,7 @@ const createWorkShiftService = async (
     if (shiftWage < 0) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Tiền công ca làm không hợp lệ!"
+        "Tiền công ca làm không hợp lệ!",
       );
     }
 
@@ -71,7 +71,7 @@ const createWorkShiftService = async (
     if (overlap) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Ca làm bị trùng thời gian với ca khác!"
+        "Ca làm bị trùng thời gian với ca khác!",
       );
     }
 
@@ -100,7 +100,7 @@ const createWorkShiftsService = async (workDate, shiftWage) => {
     if (existed) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Ngày này đã được tạo ca làm việc!"
+        "Ngày này đã được tạo ca làm việc!",
       );
     }
 

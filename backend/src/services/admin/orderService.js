@@ -1,7 +1,7 @@
 import { col, fn, Op } from "sequelize";
 import { StatusCodes } from "http-status-codes";
 import { Order } from "../../models/index.js";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 
 const ORDER_STATUSES = [
   "Pending",
@@ -19,7 +19,7 @@ const countOrderByOrderStatusService = async (date) => {
       : new Date(
           new Date().toLocaleString("en-US", {
             timeZone: "Asia/Ho_Chi_Minh",
-          })
+          }),
         );
 
     // Start & End của NGÀY VIỆT NAM
@@ -52,7 +52,7 @@ const countOrderByOrderStatusService = async (date) => {
     if (error instanceof ApiError) throw error;
     throw new ApiError(
       StatusCodes.INTERNAL_SERVER_ERROR,
-      error.message || error
+      error.message || error,
     );
   }
 };

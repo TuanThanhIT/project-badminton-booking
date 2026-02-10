@@ -1,13 +1,13 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "../../utils/ApiError.js";
-import mailer from "../../utils/mailer.js";
+import ApiError from "../../errors/ApiError.js";
+import mailer from "../../helpers/mailer.js";
 
 const submitContactService = async (
   fullName,
   email,
   phoneNumber,
   subject,
-  message
+  message,
 ) => {
   try {
     // Validate email cơ bản
@@ -19,14 +19,14 @@ const submitContactService = async (
     if (!fullName || !message) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Họ tên hoặc nội dung không được để trống!"
+        "Họ tên hoặc nội dung không được để trống!",
       );
     }
 
     if (!phoneNumber || !/^\d{10}$/.test(phoneNumber)) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Số điện thoại khách hàng không hợp lệ!"
+        "Số điện thoại khách hàng không hợp lệ!",
       );
     }
 

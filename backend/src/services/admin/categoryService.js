@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import { Category } from "../../models/index.js";
 import { Op } from "sequelize";
 
@@ -61,7 +61,7 @@ const getCategoriesService = async (page = 1, limit = 10, search = "") => {
   } catch (error) {
     throw new ApiError(
       StatusCodes.INTERNAL_SERVER_ERROR,
-      error.message || "Lỗi khi lấy danh sách category"
+      error.message || "Lỗi khi lấy danh sách category",
     );
   }
 };
@@ -113,7 +113,7 @@ const getListCategoryService = async () => {
   } catch (error) {
     throw new ApiError(
       StatusCodes.INTERNAL_SERVER_ERROR,
-      error.message || "Lỗi khi lấy danh sách category"
+      error.message || "Lỗi khi lấy danh sách category",
     );
   }
 };

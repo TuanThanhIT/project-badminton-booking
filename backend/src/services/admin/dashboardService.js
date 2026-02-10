@@ -15,7 +15,7 @@ import {
   WorkShift,
   WorkShiftEmployee,
 } from "../../models/index.js";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import { StatusCodes } from "http-status-codes";
 
 const buildDayRange = (date) => {

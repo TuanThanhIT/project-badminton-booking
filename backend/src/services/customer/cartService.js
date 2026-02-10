@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import {
   Cart,
   CartItem,
@@ -72,7 +72,7 @@ const addItemToCartService = async (userId, quantity, varientId) => {
     if (error instanceof ApiError) throw error;
     throw new ApiError(
       StatusCodes.INTERNAL_SERVER_ERROR,
-      error.message || "Lỗi không xác định!"
+      error.message || "Lỗi không xác định!",
     );
   }
 };
@@ -140,7 +140,7 @@ const getCartItemService = async (userId) => {
 
     const totalAmount = updatedCartItems.reduce(
       (sum, item) => sum + item.subTotal,
-      0
+      0,
     );
 
     const cartObj = cart.get({ plain: true });
@@ -163,7 +163,7 @@ const updateQuantityService = async (cartItemId, quantity) => {
     if (!cartItem) {
       throw new ApiError(
         StatusCodes.NOT_FOUND,
-        "Sản phẩm không tồn tại trong giỏ hàng!"
+        "Sản phẩm không tồn tại trong giỏ hàng!",
       );
     }
 
@@ -181,7 +181,7 @@ const updateQuantityService = async (cartItemId, quantity) => {
     if (quantity > varient.stock) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        `Số lượng vượt quá số lượng tồn kho! (Còn lại: ${varient.stock})`
+        `Số lượng vượt quá số lượng tồn kho! (Còn lại: ${varient.stock})`,
       );
     }
 
@@ -206,7 +206,7 @@ const deleteCartItemService = async (cartItemId) => {
     if (!cartItem) {
       throw new ApiError(
         StatusCodes.NOT_FOUND,
-        "Sản phẩm không tồn tại trong giỏ hàng!"
+        "Sản phẩm không tồn tại trong giỏ hàng!",
       );
     }
     return await cartItem.destroy();

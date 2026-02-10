@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import axios from "axios";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import { StatusCodes } from "http-status-codes";
 import { Payment, Order, Booking, PaymentBooking } from "../../models/index.js";
 import dotenv from "dotenv";
@@ -23,7 +23,7 @@ const createPaymentService = async (
   entityId,
   amount,
   orderInfo,
-  type = "order"
+  type = "order",
 ) => {
   try {
     // URL frontend khi user thanh toán xong (redirect)
@@ -76,7 +76,7 @@ const createPaymentService = async (
     const momoRes = await axios.post(
       "https://test-payment.momo.vn/v2/gateway/api/create",
       body,
-      { headers: { "Content-Type": "application/json" } }
+      { headers: { "Content-Type": "application/json" } },
     );
 
     return momoRes.data;
@@ -96,7 +96,7 @@ const paymentSuccessService = async (
   entityId,
   amount,
   transId,
-  type = "order"
+  type = "order",
 ) => {
   try {
     if (type === "order") {
@@ -114,7 +114,7 @@ const paymentSuccessService = async (
       if (!payment)
         throw new ApiError(
           StatusCodes.NOT_FOUND,
-          "Thanh toán cho đơn hàng không tồn tại!"
+          "Thanh toán cho đơn hàng không tồn tại!",
         );
 
       await payment.update({
@@ -141,7 +141,7 @@ const paymentSuccessService = async (
       if (!paymentBooking)
         throw new ApiError(
           StatusCodes.NOT_FOUND,
-          "Thanh toán cho booking không tồn tại!"
+          "Thanh toán cho booking không tồn tại!",
         );
 
       await paymentBooking.update({

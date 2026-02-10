@@ -1,5 +1,5 @@
 import { User, Profile, Role } from "../../models/index.js";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import sendOtpMail from "../../helpers/mailer.js";

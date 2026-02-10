@@ -1,6 +1,6 @@
 import { StatusCodes } from "http-status-codes";
 import { Role } from "../../models/index.js";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 
 const createRole = async (roleName) => {
   try {

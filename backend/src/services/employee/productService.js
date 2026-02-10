@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import { Product, ProductVarient } from "../../models/index.js";
 import { Op } from "sequelize";
 
@@ -35,7 +35,7 @@ const getProductsService = async (keyword) => {
         productName: product.productName,
         thumbnailUrl: product.thumbnailUrl,
         ...variant.get(), // lấy tất cả field của variant
-      }))
+      })),
     );
   } catch (error) {
     throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);

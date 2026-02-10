@@ -1,5 +1,5 @@
 import { BAD_REQUEST, StatusCodes } from "http-status-codes";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import {
   Beverage,
   Court,
@@ -22,7 +22,7 @@ const createDraftService = async (employeeId, nameCustomer) => {
     if (draftBooking) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Tên khách hàng đã tồn tại vui lòng tạo lại!"
+        "Tên khách hàng đã tồn tại vui lòng tạo lại!",
       );
     }
     await DraftBooking.create({
@@ -55,7 +55,7 @@ const createAndUpdateDraftService = async (
   total,
   courtSchedules,
   beverages,
-  products
+  products,
 ) => {
   const transaction = await sequelize.transaction();
   try {
@@ -75,7 +75,7 @@ const createAndUpdateDraftService = async (
 
       await CourtSchedule.update(
         { isAvailable: false },
-        { where: { id: { [Op.in]: courtScheduleIds } }, transaction }
+        { where: { id: { [Op.in]: courtScheduleIds } }, transaction },
       );
     }
 
@@ -214,7 +214,7 @@ const deleteDraftService = async (draftId) => {
     if (draftBooking.status === "Completed") {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Đơn tạm thời đã hoàn thành không thể xóa!"
+        "Đơn tạm thời đã hoàn thành không thể xóa!",
       );
     }
     await draftBooking.destroy();

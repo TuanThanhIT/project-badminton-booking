@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import {
   Category,
   Product,
@@ -30,7 +30,7 @@ const getProductsByFilterService = async (
   sort,
   page,
   limit,
-  keyword // thêm tham số
+  keyword, // thêm tham số
 ) => {
   try {
     const p = page && page !== "null" ? parseInt(page) : 1;
@@ -121,7 +121,7 @@ const getProductsByFilterService = async (
         const isNew = diffDays <= 10;
 
         return { ...p.toJSON(), discount, minDiscountedPrice, isNew };
-      })
+      }),
     );
 
     return { products: productFormatted, total, page: p, limit: l };
@@ -141,7 +141,7 @@ const getProductsByGroupNameAndFilterService = async (
   sort,
   page,
   limit,
-  keyword // thêm tham số
+  keyword, // thêm tham số
 ) => {
   try {
     const p = page && page !== "null" ? parseInt(page) : 1;
@@ -236,7 +236,7 @@ const getProductsByGroupNameAndFilterService = async (
         const isNew = diffDays <= 10;
 
         return { ...p.toJSON(), discount, minDiscountedPrice, isNew };
-      })
+      }),
     );
 
     return { products: productFormatted, total, page: p, limit: l };

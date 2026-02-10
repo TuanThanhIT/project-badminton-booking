@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import {
   Booking,
   User,
@@ -13,7 +13,7 @@ const createBookingFeedbackService = async (
   rate,
   userId,
   bookingId,
-  courtId
+  courtId,
 ) => {
   try {
     const user = await User.findByPk(userId);
@@ -24,7 +24,7 @@ const createBookingFeedbackService = async (
     if (Number.isInteger(rating) === false) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Sao đánh giá phải là số nguyên!"
+        "Sao đánh giá phải là số nguyên!",
       );
     } else if (rating < 1 || rating > 5) {
       throw new ApiError(StatusCodes.BAD_REQUEST, "Sao đánh giá không hợp lệ!");
@@ -37,7 +37,7 @@ const createBookingFeedbackService = async (
       if (booking.bookingStatus !== "Completed") {
         throw new ApiError(
           StatusCodes.BAD_REQUEST,
-          "Đặt sân chưa thành công! Bạn không thể đánh giá sân này được!"
+          "Đặt sân chưa thành công! Bạn không thể đánh giá sân này được!",
         );
       }
     }
@@ -80,7 +80,7 @@ const getBookingFeedbackUpdateService = async (bookingId, userId) => {
     if (!bookingFeedback) {
       throw new ApiError(
         StatusCodes.NOT_FOUND,
-        "Đánh giá cho sân không tồn tại!"
+        "Đánh giá cho sân không tồn tại!",
       );
     }
 
@@ -103,7 +103,7 @@ const updateBookingFeedbackService = async (
   content,
   rate,
   userId,
-  bookingId
+  bookingId,
 ) => {
   try {
     const user = await User.findByPk(userId);
@@ -114,7 +114,7 @@ const updateBookingFeedbackService = async (
     if (Number.isInteger(rating) === false) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Sao đánh giá phải là số nguyên!"
+        "Sao đánh giá phải là số nguyên!",
       );
     } else if (rating < 1 || rating > 5) {
       throw new ApiError(StatusCodes.BAD_REQUEST, "Sao đánh giá không hợp lệ!");
@@ -137,7 +137,7 @@ const updateBookingFeedbackService = async (
       ) {
         throw new ApiError(
           StatusCodes.BAD_REQUEST,
-          "Bạn chưa thay đổi nội dung hoặc số sao đánh giá."
+          "Bạn chưa thay đổi nội dung hoặc số sao đánh giá.",
         );
       }
     }

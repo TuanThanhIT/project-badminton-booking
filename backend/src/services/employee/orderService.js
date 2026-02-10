@@ -9,12 +9,12 @@ import {
   User,
   Profile,
 } from "../../models/index.js";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import {
   sendAdminNotification,
   sendUserNotification,
 } from "../../utils/sendNotification.js";
-import mailer from "../../utils/mailer.js";
+import mailer from "../../helpers/mailer.js";
 import sequelize from "../../config/db.js";
 
 const handleSendOrderMail = (order, type) => {
@@ -40,7 +40,7 @@ const getOrdersService = async (
   keyword,
   date,
   page = 1,
-  limit = 5
+  limit = 5,
 ) => {
   try {
     const where = {};
@@ -192,9 +192,9 @@ const confirmedOrderService = async (orderId) => {
       details.map(async ({ varientId, quantity }) => {
         await ProductVarient.increment(
           { stock: -quantity },
-          { where: { id: varientId }, transaction: t }
+          { where: { id: varientId }, transaction: t },
         );
-      })
+      }),
     );
 
     await t.commit();
@@ -204,14 +204,14 @@ const confirmedOrderService = async (orderId) => {
       order.userId,
       "us-confirm-order",
       "Đơn hàng đã được xác nhận",
-      `Đơn hàng #0${orderId} đã được xác nhận.`
+      `Đơn hàng #0${orderId} đã được xác nhận.`,
     );
 
     await sendAdminNotification(
       "Đơn hàng đã được xác nhận",
       `Đơn hàng #0${orderId} đã được nhân viên xác nhận.`,
       "ADMIN",
-      "adm-confirm-order"
+      "adm-confirm-order",
     );
 
     await handleSendOrderMail(order, "confirm");
@@ -263,7 +263,7 @@ const completedOrderService = async (orderId) => {
     if (order.orderStatus !== "Confirmed")
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Đơn hàng chưa được xác nhận!"
+        "Đơn hàng chưa được xác nhận!",
       );
 
     // tìm payment (COD nếu có)
@@ -287,9 +287,9 @@ const completedOrderService = async (orderId) => {
       details.map(async ({ varientId, quantity }) => {
         await ProductVarient.increment(
           { stock: -quantity },
-          { where: { id: varientId }, transaction: t }
+          { where: { id: varientId }, transaction: t },
         );
-      })
+      }),
     );
 
     if (payment) {
@@ -298,7 +298,7 @@ const completedOrderService = async (orderId) => {
           paymentStatus: "Success",
           paidAt: new Date(),
         },
-        { transaction: t }
+        { transaction: t },
       );
     }
 
@@ -308,14 +308,14 @@ const completedOrderService = async (orderId) => {
       order.userId,
       "us-complete-order",
       "Đơn hàng đã hoàn thành",
-      `Đơn hàng #0${orderId} đã được hoàn thành.`
+      `Đơn hàng #0${orderId} đã được hoàn thành.`,
     );
 
     await sendAdminNotification(
       "Đơn hàng đã hoàn thành",
       `Đơn hàng #0${orderId} đã được hoàn thành`,
       "ADMIN",
-      "adm-complete-order"
+      "adm-complete-order",
     );
 
     await handleSendOrderMail(order, "complete");
@@ -367,7 +367,7 @@ const cancelOrderService = async (orderId, cancelReason) => {
     if (order.orderStatus === "Completed")
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Đơn hàng đã hoàn thành không thể hủy!"
+        "Đơn hàng đã hoàn thành không thể hủy!",
       );
 
     const payment = await Payment.findOne({
@@ -388,13 +388,13 @@ const cancelOrderService = async (orderId, cancelReason) => {
           refundAmount: payment.paymentAmount,
           refundAt: new Date(),
         },
-        { transaction: t }
+        { transaction: t },
       );
     } else if (oldStatus === "Confirmed") {
       if (payment.paymentMethod === "COD") {
         await payment.update(
           { paymentStatus: "Cancelled" },
-          { transaction: t }
+          { transaction: t },
         );
       } else {
         await payment.update(
@@ -403,7 +403,7 @@ const cancelOrderService = async (orderId, cancelReason) => {
             refundAmount: payment.paymentAmount,
             refundAt: new Date(),
           },
-          { transaction: t }
+          { transaction: t },
         );
       }
     }
@@ -415,7 +415,7 @@ const cancelOrderService = async (orderId, cancelReason) => {
         cancelledBy: "Employee",
         cancelReason,
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     // hoàn stock
@@ -430,9 +430,9 @@ const cancelOrderService = async (orderId, cancelReason) => {
       details.map(async ({ varientId, quantity }) => {
         await ProductVarient.increment(
           { stock: +quantity },
-          { where: { id: varientId }, transaction: t }
+          { where: { id: varientId }, transaction: t },
         );
-      })
+      }),
     );
 
     await t.commit();
@@ -441,14 +441,14 @@ const cancelOrderService = async (orderId, cancelReason) => {
       order.userId,
       "us-cancel-order",
       "Đơn hàng đã bị hủy",
-      `Đơn hàng #0${orderId} đã được cửa hàng hủy.`
+      `Đơn hàng #0${orderId} đã được cửa hàng hủy.`,
     );
 
     await sendAdminNotification(
       "Đơn hàng đã bị hủy",
       `Đơn hàng #0${orderId} đã được nhân viên hủy theo yêu cầu của khách hàng.`,
       "ADMIN",
-      "adm-cancel-order"
+      "adm-cancel-order",
     );
 
     await handleSendOrderMail(order, "cancel");

@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import { Court, CourtPrice, CourtSchedule } from "../../models/index.js";
 
 const getCourtsService = async (date, page = 1, limit = 10) => {
@@ -35,7 +35,7 @@ const getCourtsService = async (date, page = 1, limit = 10) => {
           date: formattedDate,
           availableSlots: availableSlots,
         };
-      })
+      }),
     );
 
     return {

@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import { Notification } from "../../models/index.js";
 
 const getNotificationsService = async () => {
@@ -24,7 +24,7 @@ const updateNotificationService = async (notificationId) => {
     if (notification.isRead === true) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Thông báo này đã đánh dấu đã đọc!"
+        "Thông báo này đã đánh dấu đã đọc!",
       );
     }
     await notification.update({
@@ -46,12 +46,12 @@ const updateAllNotificationService = async () => {
     if (notifications.length === 0) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Không có thông báo mới. Tất cả thông báo đã được đánh dấu là đã đọc!"
+        "Không có thông báo mới. Tất cả thông báo đã được đánh dấu là đã đọc!",
       );
     } else {
       await Notification.update(
         { isRead: true },
-        { where: { role: "EMPLOYEE", isRead: false } }
+        { where: { role: "EMPLOYEE", isRead: false } },
       );
     }
   } catch (error) {

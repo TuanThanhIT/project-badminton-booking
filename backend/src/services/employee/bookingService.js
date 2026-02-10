@@ -9,12 +9,12 @@ import {
   Profile,
   User,
 } from "../../models/index.js";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import {
   sendAdminNotification,
   sendUserNotification,
 } from "../../utils/sendNotification.js";
-import mailer from "../../utils/mailer.js";
+import mailer from "../../helpers/mailer.js";
 import sequelize from "../../config/db.js";
 
 // Gửi mail đặt sân về cho khách
@@ -26,8 +26,8 @@ const handleSendBookingMail = (booking, type) => {
       (d) =>
         `${d.courtSchedule.startTime.substring(
           0,
-          5
-        )} - ${d.courtSchedule.endTime.substring(0, 5)}`
+          5,
+        )} - ${d.courtSchedule.endTime.substring(0, 5)}`,
     )
     .join(", ");
 
@@ -39,7 +39,7 @@ const getBookingsService = async (
   keyword,
   date,
   page = 1,
-  limit = 10
+  limit = 10,
 ) => {
   try {
     const where = {};
@@ -58,7 +58,7 @@ const getBookingsService = async (
       const endOfDayVN = new Date(`${date}T23:59:59`);
 
       const startOfDayUTC = new Date(
-        startOfDayVN.getTime() - 7 * 60 * 60 * 1000
+        startOfDayVN.getTime() - 7 * 60 * 60 * 1000,
       );
       const endOfDayUTC = new Date(endOfDayVN.getTime() - 7 * 60 * 60 * 1000);
 
@@ -137,7 +137,7 @@ const getBookingsService = async (
         : null;
 
       const timeSlots = b.bookingDetails.map(
-        (d) => `${d.courtSchedule.startTime} → ${d.courtSchedule.endTime}`
+        (d) => `${d.courtSchedule.startTime} → ${d.courtSchedule.endTime}`,
       );
 
       return {
@@ -193,12 +193,12 @@ const confirmedBookingService = async (bookingId) => {
     if (booking.bookingStatus === "Cancelled") {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Lịch đặt sân đã hủy không thể xác nhận lại được nữa!"
+        "Lịch đặt sân đã hủy không thể xác nhận lại được nữa!",
       );
     } else if (booking.bookingStatus === "Completed") {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Lịch đặt sân đã hoàn thành không thể xác nhận lại được nữa!"
+        "Lịch đặt sân đã hoàn thành không thể xác nhận lại được nữa!",
       );
     }
 
@@ -210,14 +210,14 @@ const confirmedBookingService = async (bookingId) => {
       booking.userId,
       "us-confirm-booking",
       "Lịch đặt sân đã được xác nhận",
-      `Lịch đặt sân #0${bookingId} đã được xác nhận.`
+      `Lịch đặt sân #0${bookingId} đã được xác nhận.`,
     );
 
     await sendAdminNotification(
       "Lịch đặt sân đã được xác nhận",
       `Lịch đặt sân #0${bookingId} đã được nhân viên xác nhận.`,
       "ADMIN",
-      "adm-confirm-booking"
+      "adm-confirm-booking",
     );
 
     await handleSendBookingMail(booking, "confirm");
@@ -258,7 +258,7 @@ const completedBookingService = async (bookingId) => {
     if (booking.bookingStatus !== "Confirmed") {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Lịch đặt sân chưa được xác nhận!"
+        "Lịch đặt sân chưa được xác nhận!",
       );
     }
 
@@ -271,7 +271,7 @@ const completedBookingService = async (bookingId) => {
       {
         bookingStatus: "Completed",
       },
-      { transaction }
+      { transaction },
     );
 
     if (paymentBooking) {
@@ -280,7 +280,7 @@ const completedBookingService = async (bookingId) => {
           paymentStatus: "Success",
           paidAt: new Date(),
         },
-        { transaction }
+        { transaction },
       );
     }
 
@@ -290,14 +290,14 @@ const completedBookingService = async (bookingId) => {
       booking.userId,
       "us-complete-booking",
       "Lịch đặt sân đã hoàn thành",
-      `Lịch đặt sân #0${bookingId} đã hoàn thành.`
+      `Lịch đặt sân #0${bookingId} đã hoàn thành.`,
     );
 
     await sendAdminNotification(
       "Lịch đặt sân đã hoàn thành",
       `Lịch đặt sân #0${bookingId} đã được hoàn thành.`,
       "ADMIN",
-      "adm-complete-booking"
+      "adm-complete-booking",
     );
 
     await handleSendBookingMail(booking, "complete");
@@ -337,7 +337,7 @@ const cancelBookingService = async (bookingId, cancelReason) => {
     if (booking.bookingStatus === "Completed") {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Lịch đặt sân đã hoàn thành!"
+        "Lịch đặt sân đã hoàn thành!",
       );
     }
 
@@ -352,7 +352,7 @@ const cancelBookingService = async (bookingId, cancelReason) => {
     if (oldStatus === "Pending") {
       await paymentBooking.update(
         { paymentStatus: "Cancelled" },
-        { transaction }
+        { transaction },
       );
     } else if (oldStatus === "Paid") {
       await paymentBooking.update(
@@ -361,13 +361,13 @@ const cancelBookingService = async (bookingId, cancelReason) => {
           refundAmount: paymentBooking.paymentAmount,
           refundAt: new Date(),
         },
-        { transaction }
+        { transaction },
       );
     } else if (oldStatus === "Confirmed") {
       if (paymentBooking.paymentMethod === "COD") {
         await paymentBooking.update(
           { paymentStatus: "Cancelled" },
-          { transaction }
+          { transaction },
         );
       } else {
         await paymentBooking.update(
@@ -376,7 +376,7 @@ const cancelBookingService = async (bookingId, cancelReason) => {
             refundAmount: paymentBooking.paymentAmount,
             refundAt: new Date(),
           },
-          { transaction }
+          { transaction },
         );
       }
     }
@@ -388,12 +388,12 @@ const cancelBookingService = async (bookingId, cancelReason) => {
         cancelledBy: "Employee",
         cancelReason,
       },
-      { transaction }
+      { transaction },
     );
 
     // mở lại lịch sân
     const courtScheduleIds = booking.bookingDetails.map(
-      (item) => item.courtScheduleId
+      (item) => item.courtScheduleId,
     );
 
     await CourtSchedule.update(
@@ -403,7 +403,7 @@ const cancelBookingService = async (bookingId, cancelReason) => {
       {
         where: { id: courtScheduleIds },
         transaction,
-      }
+      },
     );
 
     await transaction.commit();
@@ -412,14 +412,14 @@ const cancelBookingService = async (bookingId, cancelReason) => {
       booking.userId,
       "us-cancel-booking",
       "Lịch đặt sân đã bị hủy",
-      `Lịch đặt sân #0${bookingId} đã bị hủy.`
+      `Lịch đặt sân #0${bookingId} đã bị hủy.`,
     );
 
     await sendAdminNotification(
       "Lịch đặt sân đã bị hủy",
       `Lịch đặt sân #0${bookingId} đã được nhân viên hủy theo yêu cầu khách hàng.`,
       "ADMIN",
-      "adm-cancel-booking"
+      "adm-cancel-booking",
     );
 
     await handleSendBookingMail(booking, "cancel");

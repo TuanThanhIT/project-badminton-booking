@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import {
   Booking,
   BookingDetail,
@@ -25,7 +25,7 @@ const createBookingService = async (
   bookingDetails,
   paymentAmount,
   paymentMethod,
-  paymentStatus
+  paymentStatus,
 ) => {
   const t = await sequelize.transaction();
   try {
@@ -34,7 +34,7 @@ const createBookingService = async (
     if (!checkStatus) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Trạng thái đặt sân không hợp lệ!"
+        "Trạng thái đặt sân không hợp lệ!",
       );
     }
 
@@ -46,12 +46,12 @@ const createBookingService = async (
     if (bookingDetails.length === 0) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Chưa chọn khung giờ đặt sân nào!"
+        "Chưa chọn khung giờ đặt sân nào!",
       );
     } else if (bookingDetails.length > 3) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Chỉ được chọn tối đa 3 khung giờ/sân/ngày!"
+        "Chỉ được chọn tối đa 3 khung giờ/sân/ngày!",
       );
     }
 
@@ -66,7 +66,7 @@ const createBookingService = async (
       if (!discountBooking) {
         throw new ApiError(
           StatusCodes.NOT_FOUND,
-          "Mã giảm giá không chính xác!"
+          "Mã giảm giá không chính xác!",
         );
       }
 
@@ -78,12 +78,12 @@ const createBookingService = async (
           discountId: discountBooking.id,
           note,
         },
-        { transaction: t }
+        { transaction: t },
       );
     } else {
       booking = await Booking.create(
         { bookingStatus, totalAmount, userId, note },
-        { transaction: t }
+        { transaction: t },
       );
     }
 
@@ -98,14 +98,14 @@ const createBookingService = async (
 
     await CourtSchedule.update(
       { isAvailable: false },
-      { where: { id: ids }, transaction: t }
+      { where: { id: ids }, transaction: t },
     );
 
     const methods = ["COD", "MOMO"];
     if (!methods.includes(paymentMethod)) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Phương thức thanh toán không hợp lệ!"
+        "Phương thức thanh toán không hợp lệ!",
       );
     }
 
@@ -113,7 +113,7 @@ const createBookingService = async (
     if (!pStatus.includes(paymentStatus)) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Trạng thái thanh toán không hợp lệ!"
+        "Trạng thái thanh toán không hợp lệ!",
       );
     }
 
@@ -124,7 +124,7 @@ const createBookingService = async (
         paymentStatus,
         bookingId: booking.id,
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     await t.commit(); // CHỈ commit các thao tác có gắn { transaction: t }
@@ -134,14 +134,14 @@ const createBookingService = async (
       "Có đặt sân mới",
       `Khách hàng vừa đặt sân #0${booking.id}. Vui lòng kiểm tra và xác nhận lịch đặt.`,
       "EMPLOYEE",
-      "epl-create-booking"
+      "epl-create-booking",
     );
 
     await sendAdminNotification(
       "Có đặt sân mới",
       `Khách hàng vừa đặt sân #0${booking.id}.`,
       "ADMIN",
-      "adm-create-booking"
+      "adm-create-booking",
     );
 
     return booking.id;
@@ -200,7 +200,7 @@ const getBookingsService = async (userId) => {
           : null;
 
         const timeSlots = bookingData.bookingDetails.map(
-          (d) => `${d.courtSchedule.startTime} → ${d.courtSchedule.endTime}`
+          (d) => `${d.courtSchedule.startTime} → ${d.courtSchedule.endTime}`,
         );
 
         let reviewField; // undefined by default
@@ -228,7 +228,7 @@ const getBookingsService = async (userId) => {
         }
 
         return result;
-      })
+      }),
     );
 
     return newBookings;
@@ -249,14 +249,14 @@ const cancelBookingService = async (bookingId, cancelReason) => {
     if (booking.bookingStatus === "Paid") {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Sân đã thanh toán không thể hủy trực tiếp. Vui lòng liên hệ cửa hàng để hỗ trợ!"
+        "Sân đã thanh toán không thể hủy trực tiếp. Vui lòng liên hệ cửa hàng để hỗ trợ!",
       );
     }
 
     if (booking.bookingStatus === "Confirmed") {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Sân đã xác nhận không thể hủy trực tiếp. Vui lòng liên hệ cửa hàng để hỗ trợ!"
+        "Sân đã xác nhận không thể hủy trực tiếp. Vui lòng liên hệ cửa hàng để hỗ trợ!",
       );
     }
 
@@ -266,7 +266,7 @@ const cancelBookingService = async (bookingId, cancelReason) => {
         cancelledBy: "User",
         cancelReason,
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     const ids = await BookingDetail.findAll({
@@ -279,7 +279,7 @@ const cancelBookingService = async (bookingId, cancelReason) => {
 
     await CourtSchedule.update(
       { isAvailable: true },
-      { where: { id: courtScheduleIds }, transaction: t }
+      { where: { id: courtScheduleIds }, transaction: t },
     );
 
     const paymentBooking = await PaymentBooking.findOne({
@@ -290,7 +290,7 @@ const cancelBookingService = async (bookingId, cancelReason) => {
     if (paymentBooking) {
       await paymentBooking.update(
         { paymentStatus: "Cancelled" },
-        { transaction: t }
+        { transaction: t },
       );
     }
 
@@ -301,14 +301,14 @@ const cancelBookingService = async (bookingId, cancelReason) => {
       "Lịch đặt sân đã bị hủy",
       `Khách hàng vừa hủy lịch đặt sân #0${bookingId}`,
       "EMPLOYEE",
-      "epl-cancel-booking"
+      "epl-cancel-booking",
     );
 
     await sendAdminNotification(
       "Lịch đặt sân đã bị hủy",
       `Khách hàng vừa hủy lịch đặt sân #0${bookingId}.`,
       "ADMIN",
-      "adm-cancel-booking"
+      "adm-cancel-booking",
     );
   } catch (error) {
     await t.rollback();

@@ -13,7 +13,7 @@ import {
   OfflineBeverageItem,
   Beverage,
 } from "../../models/index.js";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import { StatusCodes } from "http-status-codes";
 
 const getCurrentWeekRange = () => {
@@ -232,7 +232,7 @@ const getRevenueTransactionListService = async (
   startDate,
   endDate,
   page = 1,
-  limit = 10
+  limit = 10,
 ) => {
   try {
     const offset = (page - 1) * limit;
@@ -354,7 +354,7 @@ const getRevenueProductService = async (
   startDate,
   endDate,
   page = 1,
-  limit = 10
+  limit = 10,
 ) => {
   try {
     let start, end;
@@ -513,7 +513,7 @@ const getRevenueBeverageService = async (
   startDate,
   endDate,
   page = 1,
-  limit = 10
+  limit = 10,
 ) => {
   try {
     // ===== Xác định khoảng thời gian =====

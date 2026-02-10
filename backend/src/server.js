@@ -7,7 +7,7 @@ import { initSocket } from "./socket/index.js";
 import initRoleRoute from "./routes/admin/roleRoute.js";
 import initWebRoutes from "./routes/customer/webRoute.js";
 import initAuthRoute from "./routes/customer/authRoute.js";
-import { errorHandlingMiddleware } from "./middlewares/errorHandling.js";
+import errorHandler from "./middlewares/errorHandler.js";
 import initUserRoute from "./routes/customer/userRoute.js";
 import initCateAdminRoute from "./routes/admin/cateRoute.js";
 import initCateCustomerRoute from "./routes/customer/cateRoute.js";
@@ -112,7 +112,7 @@ const httpServer = createServer(app);
 // init socket
 initSocket(httpServer);
 
-app.use(errorHandlingMiddleware);
+app.use(errorHandler);
 
 sequelize.sync({ force: false }).then(() => {
   console.log("Database synced");

@@ -1,22 +1,18 @@
+import SuccessResponse from "../../helpers/SuccessResponse.js";
+import asyncHandler from "../../middlewares/asyncHandler.js";
 import authService from "../../services/customer/authService.js";
 
-const createUser = async (req, res, next) => {
-  try {
-    const { username, email, password } = req.body;
-    const { safeUser } = await authService.createUserService(
-      username,
-      email,
-      password
-    );
-    return res.status(201).json({
-      message:
+const createUser = asyncHandler(async (req, res) => {
+  const user = await authService.createUserService(req.body);
+  return res
+    .status(201)
+    .json(
+      new SuccessResponse(
         "Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản.",
-      safeUser,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+        user,
+      ),
+    );
+});
 
 const verifyUserOtp = async (req, res, next) => {
   try {

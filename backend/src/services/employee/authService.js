@@ -1,7 +1,7 @@
 import { Role, User } from "../../models/index.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import { StatusCodes } from "http-status-codes";
 import dotenv from "dotenv";
 dotenv.config();
@@ -23,14 +23,14 @@ const handleLoginService = async (username, password) => {
     if (!employee) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Thông tin đăng nhập không chính xác!"
+        "Thông tin đăng nhập không chính xác!",
       );
     }
 
     if (!employee.isVerified || !employee.isActive) {
       throw new ApiError(
         StatusCodes.FORBIDDEN,
-        "Tài khoản hiện không thể đăng nhập. Vui lòng liên hệ hỗ trợ!"
+        "Tài khoản hiện không thể đăng nhập. Vui lòng liên hệ hỗ trợ!",
       );
     }
 
@@ -38,7 +38,7 @@ const handleLoginService = async (username, password) => {
     if (!isMatchPassword) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Thông tin đăng nhập không chính xác!"
+        "Thông tin đăng nhập không chính xác!",
       );
     }
 
@@ -66,7 +66,7 @@ const handleLoginService = async (username, password) => {
     if (error instanceof ApiError) throw error;
     throw new ApiError(
       StatusCodes.INTERNAL_SERVER_ERROR,
-      "Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại sau!"
+      "Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại sau!",
     );
   }
 };

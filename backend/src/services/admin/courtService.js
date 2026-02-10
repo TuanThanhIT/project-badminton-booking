@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import { Court, CourtPrice, CourtSchedule } from "../../models/index.js";
 import { Op } from "sequelize";
 
@@ -71,7 +71,7 @@ const createCourtPriceService = async (
   startTime,
   endTime,
   price,
-  periodType
+  periodType,
 ) => {
   try {
     const dayOfWeeks = [
@@ -95,7 +95,7 @@ const createCourtPriceService = async (
     if (!checkPeriod) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Giá trị của kiểu khung giờ không hợp lệ!"
+        "Giá trị của kiểu khung giờ không hợp lệ!",
       );
     }
     const timeRegex = /^\d{2}:\d{2}(:\d{2})?$/;
@@ -103,7 +103,7 @@ const createCourtPriceService = async (
     if (!timeRegex.test(startTime) || !timeRegex.test(endTime)) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Định dạng giờ không hợp lệ!"
+        "Định dạng giờ không hợp lệ!",
       );
     }
 
@@ -113,7 +113,7 @@ const createCourtPriceService = async (
     if (startTime >= endTime) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Giờ kết thúc phải lớn hơn giờ bắt đầu!"
+        "Giờ kết thúc phải lớn hơn giờ bắt đầu!",
       );
     }
     const existed = await CourtPrice.findOne({
@@ -159,7 +159,7 @@ export const createWeeklySlotsService = async (startDate) => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Ngày tạo phải ở định dạng YYYY-MM-DD"
+        "Ngày tạo phải ở định dạng YYYY-MM-DD",
       );
     }
 
@@ -174,7 +174,7 @@ export const createWeeklySlotsService = async (startDate) => {
     if (start < today) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Không thể tạo lịch cho ngày trong quá khứ!"
+        "Không thể tạo lịch cho ngày trong quá khứ!",
       );
     }
 
@@ -188,7 +188,7 @@ export const createWeeklySlotsService = async (startDate) => {
     if (!courts.length) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        "Chưa có sân nào trong hệ thống!"
+        "Chưa có sân nào trong hệ thống!",
       );
     }
 
@@ -213,13 +213,13 @@ export const createWeeklySlotsService = async (startDate) => {
     const scheduledCourtIds = scheduledCourts.map((s) => s.courtId);
 
     const availableCourts = courts.filter(
-      (c) => !scheduledCourtIds.includes(c.id)
+      (c) => !scheduledCourtIds.includes(c.id),
     );
 
     if (!availableCourts.length) {
       throw new ApiError(
         StatusCodes.CONFLICT,
-        "Tất cả sân đã có lịch trong tuần này!"
+        "Tất cả sân đã có lịch trong tuần này!",
       );
     }
 

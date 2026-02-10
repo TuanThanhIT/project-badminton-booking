@@ -1,19 +1,19 @@
 import { StatusCodes } from "http-status-codes";
-import ApiError from "../../utils/ApiError.js";
+import ApiError from "../../errors/ApiError.js";
 import {
   WorkShift,
   WorkShiftEmployee,
   User,
   Profile,
 } from "../../models/index.js";
-import mailer from "../../utils/mailer.js";
+import mailer from "../../helpers/mailer.js";
 import sequelize from "../../config/db.js";
 import { col, fn, literal, Op, where } from "sequelize";
 
 const assignEmployeeToShiftService = async (
   workShiftId,
   employeeId,
-  roleInShift
+  roleInShift,
 ) => {
   try {
     const shift = await WorkShift.findByPk(workShiftId);
@@ -40,7 +40,7 @@ const assignEmployeeToShiftService = async (
     if (existed) {
       throw new ApiError(
         StatusCodes.CONFLICT,
-        "Nhân viên đã được phân vào ca này!"
+        "Nhân viên đã được phân vào ca này!",
       );
     }
 
@@ -57,7 +57,7 @@ const assignEmployeeToShiftService = async (
       shift.workDate,
       shift.startTime,
       shift.endTime,
-      roleInShift
+      roleInShift,
     );
 
     return {
@@ -119,7 +119,7 @@ export const updateEmployeeInShiftService = async (id, data) => {
     if (!record) {
       throw new ApiError(
         StatusCodes.NOT_FOUND,
-        "Không tìm thấy phân ca nhân viên!"
+        "Không tìm thấy phân ca nhân viên!",
       );
     }
 
@@ -132,7 +132,7 @@ export const updateEmployeeInShiftService = async (id, data) => {
       if (!/^\d{1,2}:\d{2}(:\d{2})?$/.test(checkIn)) {
         throw new ApiError(
           StatusCodes.BAD_REQUEST,
-          "Giờ checkIn không hợp lệ! (HH:MM hoặc HH:MM:SS)"
+          "Giờ checkIn không hợp lệ! (HH:MM hoặc HH:MM:SS)",
         );
       }
     }
@@ -142,7 +142,7 @@ export const updateEmployeeInShiftService = async (id, data) => {
       if (!/^\d{1,2}:\d{2}(:\d{2})?$/.test(checkOut)) {
         throw new ApiError(
           StatusCodes.BAD_REQUEST,
-          "Giờ checkOut không hợp lệ! (HH:MM hoặc HH:MM:SS)"
+          "Giờ checkOut không hợp lệ! (HH:MM hoặc HH:MM:SS)",
         );
       }
     }
@@ -169,7 +169,7 @@ export const updateEmployeeInShiftService = async (id, data) => {
         if (checkOutDate <= checkInDate) {
           throw new ApiError(
             StatusCodes.BAD_REQUEST,
-            "Thời gian checkOut phải lớn hơn checkIn!"
+            "Thời gian checkOut phải lớn hơn checkIn!",
           );
         }
 
@@ -211,7 +211,7 @@ const removeEmployeeFromShiftService = async (id) => {
     if (!record) {
       throw new ApiError(
         StatusCodes.NOT_FOUND,
-        "Không tìm thấy nhân viên trong ca!"
+        "Không tìm thấy nhân viên trong ca!",
       );
     }
 

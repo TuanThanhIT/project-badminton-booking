@@ -9,6 +9,7 @@ import jwt from "jsonwebtoken";
 
 dotenv.config();
 const saltRounds = 10;
+
 const createAdminService = async (username, email, password) => {
   try {
     const existingUser = await User.findOne({ where: { username } });

@@ -1,64 +1,58 @@
 import { StatusCodes } from "http-status-codes";
 import ApiError from "../../errors/ApiError.js";
 import { Profile } from "../../models/index.js";
+import NotFoundError from "../../errors/NotFoundError.js";
+import sequelize from "../../config/db.js";
+import BadRequestError from "../../errors/BadRequestError.js";
 
-const getProfileService = async (userId) => {
-  try {
-    const profile = await Profile.findOne({
-      where: { userId },
-      attributes: { exclude: ["userId"] },
-    });
-    if (!profile) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Profile chưa được tạo!");
-    }
+const getProfileService = async (data) => {
+  const { userId } = data;
 
-    return profile;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+  const profile = await Profile.findOne({
+    where: { userId },
+    attributes: { exclude: ["userId"] },
+  });
+
+  if (!profile) {
+    throw new NotFoundError("Profile chưa được khởi tạo");
   }
+
+  return profile;
 };
 
-const updateProfileService = async (updateData, userId) => {
-  try {
+const updateProfileService = async (data) => {
+  const { updateData, userId } = data;
+
+  return sequelize.transaction(async (t) => {
     const profile = await Profile.findOne({
       where: { userId },
       attributes: { exclude: ["userId"] },
+      transaction: t,
     });
     if (!profile) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Profile chưa được tạo!");
+      throw new NotFoundError("Profile chưa được khởi tạo");
     }
 
-    profile.update(updateData);
+    await profile.update(updateData, { transaction: t });
 
     return profile;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+  });
 };
 
-const updateUserInfoService = async (updateUserData, userId) => {
-  try {
+const updateUserInfoService = async (data) => {
+  const { updateUserData, userId } = data;
+  return sequelize.transaction(async (t) => {
     const profile = await Profile.findOne({
       where: { userId },
       attributes: { exclude: ["userId"] },
+      transaction: t,
     });
     if (!profile) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Profile chưa được tạo!");
+      throw new NotFoundError("Profile chưa được khởi tạo");
     }
-    profile.update(updateUserData);
+    await profile.update(updateUserData, { transaction: t });
     return profile;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+  });
 };
 
 const userService = {

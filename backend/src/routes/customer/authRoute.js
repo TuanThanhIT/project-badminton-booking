@@ -3,7 +3,12 @@ import authController from "../../controllers/customer/authController.js";
 import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
 import validate from "../../middlewares/validate.js";
-import { createUserSchema } from "../../validations/userValidation.js";
+import {
+  createUserSchema,
+  resetPasswordSchema,
+  sendVerifyOtpSchema,
+  verifyOtpSchema,
+} from "../../validations/authValidation.js";
 
 const authRoute = express.Router();
 
@@ -13,10 +18,23 @@ const initAuthRoute = (app) => {
     validate(createUserSchema),
     authController.createUser,
   );
-  authRoute.post("/verify-otp", authController.verifyUserOtp);
-  authRoute.post("/sent-otp", authController.sentVerifyUserOtp);
-  authRoute.post("/login", authController.userLogin);
-  authRoute.get("/account", auth, authorize("USER"), authController.getAccount);
-  app.use("/auth", authRoute);
+  authRoute.post(
+    "/verify-account",
+    validate(verifyOtpSchema),
+    authController.verifyUserOtp,
+  );
+  authRoute.post(
+    "/send-otp",
+    validate(sendVerifyOtpSchema),
+    authController.sendVerifyOtp,
+  );
+  authRoute.post(
+    "/password/reset",
+    validate(resetPasswordSchema),
+    authController.resetPassword,
+  );
+  authRoute.post("/login", authController.handleLogin);
+  authRoute.get("/me", auth, authorize("USER"), authController.getAccount);
+  app.use("/user/auth", authRoute);
 };
 export default initAuthRoute;

@@ -10,18 +10,18 @@ const initProductCustomerRoute = (app) => {
     "/list",
     auth,
     authorize("USER"),
-    productCustomerController.getProductsByFilter
+    productCustomerController.getProductsByFilter,
   );
   productRoute.get(
     "/group/list",
-    productCustomerController.getProductsByGroupNameAndFilter
+    productCustomerController.getProductsByGroupNameAndFilter,
   );
   productRoute.get(
     "/:id",
     auth,
     authorize("USER"),
-    productCustomerController.getProductDetail
+    productCustomerController.getProductDetail,
   );
-  app.use("/user/product", productRoute);
+  app.use("/user/products", productRoute);
 };
 export default initProductCustomerRoute;

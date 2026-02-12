@@ -14,51 +14,44 @@ const createUser = asyncHandler(async (req, res) => {
     );
 });
 
-const verifyUserOtp = async (req, res, next) => {
-  try {
-    const { email, otpCode, newPassword } = req.body;
-    await authService.verifyOtpService(email, otpCode, newPassword);
-    if (!newPassword) {
-      return res
-        .status(200)
-        .json({ message: "Tài khoản đã được xác thực thành công" });
-    } else {
-      return res
-        .status(200)
-        .json({ message: "Tài khoản đã được đổi mật khẩu thành công" });
-    }
-  } catch (error) {
-    next(error);
-  }
-};
+const verifyUserOtp = asyncHandler(async (req, res) => {
+  await authService.verifyOtpService(req.body);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Tài khoản đã xác thực thành công"));
+});
 
-const sentVerifyUserOtp = async (req, res, next) => {
-  try {
-    const { email } = req.body;
-    await authService.sentVerifyOtpService(email);
-    return res.status(201).json({
-      message: "Mã OTP đã được gửi. Vui lòng kiểm tra email.",
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+const resetPassword = asyncHandler(async (req, res) => {
+  await authService.resetPasswordService(req.body);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Tài khoản đã được đổi mật khẩu thành công"));
+});
 
-const userLogin = async (req, res) => {
-  const { username, password } = req.body;
-  const data = await authService.handleLoginService(username, password);
-  return res.status(200).json(data);
-};
+const sendVerifyOtp = asyncHandler(async (req, res) => {
+  await authService.sendVerifyOtpService(req.body);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Mã OTP đã được gửi. Vui lòng kiểm tra email"));
+});
+
+const handleLogin = asyncHandler(async (req, res) => {
+  const data = await authService.handleLoginService(req.body);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Đăng nhập thành công", data));
+});
 
 const getAccount = async (req, res) => {
-  return res.status(200).json(req.user);
+  return res.status(200).json(new SuccessResponse("", req.user));
 };
 
 const authController = {
   createUser,
-  userLogin,
+  handleLogin,
   verifyUserOtp,
-  sentVerifyUserOtp,
+  sendVerifyOtp,
+  resetPassword,
   getAccount,
 };
 export default authController;

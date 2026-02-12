@@ -2,6 +2,13 @@ import express from "express";
 import bookingFeedbackController from "../../controllers/customer/bookingFeedbackController.js";
 import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
+import validate from "../../middlewares/validate.js";
+import {
+  createBookingFeedbackSchema,
+  getBookingFeedbackSchema,
+  getBookingFeedbackUpdateSchema,
+  updateBookingFeedbackSchema,
+} from "../../validations/bookingFeedbackValidation.js";
 
 const bookingFeedbackRoute = express.Router();
 
@@ -10,25 +17,29 @@ const initBookingFeedbackCustomerRoute = (app) => {
     "/feedback",
     auth,
     authorize("USER"),
-    bookingFeedbackController.createBookingFeedback
+    validate(createBookingFeedbackSchema),
+    bookingFeedbackController.createBookingFeedback,
   );
   bookingFeedbackRoute.patch(
     "/feedback/:id",
     auth,
     authorize("USER"),
-    bookingFeedbackController.updateBookingFeedback
+    validate(updateBookingFeedbackSchema),
+    bookingFeedbackController.updateBookingFeedback,
   );
   bookingFeedbackRoute.get(
     "/feedback/update/:id",
     auth,
     authorize("USER"),
-    bookingFeedbackController.getBookingFeedbackUpdate
+    validate(getBookingFeedbackUpdateSchema),
+    bookingFeedbackController.getBookingFeedbackUpdate,
   );
   bookingFeedbackRoute.get(
     "/feedback/:id",
     auth,
     authorize("USER"),
-    bookingFeedbackController.getBookingFeedback
+    validate(getBookingFeedbackSchema),
+    bookingFeedbackController.getBookingFeedback,
   );
   app.use("/user/booking", bookingFeedbackRoute);
 };

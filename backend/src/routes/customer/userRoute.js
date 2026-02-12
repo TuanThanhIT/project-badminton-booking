@@ -3,6 +3,11 @@ import auth from "../../middlewares/auth.js";
 import userController from "../../controllers/customer/userController.js";
 import multer from "multer";
 import authorize from "../../middlewares/authorize.js";
+import validate from "../../middlewares/validate.js";
+import {
+  updateProfileSchema,
+  updateUserInfoSchema,
+} from "../../validations/userValidation.js";
 
 const userRoute = express.Router();
 
@@ -15,20 +20,22 @@ const initUserRoute = (app) => {
     "/profile",
     auth,
     authorize("USER", "EMPLOYEE"),
-    userController.getProfile
+    userController.getProfile,
   );
   userRoute.put(
-    "/profile/update",
+    "/profile",
     auth,
     authorize("USER", "EMPLOYEE"),
     uploader.single("file"),
-    userController.updateProfile
+    validate(updateProfileSchema),
+    userController.updateProfile,
   );
   userRoute.put(
-    "/profile/update/checkout",
+    "/personal-info",
     auth,
     authorize("USER", "EMPLOYEE"),
-    userController.updateUserInfo
+    validate(updateUserInfoSchema),
+    userController.updateUserInfo,
   );
   app.use("/user", userRoute);
 };

@@ -1,5 +1,3 @@
-import { StatusCodes } from "http-status-codes";
-import ApiError from "../../errors/ApiError.js";
 import {
   Beverage,
   DraftBeverageItem,
@@ -13,39 +11,47 @@ import {
   ProductVarient,
 } from "../../models/index.js";
 import sequelize from "../../config/db.js";
+import NotFoundError from "../../errors/NotFoundError.js";
+import { DRAFT_BOOKING_STATUS } from "../../constants/draftBookingConstant.js";
+import { PAYMENT_STATUS } from "../../constants/paymentConstant.js";
 
-const createOfflineService = async (draftId, employeeId) => {
-  const transaction = await sequelize.transaction();
-
-  try {
-    const draftBooking = await DraftBooking.findByPk(draftId, {
-      attributes: ["id", "note", "total", "nameCustomer"],
-      include: [
-        {
-          model: DraftBookingItem,
-          as: "draftBookingItems",
-          attributes: ["courtScheduleId", "price"],
-        },
-        {
-          model: DraftBeverageItem,
-          as: "draftBeverageItems",
-          attributes: ["beverageId", "quantity", "subTotal"],
-        },
-        {
-          model: DraftProductItem,
-          as: "draftProductItems",
-          attributes: ["productVarientId", "quantity", "subTotal"],
-        },
-      ],
-      transaction,
-    });
+const createOfflineService = async (data) => {
+  const { draftId, employeeId } = data;
+  return sequelize.transaction(async (t) => {
+    const draftBooking = await DraftBooking.findByPk(
+      draftId,
+      {
+        attributes: ["id", "note", "total", "nameCustomer"],
+        include: [
+          {
+            model: DraftBookingItem,
+            as: "draftBookingItems",
+            attributes: ["courtScheduleId", "price"],
+          },
+          {
+            model: DraftBeverageItem,
+            as: "draftBeverageItems",
+            attributes: ["beverageId", "quantity", "subTotal"],
+          },
+          {
+            model: DraftProductItem,
+            as: "draftProductItems",
+            attributes: ["productVarientId", "quantity", "subTotal"],
+          },
+        ],
+      },
+      { transaction: t },
+    );
 
     if (!draftBooking) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Đơn tạm chưa được tạo!");
+      throw new NotFoundError("Đơn tạm chưa được tạo");
     }
 
     // Cập nhật trạng thái Draft → Completed
-    await draftBooking.update({ status: "Completed" }, { transaction });
+    await draftBooking.update(
+      { status: DRAFT_BOOKING_STATUS.COMPLETED },
+      { transaction: t },
+    );
 
     // Tạo OfflineBooking
     const offlineBooking = await OfflineBooking.create(
@@ -53,7 +59,7 @@ const createOfflineService = async (draftId, employeeId) => {
         draftId,
         employeeId,
       },
-      { transaction },
+      { transaction: t },
     );
 
     // Flatten data
@@ -79,55 +85,42 @@ const createOfflineService = async (draftId, employeeId) => {
 
     // Insert all items
     if (courtSchedules.length > 0) {
-      await OfflineBookingItem.bulkCreate(courtSchedules, { transaction });
+      await OfflineBookingItem.bulkCreate(courtSchedules, { transaction: t });
     }
 
     if (beverages.length > 0) {
-      await OfflineBeverageItem.bulkCreate(beverages, { transaction });
+      await OfflineBeverageItem.bulkCreate(beverages, { transaction: t });
     }
 
     if (products.length > 0) {
-      await OfflineProductItem.bulkCreate(products, { transaction });
+      await OfflineProductItem.bulkCreate(products, { transaction: t });
     }
-
-    // ---- Commit Transaction ----
-    await transaction.commit();
 
     return {
       id: offlineBooking.id,
       total: draftBooking.total,
       nameCustomer: draftBooking.nameCustomer,
     };
-  } catch (error) {
-    await transaction.rollback();
-
-    if (error instanceof ApiError) throw error;
-
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+  });
 };
 
-const updateOfflineService = async (offlineBookingId, paymentMethod, total) => {
-  const t = await sequelize.transaction();
-
-  try {
+const updateOfflineService = async (data) => {
+  const { offlineBookingId, paymentMethod, total } = data;
+  return sequelize.transaction(async (t) => {
     const offlineBooking = await OfflineBooking.findByPk(offlineBookingId, {
       transaction: t,
       lock: t.LOCK.UPDATE,
     });
 
     if (!offlineBooking) {
-      throw new ApiError(
-        StatusCodes.NOT_FOUND,
-        "Đơn thanh toán trực tiếp chưa được tạo!",
-      );
+      throw new NotFoundError("Đơn thanh toán trực tiếp chưa được tạo");
     }
 
     await offlineBooking.update(
       {
         paymentMethod,
         grandTotal: total,
-        paymentStatus: "Paid",
+        paymentStatus: PAYMENT_STATUS.PAID,
         paidAt: new Date(),
       },
       { transaction: t },
@@ -179,14 +172,8 @@ const updateOfflineService = async (offlineBookingId, paymentMethod, total) => {
       );
     }
 
-    await t.commit();
     return offlineBooking;
-  } catch (error) {
-    await t.rollback();
-
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error.message);
-  }
+  });
 };
 
 const offlineService = {

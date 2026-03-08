@@ -1,5 +1,3 @@
-import { StatusCodes } from "http-status-codes";
-import ApiError from "../../errors/ApiError.js";
 import {
   Booking,
   BookingDetail,
@@ -15,44 +13,28 @@ import {
   sendEmployeesNotification,
 } from "../../utils/sendNotification.js";
 import sequelize from "../../config/db.js";
+import BadRequestError from "../../errors/BadRequestError.js";
+import NotFoundError from "../../errors/NotFoundError.js";
+import { BOOKING_STATUS } from "../../constants/bookingConstant.js";
+import { PAYMENT_STATUS } from "../../constants/paymentConstant.js";
 
-const createBookingService = async (
-  bookingStatus,
-  totalAmount,
-  userId,
-  code,
-  note,
-  bookingDetails,
-  paymentAmount,
-  paymentMethod,
-  paymentStatus,
-) => {
-  const t = await sequelize.transaction();
-  try {
-    const status = ["Pending", "Paid", "Completed", "Cancelled"];
-    const checkStatus = status.includes(bookingStatus);
-    if (!checkStatus) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Trạng thái đặt sân không hợp lệ!",
-      );
-    }
+const createBookingService = async (data) => {
+  const {
+    bookingStatus,
+    totalAmount,
+    userId,
+    code,
+    note,
+    bookingDetails,
+    paymentAmount,
+    paymentMethod,
+    paymentStatus,
+  } = data;
 
+  return sequelize.transaction(async (t) => {
     const user = await User.findByPk(userId, { transaction: t });
     if (!user) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Người dùng không tồn tại!");
-    }
-
-    if (bookingDetails.length === 0) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Chưa chọn khung giờ đặt sân nào!",
-      );
-    } else if (bookingDetails.length > 3) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Chỉ được chọn tối đa 3 khung giờ/sân/ngày!",
-      );
+      throw new NotFoundError("Người dùng không tồn tại");
     }
 
     let booking;
@@ -64,10 +46,7 @@ const createBookingService = async (
       });
 
       if (!discountBooking) {
-        throw new ApiError(
-          StatusCodes.NOT_FOUND,
-          "Mã giảm giá không chính xác!",
-        );
+        throw new NotFoundError("Mã giảm giá không chính xác");
       }
 
       booking = await Booking.create(
@@ -96,26 +75,22 @@ const createBookingService = async (
 
     const ids = bookingDetails.map((detail) => detail.courtScheduleId);
 
+    const schedules = await CourtSchedule.findAll({
+      where: {
+        id: ids,
+        isAvailable: true,
+      },
+      transaction: t,
+    });
+
+    if (schedules.length !== ids.length) {
+      throw new BadRequestError("Một hoặc nhiều khung giờ đã được đặt");
+    }
+
     await CourtSchedule.update(
       { isAvailable: false },
       { where: { id: ids }, transaction: t },
     );
-
-    const methods = ["COD", "MOMO"];
-    if (!methods.includes(paymentMethod)) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Phương thức thanh toán không hợp lệ!",
-      );
-    }
-
-    const pStatus = ["Pending", "Success", "Cancelled"];
-    if (!pStatus.includes(paymentStatus)) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Trạng thái thanh toán không hợp lệ!",
-      );
-    }
 
     await PaymentBooking.create(
       {
@@ -127,142 +102,132 @@ const createBookingService = async (
       { transaction: t },
     );
 
-    await t.commit(); // CHỈ commit các thao tác có gắn { transaction: t }
-
     // Gửi thông báo KHÔNG nằm trong transaction
-    await sendEmployeesNotification(
-      "Có đặt sân mới",
-      `Khách hàng vừa đặt sân #0${booking.id}. Vui lòng kiểm tra và xác nhận lịch đặt.`,
-      "EMPLOYEE",
-      "epl-create-booking",
-    );
-
-    await sendAdminNotification(
-      "Có đặt sân mới",
-      `Khách hàng vừa đặt sân #0${booking.id}.`,
-      "ADMIN",
-      "adm-create-booking",
-    );
-
-    return booking.id;
-  } catch (error) {
-    await t.rollback();
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
-};
-
-const getBookingsService = async (userId) => {
-  try {
-    const bookings = await Booking.findAll({
-      where: { userId },
-      attributes: ["id", "bookingStatus", "totalAmount", "note", "createdDate"],
-      include: [
-        {
-          model: BookingDetail,
-          as: "bookingDetails",
-          attributes: ["id"],
-          include: [
-            {
-              model: CourtSchedule,
-              as: "courtSchedule",
-              attributes: ["id", "date", "startTime", "endTime"],
-              include: [
-                {
-                  model: Court,
-                  as: "court",
-                  attributes: ["id", "name", "thumbnailUrl"],
-                },
-              ],
-            },
-          ],
-        },
-        {
-          model: PaymentBooking,
-          as: "paymentBooking",
-          attributes: ["paymentMethod"],
-        },
-      ],
+    t.afterCommit(() => {
+      sendEmployeesNotification(
+        "Có đặt sân mới",
+        `Khách hàng vừa đặt sân #0${booking.id}. Vui lòng kiểm tra và xác nhận lịch đặt.`,
+        "EMPLOYEE",
+        "epl-create-booking",
+      ).catch((err) => console.error("Employee notify failed", err));
+      sendAdminNotification(
+        "Có đặt sân mới",
+        `Khách hàng vừa đặt sân #0${booking.id}.`,
+        "ADMIN",
+        "adm-create-booking",
+      ).catch((err) => console.error("Admin notify failed", err));
     });
 
-    const newBookings = await Promise.all(
-      bookings.map(async (booking) => {
-        const bookingData = booking.toJSON();
-
-        const firstDetail = bookingData.bookingDetails[0];
-        const courtInfo = firstDetail
-          ? {
-              id: firstDetail.courtSchedule.court.id,
-              name: firstDetail.courtSchedule.court.name,
-              thumbnailUrl: firstDetail.courtSchedule.court.thumbnailUrl,
-              date: firstDetail.courtSchedule.date,
-            }
-          : null;
-
-        const timeSlots = bookingData.bookingDetails.map(
-          (d) => `${d.courtSchedule.startTime} → ${d.courtSchedule.endTime}`,
-        );
-
-        let reviewField; // undefined by default
-        if (bookingData.bookingStatus === "Completed") {
-          const checkReview = await BookingFeedback.findOne({
-            where: { bookingId: bookingData.id },
-          });
-          if (checkReview) reviewField = true;
-          else reviewField = false;
-        }
-
-        // Tạo object trả về, chỉ thêm review nếu khác undefined
-        const result = {
-          id: bookingData.id,
-          bookingStatus: bookingData.bookingStatus,
-          totalAmount: bookingData.totalAmount,
-          note: bookingData.note,
-          createdDate: bookingData.createdDate,
-          court: courtInfo,
-          timeSlots,
-          paymentBooking: bookingData.paymentBooking,
-        };
-        if (reviewField !== undefined) {
-          result.review = reviewField;
-        }
-
-        return result;
-      }),
-    );
-
-    return newBookings;
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+    return booking.id;
+  });
 };
 
-const cancelBookingService = async (bookingId, cancelReason) => {
-  const t = await sequelize.transaction();
-  try {
+const getBookingsService = async (data) => {
+  const { userId } = data;
+  const bookings = await Booking.findAll({
+    where: { userId },
+    attributes: ["id", "bookingStatus", "totalAmount", "note", "createdDate"],
+    include: [
+      {
+        model: BookingDetail,
+        as: "bookingDetails",
+        attributes: ["id"],
+        include: [
+          {
+            model: CourtSchedule,
+            as: "courtSchedule",
+            attributes: ["id", "date", "startTime", "endTime"],
+            include: [
+              {
+                model: Court,
+                as: "court",
+                attributes: ["id", "name", "thumbnailUrl"],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        model: PaymentBooking,
+        as: "paymentBooking",
+        attributes: ["paymentMethod"],
+      },
+    ],
+    order: [["createdDate", "DESC"]],
+  });
+
+  const newBookings = await Promise.all(
+    bookings.map(async (booking) => {
+      const bookingData = booking.toJSON();
+
+      const firstDetail = bookingData.bookingDetails[0];
+      const courtInfo = firstDetail
+        ? {
+            id: firstDetail.courtSchedule.court.id,
+            name: firstDetail.courtSchedule.court.name,
+            thumbnailUrl: firstDetail.courtSchedule.court.thumbnailUrl,
+            date: firstDetail.courtSchedule.date,
+          }
+        : null;
+
+      const timeSlots = bookingData.bookingDetails.map(
+        (d) => `${d.courtSchedule.startTime} → ${d.courtSchedule.endTime}`,
+      );
+
+      let reviewField; // undefined by default
+      if (bookingData.bookingStatus === BOOKING_STATUS.COMPLETED) {
+        const checkReview = await BookingFeedback.findOne({
+          where: { bookingId: bookingData.id },
+        });
+        if (checkReview) reviewField = true;
+        else reviewField = false;
+      }
+
+      // Tạo object trả về, chỉ thêm review nếu khác undefined
+      const result = {
+        id: bookingData.id,
+        bookingStatus: bookingData.bookingStatus,
+        totalAmount: bookingData.totalAmount,
+        note: bookingData.note,
+        createdDate: bookingData.createdDate,
+        court: courtInfo,
+        timeSlots,
+        paymentBooking: bookingData.paymentBooking,
+      };
+      if (reviewField !== undefined) {
+        result.review = reviewField;
+      }
+
+      return result;
+    }),
+  );
+
+  return newBookings;
+};
+
+const cancelBookingService = async (data) => {
+  const { bookingId, cancelReason } = data;
+  return sequelize.transaction(async (t) => {
     const booking = await Booking.findByPk(bookingId, { transaction: t });
     if (!booking) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Lịch đặt sân không tồn tại!");
+      throw new NotFoundError("Lịch đặt sân không tồn tại");
     }
 
-    if (booking.bookingStatus === "Paid") {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Sân đã thanh toán không thể hủy trực tiếp. Vui lòng liên hệ cửa hàng để hỗ trợ!",
+    if (booking.bookingStatus === BOOKING_STATUS.PAID) {
+      throw new BadRequestError(
+        "Sân đã thanh toán không thể hủy trực tiếp. Vui lòng liên hệ cửa hàng để hỗ trợ",
       );
     }
 
-    if (booking.bookingStatus === "Confirmed") {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Sân đã xác nhận không thể hủy trực tiếp. Vui lòng liên hệ cửa hàng để hỗ trợ!",
+    if (booking.bookingStatus === BOOKING_STATUS.CONFIRMED) {
+      throw new BadRequestError(
+        "Sân đã xác nhận không thể hủy trực tiếp. Vui lòng liên hệ cửa hàng để hỗ trợ",
       );
     }
 
     await booking.update(
       {
-        bookingStatus: "Cancelled",
+        bookingStatus: BOOKING_STATUS.CANCELLED,
         cancelledBy: "User",
         cancelReason,
       },
@@ -289,32 +254,30 @@ const cancelBookingService = async (bookingId, cancelReason) => {
 
     if (paymentBooking) {
       await paymentBooking.update(
-        { paymentStatus: "Cancelled" },
+        { paymentStatus: PAYMENT_STATUS.CANCELLED },
         { transaction: t },
       );
     }
 
-    await t.commit();
-
-    // Không nằm trong transaction
-    await sendEmployeesNotification(
-      "Lịch đặt sân đã bị hủy",
-      `Khách hàng vừa hủy lịch đặt sân #0${bookingId}`,
-      "EMPLOYEE",
-      "epl-cancel-booking",
-    );
-
-    await sendAdminNotification(
-      "Lịch đặt sân đã bị hủy",
-      `Khách hàng vừa hủy lịch đặt sân #0${bookingId}.`,
-      "ADMIN",
-      "adm-cancel-booking",
-    );
-  } catch (error) {
-    await t.rollback();
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+    t.afterCommit(() => {
+      sendEmployeesNotification(
+        "Lịch đặt sân đã bị hủy",
+        `Khách hàng vừa hủy lịch đặt sân #0${bookingId}`,
+        "EMPLOYEE",
+        "epl-cancel-booking",
+      ).catch((err) => {
+        console.error("Employee notify failed", err);
+      });
+      sendAdminNotification(
+        "Lịch đặt sân đã bị hủy",
+        `Khách hàng vừa hủy lịch đặt sân #0${bookingId}.`,
+        "ADMIN",
+        "adm-cancel-booking",
+      ).catch((err) => {
+        console.error("Admin notify failed", err);
+      });
+    });
+  });
 };
 
 const bookingService = {

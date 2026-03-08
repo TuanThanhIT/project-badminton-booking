@@ -5,6 +5,7 @@ import authorize from "../../middlewares/authorize.js";
 import validate from "../../middlewares/validate.js";
 import {
   createUserSchema,
+  handleLoginSchema,
   resetPasswordSchema,
   sendVerifyOtpSchema,
   verifyOtpSchema,
@@ -33,7 +34,11 @@ const initAuthRoute = (app) => {
     validate(resetPasswordSchema),
     authController.resetPassword,
   );
-  authRoute.post("/login", authController.handleLogin);
+  authRoute.post(
+    "/login",
+    validate(handleLoginSchema),
+    authController.handleLogin,
+  );
   authRoute.get("/me", auth, authorize("USER"), authController.getAccount);
   app.use("/user/auth", authRoute);
 };

@@ -1,5 +1,3 @@
-import { StatusCodes } from "http-status-codes";
-import ApiError from "../../errors/ApiError.js";
 import {
   Discount,
   Order,
@@ -16,29 +14,24 @@ import {
   sendEmployeesNotification,
 } from "../../utils/sendNotification.js";
 import sequelize from "../../config/db.js";
+import BadRequestError from "../../errors/BadRequestError.js";
+import NotFoundError from "../../errors/NotFoundError.js";
+import { ORDER_STATUS } from "../../constants/orderConstant.js";
 
-const createOrderService = async (
-  orderStatus,
-  totalAmount,
-  userId,
-  code,
-  note,
-  orderDetails,
-  paymentAmount,
-  paymentMethod,
-  paymentStatus,
-) => {
-  const t = await sequelize.transaction();
+const createOrderService = async (data) => {
+  const {
+    orderStatus,
+    totalAmount,
+    userId,
+    code,
+    note,
+    orderDetails,
+    paymentAmount,
+    paymentMethod,
+    paymentStatus,
+  } = data;
 
-  try {
-    const status = ["Pending", "Paid", "Completed", "Cancelled"];
-    if (!status.includes(orderStatus)) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Trạng thái đơn hàng không hợp lệ!",
-      );
-    }
-
+  return sequelize.transaction(async (t) => {
     const user = await User.findByPk(userId, {
       include: [
         { model: Profile, attributes: ["fullName", "phoneNumber", "address"] },
@@ -46,40 +39,19 @@ const createOrderService = async (
     });
 
     if (!user?.Profile) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Thông tin giao hàng chưa được cập nhật!",
-      );
+      throw new BadRequestError("Thông tin giao hàng chưa được cập nhật");
     }
-
-    const { fullName, address, phoneNumber } = user.Profile;
-
-    if (!fullName)
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Tên khách hàng không hợp lệ!",
-      );
-    if (!address)
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Địa chỉ khách hàng không hợp lệ!",
-      );
-    if (!phoneNumber || !/^\d{10}$/.test(phoneNumber))
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Số điện thoại khách hàng không hợp lệ!",
-      );
 
     let order;
 
     if (code) {
-      const discount = await Discount.findOne({ where: { code } });
+      const discount = await Discount.findOne({
+        where: { code },
+        transaction: t,
+      });
 
       if (!discount) {
-        throw new ApiError(
-          StatusCodes.NOT_FOUND,
-          "Mã giảm giá không chính xác!",
-        );
+        throw new BadRequestError("Mã giảm giá không chính xác");
       }
 
       order = await Order.create(
@@ -111,22 +83,6 @@ const createOrderService = async (
 
     await OrderDetail.bulkCreate(detailsWithOrderId, { transaction: t });
 
-    const methods = ["COD", "MOMO"];
-    if (!methods.includes(paymentMethod)) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Phương thức thanh toán không hợp lệ!",
-      );
-    }
-
-    const pStatus = ["Pending", "Success", "Cancelled"];
-    if (!pStatus.includes(paymentStatus)) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Trạng thái thanh toán không hợp lệ!",
-      );
-    }
-
     await Payment.create(
       {
         paymentAmount,
@@ -137,112 +93,102 @@ const createOrderService = async (
       { transaction: t },
     );
 
-    await t.commit();
-
-    await sendEmployeesNotification(
-      "Có đơn hàng mới",
-      `Khách hàng vừa đặt đơn hàng #0${order.id}. Vui lòng kiểm tra và xác nhận đơn hàng.`,
-      "EMPLOYEE",
-      "epl-create-order",
-    );
-
-    await sendAdminNotification(
-      "Có đơn hàng mới",
-      `Khách hàng vừa đặt đơn hàng #0${order.id}. `,
-      "ADMIN",
-      "adm-create-order",
-    );
-
-    return order.id;
-  } catch (error) {
-    await t.rollback(); // rollback nếu có lỗi
-
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
-};
-
-const getOrdersService = async (userId) => {
-  try {
-    const orders = await Order.findAll({
-      where: {
-        userId,
-      },
-      attributes: ["id", "orderStatus", "totalAmount", "note", "createdDate"],
-      include: [
-        {
-          model: OrderDetail,
-          as: "orderDetails",
-          attributes: ["id", "quantity", "subTotal"],
-          include: [
-            {
-              model: ProductVarient,
-              as: "varient",
-              attributes: ["id", "color", "size", "material"],
-              include: [
-                {
-                  model: Product,
-                  as: "product",
-                  attributes: ["productName", "thumbnailUrl"],
-                },
-              ],
-            },
-          ],
-        },
-        {
-          model: Payment,
-          as: "payment",
-          attributes: ["paymentMethod"],
-        },
-      ],
+    t.afterCommit(() => {
+      sendEmployeesNotification(
+        "Có đơn hàng mới",
+        `Khách hàng vừa đặt đơn hàng #0${order.id}. Vui lòng kiểm tra và xác nhận đơn hàng.`,
+        "EMPLOYEE",
+        "epl-create-order",
+      ).catch((err) => console.error("Employee notify failed", err));
+      sendAdminNotification(
+        "Có đơn hàng mới",
+        `Khách hàng vừa đặt đơn hàng #0${order.id}. `,
+        "ADMIN",
+        "adm-create-order",
+      ).catch((err) => console.error("Admin notify failed", err));
     });
 
-    const newOrders = await Promise.all(
-      orders.map(async (order) => {
-        const orderData = order.toJSON();
-        if (orderData.orderStatus === "Completed") {
-          const newOrderDetails = await Promise.all(
-            orderData.orderDetails.map(async (orderDetail) => {
-              const review = await ProductFeedback.findOne({
-                where: { orderDetailId: orderDetail.id },
-              });
-              return {
-                ...orderDetail,
-                review: !!review,
-              };
-            }),
-          );
-          orderData.orderDetails = newOrderDetails;
-        }
-        return orderData;
-      }),
-    );
-
-    return newOrders;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+    return order.id;
+  });
 };
 
-const cancelOrderService = async (orderId, cancelReason) => {
-  const t = await sequelize.transaction();
-  try {
+const getOrdersService = async (data) => {
+  const { userId } = data;
+  const orders = await Order.findAll({
+    where: {
+      userId,
+    },
+    attributes: ["id", "orderStatus", "totalAmount", "note", "createdDate"],
+    include: [
+      {
+        model: OrderDetail,
+        as: "orderDetails",
+        attributes: ["id", "quantity", "subTotal"],
+        include: [
+          {
+            model: ProductVarient,
+            as: "varient",
+            attributes: ["id", "color", "size", "material"],
+            include: [
+              {
+                model: Product,
+                as: "product",
+                attributes: ["productName", "thumbnailUrl"],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        model: Payment,
+        as: "payment",
+        attributes: ["paymentMethod"],
+      },
+    ],
+    order: [["createdDate", "DESC"]],
+  });
+
+  const newOrders = await Promise.all(
+    orders.map(async (order) => {
+      const orderData = order.toJSON();
+      if (orderData.orderStatus === "Completed") {
+        const newOrderDetails = await Promise.all(
+          orderData.orderDetails.map(async (orderDetail) => {
+            const review = await ProductFeedback.findOne({
+              where: { orderDetailId: orderDetail.id },
+            });
+            return {
+              ...orderDetail,
+              review: !!review,
+            };
+          }),
+        );
+        orderData.orderDetails = newOrderDetails;
+      }
+      return orderData;
+    }),
+  );
+
+  return newOrders;
+};
+
+const cancelOrderService = async (data) => {
+  const { orderId, cancelReason } = data;
+  return sequelize.transaction(async (t) => {
     const order = await Order.findByPk(orderId, { transaction: t });
     if (!order) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Đơn hàng không tồn tại!");
+      throw new NotFoundError("Đơn hàng không tồn tại");
     }
-    if (order.orderStatus === "Paid") {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Đơn hàng đã thanh toán không thể hủy trực tiếp. Vui lòng liên hệ cửa hàng để hỗ trợ!",
+
+    if (order.orderStatus === ORDER_STATUS.PAID) {
+      throw new BadRequestError(
+        "Đơn hàng đã thanh toán không thể hủy trực tiếp. Vui lòng liên hệ cửa hàng để hỗ trợ",
       );
-    } else if (order.orderStatus === "Confirmed") {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Đơn hàng đã xác nhận không thể hủy trực tiếp. Vui lòng liên hệ cửa hàng để hỗ trợ!",
+    }
+
+    if (order.orderStatus === ORDER_STATUS.CONFIRMED) {
+      throw new BadRequestError(
+        "Đơn hàng đã xác nhận không thể hủy trực tiếp. Vui lòng liên hệ cửa hàng để hỗ trợ",
       );
     }
 
@@ -264,21 +210,21 @@ const cancelOrderService = async (orderId, cancelReason) => {
       await payment.update({ paymentStatus: "Cancelled" }, { transaction: t });
     }
 
-    await t.commit();
-
-    await sendEmployeesNotification(
-      "Đơn hàng đã bị hủy",
-      `Khách hàng vừa hủy đơn #0${orderId}`,
-      "EMPLOYEE",
-      "epl-cancel-order",
-    );
-  } catch (error) {
-    await t.rollback();
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+    t.afterCommit(async () => {
+      sendEmployeesNotification(
+        "Đơn hàng đã bị hủy",
+        `Khách hàng vừa hủy đơn #0${orderId}`,
+        "EMPLOYEE",
+        "epl-cancel-order",
+      ).catch((err) => console.error("Employee notify failed", err));
+      await sendAdminNotification(
+        "Đơn hàng đã bị hủy",
+        `Khách hàng vừa hủy đơn #0${orderId}`,
+        "ADMIN",
+        "adm-cancel-order",
+      ).catch((err) => console.error("Admin notify failed", err));
+    });
+  });
 };
 
 const orderService = {

@@ -5,7 +5,7 @@ const User = sequelize.define(
   "User",
   {
     username: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.STRING(50), // khớp max 50
       allowNull: false,
       unique: true,
       validate: {
@@ -16,12 +16,11 @@ const User = sequelize.define(
           msg: "Username must be between 3 and 50 characters",
         },
         is: {
-          args: /^[a-zA-Z0-9_]+$/i,
+          args: /^[a-zA-Z0-9_]+$/,
           msg: "Username can only contain letters, numbers and underscore",
         },
       },
     },
-
     password: {
       type: DataTypes.STRING(255),
       allowNull: false,
@@ -34,7 +33,6 @@ const User = sequelize.define(
         },
       },
     },
-
     email: {
       type: DataTypes.STRING(255),
       allowNull: false,
@@ -42,26 +40,33 @@ const User = sequelize.define(
       validate: {
         notNull: { msg: "Email is required" },
         notEmpty: { msg: "Email cannot be empty" },
-        isEmail: { msg: "Invalid email format" },
+        isEmail: {
+          msg: "Invalid email format",
+        },
+        len: {
+          args: [5, 255],
+          msg: "Email must not exceed 255 characters",
+        },
       },
     },
-
     isVerified: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
       validate: {
-        isBoolean: true,
+        isBoolean: {
+          msg: "isVerified must be a boolean",
+        },
       },
     },
-
     isActive: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
       validate: {
-        isBoolean: true,
+        isBoolean: {
+          msg: "isActive must be a boolean",
+        },
       },
     },
-
     roleId: {
       type: DataTypes.INTEGER,
       allowNull: false,

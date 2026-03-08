@@ -1,64 +1,53 @@
+import SuccessResponse from "../../helpers/SuccessResponse.js";
+import asyncHandler from "../../middlewares/asyncHandler.js";
 import draftService from "../../services/employee/draftService.js";
 
-const createDraft = async (req, res, next) => {
-  try {
-    const { nameCustomer } = req.body;
-    const employeeId = req.user.id;
-    await draftService.createDraftService(employeeId, nameCustomer);
-    return res
-      .status(201)
-      .json({ message: "Tạo đơn tạm thời cho khách hàng thành công!" });
-  } catch (error) {
-    next(error);
-  }
-};
+const createDraft = asyncHandler(async (req, res) => {
+  const data = { employeeId: req.user.id, ...req.body };
+  await draftService.createDraftService(data);
+  return res
+    .status(201)
+    .json(new SuccessResponse("Tạo đơn tạm thời cho khách hàng thành công"));
+});
 
-const getDrafts = async (req, res, next) => {
-  try {
-    const draftBookings = await draftService.getDraftsService();
-    return res.status(200).json(draftBookings);
-  } catch (error) {
-    next(error);
-  }
-};
-
-const createAndUpdateDraft = async (req, res, next) => {
-  try {
-    const { draftId, total, note, courtSchedules, beverages, products } =
-      req.body;
-    await draftService.createAndUpdateDraftService(
-      draftId,
-      note,
-      total,
-      courtSchedules,
-      beverages,
-      products
+const getDrafts = asyncHandler(async (req, res) => {
+  const draftBookings = await draftService.getDraftsService();
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse(
+        "Lấy danh sách đơn tạm thời thành công",
+        draftBookings,
+      ),
     );
-    return res.status(201).json({ message: "Lưu đơn tạm thời thành công" });
-  } catch (error) {
-    next(error);
-  }
-};
+});
 
-const getDraft = async (req, res, next) => {
-  try {
-    const draftId = req.params.id;
-    const draftBooking = await draftService.getDraftService(draftId);
-    return res.status(200).json(draftBooking);
-  } catch (error) {
-    next(error);
-  }
-};
+const createAndUpdateDraft = asyncHandler(async (req, res) => {
+  const data = { ...req.body };
+  await draftService.createAndUpdateDraftService(data);
+  return res
+    .status(201)
+    .json(new SuccessResponse("Lưu đơn tạm thời thành công"));
+});
 
-const deleteDraft = async (req, res, next) => {
-  try {
-    const draftId = req.params.id;
-    await draftService.deleteDraftService(draftId);
-    return res.status(200).json({ message: "Xóa đơn tạm thời thành công!" });
-  } catch (error) {
-    next(error);
-  }
-};
+const getDraft = asyncHandler(async (req, res) => {
+  const { draftId } = req.params;
+  const data = { draftId };
+  const draftBooking = await draftService.getDraftService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Lấy đơn tạm thời thành công", draftBooking));
+});
+
+const deleteDraft = asyncHandler(async (req, res) => {
+  const { draftId } = req.params;
+  const data = { draftId };
+  await draftService.deleteDraftService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Xóa đơn tạm thời thành công"));
+});
+
 const draftController = {
   createDraft,
   getDrafts,

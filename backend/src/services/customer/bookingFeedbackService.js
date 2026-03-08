@@ -8,6 +8,7 @@ import {
 import sequelize from "../../config/db.js";
 import NotFoundError from "../../errors/NotFoundError.js";
 import BadRequestError from "../../errors/BadRequestError.js";
+import { BOOKING_STATUS } from "../../constants/bookingConstant.js";
 
 const createBookingFeedbackService = async (data) => {
   const { content, rate, userId, bookingId, courtId } = data;
@@ -17,18 +18,11 @@ const createBookingFeedbackService = async (data) => {
     throw new NotFoundError("Người dùng không tồn tại");
   }
 
-  const rating = Number(rate);
-  if (Number.isInteger(rating) === false) {
-    throw new BadRequestError("Sao đánh giá phải là số nguyên");
-  } else if (rating < 1 || rating > 5) {
-    throw new BadRequestError("Sao đánh giá không hợp lệ");
-  }
-
   const booking = await Booking.findByPk(bookingId);
   if (!booking) {
     throw new NotFoundError("Lịch đặt sân không tồn tại");
   } else {
-    if (booking.bookingStatus !== "Completed") {
+    if (booking.bookingStatus !== BOOKING_STATUS.COMPLETED) {
       throw new BadRequestError(
         "Đặt sân chưa thành công. Bạn không thể đánh giá sân này được",
       );
@@ -42,7 +36,7 @@ const createBookingFeedbackService = async (data) => {
 
   await BookingFeedback.create({
     content,
-    rating,
+    rating: rate,
     userId,
     bookingId,
     courtId,
@@ -84,12 +78,6 @@ const updateBookingFeedbackService = async (data) => {
     if (!user) {
       throw new NotFoundError("Người dùng không tồn tại");
     }
-    const rating = Number(rate);
-    if (Number.isInteger(rating) === false) {
-      throw new BadRequestError("Sao đánh giá phải là số nguyên");
-    } else if (rating < 1 || rating > 5) {
-      throw new BadRequestError("Sao đánh giá không hợp lệ");
-    }
 
     const booking = await Booking.findByPk(bookingId, { transaction: t });
     if (!booking) {
@@ -104,7 +92,7 @@ const updateBookingFeedbackService = async (data) => {
       throw new NotFoundError("Đánh giá không tồn tại");
     } else if (
       bookingFeedback.content === content &&
-      bookingFeedback.rating === rating
+      bookingFeedback.rating === rate
     ) {
       throw new BadRequestError(
         "Bạn chưa thay đổi nội dung hoặc số sao đánh giá",
@@ -114,10 +102,12 @@ const updateBookingFeedbackService = async (data) => {
     await bookingFeedback.update(
       {
         content,
-        rating,
+        rating: rate,
       },
       { transaction: t },
     );
+
+    return bookingFeedback;
   });
 };
 

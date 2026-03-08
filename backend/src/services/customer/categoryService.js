@@ -1,38 +1,35 @@
-import { StatusCodes } from "http-status-codes";
-import ApiError from "../../errors/ApiError.js";
 import { Category } from "../../models/index.js";
 import { Op } from "sequelize";
+import sequelize from "../../config/db.js";
+import NotFoundError from "../../errors/NotFoundError.js";
 
 const getCategoriesByGroupNameService = async () => {
-  try {
-    const categories = await Category.findAll();
+  const categories = await Category.findAll();
 
-    const cateGroup = categories.reduce((acc, cate) => {
-      if (!acc[cate.menuGroup]) {
-        acc[cate.menuGroup] = [];
-      }
-      acc[cate.menuGroup].push({
-        id: cate.id,
-        cateName: cate.cateName,
-      });
-      return acc;
-    }, {});
+  const cateGroup = categories.reduce((acc, cate) => {
+    if (!acc[cate.menuGroup]) {
+      acc[cate.menuGroup] = [];
+    }
+    acc[cate.menuGroup].push({
+      id: cate.id,
+      cateName: cate.cateName,
+    });
+    return acc;
+  }, {});
 
-    const result = Object.entries(cateGroup).map(([menuGroup, items]) => ({
-      menuGroup,
-      items,
-    }));
-    return result;
-  } catch (error) {
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+  const result = Object.entries(cateGroup).map(([menuGroup, items]) => ({
+    menuGroup,
+    items,
+  }));
+  return result;
 };
 
-const getOtherCategoriesByGroupNameService = async (cateId) => {
-  try {
-    const category = await Category.findByPk(cateId);
+const getOtherCategoriesByGroupNameService = async (data) => {
+  const { cateId } = data;
+  return sequelize.transaction(async (t) => {
+    const category = await Category.findByPk(cateId, { transaction: t });
     if (!category) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Danh mục không tồn tại!");
+      throw new NotFoundError("Danh mục không tồn tại");
     }
 
     const menuGroup = category.menuGroup;
@@ -41,49 +38,34 @@ const getOtherCategoriesByGroupNameService = async (cateId) => {
       attributes: ["id", "cateName"],
     });
     return otherCategories;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+  });
 };
 
-const getCatesByGroupNameService = async (groupName) => {
-  try {
-    const categories = await Category.findAll({
-      where: { menuGroup: groupName },
-      attributes: ["id", "cateName"],
-    });
-    return categories;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+const getCatesByGroupNameService = async (data) => {
+  const { groupName } = data;
+  const categories = await Category.findAll({
+    where: { menuGroup: groupName },
+    attributes: ["id", "cateName"],
+  });
+  return categories;
 };
 
 const getAllGroupNameService = async () => {
-  try {
-    const categories = await Category.findAll();
-    const cateGroups = [];
-    categories.map((cate) => {
-      if (!cateGroups.includes(cate.menuGroup)) {
-        cateGroups.push(cate.menuGroup);
-      }
-    });
-    return cateGroups;
-  } catch (error) {
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+  const categories = await Category.findAll();
+  const cateGroups = [];
+  categories.map((cate) => {
+    if (!cateGroups.includes(cate.menuGroup)) {
+      cateGroups.push(cate.menuGroup);
+    }
+  });
+  return cateGroups;
 };
 
-const categoryCustomerService = {
+const categoryService = {
   getCategoriesByGroupNameService,
   getOtherCategoriesByGroupNameService,
   getCatesByGroupNameService,
   getAllGroupNameService,
 };
 
-export default categoryCustomerService;
+export default categoryService;

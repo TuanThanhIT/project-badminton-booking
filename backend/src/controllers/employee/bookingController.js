@@ -1,55 +1,43 @@
+import SuccessResponse from "../../helpers/SuccessResponse.js";
+import asyncHandler from "../../middlewares/asyncHandler.js";
 import bookingService from "../../services/employee/bookingService.js";
 
-const getBookings = async (req, res, next) => {
-  try {
-    const { status, keyword, date, page, limit } = req.query;
-    const bookings = await bookingService.getBookingsService(
-      status,
-      keyword,
-      date,
-      page,
-      limit
+const getBookings = asyncHandler(async (req, res) => {
+  const data = { ...req.query };
+  const bookings = await bookingService.getBookingsService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Lấy tất cả đặt sân thành công", bookings));
+});
+
+const confirmedBooking = asyncHandler(async (req, res) => {
+  const { bookingId } = req.params;
+  const data = { bookingId };
+  const booking = await bookingService.confirmedBookingService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Xác nhận đặt sân thành công", booking));
+});
+
+const completedBooking = asyncHandler(async (req, res) => {
+  const { bookingId } = req.params;
+  const data = { bookingId };
+  const booking = await bookingService.completedBookingService(data);
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse("Khách đã kết thúc sân, đặt sân hoàn tất", booking),
     );
-    return res.status(200).json(bookings);
-  } catch (error) {
-    next(error);
-  }
-};
+});
 
-const confirmedBooking = async (req, res, next) => {
-  try {
-    const bookingId = req.params.id;
-    await bookingService.confirmedBookingService(bookingId);
-    return res.status(200).json({ message: "Xác nhận đặt sân thành công!" });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const completedBooking = async (req, res, next) => {
-  try {
-    const bookingId = req.params.id;
-    await bookingService.completedBookingService(bookingId);
-    return res
-      .status(200)
-      .json({ message: "Khách đã kết thúc sân, đặt sân hoàn tất!" });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const cancelBooking = async (req, res, next) => {
-  try {
-    const bookingId = req.params.id;
-    const { cancelReason } = req.body;
-    await bookingService.cancelBookingService(bookingId, cancelReason);
-    return res
-      .status(200)
-      .json({ message: "Lịch đặt sân đã được hủy thành công!" });
-  } catch (error) {
-    next(error);
-  }
-};
+const cancelBooking = asyncHandler(async (req, res) => {
+  const { bookingId } = req.params;
+  const data = { bookingId, ...req.body };
+  const booking = await bookingService.cancelBookingService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Lịch đặt sân đã được hủy thành công", booking));
+});
 
 const bookingController = {
   getBookings,

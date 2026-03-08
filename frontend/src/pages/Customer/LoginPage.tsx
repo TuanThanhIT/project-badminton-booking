@@ -2,15 +2,21 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormLoginSchema, type formLogin } from "../../schemas/FormLoginSchema";
-import authService from "../../services/customer/authService";
-import type { ApiErrorType } from "../../types/error";
 import { toast } from "react-toastify";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { AuthContext } from "../../components/contexts/authContext";
+import { useAppDispatch, useAppSelector } from "../../store/hook";
+import { login } from "../../store/slices/customer/authSlice";
+import type { LoginRequest } from "../../types/auth";
 
 const LoginPage = () => {
+  const dispatch = useAppDispatch();
+
+  const { user, token, loading, error } = useAppSelector((state) => state.auth);
+
   const navigate = useNavigate();
   const { setAuth } = useContext(AuthContext);
+
   const location = useLocation();
   const from = location.state?.from
     ? `${location.state.from.pathname}${location.state.from.search || ""}`
@@ -26,29 +32,48 @@ const LoginPage = () => {
     mode: "onChange",
   });
 
-  const onSubmit = async (data: formLogin) => {
-    try {
-      const res = await authService.loginService(data);
-      localStorage.setItem("access_token", res.data.access_token);
+  const onSubmit = (dt: formLogin) => {
+    const data: LoginRequest = {
+      username: dt.username,
+      password: dt.password,
+    };
+
+    dispatch(login({ data }));
+  };
+
+  /*
+    Xử lý khi login thành công
+  */
+  useEffect(() => {
+    if (token && user) {
+      localStorage.setItem("access_token", token);
+
       setAuth({
         isAuthenticated: true,
         user: {
-          id: res.data?.user?.id || 0,
-          email: res.data?.user?.email || "",
-          username: res.data?.user?.username || "",
-          role: res.data?.user?.role || "",
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          role: user.role,
         },
       });
 
       toast.success("Đăng nhập thành công! B-Hub rất vui được gặp lại bạn");
+
       setTimeout(() => {
         navigate(from, { replace: true });
       }, 2000);
-    } catch (error) {
-      const apiError = error as ApiErrorType;
-      toast.error(apiError.userMessage);
     }
-  };
+  }, [token, user]);
+
+  /*
+    Xử lý lỗi
+  */
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
 
   return (
     <div className="p-20 w-3/4 mx-auto">

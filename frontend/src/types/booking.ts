@@ -78,6 +78,7 @@ export type BookingListEplResponse = {
   limit: number;
 };
 
+// sửa chỗ này thành bookingStatus
 export type BookingEplRequest = {
   status: string;
   keyword: string;

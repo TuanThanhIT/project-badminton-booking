@@ -1,112 +1,93 @@
-import { StatusCodes } from "http-status-codes";
-import ApiError from "../../errors/ApiError.js";
 import { Discount } from "../../models/index.js";
+import sequelize from "../../config/db.js";
+import BadRequestError from "../../errors/BadRequestError.js";
+import ConflictError from "../../errors/ConflictError.js";
+import NotFoundError from "../../errors/NotFoundError.js";
+import { DISCOUNT_TYPE } from "../../constants/discountConstant.js";
 
-const applyDiscountService = async (code, orderAmount) => {
-  try {
+const applyDiscountService = async (data) => {
+  const { code, orderAmount } = data;
+
+  return sequelize.transaction(async (t) => {
     const discount = await Discount.findOne({
       where: { code },
+      transaction: t,
     });
     if (!discount) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Mã giảm giá không hợp lệ!");
+      throw new BadRequestError("Mã giảm giá không hợp lệ");
     }
 
     if (!discount.isActive) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Mã giảm giá không thể sử dụng!",
-      );
+      throw new BadRequestError("Mã giảm giá không thể sử dụng");
     }
 
     if (discount.isUsed) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Mã giảm giá đã được sử dụng!",
-      );
+      throw new ConflictError("Mã giảm giá đã được sử dụng");
     }
-    // Chuyển sang Date để so sánh
-    const start = new Date(discount.startDate);
-    const end = new Date(discount.endDate);
+
     const now = new Date();
 
-    if (end < now) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Mã giảm giá đã hết hạn!");
+    if (discountBooking.startDate > now) {
+      throw new BadRequestError("Mã giảm giá chưa thể áp dụng");
     }
 
-    if (start > now) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Mã giảm giá chưa thể áp dụng!",
-      );
+    if (discountBooking.endDate < now) {
+      throw new BadRequestError("Mã giảm giá đã hết hạn");
     }
 
     if (orderAmount < discount.minOrderAmount) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
+      throw new BadRequestError(
         "Giá trị của đơn hàng chưa đủ để áp dụng giảm giá!",
       );
     }
 
     let finalPrice = orderAmount;
-    if (discount.type === "PERCENT") {
+
+    if (discount.type === DISCOUNT_TYPE.PERCENT) {
       finalPrice = orderAmount - (orderAmount * discount.value) / 100;
-    } else if (discount.type === "AMOUNT") {
+    }
+
+    if (discount.type === DISCOUNT_TYPE.AMOUNT) {
       finalPrice = orderAmount - discount.value;
     }
 
-    if (finalPrice < 0) finalPrice = 0;
-
     return {
       originalPrice: orderAmount,
-      finalPrice,
+      finalPrice: Math.max(finalPrice, 0),
       discountValue: discount.value,
       type: discount.type,
     };
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+  });
 };
 
-const updateDiscountService = async (code) => {
-  try {
-    const discount = await Discount.findOne({
-      where: { code },
-    });
-    if (!discount) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Mã giảm giá không hợp lệ!");
-    }
-    await discount.update({ isUsed: true });
-    return discount;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+const updateDiscountService = async (data) => {
+  const { code } = data;
+  const discount = await Discount.findOne({
+    where: { code },
+  });
+  if (!discount) {
+    throw new NotFoundError("Mã giảm giá không hợp lệ");
   }
+  await discount.update({ isUsed: true });
+  return discount;
 };
 
 const getDiscountService = async () => {
-  try {
-    const discounts = await Discount.findAll({
-      where: { isUsed: false, isActive: true },
-      attributes: [
-        "id",
-        "code",
-        "type",
-        "value",
-        "startDate",
-        "endDate",
-        "minOrderAmount",
-      ],
-    });
-    return discounts;
-  } catch (error) {
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+  const discounts = await Discount.findAll({
+    where: { isUsed: false, isActive: true },
+    attributes: [
+      "id",
+      "code",
+      "type",
+      "value",
+      "startDate",
+      "endDate",
+      "minOrderAmount",
+    ],
+  });
+  return discounts;
 };
+
 const discountService = {
   applyDiscountService,
   updateDiscountService,

@@ -1,4 +1,3 @@
-import { StatusCodes } from "http-status-codes";
 import { Op } from "sequelize";
 import {
   Booking,
@@ -9,374 +8,360 @@ import {
   Profile,
   User,
 } from "../../models/index.js";
-import ApiError from "../../errors/ApiError.js";
 import {
   sendAdminNotification,
   sendUserNotification,
 } from "../../utils/sendNotification.js";
-import mailer from "../../helpers/mailer.js";
 import sequelize from "../../config/db.js";
+import { handleSendBookingMail } from "../shared/sendBookingMail.js";
+import NotFoundError from "../../errors/NotFoundError.js";
+import { BOOKING_STATUS } from "../../constants/bookingConstant.js";
+import BadRequestError from "../../errors/BadRequestError.js";
+import {
+  PAYMENT_METHOD_STATUS,
+  PAYMENT_STATUS,
+} from "../../constants/paymentConstant.js";
 
-// Gửi mail đặt sân về cho khách
-const handleSendBookingMail = (booking, type) => {
-  const email = booking?.user?.email;
-  const date = booking.bookingDetails[0].courtSchedule.date;
-  const time = booking.bookingDetails
-    .map(
-      (d) =>
-        `${d.courtSchedule.startTime.substring(
-          0,
-          5,
-        )} - ${d.courtSchedule.endTime.substring(0, 5)}`,
-    )
-    .join(", ");
+const getBookingsService = async (data) => {
+  const { status: bookingStatus, keyword, date, page, limit } = data;
 
-  return mailer.sendBookingMail(email, time, date, type);
-};
+  const where = {};
+  const p = page ?? 1;
+  const l = limit ?? 10;
 
-const getBookingsService = async (
-  bookingStatus,
-  keyword,
-  date,
-  page = 1,
-  limit = 10,
-) => {
-  try {
-    const where = {};
+  const offset = (p - 1) * l;
 
-    const p = parseInt(page) || 1;
-    const l = parseInt(limit) || 10;
+  if (bookingStatus) {
+    where.bookingStatus = bookingStatus;
+  }
 
-    const offset = (p - 1) * l;
+  if (date) {
+    const startVN = new Date(`${date}T00:00:00`);
+    const endVN = new Date(`${date}T23:59:59`);
 
-    // Filter trạng thái
-    if (bookingStatus) where.bookingStatus = bookingStatus;
-
-    // Filter ngày
-    if (date) {
-      const startOfDayVN = new Date(`${date}T00:00:00`);
-      const endOfDayVN = new Date(`${date}T23:59:59`);
-
-      const startOfDayUTC = new Date(
-        startOfDayVN.getTime() - 7 * 60 * 60 * 1000,
-      );
-      const endOfDayUTC = new Date(endOfDayVN.getTime() - 7 * 60 * 60 * 1000);
-
-      where.createdDate = { [Op.between]: [startOfDayUTC, endOfDayUTC] };
-    }
-
-    const userInclude = {
-      model: User,
-      as: "user",
-      attributes: ["username"],
-      required: keyword ? true : false,
-      include: [
-        {
-          model: Profile,
-          attributes: ["fullName", "address", "phoneNumber"],
-          required: keyword ? true : false,
-          where: keyword
-            ? {
-                [Op.or]: [
-                  { fullName: { [Op.like]: `%${keyword}%` } },
-                  { phoneNumber: { [Op.like]: `%${keyword}%` } },
-                ],
-              }
-            : undefined,
-        },
+    where.createdDate = {
+      [Op.between]: [
+        new Date(startVN.getTime() - 7 * 60 * 60 * 1000),
+        new Date(endVN.getTime() - 7 * 60 * 60 * 1000),
       ],
     };
+  }
 
-    const { rows, count } = await Booking.findAndCountAll({
-      where,
-      attributes: ["id", "bookingStatus", "totalAmount", "note", "createdDate"],
-      include: [
-        {
-          model: BookingDetail,
-          as: "bookingDetails",
-          attributes: ["id"],
-          include: [
-            {
-              model: CourtSchedule,
-              as: "courtSchedule",
-              attributes: ["id", "date", "startTime", "endTime"],
-              include: [
-                {
-                  model: Court,
-                  as: "court",
-                  attributes: ["id", "name", "thumbnailUrl"],
-                },
+  const userInclude = {
+    model: User,
+    as: "user",
+    attributes: ["username"],
+    required: !!keyword,
+    include: [
+      {
+        model: Profile,
+        attributes: ["fullName", "address", "phoneNumber"],
+        required: !!keyword,
+        where: keyword
+          ? {
+              [Op.or]: [
+                { fullName: { [Op.like]: `%${keyword}%` } },
+                { phoneNumber: { [Op.like]: `%${keyword}%` } },
               ],
-            },
-          ],
-        },
-        {
-          model: PaymentBooking,
-          as: "paymentBooking",
-          attributes: ["paymentMethod"],
-        },
-        userInclude,
-      ],
-      limit: l,
-      offset,
-      order: [["createdDate", "DESC"]],
-    });
+            }
+          : undefined,
+      },
+    ],
+  };
 
-    const formatted = rows.map((booking) => {
-      const b = booking.toJSON();
+  const { rows, count } = await Booking.findAndCountAll({
+    where,
+    attributes: ["id", "bookingStatus", "totalAmount", "note", "createdDate"],
+    include: [
+      {
+        model: BookingDetail,
+        as: "bookingDetails",
+        attributes: ["id"],
+        include: [
+          {
+            model: CourtSchedule,
+            as: "courtSchedule",
+            attributes: ["id", "date", "startTime", "endTime"],
+            include: [
+              {
+                model: Court,
+                as: "court",
+                attributes: ["id", "name", "thumbnailUrl"],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        model: PaymentBooking,
+        as: "paymentBooking",
+        attributes: ["paymentMethod"],
+      },
+      userInclude,
+    ],
+    limit,
+    offset,
+    order: [["createdDate", "DESC"]],
+  });
 
-      const firstDetail = b.bookingDetails[0];
-
-      const courtInfo = firstDetail
-        ? {
-            id: firstDetail.courtSchedule.court.id,
-            name: firstDetail.courtSchedule.court.name,
-            thumbnailUrl: firstDetail.courtSchedule.court.thumbnailUrl,
-            date: firstDetail.courtSchedule.date,
-          }
-        : null;
-
-      const timeSlots = b.bookingDetails.map(
-        (d) => `${d.courtSchedule.startTime} → ${d.courtSchedule.endTime}`,
-      );
-
-      return {
-        id: b.id,
-        bookingStatus: b.bookingStatus,
-        totalAmount: b.totalAmount,
-        note: b.note,
-        createdDate: b.createdDate,
-        court: courtInfo,
-        timeSlots,
-        paymentBooking: b.paymentBooking,
-        user: b.user,
-      };
-    });
+  const bookings = rows.map((booking) => {
+    const b = booking.toJSON();
+    const first = b.bookingDetails[0];
 
     return {
-      bookings: formatted,
-      total: count,
-      page: p,
-      limit: l,
+      id: b.id,
+      bookingStatus: b.bookingStatus,
+      totalAmount: b.totalAmount,
+      note: b.note,
+      createdDate: b.createdDate,
+      court: first
+        ? {
+            id: first.courtSchedule.court.id,
+            name: first.courtSchedule.court.name,
+            thumbnailUrl: first.courtSchedule.court.thumbnailUrl,
+            date: first.courtSchedule.date,
+          }
+        : null,
+      timeSlots: b.bookingDetails.map(
+        (d) => `${d.courtSchedule.startTime} → ${d.courtSchedule.endTime}`,
+      ),
+      paymentBooking: b.paymentBooking,
+      user: b.user,
     };
-  } catch (error) {
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+  });
+
+  return { bookings, total: count, page, limit };
 };
 
-const confirmedBookingService = async (bookingId) => {
-  try {
-    const booking = await Booking.findByPk(bookingId, {
-      include: [
-        {
-          model: User,
-          as: "user",
-          attributes: ["email"],
-        },
-        {
-          model: BookingDetail,
-          as: "bookingDetails",
-          attributes: ["courtScheduleId"],
-          include: [
-            {
-              model: CourtSchedule,
-              as: "courtSchedule",
-              attributes: ["date", "startTime", "endTime"],
-            },
-          ],
-        },
-      ],
-    });
+const confirmedBookingService = async (data) => {
+  const { bookingId } = data;
+  return sequelize.transaction(async (t) => {
+    const booking = await Booking.findByPk(
+      bookingId,
+      {
+        include: [
+          {
+            model: User,
+            as: "user",
+            attributes: ["email"],
+          },
+          {
+            model: BookingDetail,
+            as: "bookingDetails",
+            attributes: ["courtScheduleId"],
+            include: [
+              {
+                model: CourtSchedule,
+                as: "courtSchedule",
+                attributes: ["date", "startTime", "endTime"],
+              },
+            ],
+          },
+        ],
+      },
+      { transaction: t },
+    );
+
     if (!booking) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Lịch đặt sân không tồn tại!");
+      throw new NotFoundError("Lịch đặt sân không tồn tại!");
     }
-    if (booking.bookingStatus === "Cancelled") {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Lịch đặt sân đã hủy không thể xác nhận lại được nữa!",
-      );
-    } else if (booking.bookingStatus === "Completed") {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Lịch đặt sân đã hoàn thành không thể xác nhận lại được nữa!",
+
+    if (booking.bookingStatus === BOOKING_STATUS.CANCELLED) {
+      throw new BadRequestError(
+        "Lịch đặt sân đã hủy không thể xác nhận lại được nữa",
       );
     }
 
-    await booking.update({
-      bookingStatus: "Confirmed",
+    if (booking.bookingStatus === BOOKING_STATUS.COMPLETED) {
+      throw new BadRequestError(
+        "Lịch đặt sân đã hoàn thành không thể xác nhận lại được nữa",
+      );
+    }
+
+    await booking.update(
+      {
+        bookingStatus: BOOKING_STATUS.CONFIRMED,
+      },
+      { transaction: t },
+    );
+
+    t.afterCommit(() => {
+      sendUserNotification(
+        booking.userId,
+        "us-confirm-booking",
+        "Lịch đặt sân đã được xác nhận",
+        `Lịch đặt sân #0${bookingId} đã được xác nhận.`,
+      ).catch((err) => console.error("Customer notify failed", err));
+      sendAdminNotification(
+        "Lịch đặt sân đã được xác nhận",
+        `Lịch đặt sân #0${bookingId} đã được nhân viên xác nhận.`,
+        "ADMIN",
+        "adm-confirm-booking",
+      ).catch((err) => console.error("Admin notify failed", err));
+      handleSendBookingMail(booking, "confirm").catch((err) =>
+        console.error("Customer mail failed", err),
+      );
     });
 
-    await sendUserNotification(
-      booking.userId,
-      "us-confirm-booking",
-      "Lịch đặt sân đã được xác nhận",
-      `Lịch đặt sân #0${bookingId} đã được xác nhận.`,
-    );
-
-    await sendAdminNotification(
-      "Lịch đặt sân đã được xác nhận",
-      `Lịch đặt sân #0${bookingId} đã được nhân viên xác nhận.`,
-      "ADMIN",
-      "adm-confirm-booking",
-    );
-
-    await handleSendBookingMail(booking, "confirm");
-  } catch (error) {
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+    return booking;
+  });
 };
 
-const completedBookingService = async (bookingId) => {
-  const transaction = await sequelize.transaction();
-  try {
-    const booking = await Booking.findByPk(bookingId, {
-      include: [
-        {
-          model: User,
-          as: "user",
-          attributes: ["email"],
-        },
-        {
-          model: BookingDetail,
-          as: "bookingDetails",
-          attributes: ["courtScheduleId"],
-          include: [
-            {
-              model: CourtSchedule,
-              as: "courtSchedule",
-              attributes: ["date", "startTime", "endTime"],
-            },
-          ],
-        },
-      ],
-      transaction,
-    });
+const completedBookingService = async (data) => {
+  const { bookingId } = data;
+  return sequelize.transaction(async (t) => {
+    const booking = await Booking.findByPk(
+      bookingId,
+      {
+        include: [
+          {
+            model: User,
+            as: "user",
+            attributes: ["email"],
+          },
+          {
+            model: BookingDetail,
+            as: "bookingDetails",
+            attributes: ["courtScheduleId"],
+            include: [
+              {
+                model: CourtSchedule,
+                as: "courtSchedule",
+                attributes: ["date", "startTime", "endTime"],
+              },
+            ],
+          },
+        ],
+      },
+      { transaction: t },
+    );
 
     if (!booking) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Lịch đặt sân không tồn tại!");
+      throw new NotFoundError("Lịch đặt sân không tồn tại");
     }
-    if (booking.bookingStatus !== "Confirmed") {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Lịch đặt sân chưa được xác nhận!",
-      );
+    if (booking.bookingStatus !== BOOKING_STATUS.CONFIRMED) {
+      throw new BadRequestError("Lịch đặt sân chưa được xác nhận");
     }
 
     const paymentBooking = await PaymentBooking.findOne({
-      where: { bookingId: booking.id, paymentMethod: "COD" },
-      transaction,
+      where: {
+        bookingId: booking.id,
+        paymentMethod: PAYMENT_METHOD_STATUS.COD,
+      },
+      transaction: t,
     });
 
     await booking.update(
       {
-        bookingStatus: "Completed",
+        bookingStatus: BOOKING_STATUS.COMPLETED,
       },
-      { transaction },
+      { transaction: t },
     );
 
     if (paymentBooking) {
       await paymentBooking.update(
         {
-          paymentStatus: "Success",
+          paymentStatus: PAYMENT_STATUS.SUCCESS,
           paidAt: new Date(),
         },
-        { transaction },
+        { transaction: t },
       );
     }
 
-    await transaction.commit();
+    t.afterCommit(() => {
+      sendUserNotification(
+        booking.userId,
+        "us-complete-booking",
+        "Lịch đặt sân đã hoàn thành",
+        `Lịch đặt sân #0${bookingId} đã hoàn thành.`,
+      ).catch((err) => console.error("Customer notify failed", err));
 
-    await sendUserNotification(
-      booking.userId,
-      "us-complete-booking",
-      "Lịch đặt sân đã hoàn thành",
-      `Lịch đặt sân #0${bookingId} đã hoàn thành.`,
-    );
+      sendAdminNotification(
+        "Lịch đặt sân đã hoàn thành",
+        `Lịch đặt sân #0${bookingId} đã được hoàn thành.`,
+        "ADMIN",
+        "adm-complete-booking",
+      ).catch((err) => console.error("Admin notify failed", err));
 
-    await sendAdminNotification(
-      "Lịch đặt sân đã hoàn thành",
-      `Lịch đặt sân #0${bookingId} đã được hoàn thành.`,
-      "ADMIN",
-      "adm-complete-booking",
-    );
-
-    await handleSendBookingMail(booking, "complete");
-  } catch (error) {
-    await transaction.rollback();
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
-};
-
-const cancelBookingService = async (bookingId, cancelReason) => {
-  const transaction = await sequelize.transaction();
-  try {
-    const booking = await Booking.findByPk(bookingId, {
-      include: [
-        {
-          model: User,
-          as: "user",
-          attributes: ["email"],
-        },
-        {
-          model: BookingDetail,
-          as: "bookingDetails",
-          include: [
-            {
-              model: CourtSchedule,
-              as: "courtSchedule",
-            },
-          ],
-        },
-      ],
-      transaction,
+      handleSendBookingMail(booking, "complete").catch((err) =>
+        console.error("Customer mail failed", err),
+      );
     });
 
+    return booking;
+  });
+};
+
+const cancelBookingService = async (data) => {
+  const { bookingId, cancelReason } = data;
+  return sequelize.transaction(async (t) => {
+    const booking = await Booking.findByPk(
+      bookingId,
+      {
+        include: [
+          {
+            model: User,
+            as: "user",
+            attributes: ["email"],
+          },
+          {
+            model: BookingDetail,
+            as: "bookingDetails",
+            include: [
+              {
+                model: CourtSchedule,
+                as: "courtSchedule",
+              },
+            ],
+          },
+        ],
+      },
+      { transaction: t },
+    );
+
     if (!booking) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Lịch đặt sân không tồn tại!");
+      throw new NotFoundError("Lịch đặt sân không tồn tại");
     }
-    if (booking.bookingStatus === "Completed") {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Lịch đặt sân đã hoàn thành!",
-      );
+    if (booking.bookingStatus === BOOKING_STATUS.COMPLETED) {
+      throw new BadRequestError("Lịch đặt sân đã hoàn thành");
     }
 
     const paymentBooking = await PaymentBooking.findOne({
       where: { bookingId },
-      transaction,
+      transaction: t,
     });
 
     const oldStatus = booking.bookingStatus;
 
     // Xử lý thanh toán
-    if (oldStatus === "Pending") {
+    if (oldStatus === BOOKING_STATUS.PENDING) {
       await paymentBooking.update(
-        { paymentStatus: "Cancelled" },
-        { transaction },
+        { paymentStatus: PAYMENT_STATUS.CANCELLED },
+        { transaction: t },
       );
-    } else if (oldStatus === "Paid") {
+    } else if (oldStatus === BOOKING_STATUS.PAID) {
       await paymentBooking.update(
         {
-          paymentStatus: "Cancelled",
+          paymentStatus: PAYMENT_STATUS.CANCELLED,
           refundAmount: paymentBooking.paymentAmount,
           refundAt: new Date(),
         },
-        { transaction },
+        { transaction: t },
       );
-    } else if (oldStatus === "Confirmed") {
-      if (paymentBooking.paymentMethod === "COD") {
+    } else if (oldStatus === BOOKING_STATUS.CONFIRMED) {
+      if (paymentBooking.paymentMethod === PAYMENT_METHOD_STATUS.COD) {
         await paymentBooking.update(
-          { paymentStatus: "Cancelled" },
-          { transaction },
+          { paymentStatus: PAYMENT_STATUS.CANCELLED },
+          { transaction: t },
         );
       } else {
         await paymentBooking.update(
           {
-            paymentStatus: "Cancelled",
+            paymentStatus: PAYMENT_STATUS.CANCELLED,
             refundAmount: paymentBooking.paymentAmount,
             refundAt: new Date(),
           },
-          { transaction },
+          { transaction: t },
         );
       }
     }
@@ -384,49 +369,49 @@ const cancelBookingService = async (bookingId, cancelReason) => {
     // hủy booking
     await booking.update(
       {
-        bookingStatus: "Cancelled",
+        bookingStatus: BOOKING_STATUS.CANCELLED,
         cancelledBy: "Employee",
         cancelReason,
       },
-      { transaction },
+      { transaction: t },
     );
 
     // mở lại lịch sân
     const courtScheduleIds = booking.bookingDetails.map(
       (item) => item.courtScheduleId,
     );
-
     await CourtSchedule.update(
       {
         isAvailable: true,
       },
       {
         where: { id: courtScheduleIds },
-        transaction,
+        transaction: t,
       },
     );
 
-    await transaction.commit();
+    t.afterCommit(() => {
+      sendUserNotification(
+        booking.userId,
+        "us-cancel-booking",
+        "Lịch đặt sân đã bị hủy",
+        `Lịch đặt sân #0${bookingId} đã bị hủy.`,
+      ).catch((err) => console.error("Customer notify failed", err));
 
-    await sendUserNotification(
-      booking.userId,
-      "us-cancel-booking",
-      "Lịch đặt sân đã bị hủy",
-      `Lịch đặt sân #0${bookingId} đã bị hủy.`,
-    );
+      sendAdminNotification(
+        "Lịch đặt sân đã bị hủy",
+        `Lịch đặt sân #0${bookingId} đã được nhân viên hủy theo yêu cầu khách hàng.`,
+        "ADMIN",
+        "adm-cancel-booking",
+      ).catch((err) => console.error("Admin notify failed", err));
 
-    await sendAdminNotification(
-      "Lịch đặt sân đã bị hủy",
-      `Lịch đặt sân #0${bookingId} đã được nhân viên hủy theo yêu cầu khách hàng.`,
-      "ADMIN",
-      "adm-cancel-booking",
-    );
+      handleSendBookingMail(booking, "cancel").catch((err) =>
+        console.error("Customer mail failed", err),
+      );
+    });
 
-    await handleSendBookingMail(booking, "cancel");
-  } catch (error) {
-    await transaction.rollback();
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+    return booking;
+  });
 };
 
 const bookingService = {

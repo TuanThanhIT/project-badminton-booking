@@ -1,14 +1,14 @@
+import SuccessResponse from "../../helpers/SuccessResponse.js";
+import asyncHandler from "../../middlewares/asyncHandler.js";
 import productService from "../../services/employee/productService.js";
 
-const getProducts = async (req, res, next) => {
-  try {
-    const { keyword } = req.query;
-    const products = await productService.getProductsService(keyword);
-    return res.status(200).json(products);
-  } catch (error) {
-    next(error);
-  }
-};
+const getProducts = asyncHandler(async (req, res) => {
+  const data = { ...req.query };
+  const products = await productService.getProductsService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Lấy tất cả sản phẩm thành công", products));
+});
 
 const productController = {
   getProducts,

@@ -2,6 +2,13 @@ import express from "express";
 import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
 import draftController from "../../controllers/employee/draftController.js";
+import validate from "../../middlewares/validate.js";
+import {
+  createAndUpdateDraftSchema,
+  createDraftSchema,
+  deleteDraftSchema,
+  getDraftSchema,
+} from "../../validations/draftValidation.js";
 
 const draftRoute = express.Router();
 
@@ -10,26 +17,35 @@ const initDraftEmployeeRoute = (app) => {
     "/add",
     auth,
     authorize("EMPLOYEE"),
-    draftController.createDraft
+    validate(createDraftSchema),
+    draftController.createDraft,
   );
   draftRoute.get(
     "/list",
     auth,
     authorize("EMPLOYEE"),
-    draftController.getDrafts
+    draftController.getDrafts,
   );
   draftRoute.post(
     "/update",
     auth,
     authorize("EMPLOYEE"),
-    draftController.createAndUpdateDraft
+    validate(createAndUpdateDraftSchema),
+    draftController.createAndUpdateDraft,
   );
-  draftRoute.get("/:id", auth, authorize("EMPLOYEE"), draftController.getDraft);
-  draftRoute.delete(
-    "/delete/:id",
+  draftRoute.get(
+    "/:draftId",
     auth,
     authorize("EMPLOYEE"),
-    draftController.deleteDraft
+    validate(getDraftSchema),
+    draftController.getDraft,
+  );
+  draftRoute.delete(
+    "/delete/:draftId",
+    auth,
+    authorize("EMPLOYEE"),
+    validate(deleteDraftSchema),
+    draftController.deleteDraft,
   );
   app.use("/employee/draft", draftRoute);
 };

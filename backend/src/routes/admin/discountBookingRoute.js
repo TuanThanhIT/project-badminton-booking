@@ -2,6 +2,13 @@ import express from "express";
 import discountBookingController from "../../controllers/admin/discountBookingController.js";
 import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
+import validate from "../../middlewares/validate.js";
+import {
+  createDiscountBookingSchema,
+  deleteDiscountBookingSchema,
+  getDiscountBookingsSchema,
+  updateDiscountBookingSchema,
+} from "../../validations/discountValidation.js";
 
 const discountBookingRoute = express.Router();
 
@@ -10,25 +17,29 @@ const initDiscountBookingAdminRoute = (app) => {
     "/add",
     auth,
     authorize("ADMIN"),
-    discountBookingController.createDiscountBooking
+    validate(createDiscountBookingSchema),
+    discountBookingController.createDiscountBooking,
   );
   discountBookingRoute.delete(
-    "/delete/:id",
+    "/delete/:discountId",
     auth,
     authorize("ADMIN"),
-    discountBookingController.deleteDiscountBooking
+    validate(deleteDiscountBookingSchema),
+    discountBookingController.deleteDiscountBooking,
   );
   discountBookingRoute.patch(
-    "/update/:id",
+    "/update/:discountId",
     auth,
     authorize("ADMIN"),
-    discountBookingController.updateDiscountBooking
+    validate(updateDiscountBookingSchema),
+    discountBookingController.updateDiscountBooking,
   );
   discountBookingRoute.get(
     "/list",
     auth,
     authorize("ADMIN"),
-    discountBookingController.getDiscountBookings
+    validate(getDiscountBookingsSchema),
+    discountBookingController.getDiscountBookings,
   );
   app.use("/admin/discount/booking", discountBookingRoute);
 };

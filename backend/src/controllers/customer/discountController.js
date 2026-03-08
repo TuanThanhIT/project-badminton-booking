@@ -1,35 +1,36 @@
+import SuccessResponse from "../../helpers/SuccessResponse.js";
+import asyncHandler from "../../middlewares/asyncHandler.js";
 import discountService from "../../services/customer/discountService.js";
 
-const applyDiscount = async (req, res, next) => {
-  try {
-    const { code, orderAmount } = req.body;
-    const data = await discountService.applyDiscountService(code, orderAmount);
-    return res.status(200).json(data);
-  } catch (error) {
-    next(error);
-  }
-};
+const applyDiscount = asyncHandler(async (req, res) => {
+  const data = { ...req.body };
+  const discount = await discountService.applyDiscountService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Áp mã giảm giá thành công", discount));
+});
 
-const updateDiscount = async (req, res, next) => {
-  try {
-    const { code } = req.body;
-    await discountService.updateDiscountService(code);
-    return res
-      .status(200)
-      .json({ message: "Mã giảm giá đã được ghi nhận và áp dụng." });
-  } catch (error) {
-    next(error);
-  }
-};
+const updateDiscount = asyncHandler(async (req, res) => {
+  const data = { ...req.body };
+  const discount = await discountService.updateDiscountService(data);
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse("Mã giảm giá đã được ghi nhận và áp dụng", discount),
+    );
+});
 
-const getDiscount = async (req, res, next) => {
-  try {
-    const discounts = await discountService.getDiscountService();
-    return res.status(200).json(discounts);
-  } catch (error) {
-    next(error);
-  }
-};
+const getDiscount = asyncHandler(async (req, res) => {
+  const discounts = await discountService.getDiscountService();
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse(
+        "Lấy danh sách mã giảm giá đặt hàng thành công",
+        discounts,
+      ),
+    );
+});
 
 const discountController = {
   applyDiscount,

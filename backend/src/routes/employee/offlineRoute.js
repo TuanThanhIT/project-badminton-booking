@@ -2,21 +2,28 @@ import express from "express";
 import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
 import offlineController from "../../controllers/employee/offlineController.js";
+import validate from "../../middlewares/validate.js";
+import {
+  createOfflineSchema,
+  updateOfflineSchema,
+} from "../../validations/offlineValidation.js";
 
 const offlineRoute = express.Router();
 
 const initOfflineEmployeeRoute = (app) => {
   offlineRoute.post(
-    "/add/:id",
+    "/add/:draftId",
     auth,
     authorize("EMPLOYEE"),
-    offlineController.createOffline
+    validate(createOfflineSchema),
+    offlineController.createOffline,
   );
   offlineRoute.patch(
-    "/update/:id",
+    "/update/:offlineBookingId",
     auth,
     authorize("EMPLOYEE"),
-    offlineController.updateOffline
+    validate(updateOfflineSchema),
+    offlineController.updateOffline,
   );
   app.use("/employee/offline", offlineRoute);
 };

@@ -10,14 +10,14 @@ const initCateCustomerRoute = (app) => {
     "/list/:group_name",
     auth,
     authorize("USER"),
-    categoryCustomerController.getCatesByGroupName
+    categoryCustomerController.getCatesByGroupName,
   );
   cateRoute.get("/list", categoryCustomerController.getCategoriesByGroupName);
   cateRoute.get(
-    "/list/other/:cate_id",
+    "/list/other/:cateId",
     auth,
     authorize("USER"),
-    categoryCustomerController.getOtherCategoriesByGroupName
+    categoryCustomerController.getOtherCategoriesByGroupName,
   );
   cateRoute.get("/group/list", categoryCustomerController.getAllGroupName);
   app.use("/user/category", cateRoute);

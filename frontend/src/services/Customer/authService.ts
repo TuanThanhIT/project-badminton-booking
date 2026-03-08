@@ -2,28 +2,33 @@ import {
   type AccountResponse,
   type LoginRequest,
   type LoginResponse,
-  type OptVerifyRequest,
   type OtpSendRequest,
   type OtpSendResponse,
+  type OtpVerifyRequest,
   type OtpVerifyResponse,
   type RegisterRequest,
   type RegisterResponse,
+  type ResetPasswordRequest,
+  type ResetPasswordResponse,
 } from "../../types/auth";
 import instance from "../../utils/axiosCustomize";
 
 const registerService = (data: RegisterRequest) =>
-  instance.post<RegisterResponse>("/auth/register", data);
+  instance.post<RegisterResponse>("/user/auth/register", data);
 
 const loginService = (data: LoginRequest) =>
-  instance.post<LoginResponse>("/auth/login", data);
+  instance.post<LoginResponse>("/user/auth/login", data);
 
-const verifyOtpService = (data: OptVerifyRequest) =>
-  instance.post<OtpVerifyResponse>("/auth/verify-otp", data);
+const verifyOtpService = (data: OtpVerifyRequest) =>
+  instance.post<OtpVerifyResponse>("/user/auth/verify-otp", data);
 
 const sendOtpService = (data: OtpSendRequest) =>
-  instance.post<OtpSendResponse>("/auth/sent-otp", data);
+  instance.post<OtpSendResponse>("/user/auth/sent-otp", data);
 
-const getAccountService = () => instance.get<AccountResponse>("/auth/account");
+const resetPasswordService = (data: ResetPasswordRequest) =>
+  instance.post<ResetPasswordResponse>("/user/auth/password/reset", data);
+
+const getAccountService = () => instance.get<AccountResponse>("/user/auth/me");
 
 const authService = {
   registerService,
@@ -31,6 +36,7 @@ const authService = {
   verifyOtpService,
   sendOtpService,
   getAccountService,
+  resetPasswordService,
 };
 
 export default authService;

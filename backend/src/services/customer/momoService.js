@@ -1,9 +1,8 @@
 import crypto from "crypto";
 import axios from "axios";
-import ApiError from "../../errors/ApiError.js";
-import { StatusCodes } from "http-status-codes";
 import { Payment, Order, Booking, PaymentBooking } from "../../models/index.js";
 import dotenv from "dotenv";
+import sequelize from "../../config/db.js";
 
 dotenv.config();
 
@@ -19,72 +18,62 @@ const IPN_URL = "https://34cfb6aa80bb.ngrok-free.app/user/momo/momo-webhook";
  * - Gửi request đến MoMo để lấy payUrl
  * - MoMo sẽ redirect + webhook IPN
  */
-const createPaymentService = async (
-  entityId,
-  amount,
-  orderInfo,
-  type = "order",
-) => {
-  try {
-    // URL frontend khi user thanh toán xong (redirect)
-    const REDIRECT_URL = `http://localhost:5173/momo-return?type=${type}`;
+const createPaymentService = async (data) => {
+  const { entityId, amount, orderInfo, type = "order" } = data;
+  // URL frontend khi user thanh toán xong (redirect)
+  const REDIRECT_URL = `http://localhost:5173/momo-return?type=${type}`;
 
-    const momoOrderId = `${entityId}_${Date.now()}`; // Format chuẩn: {id}_{timestamp}
-    const requestId = `${PARTNER_CODE}${Date.now()}`;
-    const requestType = "captureWallet";
+  const momoOrderId = `${entityId}_${Date.now()}`; // Format chuẩn: {id}_{timestamp}
+  const requestId = `${PARTNER_CODE}${Date.now()}`;
+  const requestType = "captureWallet";
 
-    /**
-     * extraData phải ENCODE base64
-     * để MoMo trả lại y nguyên trong webhook
-     */
-    const extraData = Buffer.from(JSON.stringify({ type })).toString("base64");
+  /**
+   * extraData phải ENCODE base64
+   * để MoMo trả lại y nguyên trong webhook
+   */
+  const extraData = Buffer.from(JSON.stringify({ type })).toString("base64");
 
-    const intAmount = Math.round(amount);
+  const intAmount = Math.round(amount);
 
-    /**
-     * rawSignature tạo theo đúng thứ tự của MoMo
-     * KHÔNG ĐƯỢC đổi vị trí tham số
-     */
-    const rawSignature =
-      `accessKey=${ACCESS_KEY}&amount=${intAmount}&extraData=${extraData}` +
-      `&ipnUrl=${IPN_URL}&orderId=${momoOrderId}&orderInfo=${orderInfo}` +
-      `&partnerCode=${PARTNER_CODE}&redirectUrl=${REDIRECT_URL}` +
-      `&requestId=${requestId}&requestType=${requestType}`;
+  /**
+   * rawSignature tạo theo đúng thứ tự của MoMo
+   * KHÔNG ĐƯỢC đổi vị trí tham số
+   */
+  const rawSignature =
+    `accessKey=${ACCESS_KEY}&amount=${intAmount}&extraData=${extraData}` +
+    `&ipnUrl=${IPN_URL}&orderId=${momoOrderId}&orderInfo=${orderInfo}` +
+    `&partnerCode=${PARTNER_CODE}&redirectUrl=${REDIRECT_URL}` +
+    `&requestId=${requestId}&requestType=${requestType}`;
 
-    const signature = crypto
-      .createHmac("sha256", SECRET_KEY)
-      .update(rawSignature)
-      .digest("hex");
+  const signature = crypto
+    .createHmac("sha256", SECRET_KEY)
+    .update(rawSignature)
+    .digest("hex");
 
-    // Body gửi đến MoMo
-    const body = {
-      partnerCode: PARTNER_CODE,
-      accessKey: ACCESS_KEY,
-      requestId,
-      amount: String(intAmount),
-      orderId: momoOrderId,
-      orderInfo,
-      redirectUrl: REDIRECT_URL,
-      ipnUrl: IPN_URL,
-      extraData,
-      requestType,
-      signature,
-      lang: "vi",
-    };
+  // Body gửi đến MoMo
+  const body = {
+    partnerCode: PARTNER_CODE,
+    accessKey: ACCESS_KEY,
+    requestId,
+    amount: String(intAmount),
+    orderId: momoOrderId,
+    orderInfo,
+    redirectUrl: REDIRECT_URL,
+    ipnUrl: IPN_URL,
+    extraData,
+    requestType,
+    signature,
+    lang: "vi",
+  };
 
-    // Gọi API MoMo tạo thanh toán
-    const momoRes = await axios.post(
-      "https://test-payment.momo.vn/v2/gateway/api/create",
-      body,
-      { headers: { "Content-Type": "application/json" } },
-    );
+  // Gọi API MoMo tạo thanh toán
+  const momoRes = await axios.post(
+    "https://test-payment.momo.vn/v2/gateway/api/create",
+    body,
+    { headers: { "Content-Type": "application/json" } },
+  );
 
-    return momoRes.data;
-  } catch (error) {
-    console.log("===== MOMO ERROR =====");
-    console.log(error?.response?.data || error);
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+  return momoRes.data;
 };
 
 /**
@@ -92,69 +81,70 @@ const createPaymentService = async (
  * - type = "order" → update bảng Order + Payment
  * - type = "booking" → update bảng Booking + PaymentBooking
  */
-const paymentSuccessService = async (
-  entityId,
-  amount,
-  transId,
-  type = "order",
-) => {
-  try {
+const paymentSuccessService = async (data) => {
+  const { entityId, amount, transId, type = "order" } = data;
+  return sequelize.transaction(async (t) => {
     if (type === "order") {
       // --- Xử lý đơn hàng ---
-      const order = await Order.findByPk(entityId);
-      if (!order)
-        throw new ApiError(StatusCodes.NOT_FOUND, "Đơn hàng không tồn tại!");
+      const order = await Order.findByPk(entityId, { transaction: t });
+      if (!order) throw new NotFoundError("Đơn hàng không tồn tại");
 
-      await order.update({
-        orderStatus: "Paid",
-        totalAmount: amount,
+      await order.update(
+        {
+          orderStatus: "Paid",
+          totalAmount: amount,
+        },
+        { transaction: t },
+      );
+
+      const payment = await Payment.findOne({
+        where: { orderId: entityId },
+        transaction: t,
       });
-
-      const payment = await Payment.findOne({ where: { orderId: entityId } });
       if (!payment)
-        throw new ApiError(
-          StatusCodes.NOT_FOUND,
-          "Thanh toán cho đơn hàng không tồn tại!",
-        );
+        throw new NotFoundError("Thanh toán cho đơn hàng không tồn tại");
 
-      await payment.update({
-        transId,
-        paidAt: new Date(),
-        paymentAmount: Number(amount),
-        paymentStatus: "Success",
-      });
+      await payment.update(
+        {
+          transId,
+          paidAt: new Date(),
+          paymentAmount: Number(amount),
+          paymentStatus: "Success",
+        },
+        { transaction: t },
+      );
     } else if (type === "booking") {
       // --- Xử lý booking ---
-      const booking = await Booking.findByPk(entityId);
-      if (!booking)
-        throw new ApiError(StatusCodes.NOT_FOUND, "Booking không tồn tại!");
+      const booking = await Booking.findByPk(entityId, { transaction: t });
+      if (!booking) throw new NotFoundError("Booking không tồn tại");
 
-      await booking.update({
-        bookingStatus: "Paid",
-        totalAmount: amount,
-      });
+      await booking.update(
+        {
+          bookingStatus: "Paid",
+          totalAmount: amount,
+        },
+        { transaction: t },
+      );
 
       const paymentBooking = await PaymentBooking.findOne({
         where: { bookingId: entityId },
+        transaction: t,
       });
 
       if (!paymentBooking)
-        throw new ApiError(
-          StatusCodes.NOT_FOUND,
-          "Thanh toán cho booking không tồn tại!",
-        );
+        throw new NotFoundError("Thanh toán cho booking không tồn tại");
 
-      await paymentBooking.update({
-        transId,
-        paidAt: new Date(),
-        paymentAmount: Number(amount),
-        paymentStatus: "Success",
-      });
+      await paymentBooking.update(
+        {
+          transId,
+          paidAt: new Date(),
+          paymentAmount: Number(amount),
+          paymentStatus: "Success",
+        },
+        { transaction: t },
+      );
     }
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+  });
 };
 
 const momoService = {

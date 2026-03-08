@@ -1,205 +1,98 @@
-import { StatusCodes } from "http-status-codes";
-import ApiError from "../../errors/ApiError.js";
 import DiscountBooking from "../../models/discountBooking.js";
+import BadRequestError from "../../errors/BadRequestError.js";
+import ConflictError from "../../errors/ConflictError.js";
+import NotFoundError from "../../errors/NotFoundError.js";
+import { DISCOUNT_TYPE } from "../../constants/discountConstant.js";
 
-const createDiscountBookingService = async (
-  code,
-  type,
-  value,
-  startDate,
-  endDate,
-  minBookingAmount,
-) => {
-  try {
-    // Kiểm tra trường bắt buộc
-    if (!code || !code.trim()) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Mã giảm giá không được để trống!",
-      );
-    }
-    if (!type) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Loại giảm giá không được để trống!",
-      );
-    }
-    if (value === undefined || value === null) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Giá trị giảm giá không được để trống!",
-      );
-    }
-    if (!startDate) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Ngày bắt đầu không được để trống!",
-      );
-    }
-    if (!endDate) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Ngày kết thúc không được để trống!",
-      );
-    }
-    if (minBookingAmount === undefined || minBookingAmount === null) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Giá trị tối thiểu áp dụng giảm giá không được để trống!",
-      );
-    }
+const createDiscountBookingService = async (data) => {
+  const { code, type, value, startDate, endDate, minBookingAmount } = data;
+  const existing = await DiscountBooking.findOne({
+    where: { code },
+  });
+  if (existing) {
+    throw new ConflictError("Mã giảm giá đã tồn tại");
+  }
+  if (type === DISCOUNT_TYPE.PERCENT && value > 100) {
+    throw new BadRequestError("Giá trị giảm theo phần trăm phải từ 1 đến 100");
+  }
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-    // Kiểm tra trùng mã
-    const existingCode = await DiscountBooking.findOne({ where: { code } });
-    if (existingCode) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Mã giảm giá đã tồn tại!");
-    }
+  if (new Date(startDate) < today) {
+    throw new BadRequestError("Ngày bắt đầu phải từ hôm nay trở đi");
+  }
 
-    // Kiểm tra loại giảm giá
-    const validTypes = ["PERCENT", "AMOUNT"];
-    if (!validTypes.includes(type)) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Loại giảm giá không hợp lệ!",
-      );
-    }
+  const discount = DiscountBooking.create({
+    code,
+    type,
+    value,
+    startDate,
+    endDate,
+    minBookingAmount,
+  });
 
-    // Chuyển sang Date để so sánh
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const now = new Date();
+  return discount;
+};
 
-    // Không cho tạo giảm giá trong quá khứ
-    if (start < now.setHours(0, 0, 0, 0)) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Ngày bắt đầu giảm giá phải từ hôm nay trở đi!",
-      );
-    }
+const getDiscountBookingsService = async (data) => {
+  const { isUsed, type, page, limit } = data;
 
-    if (start > end) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Khoảng thời gian giảm giá không hợp lệ!",
-      );
-    }
-    if (end < now) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Mã giảm giá đã hết hạn!");
-    }
+  const p = page ?? 1;
+  const l = limit ?? 10;
+  const offset = (p - 1) * l;
 
-    // Kiểm tra giá trị giảm
-    if (type === "PERCENT" && (value <= 0 || value > 100)) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Giá trị phần trăm giảm phải từ 1 đến 100!",
-      );
-    }
-    if (type === "AMOUNT" && value <= 0) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Giá trị giảm tiền phải lớn hơn 0!",
-      );
-    }
+  const where = {};
 
-    if (minBookingAmount < 0) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Giá trị thanh toán tối thiểu không hợp lệ!",
-      );
-    }
+  if (type) {
+    where.type = type;
+  }
 
-    // Tạo discount
-    await DiscountBooking.create({
-      code: code.trim().toUpperCase(),
-      type,
-      value,
-      startDate: start,
-      endDate: end,
-      minBookingAmount,
+  if (isUsed !== undefined) {
+    where.isUsed = isUsed; // đã là boolean rồi
+  }
+
+  const { count, rows } = await DiscountBooking.findAndCountAll({
+    where,
+    order: [["createdDate", "DESC"]],
+    limit: l,
+    offset,
+  });
+
+  return {
+    total: count,
+    page: p,
+    limit: l,
+    discountBookings: rows,
+  };
+};
+
+const updateDiscountBookingService = async (data) => {
+  const { discountId } = data;
+  const discountBooking = await DiscountBooking.findByPk(discountId);
+  if (!discountBooking) {
+    throw new NotFoundError("Mã giảm giá đặt sân không tồn tại");
+  }
+
+  if (discountBooking.isActive === true) {
+    await discountBooking.update({
+      isActive: false,
     });
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error.message);
-  }
-};
-
-const getDiscountBookingsService = async (filters = {}, page, limit) => {
-  try {
-    const p = Number(page) || 1;
-    const l = Number(limit) || 10;
-    const where = {};
-
-    // Filter theo type
-    if (filters.type !== undefined) {
-      where.type = filters.type;
-    }
-    if (filters.isUsed !== undefined) {
-      where.isUsed = filters.isUsed === "true"; // chỉ "true" mới là true, còn "false" → false
-    }
-
-    const offset = (p - 1) * l;
-
-    const { count, rows } = await DiscountBooking.findAndCountAll({
-      where,
-      order: [["createdDate", "DESC"]],
-      limit: l,
-      offset,
+  } else {
+    await discountBooking.update({
+      isActive: true,
     });
-
-    return {
-      total: count,
-      page: p,
-      limit: l,
-      discountBookings: rows,
-    };
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error.message);
   }
+
+  return discountBooking;
 };
 
-const updateDiscountBookingService = async (discountId) => {
-  try {
-    const discountBooking = await DiscountBooking.findByPk(discountId);
-    if (!discountBooking) {
-      throw new ApiError(
-        StatusCodes.NOT_FOUND,
-        "Mã giảm giá đặt sân không tồn tại!",
-      );
-    }
-    if (discountBooking.isActive === true) {
-      await discountBooking.update({
-        isActive: false,
-      });
-    } else {
-      await discountBooking.update({
-        isActive: true,
-      });
-    }
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+const deleteDiscountBookingService = async (data) => {
+  const { discountId } = data;
+  const discountBooking = await DiscountBooking.findByPk(discountId);
+  if (!discountBooking) {
+    throw new NotFoundError("Mã giảm giá đặt sân không tồn tại");
   }
-};
-
-const deleteDiscountBookingService = async (discountId) => {
-  try {
-    const discountBooking = await DiscountBooking.findByPk(discountId);
-    if (!discountBooking) {
-      throw new ApiError(
-        StatusCodes.NOT_FOUND,
-        "Mã giảm giá đặt sân không tồn tại!",
-      );
-    }
-    await discountBooking.destroy();
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+  await discountBooking.destroy();
 };
 
 const discountBookingService = {

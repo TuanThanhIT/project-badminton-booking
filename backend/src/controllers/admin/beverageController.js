@@ -1,81 +1,55 @@
+import SuccessResponse from "../../helpers/SuccessResponse.js";
+import asyncHandler from "../../middlewares/asyncHandler.js";
 import beverageService from "../../services/admin/beverageService.js";
 import uploadBuffer from "../../utils/cloudinary.js";
 import uploadFile from "../../utils/upload.js";
-import { StatusCodes } from "http-status-codes";
 
-const addBeverage = async (req, res, next) => {
-  try {
-    const { name, price, stock } = req.body;
-    let thumbnailUrl;
-    if (req.file?.buffer) {
-      const uploaded = await uploadBuffer(req.file.buffer, "beverages");
-      thumbnailUrl = uploaded.secure_url;
-    }
-    const beverage = await beverageService.addBeverageService(
-      name,
-      thumbnailUrl,
-      price,
-      stock
+const addBeverage = asyncHandler(async (req, res) => {
+  let thumbnailUrl;
+  if (req.file?.buffer) {
+    const uploaded = await uploadBuffer(req.file.buffer, "beverages");
+    thumbnailUrl = uploaded.secure_url;
+  }
+  const data = { thumbnailUrl, ...req.body };
+  const beverage = await beverageService.addBeverageService(data);
+  return res
+    .status(201)
+    .json(new SuccessResponse("Tạo thông tin đồ uống thành công", beverage));
+});
+
+const updateBeverage = asyncHandler(async (req, res) => {
+  const updateData = { ...req.body };
+  if (req.file?.path) {
+    const upload = await uploadFile(req.file.path);
+    updateData.thumbnailUrl = upload.secure_url;
+  }
+  const { beverageId } = req.params;
+  const data = { beverageId, updateData };
+  const beverage = await beverageService.updateBeverageService(data);
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse("Cập nhật thông tin đồ uống thành công", beverage),
     );
-    return res.status(201).json(beverage);
-  } catch (error) {
-    next(error);
-  }
-};
-const updateBeverage = async (req, res, next) => {
-  try {
-    const { beverageId } = req.params;
-    const data = req.body;
+});
 
-    if (req.file?.path) {
-      const upload = await uploadFile(req.file.path);
-      data.thumbnailUrl = upload.secure_url;
-    }
+const getBeverageById = asyncHandler(async (req, res) => {
+  const { beverageId } = req.params;
+  const data = { beverageId };
+  const beverage = await beverageService.getBeverageByIdService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Lấy đồ uống thành công", beverage));
+});
 
-    const result = await beverageService.updateBeverageService(
-      beverageId,
-      data
-    );
+const getAllBeverages = asyncHandler(async (req, res) => {
+  const data = { ...req.query };
+  const result = await beverageService.getAllBeveragesService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Lấy tất cả đồ uống thành công", result));
+});
 
-    return res.status(StatusCodes.OK).json(result);
-  } catch (error) {
-    next(error);
-  }
-};
-
-const getBeverageById = async (req, res, next) => {
-  try {
-    const { beverageId } = req.params;
-
-    const beverage = await beverageService.getBeverageByIdService(beverageId);
-
-    return res.status(StatusCodes.OK).json({
-      message: "Lấy đồ uống thành công!",
-      beverage,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const getAllBeverages = async (req, res, next) => {
-  try {
-    const { page, limit, keyword } = req.query;
-
-    const result = await beverageService.getAllBeveragesService({
-      page: Number(page) || 1,
-      limit: Number(limit) || 10,
-      keyword: keyword || "",
-    });
-
-    return res.status(StatusCodes.OK).json({
-      message: "Lấy danh sách đồ uống thành công!",
-      ...result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
 const beverageController = {
   addBeverage,
   updateBeverage,

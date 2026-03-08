@@ -1,38 +1,34 @@
+import SuccessResponse from "../../helpers/SuccessResponse.js";
+import asyncHandler from "../../middlewares/asyncHandler.js";
 import notificationService from "../../services/customer/notificationService.js";
 
-const getNotifications = async (req, res, next) => {
-  try {
-    const userId = req.user.id;
-    const notifications = await notificationService.getNotificationsService(
-      userId
+const getNotifications = asyncHandler(async (req, res) => {
+  const data = { userId: req.user.id };
+  const notifications = await notificationService.getNotificationsService(data);
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse("Lấy danh sách thông báo thành công", notifications),
     );
-    return res.status(200).json(notifications);
-  } catch (error) {
-    next(error);
-  }
-};
+});
 
-const updateNotification = async (req, res, next) => {
-  try {
-    const notificationId = req.params.id;
-    await notificationService.updateNotificationService(notificationId);
-    return res.status(200).json({ message: "Thông báo này đã đọc!" });
-  } catch (error) {
-    next(error);
-  }
-};
+const updateNotification = asyncHandler(async (req, res) => {
+  const { notificationId } = req.params;
+  const data = { notificationId };
+  const notification =
+    await notificationService.updateNotificationService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Thông báo này đánh dấu đã đọc", notification));
+});
 
-const updateAllNotification = async (req, res, next) => {
-  try {
-    const userId = req.user.id;
-    await notificationService.updateAllNotificationService(userId);
-    return res
-      .status(200)
-      .json({ message: "Đã xác nhận đọc tất cả thông báo!" });
-  } catch (error) {
-    next(error);
-  }
-};
+const updateAllNotification = asyncHandler(async (req, res) => {
+  const data = { userId: req.user.id };
+  await notificationService.updateAllNotificationService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Đã xác nhận đọc tất cả thông báo"));
+});
 
 const notificationController = {
   getNotifications,

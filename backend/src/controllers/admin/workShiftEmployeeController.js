@@ -1,91 +1,86 @@
-import { StatusCodes } from "http-status-codes";
 import workShiftEmployeeService from "../../services/admin/workShiftEmployeeService.js";
+import asyncHandler from "../../middlewares/asyncHandler.js";
+import SuccessResponse from "../../helpers/SuccessResponse.js";
 
-const assignEmployeeToShift = async (req, res, next) => {
-  try {
-    const { workShiftId, employeeId, roleInShift } = req.body;
-
-    const result = await workShiftEmployeeService.assignEmployeeToShiftService(
-      workShiftId,
-      employeeId,
-      roleInShift
+const assignEmployeeToShift = asyncHandler(async (req, res) => {
+  const data = { ...req.body };
+  const result =
+    await workShiftEmployeeService.assignEmployeeToShiftService(data);
+  return res
+    .status(201)
+    .json(
+      new SuccessResponse("Phân công ca làm cho nhân viên thành công", result),
     );
+});
 
-    return res.status(StatusCodes.CREATED).json(result);
-  } catch (error) {
-    next(error);
-  }
-};
-
-const getEmployeesByShift = async (req, res, next) => {
-  try {
-    const { workShiftId } = req.params;
-
-    const result = await workShiftEmployeeService.getEmployeesByShiftService(
-      workShiftId
+const getEmployeesByShift = asyncHandler(async (req, res) => {
+  const { workShiftId } = req.params;
+  const data = { workShiftId };
+  const result =
+    await workShiftEmployeeService.getEmployeesByShiftService(data);
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse(
+        "Lấy danh sách nhân viên theo ca làm thành công",
+        result,
+      ),
     );
+});
 
-    return res.status(StatusCodes.OK).json(result);
-  } catch (error) {
-    next(error);
-  }
-};
-
-const updateEmployeeInShift = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const data = req.body;
-
-    const result = await workShiftEmployeeService.updateEmployeeInShiftService(
-      id,
-      data
+const updateEmployeeInShift = asyncHandler(async (req, res) => {
+  const updateData = { ...req.body };
+  const { workShiftEmployeeId } = req.params;
+  const data = { workShiftEmployeeId, updateData };
+  const result =
+    await workShiftEmployeeService.updateEmployeeInShiftService(data);
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse(
+        "Cập nhật thông tin ca làm nhân viên thành công",
+        result,
+      ),
     );
+});
 
-    return res.status(StatusCodes.OK).json(result);
-  } catch (error) {
-    next(error);
-  }
-};
+const removeEmployeeFromShift = asyncHandler(async (req, res) => {
+  const { workShiftEmployeeId } = req.params;
+  const data = { workShiftEmployeeId };
+  await workShiftEmployeeService.removeEmployeeFromShiftService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Xóa nhân viên khỏi ca làm thành công"));
+});
 
-const removeEmployeeFromShift = async (req, res, next) => {
-  try {
-    const { id } = req.params;
+const getAllEmployeesMonthlySalary = asyncHandler(async (req, res) => {
+  const data = { ...req.query };
+  const result =
+    await workShiftEmployeeService.getAllEmployeesMonthlySalaryService(data);
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse(
+        "Lấy lương tất cả nhân viên theo tháng thành công",
+        result,
+      ),
+    );
+});
 
-    const result =
-      await workShiftEmployeeService.removeEmployeeFromShiftService(id);
-
-    return res.status(StatusCodes.OK).json(result);
-  } catch (error) {
-    next(error);
-  }
-};
-
-const getAllEmployeesMonthlySalary = async (req, res, next) => {
-  try {
-    const { month, year } = req.query;
-    const data =
-      await workShiftEmployeeService.getAllEmployeesMonthlySalaryService(
-        month,
-        year
-      );
-    return res.status(200).json(data);
-  } catch (error) {
-    next(error);
-  }
-};
-
-const getWorkShiftEmployeeDetail = async (req, res, next) => {
-  try {
-    const employeeId = req.params.id;
-    const workShiftEmployees =
-      await workShiftEmployeeService.getWorkShiftEmployeeDetailService(
-        employeeId
-      );
-    return res.status(200).json(workShiftEmployees);
-  } catch (error) {
-    next(error);
-  }
-};
+const getWorkShiftEmployeeDetail = asyncHandler(async (req, res) => {
+  const { employeeId } = req.params;
+  const data = { employeeId };
+  const workShiftEmployees =
+    await workShiftEmployeeService.getWorkShiftEmployeeDetailService(data);
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse(
+        "Lấy chi tiết ca làm của nhân viên thành công",
+        workShiftEmployees,
+      ),
+    );
+});
 
 const workShiftEmployeeController = {
   assignEmployeeToShift,

@@ -1,13 +1,13 @@
 import Joi from "joi";
-import { idParams } from "./common/idSchema.js";
-import { contentField, ratingField } from "./common/bookingFeedbackSchema.js";
+import { idParams } from "./common/numberField.js";
+import { contentField, ratingField } from "./common/feedbackFields.js";
 
 export const createBookingFeedbackSchema = {
   body: Joi.object({
-    content: contentField,
-    rate: ratingField,
-    bookingId: idParams("bookingId"),
-    courtId: idParams("courtId"),
+    content: contentField.required(),
+    rate: ratingField.required(),
+    bookingId: idParams("bookingId").required(),
+    courtId: idParams("courtId").required(),
   }),
 };
 
@@ -22,13 +22,17 @@ export const updateBookingFeedbackSchema = {
     bookingId: idParams("bookingId"),
   }),
   body: Joi.object({
-    content: contentField,
-    rate: ratingField,
-  }),
+    content: contentField.optional(),
+    rate: ratingField.optional(),
+  })
+    .min(1) // BẮT BUỘC phải update ít nhất 1 field
+    .messages({
+      "object.min": "You must update at least content or rating",
+    }),
 };
 
 export const getBookingFeedbackSchema = {
   params: Joi.object({
-    courtId: Joi.number().integer().positive().required(),
+    courtId: idParams("courtId"),
   }),
 };

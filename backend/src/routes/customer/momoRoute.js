@@ -2,6 +2,8 @@ import express from "express";
 import momoController from "../../controllers/customer/momoController.js";
 import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
+import validate from "../../middlewares/validate.js";
+import { createPaymentSchema } from "../../validations/momoValidatation.js";
 
 const momoRoute = express.Router();
 
@@ -11,13 +13,14 @@ const initMomoCustomerRoute = (app) => {
     "/create-momo-payment",
     auth,
     authorize("USER"),
-    momoController.createMoMoPayment
+    validate(createPaymentSchema),
+    momoController.createMoMoPayment,
   );
   // MoMo gọi webhook
   momoRoute.post(
     "/momo-webhook",
     express.json(),
-    momoController.handleMoMoWebhook
+    momoController.handleMoMoWebhook,
   );
   app.use("/user/momo", momoRoute);
 };

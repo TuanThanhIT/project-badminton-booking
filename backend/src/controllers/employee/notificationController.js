@@ -1,34 +1,32 @@
 import notificationService from "../../services/employee/notificationService.js";
+import asyncHandler from "../../middlewares/asyncHandler.js";
+import SuccessResponse from "../../helpers/SuccessResponse.js";
 
-const getNotifications = async (req, res, next) => {
-  try {
-    const notifications = await notificationService.getNotificationsService();
-    return res.status(200).json(notifications);
-  } catch (error) {
-    next(error);
-  }
-};
+const getNotifications = asyncHandler(async (req, res) => {
+  const notifications = await notificationService.getNotificationsService();
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse("Lấy tất cả thông báo thành công", notifications),
+    );
+});
 
-const updateNotification = async (req, res, next) => {
-  try {
-    const notificationId = req.params.id;
-    await notificationService.updateNotificationService(notificationId);
-    return res.status(200).json({ message: "Thông báo này đã đọc!" });
-  } catch (error) {
-    next(error);
-  }
-};
+const updateNotification = asyncHandler(async (req, res) => {
+  const { notificationId } = req.params;
+  const data = { notificationId };
+  const notification =
+    await notificationService.updateNotificationService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Đánh dấu thông báo đã đọc", notification));
+});
 
-const updateAllNotification = async (req, res, next) => {
-  try {
-    await notificationService.updateAllNotificationService();
-    return res
-      .status(200)
-      .json({ message: "Đã xác nhận đọc tất cả thông báo!" });
-  } catch (error) {
-    next(error);
-  }
-};
+const updateAllNotification = asyncHandler(async (req, res) => {
+  await notificationService.updateAllNotificationService();
+  return res
+    .status(200)
+    .json(new SuccessResponse("Đánh dấu đã đọc tất cả thông báo"));
+});
 
 const notificationController = {
   getNotifications,

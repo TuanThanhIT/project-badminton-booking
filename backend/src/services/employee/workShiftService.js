@@ -1,5 +1,3 @@
-import { StatusCodes } from "http-status-codes";
-import ApiError from "../../errors/ApiError.js";
 import {
   CashRegister,
   WorkShift,
@@ -7,50 +5,38 @@ import {
 } from "../../models/index.js";
 import sequelize from "../../config/db.js";
 import { sendAdminNotification } from "../../utils/sendNotification.js";
+import NotFoundError from "../../errors/NotFoundError.js";
+import BadRequestError from "../../errors/BadRequestError.js";
 
-const getWorkShiftByDateService = async (workDate) => {
-  try {
-    const workShifts = await WorkShift.findAll({
-      where: { workDate },
-      attributes: [
-        "id",
-        "name",
-        "workDate",
-        "startTime",
-        "endTime",
-        "shiftWage",
-      ],
-    });
-    return workShifts;
-  } catch (error) {
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+const getWorkShiftByDateService = async (data) => {
+  const { workDate } = data;
+  const workShifts = await WorkShift.findAll({
+    where: { workDate },
+    attributes: ["id", "name", "workDate", "startTime", "endTime", "shiftWage"],
+  });
+  return workShifts;
 };
 
-export const updateCheckInAndCashRegisterService = async (
-  workShiftId,
-  checkInTime,
-  openingCash,
-) => {
-  const t = await sequelize.transaction();
-  try {
+const updateCheckInAndCashRegisterService = async (data) => {
+  const { workShiftId, checkInTime, openingCash } = data;
+  return sequelize.transaction(async (t) => {
     const workShift = await WorkShift.findByPk(workShiftId);
     if (!workShift) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Ca làm không tồn tại!");
+      throw new NotFoundError("Ca làm không tồn tại");
     }
 
     if (!checkInTime || !/^\d{1,2}:\d{2}(:\d{2})?$/.test(checkInTime)) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
+      throw new BadRequestError(
         "Giờ checkIn không hợp lệ! (HH:MM hoặc HH:MM:SS)",
       );
     }
 
     const workShiftEmployee = await WorkShiftEmployee.findOne({
       where: { workShiftId },
+      transaction: t,
     });
     if (!workShiftEmployee) {
-      throw new ApiError("Ca làm chưa được phân cho nhân viên!");
+      throw new NotFoundError("Ca làm chưa được phân cho nhân viên!");
     } else {
       if (!workShiftEmployee.checkIn) {
         const today = new Date();
@@ -73,61 +59,50 @@ export const updateCheckInAndCashRegisterService = async (
           { transaction: t },
         );
       } else {
-        throw new ApiError(
-          StatusCodes.BAD_REQUEST,
+        throw new BadRequestError(
           "Mỗi ca chỉ được check in 1 lần! Không thể check in lại!",
         );
       }
-      await t.commit();
+      t.afterCommit(() => {
+        sendAdminNotification(
+          "Check-in ca làm",
+          `Nhân viên có id là ${workShiftEmployee.employeeId} vừa check-in vào ${workShift.name} ngày ${workShift.workDate}`,
+          "ADMIN",
+          "adm-check-in",
+        ).catch((err) => console.error("Admin notify failed", err));
+      });
 
-      await sendAdminNotification(
-        "Check-in ca làm",
-        `Nhân viên có id là ${workShiftEmployee.employeeId} vừa check-in vào ${workShift.name} ngày ${workShift.workDate}`,
-        "ADMIN",
-        "adm-check-in",
-      );
+      return workShift;
     }
-  } catch (error) {
-    await t.rollback();
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+  });
 };
 
-export const updateCheckoutAndCashRegisterService = async (
-  workShiftId,
-  checkOutTime,
-  closingCash,
-) => {
-  const t = await sequelize.transaction();
-  try {
+const updateCheckoutAndCashRegisterService = async (data) => {
+  const { workShiftId, checkOutTime, closingCash } = data;
+  return sequelize.transaction(async (t) => {
     const workShift = await WorkShift.findByPk(workShiftId);
     if (!workShift) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Ca làm không tồn tại!");
+      throw new NotFoundError("Ca làm không tồn tại");
     }
 
     if (!checkOutTime || !/^\d{1,2}:\d{2}(:\d{2})?$/.test(checkOutTime)) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
+      throw new BadRequestError(
         "Giờ checkOut không hợp lệ! (HH:MM hoặc HH:MM:SS)",
       );
     }
 
     const workShiftEmployee = await WorkShiftEmployee.findOne({
       where: { workShiftId },
+      transaction: t,
     });
 
     if (!workShiftEmployee) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Ca làm chưa được phân cho nhân viên!",
-      );
+      throw new NotFoundError("Ca làm chưa được phân cho nhân viên");
     }
 
     if (workShiftEmployee.checkOut) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Mỗi ca chỉ được check out 1 lần! Không thể check out lại!",
+      throw new BadRequestError(
+        "Mỗi ca chỉ được check out 1 lần. Không thể check out lại",
       );
     }
 
@@ -140,17 +115,14 @@ export const updateCheckoutAndCashRegisterService = async (
 
     // ------------------- Tính earnedWage -------------------
     if (!workShiftEmployee.checkIn) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Chưa có thời gian checkIn!");
+      throw new NotFoundError("Chưa có thời gian checkIn");
     }
 
     const checkInDate = new Date(workShiftEmployee.checkIn);
     const checkOutDate = new Date(checkOutDateStr);
 
     if (checkOutDate <= checkInDate) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Thời gian checkOut phải lớn hơn checkIn!",
-      );
+      throw new BadRequestError("Thời gian checkOut phải lớn hơn checkIn");
     }
 
     const hoursWorked = (checkOutDate - checkInDate) / 1000 / 3600; // giờ làm việc
@@ -173,19 +145,18 @@ export const updateCheckoutAndCashRegisterService = async (
       },
       { transaction: t },
     );
-    t.commit();
 
-    await sendAdminNotification(
-      "Check-out ca làm",
-      `Nhân viên có id là ${workShiftEmployee.employeeId} vừa check-out khỏi ${workShift.name} ngày ${workShift.workDate}`,
-      "ADMIN",
-      "adm-check-out",
-    );
-  } catch (error) {
-    t.rollback();
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+    t.afterCommit(() => {
+      sendAdminNotification(
+        "Check-out ca làm",
+        `Nhân viên có id là ${workShiftEmployee.employeeId} vừa check-out khỏi ${workShift.name} ngày ${workShift.workDate}`,
+        "ADMIN",
+        "adm-check-out",
+      ).catch((err) => console.error("Admin notify failed", err));
+    });
+
+    return workShift;
+  });
 };
 
 const workShiftService = {

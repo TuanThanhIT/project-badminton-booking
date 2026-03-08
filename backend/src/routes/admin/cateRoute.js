@@ -2,6 +2,12 @@ import express from "express";
 import categoryAdminController from "../../controllers/admin/categoryController.js";
 import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
+import validate from "../../middlewares/validate.js";
+import {
+  createCategorySchema,
+  getCategoriesSchema,
+  updateCategorySchema,
+} from "../../validations/cateValidation.js";
 
 const cateRoute = express.Router();
 
@@ -10,25 +16,28 @@ const initCateAdminRoute = (app) => {
     "/add",
     auth,
     authorize("ADMIN"),
-    categoryAdminController.createCategory
+    validate(createCategorySchema),
+    categoryAdminController.createCategory,
   );
   cateRoute.get(
     "/",
     auth,
     authorize("ADMIN"),
-    categoryAdminController.getCategories
+    validate(getCategoriesSchema),
+    categoryAdminController.getCategories,
   );
   cateRoute.put(
-    "/edit/:id",
+    "/edit/:cateId",
     auth,
     authorize("ADMIN"),
-    categoryAdminController.updateCategory
+    validate(updateCategorySchema),
+    categoryAdminController.updateCategory,
   );
   cateRoute.get(
     "/list",
     auth,
     authorize("ADMIN"),
-    categoryAdminController.getListCategory
+    categoryAdminController.getListCategory,
   );
   app.use("/admin/category", cateRoute);
 };

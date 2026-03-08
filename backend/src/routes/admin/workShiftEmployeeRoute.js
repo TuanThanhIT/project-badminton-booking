@@ -2,6 +2,15 @@ import express from "express";
 import workShiftEmployeeController from "../../controllers/admin/workShiftEmployeeController.js";
 import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
+import validate from "../../middlewares/validate.js";
+import {
+  assignEmployeeToShiftSchema,
+  getAllEmployeesMonthlySalarySchema,
+  getEmployeesByShiftSchema,
+  getWorkShiftEmployeeDetailSchema,
+  removeEmployeeFromShiftSchema,
+  updateEmployeeInShiftSchema,
+} from "../../validations/workShiftEmployeeValidation.js";
 
 const router = express.Router();
 
@@ -10,42 +19,48 @@ const initWorkShiftEmployeeRoute = (app) => {
     "/assign",
     auth,
     authorize("ADMIN"),
-    workShiftEmployeeController.assignEmployeeToShift
+    validate(assignEmployeeToShiftSchema),
+    workShiftEmployeeController.assignEmployeeToShift,
   );
 
   router.get(
     "/shift/:workShiftId",
     auth,
     authorize("ADMIN"),
-    workShiftEmployeeController.getEmployeesByShift
+    validate(getEmployeesByShiftSchema),
+    workShiftEmployeeController.getEmployeesByShift,
   );
 
   router.put(
-    "/update/:id",
+    "/update/:workShiftEmployeeId",
     auth,
     authorize("ADMIN"),
-    workShiftEmployeeController.updateEmployeeInShift
+    validate(updateEmployeeInShiftSchema),
+    workShiftEmployeeController.updateEmployeeInShift,
   );
 
   router.delete(
-    "/remove/:id",
+    "/remove/:workShiftEmployeeId",
     auth,
     authorize("ADMIN"),
-    workShiftEmployeeController.removeEmployeeFromShift
+    validate(removeEmployeeFromShiftSchema),
+    workShiftEmployeeController.removeEmployeeFromShift,
   );
 
   router.get(
     "/all/monthly-salary",
     auth,
     authorize("ADMIN"),
-    workShiftEmployeeController.getAllEmployeesMonthlySalary
+    validate(getAllEmployeesMonthlySalarySchema),
+    workShiftEmployeeController.getAllEmployeesMonthlySalary,
   );
 
   router.get(
-    "/detail/:id",
+    "/detail/:employeeId",
     auth,
     authorize("ADMIN"),
-    workShiftEmployeeController.getWorkShiftEmployeeDetail
+    validate(getWorkShiftEmployeeDetailSchema),
+    workShiftEmployeeController.getWorkShiftEmployeeDetail,
   );
   app.use("/admin/work-shift-employee", router);
 };

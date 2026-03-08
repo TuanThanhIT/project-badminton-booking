@@ -4,8 +4,7 @@ import userService from "../../services/customer/userService.js";
 import uploadBuffer from "../../utils/cloudinary.js";
 
 const getProfile = asyncHandler(async (req, res) => {
-  const userId = req.user.id;
-  const data = { userId };
+  const data = { userId: req.user.id };
   const profile = await userService.getProfileService(data);
   return res
     .status(200)
@@ -14,48 +13,26 @@ const getProfile = asyncHandler(async (req, res) => {
 
 const updateProfile = asyncHandler(async (req, res) => {
   const userId = req.user.id;
-  const { fullName, dob, gender, address, phoneNumber } = req.body || {};
-  // Nếu có file avatar
-  let avatar;
+  const updateData = { ...req.body };
   if (req.file?.buffer) {
     const uploaded = await uploadBuffer(req.file.buffer, "profiles");
-    avatar = uploaded.secure_url;
+    updateData.avatar = uploaded.secure_url;
   }
-
-  // Tạo object chứa những trường tồn tại trong req.body
-  const updateData = {};
-  if (fullName !== undefined) updateData.fullName = fullName;
-  if (dob !== undefined) updateData.dob = dob;
-  if (gender !== undefined) updateData.gender = gender;
-  if (address !== undefined) updateData.address = address;
-  if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber;
-  if (avatar) updateData.avatar = avatar;
-
-  const data = { updateData, userId };
-
-  // Gọi service
-  const profileUpdate = await userService.updateProfileService(data);
-
+  const data = {
+    userId,
+    updateData,
+  };
+  const profile = await userService.updateProfileService(data);
   return res
     .status(200)
-    .json(new SuccessResponse("Cập nhật profile thành công", profileUpdate));
+    .json(new SuccessResponse("Cập nhật profile thành công", profile));
 });
 
 const updateUserInfo = asyncHandler(async (req, res) => {
   const userId = req.user.id;
-  const { fullName, address, phoneNumber } = req.body || {};
-
-  // Tạo object chứa những trường tồn tại trong req.body
-  const updateUserData = {};
-  if (fullName !== undefined) updateUserData.fullName = fullName;
-  if (address !== undefined) updateUserData.address = address;
-  if (phoneNumber !== undefined) updateUserData.phoneNumber = phoneNumber;
-
+  const updateUserData = { ...req.body };
   const data = { updateUserData, userId };
-
-  // Gọi service
   const profileUpdate = await userService.updateUserInfoService(data);
-
   return res
     .status(200)
     .json(

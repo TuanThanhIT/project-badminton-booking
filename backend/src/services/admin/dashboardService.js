@@ -2,7 +2,6 @@ import { col, fn, literal, Op } from "sequelize";
 import {
   Beverage,
   Booking,
-  CashRegister,
   OfflineBeverageItem,
   OfflineBooking,
   OfflineProductItem,
@@ -15,402 +14,352 @@ import {
   WorkShift,
   WorkShiftEmployee,
 } from "../../models/index.js";
-import ApiError from "../../errors/ApiError.js";
-import { StatusCodes } from "http-status-codes";
-
-const buildDayRange = (date) => {
-  const d = date ? new Date(date) : new Date();
-
-  const start = new Date(d);
-  start.setHours(0, 0, 0, 0);
-
-  const end = new Date(d);
-  end.setHours(23, 59, 59, 999);
-
-  return { start, end };
-};
-
-const getCurrentWeekRange = () => {
-  const now = new Date();
-  const day = now.getDay(); // 0 = CN
-  const diffToMonday = day === 0 ? -6 : 1 - day;
-
-  const start = new Date(now);
-  start.setDate(now.getDate() + diffToMonday);
-  start.setHours(0, 0, 0, 0);
-
-  const end = new Date(start);
-  end.setDate(start.getDate() + 6);
-  end.setHours(23, 59, 59, 999);
-
-  return { start, end };
-};
+import { buildDayRange, getCurrentWeekRange } from "../../utils/dateRange.js";
+import { BOOKING_STATUS } from "../../constants/bookingConstant.js";
+import { ORDER_STATUS } from "../../constants/orderConstant.js";
+import { PAYMENT_STATUS } from "../../constants/paymentConstant.js";
 
 // Số lượt đặt sân trong ngày hôm nay
 const getTodayBookingCountService = async () => {
-  try {
-    const { start, end } = buildDayRange();
+  const { start, end } = buildDayRange();
 
-    const [online, offline] = await Promise.all([
-      Booking.count({
-        where: { createdDate: { [Op.between]: [start, end] } },
-      }),
+  const [online, offline] = await Promise.all([
+    Booking.count({
+      where: { createdDate: { [Op.between]: [start, end] } },
+    }),
 
-      OfflineBooking.count({
-        where: { createdDate: { [Op.between]: [start, end] } },
-      }),
-    ]);
+    OfflineBooking.count({
+      where: { createdDate: { [Op.between]: [start, end] } },
+    }),
+  ]);
 
-    return {
-      online,
-      offline,
-      total: online + offline,
-    };
-  } catch (error) {
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+  return {
+    online,
+    offline,
+    total: online + offline,
+  };
 };
 
 // Lấy doanh thu trong 7 ngày
 const getRevenueLast7DaysService = async () => {
-  try {
-    const today = new Date();
-    const startDate = new Date();
-    startDate.setDate(today.getDate() - 6);
-    startDate.setHours(0, 0, 0, 0);
+  const today = new Date();
+  const startDate = new Date();
+  startDate.setDate(today.getDate() - 6);
+  startDate.setHours(0, 0, 0, 0);
 
-    today.setHours(23, 59, 59, 999);
+  today.setHours(23, 59, 59, 999);
 
-    /* ========= ONLINE BOOKING ========= */
-    const bookingRevenue = await Booking.findAll({
-      attributes: [
-        [fn("DATE", col("createdDate")), "date"],
-        [fn("SUM", col("totalAmount")), "total"],
-      ],
-      where: {
-        bookingStatus: "Paid",
-        createdDate: { [Op.between]: [startDate, today] },
-      },
-      group: [literal("DATE(createdDate)")],
-      raw: true,
+  /* ========= ONLINE BOOKING ========= */
+  const bookingRevenue = await Booking.findAll({
+    attributes: [
+      [fn("DATE", col("createdDate")), "date"],
+      [fn("SUM", col("totalAmount")), "total"],
+    ],
+    where: {
+      bookingStatus: BOOKING_STATUS.PAID,
+      createdDate: { [Op.between]: [startDate, today] },
+    },
+    group: [literal("DATE(createdDate)")],
+    raw: true,
+  });
+
+  /* ========= ONLINE ORDER ========= */
+  const orderRevenue = await Order.findAll({
+    attributes: [
+      [fn("DATE", col("createdDate")), "date"],
+      [fn("SUM", col("totalAmount")), "total"],
+    ],
+    where: {
+      orderStatus: ORDER_STATUS.COMPLETED,
+      createdDate: { [Op.between]: [startDate, today] },
+    },
+    group: [literal("DATE(createdDate)")],
+    raw: true,
+  });
+
+  /* ========= OFFLINE ========= */
+  const offlineRevenue = await OfflineBooking.findAll({
+    attributes: [
+      [fn("DATE", col("paidAt")), "date"],
+      [fn("SUM", col("grandTotal")), "total"],
+    ],
+    where: {
+      paymentStatus: PAYMENT_STATUS.PAID,
+      paidAt: { [Op.between]: [startDate, today] },
+    },
+    group: [literal("DATE(paidAt)")],
+    raw: true,
+  });
+
+  /* ========= MERGE DATA ========= */
+  const revenueMap = {};
+
+  const merge = (data) => {
+    data.forEach((item) => {
+      const date = item.date;
+      revenueMap[date] = (revenueMap[date] || 0) + Number(item.total || 0);
     });
+  };
 
-    /* ========= ONLINE ORDER ========= */
-    const orderRevenue = await Order.findAll({
-      attributes: [
-        [fn("DATE", col("createdDate")), "date"],
-        [fn("SUM", col("totalAmount")), "total"],
-      ],
-      where: {
-        orderStatus: "Completed",
-        createdDate: { [Op.between]: [startDate, today] },
-      },
-      group: [literal("DATE(createdDate)")],
-      raw: true,
+  merge(bookingRevenue);
+  merge(orderRevenue);
+  merge(offlineRevenue);
+
+  /* ========= BUILD FULL 7 DAYS ========= */
+  const result = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(startDate);
+    d.setDate(startDate.getDate() + i);
+
+    const key = d.toISOString().slice(0, 10);
+
+    result.push({
+      date: key,
+      total: revenueMap[key] || 0,
     });
-
-    /* ========= OFFLINE ========= */
-    const offlineRevenue = await OfflineBooking.findAll({
-      attributes: [
-        [fn("DATE", col("paidAt")), "date"],
-        [fn("SUM", col("grandTotal")), "total"],
-      ],
-      where: {
-        paymentStatus: "Paid",
-        paidAt: { [Op.between]: [startDate, today] },
-      },
-      group: [literal("DATE(paidAt)")],
-      raw: true,
-    });
-
-    /* ========= MERGE DATA ========= */
-    const revenueMap = {};
-
-    const merge = (data) => {
-      data.forEach((item) => {
-        const date = item.date;
-        revenueMap[date] = (revenueMap[date] || 0) + Number(item.total || 0);
-      });
-    };
-
-    merge(bookingRevenue);
-    merge(orderRevenue);
-    merge(offlineRevenue);
-
-    /* ========= BUILD FULL 7 DAYS ========= */
-    const result = [];
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(startDate);
-      d.setDate(startDate.getDate() + i);
-
-      const key = d.toISOString().slice(0, 10);
-
-      result.push({
-        date: key,
-        total: revenueMap[key] || 0,
-      });
-    }
-
-    return result;
-  } catch (error) {
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
   }
+
+  return result;
 };
 
 // Đơn hàng bán lẻ hôm nay, có số lượng sản phẩm online
 const getTodayRetailOrderService = async () => {
-  try {
-    const { start, end } = buildDayRange();
+  const { start, end } = buildDayRange();
 
-    // ===== ONLINE ORDERS =====
-    const onlineOrders = await Order.count({
-      where: {
-        orderStatus: "Completed",
-        createdDate: { [Op.between]: [start, end] },
+  // ===== ONLINE ORDERS =====
+  const onlineOrders = await Order.count({
+    where: {
+      orderStatus: ORDER_STATUS.COMPLETED,
+      createdDate: { [Op.between]: [start, end] },
+    },
+  });
+
+  // ===== ONLINE PRODUCT ITEMS =====
+  const onlineProducts = await OrderDetail.findAll({
+    attributes: [[fn("SUM", col("quantity")), "totalSold"]],
+    include: [
+      {
+        model: Order,
+        as: "order",
+        attributes: [],
+        where: {
+          orderStatus: ORDER_STATUS.COMPLETED,
+          createdDate: { [Op.between]: [start, end] },
+        },
       },
-    });
+    ],
+    raw: true,
+  });
 
-    // ===== ONLINE PRODUCT ITEMS =====
-    const onlineProducts = await OrderDetail.findAll({
-      attributes: [[fn("SUM", col("quantity")), "totalSold"]],
-      include: [
-        {
-          model: Order,
-          as: "order",
-          attributes: [],
-          where: {
-            orderStatus: "Completed",
-            createdDate: { [Op.between]: [start, end] },
-          },
+  const onlineProductsQty = onlineProducts[0]?.totalSold || 0;
+
+  // ===== OFFLINE PRODUCT ITEMS =====
+  const offlineProducts = await OfflineProductItem.findAll({
+    attributes: [[fn("SUM", col("OfflineProductItem.quantity")), "totalSold"]],
+    include: [
+      {
+        model: OfflineBooking,
+        as: "offlineBooking",
+        attributes: [],
+        where: {
+          paymentStatus: PAYMENT_STATUS.PAID,
+          paidAt: { [Op.between]: [start, end] },
         },
-      ],
-      raw: true,
-    });
+      },
+    ],
+    raw: true,
+  });
+  const offlineProductsQty = offlineProducts[0]?.totalSold || 0;
 
-    const onlineProductsQty = onlineProducts[0]?.totalSold || 0;
-
-    // ===== OFFLINE PRODUCT ITEMS =====
-    const offlineProducts = await OfflineProductItem.findAll({
-      attributes: [
-        [fn("SUM", col("OfflineProductItem.quantity")), "totalSold"],
-      ],
-      include: [
-        {
-          model: OfflineBooking,
-          as: "offlineBooking",
-          attributes: [],
-          where: {
-            paymentStatus: "Paid",
-            paidAt: { [Op.between]: [start, end] },
-          },
+  // ===== OFFLINE BEVERAGE ITEMS =====
+  const offlineBeverages = await OfflineBeverageItem.findAll({
+    attributes: [[fn("SUM", col("OfflineBeverageItem.quantity")), "totalSold"]],
+    include: [
+      {
+        model: OfflineBooking,
+        as: "offlineBooking",
+        attributes: [],
+        where: {
+          paymentStatus: PAYMENT_STATUS.PAID,
+          paidAt: { [Op.between]: [start, end] },
         },
-      ],
-      raw: true,
-    });
-    const offlineProductsQty = offlineProducts[0]?.totalSold || 0;
+      },
+    ],
+    raw: true,
+  });
+  const offlineBeveragesQty = offlineBeverages[0]?.totalSold || 0;
 
-    // ===== OFFLINE BEVERAGE ITEMS =====
-    const offlineBeverages = await OfflineBeverageItem.findAll({
-      attributes: [
-        [fn("SUM", col("OfflineBeverageItem.quantity")), "totalSold"],
-      ],
-      include: [
-        {
-          model: OfflineBooking,
-          as: "offlineBooking",
-          attributes: [],
-          where: {
-            paymentStatus: "Paid",
-            paidAt: { [Op.between]: [start, end] },
-          },
-        },
-      ],
-      raw: true,
-    });
-    const offlineBeveragesQty = offlineBeverages[0]?.totalSold || 0;
-
-    return {
-      onlineOrders, // số đơn hàng online hôm nay
-      onlineItems: Number(onlineProductsQty), // số sản phẩm bán online hôm nay
-      offlineItems: Number(offlineProductsQty) + Number(offlineBeveragesQty),
-    };
-  } catch (error) {
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+  return {
+    onlineOrders, // số đơn hàng online hôm nay
+    onlineItems: Number(onlineProductsQty), // số sản phẩm bán online hôm nay
+    offlineItems: Number(offlineProductsQty) + Number(offlineBeveragesQty),
+  };
 };
 
 // top sản phẩm bán chạy theo variant trong tuần
 const getTopProductService = async () => {
-  try {
-    const limit = 5;
-    const { start, end } = getCurrentWeekRange();
+  const limit = 5;
+  const { start, end } = getCurrentWeekRange();
 
-    /* ===================== ONLINE ===================== */
-    const onlineData = await OrderDetail.findAll({
-      attributes: [
-        [fn("SUM", col("OrderDetail.quantity")), "totalSold"],
-        [fn("SUM", col("OrderDetail.subTotal")), "revenue"],
-      ],
-      include: [
-        {
-          model: Order,
-          as: "order",
-          attributes: [],
-          where: {
-            orderStatus: "Completed",
-            createdDate: { [Op.between]: [start, end] },
+  /* ===================== ONLINE ===================== */
+  const onlineData = await OrderDetail.findAll({
+    attributes: [
+      [fn("SUM", col("OrderDetail.quantity")), "totalSold"],
+      [fn("SUM", col("OrderDetail.subTotal")), "revenue"],
+    ],
+    include: [
+      {
+        model: Order,
+        as: "order",
+        attributes: [],
+        where: {
+          orderStatus: ORDER_STATUS.COMPLETED,
+          createdDate: { [Op.between]: [start, end] },
+        },
+      },
+      {
+        model: ProductVarient,
+        as: "varient",
+        attributes: ["id", "color", "size"],
+        include: [
+          {
+            model: Product,
+            as: "product",
+            attributes: ["id", "productName"],
           },
-        },
-        {
-          model: ProductVarient,
-          as: "varient",
-          attributes: ["id", "color", "size"],
-          include: [
-            {
-              model: Product,
-              as: "product",
-              attributes: ["id", "productName"],
-            },
-          ],
-        },
-      ],
-      group: [
-        "varient.id",
-        "varient.color",
-        "varient.size",
-        "varient.product.id",
-        "varient.product.productName",
-      ],
-      raw: true,
-    });
+        ],
+      },
+    ],
+    group: [
+      "varient.id",
+      "varient.color",
+      "varient.size",
+      "varient.product.id",
+      "varient.product.productName",
+    ],
+    raw: true,
+  });
 
-    /* ===================== OFFLINE ===================== */
-    const offlineData = await OfflineProductItem.findAll({
-      attributes: [
-        [fn("SUM", col("OfflineProductItem.quantity")), "totalSold"],
-        [fn("SUM", col("OfflineProductItem.subTotal")), "revenue"],
-      ],
-      include: [
-        {
-          model: OfflineBooking,
-          as: "offlineBooking",
-          attributes: [],
-          where: {
-            paymentStatus: "Paid",
-            paidAt: { [Op.between]: [start, end] },
+  /* ===================== OFFLINE ===================== */
+  const offlineData = await OfflineProductItem.findAll({
+    attributes: [
+      [fn("SUM", col("OfflineProductItem.quantity")), "totalSold"],
+      [fn("SUM", col("OfflineProductItem.subTotal")), "revenue"],
+    ],
+    include: [
+      {
+        model: OfflineBooking,
+        as: "offlineBooking",
+        attributes: [],
+        where: {
+          paymentStatus: PAYMENT_STATUS.PAID,
+          paidAt: { [Op.between]: [start, end] },
+        },
+      },
+      {
+        model: ProductVarient,
+        as: "productVarient",
+        attributes: ["id", "color", "size"],
+        include: [
+          {
+            model: Product,
+            as: "product",
+            attributes: ["id", "productName"],
           },
-        },
-        {
-          model: ProductVarient,
-          as: "productVarient",
-          attributes: ["id", "color", "size"],
-          include: [
-            {
-              model: Product,
-              as: "product",
-              attributes: ["id", "productName"],
-            },
-          ],
-        },
-      ],
-      group: [
-        "productVarient.id",
-        "productVarient.color",
-        "productVarient.size",
-        "productVarient.product.id",
-        "productVarient.product.productName",
-      ],
-      raw: true,
-    });
+        ],
+      },
+    ],
+    group: [
+      "productVarient.id",
+      "productVarient.color",
+      "productVarient.size",
+      "productVarient.product.id",
+      "productVarient.product.productName",
+    ],
+    raw: true,
+  });
 
-    /* ===================== MERGE ===================== */
-    const map = new Map();
+  /* ===================== MERGE ===================== */
+  const map = new Map();
 
-    const merge = (item, prefix) => {
-      const varientId = item[`${prefix}.id`];
+  const merge = (item, prefix) => {
+    const varientId = item[`${prefix}.id`];
 
-      if (!map.has(varientId)) {
-        map.set(varientId, {
-          varientId,
-          productName: item[`${prefix}.product.productName`],
-          color: item[`${prefix}.color`],
-          size: item[`${prefix}.size`],
-          totalSold: 0,
-          revenue: 0,
-        });
-      }
+    if (!map.has(varientId)) {
+      map.set(varientId, {
+        varientId,
+        productName: item[`${prefix}.product.productName`],
+        color: item[`${prefix}.color`],
+        size: item[`${prefix}.size`],
+        totalSold: 0,
+        revenue: 0,
+      });
+    }
 
-      const row = map.get(varientId);
-      row.totalSold += Number(item.totalSold || 0);
-      row.revenue += Number(item.revenue || 0);
-    };
+    const row = map.get(varientId);
+    row.totalSold += Number(item.totalSold || 0);
+    row.revenue += Number(item.revenue || 0);
+  };
 
-    onlineData.forEach((i) => merge(i, "varient"));
-    offlineData.forEach((i) => merge(i, "productVarient"));
+  onlineData.forEach((i) => merge(i, "varient"));
+  offlineData.forEach((i) => merge(i, "productVarient"));
 
-    /* ===================== SORT + LIMIT ===================== */
-    const data = Array.from(map.values())
-      .sort((a, b) => b.totalSold - a.totalSold)
-      .slice(0, limit);
+  /* ===================== SORT + LIMIT ===================== */
+  const data = Array.from(map.values())
+    .sort((a, b) => b.totalSold - a.totalSold)
+    .slice(0, limit);
 
-    return {
-      range: { start, end },
-      total: data.length,
-      data,
-    };
-  } catch (error) {
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+  return {
+    range: { start, end },
+    total: data.length,
+    data,
+  };
 };
 
 // top đồ uống bán chạy trong tuần
 const getTopBeverageService = async () => {
-  try {
-    const limit = 5;
-    const { start, end } = getCurrentWeekRange(); // dùng tuần hiện tại
+  const limit = 5;
+  const { start, end } = getCurrentWeekRange(); // dùng tuần hiện tại
 
-    const data = await OfflineBeverageItem.findAll({
-      attributes: [
-        "beverageId",
-        [fn("SUM", col("quantity")), "totalSold"],
-        [fn("SUM", literal("price * quantity")), "revenue"],
-      ],
-      include: [
-        {
-          model: OfflineBooking,
-          as: "offlineBooking",
-          attributes: [],
-          where: {
-            paymentStatus: "Paid",
-            paidAt: { [Op.between]: [start, end] },
-          },
+  const data = await OfflineBeverageItem.findAll({
+    attributes: [
+      "beverageId",
+      [fn("SUM", col("quantity")), "totalSold"],
+      [fn("SUM", literal("price * quantity")), "revenue"],
+    ],
+    include: [
+      {
+        model: OfflineBooking,
+        as: "offlineBooking",
+        attributes: [],
+        where: {
+          paymentStatus: PAYMENT_STATUS.PAID,
+          paidAt: { [Op.between]: [start, end] },
         },
-        {
-          model: Beverage,
-          as: "beverage",
-          attributes: ["id", "name"],
-        },
-      ],
-      group: ["beverageId", "beverage.id", "beverage.name"],
-      order: [[fn("SUM", col("quantity")), "DESC"]],
-      limit,
-      raw: true,
-      nest: true,
-    });
+      },
+      {
+        model: Beverage,
+        as: "beverage",
+        attributes: ["id", "name"],
+      },
+    ],
+    group: ["beverageId", "beverage.id", "beverage.name"],
+    order: [[fn("SUM", col("quantity")), "DESC"]],
+    limit,
+    raw: true,
+    nest: true,
+  });
 
-    return {
-      range: { start, end },
-      total: data.length,
-      data: data.map((i) => ({
-        beverageId: i.beverage.id,
-        name: i.beverage.name,
-        totalSold: Number(i.totalSold),
-        revenue: Number(i.revenue),
-      })),
-    };
-  } catch (error) {
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+  return {
+    range: { start, end },
+    total: data.length,
+    data: data.map((i) => ({
+      beverageId: i.beverage.id,
+      name: i.beverage.name,
+      totalSold: Number(i.totalSold),
+      revenue: Number(i.revenue),
+    })),
+  };
 };
 
 // cảnh báo hàng tồn kho thấp

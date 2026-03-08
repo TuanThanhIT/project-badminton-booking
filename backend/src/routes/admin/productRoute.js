@@ -3,6 +3,22 @@ import productController from "../../controllers/admin/productController.js";
 import multer from "multer";
 import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
+import validate from "../../middlewares/validate.js";
+import {
+  createProductImagesSchema,
+  createProductSchema,
+  createProductVariantSchema,
+  deleteProductImageSchema,
+  deleteProductVariantSchema,
+  getProductByIdSchema,
+  getProductImagesSchema,
+  getProductsSchema,
+  getProductVariantByIdSchema,
+  getProductVariantsByProductIdSchema,
+  updateProductImageSchema,
+  updateProductSchema,
+  updateProductVariantSchema,
+} from "../../validations/productValidation.js";
 
 const productRoute = express.Router();
 
@@ -16,91 +32,107 @@ const initProductAdminRoute = (app) => {
     "/",
     auth,
     authorize("ADMIN"),
-    productController.getProductsWithPage
+    validate(getProductsSchema),
+    productController.getProducts,
   );
   productRoute.get(
     "/:productId",
     auth,
     authorize("ADMIN"),
-    productController.getProductById
+    validate(getProductByIdSchema),
+    productController.getProductById,
   );
 
   productRoute.post(
     "/add",
     auth,
     authorize("ADMIN"),
-    uploader.single("thumbnail"),
-    productController.createProduct
+    uploader.single("file"),
+    validate(createProductSchema),
+    productController.createProduct,
   );
 
   productRoute.put(
-    "/:productId",
+    "/update/:productId",
     auth,
     authorize("ADMIN"),
-    uploader.single("thumbnail"),
-    productController.updateProduct
+    uploader.single("file"),
+    validate(updateProductSchema),
+    productController.updateProduct,
   );
 
   productRoute.post(
     "/:productId/variants",
     auth,
     authorize("ADMIN"),
-    productController.createProductVariant
+    validate(createProductVariantSchema),
+    productController.createProductVariant,
   );
 
   productRoute.get(
     "/:productId/variants",
     auth,
     authorize("ADMIN"),
-    productController.getProductVariantsByProductId
+    validate(getProductVariantsByProductIdSchema),
+    productController.getProductVariantsByProductId,
   );
 
   productRoute.get(
     "/variant/:variantId",
     auth,
     authorize("ADMIN"),
-    productController.getProductVariantById
+    validate(getProductVariantByIdSchema),
+    productController.getProductVariantById,
   );
 
   productRoute.put(
-    "/variant/:variantId",
+    "/variant/update/:variantId",
     auth,
     authorize("ADMIN"),
-    productController.updateProductVariant
+    validate(updateProductVariantSchema),
+    productController.updateProductVariant,
   );
+
   productRoute.delete(
-    "/variant/:variantId",
+    "/variant/delete/:variantId",
     auth,
     authorize("ADMIN"),
-    productController.deleteProductVariant
+    validate(deleteProductVariantSchema),
+    productController.deleteProductVariant,
   );
 
   productRoute.post(
     "/:productId/images",
     auth,
     authorize("ADMIN"),
-    uploader.array("images", 5),
-    productController.createProductImages
+    uploader.array("files", 5),
+    validate(createProductImagesSchema),
+    productController.createProductImages,
   );
 
   productRoute.get(
     "/:productId/images",
     auth,
     authorize("ADMIN"),
-    productController.getProductImages
+    validate(getProductImagesSchema),
+    productController.getProductImages,
   );
+
   productRoute.delete(
-    "/images/:imageId",
+    "/images/delete/:imageId",
     auth,
     authorize("ADMIN"),
-    productController.deleteProductImage
+    validate(deleteProductImageSchema),
+    productController.deleteProductImage,
   );
+
   productRoute.put(
-    "/images/:imageId",
+    "/images/update/:imageId",
     auth,
     authorize("ADMIN"),
     uploader.single("image"),
-    productController.updateProductImage
+    validate(updateProductImageSchema),
+    productController.updateProductImage,
   );
 
   app.use("/admin/product", productRoute);

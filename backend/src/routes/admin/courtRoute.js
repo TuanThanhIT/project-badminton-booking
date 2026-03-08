@@ -3,6 +3,14 @@ import courtController from "../../controllers/admin/courtController.js";
 import multer from "multer";
 import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
+import validate from "../../middlewares/validate.js";
+import {
+  createCourtPriceSchema,
+  createCourtSchema,
+  createWeeklySlotsSchema,
+  getCourtByIdSchema,
+  updateCourtSchema,
+} from "../../validations/courtValidation.js";
 
 const courtRoute = express.Router();
 
@@ -17,20 +25,27 @@ const initCourtAdminRoute = (app) => {
     auth,
     authorize("ADMIN"),
     uploader.single("file"),
-    courtController.createCourt
+    validate(createCourtSchema),
+    courtController.createCourt,
   );
-  courtRoute.post("/price/add", courtController.createCourtPrice);
+  courtRoute.post(
+    "/price/add",
+    validate(createCourtPriceSchema),
+    courtController.createCourtPrice,
+  );
   courtRoute.post(
     "/create-weekly-slots",
     auth,
     authorize("ADMIN"),
-    courtController.createWeeklySlots
+    validate(createWeeklySlotsSchema),
+    courtController.createWeeklySlots,
   );
   courtRoute.put(
     "/update/:courtId",
     auth,
     authorize("ADMIN"),
-    courtController.updateCourt
+    validate(updateCourtSchema),
+    courtController.updateCourt,
   );
   courtRoute.get(
     "/",
@@ -38,13 +53,14 @@ const initCourtAdminRoute = (app) => {
     authorize("ADMIN"),
     auth,
     authorize("ADMIN"),
-    courtController.getAllCourts
+    courtController.getAllCourts,
   );
   courtRoute.get(
     "/:courtId",
     auth,
     authorize("ADMIN"),
-    courtController.getCourtById
+    validate(getCourtByIdSchema),
+    courtController.getCourtById,
   );
 
   app.use("/admin/court", courtRoute);

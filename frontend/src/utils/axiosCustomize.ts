@@ -1,52 +1,40 @@
 // api/axiosInstance.ts
-import axios, { AxiosError } from "axios";
-import type { AxiosResponse } from "axios";
+import axios, { AxiosError, type AxiosResponse } from "axios";
+
 const instance = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL as string,
+  baseURL: import.meta.env.VITE_BACKEND_URL,
   timeout: 5000,
 });
 
-// Gắn token nếu có
-instance.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("access_token");
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-    return config;
-  },
-  (error) => Promise.reject(error),
-);
+// attach token
+instance.interceptors.request.use((config) => {
+  const token = localStorage.getItem("access_token");
 
-// Xử lý lỗi tập trung
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
+// response interceptor
 instance.interceptors.response.use(
-  (response: AxiosResponse) => response,
-  (
-    error: AxiosError<{ statusCode: number; message: string; stack?: string }>,
-  ) => {
-    const statusCode = error.response?.status;
-    const backendMessage = error.response?.data?.message;
+  (response: AxiosResponse) => {
+    return response;
+  },
+  (error: AxiosError<any>) => {
+    console.log("error>>", error);
+    const statusCode = error.response?.status ?? 500;
+    const data = error.response?.data;
 
-    let userMessage = "Có lỗi xảy ra, vui lòng thử lại."; // fallback mặc định
-    const developerMessage = backendMessage || error.message;
-
-    if (statusCode) {
-      if (statusCode === 401) {
-        // Token hết hạn hoặc không hợp lệ → chỉ cần logout
-        localStorage.removeItem("access_token");
-        userMessage = backendMessage || "Phiên đăng nhập đã hết hạn.";
-      } else if (statusCode === 404) {
-        userMessage = backendMessage || "Không tìm thấy tài nguyên.";
-      } else if (statusCode >= 400 && statusCode < 500) {
-        userMessage = backendMessage || "Yêu cầu không hợp lệ.";
-      } else if (statusCode >= 500) {
-        userMessage = "Hệ thống đang gặp sự cố, vui lòng thử lại sau!";
-      }
+    if (statusCode === 401) {
+      localStorage.removeItem("access_token");
     }
 
-    // Trả về object lỗi chuẩn để frontend xử lý dễ
     return Promise.reject({
       statusCode,
-      userMessage, // thông báo để show cho người dùng
-      developerMessage, // thông báo kỹ thuật (có thể log ra console)
+      message: data?.message || "Có lỗi xảy ra",
+      errors: data?.errors || null,
     });
   },
 );

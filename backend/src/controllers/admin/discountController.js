@@ -1,65 +1,47 @@
+import SuccessResponse from "../../helpers/SuccessResponse.js";
+import asyncHandler from "../../middlewares/asyncHandler.js";
 import discountService from "../../services/admin/discountService.js";
 
-const createDiscount = async (req, res, next) => {
-  try {
-    const { code, type, value, startDate, endDate, minOrderAmount } = req.body;
-    await discountService.createDiscountService(
-      code,
-      type,
-      value,
-      startDate,
-      endDate,
-      minOrderAmount
+const createDiscount = asyncHandler(async (req, res) => {
+  const data = { ...req.body };
+  const discount = await discountService.createDiscountService(data);
+  return res
+    .status(201)
+    .json(
+      new SuccessResponse("Tạo mã giảm giá cho đơn hàng thành công", discount),
     );
-    return res
-      .status(201)
-      .json({ message: "Tạo mã giảm giá cho đơn hàng thành công!" });
-  } catch (error) {
-    next(error);
-  }
-};
+});
 
-const getDiscounts = async (req, res, next) => {
-  try {
-    const { isUsed, type, page, limit } = req.query;
-    const filter = {
-      isUsed,
-      type,
-    };
-    const discounts = await discountService.getDiscountsService(
-      filter,
-      page,
-      limit
+const getDiscounts = asyncHandler(async (req, res) => {
+  const data = { ...req.query };
+  const discounts = await discountService.getDiscountsService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Lấy tất cả mã giảm giá thành công", discounts));
+});
+
+const updateDiscount = asyncHandler(async (req, res) => {
+  const { discountId } = req.params;
+  const data = { discountId };
+  const discount = await discountService.updateDiscountService(data);
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse(
+        "Thay đổi trạng thái mã giảm giá thành công",
+        discount,
+      ),
     );
-    return res.status(200).json(discounts);
-  } catch (error) {
-    next(error);
-  }
-};
+});
 
-const updateDiscount = async (req, res, next) => {
-  try {
-    const discountId = req.params.id;
-    await discountService.updateDiscountService(discountId);
-    return res
-      .status(200)
-      .json({ message: "Thay đổi trạng thái mã giảm giá thành công!" });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const deleteDiscount = async (req, res, next) => {
-  try {
-    const discountId = req.params.id;
-    await discountService.deleteDiscountService(discountId);
-    return res
-      .status(200)
-      .json({ message: "Xóa mã giảm giá đơn hàng thành công!" });
-  } catch (error) {
-    next(error);
-  }
-};
+const deleteDiscount = asyncHandler(async (req, res) => {
+  const { discountId } = req.params;
+  const data = { discountId };
+  await discountService.deleteDiscountService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Xóa mã giảm giá đơn hàng thành công"));
+});
 
 const discountController = {
   createDiscount,

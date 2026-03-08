@@ -1,5 +1,4 @@
-import { Op } from "sequelize";
-import { StatusCodes } from "http-status-codes";
+import { Op, or } from "sequelize";
 import {
   Order,
   OrderDetail,
@@ -9,176 +8,157 @@ import {
   User,
   Profile,
 } from "../../models/index.js";
-import ApiError from "../../errors/ApiError.js";
 import {
   sendAdminNotification,
   sendUserNotification,
 } from "../../utils/sendNotification.js";
-import mailer from "../../helpers/mailer.js";
 import sequelize from "../../config/db.js";
+import NotFoundError from "../../errors/NotFoundError.js";
+import { ORDER_STATUS } from "../../constants/orderConstant.js";
+import BadRequestError from "../../errors/BadRequestError.js";
+import { handleSendOrderMail } from "../shared/sendOrderMail.js";
+import {
+  PAYMENT_METHOD_STATUS,
+  PAYMENT_STATUS,
+} from "../../constants/paymentConstant.js";
 
-const handleSendOrderMail = (order, type) => {
-  const orderProducts = order.orderDetails.map((item) => {
-    return {
-      productName: item.varient.product.productName,
-      color: item.varient.color,
-      size: item.varient.size,
-      material: item.varient.material,
-      quantity: item.quantity,
-      subTotal: item.subTotal,
+const getOrdersService = async (data) => {
+  const { status: orderStatus, keyword, date, page, limit } = data;
+  const where = {};
+
+  const p = page ?? 1;
+  const l = limit ?? 10;
+  const offset = (p - 1) * l;
+
+  // Filter trạng thái
+  if (orderStatus) {
+    where.orderStatus = orderStatus;
+  }
+
+  // Filter ngày – chuẩn giờ Việt Nam
+  if (date) {
+    const startVN = new Date(`${date}T00:00:00+07:00`);
+    const endVN = new Date(`${date}T23:59:59.999+07:00`);
+
+    where.createdDate = {
+      [Op.between]: [startVN, endVN],
     };
+  }
+
+  // Filter keyword
+  const userInclude = {
+    model: User,
+    as: "user",
+    attributes: ["username"],
+    required: !!keyword,
+    include: [
+      {
+        model: Profile,
+        attributes: ["fullName", "address", "phoneNumber"],
+        required: !!keyword,
+        where: keyword
+          ? {
+              [Op.or]: [
+                { fullName: { [Op.like]: `%${keyword}%` } },
+                { phoneNumber: { [Op.like]: `%${keyword}%` } },
+              ],
+            }
+          : undefined,
+      },
+    ],
+  };
+
+  const { rows, count } = await Order.findAndCountAll({
+    where,
+    attributes: ["id", "orderStatus", "totalAmount", "note", "createdDate"],
+    include: [
+      {
+        model: OrderDetail,
+        as: "orderDetails",
+        attributes: ["id", "quantity", "subTotal"],
+        include: [
+          {
+            model: ProductVarient,
+            as: "varient",
+            attributes: ["id", "color", "size", "material"],
+            include: [
+              {
+                model: Product,
+                as: "product",
+                attributes: ["productName", "thumbnailUrl"],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        model: Payment,
+        as: "payment",
+        attributes: ["paymentMethod"],
+      },
+      userInclude,
+    ],
+    limit: l,
+    offset,
+    order: [["createdDate", "DESC"]],
   });
 
-  const totalAmount = order.totalAmount;
-  const email = order.user.email;
-
-  return mailer.sendOrderMail(email, orderProducts, totalAmount, type);
+  return {
+    orders: rows,
+    total: count,
+    page: p,
+    limit: l,
+  };
 };
 
-const getOrdersService = async (
-  orderStatus,
-  keyword,
-  date,
-  page = 1,
-  limit = 5,
-) => {
-  try {
-    const where = {};
-
-    const p = page && page !== "null" ? parseInt(page) : 1;
-    const l = limit && limit !== "null" ? parseInt(limit) : 10;
-    const offset = (p - 1) * l;
-
-    // Filter trạng thái
-    if (orderStatus) {
-      where.orderStatus = orderStatus;
-    }
-
-    // ✅ Filter ngày – chuẩn giờ Việt Nam
-    if (date) {
-      const startVN = new Date(`${date}T00:00:00+07:00`);
-      const endVN = new Date(`${date}T23:59:59.999+07:00`);
-
-      where.createdDate = {
-        [Op.between]: [startVN, endVN],
-      };
-    }
-
-    // Filter keyword
-    const userInclude = {
-      model: User,
-      as: "user",
-      attributes: ["username"],
-      required: !!keyword,
-      include: [
-        {
-          model: Profile,
-          attributes: ["fullName", "address", "phoneNumber"],
-          required: !!keyword,
-          where: keyword
-            ? {
-                [Op.or]: [
-                  { fullName: { [Op.like]: `%${keyword}%` } },
-                  { phoneNumber: { [Op.like]: `%${keyword}%` } },
+const confirmedOrderService = async (data) => {
+  const { orderId } = data;
+  return sequelize.transaction(async (t) => {
+    const order = await Order.findByPk(
+      orderId,
+      {
+        include: [
+          {
+            model: User,
+            as: "user",
+            attributes: ["email"],
+          },
+          {
+            model: OrderDetail,
+            as: "orderDetails",
+            attributes: ["quantity", "subTotal"],
+            include: [
+              {
+                model: ProductVarient,
+                as: "varient",
+                attributes: ["color", "size", "material"],
+                include: [
+                  {
+                    model: Product,
+                    as: "product",
+                    attributes: ["productName"],
+                  },
                 ],
-              }
-            : undefined,
-        },
-      ],
-    };
+              },
+            ],
+          },
+        ],
+      },
+      { transaction: t, lock: t.LOCK.UPDATE },
+    );
 
-    const { rows, count } = await Order.findAndCountAll({
-      where,
-      attributes: ["id", "orderStatus", "totalAmount", "note", "createdDate"],
-      include: [
-        {
-          model: OrderDetail,
-          as: "orderDetails",
-          attributes: ["id", "quantity", "subTotal"],
-          include: [
-            {
-              model: ProductVarient,
-              as: "varient",
-              attributes: ["id", "color", "size", "material"],
-              include: [
-                {
-                  model: Product,
-                  as: "product",
-                  attributes: ["productName", "thumbnailUrl"],
-                },
-              ],
-            },
-          ],
-        },
-        {
-          model: Payment,
-          as: "payment",
-          attributes: ["paymentMethod"],
-        },
-        userInclude,
-      ],
-      limit: l,
-      offset,
-      order: [["createdDate", "DESC"]],
-    });
+    if (!order) throw new NotFoundError("Đơn hàng không tồn tại");
 
-    return {
-      orders: rows,
-      total: count,
-      page: p,
-      limit: l,
-    };
-  } catch (error) {
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
-};
-
-const confirmedOrderService = async (orderId) => {
-  const t = await sequelize.transaction();
-
-  try {
-    const order = await Order.findByPk(orderId, {
-      include: [
-        {
-          model: User,
-          as: "user",
-          attributes: ["email"],
-        },
-        {
-          model: OrderDetail,
-          as: "orderDetails",
-          attributes: ["quantity", "subTotal"],
-          include: [
-            {
-              model: ProductVarient,
-              as: "varient",
-              attributes: ["color", "size", "material"],
-              include: [
-                {
-                  model: Product,
-                  as: "product",
-                  attributes: ["productName"],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-      transaction: t,
-      lock: t.LOCK.UPDATE,
-    });
-
-    if (!order)
-      throw new ApiError(StatusCodes.NOT_FOUND, "Đơn hàng không tồn tại!");
-
-    if (order.orderStatus === "Cancelled")
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Đơn hàng đã bị hủy!");
-
-    if (order.orderStatus === "Completed")
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Đơn hàng đã hoàn thành!");
+    if (order.orderStatus === ORDER_STATUS.CANCELLED)
+      throw new BadRequestError("Đơn hàng đã bị hủy");
+    if (order.orderStatus === ORDER_STATUS.COMPLETED)
+      throw new BadRequestError("Đơn hàng đã hoàn thành");
 
     // cập nhật trạng thái
-    await order.update({ orderStatus: "Confirmed" }, { transaction: t });
+    await order.update(
+      { orderStatus: ORDER_STATUS.CONFIRMED },
+      { transaction: t },
+    );
 
     // trừ stock
     const details = await OrderDetail.findAll({
@@ -197,83 +177,82 @@ const confirmedOrderService = async (orderId) => {
       }),
     );
 
-    await t.commit();
+    t.afterCommit(() => {
+      sendUserNotification(
+        order.userId,
+        "us-confirm-order",
+        "Đơn hàng đã được xác nhận",
+        `Đơn hàng #0${orderId} đã được xác nhận.`,
+      ).catch((err) => console.error("Customer notify failed", err));
 
-    // các tác vụ ngoài transaction
-    await sendUserNotification(
-      order.userId,
-      "us-confirm-order",
-      "Đơn hàng đã được xác nhận",
-      `Đơn hàng #0${orderId} đã được xác nhận.`,
-    );
+      sendAdminNotification(
+        "Đơn hàng đã được xác nhận",
+        `Đơn hàng #0${orderId} đã được nhân viên xác nhận.`,
+        "ADMIN",
+        "adm-confirm-order",
+      ).catch((err) => console.error("Admin notify failed", err));
 
-    await sendAdminNotification(
-      "Đơn hàng đã được xác nhận",
-      `Đơn hàng #0${orderId} đã được nhân viên xác nhận.`,
-      "ADMIN",
-      "adm-confirm-order",
-    );
-
-    await handleSendOrderMail(order, "confirm");
-  } catch (error) {
-    await t.rollback();
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
-};
-
-const completedOrderService = async (orderId) => {
-  const t = await sequelize.transaction();
-
-  try {
-    const order = await Order.findByPk(orderId, {
-      include: [
-        {
-          model: User,
-          as: "user",
-          attributes: ["email"],
-        },
-        {
-          model: OrderDetail,
-          as: "orderDetails",
-          attributes: ["quantity", "subTotal"],
-          include: [
-            {
-              model: ProductVarient,
-              as: "varient",
-              attributes: ["color", "size", "material"],
-              include: [
-                {
-                  model: Product,
-                  as: "product",
-                  attributes: ["productName"],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-      transaction: t,
-      lock: t.LOCK.UPDATE,
+      handleSendOrderMail(order, "confirm").catch((err) =>
+        console.error("Customer mail failed", err),
+      );
     });
 
-    if (!order)
-      throw new ApiError(StatusCodes.NOT_FOUND, "Đơn hàng không tồn tại!");
+    return order;
+  });
+};
 
-    if (order.orderStatus !== "Confirmed")
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Đơn hàng chưa được xác nhận!",
-      );
+const completedOrderService = async (data) => {
+  const { orderId } = data;
+  return sequelize.transaction(async (t) => {
+    const order = await Order.findByPk(
+      orderId,
+      {
+        include: [
+          {
+            model: User,
+            as: "user",
+            attributes: ["email"],
+          },
+          {
+            model: OrderDetail,
+            as: "orderDetails",
+            attributes: ["quantity", "subTotal"],
+            include: [
+              {
+                model: ProductVarient,
+                as: "varient",
+                attributes: ["color", "size", "material"],
+                include: [
+                  {
+                    model: Product,
+                    as: "product",
+                    attributes: ["productName"],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      { transaction: t, lock: t.LOCK.UPDATE },
+    );
+
+    if (!order) throw new NotFoundError("Đơn hàng không tồn tại");
+
+    if (order.orderStatus !== ORDER_STATUS.CONFIRMED)
+      throw new BadRequestError("Đơn hàng chưa được xác nhận");
 
     // tìm payment (COD nếu có)
     const payment = await Payment.findOne({
-      where: { orderId: order.id, paymentMethod: "COD" },
+      where: { orderId: order.id, paymentMethod: PAYMENT_METHOD_STATUS.COD },
       transaction: t,
       lock: t.LOCK.UPDATE,
     });
 
-    await order.update({ orderStatus: "Completed" }, { transaction: t });
+    await order.update(
+      { orderStatus: ORDER_STATUS.COMPLETED },
+      { transaction: t },
+    );
 
     // hoàn stock
     const details = await OrderDetail.findAll({
@@ -295,80 +274,77 @@ const completedOrderService = async (orderId) => {
     if (payment) {
       await payment.update(
         {
-          paymentStatus: "Success",
+          paymentStatus: PAYMENT_STATUS.SUCCESS,
           paidAt: new Date(),
         },
         { transaction: t },
       );
     }
 
-    await t.commit();
+    t.afterCommit(() => {
+      sendUserNotification(
+        order.userId,
+        "us-complete-order",
+        "Đơn hàng đã hoàn thành",
+        `Đơn hàng #0${orderId} đã được hoàn thành.`,
+      ).catch((err) => console.error("Customer notify failed", err));
 
-    await sendUserNotification(
-      order.userId,
-      "us-complete-order",
-      "Đơn hàng đã hoàn thành",
-      `Đơn hàng #0${orderId} đã được hoàn thành.`,
-    );
+      sendAdminNotification(
+        "Đơn hàng đã hoàn thành",
+        `Đơn hàng #0${orderId} đã được hoàn thành`,
+        "ADMIN",
+        "adm-complete-order",
+      ).catch((err) => console.error("Admin notify failed", err));
 
-    await sendAdminNotification(
-      "Đơn hàng đã hoàn thành",
-      `Đơn hàng #0${orderId} đã được hoàn thành`,
-      "ADMIN",
-      "adm-complete-order",
-    );
-
-    await handleSendOrderMail(order, "complete");
-  } catch (error) {
-    await t.rollback();
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
-};
-
-const cancelOrderService = async (orderId, cancelReason) => {
-  const t = await sequelize.transaction();
-
-  try {
-    const order = await Order.findByPk(orderId, {
-      include: [
-        {
-          model: User,
-          as: "user",
-          attributes: ["email"],
-        },
-        {
-          model: OrderDetail,
-          as: "orderDetails",
-          attributes: ["quantity", "subTotal"],
-          include: [
-            {
-              model: ProductVarient,
-              as: "varient",
-              attributes: ["color", "size", "material"],
-              include: [
-                {
-                  model: Product,
-                  as: "product",
-                  attributes: ["productName"],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-      transaction: t,
-      lock: t.LOCK.UPDATE,
+      handleSendOrderMail(order, "complete").catch((err) =>
+        console.error("Customer mail failed"),
+      );
     });
 
-    if (!order)
-      throw new ApiError(StatusCodes.NOT_FOUND, "Đơn hàng không tồn tại!");
+    return order;
+  });
+};
 
-    if (order.orderStatus === "Completed")
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Đơn hàng đã hoàn thành không thể hủy!",
-      );
+const cancelOrderService = async (data) => {
+  const { orderId, cancelReason } = data;
+  return sequelize.transaction(async (t) => {
+    const order = await Order.findByPk(
+      orderId,
+      {
+        include: [
+          {
+            model: User,
+            as: "user",
+            attributes: ["email"],
+          },
+          {
+            model: OrderDetail,
+            as: "orderDetails",
+            attributes: ["quantity", "subTotal"],
+            include: [
+              {
+                model: ProductVarient,
+                as: "varient",
+                attributes: ["color", "size", "material"],
+                include: [
+                  {
+                    model: Product,
+                    as: "product",
+                    attributes: ["productName"],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      { transaction: t, lock: t.LOCK.UPDATE },
+    );
+
+    if (!order) throw new NotFoundError("Đơn hàng không tồn tại");
+
+    if (order.orderStatus === ORDER_STATUS.COMPLETED)
+      throw new BadRequestError("Đơn hàng đã hoàn thành không thể hủy");
 
     const payment = await Payment.findOne({
       where: { orderId },
@@ -379,27 +355,30 @@ const cancelOrderService = async (orderId, cancelReason) => {
     const oldStatus = order.orderStatus;
 
     // xử lý payment
-    if (oldStatus === "Pending") {
-      await payment.update({ paymentStatus: "Cancelled" }, { transaction: t });
-    } else if (oldStatus === "Paid") {
+    if (oldStatus === ORDER_STATUS.PENDING) {
+      await payment.update(
+        { paymentStatus: PAYMENT_STATUS.CANCELLED },
+        { transaction: t },
+      );
+    } else if (oldStatus === ORDER_STATUS.PAID) {
       await payment.update(
         {
-          paymentStatus: "Cancelled",
+          paymentStatus: PAYMENT_STATUS.CANCELLED,
           refundAmount: payment.paymentAmount,
           refundAt: new Date(),
         },
         { transaction: t },
       );
-    } else if (oldStatus === "Confirmed") {
-      if (payment.paymentMethod === "COD") {
+    } else if (oldStatus === ORDER_STATUS.CONFIRMED) {
+      if (payment.paymentMethod === PAYMENT_METHOD_STATUS.COD) {
         await payment.update(
-          { paymentStatus: "Cancelled" },
+          { paymentStatus: PAYMENT_STATUS.CANCELLED },
           { transaction: t },
         );
       } else {
         await payment.update(
           {
-            paymentStatus: "Cancelled",
+            paymentStatus: PAYMENT_STATUS.CANCELLED,
             refundAmount: payment.paymentAmount,
             refundAt: new Date(),
           },
@@ -411,7 +390,7 @@ const cancelOrderService = async (orderId, cancelReason) => {
     // update trạng thái order
     await order.update(
       {
-        orderStatus: "Cancelled",
+        orderStatus: ORDER_STATUS.CANCELLED,
         cancelledBy: "Employee",
         cancelReason,
       },
@@ -435,28 +414,28 @@ const cancelOrderService = async (orderId, cancelReason) => {
       }),
     );
 
-    await t.commit();
+    t.afterCommit(() => {
+      sendUserNotification(
+        order.userId,
+        "us-cancel-order",
+        "Đơn hàng đã bị hủy",
+        `Đơn hàng #0${orderId} đã được cửa hàng hủy.`,
+      ).catch((err) => console.error("Customer notify failed", err));
 
-    await sendUserNotification(
-      order.userId,
-      "us-cancel-order",
-      "Đơn hàng đã bị hủy",
-      `Đơn hàng #0${orderId} đã được cửa hàng hủy.`,
-    );
+      sendAdminNotification(
+        "Đơn hàng đã bị hủy",
+        `Đơn hàng #0${orderId} đã được nhân viên hủy theo yêu cầu của khách hàng.`,
+        "ADMIN",
+        "adm-cancel-order",
+      ).catch((err) => console.error("Admin notify failed", err));
 
-    await sendAdminNotification(
-      "Đơn hàng đã bị hủy",
-      `Đơn hàng #0${orderId} đã được nhân viên hủy theo yêu cầu của khách hàng.`,
-      "ADMIN",
-      "adm-cancel-order",
-    );
+      handleSendOrderMail(order, "cancel").catch((err) =>
+        console.error("Customer mail failed", err),
+      );
+    });
 
-    await handleSendOrderMail(order, "cancel");
-  } catch (error) {
-    await t.rollback();
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+    return order;
+  });
 };
 
 const orderService = {

@@ -1,29 +1,39 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import UnauthorizedError from "../errors/UnauthorizedError.js";
+
 dotenv.config();
 
 const auth = (req, res, next) => {
-  if (req.headers && req.headers.authorization) {
-    try {
-      const token = req.headers.authorization.split(" ")[1];
-      const decoder = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = {
-        id: decoder?.id,
-        username: decoder?.username,
-        email: decoder?.email,
-        role: decoder?.role,
-      };
-      next();
-    } catch (err) {
-      return res.status(401).json({
-        message: "Vui lòng đăng nhập để tiếp tục.",
-      });
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+      next(
+        new UnauthorizedError(
+          "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.",
+        ),
+      );
     }
-  } else {
-    return res.status(401).json({
-      message:
-        "Phiên đăng nhập của bạn đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.",
-    });
+
+    const token = authHeader.split(" ")[1];
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    req.user = {
+      id: decoded?.id,
+      username: decoded?.username,
+      email: decoded?.email,
+      role: decoded?.role,
+    };
+
+    next();
+  } catch (err) {
+    next(
+      new UnauthorizedError(
+        "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+      ),
+    );
   }
 };
 

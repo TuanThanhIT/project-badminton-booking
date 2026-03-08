@@ -1,27 +1,61 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
+import { DISCOUNT_TYPE } from "../constants/discountConstant.js";
 
 const Discount = sequelize.define(
   "Discount",
   {
     code: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(30),
       allowNull: false,
-      unique: true, // không cho trùng mã giảm
+      unique: true,
+      set(value) {
+        this.setDataValue("code", value?.trim().toUpperCase());
+      },
+      validate: {
+        notNull: {
+          msg: "Discount code is required",
+        },
+        notEmpty: {
+          msg: "Discount code must not be empty",
+        },
+        len: {
+          args: [3, 30],
+          msg: "Discount code must be between 3 and 30 characters",
+        },
+      },
     },
     type: {
-      type: DataTypes.ENUM("PERCENT", "AMOUNT"),
+      type: DataTypes.ENUM(...Object.values(DISCOUNT_TYPE)),
       allowNull: false,
-      defaultValue: "AMOUNT", // mặc định giảm theo số tiền
+      defaultValue: DISCOUNT_TYPE.AMOUNT,
+      validate: {
+        notNull: {
+          msg: "Discount type is required",
+        },
+        isIn: {
+          args: [Object.values(DISCOUNT_TYPE)],
+          msg: "Invalid discount type",
+        },
+      },
     },
     value: {
       type: DataTypes.DOUBLE,
       allowNull: false,
+      validate: {
+        isFloat: {
+          msg: "Discount value must be a number",
+        },
+        min: {
+          args: [0.0000001],
+          msg: "Discount value must be greater than 0",
+        },
+      },
     },
     isActive: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: true, // cho phép bật/tắt mã giảm giá
+      defaultValue: true,
     },
     isUsed: {
       type: DataTypes.BOOLEAN,
@@ -29,16 +63,41 @@ const Discount = sequelize.define(
       defaultValue: false,
     },
     startDate: {
-      type: DataTypes.DATE,
+      type: DataTypes.DATEONLY,
       allowNull: false,
+      validate: {
+        notNull: {
+          msg: "Start date is required",
+        },
+        isDate: {
+          msg: "Start date must be a valid date",
+        },
+      },
     },
     endDate: {
-      type: DataTypes.DATE,
+      type: DataTypes.DATEONLY,
       allowNull: false,
+      validate: {
+        notNull: {
+          msg: "End date is required",
+        },
+        isDate: {
+          msg: "End date must be a valid date",
+        },
+      },
     },
     minOrderAmount: {
       type: DataTypes.DOUBLE,
-      allowNull: true, // giá trị đơn hàng tối thiểu để áp dụng
+      allowNull: false,
+      validate: {
+        isFloat: {
+          msg: "Minimum order amount must be a number",
+        },
+        min: {
+          args: [0],
+          msg: "Minimum order amount cannot be negative",
+        },
+      },
     },
   },
   {
@@ -46,7 +105,7 @@ const Discount = sequelize.define(
     timestamps: true,
     createdAt: "createdDate",
     updatedAt: "updatedDate",
-  }
+  },
 );
 
 export default Discount;

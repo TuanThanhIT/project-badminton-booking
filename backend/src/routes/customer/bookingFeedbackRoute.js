@@ -21,21 +21,21 @@ const initBookingFeedbackCustomerRoute = (app) => {
     bookingFeedbackController.createBookingFeedback,
   );
   bookingFeedbackRoute.patch(
-    "/feedback/:id",
+    "/feedback/:bookingId",
     auth,
     authorize("USER"),
     validate(updateBookingFeedbackSchema),
     bookingFeedbackController.updateBookingFeedback,
   );
   bookingFeedbackRoute.get(
-    "/feedback/update/:id",
+    "/feedback/update/:bookingId",
     auth,
     authorize("USER"),
     validate(getBookingFeedbackUpdateSchema),
     bookingFeedbackController.getBookingFeedbackUpdate,
   );
   bookingFeedbackRoute.get(
-    "/feedback/:id",
+    "/feedback/:courtId",
     auth,
     authorize("USER"),
     validate(getBookingFeedbackSchema),

@@ -1,7 +1,7 @@
 import ApiError from "./ApiError.js";
 
 class BadRequestError extends ApiError {
-  constructor(msg = "Bad request") {
+  constructor(msg = "Yêu cầu không hợp lệ") {
     super(400, msg);
   }
 }

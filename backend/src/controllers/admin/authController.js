@@ -1,24 +1,27 @@
 import authService from "../../services/admin/authService.js";
+import asyncHandler from "../../middlewares/asyncHandler.js";
+import SuccessResponse from "../../helpers/SuccessResponse.js";
 
-const createAdminController = async (req, res, next) => {
-  try {
-    const { username, email, password } = req.body;
-    safeAdmin = await authService.createAdminService(username, email, password);
-    return res.status(201).json({
-      message:
+const createAdminController = asyncHandler(async (req, res) => {
+  const data = { ...req.body };
+  const safeAdmin = await authService.createAdminService(data);
+  return res
+    .status(201)
+    .json(
+      new SuccessResponse(
         "Tài khoản quản trị viên đã được tạo thành công! Vui lòng kiểm tra email để xác thực tài khoản.",
-      safeAdmin,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+        safeAdmin,
+      ),
+    );
+});
 
-const handleLogin = async (req, res) => {
-  const { username, password } = req.body;
-  const data = await authService.handleLoginService(username, password);
-  return res.status(200).json(data);
-};
+const handleLogin = asyncHandler(async (req, res) => {
+  const data = { ...req.body };
+  const result = await authService.handleLoginService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Đăng nhập thành công", result));
+});
 
 const getAdminAccount = async (req, res) => {
   return res.status(200).json(req.user);

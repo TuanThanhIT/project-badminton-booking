@@ -1,78 +1,78 @@
+import SuccessResponse from "../../helpers/SuccessResponse.js";
+import asyncHandler from "../../middlewares/asyncHandler.js";
 import userService from "../../services/admin/usersService.js";
 import { StatusCodes } from "http-status-codes";
-const createUserController = async (req, res, next) => {
-  try {
-    const { username, password, email } = req.body;
-    const safeUser = await userService.createUser(username, password, email);
-    return res.status(201).json({
-      message: "Tài khoản người dùng đã được tạo thành công!",
-      safeUser,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-const lockUserController = async (req, res, next) => {
-  try {
-    const { userId } = req.params;
-    const result = await userService.lockUser(userId);
 
-    return res.status(StatusCodes.OK).json(result);
-  } catch (error) {
-    next(error);
-  }
-};
-const unlockUserController = async (req, res, next) => {
-  try {
-    const { userId } = req.params;
-    const result = await userService.unlockUserService(userId);
+const createUser = asyncHandler(async (req, res) => {
+  const data = { ...req.body };
+  const safeUser = await userService.createUserService(data);
+  return res
+    .status(201)
+    .json(
+      new SuccessResponse(
+        "Tài khoản người dùng đã được tạo thành công",
+        safeUser,
+      ),
+    );
+});
 
-    return res.status(StatusCodes.OK).json(result);
-  } catch (error) {
-    next(error);
-  }
-};
-const getAllUsersController = async (req, res, next) => {
-  try {
-    const users = await userService.getAllUsersService();
+const lockUser = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const data = { userId };
+  const user = await userService.lockUserService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Khóa tài khoản người dùng thành công", user));
+});
 
-    return res.status(StatusCodes.OK).json({
-      message: "Lấy danh sách người dùng thành công!",
-      users,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-const getUsersByRoleController = async (req, res, next) => {
-  try {
-    const { roleId } = req.params;
-    const users = await userService.getUsersByRoleService(roleId);
+const unlockUser = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const data = { userId };
+  const user = await userService.unlockUserService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Mở khóa tài khoản người dùng thành công", user));
+});
 
-    return res.status(StatusCodes.OK).json({
-      message: `Danh sách user với roleId = ${roleId}`,
-      users,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-const getAllEmployees = async (req, res, next) => {
-  try {
-    const employees = await userService.getAllEmployeesService();
-    res.status(StatusCodes.OK).json({
-      data: employees,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+const getAllUsers = asyncHandler(async (req, res) => {
+  const users = await userService.getAllUsersService();
+  return res
+    .status(StatusCodes.OK)
+    .json(new SuccessResponse("Lấy danh sách người dùng thành công", users));
+});
+
+const getUsersByRole = asyncHandler(async (req, res) => {
+  const { roleId } = req.params;
+  const data = { roleId };
+  const users = await userService.getUsersByRoleService(data);
+  return res
+    .status(StatusCodes.OK)
+    .json(
+      new SuccessResponse(
+        "Lấy danh sách người dùng theo role thành công",
+        users,
+      ),
+    );
+});
+
+const getAllEmployees = asyncHandler(async (req, res) => {
+  const employees = await userService.getAllEmployeesService();
+  res
+    .status(StatusCodes.OK)
+    .json(
+      new SuccessResponse(
+        "Lấy danh sách tất cả nhân viên thành công",
+        employees,
+      ),
+    );
+});
+
 const usersController = {
-  createUserController,
-  lockUserController,
-  unlockUserController,
-  getAllUsersController,
-  getUsersByRoleController,
+  createUser,
+  lockUser,
+  unlockUser,
+  getAllUsers,
+  getUsersByRole,
   getAllEmployees,
 };
 

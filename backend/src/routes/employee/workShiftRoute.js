@@ -2,6 +2,12 @@ import express from "express";
 import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
 import workShiftController from "../../controllers/employee/workShiftController.js";
+import validate from "../../middlewares/validate.js";
+import {
+  getWorkShiftByDateSchema,
+  updateCheckInAndCashRegisterSchema,
+  updateCheckOutAndCashRegisterSchema,
+} from "../../validations/workShiftValidation.js";
 
 const workShiftRoute = express.Router();
 
@@ -10,19 +16,22 @@ const initWorkShiftEmployeeRoute = (app) => {
     "/list/:date",
     auth,
     authorize("EMPLOYEE"),
-    workShiftController.getWorkShiftByDate
+    validate(getWorkShiftByDateSchema),
+    workShiftController.getWorkShiftByDate,
   );
   workShiftRoute.patch(
-    "/update/check-in/:id",
+    "/update/check-in/:workShiftId",
     auth,
     authorize("EMPLOYEE"),
-    workShiftController.updateCheckInAndCashRegister
+    validate(updateCheckInAndCashRegisterSchema),
+    workShiftController.updateCheckInAndCashRegister,
   );
   workShiftRoute.patch(
-    "/update/check-out/:id",
+    "/update/check-out/:workShiftId",
     auth,
     authorize("EMPLOYEE"),
-    workShiftController.updateCheckOutAndCashRegister
+    validate(updateCheckOutAndCashRegisterSchema),
+    workShiftController.updateCheckOutAndCashRegister,
   );
   app.use("/employee/work-shift", workShiftRoute);
 };

@@ -2,6 +2,11 @@ import express from "express";
 import bookingController from "../../controllers/customer/bookingController.js";
 import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
+import validate from "../../middlewares/validate.js";
+import {
+  cancelBookingSchema,
+  createBookingSchema,
+} from "../../validations/bookingValidation.js";
 
 const bookingRoute = express.Router();
 
@@ -10,19 +15,21 @@ const initBookingCustomerRoute = (app) => {
     "/add",
     auth,
     authorize("USER"),
-    bookingController.createBooking
+    validate(createBookingSchema),
+    bookingController.createBooking,
   );
   bookingRoute.get(
     "/list",
     auth,
     authorize("USER"),
-    bookingController.getBookings
+    bookingController.getBookings,
   );
   bookingRoute.patch(
-    "/cancel/:id",
+    "/cancel/:bookingId",
     auth,
     authorize("USER"),
-    bookingController.cancelBooking
+    validate(cancelBookingSchema),
+    bookingController.cancelBooking,
   );
   app.use("/user/booking", bookingRoute);
 };

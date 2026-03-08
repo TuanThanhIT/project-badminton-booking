@@ -2,29 +2,43 @@ import express from "express";
 import cartController from "../../controllers/customer/cartController.js";
 import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
+import validate from "../../middlewares/validate.js";
+import {
+  addItemToCartSchema,
+  deleteCartItemSchema,
+  updateQuantitySchema,
+} from "../../validations/cartValidation.js";
 
 const cartRoute = express.Router();
 
 const initCartCustomerRoute = (app) => {
-  cartRoute.post("/add", auth, authorize("USER"), cartController.addItemToCart);
-  cartRoute.get("/list", auth, authorize("USER"), cartController.getCartItem);
-  cartRoute.put(
-    "/update/:id",
+  cartRoute.post(
+    "/add",
     auth,
     authorize("USER"),
-    cartController.updateQuantity
+    validate(addItemToCartSchema),
+    cartController.addItemToCart,
+  );
+  cartRoute.get("/list", auth, authorize("USER"), cartController.getCartItems);
+  cartRoute.put(
+    "/update/:cartItemId",
+    auth,
+    authorize("USER"),
+    validate(updateQuantitySchema),
+    cartController.updateQuantity,
   );
   cartRoute.delete(
     "/delete/all",
     auth,
     authorize("USER"),
-    cartController.deleteAllCartItem
+    cartController.deleteAllCartItem,
   );
   cartRoute.delete(
-    "/delete/:id",
+    "/delete/:cartItemId",
     auth,
     authorize("USER"),
-    cartController.deleteCartItem
+    validate(deleteCartItemSchema),
+    cartController.deleteCartItem,
   );
   app.use("/user/cart", cartRoute);
 };

@@ -2,6 +2,13 @@ import express from "express";
 import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
 import orderController from "../../controllers/employee/orderController.js";
+import validate from "../../middlewares/validate.js";
+import {
+  cancelOrderSchema,
+  completedOrderSchema,
+  confirmedOrderSchema,
+  getOrdersSchema,
+} from "../../validations/orderValidation.js";
 
 const orderRoute = express.Router();
 
@@ -10,25 +17,29 @@ const initOrderEmployeeRoute = (app) => {
     "/list",
     auth,
     authorize("EMPLOYEE"),
-    orderController.getOrders
+    validate(getOrdersSchema),
+    orderController.getOrders,
   );
   orderRoute.patch(
-    "/confirm/:id",
+    "/confirm/:orderId",
     auth,
     authorize("EMPLOYEE"),
-    orderController.confirmedOrder
+    validate(confirmedOrderSchema),
+    orderController.confirmedOrder,
   );
   orderRoute.patch(
-    "/complete/:id",
+    "/complete/:orderId",
     auth,
     authorize("EMPLOYEE"),
-    orderController.completedOrder
+    validate(completedOrderSchema),
+    orderController.completedOrder,
   );
   orderRoute.patch(
-    "/cancel/:id",
+    "/cancel/:orderId",
     auth,
     authorize("EMPLOYEE"),
-    orderController.cancelOrder
+    validate(cancelOrderSchema),
+    orderController.cancelOrder,
   );
   app.use("/employee/order", orderRoute);
 };

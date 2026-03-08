@@ -1,68 +1,55 @@
 import discountBookingService from "../../services/admin/discountBookingService.js";
+import asyncHandler from "../../middlewares/asyncHandler.js";
+import SuccessResponse from "../../helpers/SuccessResponse.js";
 
-const createDiscountBooking = async (req, res, next) => {
-  try {
-    const { code, type, value, startDate, endDate, minBookingAmount } =
-      req.body;
-
-    await discountBookingService.createDiscountBookingService(
-      code,
-      type,
-      value,
-      startDate,
-      endDate,
-      minBookingAmount
+const createDiscountBooking = asyncHandler(async (req, res) => {
+  const data = { ...req.body };
+  const discount =
+    await discountBookingService.createDiscountBookingService(data);
+  return res
+    .status(201)
+    .json(
+      new SuccessResponse("Tạo mã giảm giá cho đặt sân thành công", discount),
     );
-    return res
-      .status(201)
-      .json({ message: "Tạo mã giảm giá cho đặt sân thành công!" });
-  } catch (error) {
-    next(error);
-  }
-};
+});
 
-const getDiscountBookings = async (req, res, next) => {
-  try {
-    const { isUsed, type, page, limit } = req.query;
-    const filter = {
-      isUsed,
-      type,
-    };
-    const discountBookings =
-      await discountBookingService.getDiscountBookingsService(
-        filter,
-        page,
-        limit
-      );
-    return res.status(200).json(discountBookings);
-  } catch (error) {
-    next(error);
-  }
-};
+const getDiscountBookings = asyncHandler(async (req, res) => {
+  const data = { ...req.query };
+  const discountBookings =
+    await discountBookingService.getDiscountBookingsService(data);
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse(
+        "Lấy tất cả mã giảm giá đặt sân thành công",
+        discountBookings,
+      ),
+    );
+});
 
-const updateDiscountBooking = async (req, res, next) => {
-  try {
-    const discountId = req.params.id;
-    await discountBookingService.updateDiscountBookingService(discountId);
-    return res
-      .status(200)
-      .json({ message: "Thay đổi trạng thái mã giảm giá thành công!" });
-  } catch (error) {
-    next(error);
-  }
-};
+const updateDiscountBooking = asyncHandler(async (req, res) => {
+  const { discountId } = req.params;
+  const data = { discountId };
+  const discountBooking =
+    await discountBookingService.updateDiscountBookingService(data);
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse(
+        "Thay đổi trạng thái mã giảm giá thành công",
+        discountBooking,
+      ),
+    );
+});
 
-const deleteDiscountBooking = async (req, res, next) => {
-  try {
-    const discountId = req.params.id;
-    await discountBookingService.deleteDiscountBookingService(discountId);
-    return res
-      .status(200)
-      .json({ message: "Xóa mã giảm giá đặt sân thành công!" });
-  } catch (error) {
-    next(error);
-  }
-};
+const deleteDiscountBooking = asyncHandler(async (req, res) => {
+  const { discountId } = req.params;
+  const data = { discountId };
+  await discountBookingService.deleteDiscountBookingService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Xóa mã giảm giá đặt sân thành công"));
+});
 
 const discountBookingController = {
   createDiscountBooking,

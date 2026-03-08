@@ -2,6 +2,13 @@ import express from "express";
 import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
 import bookingController from "../../controllers/employee/bookingController.js";
+import validate from "../../middlewares/validate.js";
+import {
+  cancelBookingSchema,
+  completedBookingSchema,
+  confirmedBookingSchema,
+  getBookingsSchema,
+} from "../../validations/bookingValidation.js";
 
 const bookingRoute = express.Router();
 
@@ -10,25 +17,29 @@ const initBookingEmployeeRoute = (app) => {
     "/list",
     auth,
     authorize("EMPLOYEE"),
-    bookingController.getBookings
+    validate(getBookingsSchema),
+    bookingController.getBookings,
   );
   bookingRoute.patch(
-    "/confirm/:id",
+    "/confirm/:bookingId",
     auth,
     authorize("EMPLOYEE"),
-    bookingController.confirmedBooking
+    validate(confirmedBookingSchema),
+    bookingController.confirmedBooking,
   );
   bookingRoute.patch(
-    "/complete/:id",
+    "/complete/:bookingId",
     auth,
     authorize("EMPLOYEE"),
-    bookingController.completedBooking
+    validate(completedBookingSchema),
+    bookingController.completedBooking,
   );
   bookingRoute.patch(
-    "/cancel/:id",
+    "/cancel/:bookingId",
     auth,
     authorize("EMPLOYEE"),
-    bookingController.cancelBooking
+    validate(cancelBookingSchema),
+    bookingController.cancelBooking,
   );
   app.use("/employee/booking", bookingRoute);
 };

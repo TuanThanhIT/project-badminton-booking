@@ -1,72 +1,66 @@
-import { StatusCodes } from "http-status-codes";
+import { DAY_OF_WEEK } from "../../constants/courtConstant.js";
 import { Court, CourtPrice, CourtSchedule } from "../../models/index.js";
-import ApiError from "../../errors/ApiError.js";
 
-const getCourtScheduleByDateService = async (date) => {
-  try {
-    const targetDate = date ? new Date(date) : new Date();
-    const isoDate = targetDate.toISOString().split("T")[0];
+const getCourtScheduleByDateService = async (data) => {
+  const { date } = data;
 
-    const courtSchedules = await CourtSchedule.findAll({
-      where: { date: isoDate },
-      attributes: [
-        "id",
-        "date",
-        "startTime",
-        "endTime",
-        "isAvailable",
-        "courtId",
-      ],
-      include: [
-        {
-          model: Court,
-          as: "court",
-          attributes: ["name"],
-        },
-      ],
-    });
+  const isoDate = date ?? new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
 
-    if (courtSchedules.length === 0) return [];
+  const courtSchedules = await CourtSchedule.findAll({
+    where: { date: isoDate },
+    attributes: [
+      "id",
+      "date",
+      "startTime",
+      "endTime",
+      "isAvailable",
+      "courtId",
+    ],
+    include: [
+      {
+        model: Court,
+        as: "court",
+        attributes: ["name"],
+      },
+    ],
+  });
 
-    // Xác định ngày trong tuần
-    const daysOfWeek = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ];
-    const dayName = daysOfWeek[targetDate.getDay()];
+  if (courtSchedules.length === 0) return [];
 
-    // Lấy tất cả giá sân trong ngày để tránh N+1 query
-    const courtPrices = await CourtPrice.findAll({
-      where: { dayOfWeek: dayName },
-      attributes: ["startTime", "endTime", "price"],
-    });
+  // Map getDay() → DAY_OF_WEEK
+  const targetDate = new Date(isoDate);
+  const dayOfWeekMap = [
+    DAY_OF_WEEK.SUNDAY,
+    DAY_OF_WEEK.MONDAY,
+    DAY_OF_WEEK.TUESDAY,
+    DAY_OF_WEEK.WEDNESDAY,
+    DAY_OF_WEEK.THURSDAY,
+    DAY_OF_WEEK.FRIDAY,
+    DAY_OF_WEEK.SATURDAY,
+  ];
 
-    const result = courtSchedules.map((cs) => {
-      const priceObj = courtPrices.find(
-        (p) => cs.startTime >= p.startTime && cs.endTime <= p.endTime,
-      );
+  const dayOfWeek = dayOfWeekMap[targetDate.getDay()];
 
-      return {
-        id: cs.id,
-        date: cs.date,
-        startTime: cs.startTime,
-        endTime: cs.endTime,
-        isAvailable: cs.isAvailable,
-        court: cs.court,
-        price: priceObj?.price ?? 0,
-      };
-    });
+  const courtPrices = await CourtPrice.findAll({
+    where: { dayOfWeek },
+    attributes: ["startTime", "endTime", "price"],
+  });
 
-    return result;
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+  return courtSchedules.map((cs) => {
+    const priceObj = courtPrices.find(
+      (p) => cs.startTime >= p.startTime && cs.endTime <= p.endTime,
+    );
+
+    return {
+      id: cs.id,
+      date: cs.date,
+      startTime: cs.startTime,
+      endTime: cs.endTime,
+      isAvailable: cs.isAvailable,
+      court: cs.court,
+      price: priceObj?.price ?? 0,
+    };
+  });
 };
 
 const courtService = {

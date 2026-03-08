@@ -2,6 +2,13 @@ import express from "express";
 import discountController from "../../controllers/admin/discountController.js";
 import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
+import validate from "../../middlewares/validate.js";
+import {
+  createDiscountSchema,
+  deleteDiscountSchema,
+  getDiscountsSchema,
+  updateDiscountSchema,
+} from "../../validations/discountValidation.js";
 
 const discountRoute = express.Router();
 
@@ -10,25 +17,29 @@ const initDiscountAdminRoute = (app) => {
     "/add",
     auth,
     authorize("ADMIN"),
-    discountController.createDiscount
+    validate(createDiscountSchema),
+    discountController.createDiscount,
   );
   discountRoute.delete(
     "/delete/:id",
     auth,
     authorize("ADMIN"),
-    discountController.deleteDiscount
+    validate(deleteDiscountSchema),
+    discountController.deleteDiscount,
   );
   discountRoute.patch(
     "/update/:id",
     auth,
     authorize("ADMIN"),
-    discountController.updateDiscount
+    validate(updateDiscountSchema),
+    discountController.updateDiscount,
   );
   discountRoute.get(
     "/list",
     auth,
     authorize("ADMIN"),
-    discountController.getDiscounts
+    validate(getDiscountsSchema),
+    discountController.getDiscounts,
   );
   app.use("/admin/discount", discountRoute);
 };

@@ -3,37 +3,38 @@ import asyncHandler from "../../middlewares/asyncHandler.js";
 import bookingFeedbackService from "../../services/customer/bookingFeedbackService.js";
 
 const createBookingFeedback = asyncHandler(async (req, res) => {
-  const userId = req.user.id;
-  const data = { ...req.body, userId };
+  const data = { ...req.body, userId: req.user.id };
   await bookingFeedbackService.createBookingFeedbackService(data);
   return res.status(201).json(new SuccessResponse("Đánh giá sân thành công"));
 });
 
 const getBookingFeedbackUpdate = asyncHandler(async (req, res) => {
-  const userId = req.user.id;
-  const bookingId = req.params.id;
-  const data = { bookingId, userId };
-
+  const { bookingId } = req.params;
+  const data = { bookingId, userId: req.user.id };
   const bookingFeedback =
     await bookingFeedbackService.getBookingFeedbackUpdateService(data);
-
   return res
     .status(200)
     .json(new SuccessResponse("Lấy đánh giá sân thành công", bookingFeedback));
 });
 
 const updateBookingFeedback = asyncHandler(async (req, res) => {
-  const userId = req.user.id;
-  const bookingId = req.params.id;
-  const data = { ...req.body, userId, bookingId };
-  await bookingFeedbackService.updateBookingFeedbackService(data);
+  const { bookingId } = req.params;
+  const data = { ...req.body, userId: req.user.id, bookingId };
+  const bookingFeedback =
+    await bookingFeedbackService.updateBookingFeedbackService(data);
   return res
     .status(200)
-    .json(new SuccessResponse("Cập nhật đánh giá cho sân thành công"));
+    .json(
+      new SuccessResponse(
+        "Cập nhật đánh giá cho sân thành công",
+        bookingFeedback,
+      ),
+    );
 });
 
 const getBookingFeedback = asyncHandler(async (req, res) => {
-  const courtId = req.params.id;
+  const { courtId } = req.params;
   const data = { courtId };
   const bookingFeedback =
     await bookingFeedbackService.getBookingFeedbackService(data);

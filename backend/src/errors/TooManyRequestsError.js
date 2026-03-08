@@ -1,7 +1,7 @@
 import ApiError from "./ApiError.js";
 
 class TooManyRequestsError extends ApiError {
-  constructor(msg = "Too many requests") {
+  constructor(msg = "QUá nhiều yêu cầu, vui lòng thử lại sau") {
     super(429, msg);
   }
 }

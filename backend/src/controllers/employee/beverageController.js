@@ -1,14 +1,15 @@
+import SuccessResponse from "../../helpers/SuccessResponse.js";
+import asyncHandler from "../../middlewares/asyncHandler.js";
 import beverageService from "../../services/employee/beverageService.js";
 
-const getBeverages = async (req, res, next) => {
-  try {
-    const { keyword } = req.query;
-    const beverages = await beverageService.getBeveragesService(keyword);
-    return res.status(200).json(beverages);
-  } catch (error) {
-    next(error);
-  }
-};
+const getBeverages = asyncHandler(async (req, res) => {
+  const data = { ...req.query };
+  const beverages = await beverageService.getBeveragesService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Lấy danh sách đồ uống thành công", beverages));
+});
+
 const beverageController = {
   getBeverages,
 };

@@ -1,88 +1,75 @@
-import { StatusCodes } from "http-status-codes";
-import ApiError from "../../errors/ApiError.js";
 import { Court, CourtPrice, CourtSchedule } from "../../models/index.js";
+import BadRequestError from "../../errors/BadRequestError.js";
 
-const getCourtsService = async (date, page = 1, limit = 10) => {
-  try {
-    // ép tất cả case null/undefined/"null"/"" về default
-    const p = page && page !== "null" ? parseInt(page) : 1;
-    const l = limit && limit !== "null" ? parseInt(limit) : 10;
+const getCourtsService = async (data) => {
+  const { date, page, limit } = data;
 
-    const offset = (p - 1) * l;
+  const p = page ?? 1;
+  const l = limit ?? 10;
 
-    const { rows, count } = await Court.findAndCountAll({
-      limit: l,
-      offset,
-      order: [["id", "ASC"]],
-    });
+  const offset = (p - 1) * l;
 
-    const formattedDate =
-      date && date !== "null" ? date : new Date().toISOString().split("T")[0];
+  const { rows, count } = await Court.findAndCountAll({
+    limit: l,
+    offset,
+    order: [["id", "ASC"]],
+  });
 
-    const newCourts = await Promise.all(
-      rows.map(async (court) => {
-        const newCourt = court.toJSON();
-        const availableSlots = await CourtSchedule.count({
-          where: {
-            isAvailable: true,
-            date: formattedDate,
-            courtId: newCourt.id,
-          },
-        });
+  const formattedDate =
+    date && date !== "null" ? date : new Date().toISOString().split("T")[0];
 
-        return {
-          ...newCourt,
+  const newCourts = await Promise.all(
+    rows.map(async (court) => {
+      const newCourt = court.toJSON();
+      const availableSlots = await CourtSchedule.count({
+        where: {
+          isAvailable: true,
           date: formattedDate,
-          availableSlots: availableSlots,
-        };
-      }),
-    );
+          courtId: newCourt.id,
+        },
+      });
 
-    return {
-      courts: newCourts,
-      total: count,
-      page: p,
-      limit: l,
-    };
-  } catch (error) {
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+      return {
+        ...newCourt,
+        date: formattedDate,
+        availableSlots: availableSlots,
+      };
+    }),
+  );
+
+  return {
+    courts: newCourts,
+    total: count,
+    page: p,
+    limit: l,
+  };
 };
 
-const getCourtScheduleService = async (courtId, date) => {
-  try {
-    const courtSchedule = await Court.findByPk(courtId, {
-      include: [
-        {
-          model: CourtSchedule,
-          as: "courtSchedules",
-          where: { date },
-          attributes: ["id", "startTime", "endTime", "isAvailable"],
-        },
-      ],
-    });
-    if (!courtSchedule) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Sân không tồn tại!");
-    }
-    return courtSchedule;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+const getCourtScheduleService = async (data) => {
+  const { courtId, date } = data;
+  const courtSchedule = await Court.findByPk(courtId, {
+    include: [
+      {
+        model: CourtSchedule,
+        as: "courtSchedules",
+        where: { date },
+        attributes: ["id", "startTime", "endTime", "isAvailable"],
+      },
+    ],
+  });
+  if (!courtSchedule) {
+    throw new BadRequestError("Sân không tồn tại");
   }
+  return courtSchedule;
 };
 
 const getCourtPriceService = async () => {
-  try {
-    const courtPrices = await CourtPrice.findAll({
-      attributes: ["dayOfWeek", "startTime", "endTime", "price", "periodType"],
-    });
-    return courtPrices;
-  } catch (error) {
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+  const courtPrices = await CourtPrice.findAll({
+    attributes: ["dayOfWeek", "startTime", "endTime", "price", "periodType"],
+  });
+  return courtPrices;
 };
+
 const courtService = {
   getCourtsService,
   getCourtScheduleService,

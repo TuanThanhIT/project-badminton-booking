@@ -1,63 +1,30 @@
-import { StatusCodes } from "http-status-codes";
-import ApiError from "../../errors/ApiError.js";
 import { Op } from "sequelize";
 import { WorkShift } from "../../models/index.js";
+import sequelize from "../../config/db.js";
+import BadRequestError from "../../errors/BadRequestError.js";
+import ConflictError from "../../errors/ConflictError.js";
 
-const createWorkShiftService = async (
-  name,
-  workDate,
-  startTime,
-  endTime,
-  shiftWage,
-) => {
-  try {
-    // 1. Validate ngày
+const createWorkShiftService = async (data) => {
+  const { name, workDate, startTime, endTime, shiftWage } = data;
+  return sequelize.transaction(async (t) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const shiftDate = new Date(workDate);
-    shiftDate.setHours(0, 0, 0, 0);
-
-    if (isNaN(shiftDate.getTime())) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Ngày làm không hợp lệ!");
-    }
+    const shiftDate = new Date(`${workDate}T00:00:00+07:00`);
 
     if (shiftDate < today) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Không thể tạo ca làm cho ngày đã qua!",
-      );
+      throw new BadRequestError("Không thể tạo ngày trong quá khứ");
     }
 
-    // 2. Validate thời gian (ghép vào Date để so sánh)
-    const start = new Date(`${workDate}T${startTime}:00`);
-    const end = new Date(`${workDate}T${endTime}:00`);
-
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Thời gian bắt đầu hoặc kết thúc không hợp lệ!",
-      );
-    }
+    const start = new Date(`${workDate}T${startTime}:00+07:00`);
+    const end = new Date(`${workDate}T${endTime}:00+07:00`);
 
     if (start >= end) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc!",
+      throw new BadRequestError(
+        "Thời gian bắt đâu phải sớm hơn thời gian kết thúc",
       );
     }
 
-    // 3. Validate shiftWage
-    if (shiftWage < 0) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Tiền công ca làm không hợp lệ!",
-      );
-    }
-
-    // 4. Kiểm tra trùng ca
-    // Điều kiện overlap chuẩn:
-    // (start < existingEnd) && (end > existingStart)
     const overlap = await WorkShift.findOne({
       where: {
         workDate,
@@ -66,42 +33,38 @@ const createWorkShiftService = async (
           { endTime: { [Op.gt]: startTime } },
         ],
       },
+      transaction: t,
     });
 
     if (overlap) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Ca làm bị trùng thời gian với ca khác!",
-      );
+      throw new ConflictError("Ca làm bị trùng thời gian với ca khác");
     }
 
-    // 5. Lưu ca làm
-    const shift = await WorkShift.create({
-      name,
-      workDate,
-      startTime,
-      endTime,
-      shiftWage,
-    });
+    const shift = await WorkShift.create(
+      {
+        name,
+        workDate,
+        startTime,
+        endTime,
+        shiftWage,
+      },
+      { transaction: t },
+    );
 
     return shift;
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error.message);
-  }
+  });
 };
-const createWorkShiftsService = async (workDate, shiftWage) => {
-  try {
-    // Kiểm tra đã tồn tại ca trong ngày chưa
+
+const createWorkShiftsService = async (data) => {
+  const { workDate, shiftWage } = data;
+  return sequelize.transaction(async (t) => {
     const existed = await WorkShift.findOne({
       where: { workDate },
+      transaction: t,
     });
 
     if (existed) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        "Ngày này đã được tạo ca làm việc!",
-      );
+      throw new BadRequestError("Ngày này đã được tạo ca làm việc");
     }
 
     const shifts = [
@@ -128,48 +91,41 @@ const createWorkShiftsService = async (workDate, shiftWage) => {
       },
     ];
 
-    const createdShifts = await WorkShift.bulkCreate(shifts);
-
-    return createdShifts;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
-};
-
-const getAllWorkShiftsService = async ({ page = 1, limit = 10, workDate }) => {
-  try {
-    const offset = (page - 1) * limit;
-
-    const whereCondition = workDate ? { workDate } : {};
-
-    const { rows, count } = await WorkShift.findAndCountAll({
-      where: whereCondition,
-      order: [
-        ["workDate", "DESC"],
-        ["startTime", "ASC"],
-      ],
-      limit,
-      offset,
+    const createdShifts = await WorkShift.bulkCreate(shifts, {
+      transaction: t,
     });
 
-    return {
-      workShifts: rows,
-      pagination: {
-        total: count,
-        page,
-        limit,
-        totalPages: Math.ceil(count / limit),
-      },
-    };
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
-  }
+    return createdShifts;
+  });
+};
+
+const getAllWorkShiftsService = async (data) => {
+  const { page, limit, workDate } = data;
+  const p = page ?? 1;
+  const l = limit ?? 10;
+  const offset = (p - 1) * l;
+
+  const whereCondition = workDate ? { workDate } : {};
+
+  const { rows, count } = await WorkShift.findAndCountAll({
+    where: whereCondition,
+    order: [
+      ["workDate", "DESC"],
+      ["startTime", "ASC"],
+    ],
+    limit: l,
+    offset,
+  });
+
+  return {
+    workShifts: rows,
+    pagination: {
+      total: count,
+      page: p,
+      limit: l,
+      totalPages: Math.ceil(count / limit),
+    },
+  };
 };
 
 const workShiftService = {

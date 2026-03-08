@@ -4,13 +4,34 @@ import sequelize from "../config/db.js";
 const ProductImage = sequelize.define(
   "ProductImage",
   {
-    imageUrl: { type: DataTypes.STRING },
+    imageUrl: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        isUrl: {
+          msg: "Image URL must be a valid URL",
+        },
+      },
+    },
     productId: {
       type: DataTypes.INTEGER,
-      references: { model: "Products", key: "id" },
       allowNull: false,
+      references: { model: "Products", key: "id" },
+      validate: {
+        isInt: {
+          msg: "Product ID must be an integer",
+        },
+        min: {
+          args: [1],
+          msg: "Product ID must be a positive number",
+        },
+      },
     },
   },
-  { tableName: "ProductImages", timestamps: false }
+  {
+    tableName: "ProductImages",
+    timestamps: false,
+  },
 );
+
 export default ProductImage;

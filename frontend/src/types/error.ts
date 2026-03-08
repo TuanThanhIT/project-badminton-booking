@@ -1,5 +1,10 @@
+export interface FieldError {
+  field: string;
+  fieldMessage: string;
+}
+
 export interface ApiErrorType {
-  statusCode?: number;
-  userMessage: string;
-  developerMessage: string;
+  success: boolean;
+  message: string;
+  errors?: FieldError[];
 }

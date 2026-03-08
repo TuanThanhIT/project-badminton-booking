@@ -1,25 +1,18 @@
 import crypto from "crypto";
 import momoService from "../../services/customer/momoService.js";
+import asyncHandler from "../../middlewares/asyncHandler.js";
+import SuccessResponse from "../../helpers/SuccessResponse.js";
 
 /**
  * Tạo link thanh toán MoMo
  */
-const createMoMoPayment = async (req, res, next) => {
-  try {
-    const { entityId, amount, orderInfo, type } = req.body;
-
-    const result = await momoService.createPaymentService(
-      entityId,
-      amount,
-      orderInfo,
-      type
-    );
-
-    return res.status(201).json(result);
-  } catch (error) {
-    next(error);
-  }
-};
+const createMoMoPayment = asyncHandler(async (req, res) => {
+  const data = { ...req.body };
+  const result = await momoService.createPaymentService(data);
+  return res
+    .status(201)
+    .json(new SuccessResponse("Tạo thanh toán Momo thành công", result));
+});
 
 /**
  * Xử lý webhook IPN MoMo
@@ -28,7 +21,6 @@ const createMoMoPayment = async (req, res, next) => {
 const handleMoMoWebhook = async (req, res) => {
   console.log("===> WEBHOOK RECEIVED <===");
   console.log(req.body);
-
   const {
     partnerCode,
     orderId,
@@ -44,10 +36,8 @@ const handleMoMoWebhook = async (req, res) => {
     signature,
     resultCode,
   } = req.body;
-
   const SECRET_KEY = process.env.SECRET_KEY;
   const ACCESS_KEY = process.env.ACCESS_KEY;
-
   /**
    * MoMo yêu cầu rawSignature phải tạo theo đúng thứ tự
    * KHÔNG ĐƯỢC ĐỔI VỊ TRÍ hoặc BỎ FIELD
@@ -66,21 +56,17 @@ const handleMoMoWebhook = async (req, res) => {
     `&responseTime=${responseTime}` +
     `&resultCode=${resultCode}` +
     `&transId=${transId}`;
-
   // Tạo chữ ký để so sánh
   const expectedSignature = crypto
     .createHmac("sha256", SECRET_KEY)
     .update(rawSignature)
     .digest("hex");
-
   // Sai signature → từ chối webhook
   if (expectedSignature !== signature) {
     return res.status(400).json({ message: "Invalid signature" });
   }
-
   // Lấy id thực của đơn hàng (orderId = "{id}_{timestamp}_{requestId}")
   const originalEntityId = orderId.split("_")[0];
-
   // Giải mã extraData
   let type = "order";
   try {
@@ -88,17 +74,11 @@ const handleMoMoWebhook = async (req, res) => {
   } catch (err) {
     console.log("extraData decode error:", err);
   }
-
   // Nếu thanh toán thành công
   if (Number(resultCode) === 0) {
-    await momoService.paymentSuccessService(
-      originalEntityId,
-      amount,
-      transId,
-      type
-    );
+    const data = { entityId: originalEntityId, amount, transId, type };
+    await momoService.paymentSuccessService(data);
   }
-
   // MoMo yêu cầu trả resultCode = 0
   return res.status(200).json({ message: "OK" });
 };

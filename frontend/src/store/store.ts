@@ -22,6 +22,7 @@ import discountAdminReducer from "./slices/admin/discountSlice";
 import revenueAdminReducer from "./slices/admin/revenueSlice";
 import dashboardAdminReducer from "./slices/admin/dashboardSlice";
 import notificationAdmReducer from "./slices/admin/notificationSlice";
+import authReducer from "./slices/customer/authSlice";
 
 const persistConfig = {
   key: "root",
@@ -37,6 +38,7 @@ const rootReducer = combineReducers({
   court: courtReducer,
   booking: bookingReducer,
   bookingFeedback: bookingFeedbackReducer,
+  auth: authReducer,
   workShiftEpl: workShiftReducer,
   orderEpl: orderEplReducer,
   bookingEpl: bookingEplReducer,

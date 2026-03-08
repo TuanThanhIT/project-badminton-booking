@@ -1,7 +1,7 @@
 import ApiError from "./ApiError.js";
 
 class UnauthorizedError extends ApiError {
-  constructor(msg = "Unauthorized") {
+  constructor(msg = "Bạn chưa đăng nhập") {
     super(401, msg);
   }
 }

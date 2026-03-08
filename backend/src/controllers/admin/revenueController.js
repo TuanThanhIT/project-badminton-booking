@@ -1,82 +1,56 @@
+import SuccessResponse from "../../helpers/SuccessResponse.js";
+import asyncHandler from "../../middlewares/asyncHandler.js";
 import revenueService from "../../services/admin/revenueService.js";
 
-const getDashboardOverview = async (req, res, next) => {
-  try {
-    const { startDate, endDate } = req.query;
-
-    const data = await revenueService.getDashboardOverviewService(
-      startDate,
-      endDate
+const getDashboardOverview = asyncHandler(async (req, res) => {
+  const data = { ...req.query };
+  const result = await revenueService.getDashboardOverviewService(data);
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse("Lấy dữ liệu tổng quan dashboard thành công", result),
     );
+});
 
-    return res.status(200).json(data);
-  } catch (error) {
-    next(error);
-  }
-};
-
-const getRevenueByDate = async (req, res, next) => {
-  try {
-    const { date } = req.query;
-
-    const data = await revenueService.getRevenueByDayService(date);
-
-    return res.status(200).json(data);
-  } catch (error) {
-    next(error);
-  }
-};
-
-const getBookingOrderList = async (req, res, next) => {
-  try {
-    const { startDate, endDate, page, limit } = req.query;
-
-    const data = await revenueService.getRevenueTransactionListService(
-      startDate,
-      endDate,
-      page,
-      limit
+const getRevenueByDate = asyncHandler(async (req, res) => {
+  const data = { ...req.query };
+  const result = await revenueService.getRevenueByDayService(data);
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse("Lấy dữ liệu doanh thu theo ngày thành công", result),
     );
+});
 
-    return res.status(200).json(data);
-  } catch (error) {
-    next(error);
-  }
-};
-
-const getRevenueProduct = async (req, res, next) => {
-  try {
-    const { startDate, endDate, page, limit } = req.query;
-
-    const data = await revenueService.getRevenueProductService(
-      startDate,
-      endDate,
-      page,
-      limit
+const getBookingOrderList = asyncHandler(async (req, res) => {
+  const data = { ...req.query };
+  const result = await revenueService.getRevenueTransactionListService(data);
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse("Lấy dữ liệu đặt sân và mua hàng thành công", result),
     );
+});
 
-    return res.status(200).json(data);
-  } catch (error) {
-    next(error);
-  }
-};
-
-const getRevenueBeverage = async (req, res, next) => {
-  try {
-    const { startDate, endDate, page, limit } = req.query;
-
-    const data = await revenueService.getRevenueBeverageService(
-      startDate,
-      endDate,
-      page,
-      limit
+const getRevenueProduct = asyncHandler(async (req, res) => {
+  const data = { ...req.query };
+  const result = await revenueService.getRevenueProductService(data);
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse("Lấy dữ liệu doanh thu sản phẩm thành công", result),
     );
+});
 
-    return res.status(200).json(data);
-  } catch (error) {
-    next(error);
-  }
-};
+const getRevenueBeverage = asyncHandler(async (req, res) => {
+  const data = { ...req.query };
+  const result = await revenueService.getRevenueBeverageService(data);
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse("Lấy dữ liệu doanh thu đồ uống thành công", result),
+    );
+});
 
 const revenueController = {
   getDashboardOverview,

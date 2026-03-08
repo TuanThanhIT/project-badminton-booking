@@ -1,23 +1,53 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
-// CashRegister (Doanh thu ca)
+
 const CashRegister = sequelize.define(
   "CashRegister",
   {
     workShiftEmployeeId: {
       type: DataTypes.INTEGER,
-      references: { model: "WorkShiftEmployees", key: "id" },
       allowNull: false,
+      validate: {
+        isInt: {
+          msg: "Work shift employee ID must be an integer",
+        },
+        min: {
+          args: [1],
+          msg: "Work shift employee ID must be a positive number",
+        },
+      },
+      references: {
+        model: "WorkShiftEmployees",
+        key: "id",
+      },
     },
     openingCash: {
       type: DataTypes.DOUBLE,
-      defaultValue: 0,
       allowNull: false,
+      defaultValue: 0,
+      validate: {
+        isFloat: {
+          msg: "Opening cash must be a number",
+        },
+        min: {
+          args: [0],
+          msg: "Opening cash must be greater than or equal to 0",
+        },
+      },
     },
     closingCash: {
       type: DataTypes.DOUBLE,
-      defaultValue: 0,
       allowNull: false,
+      defaultValue: 0,
+      validate: {
+        isFloat: {
+          msg: "Closing cash must be a number",
+        },
+        min: {
+          args: [0],
+          msg: "Closing cash must be greater than or equal to 0",
+        },
+      },
     },
   },
   {
@@ -25,6 +55,7 @@ const CashRegister = sequelize.define(
     timestamps: true,
     createdAt: "createdDate",
     updatedAt: "updatedDate",
-  }
+  },
 );
+
 export default CashRegister;

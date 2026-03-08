@@ -1,88 +1,82 @@
-import { StatusCodes } from "http-status-codes";
-import ApiError from "../../errors/ApiError.js";
 import { Category } from "../../models/index.js";
 import { Op } from "sequelize";
+import ConflictError from "../../errors/ConflictError.js";
+import sequelize from "../../config/db.js";
 
-const createCategoryService = async (cateName, menuGroup) => {
-  try {
-    const category = await Category.findOne({ where: { cateName } });
-    if (category) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Danh mục đã tồn tại!");
-    }
-    const newCate = await Category.create({ cateName, menuGroup });
-    return newCate;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+const createCategoryService = async (data) => {
+  const { cateName, menuGroup } = data;
+  const category = await Category.findOne({ where: { cateName } });
+  if (category) {
+    throw new ConflictError("Danh mục đã tồn tại");
   }
+  const newCate = await Category.create({ cateName, menuGroup });
+  return newCate;
 };
 
-const getCategoriesService = async (page = 1, limit = 10, search = "") => {
-  try {
-    const offset = (page - 1) * limit;
-    const whereCondition = search
-      ? {
-          [Op.or]: [
-            { cateName: { [Op.like]: `%${search}%` } },
-            { menuGroup: { [Op.like]: `%${search}%` } },
-          ],
-        }
-      : {};
+const getCategoriesService = async (data) => {
+  const { page, limit, search } = data;
+  const p = page ?? 1;
+  const l = limit ?? 10;
+  const offset = (p - 1) * l;
+  const whereCondition = search
+    ? {
+        [Op.or]: [
+          { cateName: { [Op.like]: `%${search}%` } },
+          { menuGroup: { [Op.like]: `%${search}%` } },
+        ],
+      }
+    : {};
 
-    // Đếm tổng số records
-    const totalItems = await Category.count({ where: whereCondition });
+  // Đếm tổng số records
+  const totalItems = await Category.count({ where: whereCondition });
 
-    // Lấy data với pagination
-    const categories = await Category.findAll({
-      where: whereCondition,
-      limit: parseInt(limit),
-      offset: parseInt(offset),
-      order: [["createdDate", "DESC"]], // Sắp xếp theo ngày tạo mới nhất
-    });
+  // Lấy data với pagination
+  const categories = await Category.findAll({
+    where: whereCondition,
+    limit: l,
+    offset,
+    order: [["createdDate", "DESC"]], // Sắp xếp theo ngày tạo mới nhất
+  });
 
-    // Tính toán pagination info
-    const totalPages = Math.ceil(totalItems / limit);
-    const hasNextPage = page < totalPages;
-    const hasPrevPage = page > 1;
+  // Tính toán pagination info
+  const totalPages = Math.ceil(totalItems / l);
+  const hasNextPage = p < totalPages;
+  const hasPrevPage = p > 1;
 
-    return {
-      data: categories,
-      pagination: {
-        currentPage: parseInt(page),
-        totalPages,
-        totalItems,
-        itemsPerPage: parseInt(limit),
-        hasNextPage,
-        hasPrevPage,
-      },
-    };
-  } catch (error) {
-    throw new ApiError(
-      StatusCodes.INTERNAL_SERVER_ERROR,
-      error.message || "Lỗi khi lấy danh sách category",
-    );
-  }
+  return {
+    data: categories,
+    pagination: {
+      currentPage: p,
+      totalPages,
+      totalItems,
+      itemsPerPage: l,
+      hasNextPage,
+      hasPrevPage,
+    },
+  };
 };
 
-const updateCategoryService = async (id, cateName, menuGroup) => {
-  try {
-    const category = await Category.findByPk(id);
+const updateCategoryService = async (data) => {
+  const { cateId, cateName, menuGroup } = data;
+  return sequelize.transaction(async (t) => {
+    const category = await Category.findByPk(cateId, { transaction: t });
     if (!category) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Không tìm thấy category!");
+      throw new NotFoundError("Không tìm thấy danh mục");
     }
 
     // Kiểm tra xem tên mới có bị trùng với category khác không
     if (cateName && cateName !== category.cateName) {
-      const existingCategory = await Category.findOne({
-        where: {
-          cateName,
-          id: { [Op.ne]: id }, // Loại trừ category hiện tại
+      const existingCategory = await Category.findOne(
+        {
+          where: {
+            cateName,
+            id: { [Op.ne]: cateId }, // Loại trừ category hiện tại
+          },
         },
-      });
+        { transaction: t },
+      );
       if (existingCategory) {
-        throw new ApiError(StatusCodes.BAD_REQUEST, "Tên danh mục đã tồn tại!");
+        throw new ConflictError("Tên danh mục đã tồn tại");
       }
     }
 
@@ -91,32 +85,19 @@ const updateCategoryService = async (id, cateName, menuGroup) => {
     if (cateName) updateData.cateName = cateName;
     if (menuGroup) updateData.menuGroup = menuGroup;
 
-    await category.update(updateData);
+    await category.update(updateData, { transaction: t });
+    return category;
+  });
+};
 
-    // Lấy lại data mới
-    const updatedCategory = await Category.findByPk(id);
-    return updatedCategory;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error.message);
-  }
-};
 const getListCategoryService = async () => {
-  try {
-    const categories = await Category.findAll({
-      attributes: ["id", "cateName"],
-      order: [["createdDate", "DESC"]],
-    });
-    return categories;
-  } catch (error) {
-    throw new ApiError(
-      StatusCodes.INTERNAL_SERVER_ERROR,
-      error.message || "Lỗi khi lấy danh sách category",
-    );
-  }
+  const categories = await Category.findAll({
+    attributes: ["id", "cateName"],
+    order: [["createdDate", "DESC"]],
+  });
+  return categories;
 };
+
 const categoryAdminService = {
   createCategoryService,
   getCategoriesService,

@@ -2,6 +2,8 @@ import express from "express";
 import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
 import notificationController from "../../controllers/customer/notificationController.js";
+import validate from "../../middlewares/validate.js";
+import { updateNotificationSchema } from "../../validations/notificationValidation.js";
 
 const notificationRoute = express.Router();
 
@@ -10,19 +12,20 @@ const initNotificationCustomerRoute = (app) => {
     "/list",
     auth,
     authorize("USER"),
-    notificationController.getNotifications
+    notificationController.getNotifications,
   );
   notificationRoute.patch(
     "/update/all",
     auth,
     authorize("USER"),
-    notificationController.updateAllNotification
+    notificationController.updateAllNotification,
   );
   notificationRoute.patch(
-    "/update/:id",
+    "/update/:notificationId",
     auth,
     authorize("USER"),
-    notificationController.updateNotification
+    validate(updateNotificationSchema),
+    notificationController.updateNotification,
   );
 
   app.use("/user/notification", notificationRoute);

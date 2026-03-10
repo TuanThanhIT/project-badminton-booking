@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
+import Product from "./product.js";
 
 const ProductImage = sequelize.define(
   "ProductImage",
@@ -8,6 +9,7 @@ const ProductImage = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
+        notNull: { msg: "Image URL is required" },
         isUrl: {
           msg: "Image URL must be a valid URL",
         },
@@ -16,8 +18,11 @@ const ProductImage = sequelize.define(
     productId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: { model: "Products", key: "id" },
+      references: { model: Product, key: "id" },
       validate: {
+        notNull: {
+          msg: "Product ID is required",
+        },
         isInt: {
           msg: "Product ID must be an integer",
         },

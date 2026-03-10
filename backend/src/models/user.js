@@ -1,11 +1,12 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
+import Role from "./role.js";
 
 const User = sequelize.define(
   "User",
   {
     username: {
-      type: DataTypes.STRING(50), // khớp max 50
+      type: DataTypes.STRING(50),
       allowNull: false,
       unique: true,
       validate: {
@@ -51,6 +52,7 @@ const User = sequelize.define(
     },
     isVerified: {
       type: DataTypes.BOOLEAN,
+      allowNull: true,
       defaultValue: false,
       validate: {
         isBoolean: {
@@ -60,6 +62,7 @@ const User = sequelize.define(
     },
     isActive: {
       type: DataTypes.BOOLEAN,
+      allowNull: true,
       defaultValue: true,
       validate: {
         isBoolean: {
@@ -70,13 +73,13 @@ const User = sequelize.define(
     roleId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: { model: "Roles", key: "id" },
+      references: { model: Role, key: "id" },
       validate: {
-        notNull: { msg: "Role is required" },
-        isInt: { msg: "RoleId must be an integer" },
+        notNull: { msg: "Role ID is required" },
+        isInt: { msg: "Role ID must be an integer" },
         min: {
           args: [1],
-          msg: "RoleId must be greater than 0",
+          msg: "Role ID must be greater than 0",
         },
       },
     },

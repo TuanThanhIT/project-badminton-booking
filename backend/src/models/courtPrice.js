@@ -1,10 +1,31 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
 import { DAY_OF_WEEK, PERIOD_TYPE } from "../constants/courtConstant.js";
+import Branch from "./branch.js";
 
 const CourtPrice = sequelize.define(
   "CourtPrice",
   {
+    branchId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: Branch,
+        key: "id",
+      },
+      validate: {
+        notNull: {
+          msg: "Branch ID is required",
+        },
+        isInt: {
+          msg: "Branch ID must be an integer",
+        },
+        min: {
+          args: [1],
+          msg: "Branch ID must be a positive number",
+        },
+      },
+    },
     dayOfWeek: {
       type: DataTypes.ENUM(...Object.values(DAY_OF_WEEK)),
       allowNull: false,
@@ -48,6 +69,7 @@ const CourtPrice = sequelize.define(
       type: DataTypes.DOUBLE,
       allowNull: false,
       validate: {
+        notNull: { msg: "Price is required" },
         isFloat: {
           msg: "Price must be a number",
         },
@@ -75,6 +97,12 @@ const CourtPrice = sequelize.define(
   {
     tableName: "CourtPrices",
     timestamps: false,
+    indexes: [
+      {
+        unique: true,
+        fields: ["branchId", "dayOfWeek", "startTime", "endTime"],
+      },
+    ],
   },
 );
 

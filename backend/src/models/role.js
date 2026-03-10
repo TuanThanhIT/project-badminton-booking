@@ -1,20 +1,20 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
+import { ROLE_NAME } from "../constants/userConstant.js";
 
 const Role = sequelize.define(
   "Role",
   {
     roleName: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.ENUM(...Object.values(ROLE_NAME)),
+      unique: true,
       allowNull: false,
       unique: true,
       validate: {
-        notEmpty: {
-          msg: "Role name cannot be empty",
-        },
-        len: {
-          args: [1, 255],
-          msg: "Role name must not exceed 255 characters",
+        notNull: { msg: "Role name is required" },
+        isIn: {
+          args: [Object.values(ROLE_NAME)],
+          msg: "Invalid role name",
         },
       },
     },

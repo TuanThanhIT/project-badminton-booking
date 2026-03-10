@@ -1,6 +1,10 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
 import { ORDER_STATUS } from "../constants/orderConstant.js";
+import { CANCELLED_BY } from "../constants/bookingConstant.js";
+import Branch from "./branch.js";
+import User from "./user.js";
+import Discount from "./discount.js";
 
 const Order = sequelize.define(
   "Order",
@@ -10,6 +14,7 @@ const Order = sequelize.define(
       allowNull: false,
       defaultValue: ORDER_STATUS.PENDING,
       validate: {
+        notNull: { msg: "Order status is required" },
         isIn: {
           args: [Object.values(ORDER_STATUS)],
           msg: "Invalid order status",
@@ -20,6 +25,7 @@ const Order = sequelize.define(
       type: DataTypes.DOUBLE,
       allowNull: false,
       validate: {
+        notNull: { msg: "Total amount is required" },
         isFloat: {
           msg: "Total amount must be a number",
         },
@@ -29,11 +35,31 @@ const Order = sequelize.define(
         },
       },
     },
+    branchId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: { model: Branch, key: "id" },
+      validate: {
+        notNull: {
+          msg: "Branch ID is required",
+        },
+        isInt: {
+          msg: "Branch ID must be an integer",
+        },
+        min: {
+          args: [1],
+          msg: "Branch ID must be a positive number",
+        },
+      },
+    },
     userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: { model: "Users", key: "id" },
+      references: { model: User, key: "id" },
       validate: {
+        notNull: {
+          msg: "User ID is required",
+        },
         isInt: {
           msg: "User ID must be an integer",
         },
@@ -46,7 +72,7 @@ const Order = sequelize.define(
     discountId: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      references: { model: "Discounts", key: "id" },
+      references: { model: Discount, key: "id" },
       validate: {
         isInt: {
           msg: "Discount ID must be an integer",
@@ -68,8 +94,14 @@ const Order = sequelize.define(
       },
     },
     cancelledBy: {
-      type: DataTypes.ENUM("User", "Employee", "System"),
+      type: DataTypes.ENUM(...Object.values(CANCELLED_BY)),
       allowNull: true,
+      validate: {
+        isIn: {
+          args: [Object.values(CANCELLED_BY)],
+          msg: "Invalid cancelled by value",
+        },
+      },
     },
     cancelReason: {
       type: DataTypes.STRING(255),

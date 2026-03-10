@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
+import Category from "./category.js";
 
 const Product = sequelize.define(
   "Product",
@@ -8,7 +9,11 @@ const Product = sequelize.define(
       type: DataTypes.STRING(255),
       allowNull: false,
       unique: true,
+      set(value) {
+        this.setDataValue("productName", value?.trim());
+      },
       validate: {
+        notNull: { msg: "Product name is required" },
         notEmpty: {
           msg: "Product name cannot be empty",
         },
@@ -22,6 +27,7 @@ const Product = sequelize.define(
       type: DataTypes.STRING(255),
       allowNull: false,
       validate: {
+        notNull: { msg: "Brand is required" },
         len: {
           args: [0, 255],
           msg: "Brand must not exceed 255 characters",
@@ -32,12 +38,13 @@ const Product = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
+        notNull: { msg: "Description is required" },
         notEmpty: {
           msg: "Description cannot be empty",
         },
         len: {
           args: [1, 65535],
-          msg: "Description must not be empty",
+          msg: "Description must not exceed 65535 characters",
         },
       },
     },
@@ -45,6 +52,7 @@ const Product = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
+        notNull: { msg: "Thumbnail URL is required" },
         isUrl: {
           msg: "Thumbnail URL must be a valid URL",
         },
@@ -53,8 +61,11 @@ const Product = sequelize.define(
     categoryId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: { model: "Categories", key: "id" },
+      references: { model: Category, key: "id" },
       validate: {
+        notNull: {
+          msg: "Category ID is required",
+        },
         isInt: {
           msg: "Category ID must be an integer",
         },

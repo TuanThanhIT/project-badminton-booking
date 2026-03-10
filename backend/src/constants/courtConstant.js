@@ -13,3 +13,9 @@ export const DAY_OF_WEEK = Object.freeze({
   SATURDAY: "Saturday",
   SUNDAY: "Sunday",
 });
+
+export const COURT_STATUS = Object.freeze({
+  ACTIVE: "Active",
+  MAINTENANCE: "Maintenance",
+  CLOSED: "Closed",
+});

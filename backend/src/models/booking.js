@@ -1,6 +1,9 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
-import { BOOKING_STATUS } from "../constants/bookingConstant.js";
+import { BOOKING_STATUS, CANCELLED_BY } from "../constants/bookingConstant.js";
+import Branch from "./branch.js";
+import User from "./user.js";
+import Discount from "./discount.js";
 
 const Booking = sequelize.define(
   "Booking",
@@ -10,6 +13,9 @@ const Booking = sequelize.define(
       allowNull: false,
       defaultValue: BOOKING_STATUS.PENDING,
       validate: {
+        notNull: {
+          msg: "Booking status is required",
+        },
         isIn: {
           args: [Object.values(BOOKING_STATUS)],
           msg: "Invalid booking status",
@@ -20,6 +26,9 @@ const Booking = sequelize.define(
       type: DataTypes.DOUBLE,
       allowNull: false,
       validate: {
+        notNull: {
+          msg: "Total amount is required",
+        },
         isFloat: {
           msg: "Total amount must be a number",
         },
@@ -29,11 +38,34 @@ const Booking = sequelize.define(
         },
       },
     },
+    branchId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: Branch,
+        key: "id",
+      },
+      validate: {
+        notNull: {
+          msg: "Branch ID is required",
+        },
+        isInt: {
+          msg: "Branch ID must be an integer",
+        },
+        min: {
+          args: [1],
+          msg: "Branch ID must be a positive number",
+        },
+      },
+    },
     userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: { model: "Users", key: "id" },
+      references: { model: User, key: "id" },
       validate: {
+        notNull: {
+          msg: "User ID is required",
+        },
         isInt: {
           msg: "User ID must be an integer",
         },
@@ -46,7 +78,7 @@ const Booking = sequelize.define(
     discountId: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      references: { model: "DiscountBookings", key: "id" },
+      references: { model: Discount, key: "id" },
       validate: {
         isInt: {
           msg: "Discount ID must be an integer",
@@ -68,8 +100,14 @@ const Booking = sequelize.define(
       },
     },
     cancelledBy: {
-      type: DataTypes.ENUM("User", "Employee", "System"),
+      type: DataTypes.ENUM(...Object.values(CANCELLED_BY)),
       allowNull: true,
+      validate: {
+        isIn: {
+          args: [Object.values(CANCELLED_BY)],
+          msg: "Invalid cancelled by value",
+        },
+      },
     },
     cancelReason: {
       type: DataTypes.STRING(500),

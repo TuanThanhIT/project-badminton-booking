@@ -4,10 +4,17 @@ import sequelize from "../config/db.js";
 const Beverage = sequelize.define(
   "Beverage",
   {
-    name: {
+    beverageName: {
       type: DataTypes.STRING(255),
       allowNull: false,
+      unique: true,
+      set(value) {
+        this.setDataValue("beverageName", value?.trim());
+      },
       validate: {
+        notNull: {
+          msg: "Beverage name is required",
+        },
         notEmpty: {
           msg: "Beverage name cannot be empty",
         },
@@ -30,6 +37,9 @@ const Beverage = sequelize.define(
       type: DataTypes.DOUBLE,
       allowNull: false,
       validate: {
+        notNull: {
+          msg: "Price is required",
+        },
         isFloat: {
           msg: "Price must be a number",
         },
@@ -44,6 +54,9 @@ const Beverage = sequelize.define(
       allowNull: false,
       defaultValue: 0,
       validate: {
+        notNull: {
+          msg: "Stock is required",
+        },
         isInt: {
           msg: "Stock must be an integer",
         },

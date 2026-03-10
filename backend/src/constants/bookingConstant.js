@@ -6,3 +6,9 @@ export const BOOKING_STATUS = Object.freeze({
   COMPLETED: "Completed",
   CANCELLED: "Cancelled",
 });
+
+export const CANCELLED_BY = Object.freeze({
+  USER: "User",
+  EMPLOYEE: "Employee",
+  SYSTEM: "System",
+});

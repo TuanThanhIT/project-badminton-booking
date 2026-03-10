@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
+import User from "./user.js";
 
 const UserOtp = sequelize.define(
   "UserOtp",
@@ -7,6 +8,12 @@ const UserOtp = sequelize.define(
     otpCode: {
       type: DataTypes.STRING,
       allowNull: false,
+      validate: {
+        notNull: { msg: "OTP code is required" },
+        notEmpty: {
+          msg: "OTP code cannot be empty",
+        },
+      },
     },
     otpExpiry: {
       type: DataTypes.DATE,
@@ -20,6 +27,7 @@ const UserOtp = sequelize.define(
     },
     isUsed: {
       type: DataTypes.BOOLEAN,
+      allowNull: true,
       defaultValue: false,
       validate: {
         isBoolean: {
@@ -30,7 +38,7 @@ const UserOtp = sequelize.define(
     userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: { model: "Users", key: "id" },
+      references: { model: User, key: "id" },
       validate: {
         notNull: { msg: "User ID is required" },
         isInt: { msg: "User ID must be an integer" },

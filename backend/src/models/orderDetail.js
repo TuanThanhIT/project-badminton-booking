@@ -1,5 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
+import Order from "./order.js";
+import ProductVariant from "./productVariant.js";
 
 const OrderDetail = sequelize.define(
   "OrderDetail",
@@ -9,6 +11,7 @@ const OrderDetail = sequelize.define(
       allowNull: false,
       defaultValue: 1,
       validate: {
+        notNull: { msg: "Quantity is required" },
         isInt: {
           msg: "Quantity must be an integer",
         },
@@ -22,6 +25,7 @@ const OrderDetail = sequelize.define(
       type: DataTypes.DOUBLE,
       allowNull: false,
       validate: {
+        notNull: { msg: "Sub total is required" },
         isFloat: {
           msg: "Sub total must be a number",
         },
@@ -34,8 +38,11 @@ const OrderDetail = sequelize.define(
     orderId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: { model: "Orders", key: "id" },
+      references: { model: Order, key: "id" },
       validate: {
+        notNull: {
+          msg: "Order ID is required",
+        },
         isInt: {
           msg: "Order ID must be an integer",
         },
@@ -45,11 +52,14 @@ const OrderDetail = sequelize.define(
         },
       },
     },
-    varientId: {
+    variantId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: { model: "ProductVarients", key: "id" },
+      references: { model: ProductVariant, key: "id" },
       validate: {
+        notNull: {
+          msg: "Product variant ID is required",
+        },
         isInt: {
           msg: "Product variant ID must be an integer",
         },

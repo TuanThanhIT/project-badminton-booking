@@ -1,17 +1,24 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
+import { WORK_SHIFT_STATUS } from "../constants/workShiftConstant.js";
+import Branch from "./branch.js";
 
-// WorkShift (Ca làm)
 const WorkShift = sequelize.define(
   "WorkShift",
   {
-    name: {
-      type: DataTypes.STRING(100),
-      allowNull: true,
+    shiftName: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
       validate: {
+        notNull: {
+          msg: "Shift name is required",
+        },
+        notEmpty: {
+          msg: "Shift name cannot be empty",
+        },
         len: {
-          args: [2, 100],
-          msg: "Shift name must be between 2 and 100 characters",
+          args: [1, 255],
+          msg: "Shift name must not exceed 255 characters",
         },
       },
     },
@@ -47,17 +54,35 @@ const WorkShift = sequelize.define(
         },
       },
     },
-    shiftWage: {
-      type: DataTypes.DOUBLE,
+    branchId: {
+      type: DataTypes.INTEGER,
       allowNull: false,
+      references: {
+        model: Branch,
+        key: "id",
+      },
       validate: {
-        notNull: { msg: "Shift wage is required" },
-        isFloat: {
-          msg: "Shift wage must be a number",
+        notNull: {
+          msg: "Branch ID is required",
+        },
+        isInt: {
+          msg: "Branch ID must be an integer",
         },
         min: {
-          args: [0.01],
-          msg: "Shift wage must be greater than 0",
+          args: [1],
+          msg: "Branch ID must be a positive number",
+        },
+      },
+    },
+    shiftStatus: {
+      type: DataTypes.ENUM(...Object.values(WORK_SHIFT_STATUS)),
+      allowNull: false,
+      defaultValue: WORK_SHIFT_STATUS.SCHEDULED,
+      validate: {
+        notNull: { msg: "Shift status is required" },
+        isIn: {
+          args: [Object.values(WORK_SHIFT_STATUS)],
+          msg: "Invalid work shift status",
         },
       },
     },

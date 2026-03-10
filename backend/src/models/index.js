@@ -1,307 +1,544 @@
 import User from "./user.js";
 import Role from "./role.js";
 import Profile from "./profile.js";
-import Report from "./report.js";
-import Booking from "./booking.js";
+import UserOtp from "./userOtp.js";
+
+import Branch from "./branch.js";
+import BranchManager from "./branchManager.js";
+
 import Court from "./court.js";
-import CourtSchedule from "./courtSchedule.js";
-import Notification from "./notification.js";
-import Order from "./order.js";
-import Discount from "./discount.js";
-import OrderDetail from "./orderDetail.js";
-import Payment from "./payment.js";
-import Product from "./product.js";
-import Category from "./category.js";
+import CourtPrice from "./courtPrice.js";
+
+import Booking from "./booking.js";
+import BookingDetail from "./bookingDetail.js";
+
 import Cart from "./cart.js";
 import CartItem from "./cartItem.js";
-import ProductVarient from "./productVarient.js";
+
+import Product from "./product.js";
+import ProductVariant from "./productVariant.js";
 import ProductImage from "./productImage.js";
-import ProductFeedback from "./productFeedback.js";
-import UserOtp from "./userOtp.js";
-import DiscountBooking from "./discountBooking.js";
-import PaymentBooking from "./paymentBooking.js";
-import BookingFeedback from "./bookingFeedback.js";
-import CourtPrice from "./courtPrice.js";
-import BookingDetail from "./bookingDetail.js";
+import Category from "./category.js";
+
+import Order from "./order.js";
+import OrderDetail from "./orderDetail.js";
+import Payment from "./payment.js";
+import Discount from "./discount.js";
+
 import DraftBooking from "./draftBooking.js";
 import DraftBookingItem from "./draftBookingItem.js";
 import DraftProductItem from "./draftProductItem.js";
 import DraftBeverageItem from "./draftBeverageItem.js";
-import Beverage from "./beverage.js";
+
 import OfflineBooking from "./offlineBooking.js";
-import OfflineBookingItem from "./offlineBookingItem.js";
-import OfflineProductItem from "./offlineProductItem.js";
-import OfflineBeverageItem from "./offlineBeverageItem.js";
+
+import Beverage from "./beverage.js";
+
+import Wallet from "./wallet.js";
+import WalletTransaction from "./walletTransaction.js";
+
+import Feedback from "./feedback.js";
+
+import Post from "./post.js";
+import PostLike from "./postLike.js";
+import PostShare from "./postShare.js";
+import Comment from "./comment.js";
+
+import Conversation from "./conversation.js";
+import ConversationParticipant from "./conversationParticipant.js";
+import Message from "./message.js";
+
+import Notification from "./notification.js";
+
 import WorkShift from "./workShift.js";
 import WorkShiftEmployee from "./workShiftEmployee.js";
 import CashRegister from "./cashRegister.js";
 
-// Quan hệ n-1 giữa Role và User
+import CoachProfile from "./coachProfile.js";
+
+//////////////////////////////////////////////////////
+//////////////// USER SYSTEM /////////////////////////
+//////////////////////////////////////////////////////
+
 Role.hasMany(User, { foreignKey: "roleId", as: "users" });
 User.belongsTo(Role, { foreignKey: "roleId", as: "role" });
 
-// Quan hệ 1-1 giữa User và Profile
-User.hasOne(Profile, { foreignKey: "userId" });
-Profile.belongsTo(User, { foreignKey: "userId" });
+User.hasOne(Profile, { foreignKey: "userId", as: "profile" });
+Profile.belongsTo(User, { foreignKey: "userId", as: "user" });
 
-// Quan hệ 1-n giữa User và Report
-User.hasMany(Report, { foreignKey: "userId" });
-Report.belongsTo(User, { foreignKey: "userId" });
+User.hasMany(UserOtp, { foreignKey: "userId", as: "otps" });
+UserOtp.belongsTo(User, { foreignKey: "userId", as: "user" });
 
-// Quan hệ 1-n User -> BookingFeedback
-User.hasMany(BookingFeedback, { foreignKey: "userId", as: "bookingFeedbacks" });
-BookingFeedback.belongsTo(User, { foreignKey: "userId", as: "user" });
+//////////////////////////////////////////////////////
+//////////////// WALLET //////////////////////////////
+//////////////////////////////////////////////////////
 
-// Quan hệ 1-1 Booking -> BookingFeedback
-Booking.hasOne(BookingFeedback, { foreignKey: "bookingId" });
-BookingFeedback.belongsTo(Booking, { foreignKey: "bookingId" });
+User.hasOne(Wallet, { foreignKey: "userId", as: "wallet" });
+Wallet.belongsTo(User, { foreignKey: "userId", as: "user" });
 
-// Quan hệ 1-n Court -> BookingFeedback
-Court.hasMany(BookingFeedback, { foreignKey: "courtId" });
-BookingFeedback.belongsTo(Court, { foreignKey: "courtId" });
-
-// Quan hệ 1-n giữa User và Booking
-User.hasMany(Booking, { foreignKey: "userId", as: "booking" });
-Booking.belongsTo(User, { foreignKey: "userId", as: "user" });
-
-// Quan hệ 1-1 giữa Booking - Discount
-DiscountBooking.hasOne(Booking, { foreignKey: "discountId" });
-Booking.belongsTo(DiscountBooking, { foreignKey: "discountId" });
-
-//Quan hệ 1-1 giữa Booking - PaymentBooking
-Booking.hasOne(PaymentBooking, {
-  foreignKey: "bookingId",
-  as: "paymentBooking",
+Wallet.hasMany(WalletTransaction, {
+  foreignKey: "walletId",
+  as: "transactions",
 });
-PaymentBooking.belongsTo(Booking, { foreignKey: "bookingId", as: "booking" });
+WalletTransaction.belongsTo(Wallet, {
+  foreignKey: "walletId",
+  as: "wallet",
+});
 
-// Quan hệ 1-n giữa Booking và BooingDetail
+//////////////////////////////////////////////////////
+//////////////// BRANCH //////////////////////////////
+//////////////////////////////////////////////////////
+
+Branch.hasMany(Court, {
+  foreignKey: "branchId",
+  as: "courts",
+});
+Court.belongsTo(Branch, {
+  foreignKey: "branchId",
+  as: "branch",
+});
+
+Branch.hasMany(CourtPrice, {
+  foreignKey: "branchId",
+  as: "courtPrices",
+});
+CourtPrice.belongsTo(Branch, {
+  foreignKey: "branchId",
+  as: "branch",
+});
+//////////////////////////////////////////////////////
+/////////////// BRANCH MANAGER ///////////////////////
+//////////////////////////////////////////////////////
+
+User.belongsToMany(Branch, {
+  through: BranchManager,
+  foreignKey: "managerId",
+  otherKey: "branchId",
+  as: "managedBranches",
+});
+Branch.belongsToMany(User, {
+  through: BranchManager,
+  foreignKey: "branchId",
+  otherKey: "managerId",
+  as: "managers",
+});
+
+Branch.hasMany(BranchManager, {
+  foreignKey: "branchId",
+  as: "branchManagers",
+});
+BranchManager.belongsTo(Branch, { foreignKey: "branchId", as: "branch" });
+
+User.hasMany(BranchManager, { foreignKey: "managerId", as: "branchManagers" });
+BranchManager.belongsTo(User, { foreignKey: "managerId", as: "manager" });
+
+//////////////////////////////////////////////////////
+//////////////// BOOKING /////////////////////////////
+//////////////////////////////////////////////////////
+
+User.hasMany(Booking, {
+  foreignKey: "userId",
+  as: "bookings",
+});
+Booking.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
+Branch.hasMany(Booking, {
+  foreignKey: "branchId",
+  as: "bookings",
+});
+Booking.belongsTo(Branch, {
+  foreignKey: "branchId",
+  as: "branch",
+});
+
+Discount.hasMany(Booking, {
+  foreignKey: "discountId",
+  as: "bookings",
+});
+Booking.belongsTo(Discount, {
+  foreignKey: "discountId",
+  as: "discount",
+});
+
 Booking.hasMany(BookingDetail, {
   foreignKey: "bookingId",
+  as: "details",
+});
+BookingDetail.belongsTo(Booking, {
+  foreignKey: "bookingId",
+  as: "booking",
+});
+
+Court.hasMany(BookingDetail, {
+  foreignKey: "courtId",
   as: "bookingDetails",
 });
-BookingDetail.belongsTo(Booking, { foreignKey: "bookingId", as: "booking" });
-
-// Quan hệ 1-1 giữ BookingDetail và CourtSchedule
-CourtSchedule.hasOne(BookingDetail, {
-  foreignKey: "courtScheduleId",
-  as: "bookingDetails",
-});
-BookingDetail.belongsTo(CourtSchedule, {
-  foreignKey: "courtScheduleId",
-  as: "courtSchedule",
+BookingDetail.belongsTo(Court, {
+  foreignKey: "courtId",
+  as: "court",
 });
 
-// Quan hệ 1-n giữa Court và CourtSchedule
-Court.hasMany(CourtSchedule, { foreignKey: "courtId", as: "courtSchedules" });
-CourtSchedule.belongsTo(Court, { foreignKey: "courtId", as: "court" });
+//////////////////////////////////////////////////////
+//////////////// CART ////////////////////////////////
+//////////////////////////////////////////////////////
 
-// Quan hệ 1-n giữa User và Notification
-User.hasMany(Notification, { foreignKey: "userId" });
-Notification.belongsTo(User, { foreignKey: "userId" });
-
-// Quan hệ 1-n giữa User và Order
-User.hasMany(Order, { foreignKey: "userId", as: "orders" });
-Order.belongsTo(User, { foreignKey: "userId", as: "user" });
-
-// Quan hệ 1-1 giữa Discount và Order
-Discount.hasOne(Order, { foreignKey: "discountId" });
-Order.belongsTo(Discount, { foreignKey: "discountId" });
-
-// Quan hệ 1-n giữa Order và OrderDetail
-Order.hasMany(OrderDetail, { foreignKey: "orderId", as: "orderDetails" });
-OrderDetail.belongsTo(Order, { foreignKey: "orderId", as: "order" });
-
-// Quan hệ 1-n giữa Order và Payment
-Order.hasOne(Payment, { foreignKey: "orderId", as: "payment" });
-Payment.belongsTo(Order, { foreignKey: "orderId", as: "orders" });
-
-//Quan hệ 1-1 giữa ProductVarient và OrderDetail
-ProductVarient.hasOne(OrderDetail, {
-  foreignKey: "varientId",
-  as: "orderDetail",
-});
-OrderDetail.belongsTo(ProductVarient, {
-  foreignKey: "varientId",
-  as: "varient",
-});
-
-// Quan hệ 1-n giữa Category và Product
-Category.hasMany(Product, { foreignKey: "categoryId", as: "products" });
-Product.belongsTo(Category, { foreignKey: "categoryId", as: "category" });
-
-// Quan hệ 1-n giữa Cart và CartItem
-Cart.hasMany(CartItem, { foreignKey: "cartId" });
-CartItem.belongsTo(Cart, { foreignKey: "cartId" });
-
-// Quan hệ 1-1 giữa Card và User
-User.hasOne(Cart, { foreignKey: "userId" });
-Cart.belongsTo(User, { foreignKey: "userId" });
-
-// Quan hệ 1-1 giữa Product và CartItem
-ProductVarient.hasOne(CartItem, { foreignKey: "varientId", as: "cartItem" });
-CartItem.belongsTo(ProductVarient, { foreignKey: "varientId", as: "varient" });
-
-// Quan hệ 1-n giữa Product và ProductVarient
-Product.hasMany(ProductVarient, { foreignKey: "productId", as: "varients" });
-ProductVarient.belongsTo(Product, { foreignKey: "productId", as: "product" });
-
-// Quan hệ 1-n giữa ProductVarient và ProductImage
-Product.hasMany(ProductImage, { foreignKey: "productId", as: "images" });
-ProductImage.belongsTo(Product, { foreignKey: "productId", as: "product" });
-// Quan hệ 1-n giữa User và UserOtp
-User.hasMany(UserOtp, { foreignKey: "userId" });
-UserOtp.belongsTo(User, { foreignKey: "userId" });
-
-// Quan hệ n-n giữa User và Product thông qua ProductFeedback
-User.belongsToMany(ProductVarient, {
-  through: ProductFeedback,
+User.hasOne(Cart, {
   foreignKey: "userId",
-  otherKey: "varientId",
+  as: "cart",
 });
-ProductVarient.belongsToMany(User, {
-  through: ProductFeedback,
-  foreignKey: "varientId",
-  otherKey: "userId",
-});
-
-// Quan hệ 1-1 giữa ProductFeedback và OrderDetail
-ProductFeedback.belongsTo(OrderDetail, {
-  foreignKey: "orderDetailId",
-  as: "orderDetail",
-});
-OrderDetail.hasOne(ProductFeedback, {
-  foreignKey: "orderDetailId",
-  as: "feedback",
+Cart.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
 });
 
-// ======================= DRAFT =======================
+Cart.hasMany(CartItem, {
+  foreignKey: "cartId",
+  as: "items",
+});
+CartItem.belongsTo(Cart, {
+  foreignKey: "cartId",
+  as: "cart",
+});
 
-// DraftBooking ↔ DraftBookingItem (1-n)
+ProductVariant.hasMany(CartItem, {
+  foreignKey: "variantId",
+  as: "cartItems",
+});
+CartItem.belongsTo(ProductVariant, {
+  foreignKey: "variantId",
+  as: "variant",
+});
+
+//////////////////////////////////////////////////////
+//////////////// PRODUCT /////////////////////////////
+//////////////////////////////////////////////////////
+
+Category.hasMany(Product, {
+  foreignKey: "categoryId",
+  as: "products",
+});
+Product.belongsTo(Category, {
+  foreignKey: "categoryId",
+  as: "category",
+});
+
+Product.hasMany(ProductVariant, {
+  foreignKey: "productId",
+  as: "variants",
+});
+ProductVariant.belongsTo(Product, {
+  foreignKey: "productId",
+  as: "product",
+});
+
+Product.hasMany(ProductImage, {
+  foreignKey: "productId",
+  as: "images",
+});
+ProductImage.belongsTo(Product, {
+  foreignKey: "productId",
+  as: "product",
+});
+
+//////////////////////////////////////////////////////
+//////////////// ORDER ///////////////////////////////
+//////////////////////////////////////////////////////
+
+User.hasMany(Order, {
+  foreignKey: "userId",
+  as: "orders",
+});
+Order.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
+Branch.hasMany(Order, {
+  foreignKey: "branchId",
+  as: "orders",
+});
+Order.belongsTo(Branch, {
+  foreignKey: "branchId",
+  as: "branch",
+});
+
+Discount.hasMany(Order, {
+  foreignKey: "discountId",
+  as: "orders",
+});
+Order.belongsTo(Discount, {
+  foreignKey: "discountId",
+  as: "discount",
+});
+
+Order.hasMany(OrderDetail, {
+  foreignKey: "orderId",
+  as: "details",
+});
+OrderDetail.belongsTo(Order, {
+  foreignKey: "orderId",
+  as: "order",
+});
+
+ProductVariant.hasMany(OrderDetail, {
+  foreignKey: "variantId",
+  as: "orderDetails",
+});
+OrderDetail.belongsTo(ProductVariant, {
+  foreignKey: "variantId",
+  as: "variant",
+});
+
+//////////////////////////////////////////////////////
+//////////////// DRAFT BOOKING ///////////////////////
+//////////////////////////////////////////////////////
+
+User.hasMany(DraftBooking, {
+  foreignKey: "employeeId",
+  as: "draftBookings",
+});
+DraftBooking.belongsTo(User, {
+  foreignKey: "employeeId",
+  as: "employee",
+});
+
+Branch.hasMany(DraftBooking, {
+  foreignKey: "branchId",
+  as: "draftBookings",
+});
+DraftBooking.belongsTo(Branch, {
+  foreignKey: "branchId",
+  as: "branch",
+});
+
 DraftBooking.hasMany(DraftBookingItem, {
   foreignKey: "draftId",
-  as: "draftBookingItems",
+  as: "courtItems",
 });
 DraftBookingItem.belongsTo(DraftBooking, {
   foreignKey: "draftId",
-  as: "draftBooking",
+  as: "draft",
 });
 
-// DraftBookingItem ↔ CourtSchedule (1-1)
-CourtSchedule.hasOne(DraftBookingItem, {
-  foreignKey: "courtScheduleId",
-  as: "draftBookingItem",
+Court.hasMany(DraftBookingItem, {
+  foreignKey: "courtId",
+  as: "draftItems",
 });
-DraftBookingItem.belongsTo(CourtSchedule, {
-  foreignKey: "courtScheduleId",
-  as: "courtSchedule",
+DraftBookingItem.belongsTo(Court, {
+  foreignKey: "courtId",
+  as: "court",
 });
 
-// DraftBooking ↔ DraftProductItem (1-n)
 DraftBooking.hasMany(DraftProductItem, {
   foreignKey: "draftId",
-  as: "draftProductItems",
+  as: "productItems",
 });
 DraftProductItem.belongsTo(DraftBooking, {
   foreignKey: "draftId",
-  as: "draftBooking",
+  as: "draft",
 });
 
-// DraftProductItem ↔ ProductVarient (1-n)
-ProductVarient.hasMany(DraftProductItem, {
-  foreignKey: "productVarientId",
-  as: "draftProductItems",
+ProductVariant.hasMany(DraftProductItem, {
+  foreignKey: "productVariantId",
+  as: "draftItems",
 });
-DraftProductItem.belongsTo(ProductVarient, {
-  foreignKey: "productVarientId",
-  as: "productVarient",
+DraftProductItem.belongsTo(ProductVariant, {
+  foreignKey: "productVariantId",
+  as: "variant",
 });
 
-// DraftBooking ↔ DraftBeverageItem (1-n)
 DraftBooking.hasMany(DraftBeverageItem, {
   foreignKey: "draftId",
-  as: "draftBeverageItems",
+  as: "beverageItems",
 });
 DraftBeverageItem.belongsTo(DraftBooking, {
   foreignKey: "draftId",
-  as: "draftBooking",
+  as: "draft",
 });
 
-// DraftBeverageItem ↔ Beverage (1-n)
 Beverage.hasMany(DraftBeverageItem, {
   foreignKey: "beverageId",
-  as: "draftBeverageItems",
+  as: "draftItems",
 });
 DraftBeverageItem.belongsTo(Beverage, {
   foreignKey: "beverageId",
   as: "beverage",
 });
 
-// ======================= OFFLINE =======================
+//////////////////////////////////////////////////////
+//////////////// OFFLINE BOOKING /////////////////////
+//////////////////////////////////////////////////////
 
-// OfflineBooking ↔ OfflineBookingItem (1-n)
-OfflineBooking.hasMany(OfflineBookingItem, {
-  foreignKey: "offlineBookingId",
-  as: "offlineBookingItems",
-});
-OfflineBookingItem.belongsTo(OfflineBooking, {
-  foreignKey: "offlineBookingId",
+DraftBooking.hasOne(OfflineBooking, {
+  foreignKey: "draftId",
   as: "offlineBooking",
 });
 
-// OfflineBookingItem ↔ CourtSchedule (1-1)
-CourtSchedule.hasOne(OfflineBookingItem, {
-  foreignKey: "courtScheduleId",
-  as: "offlineBookingItem",
-});
-OfflineBookingItem.belongsTo(CourtSchedule, {
-  foreignKey: "courtScheduleId",
-  as: "courtSchedule",
+OfflineBooking.belongsTo(DraftBooking, {
+  foreignKey: "draftId",
+  as: "draft",
 });
 
-// OfflineBooking ↔ OfflineProductItem (1-n)
-OfflineBooking.hasMany(OfflineProductItem, {
-  foreignKey: "offlineBookingId",
-  as: "offlineProductItems",
+//////////////////////////////////////////////////////
+//////////////// SOCIAL //////////////////////////////
+//////////////////////////////////////////////////////
+
+User.hasMany(Post, { foreignKey: "authorId", as: "posts" });
+Post.belongsTo(User, { foreignKey: "authorId", as: "author" });
+
+Post.hasMany(Comment, { foreignKey: "postId", as: "comments" });
+Comment.belongsTo(Post, { foreignKey: "postId", as: "post" });
+
+User.hasMany(Comment, { foreignKey: "authorId", as: "comments" });
+Comment.belongsTo(User, { foreignKey: "authorId", as: "author" });
+
+Comment.hasMany(Comment, { foreignKey: "parentId", as: "replies" });
+Comment.belongsTo(Comment, { foreignKey: "parentId", as: "parent" });
+
+User.belongsToMany(Post, {
+  through: PostLike,
+  foreignKey: "userId",
+  otherKey: "postId",
+  as: "likedPosts",
 });
-OfflineProductItem.belongsTo(OfflineBooking, {
-  foreignKey: "offlineBookingId",
-  as: "offlineBooking",
+Post.belongsToMany(User, {
+  through: PostLike,
+  foreignKey: "postId",
+  otherKey: "userId",
+  as: "likedUsers",
 });
 
-// OfflineProductItem ↔ ProductVarient (1-n)
-ProductVarient.hasMany(OfflineProductItem, {
-  foreignKey: "productVarientId",
-  as: "offlineProductItems",
+User.hasMany(PostLike, {
+  foreignKey: "userId",
+  as: "likes",
 });
-OfflineProductItem.belongsTo(ProductVarient, {
-  foreignKey: "productVarientId",
-  as: "productVarient",
-});
-
-// OfflineBooking ↔ OfflineBeverageItem (1-n)
-OfflineBooking.hasMany(OfflineBeverageItem, {
-  foreignKey: "offlineBookingId",
-  as: "offlineBeverageItems",
-});
-OfflineBeverageItem.belongsTo(OfflineBooking, {
-  foreignKey: "offlineBookingId",
-  as: "offlineBooking",
+PostLike.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
 });
 
-// OfflineBeverageItem ↔ Beverage (1-n)
-Beverage.hasMany(OfflineBeverageItem, {
-  foreignKey: "beverageId",
-  as: "offlineBeverageItems",
+Post.hasMany(PostLike, {
+  foreignKey: "postId",
+  as: "likes",
 });
-OfflineBeverageItem.belongsTo(Beverage, {
-  foreignKey: "beverageId",
-  as: "beverage",
+PostLike.belongsTo(Post, {
+  foreignKey: "postId",
+  as: "post",
 });
 
-// ======================= WORKSHIFT =======================
+User.belongsToMany(Post, {
+  through: PostShare,
+  foreignKey: "userId",
+  otherKey: "postId",
+  as: "sharedPosts",
+});
+Post.belongsToMany(User, {
+  through: PostShare,
+  foreignKey: "postId",
+  otherKey: "userId",
+  as: "sharedUsers",
+});
 
-// WorkShift ↔ WorkShiftEmployee (1-n)
+User.hasMany(PostShare, {
+  foreignKey: "userId",
+  as: "shares",
+});
+PostShare.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
+Post.hasMany(PostShare, {
+  foreignKey: "postId",
+  as: "shares",
+});
+PostShare.belongsTo(Post, {
+  foreignKey: "postId",
+  as: "post",
+});
+
+//////////////////////////////////////////////////////
+//////////////// CHAT ////////////////////////////////
+//////////////////////////////////////////////////////
+
+Conversation.belongsToMany(User, {
+  through: ConversationParticipant,
+  foreignKey: "conversationId",
+  otherKey: "userId",
+  as: "participants",
+});
+User.belongsToMany(Conversation, {
+  through: ConversationParticipant,
+  foreignKey: "userId",
+  otherKey: "conversationId",
+  as: "conversations",
+});
+
+Conversation.hasMany(ConversationParticipant, {
+  foreignKey: "conversationId",
+  as: "conversationParticipants",
+});
+ConversationParticipant.belongsTo(Conversation, {
+  foreignKey: "conversationId",
+  as: "conversation",
+});
+
+User.hasMany(ConversationParticipant, {
+  foreignKey: "userId",
+  as: "conversationParticipants",
+});
+ConversationParticipant.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
+Conversation.hasMany(Message, {
+  foreignKey: "conversationId",
+  as: "messages",
+});
+Message.belongsTo(Conversation, {
+  foreignKey: "conversationId",
+  as: "conversation",
+});
+
+User.hasMany(Message, {
+  foreignKey: "senderId",
+  as: "sentMessages",
+});
+Message.belongsTo(User, {
+  foreignKey: "senderId",
+  as: "sender",
+});
+
+//////////////////////////////////////////////////////
+//////////////// NOTIFICATION ////////////////////////
+//////////////////////////////////////////////////////
+
+User.hasMany(Notification, {
+  foreignKey: "userId",
+  as: "notifications",
+});
+Notification.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
+//////////////////////////////////////////////////////
+//////////////// WORKSHIFT ///////////////////////////
+//////////////////////////////////////////////////////
+
+Branch.hasMany(WorkShift, {
+  foreignKey: "branchId",
+  as: "workShifts",
+});
+WorkShift.belongsTo(Branch, {
+  foreignKey: "branchId",
+  as: "branch",
+});
+
 WorkShift.hasMany(WorkShiftEmployee, {
   foreignKey: "workShiftId",
   as: "workShiftEmployees",
@@ -311,7 +548,15 @@ WorkShiftEmployee.belongsTo(WorkShift, {
   as: "workShift",
 });
 
-// WorkShiftEmployee ↔ CashRegister (1-1)
+User.hasMany(WorkShiftEmployee, {
+  foreignKey: "employeeId",
+  as: "workShiftAssignments",
+});
+WorkShiftEmployee.belongsTo(User, {
+  foreignKey: "employeeId",
+  as: "employee",
+});
+
 WorkShiftEmployee.hasOne(CashRegister, {
   foreignKey: "workShiftEmployeeId",
   as: "cashRegister",
@@ -321,73 +566,62 @@ CashRegister.belongsTo(WorkShiftEmployee, {
   as: "workShiftEmployee",
 });
 
-// ======================= USER =======================
+//////////////////////////////////////////////////////
+//////////////// COACH ///////////////////////////////
+//////////////////////////////////////////////////////
 
-// User ↔ DraftBooking (1-n)
-User.hasMany(DraftBooking, { foreignKey: "employeeId", as: "draftBookings" });
-DraftBooking.belongsTo(User, { foreignKey: "employeeId", as: "employee" });
-
-// User ↔ OfflineBooking (1-n)
-User.hasMany(OfflineBooking, {
-  foreignKey: "employeeId",
-  as: "offlineBookings",
+User.hasOne(CoachProfile, {
+  foreignKey: "userId",
+  as: "coachProfile",
 });
-OfflineBooking.belongsTo(User, { foreignKey: "employeeId", as: "employee" });
 
-// User ↔ WorkShiftEmployee (1-n)
-User.hasMany(WorkShiftEmployee, {
-  foreignKey: "employeeId",
-  as: "workShiftAssignments",
+CoachProfile.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
 });
-WorkShiftEmployee.belongsTo(User, { foreignKey: "employeeId", as: "employee" });
 
-// ======================= DRAFT ↔ OFFLINE =======================
-
-// DraftBooking ↔ OfflineBooking (1-1)
-DraftBooking.hasOne(OfflineBooking, {
-  foreignKey: "draftId",
-  as: "offlineBooking",
-});
-OfflineBooking.belongsTo(DraftBooking, {
-  foreignKey: "draftId",
-  as: "draftBooking",
-});
+//////////////////////////////////////////////////////
 
 export {
-  Role,
   User,
+  Role,
   Profile,
-  Report,
-  Booking,
-  Beverage,
+  UserOtp,
+  Branch,
+  BranchManager,
   Court,
-  CourtSchedule,
-  PaymentBooking,
-  DiscountBooking,
-  Notification,
-  Order,
-  Discount,
-  OrderDetail,
-  Payment,
-  Product,
-  Category,
+  CourtPrice,
+  Booking,
+  BookingDetail,
   Cart,
   CartItem,
+  Product,
+  ProductVariant,
   ProductImage,
-  ProductVarient,
-  ProductFeedback,
-  BookingFeedback,
-  CourtPrice,
-  BookingDetail,
+  Category,
+  Order,
+  OrderDetail,
+  Payment,
+  Discount,
   DraftBooking,
-  DraftBeverageItem,
-  DraftProductItem,
   DraftBookingItem,
+  DraftProductItem,
+  DraftBeverageItem,
   OfflineBooking,
-  OfflineBeverageItem,
-  OfflineProductItem,
-  OfflineBookingItem,
+  Beverage,
+  Wallet,
+  WalletTransaction,
+  Feedback,
+  Post,
+  PostLike,
+  PostShare,
+  Comment,
+  Conversation,
+  ConversationParticipant,
+  Message,
+  Notification,
   WorkShift,
   WorkShiftEmployee,
   CashRegister,
+  CoachProfile,
 };

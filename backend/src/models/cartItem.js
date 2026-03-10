@@ -1,5 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
+import Cart from "./cart.js";
+import ProductVariant from "./productVariant.js";
 
 const CartItem = sequelize.define(
   "CartItem",
@@ -9,6 +11,9 @@ const CartItem = sequelize.define(
       allowNull: false,
       defaultValue: 1,
       validate: {
+        notNull: {
+          msg: "Quantity is required",
+        },
         isInt: {
           msg: "Quantity must be an integer",
         },
@@ -22,6 +27,9 @@ const CartItem = sequelize.define(
       type: DataTypes.DOUBLE,
       allowNull: false,
       validate: {
+        notNull: {
+          msg: "Sub total is required",
+        },
         isFloat: {
           msg: "Sub total must be a number",
         },
@@ -34,7 +42,14 @@ const CartItem = sequelize.define(
     cartId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      references: {
+        model: Cart,
+        key: "id",
+      },
       validate: {
+        notNull: {
+          msg: "Cart ID is required",
+        },
         isInt: {
           msg: "Cart ID must be an integer",
         },
@@ -43,15 +58,18 @@ const CartItem = sequelize.define(
           msg: "Cart ID must be a positive number",
         },
       },
-      references: {
-        model: "Carts",
-        key: "id",
-      },
     },
-    varientId: {
+    variantId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      references: {
+        model: ProductVariant,
+        key: "id",
+      },
       validate: {
+        notNull: {
+          msg: "Variant ID is required",
+        },
         isInt: {
           msg: "Variant ID must be an integer",
         },
@@ -59,10 +77,6 @@ const CartItem = sequelize.define(
           args: [1],
           msg: "Variant ID must be a positive number",
         },
-      },
-      references: {
-        model: "ProductVarients",
-        key: "id",
       },
     },
   },

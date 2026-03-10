@@ -1,5 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
+import { NOTIFICATION_ROLE } from "../constants/notificationConstant.js";
+import User from "./user.js";
 
 const Notification = sequelize.define(
   "Notification",
@@ -8,6 +10,7 @@ const Notification = sequelize.define(
       type: DataTypes.STRING(255),
       allowNull: false,
       validate: {
+        notNull: { msg: "Title is required" },
         notEmpty: {
           msg: "Title must not be empty",
         },
@@ -17,7 +20,6 @@ const Notification = sequelize.define(
         },
       },
     },
-
     message: {
       type: DataTypes.STRING(1000),
       allowNull: true,
@@ -28,17 +30,21 @@ const Notification = sequelize.define(
         },
       },
     },
-
     isRead: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
+      validate: {
+        notNull: { msg: "isRead is required" },
+        isBoolean: {
+          msg: "isRead must be a boolean",
+        },
+      },
     },
-
     userId: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      references: { model: "Users", key: "id" },
+      references: { model: User, key: "id" },
       validate: {
         isInt: {
           msg: "User ID must be an integer",
@@ -49,12 +55,16 @@ const Notification = sequelize.define(
         },
       },
     },
-
     role: {
-      type: DataTypes.ENUM("ADMIN", "EMPLOYEE", "USER"),
+      type: DataTypes.ENUM(...Object.values(NOTIFICATION_ROLE)),
       allowNull: true,
+      validate: {
+        isIn: {
+          args: [Object.values(NOTIFICATION_ROLE)],
+          msg: "Invalid notification role",
+        },
+      },
     },
-
     type: {
       type: DataTypes.STRING(255),
       allowNull: true,

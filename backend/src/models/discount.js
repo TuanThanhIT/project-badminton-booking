@@ -1,6 +1,9 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
-import { DISCOUNT_TYPE } from "../constants/discountConstant.js";
+import {
+  DISCOUNT_APPLY_TYPE,
+  DISCOUNT_TYPE,
+} from "../constants/discountConstant.js";
 
 const Discount = sequelize.define(
   "Discount",
@@ -39,10 +42,25 @@ const Discount = sequelize.define(
         },
       },
     },
+    applyType: {
+      type: DataTypes.ENUM(...Object.values(DISCOUNT_APPLY_TYPE)),
+      allowNull: false,
+      defaultValue: DISCOUNT_APPLY_TYPE.ALL,
+      validate: {
+        notNull: {
+          msg: "Discount apply type is required",
+        },
+        isIn: {
+          args: [Object.values(DISCOUNT_APPLY_TYPE)],
+          msg: "Invalid discount apply type",
+        },
+      },
+    },
     value: {
       type: DataTypes.DOUBLE,
       allowNull: false,
       validate: {
+        notNull: { msg: "Discount value is required" },
         isFloat: {
           msg: "Discount value must be a number",
         },
@@ -56,11 +74,23 @@ const Discount = sequelize.define(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true,
+      validate: {
+        notNull: { msg: "isActive is required" },
+        isBoolean: {
+          msg: "isActive must be a boolean",
+        },
+      },
     },
     isUsed: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
+      validate: {
+        notNull: { msg: "isUsed is required" },
+        isBoolean: {
+          msg: "isUsed must be a boolean",
+        },
+      },
     },
     startDate: {
       type: DataTypes.DATEONLY,
@@ -86,16 +116,16 @@ const Discount = sequelize.define(
         },
       },
     },
-    minOrderAmount: {
+    minAmount: {
       type: DataTypes.DOUBLE,
       allowNull: false,
       validate: {
         isFloat: {
-          msg: "Minimum order amount must be a number",
+          msg: "Minimum amount must be a number",
         },
         min: {
           args: [0],
-          msg: "Minimum order amount cannot be negative",
+          msg: "Minimum amount cannot be negative",
         },
       },
     },

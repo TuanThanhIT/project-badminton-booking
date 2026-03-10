@@ -1,5 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
+import DraftBooking from "./draftBooking.js";
+import ProductVariant from "./productVariant.js";
 
 const DraftProductItem = sequelize.define(
   "DraftProductItem",
@@ -7,8 +9,11 @@ const DraftProductItem = sequelize.define(
     draftId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: { model: "DraftBookings", key: "id" },
+      references: { model: DraftBooking, key: "id" },
       validate: {
+        notNull: {
+          msg: "Draft ID is required",
+        },
         isInt: {
           msg: "Draft ID must be an integer",
         },
@@ -18,11 +23,14 @@ const DraftProductItem = sequelize.define(
         },
       },
     },
-    productVarientId: {
+    productVariantId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: { model: "ProductVarients", key: "id" },
+      references: { model: ProductVariant, key: "id" },
       validate: {
+        notNull: {
+          msg: "Product variant ID is required",
+        },
         isInt: {
           msg: "Product variant ID must be an integer",
         },
@@ -37,6 +45,7 @@ const DraftProductItem = sequelize.define(
       allowNull: false,
       defaultValue: 1,
       validate: {
+        notNull: { msg: "Quantity is required" },
         isInt: {
           msg: "Quantity must be an integer",
         },
@@ -50,6 +59,7 @@ const DraftProductItem = sequelize.define(
       type: DataTypes.DOUBLE,
       allowNull: false,
       validate: {
+        notNull: { msg: "Sub total is required" },
         isFloat: {
           msg: "Sub total must be a number",
         },

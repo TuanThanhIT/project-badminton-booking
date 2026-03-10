@@ -2,29 +2,13 @@ import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
 import User from "./user.js";
 
-const Cart = sequelize.define(
-  "Cart",
+const Wallet = sequelize.define(
+  "Wallet",
   {
-    totalAmount: {
-      type: DataTypes.DOUBLE,
-      allowNull: false,
-      defaultValue: 0,
-      validate: {
-        notNull: {
-          msg: "Total amount is required",
-        },
-        isFloat: {
-          msg: "Total amount must be a number",
-        },
-        min: {
-          args: [0],
-          msg: "Total amount must be greater than or equal to 0",
-        },
-      },
-    },
     userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      unique: true,
       references: { model: User, key: "id" },
       validate: {
         notNull: {
@@ -39,13 +23,28 @@ const Cart = sequelize.define(
         },
       },
     },
+    balance: {
+      type: DataTypes.DECIMAL(12, 2),
+      allowNull: false,
+      defaultValue: 0,
+      validate: {
+        notNull: { msg: "Balance is required" },
+        isDecimal: {
+          msg: "Balance must be a valid number",
+        },
+        min: {
+          args: [0],
+          msg: "Balance cannot be negative",
+        },
+      },
+    },
   },
   {
-    tableName: "Carts",
+    tableName: "Wallets",
     timestamps: true,
     createdAt: "createdDate",
     updatedAt: "updatedDate",
   },
 );
 
-export default Cart;
+export default Wallet;

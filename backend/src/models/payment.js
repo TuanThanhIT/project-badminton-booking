@@ -3,6 +3,7 @@ import sequelize from "../config/db.js";
 import {
   PAYMENT_METHOD_STATUS,
   PAYMENT_STATUS,
+  TARGET_PAYMENT_TYPE,
 } from "../constants/paymentConstant.js";
 
 const Payment = sequelize.define(
@@ -12,6 +13,7 @@ const Payment = sequelize.define(
       type: DataTypes.DOUBLE,
       allowNull: false,
       validate: {
+        notNull: { msg: "Payment amount is required" },
         isFloat: {
           msg: "Payment amount must be a number",
         },
@@ -36,6 +38,7 @@ const Payment = sequelize.define(
       allowNull: false,
       defaultValue: PAYMENT_STATUS.PENDING,
       validate: {
+        notNull: { msg: "Payment status is required" },
         isIn: {
           args: [Object.values(PAYMENT_STATUS)],
           msg: "Invalid payment status",
@@ -55,6 +58,11 @@ const Payment = sequelize.define(
     paidAt: {
       type: DataTypes.DATE,
       allowNull: true,
+      validate: {
+        isDate: {
+          msg: "paidAt must be a valid date",
+        },
+      },
     },
     refundAmount: {
       type: DataTypes.DOUBLE,
@@ -72,19 +80,37 @@ const Payment = sequelize.define(
     refundAt: {
       type: DataTypes.DATE,
       allowNull: true,
+      validate: {
+        isDate: {
+          msg: "refundAt must be a valid date",
+        },
+      },
     },
-    orderId: {
+    targetPaymentType: {
+      type: DataTypes.ENUM(...Object.values(TARGET_PAYMENT_TYPE)),
+      allowNull: false,
+      defaultValue: TARGET_PAYMENT_TYPE.ORDER,
+      validate: {
+        notNull: { msg: "Target payment type is required" },
+        isIn: {
+          args: [Object.values(TARGET_PAYMENT_TYPE)],
+          msg: "Invalid target payment type",
+        },
+      },
+    },
+    targetPaymentId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: { model: "Orders", key: "id" },
-      onDelete: "CASCADE",
       validate: {
+        notNull: {
+          msg: "Target payment ID is required",
+        },
         isInt: {
-          msg: "Order ID must be an integer",
+          msg: "Target payment ID must be an integer",
         },
         min: {
           args: [1],
-          msg: "Order ID must be a positive number",
+          msg: "Target payment ID must be a positive number",
         },
       },
     },

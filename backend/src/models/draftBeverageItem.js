@@ -1,5 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
+import DraftBooking from "./draftBooking.js";
+import Beverage from "./beverage.js";
 
 // DraftBeverageItem (nước đang order / draft)
 const DraftBeverageItem = sequelize.define(
@@ -8,8 +10,11 @@ const DraftBeverageItem = sequelize.define(
     draftId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: { model: "DraftBookings", key: "id" },
+      references: { model: DraftBooking, key: "id" },
       validate: {
+        notNull: {
+          msg: "Draft ID is required",
+        },
         isInt: {
           msg: "Draft ID must be an integer",
         },
@@ -22,8 +27,11 @@ const DraftBeverageItem = sequelize.define(
     beverageId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: { model: "Beverages", key: "id" },
+      references: { model: Beverage, key: "id" },
       validate: {
+        notNull: {
+          msg: "Beverage ID is required",
+        },
         isInt: {
           msg: "Beverage ID must be an integer",
         },
@@ -38,6 +46,7 @@ const DraftBeverageItem = sequelize.define(
       allowNull: false,
       defaultValue: 1,
       validate: {
+        notNull: { msg: "Quantity is required" },
         isInt: {
           msg: "Quantity must be an integer",
         },
@@ -51,6 +60,7 @@ const DraftBeverageItem = sequelize.define(
       type: DataTypes.DOUBLE,
       allowNull: false,
       validate: {
+        notNull: { msg: "Sub total is required" },
         isFloat: {
           msg: "Sub total must be a number",
         },

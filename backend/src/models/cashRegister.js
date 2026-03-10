@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
+import WorkShiftEmployee from "./workShiftEmployee.js";
 
 const CashRegister = sequelize.define(
   "CashRegister",
@@ -7,7 +8,14 @@ const CashRegister = sequelize.define(
     workShiftEmployeeId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      references: {
+        model: WorkShiftEmployee,
+        key: "id",
+      },
       validate: {
+        notNull: {
+          msg: "Work shift employee ID is required",
+        },
         isInt: {
           msg: "Work shift employee ID must be an integer",
         },
@@ -16,16 +24,15 @@ const CashRegister = sequelize.define(
           msg: "Work shift employee ID must be a positive number",
         },
       },
-      references: {
-        model: "WorkShiftEmployees",
-        key: "id",
-      },
     },
     openingCash: {
       type: DataTypes.DOUBLE,
       allowNull: false,
       defaultValue: 0,
       validate: {
+        notNull: {
+          msg: "Opening cash is required",
+        },
         isFloat: {
           msg: "Opening cash must be a number",
         },
@@ -40,12 +47,41 @@ const CashRegister = sequelize.define(
       allowNull: false,
       defaultValue: 0,
       validate: {
+        notNull: {
+          msg: "Closing cash is required",
+        },
         isFloat: {
           msg: "Closing cash must be a number",
         },
         min: {
           args: [0],
           msg: "Closing cash must be greater than or equal to 0",
+        },
+      },
+    },
+    expectedCash: {
+      type: DataTypes.DOUBLE,
+      allowNull: false,
+      defaultValue: 0,
+      validate: {
+        notNull: {
+          msg: "Expected cash is required",
+        },
+        isFloat: {
+          msg: "Expected cash must be a number",
+        },
+        min: {
+          args: [0],
+          msg: "Expected cash must be greater than or equal to 0",
+        },
+      },
+    },
+    difference: {
+      type: DataTypes.DOUBLE,
+      allowNull: true,
+      validate: {
+        isFloat: {
+          msg: "Difference must be a number",
         },
       },
     },

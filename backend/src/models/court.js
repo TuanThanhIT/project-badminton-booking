@@ -1,16 +1,34 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
+import { COURT_STATUS } from "../constants/courtConstant.js";
+import Branch from "./branch.js";
 
 const Court = sequelize.define(
   "Court",
   {
-    name: {
+    branchId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: Branch,
+        key: "id",
+      },
+      validate: {
+        notNull: {
+          msg: "Branch ID is required",
+        },
+        isInt: {
+          msg: "Branch ID must be an integer",
+        },
+        min: {
+          args: [1],
+          msg: "Branch ID must be a positive number",
+        },
+      },
+    },
+    courtName: {
       type: DataTypes.STRING(255),
       allowNull: false,
-      unique: true,
-      set(value) {
-        this.setDataValue("name", value?.trim());
-      },
       validate: {
         notNull: {
           msg: "Court name is required",
@@ -52,10 +70,24 @@ const Court = sequelize.define(
         },
       },
     },
+    courtStatus: {
+      type: DataTypes.ENUM(...Object.values(COURT_STATUS)),
+      allowNull: false,
+      defaultValue: COURT_STATUS.ACTIVE,
+      validate: {
+        notNull: { msg: "Court status is required" },
+        isIn: {
+          args: [Object.values(COURT_STATUS)],
+          msg: "Invalid court status",
+        },
+      },
+    },
   },
   {
     tableName: "Courts",
-    timestamps: false,
+    timestamps: true,
+    createdAt: "createdDate",
+    updatedAt: "updatedDate",
   },
 );
 

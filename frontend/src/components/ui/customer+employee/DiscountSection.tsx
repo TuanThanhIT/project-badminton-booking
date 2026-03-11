@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from "../../../store/hook";
+import { useAppDispatch, useAppSelector } from "../../../redux/hook";
 import {
   getDiscount,
   getDiscountBooking,
-} from "../../../store/slices/customer/discountSlice";
+} from "../../../redux/slices/user/discountSlice";
 import { toast } from "react-toastify";
 import { X, TicketPercent } from "lucide-react";
 import type { DiscountListResponse } from "../../../types/discount";
@@ -11,7 +11,7 @@ import type { DiscountListResponse } from "../../../types/discount";
 const DiscountSection = () => {
   const dispatch = useAppDispatch();
   const { discountBookings, discounts } = useAppSelector(
-    (state) => state.discount
+    (state) => state.discount,
   );
 
   const [open, setOpen] = useState(false);
@@ -37,7 +37,7 @@ const DiscountSection = () => {
   const renderVoucherList = (
     list: DiscountListResponse[],
     title: string,
-    type: "booking" | "product"
+    type: "booking" | "product",
   ) => (
     <>
       <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-sky-700">

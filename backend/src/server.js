@@ -6,6 +6,7 @@ import { createServer } from "http";
 import { initSocket } from "./socket/index.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import "./models/index.js";
+import initAuthRoute from "./routes/user/authRoute.js";
 
 dotenv.config();
 
@@ -16,6 +17,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(cors());
+
+// User
+initAuthRoute(app);
 
 // create http server
 const httpServer = createServer(app);

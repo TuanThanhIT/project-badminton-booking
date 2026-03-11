@@ -2,13 +2,13 @@ import { useContext, useEffect, useState } from "react";
 import { Calendar, Home, LogOutIcon, Package, UserPlus } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../contexts/authContext";
-import { useAppDispatch, useAppSelector } from "../../../store/hook";
+import { useAppDispatch, useAppSelector } from "../../../redux/hook";
 import type { WorkShiftRequest } from "../../../types/workShift";
 import {
   clearWorkShiftError,
   getWorkShift,
   getWorkShifts,
-} from "../../../store/slices/employee/workShiftSlice";
+} from "../../../redux/slices/employee/workShiftSlice";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import { useRealtime } from "../../../hooks/useRealtime";
@@ -20,7 +20,7 @@ import {
   updateAllNotification,
   updateLocalNotification,
   updateNotification,
-} from "../../../store/slices/employee/notificationSlice";
+} from "../../../redux/slices/employee/notificationSlice";
 
 const EmployeeHeader = () => {
   const { auth } = useContext(AuthContext);
@@ -33,10 +33,10 @@ const EmployeeHeader = () => {
   const workShifts = useAppSelector((state) => state.workShiftEpl.workShifts);
   const workShiftError = useAppSelector((state) => state.workShiftEpl.error);
   const notifications = useAppSelector(
-    (state) => state.notificationEpl.notifications
+    (state) => state.notificationEpl.notifications,
   );
   const notificationError = useAppSelector(
-    (state) => state.notificationEpl.error
+    (state) => state.notificationEpl.error,
   );
 
   const token = localStorage.getItem("access_token");

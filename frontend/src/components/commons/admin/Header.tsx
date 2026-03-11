@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { LogOut, Sun, Moon, BellRing, User, Search } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../contexts/authContext";
-import { useAppDispatch, useAppSelector } from "../../../store/hook";
+import { useAppDispatch, useAppSelector } from "../../../redux/hook";
 import { toast } from "react-toastify";
 import { useRealtime } from "../../../hooks/useRealtime";
 import {
@@ -13,7 +13,7 @@ import {
   updateAllNotification,
   updateLocalNotification,
   updateNotification,
-} from "../../../store/slices/admin/notificationSlice";
+} from "../../../redux/slices/admin/notificationSlice";
 
 const ThemeToggle = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -49,10 +49,10 @@ const Header = () => {
   const [notificationId, setNotificationId] = useState(0);
 
   const notifications = useAppSelector(
-    (state) => state.notificationAdm.notifications
+    (state) => state.notificationAdm.notifications,
   );
   const notificationError = useAppSelector(
-    (state) => state.notificationAdm.error
+    (state) => state.notificationAdm.error,
   );
   const token = localStorage.getItem("access_token");
   const { notification } = useRealtime(token ?? "");

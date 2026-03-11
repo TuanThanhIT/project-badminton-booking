@@ -6,7 +6,7 @@ import {
   usernameField,
 } from "./common/authFields.js";
 
-export const createUserSchema = {
+export const handleRegisterSchema = {
   body: Joi.object({
     username: usernameField,
     email: emailField,
@@ -33,7 +33,7 @@ export const resetPasswordSchema = {
   }),
 };
 
-export const sendVerifyOtpSchema = {
+export const sendOtpSchema = {
   body: Joi.object({
     email: emailField,
   }),

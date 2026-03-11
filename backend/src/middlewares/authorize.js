@@ -8,7 +8,7 @@ const authorize = (...allowedRoles) => {
     }
 
     // Admin có quyền truy cập tất cả
-    if (req.user.role === "ADMIN") {
+    if (req.user.role === "Admin") {
       return next();
     }
 

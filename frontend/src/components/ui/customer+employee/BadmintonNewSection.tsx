@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import type { ApiErrorType } from "../../../types/error";
 import { toast } from "react-toastify";
-import categoryService from "../../../services/customer/categoryService";
-import productService from "../../../services/customer/productService";
+import categoryService from "../../../services/user/categoryService";
+import productService from "../../../services/user/productService";
 import type {
   ProductInfo,
   ProductResponse,
@@ -43,7 +43,7 @@ const BadmintonNewSection = () => {
         const res = await productService.getProductByGroupName(proParams);
         const productsGroup: ProductResponse = res.data;
         const newProductsGroup = productsGroup.products.filter(
-          (pg) => pg.isNew === true
+          (pg) => pg.isNew === true,
         );
         setProductsRelated(newProductsGroup);
       } catch (error) {

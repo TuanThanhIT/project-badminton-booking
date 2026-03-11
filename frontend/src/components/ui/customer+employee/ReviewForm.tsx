@@ -8,16 +8,16 @@ import {
   type formRating,
 } from "../../../schemas/FormRatingSchema";
 
-import { useAppDispatch, useAppSelector } from "../../../store/hook";
+import { useAppDispatch, useAppSelector } from "../../../redux/hook";
 
 import {
   clearProductFeedbackDetail,
   getProductFeedbackDetail,
-} from "../../../store/slices/customer/productFeedbackSlice";
+} from "../../../redux/slices/user/productFeedbackSlice";
 
 import type { ProductFeedbackDetailRequest } from "../../../types/productFeedback";
 
-import { getBookingFeedbackDetail } from "../../../store/slices/customer/bookingFeedbackSlice";
+import { getBookingFeedbackDetail } from "../../../redux/slices/user/bookingFeedbackSlice";
 
 import type { BookingFeedbackDetailRequest } from "../../../types/bookingFeedback";
 
@@ -60,11 +60,11 @@ const ReviewForm = (props: ReviewFormProps) => {
   const dispatch = useAppDispatch();
 
   const { productFeedbackDetail } = useAppSelector(
-    (state) => state.productFeedback
+    (state) => state.productFeedback,
   );
 
   const { bookingFeedbackDetail } = useAppSelector(
-    (state) => state.bookingFeedback
+    (state) => state.bookingFeedback,
   );
 
   /** ------------------------------------------------------
@@ -216,8 +216,8 @@ const ReviewForm = (props: ReviewFormProps) => {
             {hovered
               ? starLabels[hovered - 1]
               : selected
-              ? starLabels[selected - 1]
-              : "Chọn số sao"}
+                ? starLabels[selected - 1]
+                : "Chọn số sao"}
           </p>
 
           <input

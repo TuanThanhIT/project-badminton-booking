@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from "../../../store/hook";
+import { useAppDispatch, useAppSelector } from "../../../redux/hook";
 import { toast } from "react-toastify";
 import {
   clearDraftError,
@@ -10,7 +10,7 @@ import {
   getDraft,
   getDrafts,
   resetDraftLocal,
-} from "../../../store/slices/employee/draftSlice";
+} from "../../../redux/slices/employee/draftSlice";
 import type {
   AddDraftBookingRequest,
   DeleteDraftRequest,
@@ -21,8 +21,8 @@ import type {
 import type { CourtScheduleEplResponse } from "../../../types/court";
 import type { ProductEplResponse } from "../../../types/product";
 import type { BeverageEplResponse } from "../../../types/beverage";
-import { getCourtSchedules } from "../../../store/slices/employee/courtSlice";
-import { clearOfflineError } from "../../../store/slices/employee/offlineSlice";
+import { getCourtSchedules } from "../../../redux/slices/employee/courtSlice";
+import { clearOfflineError } from "../../../redux/slices/employee/offlineSlice";
 import { FileClock, Trash2 } from "lucide-react";
 
 interface DraftBoxProps {
@@ -112,7 +112,7 @@ const DraftBox = ({
 
         const prodQty: Record<number, number> = {};
         res.products?.forEach(
-          (p: any) => (prodQty[p.productVarientId] = p.quantity)
+          (p: any) => (prodQty[p.productVarientId] = p.quantity),
         );
 
         const bevQty: Record<number, number> = {};
@@ -203,19 +203,19 @@ const DraftBox = ({
   /* ================= TOTALS ================= */
   const totalCourtPrice = courtSlotsToShow.reduce(
     (sum: any, x: any) => sum + x.price,
-    0
+    0,
   );
 
   const totalProductPrice = productsToShow.reduce(
     (sum: any, p: any) =>
       sum + p.price * (productQuantities[p.productVarientId || p.id] || 1),
-    0
+    0,
   );
 
   const totalBeveragePrice = beveragesToShow.reduce(
     (sum: any, b: any) =>
       sum + b.price * (beverageQuantities[b.beverageId || b.id] || 1),
-    0
+    0,
   );
 
   const totalAll = totalCourtPrice + totalProductPrice + totalBeveragePrice;
@@ -431,7 +431,7 @@ const DraftBox = ({
                                 ...productQuantities,
                                 [p.productVarientId || p.id]: Math.max(
                                   1,
-                                  parseInt(e.target.value)
+                                  parseInt(e.target.value),
                                 ),
                               })
                             }
@@ -482,7 +482,7 @@ const DraftBox = ({
                                 ...beverageQuantities,
                                 [b.beverageId || b.id]: Math.max(
                                   1,
-                                  parseInt(e.target.value)
+                                  parseInt(e.target.value),
                                 ),
                               })
                             }

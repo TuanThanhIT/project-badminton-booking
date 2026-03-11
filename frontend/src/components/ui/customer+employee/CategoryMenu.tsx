@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { ChevronDown, Package } from "lucide-react";
-import categoryService from "../../../services/customer/categoryService";
+import categoryService from "../../../services/user/categoryService";
 import type { CategoryResponse } from "../../../types/category";
 
 const CategoryMenu = () => {
@@ -82,7 +82,7 @@ const CategoryMenu = () => {
                   <div className="font-semibold text-sky-700 border-b border-sky-100 mb-3 pb-1 text-sm uppercase">
                     <NavLink
                       to={`/products?group=${encodeURIComponent(
-                        group.menuGroup
+                        group.menuGroup,
                       )}`}
                       className="block px-2 py-1 text-gray-700 rounded-md hover:bg-sky-100 hover:text-sky-600 transition duration-150 text-sm whitespace-nowrap"
                       onClick={() => setIsOpen(false)}
@@ -97,7 +97,7 @@ const CategoryMenu = () => {
                         to={`/products?category_id=${
                           item.id
                         }&category_name=${encodeURIComponent(
-                          item.cateName
+                          item.cateName,
                         )}&group=${encodeURIComponent(group.menuGroup)}`}
                         className="block px-2 py-1 text-gray-700 rounded-md hover:bg-sky-100 hover:text-sky-600 transition duration-150 text-sm whitespace-nowrap"
                         onClick={() => setIsOpen(false)}

@@ -5,6 +5,7 @@ import UserOtp from "./userOtp.js";
 
 import Branch from "./branch.js";
 import BranchManager from "./branchManager.js";
+import BranchImage from "./branchImage.js";
 
 import Court from "./court.js";
 import CourtPrice from "./courtPrice.js";
@@ -103,6 +104,15 @@ Branch.hasMany(CourtPrice, {
   as: "courtPrices",
 });
 CourtPrice.belongsTo(Branch, {
+  foreignKey: "branchId",
+  as: "branch",
+});
+
+Branch.hasMany(BranchImage, {
+  foreignKey: "branchId",
+  as: "images",
+});
+BranchImage.belongsTo(Branch, {
   foreignKey: "branchId",
   as: "branch",
 });
@@ -589,6 +599,7 @@ export {
   UserOtp,
   Branch,
   BranchManager,
+  BranchImage,
   Court,
   CourtPrice,
   Booking,

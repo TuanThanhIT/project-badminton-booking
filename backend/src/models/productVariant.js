@@ -1,6 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
 import Product from "./product.js";
+import Branch from "./branch.js";
 
 const ProductVariant = sequelize.define(
   "ProductVariant",
@@ -104,6 +105,23 @@ const ProductVariant = sequelize.define(
         min: {
           args: [1],
           msg: "Product ID must be a positive number",
+        },
+      },
+    },
+    branchId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: { model: Branch, key: "id" },
+      validate: {
+        notNull: {
+          msg: "Branch ID is required",
+        },
+        isInt: {
+          msg: "Branch ID must be an integer",
+        },
+        min: {
+          args: [1],
+          msg: "Branch ID must be a positive number",
         },
       },
     },

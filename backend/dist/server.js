@@ -29,7 +29,7 @@ var httpServer = (0, _http.createServer)(app);
 (0, _index.initSocket)(httpServer);
 app.use(_errorHandler["default"]);
 _db["default"].sync({
-  alter: true
+  force: true
 }).then(function () {
   console.log("Database synced");
   httpServer.listen(PORT, function () {

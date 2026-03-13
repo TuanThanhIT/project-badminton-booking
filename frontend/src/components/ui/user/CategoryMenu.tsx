@@ -1,11 +1,11 @@
 import { useEffect, useState, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { ChevronDown, Package } from "lucide-react";
-import categoryService from "../../../services/user/categoryService";
-import type { CategoryResponse } from "../../../types/category";
+import { useAppSelector } from "../../../redux/hook";
 
 const CategoryMenu = () => {
-  const [categories, setCategories] = useState<CategoryResponse[]>([]);
+  const categoriesGroup = useAppSelector((state) => state.cate.categoriesGroup);
+
   const [isOpen, setIsOpen] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const buttonRef = useRef<HTMLDivElement | null>(null);
@@ -13,18 +13,6 @@ const CategoryMenu = () => {
 
   const location = useLocation();
   const isActive = location.pathname.startsWith("/products");
-
-  useEffect(() => {
-    const fetchCategory = async () => {
-      try {
-        const res = await categoryService.getCategoriesService();
-        setCategories(res.data);
-      } catch (err) {
-        console.error("Lỗi khi lấy danh mục:", err);
-      }
-    };
-    fetchCategory();
-  }, []);
 
   const handleMouseEnter = () => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -39,8 +27,8 @@ const CategoryMenu = () => {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       setDropdownStyle({
-        top: rect.bottom + window.scrollY + 4, // 4px cách nhẹ dưới nút
-        left: window.innerWidth / 2, // canh giữa toàn navbar
+        top: rect.bottom + window.scrollY + 4,
+        left: window.innerWidth / 2,
       });
     }
   }, [isOpen]);
@@ -51,7 +39,6 @@ const CategoryMenu = () => {
       onMouseLeave={handleMouseLeave}
       className="relative"
     >
-      {/* Nút SẢN PHẨM */}
       <div
         ref={buttonRef}
         className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium cursor-pointer select-none transition-all duration-200
@@ -75,11 +62,11 @@ const CategoryMenu = () => {
             left: `${dropdownStyle.left}px`,
           }}
         >
-          <div className="bg-white shadow-2xl rounded-b-2xl border-t-4 border-sky-400 p-8">
+          <div className="bg-white shadow-2xl rounded-b-2xl border-t-4 border-sky-500 p-8">
             <div className="grid grid-cols-5 gap-8">
-              {categories.map((group) => (
+              {categoriesGroup.map((group) => (
                 <div key={group.menuGroup}>
-                  <div className="font-semibold text-sky-700 border-b border-sky-100 mb-3 pb-1 text-sm uppercase">
+                  <div className="font-semibold text-sky-700 border-b border-sky-100 mb-3 pb- uppercase">
                     <NavLink
                       to={`/products?group=${encodeURIComponent(
                         group.menuGroup,
@@ -94,11 +81,12 @@ const CategoryMenu = () => {
                     {group.items.map((item) => (
                       <NavLink
                         key={item.id}
-                        to={`/products?category_id=${
-                          item.id
-                        }&category_name=${encodeURIComponent(
-                          item.cateName,
-                        )}&group=${encodeURIComponent(group.menuGroup)}`}
+                        // to={`/products?category_id=${
+                        //   item.id
+                        // }&category_name=${encodeURIComponent(
+                        //   item.cateName,
+                        // )}&group=${encodeURIComponent(group.menuGroup)}`}
+                        to={"/products"}
                         className="block px-2 py-1 text-gray-700 rounded-md hover:bg-sky-100 hover:text-sky-600 transition duration-150 text-sm whitespace-nowrap"
                         onClick={() => setIsOpen(false)}
                       >

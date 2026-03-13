@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { Calendar, Contact, History, Home, Info } from "lucide-react";
 import { useAppSelector } from "../../../redux/hook";
+import CategoryMenu from "../../ui/user/CategoryMenu";
 
 const Navbar = () => {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
@@ -46,14 +47,7 @@ const Navbar = () => {
 
         {/* Sản phẩm (thay bằng CategoryMenu) */}
         <li>
-          <NavLink to="/products" className={linkClass}>
-            {({ isActive }) => (
-              <>
-                <Calendar className={iconClass({ isActive })} />
-                SẢN PHẨM
-              </>
-            )}
-          </NavLink>
+          <CategoryMenu />
         </li>
 
         {/* Đặt sân */}

@@ -26,8 +26,10 @@ const getOtherCategoriesInSameGroupController = asyncHandler(
     return res
       .status(200)
       .json(
-        "Lấy danh sách danh mục khác theo nhóm thành công",
-        otherCategories,
+        new SuccessResponse(
+          "Lấy danh sách danh mục khác theo nhóm thành công",
+          otherCategories,
+        ),
       );
   },
 );

@@ -4,12 +4,12 @@ import Spinner from "../ui/customer+employee/SpinnerLoad";
 
 const AuthUserGuard = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { token } = useAppSelector((state) => state.auth);
   const loading = useAppSelector((state) => state.ui.loadingCount > 0);
 
   if (loading) return <Spinner />;
 
-  if (!isAuthenticated) {
+  if (!token) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

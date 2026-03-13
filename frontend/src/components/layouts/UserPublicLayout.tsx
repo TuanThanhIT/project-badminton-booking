@@ -2,16 +2,8 @@ import Header from "../commons/user/Header";
 import Footer from "../commons/user/Footer";
 import { Outlet } from "react-router-dom";
 import ScrollToTopButton from "../ui/customer+employee/ScrollToTopButton";
-import { useAppDispatch } from "../../redux/hook";
-import { useEffect } from "react";
-import { getCategoriesGrouped } from "../../redux/slices/user/cateSlice";
 
 const UserPublicLayout = () => {
-  const dispatch = useAppDispatch();
-  useEffect(() => {
-    dispatch(getCategoriesGrouped());
-  }, []);
-
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       <div className="sticky top-0 z-40 bg-white shadow-sm">

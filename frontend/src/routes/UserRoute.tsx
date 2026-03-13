@@ -37,9 +37,9 @@ const UserRoute = () => {
       {/* Private */}
       <Route
         element={
-          <AuthGuard>
-            <UserPrivateLayout />
-          </AuthGuard>
+          // <AuthGuard>
+          <UserPrivateLayout />
+          // </AuthGuard>
         }
       >
         <Route path="home" element={<HomePage />} />

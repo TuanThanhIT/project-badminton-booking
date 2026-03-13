@@ -4,6 +4,7 @@ import { persistReducer, persistStore } from "redux-persist";
 import authReducer from "./slices/user/authSlice";
 import uiReducer from "./slices/uiSlice";
 import cateReducer from "./slices/user/cateSlice";
+import productReducer from "./slices/user/productSlice";
 
 const persistConfig = {
   key: "root",
@@ -15,6 +16,7 @@ const rootReducer = combineReducers({
   auth: authReducer,
   ui: uiReducer,
   cate: cateReducer,
+  product: productReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

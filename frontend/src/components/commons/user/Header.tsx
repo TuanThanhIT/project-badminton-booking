@@ -16,7 +16,7 @@ const Header = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const dispatch = useAppDispatch();
-  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+  const { user, token } = useAppSelector((state) => state.auth);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -98,7 +98,7 @@ const Header = () => {
             <span>Giỏ hàng</span>
           </NavLink>
 
-          {!isAuthenticated ? (
+          {!token || !user ? (
             <div className="flex items-center gap-3">
               <NavLink
                 to="/login"

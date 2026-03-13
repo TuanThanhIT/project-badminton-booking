@@ -1,6 +1,7 @@
 import Joi from "joi";
 import { idParams, priceField, stockField } from "./common/numberField.js";
 import {
+  branchesField,
   brandField,
   colorField,
   colorsField,
@@ -23,26 +24,12 @@ import { thumbnailUrlField } from "./common/urlField.js";
 export const getProductsByFilterSchema = {
   query: Joi.object({
     cateId: idParams("cateId"),
-    prices: pricesField,
-    sizes: sizesField,
-    colors: colorsField,
-    materials: materialsField,
-    excludeProductId: idParams("excludeProductId"),
-    sort: sortField,
-    page: pageField,
-    limitField: limitField,
-    keyword: keywordField,
-  }),
-};
-
-export const getProductsByGroupNameAndFilterSchema = {
-  query: Joi.object({
     groupName: groupNameField,
-    prices: pricesField,
+    branches: branchesField,
+    pricesRange: pricesField,
     sizes: sizesField,
     colors: colorsField,
     materials: materialsField,
-    excludeProductId: idParams("excludeProductId"),
     sort: sortField,
     page: pageField,
     limit: limitField,

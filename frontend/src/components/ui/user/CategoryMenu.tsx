@@ -81,12 +81,11 @@ const CategoryMenu = () => {
                     {group.items.map((item) => (
                       <NavLink
                         key={item.id}
-                        // to={`/products?category_id=${
-                        //   item.id
-                        // }&category_name=${encodeURIComponent(
-                        //   item.cateName,
-                        // )}&group=${encodeURIComponent(group.menuGroup)}`}
-                        to={"/products"}
+                        to={`/products?cateId=${
+                          item.id
+                        }&cateName=${encodeURIComponent(
+                          item.cateName,
+                        )}&group=${encodeURIComponent(group.menuGroup)}`}
                         className="block px-2 py-1 text-gray-700 rounded-md hover:bg-sky-100 hover:text-sky-600 transition duration-150 text-sm whitespace-nowrap"
                         onClick={() => setIsOpen(false)}
                       >

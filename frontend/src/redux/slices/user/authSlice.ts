@@ -17,6 +17,7 @@ import type {
 import type { ApiErrorType } from "../../../types/error";
 import authService from "../../../services/user/authService";
 
+const token = localStorage.getItem("access_token");
 interface AuthState {
   user?: User;
   token?: string;
@@ -26,7 +27,7 @@ interface AuthState {
 
 const initialState: AuthState = {
   user: undefined,
-  token: localStorage.getItem("access_token") || undefined,
+  token: token || undefined,
   isAuthenticated: false,
   userRegister: undefined,
 };
@@ -127,6 +128,8 @@ const authSlice = createSlice({
         state.user = action.payload.data.user;
         state.token = action.payload.data.access_token;
         state.isAuthenticated = true;
+
+        localStorage.setItem("access_token", action.payload.data.access_token);
       })
 
       // getAccount

@@ -46,7 +46,6 @@ const LoginPage = () => {
   */
   useEffect(() => {
     if (token && user) {
-      localStorage.setItem("access_token", token);
       toast.success("Đăng nhập thành công. B-Hub rất vui được gặp lại bạn.");
       setTimeout(() => {
         navigate(from, { replace: true });

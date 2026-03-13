@@ -2,13 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import filterConfig from "../../../configs/filterConfig";
 
-// Định nghĩa type cho filters
 interface Filters {
   priceRange: [number, number];
-  [key: string]: any; // Hỗ trợ các key động như color, material, size: string[]
+  [key: string]: any;
 }
 
-// Định nghĩa type cho filterConfig
 interface FilterOption {
   key: string;
   label: string;
@@ -82,7 +80,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
     if (filters.priceRange) {
       params.set(
         "price_range",
-        `${filters.priceRange[0]}-${filters.priceRange[1]}`
+        `${filters.priceRange[0]}-${filters.priceRange[1]}`,
       );
     } else {
       params.delete("price_range");

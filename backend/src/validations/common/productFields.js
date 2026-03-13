@@ -1,56 +1,46 @@
 import Joi from "joi";
 import { SORT_OPTIONS } from "../../constants/productConstant.js";
 
-export const groupNameField = Joi.string().trim().min(1).required().messages({
-  "any.required": "Group name is required",
+export const groupNameField = Joi.string().trim().min(1).optional().messages({
   "string.base": "Group name must be a string",
   "string.empty": "Group name cannot be empty",
   "string.min": "Group name cannot be empty",
 });
 
-export const pricesField = Joi.array()
-  .length(2)
-  .items(Joi.number().min(0))
+export const pricesField = Joi.string()
+  .trim()
   .custom((value, helpers) => {
-    if (value[0] > value[1]) {
+    const [min, max] = value.split("-").map(Number);
+    if (min > max) {
       return helpers.message("Min price must be less than max price");
     }
     return value;
   })
   .optional()
   .messages({
-    "array.base": "Prices must be an array",
-    "array.length": "Prices must contain exactly 2 values",
-    "number.base": "Price must be a number",
-    "number.min": "Price must be greater than or equal to 0",
+    "string.base": "Prices must be a string",
+    "string.pattern.base": "Price range must be in format min-max",
   });
 
-export const sizesField = Joi.array()
-  .items(Joi.string().trim().min(1))
-  .optional()
-  .messages({
-    "array.base": "Sizes must be an array",
-    "string.base": "Size must be a string",
-    "string.empty": "Size cannot be empty",
-  });
+export const branchesField = Joi.string().trim().optional().messages({
+  "string.base": "Branches must be a string",
+  "string.pattern.base": "Branches must be comma separated",
+});
 
-export const colorsField = Joi.array()
-  .items(Joi.string().trim().min(1))
-  .optional()
-  .messages({
-    "array.base": "Colors must be an array",
-    "string.base": "Color must be a string",
-    "string.empty": "Color cannot be empty",
-  });
+export const sizesField = Joi.string().trim().optional().messages({
+  "string.base": "Sizes must be a string",
+  "string.pattern.base": "Sizes must be comma separated",
+});
 
-export const materialsField = Joi.array()
-  .items(Joi.string().trim().min(1))
-  .optional()
-  .messages({
-    "array.base": "Materials must be an array",
-    "string.base": "Material must be a string",
-    "string.empty": "Material cannot be empty",
-  });
+export const colorsField = Joi.string().trim().optional().messages({
+  "string.base": "Colors must be a string",
+  "string.pattern.base": "Colors must be comma separated",
+});
+
+export const materialsField = Joi.string().trim().optional().messages({
+  "string.base": "Materials must be a string",
+  "string.pattern.base": "Materials must be comma separated",
+});
 
 export const sortField = Joi.string()
   .valid(...Object.keys(SORT_OPTIONS))

@@ -8,6 +8,7 @@ import errorHandler from "./middlewares/errorHandler.js";
 import "./models/index.js";
 import initAuthRoute from "./routes/user/authRoute.js";
 import initCateRoute from "./routes/user/cateRoute.js";
+import initProductRoute from "./routes/user/productRoute.js";
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ app.use(cors());
 // User
 initAuthRoute(app);
 initCateRoute(app);
+initProductRoute(app);
 
 // create http server
 const httpServer = createServer(app);

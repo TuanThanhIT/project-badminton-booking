@@ -11,3 +11,9 @@ export type CategoryGroup = {
 };
 
 export type CategoriesGroupedResponse = ApiResponse<CategoryGroup[]>;
+
+export type OtherCategoriesResponse = ApiResponse<Category[]>;
+
+export type OtherCatesParamsRequest = {
+  cateId: number;
+};

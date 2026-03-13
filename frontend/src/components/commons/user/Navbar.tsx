@@ -4,7 +4,7 @@ import { useAppSelector } from "../../../redux/hook";
 import CategoryMenu from "../../ui/user/CategoryMenu";
 
 const Navbar = () => {
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { token, user } = useAppSelector((state) => state.auth);
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `group flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium transition-all duration-200
@@ -24,8 +24,8 @@ const Navbar = () => {
       <ul className="flex flex-wrap justify-center items-center gap-6 py-3">
         {/* Trang chủ */}
         <li>
-          {isAuthenticated ? (
-            <NavLink to="/home" className={linkClass}>
+          {!token || !user ? (
+            <NavLink to="/" className={linkClass}>
               {({ isActive }) => (
                 <>
                   <Home className={iconClass({ isActive })} />
@@ -34,7 +34,7 @@ const Navbar = () => {
               )}
             </NavLink>
           ) : (
-            <NavLink to="/" className={linkClass}>
+            <NavLink to="/home" className={linkClass}>
               {({ isActive }) => (
                 <>
                   <Home className={iconClass({ isActive })} />

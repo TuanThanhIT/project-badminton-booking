@@ -17,14 +17,15 @@ export const pricesField = Joi.string()
     return value;
   })
   .optional()
+  .empty("")
   .messages({
     "string.base": "Prices must be a string",
     "string.pattern.base": "Price range must be in format min-max",
   });
 
-export const branchesField = Joi.string().trim().optional().messages({
-  "string.base": "Branches must be a string",
-  "string.pattern.base": "Branches must be comma separated",
+export const branchIdField = Joi.string().trim().optional().messages({
+  "string.base": "Branch Ids must be a string",
+  "string.pattern.base": "Branch Ids must be comma separated",
 });
 
 export const sizesField = Joi.string().trim().optional().messages({

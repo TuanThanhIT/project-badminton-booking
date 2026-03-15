@@ -85,7 +85,7 @@ const CategoryMenu = () => {
                           item.id
                         }&cateName=${encodeURIComponent(
                           item.cateName,
-                        )}&group=${encodeURIComponent(group.menuGroup)}`}
+                        )}&groupName=${encodeURIComponent(group.menuGroup)}`}
                         className="block px-2 py-1 text-gray-700 rounded-md hover:bg-sky-100 hover:text-sky-600 transition duration-150 text-sm whitespace-nowrap"
                         onClick={() => setIsOpen(false)}
                       >

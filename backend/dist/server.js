@@ -11,6 +11,7 @@ require("./models/index.js");
 var _authRoute = _interopRequireDefault(require("./routes/user/authRoute.js"));
 var _cateRoute = _interopRequireDefault(require("./routes/user/cateRoute.js"));
 var _productRoute = _interopRequireDefault(require("./routes/user/productRoute.js"));
+var _branchRoute = _interopRequireDefault(require("./routes/user/branchRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -25,6 +26,7 @@ app.use((0, _cors["default"])());
 (0, _authRoute["default"])(app);
 (0, _cateRoute["default"])(app);
 (0, _productRoute["default"])(app);
+(0, _branchRoute["default"])(app);
 
 // create http server
 var httpServer = (0, _http.createServer)(app);

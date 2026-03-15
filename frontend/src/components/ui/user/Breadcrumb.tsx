@@ -1,17 +1,17 @@
 import { NavLink } from "react-router-dom";
 
 type BreadcrumbProps = {
-  cate_id?: number;
-  cate_name?: string;
-  group_name: string;
+  cateId?: number;
+  cateName?: string;
+  groupName: string;
   product_id?: number;
   product_name?: string;
 };
 
 const Breadcrumb = ({
-  cate_id,
-  cate_name,
-  group_name,
+  cateId,
+  cateName,
+  groupName,
   product_id,
   product_name,
 }: BreadcrumbProps) => {
@@ -20,28 +20,28 @@ const Breadcrumb = ({
       className="text-gray-500 flex items-center gap-1 text-sm"
       aria-label="breadcrumb"
     >
-      <NavLink to="/home" className="hover:text-sky-600">
+      <NavLink to="/home" className="hover:text-sky-600 font-bold">
         TRANG CHỦ
       </NavLink>
       <span className="mx-1">/</span>
 
       <NavLink
-        to={`/products?group=${encodeURIComponent(group_name)}`}
+        to={`/products?groupName=${encodeURIComponent(groupName)}`}
         className="hover:text-sky-600"
       >
-        {group_name}
+        {groupName}
       </NavLink>
 
-      {cate_name && (
+      {cateName && (
         <>
           <span className="mx-1">/</span>
           <NavLink
-            to={`/products?category_id=${cate_id}&category_name=${encodeURIComponent(
-              cate_name
-            )}&group=${encodeURIComponent(group_name)}`}
+            to={`/products?cateId=${cateId}&cateName=${encodeURIComponent(
+              cateName,
+            )}&groupName=${encodeURIComponent(groupName)}`}
             className="hover:text-sky-600"
           >
-            {cate_name}
+            {cateName}
           </NavLink>
         </>
       )}

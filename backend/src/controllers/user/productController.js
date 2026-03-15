@@ -5,8 +5,7 @@ import productService from "../../services/user/productService.js";
 const getProductsByFilterController = asyncHandler(async (req, res) => {
   const {
     cateId,
-    groupName,
-    branches,
+    branchId,
     pricesRange,
     sizes,
     colors,
@@ -19,12 +18,11 @@ const getProductsByFilterController = asyncHandler(async (req, res) => {
   } = req.query;
   const data = {
     cateId,
-    groupName,
-    branches: branches?.split("-") ?? [],
-    prices: pricesRange?.split("-") ?? [],
-    sizes: sizes?.split(",") ?? [],
-    colors: colors?.split(",") ?? [],
-    materials: materials?.split(",") ?? [],
+    prices: pricesRange?.split("-").filter(Boolean) || [],
+    sizes: sizes?.split(",").filter(Boolean) || [],
+    colors: colors?.split(",").filter(Boolean) || [],
+    materials: materials?.split(",").filter(Boolean) || [],
+    branchIds: branchId?.split(",").filter(Boolean) || [],
     excludeProductId: productId ?? null,
     sort,
     page,

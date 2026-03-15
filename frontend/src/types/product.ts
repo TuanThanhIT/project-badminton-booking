@@ -7,7 +7,6 @@ export type Product = {
   brand: string;
   thumbnailUrl: string;
   createdDate: string;
-  categoryId: number;
   minPrice: number;
   category: Category;
   discount: number;
@@ -26,7 +25,6 @@ export type ProductFilterResponse = ApiResponse<ProductFilterData>;
 
 export type ProductQueriesRequest = {
   cateId: number;
-  groupName?: string;
   pricesRange?: string;
   sizes?: string;
   colors?: string;
@@ -35,4 +33,5 @@ export type ProductQueriesRequest = {
   page?: number;
   limit?: number;
   keyword?: string;
+  branchId?: string;
 };

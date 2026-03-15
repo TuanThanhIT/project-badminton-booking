@@ -1,13 +1,12 @@
 import Joi from "joi";
 import { idParams, priceField, stockField } from "./common/numberField.js";
 import {
-  branchesField,
+  branchIdField,
   brandField,
   colorField,
   colorsField,
   descriptionField,
   discountField,
-  groupNameField,
   materialField,
   materialsField,
   pricesField,
@@ -24,8 +23,7 @@ import { thumbnailUrlField } from "./common/urlField.js";
 export const getProductsByFilterSchema = {
   query: Joi.object({
     cateId: idParams("cateId"),
-    groupName: groupNameField,
-    branches: branchesField,
+    branchId: branchIdField,
     pricesRange: pricesField,
     sizes: sizesField,
     colors: colorsField,

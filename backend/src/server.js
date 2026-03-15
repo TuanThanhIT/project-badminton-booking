@@ -9,6 +9,7 @@ import "./models/index.js";
 import initAuthRoute from "./routes/user/authRoute.js";
 import initCateRoute from "./routes/user/cateRoute.js";
 import initProductRoute from "./routes/user/productRoute.js";
+import initBranchRoute from "./routes/user/branchRoute.js";
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use(cors());
 initAuthRoute(app);
 initCateRoute(app);
 initProductRoute(app);
+initBranchRoute(app);
 
 // create http server
 const httpServer = createServer(app);

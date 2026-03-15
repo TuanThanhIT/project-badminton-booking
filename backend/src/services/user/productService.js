@@ -1,7 +1,6 @@
 import { StatusCodes } from "http-status-codes";
 import ApiError from "../../errors/ApiError.js";
 import {
-  Branch,
   Category,
   Product,
   ProductImage,
@@ -18,12 +17,11 @@ const getSortOption = (sort) => {
 const getProductsByFilterService = async (data) => {
   const {
     cateId,
-    groupName,
-    branches,
     prices,
     sizes,
     colors,
     materials,
+    branchIds,
     excludeProductId,
     sort,
     page,
@@ -33,36 +31,19 @@ const getProductsByFilterService = async (data) => {
 
   const p = Number(page) ?? 1;
   const l = Number(limit) ?? 10;
+
   const offset = (p - 1) * l;
 
-  let categoryIds = [];
-
-  // xử lý cateId hoặc groupName
-  if (cateId) {
-    const category = await Category.findByPk(cateId);
-    if (!category) {
-      throw new NotFoundError("Danh mục không tồn tại");
-    }
-    categoryIds = [cateId];
+  const category = await Category.findByPk(cateId);
+  if (!category) {
+    throw new NotFoundError("Danh mục không tồn tại");
   }
 
-  if (groupName) {
-    const categories = await Category.findAll({
-      where: { menuGroup: groupName },
-      attributes: ["id"],
-    });
-
-    categoryIds = categories.map((c) => c.id);
-
-    if (categoryIds.length === 0) {
-      return { products: [], total: 0, page: p, limit: l };
-    }
-  }
-
+  // Xử lý keyword
   const kw = keyword && keyword !== "null" ? keyword : undefined;
 
   const whereCondition = {
-    ...(categoryIds.length > 0 && { categoryId: { [Op.in]: categoryIds } }),
+    categoryId: cateId,
     ...(excludeProductId && { id: { [Op.ne]: Number(excludeProductId) } }),
     ...(kw && { productName: { [Op.like]: `%${kw}%` } }),
   };
@@ -76,7 +57,6 @@ const getProductsByFilterService = async (data) => {
   });
 
   const ids = productIdsPage.map((p) => p.id);
-
   if (ids.length === 0) {
     return { products: [], total: 0, page: p, limit: l };
   }
@@ -91,7 +71,6 @@ const getProductsByFilterService = async (data) => {
       "brand",
       "thumbnailUrl",
       "createdDate",
-      "categoryId",
       [fn("MIN", col("variants.price")), "minPrice"],
     ],
     include: [
@@ -100,27 +79,16 @@ const getProductsByFilterService = async (data) => {
         as: "variants",
         attributes: [],
         where: {
-          ...(prices?.length === 2 && {
+          ...(prices?.length > 0 && {
             price: { [Op.between]: [prices[0], prices[1]] },
           }),
           ...(sizes?.length > 0 && { size: { [Op.in]: sizes } }),
           ...(colors?.length > 0 && { color: { [Op.in]: colors } }),
-          ...(materials?.length > 0 && {
-            material: { [Op.in]: materials },
+          ...(materials?.length > 0 && { material: { [Op.in]: materials } }),
+          ...(branchIds?.length > 0 && {
+            branchId: { [Op.in]: branchIds },
           }),
         },
-        include: [
-          {
-            model: Branch,
-            as: "branch",
-            attributes: [],
-            where: {
-              ...(branches?.length > 0 && {
-                branchName: { [Op.in]: branches },
-              }),
-            },
-          },
-        ],
         required: true,
       },
       {
@@ -138,12 +106,10 @@ const getProductsByFilterService = async (data) => {
   const productFormatted = await Promise.all(
     productsFilter.map(async (p) => {
       const minPrice = parseFloat(p.get("minPrice"));
-
       const variant = await ProductVariant.findOne({
         where: { productId: p.id, price: minPrice },
         attributes: ["discount"],
       });
-
       const discount = variant ? variant.discount : 0;
       const minDiscountedPrice = minPrice - (minPrice * discount) / 100;
 
@@ -151,24 +117,13 @@ const getProductsByFilterService = async (data) => {
       const now = new Date();
       const diffDays =
         (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
-
       const isNew = diffDays <= 15;
 
-      return {
-        ...p.toJSON(),
-        discount,
-        minDiscountedPrice,
-        isNew,
-      };
+      return { ...p.toJSON(), discount, minDiscountedPrice, isNew };
     }),
   );
 
-  return {
-    products: productFormatted,
-    total,
-    page: p,
-    limit: l,
-  };
+  return { products: productFormatted, total, page: p, limit: l };
 };
 
 const getProductDetailService = async (data) => {

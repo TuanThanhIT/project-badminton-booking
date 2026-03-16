@@ -13,7 +13,7 @@ const ProductCard = ({ product, groupName }: ProductCardProps) => {
   return (
     <div
       key={product.id}
-      className="bg-white rounded-2xl transition-all duration-300 overflow-hidden group cursor-pointer border flex flex-col transform hover:scale-105 border-none"
+      className="bg-white p-2 rounded-2xl transition-all duration-300 overflow-hidden group cursor-pointer border border-gray-200 flex flex-col transform hover:scale-105"
     >
       {/* Ảnh sản phẩm */}
       <div className="relative w-full h-50s bg-white overflow-hidden">

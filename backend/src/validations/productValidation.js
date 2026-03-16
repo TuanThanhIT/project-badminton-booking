@@ -28,6 +28,11 @@ export const getProductsByFilterSchema = {
     sizes: sizesField,
     colors: colorsField,
     materials: materialsField,
+    productId: Joi.number().integer().positive().optional().messages({
+      "number.base": "Product ID must be a number",
+      "number.integer": "Product ID must be an integer",
+      "number.positive": "Product ID must be a positive number",
+    }),
     sort: sortField,
     page: pageField,
     limit: limitField,

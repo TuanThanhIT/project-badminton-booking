@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import debounce from "lodash.debounce";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Folder, Filter, Search } from "lucide-react";
+import { Folder, Filter, Search, MapPinned } from "lucide-react";
 import Breadcrumb from "../../components/ui/user/Breadcrumb";
 import ProductFilter from "../../components/ui/user/ProductFilter";
-import ProductCard from "../../components/ui/customer+employee/ProductCard";
-import PaginatedItems from "../../components/ui/customer+employee/PaginatedItems";
+import ProductCard from "../../components/ui/user/ProductCard";
+import PaginatedItems from "../../components/ui/user/PaginatedItems";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { getOtherCategoriesInSameGroup } from "../../redux/slices/user/cateSlice";
 import type { OtherCatesParamsRequest } from "../../types/cate";
 import { getProductsByFilter } from "../../redux/slices/user/productSlice";
 import { getAllBranch } from "../../redux/slices/user/branchSlice";
-import type { BranchQueryRequest } from "../../types/branch";
+import type { ProductQueriesRequest } from "../../types/product";
 
 const ProductPage = () => {
   const navigate = useNavigate();
@@ -52,7 +52,7 @@ const ProductPage = () => {
   const [page, setPage] = useState(1);
   const limit = 8;
   const [keywordSearch, setKeywordSearch] = useState("");
-  const [keywordBranch, setKeywordBranch] = useState("");
+  const [searchBranch, setSearchBranch] = useState("");
 
   const [debouncedKeyword, setDebouncedKeyword] = useState("");
 
@@ -70,7 +70,7 @@ const ProductPage = () => {
     [],
   );
 
-  const productQuery = useMemo(() => {
+  const productQuery: ProductQueriesRequest = useMemo(() => {
     return {
       cateId,
       branchId,
@@ -113,9 +113,8 @@ const ProductPage = () => {
   }, [productQuery, dispatch]);
 
   useEffect(() => {
-    const data: BranchQueryRequest = { keyword: keywordBranch };
-    dispatch(getAllBranch({ data }));
-  }, [dispatch, keywordBranch]);
+    dispatch(getAllBranch());
+  }, [dispatch]);
 
   const handleChange = (value: number) => {
     if (selectedBranch.includes(value)) {
@@ -149,17 +148,19 @@ const ProductPage = () => {
       {/* Nội dung chính */}
       <div className="flex flex-col md:flex-row gap-6 px-6 py-6 items-start">
         {/* Sidebar danh mục */}
-        <div className="w-full md:w-1/5 bg-white rounded-xl p-4 h-fit">
+        <div className="w-full md:w-1/5 bg-white rounded-2xl shadow-sm border border-gray-300 p-5 h-fit flex flex-col gap-6">
+          {/* DANH MỤC */}
           <div>
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Folder size={24} className="text-gray-600" />
-              Danh mục sản phẩm
+            <h3 className="font-semibold mb-4 flex items-center gap-2 border-b pb-2 border-gray-500">
+              <Folder size={20} className="text-sky-500" />
+              DANH MỤC SẢN PHẨM
             </h3>
-            <ul className="flex flex-col gap-3">
+
+            <ul className="flex flex-col gap-2">
               {otherCategories.map((cate) => (
                 <li
                   key={cate.id}
-                  className="px-3 py-2 rounded-lg cursor-pointer bg-white hover:bg-sky-100 hover:text-sky-700 transition-all duration-200 text-gray-700 font-medium"
+                  className="px-3 py-2 rounded-lg cursor-pointer hover:bg-sky-50 hover:text-sky-600 hover:-translate-0.5 transition text-gray-700 "
                   onClick={() =>
                     navigate(
                       `/products?cateId=${cate.id}&cateName=${encodeURIComponent(
@@ -173,30 +174,57 @@ const ProductPage = () => {
               ))}
             </ul>
           </div>
+          {/* CHI NHÁNH */}
           <div>
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Folder size={24} className="text-gray-600" />
-              Chi nhánh cửa hàng
+            <h3 className="font-semibold mb-4 flex items-center gap-2 border-b pb-2 border-gray-500">
+              <MapPinned size={20} className="text-sky-500" />
+              CHI NHÁNH CỬA HÀNG
             </h3>
-            <ul className="flex flex-col gap-3">
-              {branches.map((branch) => (
-                <li className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    name={branch.branchName}
-                    checked={selectedBranch.includes(branch.id)}
-                    onChange={() => handleChange(branch.id)}
-                    className="cursor-pointer"
-                  />
-                  <span>{branch.branchName}</span>
-                </li>
-              ))}
+
+            {/* SEARCH */}
+            <div className="relative flex-1">
+              <span className="absolute left-3 top-1/3 -translate-y-1/3 text-gray-500">
+                <Search size={18} className="text-sky-700" />
+              </span>
+              <input
+                type="text"
+                placeholder="Tìm chi nhánh..."
+                className="w-full mb-3 pl-10 pr-3 py-1 border border-gray-400 rounded-lg outline-none "
+                value={searchBranch}
+                onChange={(e) => setSearchBranch(e.target.value)}
+              />
+            </div>
+
+            {/* LIST */}
+            <ul className="flex flex-col gap-2 max-h-60 overflow-y-auto pr-1">
+              {branches
+                .filter((branch) =>
+                  branch.branchName
+                    .toLowerCase()
+                    .includes(searchBranch.toLowerCase()),
+                )
+                .map((branch) => (
+                  <li
+                    key={branch.id}
+                    className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-sky-50 hover:text-sky-600 hover:-translate-0.5 transition"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedBranch.includes(branch.id)}
+                      onChange={() => handleChange(branch.id)}
+                      className="cursor-pointer w-4 h-4 accent-sky-500"
+                    />
+                    <span className="text-gray-700 text-sm">
+                      {branch.branchName}
+                    </span>
+                  </li>
+                ))}
             </ul>
           </div>
         </div>
 
         {/* Cột sản phẩm */}
-        <div className="w-full md:w-4/5 p-6 shadow-sm rounded-xl">
+        <div className="w-full md:w-4/5 p-6 shadow-sm border border-gray-300 rounded-xl">
           <div className="flex justify-between items-center mb-10">
             <h2 className="text-2xl font-bold text-gray-900 relative inline-block after:content-[''] after:block after:w-20 after:h-1 after:bg-gray-400 after:mt-1 rounded-full">
               {cateName || groupName}
@@ -210,7 +238,7 @@ const ProductPage = () => {
                 </span>
                 <input
                   type="text"
-                  placeholder="Tìm sản phẩm"
+                  placeholder="Tìm sản phẩm..."
                   value={keywordSearch}
                   onChange={(e) => setKeywordSearch(e.target.value)}
                   className="w-full pl-10 pr-3 py-2 border border-gray-400 rounded-lg focus:outline-none transition-all"

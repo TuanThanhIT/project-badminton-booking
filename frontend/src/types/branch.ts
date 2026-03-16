@@ -6,7 +6,3 @@ export type Branch = {
 };
 
 export type BranchResponse = ApiResponse<Branch[]>;
-
-export type BranchQueryRequest = {
-  keyword?: string;
-};

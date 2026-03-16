@@ -1,4 +1,5 @@
 import type { ApiResponse } from "./api";
+import type { Branch } from "./branch";
 import type { Category } from "./cate";
 
 export type Product = {
@@ -34,4 +35,39 @@ export type ProductQueriesRequest = {
   limit?: number;
   keyword?: string;
   branchId?: string;
+  productId?: number;
+};
+
+export type ProductVariant = {
+  id: number;
+  sku: string;
+  price: number;
+  stock: number;
+  discount: number;
+  color: string;
+  size: string;
+  material: string;
+  branch: Branch;
+  discountPrice: number;
+};
+
+export type ProductImage = {
+  id: number;
+  imageUrl: string;
+  productId: number;
+};
+
+export type ProductDetail = {
+  id: number;
+  productName: string;
+  brand: string;
+  description: string;
+  variants: ProductVariant[];
+  images: ProductImage[];
+};
+
+export type ProductDetailResponse = ApiResponse<ProductDetail>;
+
+export type ProductDetailRequest = {
+  productId: number;
 };

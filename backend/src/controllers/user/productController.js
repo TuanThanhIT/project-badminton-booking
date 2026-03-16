@@ -43,8 +43,7 @@ const getProductsByFilterController = asyncHandler(async (req, res) => {
 const getProductDetailController = asyncHandler(async (req, res) => {
   const { productId } = req.params;
   const data = { productId };
-  const productDetail =
-    await productCustomerService.getProductDetailService(data);
+  const productDetail = await productService.getProductDetailService(data);
   return res
     .status(201)
     .json(

@@ -4,16 +4,16 @@ type BreadcrumbProps = {
   cateId?: number;
   cateName?: string;
   groupName: string;
-  product_id?: number;
-  product_name?: string;
+  productId?: number;
+  productName?: string;
 };
 
 const Breadcrumb = ({
   cateId,
   cateName,
   groupName,
-  product_id,
-  product_name,
+  productId,
+  productName,
 }: BreadcrumbProps) => {
   return (
     <nav
@@ -46,10 +46,10 @@ const Breadcrumb = ({
         </>
       )}
 
-      {product_id && product_name && (
+      {productId && productName && (
         <>
           <span className="mx-1">/</span>
-          <span className="text-gray-900 font-semibold">{product_name}</span>
+          <span className="text-gray-900 font-semibold">{productName}</span>
         </>
       )}
     </nav>

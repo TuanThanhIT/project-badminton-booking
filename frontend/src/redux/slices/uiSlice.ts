@@ -35,6 +35,7 @@ const uiSlice = createSlice({
           "Something went wrong";
 
         toast.error(message);
+        console.log("error>>", action.payload);
       });
   },
 });

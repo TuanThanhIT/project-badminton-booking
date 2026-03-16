@@ -1,6 +1,5 @@
-import { StatusCodes } from "http-status-codes";
-import ApiError from "../../errors/ApiError.js";
 import {
+  Branch,
   Category,
   Product,
   ProductImage,
@@ -29,8 +28,8 @@ const getProductsByFilterService = async (data) => {
     keyword,
   } = data;
 
-  const p = Number(page) ?? 1;
-  const l = Number(limit) ?? 10;
+  const p = Number(page) || 1;
+  const l = Number(limit) || 10;
 
   const offset = (p - 1) * l;
 
@@ -134,6 +133,21 @@ const getProductDetailService = async (data) => {
       {
         model: ProductVariant,
         as: "variants",
+        attributes: [
+          "id",
+          "sku",
+          "price",
+          "stock",
+          "discount",
+          "color",
+          "size",
+          "material",
+        ],
+        include: {
+          model: Branch,
+          as: "branch",
+          attributes: ["id", "branchName"],
+        },
       },
       {
         model: ProductImage,
@@ -143,7 +157,7 @@ const getProductDetailService = async (data) => {
   });
 
   if (!product) {
-    throw new ApiError(StatusCodes.NOT_FOUND, "Sản phẩm không tồn tạo!");
+    throw new NotFoundError("Sản phẩm không tồn tại");
   }
 
   const variantsWithDiscount = product.variants.map((v) => {
@@ -156,7 +170,7 @@ const getProductDetailService = async (data) => {
 
   const productDetail = {
     ...product.toJSON(),
-    variants: variantsWithDiscount, // dùng mảng mới đã tính discountPrice
+    variants: variantsWithDiscount,
   };
 
   return productDetail;

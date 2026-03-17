@@ -14,6 +14,9 @@ import {
 import Breadcrumb from "../../components/ui/user/Breadcrumb";
 import type { Branch } from "../../types/branch";
 import ProductsRelated from "../../components/ui/user/ProductsRelated";
+import type { AddCartItemRequest } from "../../types/cart";
+import { addCartItem } from "../../redux/slices/user/cartSlice";
+import { toast } from "react-toastify";
 
 // --- format tiền ---
 const formatPrice = (n: number) =>
@@ -131,20 +134,16 @@ const ProductDetailPage: React.FC = () => {
     else setQuantity(val);
   };
 
-  // // --- Thêm vào giỏ hàng ---
-  // const handleAddToCart = async () => {
-  //   if (!selectedVariant) {
-  //     toast.error("Vui lòng chọn size và màu!");
-  //     return;
-  //   }
-  //   const variantId = selectedVariant.id;
-  //   try {
-  //     await dispatch(addCart({ quantity, varientId }));
-  //     toast.success("Đã thêm vào giỏ hàng!");
-  //   } catch (error) {
-  //     // Đã xử lý lỗi rồi
-  //   }
-  // };
+  // --- Thêm vào giỏ hàng ---
+  const handleAddItemToCart = async () => {
+    if (!selectedVariant) return;
+    const variantId = selectedVariant.id;
+    const data: AddCartItemRequest = { quantity, variantId };
+    const result = await dispatch(addCartItem({ data }));
+    if (addCartItem.fulfilled.match(result)) {
+      toast.success("Sản phẩm được thêm vào giỏ hàng thành công");
+    }
+  };
 
   // const handleBuyNow = async () => {
   //   const result = await Swal.fire({
@@ -167,21 +166,6 @@ const ProductDetailPage: React.FC = () => {
   //     navigate("/checkout");
   //   }
   // };
-
-  // // --- Fetch sản phẩm liên quan ---
-  // useEffect(() => {
-  //   const fetchProductsRelated = async () => {
-  //     try {
-  //       const params = { product_id, category_id };
-  //       const res = await productService.getProductRelatedService(params);
-  //       setProductsRelated(res.data);
-  //     } catch (err) {
-  //       const apiError = err as ApiErrorType;
-  //       toast.error(apiError?.userMessage);
-  //     }
-  //   };
-  //   fetchProductsRelated();
-  // }, [product_id, category_id]);
 
   // // -- Lấy đánh giá
   // useEffect(() => {
@@ -327,7 +311,7 @@ const ProductDetailPage: React.FC = () => {
             {/* Nút hành động */}
             <div className="flex gap-5 pt-4">
               <button
-                // onClick={handleAddToCart}
+                onClick={handleAddItemToCart}
                 className="flex-1 flex items-center justify-center gap-2 bg-sky-600 text-white text-lg px-6 py-4 rounded-2xl shadow-lg hover:bg-sky-700 hover:scale-[1.02] transition-transform duration-300"
               >
                 <ShoppingCart size={20} />
@@ -399,12 +383,15 @@ const ProductDetailPage: React.FC = () => {
             </div>
 
             {/* Đánh giá của khách hàng */}
-            {/* <div className="border-t border-gray-400 mt-8">
-              <ProductReviewList
-                productFeedbacks={productFeedbacks}
-                type="product"
-              />
-            </div> */}
+            <div className="border-t border-gray-400 mt-8">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6 mt-8">
+                Đánh giá của khách hàng
+              </h2>
+              {/* <ReviewList
+                  productFeedbacks={productFeedbacks}
+                  type="product"
+                /> */}
+            </div>
           </div>
         </div>
 
@@ -413,7 +400,7 @@ const ProductDetailPage: React.FC = () => {
           <h3 className="text-2xl font-bold mb-6 text-gray-700">
             Sản phẩm liên quan
           </h3>
-          <div className="max-w-8xl mx-auto px-10">
+          <div className="max-w-7xl mx-auto">
             <ProductsRelated productsRelated={products} groupName={groupName} />
           </div>
         </div>

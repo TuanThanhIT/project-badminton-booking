@@ -12,21 +12,17 @@ const initCateRoute = (app) => {
     authorize("User"),
     categoryController.getCategoriesByMenuGroupController,
   );
-
   cateRoute.get(
     "/grouped",
     categoryController.getCategoriesGroupedByMenuGroupController,
   );
-
   cateRoute.get(
     "/:cateId/siblings",
     auth,
     authorize("User"),
     categoryController.getOtherCategoriesInSameGroupController,
   );
-
   cateRoute.get("/groups", categoryController.getAllMenuGroupsController);
-
   app.use("/user/categories", cateRoute);
 };
 

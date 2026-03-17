@@ -18,7 +18,6 @@ const initProductRoute = (app) => {
     validate(getProductsByFilterSchema),
     productController.getProductsByFilterController,
   );
-
   productRoute.get(
     "/:productId",
     auth,

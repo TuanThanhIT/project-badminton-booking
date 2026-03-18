@@ -8,21 +8,32 @@ import {
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../redux/hook";
 import { logout } from "../../../redux/slices/user/authSlice";
 
-const Header = () => {
+interface HeaderProps {
+  cartRef: React.RefObject<HTMLDivElement | null>; // cho phép null
+}
+
+const Header = ({ cartRef }: HeaderProps) => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const dispatch = useAppDispatch();
   const { user, token } = useAppSelector((state) => state.auth);
+  const cart = useAppSelector((state) => state.cart.cart);
+  const [countCartItem, setCountCartItem] = useState(0);
 
   const handleLogout = () => {
     dispatch(logout());
     localStorage.removeItem("persist:root");
     navigate("/login");
   };
+
+  useEffect(() => {
+    if (!cart) return;
+    setCountCartItem(cart.cartItems.length);
+  }, [cart]);
 
   return (
     <header className="bg-white shadow-sm">
@@ -88,12 +99,11 @@ const Header = () => {
             to="/cart"
             className="flex items-center gap-2 px-4 py-2 rounded-full text-gray-700 hover:bg-gray-100 transition text-base font-medium"
           >
-            <div className="relative">
+            <div ref={cartRef} className="relative">
               <ShoppingCart className="w-6 h-6 text-sky-600" />
-
-              {/* <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md">
-                {countCartItems}
-              </span> */}
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md">
+                {countCartItem}
+              </span>
             </div>
             <span>Giỏ hàng</span>
           </NavLink>

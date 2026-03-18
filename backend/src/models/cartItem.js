@@ -81,6 +81,12 @@ const CartItem = sequelize.define(
     },
   },
   {
+    indexes: [
+      {
+        unique: true,
+        fields: ["cartId", "variantId"],
+      },
+    ],
     tableName: "CartItems",
     timestamps: false,
   },

@@ -1,5 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useNavigate,
+  useOutletContext,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { MapPin, ShoppingCart } from "lucide-react";
 import type {
   ProductDetailRequest,
@@ -14,9 +19,16 @@ import {
 import Breadcrumb from "../../components/ui/user/Breadcrumb";
 import type { Branch } from "../../types/branch";
 import ProductsRelated from "../../components/ui/user/ProductsRelated";
-import type { AddCartItemRequest } from "../../types/cart";
-import { addCartItem } from "../../redux/slices/user/cartSlice";
+import type { AddCartItemRequest, Cart } from "../../types/cart";
+import {
+  addCartItem,
+  getCart,
+  restoreCartLocal,
+} from "../../redux/slices/user/cartSlice";
 import { toast } from "react-toastify";
+import { normalizeColor } from "../../utils/color";
+import { COLOR_MAP } from "../../constants/color";
+import { flyToCart } from "../../utils/flyToCart";
 
 // --- format tiền ---
 const formatPrice = (n: number) =>
@@ -27,7 +39,13 @@ const ProductDetailPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const productDetail = useAppSelector((state) => state.product.productDetail);
   const products = useAppSelector((state) => state.product.products?.products);
-  console.log("productRelated>>", products);
+  const cart = useAppSelector((state) => state.cart.cart);
+
+  // Xử lý giao diện thêm vào giỏ hàng
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const { cartRef } = useOutletContext<{
+    cartRef: React.RefObject<HTMLDivElement>;
+  }>();
 
   // --- Params & Search ---
   const { id } = useParams();
@@ -52,6 +70,7 @@ const ProductDetailPage: React.FC = () => {
       productId,
     };
     dispatch(getProductDetail({ data }));
+    dispatch(getCart());
   }, [dispatch, productId]);
 
   useEffect(() => {
@@ -140,8 +159,16 @@ const ProductDetailPage: React.FC = () => {
     const variantId = selectedVariant.id;
     const data: AddCartItemRequest = { quantity, variantId };
     const result = await dispatch(addCartItem({ data }));
+
     if (addCartItem.fulfilled.match(result)) {
+      if (imgRef.current && cartRef.current) {
+        flyToCart(imgRef.current, cartRef.current);
+      }
       toast.success("Sản phẩm được thêm vào giỏ hàng thành công");
+    } else if (addCartItem.rejected.match(result)) {
+      if (!cart) return;
+      const prevCart: Cart = { ...cart };
+      dispatch(restoreCartLocal({ prevCart }));
     }
   };
 
@@ -189,24 +216,25 @@ const ProductDetailPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
           {/* Hình ảnh */}
           <div className="md:col-span-5 flex flex-col items-center space-y-4">
-            <div className="w-full bg-white border border-gray-200 rounded-2xl p-6 flex items-center justify-center transition-all">
+            <div className="w-full bg-white border rounded-2xl border-gray-400 p-6 flex items-center justify-center transition-all">
               {mainImage ? (
                 <img
                   src={mainImage}
+                  ref={imgRef}
                   alt={productDetail?.productName}
-                  className="w-full max-h-[500px] object-contain rounded-2xl"
+                  className="w-full max-h-[600px] object-contain rounded-2xl"
                 />
               ) : (
-                <div className="w-full h-[500px] bg-gray-100 rounded-2xl" />
+                <div className="w-full h-[600px] bg-gray-100 rounded-2xl" />
               )}
             </div>
 
-            <div className="w-full flex gap-4 overflow-x-auto py-2 justify-center">
+            <div className="w-full flex gap-4 overflow-x-auto p-2">
               {productDetail?.images.map((img) => (
                 <button
                   key={img.id}
                   onClick={() => setMainImage(img.imageUrl)}
-                  className={`shrink-0 w-24 h-24 rounded-2xl border-2 overflow-hidden transition-all duration-300 ${
+                  className={`shrink-0 w-24 h-24 rounded-2xl border-1 overflow-hidden transition-all duration-300 ${
                     mainImage === img.imageUrl
                       ? "border-sky-600 ring-2 ring-sky-300 scale-105"
                       : "border-gray-300 hover:border-sky-400 hover:scale-105"
@@ -279,19 +307,25 @@ const ProductDetailPage: React.FC = () => {
             <div className="flex flex-row gap-5 items-center">
               <h4 className="text-base font-semibold">Chọn màu sắc:</h4>
               <div className="flex flex-wrap gap-3">
-                {colors.map((color) => (
-                  <button
-                    key={color}
-                    onClick={() => handleSelectColor(color)}
-                    className={`px-6 py-1 rounded-full border text-sm font-medium transition-all duration-200 ${
-                      selectedColor === color
-                        ? "bg-sky-600 text-white border-sky-600 shadow-lg scale-105"
-                        : "bg-white text-gray-700 border-gray-300 hover:border-sky-500 hover:shadow"
-                    }`}
-                  >
-                    {color}
-                  </button>
-                ))}
+                {colors.map((color) => {
+                  const key = normalizeColor(color);
+                  const isSelected = selectedColor?.includes(color);
+
+                  return (
+                    <div
+                      key={color}
+                      onClick={() => handleSelectColor(color)}
+                      className={`w-8 h-8 rounded-full cursor-pointer transition
+          ${isSelected ? "ring-1 ring-black ring-offset-2" : "border border-gray-400"}
+        `}
+                      style={{
+                        backgroundColor: COLOR_MAP[key] || "#ccc",
+                        border: key === "trang" ? "1px solid #ddd" : undefined,
+                      }}
+                      title={color}
+                    />
+                  );
+                })}
               </div>
             </div>
 

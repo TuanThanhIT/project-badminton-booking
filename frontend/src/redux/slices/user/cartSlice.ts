@@ -111,6 +111,10 @@ const cartSlice = createSlice({
         cart.cartItems[idx].subTotal =
           cart.cartItems[idx].price * action.payload.data.quantity;
       }
+      cart.totalAmount = cart.cartItems.reduce(
+        (sum, item) => sum + item.subTotal,
+        0,
+      );
     },
     deleteCartItemLocal(
       state,
@@ -135,12 +139,29 @@ const cartSlice = createSlice({
       .addCase(getCart.fulfilled, (state, action) => {
         state.cart = action.payload.data;
       })
-
       .addCase(deleteAllCartItem.fulfilled, (state) => {
         const cart = state.cart;
         if (!cart) return;
         cart.cartItems = [];
         cart.totalAmount = 0;
+      })
+      .addCase(addCartItem.fulfilled, (state, action) => {
+        const cart = state.cart;
+        if (!cart) return;
+        const idx = cart.cartItems.findIndex(
+          (item) => item.id === action.payload.data.id,
+        );
+        if (idx >= 0) {
+          cart.cartItems[idx].quantity = action.payload.data.quantity;
+          cart.cartItems[idx].subTotal =
+            cart.cartItems[idx].price * cart.cartItems[idx].quantity;
+        } else {
+          cart.cartItems.push(action.payload.data);
+        }
+        cart.totalAmount = cart.cartItems.reduce(
+          (sum, item) => sum + item.subTotal,
+          0,
+        );
       });
   },
 });

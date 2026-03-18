@@ -9,7 +9,6 @@ type ProductCardProps = {
 
 const ProductCard = ({ product, groupName }: ProductCardProps) => {
   const navigate = useNavigate();
-
   return (
     <div
       key={product.id}

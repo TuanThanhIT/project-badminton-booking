@@ -8,7 +8,6 @@ import {
   deleteAllCartItem,
   deleteCartItem,
   deleteCartItemLocal,
-  getCart,
   restoreCartLocal,
   updateCartItem,
   updateQuantityLocal,
@@ -19,15 +18,13 @@ import type {
   DeleteCartItemRequest,
   UpdateCartItemRequest,
 } from "../../types/cart";
+import { normalizeColor } from "../../utils/color";
+import { COLOR_MAP } from "../../constants/color";
 
 const CartPage = () => {
   const dispatch = useAppDispatch();
-  const { cart } = useAppSelector((state) => state.cart);
+  const cart = useAppSelector((state) => state.cart.cart);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    dispatch(getCart());
-  }, [dispatch]);
 
   const handleRemove = async (cartItemId: number) => {
     const data: DeleteCartItemRequest = { cartItemId };
@@ -125,8 +122,8 @@ const CartPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white py-10 px-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-white py-10 px-20">
+      <div className="max-w-8xl mx-auto">
         {/* Header */}
         <div className="mb-10 text-center">
           <div className="flex items-center justify-center gap-3 mb-3">
@@ -145,109 +142,126 @@ const CartPage = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Danh sách sản phẩm */}
-          <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+          <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-300 p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-gray-800">
                 Sản phẩm ({cart.cartItems.length})
               </h2>
               <button
                 onClick={handleDeleteAll}
-                className="text-red-500 hover:text-red-600 text-sm font-medium"
+                className="text-red-500 hover:text-red-600 text-lg font-bold underline"
               >
                 Xóa tất cả
               </button>
             </div>
 
             <div className="space-y-4">
-              {cart.cartItems.map((item: CartItem) => (
-                <div
-                  key={item.id}
-                  className="flex items-stretch gap-5 bg-white p-4 rounded-2xl shadow-sm hover:shadow-md transition-all border border-gray-100"
-                >
-                  {/* Ảnh sản phẩm */}
-                  <div className="flex-shrink-0">
-                    <img
-                      src={item.thumbnailUrl}
-                      alt={item.productName}
-                      className="w-36 h-full object-cover rounded-xl border border-gray-100"
-                    />
-                  </div>
+              {cart.cartItems.map((item: CartItem) => {
+                const key = normalizeColor(item.color);
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-stretch gap-5 bg-white p-10 transition-all border-t border-t-gray-300"
+                  >
+                    {/* Ảnh sản phẩm */}
+                    <div className="flex-shrink-0">
+                      <img
+                        src={item.thumbnailUrl}
+                        alt={item.productName}
+                        className="w-36 h-full object-cover rounded-xl border border-gray-100"
+                      />
+                    </div>
 
-                  {/* Thông tin chính */}
-                  <div className="flex-1 flex flex-col justify-between py-2">
-                    <div>
-                      <h3 className="font-semibold text-gray-800 text-lg">
-                        {item.productName}
-                      </h3>
+                    {/* Thông tin chính */}
+                    <div className="flex-1 flex flex-col justify-between py-2">
+                      <div>
+                        <h3 className="font-semibold text-gray-800 text-lg">
+                          {item.productName}
+                        </h3>
 
-                      {/* Thuộc tính */}
-                      <div className="flex flex-wrap items-center gap-x-5 text-sm text-gray-600 mt-1">
-                        <span>
-                          <span className="font-semibold text-gray-700">
-                            Size:
-                          </span>{" "}
-                          {item.size || "—"}
-                        </span>
-                        <span>
-                          <span className="font-semibold text-gray-700">
-                            Màu:
-                          </span>{" "}
-                          {item.color || "—"}
-                        </span>
-                        <span>
-                          <span className="font-semibold text-gray-700">
-                            Chất liệu:
-                          </span>{" "}
-                          {item.material || "—"}
-                        </span>
+                        <div className="flex flex-wrap items-center gap-x-6 text-sm text-gray-600 mt-1">
+                          {/* SIZE */}
+                          <div className="flex items-center gap-1">
+                            <span className="font-semibold text-gray-700">
+                              Size:
+                            </span>
+                            <span>{item.size || "—"}</span>
+                          </div>
+
+                          {/* COLOR */}
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-gray-700">
+                              Màu:
+                            </span>
+
+                            <div
+                              className="w-5 h-5 rounded-full ring-1 ring-black ring-offset-2"
+                              style={{
+                                backgroundColor: COLOR_MAP[key] || "#ccc",
+                                border:
+                                  key === "trang"
+                                    ? "1px solid #ddd"
+                                    : undefined,
+                              }}
+                            />
+                          </div>
+
+                          {/* MATERIAL */}
+                          <div className="flex items-center gap-1">
+                            <span className="font-semibold text-gray-700">
+                              Chất liệu:
+                            </span>
+                            <span>{item.material || "—"}</span>
+                          </div>
+                        </div>
+                        {/* Giá đơn vị */}
+                        <p className="text-sky-600 font-semibold mt-2 text-base">
+                          {item.price.toLocaleString()}₫
+                        </p>
                       </div>
 
-                      {/* Giá đơn vị */}
-                      <p className="text-sky-600 font-semibold mt-2 text-base">
-                        {item.price.toLocaleString()}₫
+                      {/* Số lượng */}
+                      <div className="flex items-center gap-3 mt-3">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <label className="font-medium">Số lượng:</label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={item.stock}
+                            value={item.quantity}
+                            onChange={(e) =>
+                              handleQuantityChange(item, Number(e.target.value))
+                            }
+                            className="w-16 border border-gray-300 rounded-md px-2 py-1 text-center focus:ring-1 focus:ring-sky-400 outline-none text-gray-700"
+                          />
+                        </div>
+                        <span className="text-xs text-gray-400">
+                          (Còn {item.stock})
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Giá tổng + nút xóa */}
+                    <div className="flex flex-col items-end justify-between py-2">
+                      <p className="font-bold text-gray-800 text-lg">
+                        {(item.price * item.quantity).toLocaleString()}₫
                       </p>
-                    </div>
-
-                    {/* Số lượng */}
-                    <div className="flex items-center gap-3 mt-3">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <label className="font-medium">Số lượng:</label>
-                        <input
-                          type="number"
-                          min={1}
-                          max={item.stock}
-                          value={item.quantity}
-                          onChange={(e) =>
-                            handleQuantityChange(item, Number(e.target.value))
-                          }
-                          className="w-16 border border-gray-300 rounded-md px-2 py-1 text-center focus:ring-1 focus:ring-sky-400 outline-none text-gray-700"
-                        />
-                      </div>
-                      <span className="text-xs text-gray-400">
-                        (Còn {item.stock})
-                      </span>
+                      <button
+                        onClick={() => handleRemove(item.id)}
+                        title="Xóa"
+                        className="flex items-center gap-1 text-red-500 hover:text-red-600 border rounded-full p-2"
+                      >
+                        <Trash2 size={15} />
+                      </button>
                     </div>
                   </div>
-
-                  {/* Giá tổng + nút xóa */}
-                  <div className="flex flex-col items-end justify-between py-2">
-                    <p className="font-bold text-gray-800 text-lg">
-                      {(item.price * item.quantity).toLocaleString()}₫
-                    </p>
-                    <button
-                      onClick={() => handleRemove(item.id)}
-                      className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600"
-                    >
-                      <Trash2 size={15} /> Xóa
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
           {/* Tóm tắt đơn hàng */}
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-300 p-6 h-fit sticky top-20">
+          <div className="bg-white rounded-2xl border border-gray-300 p-6 h-fit sticky top-20">
             <h2 className="text-xl font-semibold text-gray-800 mb-2">
               Tóm tắt đơn hàng
             </h2>

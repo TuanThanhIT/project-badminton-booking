@@ -21,18 +21,75 @@ const Order = sequelize.define(
         },
       },
     },
+    subtotal: {
+      type: DataTypes.DOUBLE,
+      allowNull: false,
+      validate: {
+        notNull: { msg: "Subtotal is required" },
+        isFloat: { msg: "Subtotal must be a number" },
+        min: { args: [0], msg: "Subtotal must be >= 0" },
+      },
+    },
+    shippingFee: {
+      type: DataTypes.DOUBLE,
+      allowNull: false,
+      defaultValue: 0,
+      validate: {
+        notNull: { msg: "Shipping fee is required" },
+        isFloat: { msg: "Shipping fee must be a number" },
+        min: { args: [0], msg: "Shipping fee must be >= 0" },
+      },
+    },
     totalAmount: {
       type: DataTypes.DOUBLE,
       allowNull: false,
       validate: {
         notNull: { msg: "Total amount is required" },
-        isFloat: {
-          msg: "Total amount must be a number",
+        isFloat: { msg: "Total amount must be a number" },
+        min: { args: [0], msg: "Total amount must be >= 0" },
+      },
+    },
+    shippingName: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+      validate: {
+        notNull: { msg: "Shipping name is required" },
+        notEmpty: { msg: "Shipping name cannot be empty" },
+        len: {
+          args: [2, 255],
+          msg: "Shipping name must be between 2 and 255 characters",
         },
-        min: {
-          args: [0.01],
-          msg: "Total amount must be greater than 0",
+      },
+    },
+    shippingPhone: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+      validate: {
+        notNull: { msg: "Phone number is required" },
+        is: {
+          args: /^[0-9]{9,11}$/,
+          msg: "Phone number must contain 9 to 11 digits",
         },
+      },
+    },
+    shippingAddress: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+      validate: {
+        notNull: { msg: "Address is required" },
+        notEmpty: { msg: "Address cannot be empty" },
+        len: {
+          args: [5, 255],
+          msg: "Address must be between 5 and 255 characters",
+        },
+      },
+    },
+    shippingDistance: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+      validate: {
+        isFloat: { msg: "Distance must be a number" },
+        min: { args: [0], msg: "Distance must be >= 0" },
       },
     },
     branchId: {
@@ -115,11 +172,26 @@ const Order = sequelize.define(
     },
   },
   {
+    indexes: [
+      { fields: ["userId"] },
+      { fields: ["branchId"] },
+      { fields: ["createdDate"] },
+    ],
     tableName: "Orders",
     timestamps: true,
     createdAt: "createdDate",
     updatedAt: "updatedDate",
   },
 );
+
+Order.beforeValidate((order) => {
+  if (order.subtotal != null && order.shippingFee != null) {
+    const expected = order.subtotal + order.shippingFee;
+
+    if (order.totalAmount !== expected) {
+      throw new Error("Invalid total amount");
+    }
+  }
+});
 
 export default Order;

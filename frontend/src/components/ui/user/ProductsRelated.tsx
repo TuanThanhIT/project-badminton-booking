@@ -1,5 +1,5 @@
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, EffectFade, FreeMode, Navigation } from "swiper/modules";
+import { Navigation } from "swiper/modules";
 import type { Product } from "../../../types/product";
 import ProductCard from "./ProductCard";
 import "swiper/css";
@@ -32,7 +32,7 @@ const ProductsRelated = ({
       breakpoints={{
         0: { slidesPerView: 2 },
         640: { slidesPerView: 3 },
-        1024: { slidesPerView: 5 },
+        1024: { slidesPerView: 4 },
       }}
     >
       {safeProductsRelated.map((product) => (

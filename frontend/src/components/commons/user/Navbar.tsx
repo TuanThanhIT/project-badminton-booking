@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { Calendar, Contact, History, Home, Info } from "lucide-react";
-import { useAppSelector } from "../../../redux/hook";
 import CategoryMenu from "../../ui/user/CategoryMenu";
+import { useAppSelector } from "../../../redux/hook";
 
 const Navbar = () => {
   const { token, user } = useAppSelector((state) => state.auth);
@@ -24,7 +24,7 @@ const Navbar = () => {
       <ul className="flex flex-wrap justify-center items-center gap-6 py-3">
         {/* Trang chủ */}
         <li>
-          {!token || !user ? (
+          {!token && !user ? (
             <NavLink to="/" className={linkClass}>
               {({ isActive }) => (
                 <>

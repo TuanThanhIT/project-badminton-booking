@@ -28,26 +28,20 @@ const CartPage = () => {
 
   const handleRemove = async (cartItemId: number) => {
     const data: DeleteCartItemRequest = { cartItemId };
-    dispatch(deleteCartItemLocal({ data }));
-    const res = dispatch(deleteCartItem({ data }));
-    if (deleteCartItem.fulfilled.match(res)) {
-      toast.success("Xóa sản phẩm khỏi giỏ hàng thành công!");
-    } else if (deleteCartItem.rejected.match(res)) {
-      if (!cart) return;
-      const prevCart: Cart = { ...cart };
-      dispatch(restoreCartLocal({ prevCart }));
-    }
+    dispatch(deleteCartItem({ data }))
+      .unwrap()
+      .then(() => {
+        dispatch(deleteCartItemLocal({ data }));
+        toast.success("Xóa sản phẩm khỏi giỏ hàng thành công!");
+      });
   };
 
   const handleDeleteAll = async () => {
-    const res = await dispatch(deleteAllCartItem());
-    if (deleteAllCartItem.fulfilled.match(res)) {
-      toast.success("Xóa tất cả sản phẩm khỏi giỏ hàng thành công");
-    } else if (deleteAllCartItem.rejected.match(res)) {
-      if (!cart) return;
-      const prevCart: Cart = { ...cart };
-      dispatch(restoreCartLocal({ prevCart }));
-    }
+    await dispatch(deleteAllCartItem())
+      .unwrap()
+      .then(() => {
+        toast.success("Xóa tất cả sản phẩm khỏi giỏ hàng thành công");
+      });
   };
 
   // const handleCheckout = async () => {
@@ -67,12 +61,13 @@ const CartPage = () => {
   // Xử lý update quantity
   const debouncedUpdateRef = useRef(
     debounce(async (data: UpdateCartItemRequest) => {
-      const result = await dispatch(updateCartItem({ data }));
-      if (updateCartItem.rejected.match(result)) {
-        if (!cart) return;
-        const prevCart: Cart = { ...cart };
-        dispatch(restoreCartLocal({ prevCart }));
-      }
+      await dispatch(updateCartItem({ data }))
+        .unwrap()
+        .catch(() => {
+          if (!cart) return;
+          const prevCart: Cart = { ...cart };
+          dispatch(restoreCartLocal({ prevCart }));
+        });
     }, 400),
   );
 

@@ -113,7 +113,7 @@ const LoginPage = () => {
               <label>Ghi nhớ đăng nhập</label>
             </div>
             <Link
-              to="/forgotpass"
+              to="/forgot-pass"
               className="text-blue-700 hover:text-red-500 underline"
             >
               Quên mật khẩu?

@@ -4,6 +4,7 @@ export interface FieldError {
 }
 
 export interface ApiErrorType {
+  statusCode: number;
   success: boolean;
   message: string;
   errors?: FieldError[];

@@ -16,7 +16,6 @@ import CheckoutPage from "../pages/user/CheckoutPage";
 import OrderPage from "../pages/user/OrderPage";
 import UserPublicLayout from "../components/layouts/UserPublicLayout";
 import UserPrivateLayout from "../components/layouts/UserPrivateLayout";
-import AuthGuard from "../components/guards/AuthUserGuard";
 import BookingCourtPage from "../pages/user/BookingCourtPage";
 import BookingPage from "../pages/user/BookingPage";
 
@@ -31,17 +30,11 @@ const UserRoute = () => {
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
         <Route path="verify-otp" element={<OTPPage />} />
-        <Route path="forgotpass" element={<ForgotPasswordPage />} />
+        <Route path="forgot-pass" element={<ForgotPasswordPage />} />
       </Route>
 
       {/* Private */}
-      <Route
-        element={
-          // <AuthGuard>
-          <UserPrivateLayout />
-          // </AuthGuard>
-        }
-      >
+      <Route element={<UserPrivateLayout />}>
         <Route path="home" element={<HomePage />} />
         <Route path="products" element={<ProductPage />} />
         <Route path="product/:id" element={<ProductDetailPage />} />

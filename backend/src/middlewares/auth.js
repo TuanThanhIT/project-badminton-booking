@@ -11,7 +11,7 @@ const auth = (req, res, next) => {
     if (!authHeader) {
       next(
         new UnauthorizedError(
-          "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.",
+          "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
         ),
       );
     }

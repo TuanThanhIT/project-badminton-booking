@@ -158,18 +158,19 @@ const ProductDetailPage: React.FC = () => {
     if (!selectedVariant) return;
     const variantId = selectedVariant.id;
     const data: AddCartItemRequest = { quantity, variantId };
-    const result = await dispatch(addCartItem({ data }));
-
-    if (addCartItem.fulfilled.match(result)) {
-      if (imgRef.current && cartRef.current) {
-        flyToCart(imgRef.current, cartRef.current);
-      }
-      toast.success("Sản phẩm được thêm vào giỏ hàng thành công");
-    } else if (addCartItem.rejected.match(result)) {
-      if (!cart) return;
-      const prevCart: Cart = { ...cart };
-      dispatch(restoreCartLocal({ prevCart }));
-    }
+    await dispatch(addCartItem({ data }))
+      .unwrap()
+      .then(() => {
+        if (imgRef.current && cartRef.current) {
+          flyToCart(imgRef.current, cartRef.current);
+        }
+        toast.success("Sản phẩm được thêm vào giỏ hàng thành công");
+      })
+      .catch(() => {
+        if (!cart) return;
+        const prevCart: Cart = { ...cart };
+        dispatch(restoreCartLocal({ prevCart }));
+      });
   };
 
   // const handleBuyNow = async () => {

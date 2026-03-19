@@ -1,5 +1,5 @@
 import "./App.css";
-import { BrowserRouter as Router } from "react-router-dom";
+import { BrowserRouter as Router, useNavigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import AllRoute from "./routes/AllRoute";
 import { useEffect } from "react";
@@ -10,12 +10,13 @@ import { getCategoriesGrouped } from "./redux/slices/user/cateSlice";
 const App = () => {
   const token = localStorage.getItem("access_token");
   const dispatch = useAppDispatch();
+
   useEffect(() => {
     if (token) {
       dispatch(getAccount());
-      dispatch(getCategoriesGrouped());
     }
-  }, []);
+    dispatch(getCategoriesGrouped());
+  }, [dispatch, token]);
 
   return (
     <Router>

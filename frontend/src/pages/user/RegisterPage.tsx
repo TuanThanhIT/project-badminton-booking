@@ -34,13 +34,14 @@ const RegisterPage = () => {
       password,
       email,
     };
-    const res = await dispatch(registerAccount({ data }));
-    if (registerAccount.fulfilled.match(res)) {
-      toast.success("Đăng kí tài khoản người dùng thành công");
-      setTimeout(() => {
-        navigate("/verify-otp", { state: { email } });
-      }, 1000);
-    }
+    await dispatch(registerAccount({ data }))
+      .unwrap()
+      .then(() => {
+        toast.success("Đăng kí tài khoản người dùng thành công");
+        setTimeout(() => {
+          navigate("/verify-otp", { state: { email } });
+        }, 1000);
+      });
   };
 
   return (

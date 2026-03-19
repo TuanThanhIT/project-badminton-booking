@@ -59,3 +59,18 @@ export type ResetPasswordRequest = {
 };
 
 export type ResetPasswordResponse = ApiResponse<null>;
+
+export interface AuthState {
+  isAuthenticated: boolean;
+  user: {
+    id: number;
+    email: string;
+    username: string;
+    role: string;
+  };
+}
+
+export interface AuthContextType {
+  auth: AuthState;
+  setAuth: React.Dispatch<React.SetStateAction<AuthState>>;
+}

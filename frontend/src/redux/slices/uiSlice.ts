@@ -4,7 +4,6 @@ import {
   isFulfilled,
   isRejectedWithValue,
 } from "@reduxjs/toolkit";
-import { toast } from "react-toastify";
 
 interface UiState {
   loadingCount: number;
@@ -28,14 +27,6 @@ const uiSlice = createSlice({
       })
       .addMatcher(isRejectedWithValue, (state, action: any) => {
         state.loadingCount = Math.max(0, state.loadingCount - 1);
-
-        const message =
-          action.payload?.message ||
-          action.error?.message ||
-          "Something went wrong";
-
-        toast.error(message);
-        console.log("error>>", action.payload);
       });
   },
 });

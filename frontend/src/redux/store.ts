@@ -7,6 +7,7 @@ import cateReducer from "./slices/user/cateSlice";
 import productReducer from "./slices/user/productSlice";
 import branchReducer from "./slices/user/branchSlice";
 import cartReducer from "./slices/user/cartSlice";
+import { authMiddleware } from "./middlewares/authMiddleware";
 
 const persistConfig = {
   key: "root",
@@ -27,6 +28,8 @@ const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = configureStore({
   reducer: persistedReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(authMiddleware),
 });
 
 export const persistor = persistStore(store);

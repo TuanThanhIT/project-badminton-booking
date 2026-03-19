@@ -26,7 +26,6 @@ const Header = ({ cartRef }: HeaderProps) => {
 
   const handleLogout = () => {
     dispatch(logout());
-    localStorage.removeItem("persist:root");
     navigate("/login");
   };
 
@@ -108,7 +107,7 @@ const Header = ({ cartRef }: HeaderProps) => {
             <span>Giỏ hàng</span>
           </NavLink>
 
-          {!token || !user ? (
+          {!token && !user ? (
             <div className="flex items-center gap-3">
               <NavLink
                 to="/login"

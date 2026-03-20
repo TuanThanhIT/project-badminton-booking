@@ -21,11 +21,13 @@ import cartService from "../../../services/user/cartService";
 interface CartState {
   cartItem?: CartItem;
   cart?: Cart;
+  prevCartItem?: CartItem;
 }
 
 const initialState: CartState = {
   cartItem: undefined,
   cart: undefined,
+  prevCartItem: undefined,
 };
 
 export const getCart = createAsyncThunk<
@@ -107,6 +109,7 @@ const cartSlice = createSlice({
         (i) => i.id === action.payload.data.cartItemId,
       );
       if (idx >= 0) {
+        state.prevCartItem = { ...cart.cartItems[idx] };
         cart.cartItems[idx].quantity = action.payload.data.quantity;
         cart.cartItems[idx].subTotal =
           cart.cartItems[idx].price * action.payload.data.quantity;
@@ -122,6 +125,12 @@ const cartSlice = createSlice({
     ) {
       const cart = state.cart;
       if (!cart) return;
+      const item = cart.cartItems.find(
+        (it) => it.id === action.payload.data.cartItemId,
+      );
+      if (!state.prevCartItem) {
+        state.prevCartItem = item ? { ...item } : undefined;
+      }
       cart.cartItems = cart.cartItems.filter(
         (item) => item.id !== action.payload.data.cartItemId,
       );
@@ -129,9 +138,6 @@ const cartSlice = createSlice({
         (sum, item) => sum + item.subTotal,
         0,
       );
-    },
-    restoreCartLocal(state, action: PayloadAction<{ prevCart: Cart }>) {
-      state.cart = action.payload.prevCart;
     },
   },
   extraReducers: (builder) => {
@@ -162,9 +168,39 @@ const cartSlice = createSlice({
           (sum, item) => sum + item.subTotal,
           0,
         );
+      })
+
+      .addCase(updateCartItem.fulfilled, (state) => {
+        state.prevCartItem = undefined;
+      })
+      .addCase(updateCartItem.rejected, (state) => {
+        if (!state.prevCartItem || !state.cart) return;
+        const idx = state.cart.cartItems.findIndex(
+          (item) => item.id === state.prevCartItem?.id,
+        );
+        if (idx >= 0) {
+          state.cart.cartItems[idx] = state.prevCartItem;
+          state.cart.totalAmount = state.cart.cartItems.reduce(
+            (sum, item) => sum + item.subTotal,
+            0,
+          );
+        }
+        state.prevCartItem = undefined;
+      })
+
+      .addCase(deleteCartItem.fulfilled, (state) => {
+        state.prevCartItem = undefined;
+      })
+      .addCase(deleteCartItem.rejected, (state) => {
+        if (!state.prevCartItem || !state.cart) return;
+        state.cart.cartItems.push(state.prevCartItem);
+        state.cart.totalAmount = state.cart.cartItems.reduce(
+          (sum, item) => sum + item.subTotal,
+          0,
+        );
+        state.prevCartItem = undefined;
       });
   },
 });
-export const { updateQuantityLocal, deleteCartItemLocal, restoreCartLocal } =
-  cartSlice.actions;
+export const { updateQuantityLocal, deleteCartItemLocal } = cartSlice.actions;
 export default cartSlice.reducer;

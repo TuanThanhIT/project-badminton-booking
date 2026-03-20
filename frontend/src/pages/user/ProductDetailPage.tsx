@@ -19,12 +19,8 @@ import {
 import Breadcrumb from "../../components/ui/user/Breadcrumb";
 import type { Branch } from "../../types/branch";
 import ProductsRelated from "../../components/ui/user/ProductsRelated";
-import type { AddCartItemRequest, Cart } from "../../types/cart";
-import {
-  addCartItem,
-  getCart,
-  restoreCartLocal,
-} from "../../redux/slices/user/cartSlice";
+import type { AddCartItemRequest } from "../../types/cart";
+import { addCartItem, getCart } from "../../redux/slices/user/cartSlice";
 import { toast } from "react-toastify";
 import { normalizeColor } from "../../utils/color";
 import { COLOR_MAP } from "../../constants/color";
@@ -39,7 +35,6 @@ const ProductDetailPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const productDetail = useAppSelector((state) => state.product.productDetail);
   const products = useAppSelector((state) => state.product.products?.products);
-  const cart = useAppSelector((state) => state.cart.cart);
 
   // Xử lý giao diện thêm vào giỏ hàng
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -165,11 +160,6 @@ const ProductDetailPage: React.FC = () => {
           flyToCart(imgRef.current, cartRef.current);
         }
         toast.success("Sản phẩm được thêm vào giỏ hàng thành công");
-      })
-      .catch(() => {
-        if (!cart) return;
-        const prevCart: Cart = { ...cart };
-        dispatch(restoreCartLocal({ prevCart }));
       });
   };
 

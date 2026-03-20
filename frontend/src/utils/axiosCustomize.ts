@@ -1,7 +1,5 @@
 // api/axiosInstance.ts
 import axios, { AxiosError, type AxiosResponse } from "axios";
-import { success } from "zod";
-import { da } from "zod/v4/locales";
 import type { ApiErrorType } from "../types/error";
 
 const instance = axios.create({

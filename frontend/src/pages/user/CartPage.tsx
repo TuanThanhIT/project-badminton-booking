@@ -8,12 +8,11 @@ import {
   deleteAllCartItem,
   deleteCartItem,
   deleteCartItemLocal,
-  restoreCartLocal,
+  getCart,
   updateCartItem,
   updateQuantityLocal,
 } from "../../redux/slices/user/cartSlice";
 import type {
-  Cart,
   CartItem,
   DeleteCartItemRequest,
   UpdateCartItemRequest,
@@ -26,12 +25,16 @@ const CartPage = () => {
   const cart = useAppSelector((state) => state.cart.cart);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    dispatch(getCart());
+  }, [dispatch]);
+
   const handleRemove = async (cartItemId: number) => {
     const data: DeleteCartItemRequest = { cartItemId };
+    dispatch(deleteCartItemLocal({ data }));
     dispatch(deleteCartItem({ data }))
       .unwrap()
       .then(() => {
-        dispatch(deleteCartItemLocal({ data }));
         toast.success("Xóa sản phẩm khỏi giỏ hàng thành công!");
       });
   };
@@ -61,13 +64,7 @@ const CartPage = () => {
   // Xử lý update quantity
   const debouncedUpdateRef = useRef(
     debounce(async (data: UpdateCartItemRequest) => {
-      await dispatch(updateCartItem({ data }))
-        .unwrap()
-        .catch(() => {
-          if (!cart) return;
-          const prevCart: Cart = { ...cart };
-          dispatch(restoreCartLocal({ prevCart }));
-        });
+      await dispatch(updateCartItem({ data }));
     }, 400),
   );
 

@@ -73,33 +73,6 @@ const Post = sequelize.define(
         },
       },
     },
-    courtFee: {
-      type: DataTypes.DOUBLE,
-      allowNull: true,
-      validate: {
-        isFloat: {
-          msg: "Court fee must be a number",
-        },
-        min: {
-          args: [0],
-          msg: "Court fee must be greater than or equal to 0",
-        },
-      },
-    },
-    referralFee: {
-      type: DataTypes.DOUBLE,
-      allowNull: false,
-      validate: {
-        notNull: { msg: "Referral fee is required" },
-        isFloat: {
-          msg: "Referral fee must be a number",
-        },
-        min: {
-          args: [0],
-          msg: "Referral must be greater than or equal to 0",
-        },
-      },
-    },
     isActive: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,

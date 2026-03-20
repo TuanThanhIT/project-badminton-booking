@@ -12,12 +12,8 @@ const Branch = sequelize.define(
         this.setDataValue("branchName", value?.trim());
       },
       validate: {
-        notNull: {
-          msg: "Branch name is required",
-        },
-        notEmpty: {
-          msg: "Branch name cannot be empty",
-        },
+        notNull: { msg: "Branch name is required" },
+        notEmpty: { msg: "Branch name cannot be empty" },
         len: {
           args: [1, 255],
           msg: "Branch name must not exceed 255 characters",
@@ -27,14 +23,38 @@ const Branch = sequelize.define(
     address: {
       type: DataTypes.STRING(255),
       allowNull: false,
-      defaultValue: "231 Lê Văn Chí, Phường Linh Trung, TP. Thủ Đức, TP.HCM",
+      defaultValue: "231 Lê Văn Chí",
       validate: {
-        notNull: {
-          msg: "Address is required",
-        },
+        notNull: { msg: "Address is required" },
         len: {
-          args: [0, 255],
+          args: [1, 255],
           msg: "Address must not exceed 255 characters",
+        },
+      },
+    },
+    district: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+      defaultValue: "Thủ Đức",
+      validate: {
+        notNull: { msg: "District is required" },
+        notEmpty: { msg: "District cannot be empty" },
+        len: {
+          args: [1, 100],
+          msg: "District must not exceed 100 characters",
+        },
+      },
+    },
+    city: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+      defaultValue: "TP.HCM",
+      validate: {
+        notNull: { msg: "City is required" },
+        notEmpty: { msg: "City cannot be empty" },
+        len: {
+          args: [1, 100],
+          msg: "City must not exceed 100 characters",
         },
       },
     },
@@ -43,9 +63,7 @@ const Branch = sequelize.define(
       allowNull: false,
       defaultValue: "0912345678",
       validate: {
-        notNull: {
-          msg: "Phone number is required",
-        },
+        notNull: { msg: "Phone number is required" },
         is: {
           args: /^[0-9]{9,11}$/,
           msg: "Phone number must contain 9 to 11 digits",
@@ -56,12 +74,8 @@ const Branch = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: false,
       validate: {
-        notNull: {
-          msg: "Description branch is required",
-        },
-        notEmpty: {
-          msg: "Description branch cannot be empty",
-        },
+        notNull: { msg: "Description branch is required" },
+        notEmpty: { msg: "Description branch cannot be empty" },
         len: {
           args: [1, 65535],
           msg: "Description must not exceed 65535 characters",
@@ -72,12 +86,8 @@ const Branch = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        notNull: {
-          msg: "Thumbnail URL is required",
-        },
-        isUrl: {
-          msg: "Thumbnail URL must be a valid URL",
-        },
+        notNull: { msg: "Thumbnail URL is required" },
+        isUrl: { msg: "Thumbnail URL must be a valid URL" },
       },
     },
     isActive: {
@@ -86,9 +96,7 @@ const Branch = sequelize.define(
       defaultValue: true,
       validate: {
         notNull: { msg: "isActive is required" },
-        isBoolean: {
-          msg: "isActive must be a boolean",
-        },
+        isBoolean: { msg: "isActive must be a boolean" },
       },
     },
   },

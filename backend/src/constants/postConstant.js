@@ -3,6 +3,7 @@ export const POST_TYPE = Object.freeze({
   TOURNAMENT: "Tournament",
   GROUP: "Group",
   FIND_COACH: "Find_coach",
+  CLASS: "Class",
 });
 
 export const COMMENT_TYPE = Object.freeze({

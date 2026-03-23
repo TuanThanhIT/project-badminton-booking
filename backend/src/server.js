@@ -7,6 +7,7 @@ import { initSocket } from "./socket/index.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import "./models/index.js";
 import initAuthRoute from "./routes/user/authRoute.js";
+import initPostRoute from "./routes/user/postRoute.js";
 
 dotenv.config();
 
@@ -21,6 +22,9 @@ app.use(cors());
 // User
 initAuthRoute(app);
 
+// Post
+initPostRoute(app);
+
 // create http server
 const httpServer = createServer(app);
 
@@ -29,7 +33,7 @@ initSocket(httpServer);
 
 app.use(errorHandler);
 
-sequelize.sync({ force: true }).then(() => {
+sequelize.sync().then(() => {
   console.log("Database synced");
   httpServer.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

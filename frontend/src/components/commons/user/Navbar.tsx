@@ -68,13 +68,13 @@ const Navbar = () => {
           </NavLink>
         </li>
 
-        {/* Lịch sử */}
+        {/* Bài đăng (feed) */}
         <li>
-          <NavLink to="/history" className={linkClass}>
+          <NavLink to="/posts" className={linkClass}>
             {({ isActive }) => (
               <>
                 <History className={iconClass({ isActive })} />
-                LỊCH SỬ
+                THẢO LUẬN
               </>
             )}
           </NavLink>

@@ -16,9 +16,10 @@ import CheckoutPage from "../pages/user/CheckoutPage";
 import OrderPage from "../pages/user/OrderPage";
 import UserPublicLayout from "../components/layouts/UserPublicLayout";
 import UserPrivateLayout from "../components/layouts/UserPrivateLayout";
-import AuthGuard from "../components/guards/AuthUserGuard";
 import BookingCourtPage from "../pages/user/BookingCourtPage";
 import BookingPage from "../pages/user/BookingPage";
+import CreatePostPage from "../pages/user/CreatePostPage";
+import PostListPage from "../pages/user/postList/PostListPage";
 
 const UserRoute = () => {
   return (
@@ -35,13 +36,7 @@ const UserRoute = () => {
       </Route>
 
       {/* Private */}
-      <Route
-        element={
-          <AuthGuard>
-            <UserPrivateLayout />
-          </AuthGuard>
-        }
-      >
+      <Route element={<UserPrivateLayout />}>
         <Route path="home" element={<HomePage />} />
         <Route path="products" element={<ProductPage />} />
         <Route path="product/:id" element={<ProductDetailPage />} />
@@ -52,6 +47,8 @@ const UserRoute = () => {
         <Route path="checkout" element={<CheckoutPage />} />
         <Route path="orders" element={<OrderPage />} />
         <Route path="bookings" element={<BookingPage />} />
+        <Route path="create-post" element={<CreatePostPage />} />
+        <Route path="posts" element={<PostListPage />} />
       </Route>
     </Routes>
   );

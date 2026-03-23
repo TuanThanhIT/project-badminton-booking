@@ -34,7 +34,7 @@ const RegisterPage = () => {
       password,
       email,
     };
-    const res = dispatch(registerAccount({ data }));
+    const res = await dispatch(registerAccount({ data }));
     if (registerAccount.fulfilled.match(res)) {
       toast.success("Đăng kí tài khoản người dùng thành công");
       setTimeout(() => {

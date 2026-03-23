@@ -7,6 +7,9 @@ import BadRequestError from "../../errors/BadRequestError.js";
 dotenv.config();
 
 export const handleLogin = async (username, password) => {
+  if (!username || !password) {
+    throw new BadRequestError("Vui lòng nhập username và password.");
+  }
   return sequelize.transaction(async (t) => {
     const user = await User.findOne({
       where: { username },

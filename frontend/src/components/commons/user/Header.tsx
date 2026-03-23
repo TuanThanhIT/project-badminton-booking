@@ -58,7 +58,7 @@ const Header = () => {
         {/* Actions */}
         <div className="flex items-center">
           <NavLink
-            to="/bookings"
+            to="/create-post"
             className="flex items-center gap-2 px-4 py-2 rounded-full text-gray-700 hover:bg-gray-100 transition text-base font-medium"
           >
             <div className="relative">
@@ -67,7 +67,7 @@ const Header = () => {
                 {countBookingItems}
               </span> */}
             </div>
-            <span>Lịch sân</span>
+            <span>Đăng bài</span>
           </NavLink>
 
           <NavLink

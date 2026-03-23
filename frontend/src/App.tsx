@@ -1,22 +1,38 @@
 import "./App.css";
-import { BrowserRouter as Router } from "react-router-dom";
+import { BrowserRouter as Router, useNavigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import AllRoute from "./routes/AllRoute";
+import { useEffect } from "react";
+import { useAppDispatch } from "./redux/hook";
+import { getAccount } from "./redux/slices/user/authSlice";
+import { getCategoriesGrouped } from "./redux/slices/user/cateSlice";
 
-const App = () => (
-  <Router>
-    <AllRoute />
+const App = () => {
+  const token = localStorage.getItem("access_token");
+  const dispatch = useAppDispatch();
 
-    <ToastContainer
-      position="top-right"
-      autoClose={3000}
-      hideProgressBar={false}
-      closeOnClick
-      draggable
-      pauseOnHover
-      theme="colored"
-    />
-  </Router>
-);
+  useEffect(() => {
+    if (token) {
+      dispatch(getAccount());
+    }
+    dispatch(getCategoriesGrouped());
+  }, [dispatch, token]);
+
+  return (
+    <Router>
+      <AllRoute />
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        closeOnClick
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
+    </Router>
+  );
+};
 
 export default App;

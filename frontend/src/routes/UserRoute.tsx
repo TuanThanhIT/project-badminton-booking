@@ -32,7 +32,7 @@ const UserRoute = () => {
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
         <Route path="verify-otp" element={<OTPPage />} />
-        <Route path="forgotpass" element={<ForgotPasswordPage />} />
+        <Route path="forgot-pass" element={<ForgotPasswordPage />} />
       </Route>
 
       {/* Private */}

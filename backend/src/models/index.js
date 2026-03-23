@@ -116,6 +116,15 @@ BranchImage.belongsTo(Branch, {
   foreignKey: "branchId",
   as: "branch",
 });
+
+Branch.hasMany(ProductVariant, {
+  foreignKey: "branchId",
+  as: "variants",
+});
+ProductVariant.belongsTo(Branch, {
+  foreignKey: "branchId",
+  as: "branch",
+});
 //////////////////////////////////////////////////////
 /////////////// BRANCH MANAGER ///////////////////////
 //////////////////////////////////////////////////////

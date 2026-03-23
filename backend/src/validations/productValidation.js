@@ -1,12 +1,12 @@
 import Joi from "joi";
 import { idParams, priceField, stockField } from "./common/numberField.js";
 import {
+  branchIdField,
   brandField,
   colorField,
   colorsField,
   descriptionField,
   discountField,
-  groupNameField,
   materialField,
   materialsField,
   pricesField,
@@ -23,26 +23,16 @@ import { thumbnailUrlField } from "./common/urlField.js";
 export const getProductsByFilterSchema = {
   query: Joi.object({
     cateId: idParams("cateId"),
-    prices: pricesField,
+    branchId: branchIdField,
+    pricesRange: pricesField,
     sizes: sizesField,
     colors: colorsField,
     materials: materialsField,
-    excludeProductId: idParams("excludeProductId"),
-    sort: sortField,
-    page: pageField,
-    limitField: limitField,
-    keyword: keywordField,
-  }),
-};
-
-export const getProductsByGroupNameAndFilterSchema = {
-  query: Joi.object({
-    groupName: groupNameField,
-    prices: pricesField,
-    sizes: sizesField,
-    colors: colorsField,
-    materials: materialsField,
-    excludeProductId: idParams("excludeProductId"),
+    productId: Joi.number().integer().positive().optional().messages({
+      "number.base": "Product ID must be a number",
+      "number.integer": "Product ID must be an integer",
+      "number.positive": "Product ID must be a positive number",
+    }),
     sort: sortField,
     page: pageField,
     limit: limitField,

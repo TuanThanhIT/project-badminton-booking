@@ -9,6 +9,10 @@ var _index = require("./socket/index.js");
 var _errorHandler = _interopRequireDefault(require("./middlewares/errorHandler.js"));
 require("./models/index.js");
 var _authRoute = _interopRequireDefault(require("./routes/user/authRoute.js"));
+var _cateRoute = _interopRequireDefault(require("./routes/user/cateRoute.js"));
+var _productRoute = _interopRequireDefault(require("./routes/user/productRoute.js"));
+var _branchRoute = _interopRequireDefault(require("./routes/user/branchRoute.js"));
+var _cartRoute = _interopRequireDefault(require("./routes/user/cartRoute.js"));
 var _postRoute = _interopRequireDefault(require("./routes/user/postRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
@@ -22,6 +26,10 @@ app.use((0, _cors["default"])());
 
 // User
 (0, _authRoute["default"])(app);
+(0, _cateRoute["default"])(app);
+(0, _productRoute["default"])(app);
+(0, _branchRoute["default"])(app);
+(0, _cartRoute["default"])(app);
 
 // Post
 (0, _postRoute["default"])(app);

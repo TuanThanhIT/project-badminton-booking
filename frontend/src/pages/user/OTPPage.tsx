@@ -92,7 +92,7 @@ const OTPPage: React.FC = () => {
         toast.success("Xác thực tài khoản đăng kí thành công");
         setTimeout(() => {
           navigate("/login");
-        }, 3000);
+        }, 1000);
       }
     } else {
       const data: ResetPasswordRequest = {
@@ -105,7 +105,7 @@ const OTPPage: React.FC = () => {
         toast.success("Thay đổi mật khẩu thành công");
         setTimeout(() => {
           navigate("/login");
-        }, 3000);
+        }, 1000);
       }
     }
     setCountdown(300); // reset 5 phút

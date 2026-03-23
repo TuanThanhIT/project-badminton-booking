@@ -7,6 +7,10 @@ import { initSocket } from "./socket/index.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import "./models/index.js";
 import initAuthRoute from "./routes/user/authRoute.js";
+import initCateRoute from "./routes/user/cateRoute.js";
+import initProductRoute from "./routes/user/productRoute.js";
+import initBranchRoute from "./routes/user/branchRoute.js";
+import initCartRoute from "./routes/user/cartRoute.js";
 import initPostRoute from "./routes/user/postRoute.js";
 
 dotenv.config();
@@ -21,6 +25,10 @@ app.use(cors());
 
 // User
 initAuthRoute(app);
+initCateRoute(app);
+initProductRoute(app);
+initBranchRoute(app);
+initCartRoute(app);
 
 // Post
 initPostRoute(app);

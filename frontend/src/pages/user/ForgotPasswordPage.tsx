@@ -43,11 +43,20 @@ const ForgotPasswordPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-sky-50 to-white">
-      <div className="w-full max-w-md bg-white rounded-2xl p-8 border border-gray-200">
-        <h2 className="text-2xl font-bold mb-6 text-center">Quên mật khẩu</h2>
+    <div className="p-20 w-3/4 mx-auto">
+      <div className="grid grid-cols-2 rounded-2xl gap-5 border border-gray-200">
+        <div className="h-full">
+          <img
+            src="/img/forgetpass.webp"
+            alt="Đăng nhập"
+            className="w-full h-full object-cover rounded-l-2xl"
+          />
+        </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-10">
+          <h2 className="text-2xl font-bold mb-6 text-center">
+            Đặt lại mật khẩu!
+          </h2>
           {/* Email */}
           <div>
             <label className="block text-gray-700 font-medium mb-1">
@@ -90,14 +99,14 @@ const ForgotPasswordPage: React.FC = () => {
             type="submit"
             className="w-full"
           ></LoadingButton>
-        </form>
 
-        <p className="text-center text-sm text-gray-500 mt-5">
-          Nhớ mật khẩu?{" "}
-          <a href="/login" className="text-sky-600 hover:underline">
-            Đăng nhập ngay
-          </a>
-        </p>
+          <p className="text-center text-gray-500 mt-5">
+            Nhớ mật khẩu?{" "}
+            <a href="/login" className="text-sky-600 hover:underline">
+              Đăng nhập ngay
+            </a>
+          </p>
+        </form>
       </div>
     </div>
   );

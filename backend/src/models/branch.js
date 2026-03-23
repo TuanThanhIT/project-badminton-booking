@@ -34,8 +34,6 @@ const Branch = sequelize.define(
         },
       },
     },
-
-    // 👇 quận / huyện
     district: {
       type: DataTypes.STRING(100),
       allowNull: false,
@@ -49,8 +47,6 @@ const Branch = sequelize.define(
         },
       },
     },
-
-    // 👇 thành phố
     city: {
       type: DataTypes.STRING(100),
       allowNull: false,
@@ -64,7 +60,6 @@ const Branch = sequelize.define(
         },
       },
     },
-
     phoneNumber: {
       type: DataTypes.STRING(255),
       allowNull: false,

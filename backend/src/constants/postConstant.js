@@ -1,16 +1,16 @@
 export const POST_TYPE = Object.freeze({
-  FIND_PLAYER: "Find_player",
-  TOURNAMENT: "Tournament",
-  GROUP: "Group",
-  FIND_COACH: "Find_coach",
+  FIND_PLAYER: "FIND_PLAYER",
+  TOURNAMENT: "TOURNAMENT",
+  GROUP: "GROUP",
+  FIND_COACH: "FIND_COACH",
 });
 
 export const COMMENT_TYPE = Object.freeze({
-  COMMENT: "Comment",
-  REPLY: "Reply",
+  COMMENT: "COMMENT",
+  REPLY: "REPLY",
 });
 
 export const SHARE_TYPE = Object.freeze({
-  SHARE: "Share",
-  REPOST: "Re-post",
+  SHARE: "SHARE",
+  REPOST: "RE-POST",
 });

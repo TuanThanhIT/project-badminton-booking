@@ -172,15 +172,15 @@ const Order = sequelize.define(
     },
   },
   {
+    tableName: "Orders",
+    timestamps: true,
+    createdAt: "createdDate",
+    updatedAt: "updatedDate",
     indexes: [
       { fields: ["userId"] },
       { fields: ["branchId"] },
       { fields: ["createdDate"] },
     ],
-    tableName: "Orders",
-    timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
   },
 );
 

@@ -56,6 +56,7 @@ import WorkShiftEmployee from "./workShiftEmployee.js";
 import CashRegister from "./cashRegister.js";
 
 import CoachProfile from "./coachProfile.js";
+import WithdrawRequest from "./withDrawRequest.js";
 
 //////////////////////////////////////////////////////
 //////////////// USER SYSTEM /////////////////////////
@@ -79,11 +80,38 @@ Wallet.belongsTo(User, { foreignKey: "userId", as: "user" });
 
 Wallet.hasMany(WalletTransaction, {
   foreignKey: "walletId",
-  as: "transactions",
+  as: "walletTransactions", // ✅ đổi
 });
 WalletTransaction.belongsTo(Wallet, {
   foreignKey: "walletId",
   as: "wallet",
+});
+
+Wallet.hasMany(WithdrawRequest, {
+  foreignKey: "walletId",
+  as: "withdrawRequests",
+});
+WithdrawRequest.belongsTo(Wallet, {
+  foreignKey: "walletId",
+  as: "wallet",
+});
+
+Payment.hasMany(WalletTransaction, {
+  foreignKey: "paymentId",
+  as: "paymentTransactions",
+});
+WalletTransaction.belongsTo(Payment, {
+  foreignKey: "paymentId",
+  as: "payment",
+});
+
+WithdrawRequest.hasMany(WalletTransaction, {
+  foreignKey: "withdrawRequestId",
+  as: "withdrawTransactions", // ✅ đổi
+});
+WalletTransaction.belongsTo(WithdrawRequest, {
+  foreignKey: "withdrawRequestId",
+  as: "withdrawRequest",
 });
 
 //////////////////////////////////////////////////////

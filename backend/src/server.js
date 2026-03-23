@@ -11,6 +11,7 @@ import initCateRoute from "./routes/user/cateRoute.js";
 import initProductRoute from "./routes/user/productRoute.js";
 import initBranchRoute from "./routes/user/branchRoute.js";
 import initCartRoute from "./routes/user/cartRoute.js";
+import initWalletRoute from "./routes/user/walletRoute.js";
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ initCateRoute(app);
 initProductRoute(app);
 initBranchRoute(app);
 initCartRoute(app);
+initWalletRoute(app);
 
 // create http server
 const httpServer = createServer(app);

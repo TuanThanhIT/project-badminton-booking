@@ -1,7 +1,7 @@
 export const ORDER_STATUS = Object.freeze({
-  PENDING: "Pending",
-  CONFIRMED: "Confirmed",
-  PAID: "Paid",
-  COMPLETED: "Completed",
-  CANCELLED: "Cancelled",
+  PENDING: "PENDING",
+  CONFIRMED: "CONFIRMED",
+  PAID: "PAID",
+  COMPLETED: "COMPLETED",
+  CANCELLED: "CANCELLED",
 });

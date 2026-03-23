@@ -1,18 +1,18 @@
 export const ROLE_NAME = Object.freeze({
-  ADMIN: "Admin",
-  MANAGER: "Manager",
-  EMPLOYEE: "Employee",
-  USER: "User",
-  COACH: "Coach",
+  ADMIN: "ADMIN",
+  MANAGER: "MANAGER",
+  EMPLOYEE: "EMPLOYEE",
+  USER: "USER",
+  COACH: "COACH",
 });
 
 export const PLAYER_LEVEL = Object.freeze({
-  BEGINNER: "Beginner", // Người chơi mới
-  CASUAL: "Casual", // Chơi giải trí
-  BASIC: "Basic", // Biết luật và kĩ thuật cơ bản
-  INTERMEDIATE: "Intermediate", //Trình trung bình
-  ADVANCED: "Advanced", //Trình khá
-  COMPETITIVE: "Competitive", // Trình thi đấu phong trào
-  SEMIPRO: "Semi-pro", // Trình bán chuyên
-  PRO: "Pro", //Trình chuyên nghiệp
+  BEGINNER: "BEGINNER", // Người chơi mới
+  CASUAL: "CASUAL", // Chơi giải trí
+  BASIC: "BASIC", // Biết luật và kĩ thuật cơ bản
+  INTERMEDIATE: "INTERMEDIATE", //Trình trung bình
+  ADVANCED: "ADVANCED", //Trình khá
+  COMPETITIVE: "COMPETITIVE", // Trình thi đấu phong trào
+  SEMIPRO: "SEMI_PRO", // Trình bán chuyên
+  PRO: "PRO", //Trình chuyên nghiệp
 });

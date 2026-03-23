@@ -1,7 +1,7 @@
 export const PERIOD_TYPE = Object.freeze({
-  DAYTIME: "Daytime",
-  EVENING: "Evening",
-  WEEKEND: "Weekend",
+  DAYTIME: "DAYTIME",
+  EVENING: "EVENING",
+  WEEKEND: "WEEKEND",
 });
 
 export const DAY_OF_WEEK = Object.freeze({
@@ -15,7 +15,7 @@ export const DAY_OF_WEEK = Object.freeze({
 });
 
 export const COURT_STATUS = Object.freeze({
-  ACTIVE: "Active",
-  MAINTENANCE: "Maintenance",
-  CLOSED: "Closed",
+  ACTIVE: "ACTIVE",
+  MAINTENANCE: "MAINTENANCE",
+  CLOSED: "CLOSED",
 });

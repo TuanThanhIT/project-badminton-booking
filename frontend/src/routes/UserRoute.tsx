@@ -18,6 +18,7 @@ import UserPublicLayout from "../components/layouts/UserPublicLayout";
 import UserPrivateLayout from "../components/layouts/UserPrivateLayout";
 import BookingCourtPage from "../pages/user/BookingCourtPage";
 import BookingPage from "../pages/user/BookingPage";
+import WalletDepositSuccess from "../pages/user/WalletDepositSuccess";
 
 const UserRoute = () => {
   return (
@@ -45,6 +46,10 @@ const UserRoute = () => {
         <Route path="checkout" element={<CheckoutPage />} />
         <Route path="orders" element={<OrderPage />} />
         <Route path="bookings" element={<BookingPage />} />
+        <Route
+          path="wallet/deposit/success"
+          element={<WalletDepositSuccess />}
+        ></Route>
       </Route>
     </Routes>
   );

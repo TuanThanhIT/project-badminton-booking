@@ -1,14 +1,14 @@
 // object.freeze có tác dụng đóng băng object ko thể sửa được
 export const BOOKING_STATUS = Object.freeze({
-  PENDING: "Pending",
-  CONFIRMED: "Confirmed",
-  PAID: "Paid",
-  COMPLETED: "Completed",
-  CANCELLED: "Cancelled",
+  PENDING: "PENDING",
+  CONFIRMED: "CONFIRMED",
+  PAID: "PAID",
+  COMPLETED: "COMPLETED",
+  CANCELLED: "CANCELLED",
 });
 
 export const CANCELLED_BY = Object.freeze({
-  USER: "User",
-  EMPLOYEE: "Employee",
-  SYSTEM: "System",
+  USER: "USER",
+  EMPLOYEE: "EMPLOYEE",
+  SYSTEM: "SYSTEM",
 });

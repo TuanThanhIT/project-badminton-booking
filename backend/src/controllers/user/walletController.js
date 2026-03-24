@@ -13,8 +13,7 @@ const walletDepositController = asyncHandler(async (req, res) => {
 });
 
 const walletCallbackController = asyncHandler(async (req, res) => {
-  const { vnp_TxnRef, vnp_ResponseCode, vnp_TransactionNo } = req.query;
-  const data = { vnp_TxnRef, vnp_ResponseCode, vnp_TransactionNo };
+  const data = { ...req.body };
   await walletService.walletCallbackService(data);
   return res
     .status(200)

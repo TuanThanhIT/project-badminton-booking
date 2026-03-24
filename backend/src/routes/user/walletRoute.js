@@ -3,6 +3,7 @@ import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
 import walletController from "../../controllers/user/walletController.js";
 import {
+  walletCallbackSchema,
   walletDepositSchema,
   walletWithdrawRequestSchema,
 } from "../../validations/walletValidation.js";
@@ -18,7 +19,13 @@ const initWalletRoute = (app) => {
     validate(walletDepositSchema),
     walletController.walletDepositController,
   );
-  walletRoute.get("/vnpay/callback", walletController.walletCallbackController);
+  walletRoute.patch(
+    "/vnpay/callback",
+    auth,
+    authorize("User"),
+    validate(walletCallbackSchema),
+    walletController.walletCallbackController,
+  );
   walletRoute.post(
     "/withdraw",
     auth,

@@ -58,10 +58,10 @@ const walletDepositService = async (data) => {
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     const paymentUrl = await vnpay.buildPaymentUrl({
-      vnp_Amount: amount * 100,
+      vnp_Amount: amount,
       vnp_IpAddr: ip,
       vnp_TxnRef: txnRef,
-      vnp_OrderInfo: `Nap tien vi user ${userId}`,
+      vnp_OrderInfo: `Nap tien vao vi thanh toan`,
       vnp_OrderType: "topup",
       vnp_ReturnUrl: process.env.VNP_RETURN_URL,
       vnp_Locale: VnpLocale.VN,
@@ -75,7 +75,7 @@ const walletDepositService = async (data) => {
 
 const walletCallbackService = async (data) => {
   return sequelize.transaction(async (t) => {
-    // 🔐 1. verify chữ ký
+    // 1. verify chữ ký
     const isValid = verifyVNPayURL(data);
     if (!isValid) {
       throw new BadRequestError("Chữ ký không hợp lệ");
@@ -84,7 +84,6 @@ const walletCallbackService = async (data) => {
     const { vnp_TxnRef, vnp_ResponseCode, vnp_TransactionNo, vnp_Amount } =
       data;
 
-    // ❌ thất bại thì bỏ
     if (vnp_ResponseCode !== "00") {
       throw new BadRequestError("Thanh toán thất bại");
     }
@@ -100,12 +99,12 @@ const walletCallbackService = async (data) => {
       throw new NotFoundError("Thanh toán không tồn tại");
     }
 
-    // 🔁 chống xử lý lại
+    // chống xử lý lại
     if (payment.paymentStatus === PAYMENT_STATUS.SUCCESS) {
       return; // idempotent
     }
 
-    // 🔍 check số tiền
+    // check số tiền
     if (Number(payment.paymentAmount) !== Number(vnp_Amount) / 100) {
       throw new BadRequestError("Số tiền không hợp lệ");
     }
@@ -116,7 +115,7 @@ const walletCallbackService = async (data) => {
     payment.paidAt = new Date();
     await payment.save({ transaction: t });
 
-    // 4. lấy wallet (⚠️ dùng walletId)
+    // 4. lấy wallet (dùng walletId)
     const wallet = await Wallet.findOne({
       where: { id: payment.targetPaymentId },
       transaction: t,

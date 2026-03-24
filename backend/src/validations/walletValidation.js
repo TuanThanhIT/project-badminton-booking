@@ -45,3 +45,61 @@ export const walletWithdrawRequestSchema = {
       }),
   }),
 };
+
+export const walletCallbackSchema = {
+  body: Joi.object({
+    vnp_Amount: Joi.string().pattern(/^\d+$/).required().messages({
+      "string.empty": "Amount is required",
+      "string.pattern.base": "Amount must be a number string",
+      "any.required": "Amount is required",
+    }),
+    vnp_BankCode: Joi.string().trim().required().messages({
+      "string.empty": "Bank code is required",
+      "any.required": "Bank code is required",
+    }),
+    vnp_BankTranNo: Joi.string().trim().required().messages({
+      "string.empty": "Bank transaction number is required",
+      "any.required": "Bank transaction number is required",
+    }),
+    vnp_CardType: Joi.string().trim().required().messages({
+      "string.empty": "Card type is required",
+      "any.required": "Card type is required",
+    }),
+    vnp_OrderInfo: Joi.string().trim().required().messages({
+      "string.empty": "Order info is required",
+      "any.required": "Order info is required",
+    }),
+    vnp_PayDate: Joi.string()
+      .pattern(/^\d{14}$/)
+      .required()
+      .messages({
+        "string.empty": "Pay date is required",
+        "string.pattern.base": "Pay date must be format yyyyMMddHHmmss",
+        "any.required": "Pay date is required",
+      }),
+    vnp_ResponseCode: Joi.string().length(2).required().messages({
+      "string.length": "Response code must be 2 characters",
+      "any.required": "Response code is required",
+    }),
+    vnp_TmnCode: Joi.string().required().messages({
+      "string.empty": "Terminal code is required",
+      "any.required": "Terminal code is required",
+    }),
+    vnp_TransactionNo: Joi.string().pattern(/^\d+$/).required().messages({
+      "string.pattern.base": "Transaction number must be digits",
+      "any.required": "Transaction number is required",
+    }),
+    vnp_TransactionStatus: Joi.string().length(2).required().messages({
+      "string.length": "Transaction status must be 2 characters",
+      "any.required": "Transaction status is required",
+    }),
+    vnp_TxnRef: Joi.string().required().messages({
+      "string.empty": "Transaction reference is required",
+      "any.required": "Transaction reference is required",
+    }),
+    vnp_SecureHash: Joi.string().required().messages({
+      "string.empty": "Secure hash is required",
+      "any.required": "Secure hash is required",
+    }),
+  }),
+};

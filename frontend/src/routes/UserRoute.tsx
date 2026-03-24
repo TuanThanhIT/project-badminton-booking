@@ -19,6 +19,7 @@ import UserPrivateLayout from "../components/layouts/UserPrivateLayout";
 import BookingCourtPage from "../pages/user/BookingCourtPage";
 import BookingPage from "../pages/user/BookingPage";
 import WalletDepositSuccess from "../pages/user/WalletDepositSuccess";
+import WalletPage from "../pages/user/WalletPage";
 
 const UserRoute = () => {
   return (
@@ -46,6 +47,7 @@ const UserRoute = () => {
         <Route path="checkout" element={<CheckoutPage />} />
         <Route path="orders" element={<OrderPage />} />
         <Route path="bookings" element={<BookingPage />} />
+        <Route path="wallet" element={<WalletPage />}></Route>
         <Route
           path="wallet/deposit/success"
           element={<WalletDepositSuccess />}

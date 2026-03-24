@@ -7,6 +7,7 @@ import cateReducer from "./slices/user/cateSlice";
 import productReducer from "./slices/user/productSlice";
 import branchReducer from "./slices/user/branchSlice";
 import cartReducer from "./slices/user/cartSlice";
+import walletReducer from "./slices/user/walletSlice";
 import { authMiddleware } from "./middlewares/authMiddleware";
 
 const persistConfig = {
@@ -22,6 +23,7 @@ const rootReducer = combineReducers({
   product: productReducer,
   branch: branchReducer,
   cart: cartReducer,
+  wallet: walletReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

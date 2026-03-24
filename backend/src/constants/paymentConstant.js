@@ -33,6 +33,7 @@ export const WALLET_STATUS = Object.freeze({
 
 export const WITHDRAW_REQUEST_STATUS = Object.freeze({
   PENDING: "PENDING",
+  EMAIL_CONFIRMED: "EMAIL_CONFIRMED",
   SUCCESS: "SUCCESS",
   FAILED: "FAILED",
 });

@@ -19,6 +19,8 @@ import UserPrivateLayout from "../components/layouts/UserPrivateLayout";
 import AuthGuard from "../components/guards/AuthUserGuard";
 import BookingCourtPage from "../pages/user/BookingCourtPage";
 import BookingPage from "../pages/user/BookingPage";
+import BranchPage from "../pages/user/BranchesPage";
+import BranchDetailPage from "../pages/user/BranchDetailPage";
 
 const UserRoute = () => {
   return (
@@ -37,9 +39,9 @@ const UserRoute = () => {
       {/* Private */}
       <Route
         element={
-          <AuthGuard>
-            <UserPrivateLayout />
-          </AuthGuard>
+          //<AuthGuard>
+          <UserPrivateLayout />
+          //</AuthGuard>
         }
       >
         <Route path="home" element={<HomePage />} />
@@ -52,6 +54,8 @@ const UserRoute = () => {
         <Route path="checkout" element={<CheckoutPage />} />
         <Route path="orders" element={<OrderPage />} />
         <Route path="bookings" element={<BookingPage />} />
+        <Route path="branches" element={<BranchPage />} />
+        <Route path="branches/:branchId" element={<BranchDetailPage />} />
       </Route>
     </Routes>
   );

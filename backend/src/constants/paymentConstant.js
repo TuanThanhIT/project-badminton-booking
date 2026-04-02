@@ -1,3 +1,5 @@
+import { CANCELLED } from "dns";
+
 export const PAYMENT_STATUS = Object.freeze({
   PENDING: "PENDING",
   SUCCESS: "SUCCESS",
@@ -33,7 +35,8 @@ export const WALLET_STATUS = Object.freeze({
 
 export const WITHDRAW_REQUEST_STATUS = Object.freeze({
   PENDING: "PENDING",
-  EMAIL_CONFIRMED: "EMAIL_CONFIRMED",
+  CONFIRMED: "CONFIRMED",
   SUCCESS: "SUCCESS",
   FAILED: "FAILED",
+  CANCELLED: "CANCELLED",
 });

@@ -14,13 +14,24 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import Swal from "sweetalert2";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import type { formWalletDeposit } from "../../schemas/FormWalletDepositSchema";
-import type { WalletDepositRequest } from "../../types/wallet";
-import { walletDeposit } from "../../redux/slices/user/walletSlice";
+import type {
+  WalletDepositRequest,
+  WalletWithdrawRequest,
+} from "../../types/wallet";
+import {
+  walletDeposit,
+  walletWithdrawRequest,
+} from "../../redux/slices/user/walletSlice";
 import DepositForm from "../../components/ui/user/DepositForm";
 import { showConfirmDialog } from "../../utils/swalHelper";
+import type { formWithdrawRequest } from "../../schemas/FormWithdrawRequestSchema";
+import WithdrawRequestForm from "../../components/ui/user/WithdrawRequestForm";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import { setOtpFlow } from "../../redux/slices/user/authSlice";
+import type { OtpFlowData } from "../../types/auth";
 
 type TabType = "deposit" | "withdraw" | "payment" | "refund";
 type Status = "success" | "pending";
@@ -38,9 +49,13 @@ interface Transaction {
 const WalletPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const paymentUrl = useAppSelector((state) => state.wallet.paymentUrl);
+  const user = useAppSelector((state) => state.auth.user);
+  const loading = useAppSelector((state) => state.ui.loadingCount > 0);
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>("deposit");
   const [search, setSearch] = useState("");
   const [openDeposit, setOpenDeposit] = useState<boolean>(false);
+  const [openWithdraw, setOpenWithdraw] = useState<boolean>(false);
 
   useEffect(() => {
     if (paymentUrl) {
@@ -60,6 +75,35 @@ const WalletPage: React.FC = () => {
       amount: dt.amount,
     };
     await dispatch(walletDeposit({ data }));
+  };
+
+  const handleWithdrawRequest = async (dt: formWithdrawRequest) => {
+    const confirmed = await showConfirmDialog(
+      "Xác nhận rút tiền",
+      "Bạn có chắc chắn muốn rút số tiền này khỏi ví ?",
+      "Chắc chắn",
+      "Hủy",
+    );
+    if (!confirmed) return;
+    const data: WalletWithdrawRequest = {
+      amount: dt.amount,
+      bankName: dt.bankName,
+      bankAccount: dt.bankAccount,
+      accountHolder: dt.accountHolder,
+    };
+    await dispatch(walletWithdrawRequest({ data }))
+      .unwrap()
+      .then((res) => {
+        const dta: OtpFlowData = {
+          withdrawRequestId: res.data.id,
+          email: user?.email,
+        };
+        toast.success("Gửi yêu cầu rút tiền thành công");
+        dispatch(setOtpFlow({ data: dta }));
+        setTimeout(() => {
+          navigate("/verify-otp");
+        }, 2000);
+      });
   };
 
   // MOCK DATA
@@ -216,7 +260,10 @@ const WalletPage: React.FC = () => {
             </button>
 
             {/* RÚT */}
-            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-medium shadow-sm transition">
+            <button
+              onClick={() => setOpenWithdraw(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-medium shadow-sm transition"
+            >
               <ArrowUpCircle className="w-5 h-5" />
               Rút tiền
             </button>
@@ -337,6 +384,14 @@ const WalletPage: React.FC = () => {
         <DepositForm
           setOpenDeposit={setOpenDeposit}
           onSubmit={handleWalletDeposit}
+        />
+      )}
+
+      {openWithdraw && (
+        <WithdrawRequestForm
+          setOpenWithdraw={setOpenWithdraw}
+          onSubmit={handleWithdrawRequest}
+          loading={loading}
         />
       )}
     </div>

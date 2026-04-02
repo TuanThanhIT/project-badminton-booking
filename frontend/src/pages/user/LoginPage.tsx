@@ -3,7 +3,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormLoginSchema, type formLogin } from "../../schemas/FormLoginSchema";
 import { toast } from "react-toastify";
-import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { login } from "../../redux/slices/user/authSlice";
 import type { LoginRequest } from "../../types/auth";
@@ -15,7 +14,6 @@ const LoginPage = () => {
   const dispatch = useAppDispatch();
   const loading = useAppSelector((state) => state.ui.loadingCount > 0);
 
-  const { user, token } = useAppSelector((state) => state.auth);
   const navigate = useNavigate();
 
   const location = useLocation();
@@ -38,20 +36,21 @@ const LoginPage = () => {
       username: dt.username,
       password: dt.password,
     };
-    dispatch(login({ data })).unwrap();
+    dispatch(login({ data }))
+      .unwrap()
+      .then((res) => {
+        const accessToken = res.data.accessToken;
+        const user = res.data.user;
+        if (accessToken && user) {
+          toast.success(
+            "Đăng nhập thành công. B-Hub rất vui được gặp lại bạn.",
+          );
+          setTimeout(() => {
+            navigate(from, { replace: true });
+          }, 2000);
+        }
+      });
   };
-
-  /*
-    Xử lý khi login thành công
-  */
-  useEffect(() => {
-    if (token && user) {
-      toast.success("Đăng nhập thành công. B-Hub rất vui được gặp lại bạn.");
-      setTimeout(() => {
-        navigate(from, { replace: true });
-      }, 2000);
-    }
-  }, [token, user]);
 
   return (
     <div className="p-20 w-3/4 mx-auto">
@@ -92,15 +91,6 @@ const LoginPage = () => {
               field={"password"}
             ></PasswordInput>
           </div>
-          {/* <input
-            type="password"
-            placeholder="Mật khẩu"
-            {...register("password")}
-            className="border-0 p-2 px-4 rounded-md mb-3 shadow-sm outline-0"
-          ></input>
-          {errors.password && (
-            <p className="text-red-500 text-sm">{errors.password.message}</p>
-          )} */}
 
           <div className="flex flex-row justify-between mb-3">
             <div>

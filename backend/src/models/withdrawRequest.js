@@ -84,6 +84,40 @@ const WithdrawRequest = sequelize.define(
         },
       },
     },
+    otpCode: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      validate: {
+        notEmpty: {
+          msg: "OTP code cannot be empty",
+        },
+      },
+    },
+    otpExpiry: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      validate: {
+        isDate: {
+          msg: "OTP expiry must be a valid date",
+        },
+      },
+    },
+    attempts: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      validate: {
+        isInt: { msg: "Attempts must be an integer" },
+        min: {
+          args: [0],
+          msg: "Attempts cannot be negative",
+        },
+        max: {
+          args: [5],
+          msg: "Too many attempts",
+        },
+      },
+    },
   },
   {
     tableName: "WithdrawRequests",

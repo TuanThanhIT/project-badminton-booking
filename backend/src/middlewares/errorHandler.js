@@ -23,6 +23,7 @@ const errorHandler = (err, req, res, next) => {
       ? err.message
       : "Lỗi hệ thống. Vui lòng thử lại sau.",
     errors: isOperational ? err.errors || null : null,
+    ...(err.data && err.data),
   });
 };
 

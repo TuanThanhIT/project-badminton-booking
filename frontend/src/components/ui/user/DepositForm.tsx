@@ -4,7 +4,7 @@ import {
   FormWalletDepositSchema,
   type formWalletDeposit,
 } from "../../../schemas/FormWalletDepositSchema";
-import { CreditCard, X } from "lucide-react";
+import { CreditCard, Wallet, X } from "lucide-react";
 import { useState } from "react";
 
 type DepositFormProps = {
@@ -52,13 +52,17 @@ const DepositForm = ({ setOpenDeposit, onSubmit }: DepositFormProps) => {
         </button>
 
         {/* HEADER */}
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-4">
           <CreditCard className="w-6 h-6 text-sky-500" />
-          <h3 className="text-2xl font-bold text-gray-800">Nạp tiền</h3>
+          <div>
+            <h3 className="text-xl font-bold text-gray-800">Nạp tiền</h3>
+            <p className="text-sm text-gray-500">
+              Nhập số tiền bạn muốn nạp vào ví
+            </p>
+          </div>
         </div>
-        <p className="text-sm text-gray-500 mb-5">
-          Chọn nhanh hoặc nhập số tiền
-        </p>
+
+        <p className="text-sm font-medium text-gray-700 mb-2">Chọn số tiền</p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           {/* QUICK AMOUNT */}
@@ -98,13 +102,16 @@ const DepositForm = ({ setOpenDeposit, onSubmit }: DepositFormProps) => {
               Hoặc nhập số tiền
             </p>
 
-            <input
-              type="number"
-              placeholder="VD: 250000"
-              value={amount || ""}
-              onChange={handleInputChange}
-              className="w-full rounded-xl p-3 border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-1 transition-shadow shadow-sm"
-            />
+            <div className="relative">
+              <Wallet className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="number"
+                placeholder="Nhập số tiền"
+                value={amount || ""}
+                onChange={handleInputChange}
+                className="w-full pl-10 pr-3 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white"
+              />
+            </div>
 
             <input type="hidden" {...register("amount")} />
             {errors.amount && (

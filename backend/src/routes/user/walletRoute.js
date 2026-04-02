@@ -5,6 +5,7 @@ import walletController from "../../controllers/user/walletController.js";
 import {
   walletCallbackSchema,
   walletDepositSchema,
+  walletWithdrawConfirmSchema,
   walletWithdrawRequestSchema,
 } from "../../validations/walletValidation.js";
 import validate from "../../middlewares/validate.js";
@@ -32,6 +33,13 @@ const initWalletRoute = (app) => {
     authorize("User"),
     validate(walletWithdrawRequestSchema),
     walletController.walletWithdrawRequestController,
+  );
+  walletRoute.patch(
+    "/withdraw/confirm",
+    auth,
+    authorize("User"),
+    validate(walletWithdrawConfirmSchema),
+    walletController.walletWithdrawConfirmController,
   );
   app.use("/user/wallet", walletRoute);
 };

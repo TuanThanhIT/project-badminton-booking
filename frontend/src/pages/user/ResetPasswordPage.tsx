@@ -5,16 +5,19 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import {
   FormForgotPasswordSchema,
+  FormResetPasswordSchema,
   type formForgotPassword,
+  type formResetPassword,
 } from "../../schemas/FormForgotPasswordSchema";
 import type { OtpFlowData, OtpSendRequest } from "../../types/auth";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { otpSend, setOtpFlow } from "../../redux/slices/user/authSlice";
 import LoadingButton from "../../components/ui/common/LoadingButton";
-import InputForm from "../../components/ui/common/InputForm";
+import PasswordInput from "../../components/ui/common/PasswordInput";
 
-const ForgotPasswordPage: React.FC = () => {
+const ResetPasswordPage: React.FC = () => {
   const dispatch = useAppDispatch();
+  const {email, otpCode} = useAppSelector((state) => state.auth.otpFlow.);
   const loading = useAppSelector((state) => state.ui.loadingCount > 0);
   const navigate = useNavigate();
 
@@ -22,15 +25,15 @@ const ForgotPasswordPage: React.FC = () => {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<formForgotPassword>({
-    resolver: zodResolver(FormForgotPasswordSchema),
+  } = useForm<formResetPassword>({
+    resolver: zodResolver(FormResetPasswordSchema),
     mode: "onChange",
   });
 
-  const onSubmit = async (dt: formForgotPassword) => {
-    const { email } = dt;
-    const data: OtpSendRequest = {
+  const onSubmit = async (dt: formResetPassword) => {
+    const data: ResetPasswordRequest = {
       email,
+      
     };
     const dta: OtpFlowData = {
       email,
@@ -62,21 +65,34 @@ const ForgotPasswordPage: React.FC = () => {
           <h2 className="text-2xl font-bold mb-6 text-center">
             Đặt lại mật khẩu!
           </h2>
-          {/* Email */}
+
+          {/* New Password */}
           <div>
             <label className="block text-gray-700 font-medium mb-1">
-              Email đăng ký
+              Mật khẩu mới
             </label>
-            <InputForm
+            <PasswordInput
               register={register}
-              error={errors.email}
-              field={"email"}
-            ></InputForm>
+              error={errors.newPassword}
+              field={"newPassword"}
+            ></PasswordInput>
+          </div>
+
+          {/* Confirm Password */}
+          <div>
+            <label className="block text-gray-700 font-medium mb-1">
+              Nhập lại mật khẩu
+            </label>
+            <PasswordInput
+              register={register}
+              error={errors.confirmPassword}
+              field={"confirmPassword"}
+            ></PasswordInput>
           </div>
 
           <LoadingButton
             loading={loading}
-            children={"Xác nhận"}
+            children={"Gửi yêu cầu"}
             type="submit"
             className="w-full"
           ></LoadingButton>
@@ -93,4 +109,4 @@ const ForgotPasswordPage: React.FC = () => {
   );
 };
 
-export default ForgotPasswordPage;
+export default ResetPasswordPage;

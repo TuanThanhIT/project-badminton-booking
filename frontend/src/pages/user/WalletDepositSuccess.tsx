@@ -11,7 +11,7 @@ const WalletDepositResult = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // 👉 Lấy params từ URL
+  // Lấy params từ URL
   const vnp_Amount = searchParams.get("vnp_Amount") ?? "";
   const vnp_BankCode = searchParams.get("vnp_BankCode") ?? "";
   const vnp_ResponseCode = searchParams.get("vnp_ResponseCode") ?? "";
@@ -25,11 +25,11 @@ const WalletDepositResult = () => {
   const vnp_BankTranNo = searchParams.get("vnp_BankTranNo") ?? "";
   const vnp_CardType = searchParams.get("vnp_CardType") ?? "";
 
-  // 👉 check params cơ bản
+  // check params cơ bản
   const hasValidParams = vnp_TxnRef && vnp_Amount && vnp_ResponseCode;
   const amount = Number(vnp_Amount) / 100;
 
-  // 👉 xác định trạng thái giao dịch
+  // xác định trạng thái giao dịch
   const isSuccess =
     hasValidParams &&
     vnp_ResponseCode === "00" &&
@@ -40,7 +40,7 @@ const WalletDepositResult = () => {
 
     const key = `vnpay_${vnp_TxnRef}`;
 
-    // ✅ chỉ call API khi SUCCESS và chưa call lần nào
+    // chỉ call API khi SUCCESS và chưa call lần nào
     if (isSuccess && !sessionStorage.getItem(key)) {
       sessionStorage.setItem(key, "done");
 
@@ -65,7 +65,7 @@ const WalletDepositResult = () => {
         .catch(() => toast.error("Lỗi khi cập nhật ví"));
     }
 
-    // ❌ nếu fail → show toast (chỉ show 1 lần)
+    // nếu fail → show toast (chỉ show 1 lần)
     if (!isSuccess && !sessionStorage.getItem(key)) {
       sessionStorage.setItem(key, "done");
       toast.error(
@@ -76,7 +76,7 @@ const WalletDepositResult = () => {
     }
   }, [vnp_TxnRef, hasValidParams]);
 
-  // 👉 Background gradient theo trạng thái
+  // Background gradient theo trạng thái
   const containerBg = hasValidParams
     ? isSuccess
       ? "bg-gradient-to-br from-green-50 via-white to-green-100"

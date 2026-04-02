@@ -37,3 +37,9 @@ export const otpCodeField = Joi.string()
     "string.empty": "OTP cannot be empty",
     "any.required": "OTP is required",
   });
+
+export const tokenField = Joi.string().min(10).required().messages({
+  "string.min": "Reset token is invalid",
+  "string.empty": "Reset token cannot be empty",
+  "any.required": "Reset token is required",
+});

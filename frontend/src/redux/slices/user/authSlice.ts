@@ -1,12 +1,19 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import {
+  createAsyncThunk,
+  createSlice,
+  type PayloadAction,
+} from "@reduxjs/toolkit";
 import type {
   AccountResponse,
   LoginRequest,
   LoginResponse,
+  LogoutResponse,
+  OtpFlowData,
   OtpSendRequest,
   OtpSendResponse,
   OtpVerifyRequest,
   OtpVerifyResponse,
+  RefreshTokenResponse,
   RegisterData,
   RegisterRequest,
   RegisterResponse,
@@ -17,18 +24,23 @@ import type {
 import type { ApiErrorType } from "../../../types/error";
 import authService from "../../../services/user/authService";
 
-const token = localStorage.getItem("access_token");
-
+const accessToken = localStorage.getItem("accessToken");
 interface AuthState {
   user?: User;
-  token?: string;
+  accessToken?: string;
   userRegister?: RegisterData;
+  otpFlow: OtpFlowData;
 }
 
 const initialState: AuthState = {
   user: undefined,
-  token: token || undefined,
+  accessToken: accessToken || undefined,
   userRegister: undefined,
+  otpFlow: {
+    email: undefined,
+    withdrawRequestId: undefined,
+    type: undefined,
+  },
 };
 
 export const login = createAsyncThunk<
@@ -109,14 +121,56 @@ export const resetPassword = createAsyncThunk<
   }
 });
 
+export const refreshTokenThunk = createAsyncThunk<
+  RefreshTokenResponse,
+  void,
+  { rejectValue: ApiErrorType }
+>("auth/refreshTokenThunk", async (_, { rejectWithValue }) => {
+  try {
+    const res = await authService.refreshTokenService();
+    return res.data as RefreshTokenResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
+export const logout = createAsyncThunk<
+  LogoutResponse,
+  void,
+  { rejectValue: ApiErrorType }
+>("auth/logout", async (_, { rejectWithValue }) => {
+  try {
+    const res = await authService.logoutService();
+    return res.data as LogoutResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    logout: (state) => {
+    logoutLocal: (state) => {
       state.user = undefined;
-      state.token = undefined;
-      localStorage.removeItem("access_token");
+      state.accessToken = undefined;
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("branchIds");
+      localStorage.removeItem("countdown");
+    },
+    setOtpFlow: (state, action: PayloadAction<{ data: OtpFlowData }>) => {
+      state.otpFlow = action.payload.data;
+      // lưu localStorage
+      sessionStorage.setItem("otpFlow", JSON.stringify(action.payload));
+    },
+
+    clearOtpFlow: (state) => {
+      state.otpFlow = {
+        email: undefined,
+        withdrawRequestId: undefined,
+        type: undefined,
+      };
+      sessionStorage.removeItem("otpFlow");
     },
   },
   extraReducers: (builder) => {
@@ -124,8 +178,8 @@ const authSlice = createSlice({
       // login
       .addCase(login.fulfilled, (state, action) => {
         state.user = action.payload.data.user;
-        state.token = action.payload.data.access_token;
-        localStorage.setItem("access_token", action.payload.data.access_token);
+        state.accessToken = action.payload.data.accessToken;
+        localStorage.setItem("accessToken", action.payload.data.accessToken);
       })
 
       // getAccount
@@ -136,9 +190,15 @@ const authSlice = createSlice({
       // register
       .addCase(registerAccount.fulfilled, (state, action) => {
         state.userRegister = action.payload.data;
+      })
+
+      // refreshToken
+      .addCase(refreshTokenThunk.fulfilled, (state, action) => {
+        state.accessToken = action.payload.data.accessToken;
+        localStorage.setItem("accessToken", action.payload.data.accessToken);
       });
   },
 });
 
-export const { logout } = authSlice.actions;
+export const { logoutLocal, setOtpFlow, clearOtpFlow } = authSlice.actions;
 export default authSlice.reducer;

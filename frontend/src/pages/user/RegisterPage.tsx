@@ -6,8 +6,8 @@ import {
   type formRegister,
 } from "../../schemas/FormRegisterSchema";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
-import { registerAccount } from "../../redux/slices/user/authSlice";
-import type { RegisterRequest } from "../../types/auth";
+import { registerAccount, setOtpFlow } from "../../redux/slices/user/authSlice";
+import type { OtpFlowData, RegisterRequest } from "../../types/auth";
 import { toast } from "react-toastify";
 import LoadingButton from "../../components/ui/common/LoadingButton";
 import InputForm from "../../components/ui/common/InputForm";
@@ -34,12 +34,17 @@ const RegisterPage = () => {
       password,
       email,
     };
+    const dta: OtpFlowData = {
+      email,
+      type: "REGISTER",
+    };
     await dispatch(registerAccount({ data }))
       .unwrap()
       .then(() => {
         toast.success("Đăng kí tài khoản người dùng thành công");
+        dispatch(setOtpFlow({ data: dta }));
         setTimeout(() => {
-          navigate("/verify-otp", { state: { email } });
+          navigate("/verify-otp");
         }, 1000);
       });
   };

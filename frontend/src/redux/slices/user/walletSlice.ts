@@ -5,17 +5,20 @@ import type {
   WalletCallbackResponse,
   WalletDepositRequest,
   WalletDepositResponse,
+  WalletWithdrawConfirmRequest,
+  WalletWithdrawRequest,
+  WalletWithdrawResponse,
 } from "../../../types/wallet";
 import walletService from "../../../services/user/walletService";
-import { data } from "react-router-dom";
-import { PawPrint } from "lucide-react";
 
 interface WalletState {
   paymentUrl?: string;
+  withdrawRequestId?: number;
 }
 
 const initialState: WalletState = {
   paymentUrl: undefined,
+  withdrawRequestId: undefined,
 };
 
 export const walletDeposit = createAsyncThunk<
@@ -44,15 +47,50 @@ export const walletCallback = createAsyncThunk<
   }
 });
 
+export const walletWithdrawRequest = createAsyncThunk<
+  WalletWithdrawResponse,
+  { data: WalletWithdrawRequest },
+  { rejectValue: ApiErrorType }
+>("wallet/walletWithdrawRequest", async ({ data }, { rejectWithValue }) => {
+  try {
+    const res = await walletService.walletWithdrawRequestService(data);
+    return res.data as WalletWithdrawResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
+export const walletWithdrawConfirm = createAsyncThunk<
+  WalletWithdrawResponse,
+  { data: WalletWithdrawConfirmRequest },
+  { rejectValue: ApiErrorType }
+>("wallet/walletWithdrawConfirm", async ({ data }, { rejectWithValue }) => {
+  try {
+    const res = await walletService.walletWithdrawConfirmService(data);
+    return res.data as WalletWithdrawResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
 const walletSlice = createSlice({
   name: "wallet",
   initialState,
-  reducers: {},
+  reducers: {
+    clearWithdrawRequestId(state) {
+      state.withdrawRequestId = undefined;
+    },
+  },
   extraReducers: (builder) => {
     builder.addCase(walletDeposit.fulfilled, (state, action) => {
       state.paymentUrl = action.payload.data;
     });
+
+    builder.addCase(walletWithdrawRequest.fulfilled, (state, action) => {
+      state.withdrawRequestId = action.payload.data.id;
+    });
   },
 });
 
+export const { clearWithdrawRequestId } = walletSlice.actions;
 export default walletSlice.reducer;

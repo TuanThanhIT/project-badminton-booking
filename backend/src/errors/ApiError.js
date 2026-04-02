@@ -1,9 +1,10 @@
 class ApiError extends Error {
-  constructor(statusCode, message, errors = null) {
+  constructor(statusCode, message, errors = null, data = null) {
     super(message);
     this.statusCode = statusCode;
     this.errors = errors;
     this.isOperational = true; //isOperational giúp backend biết: “Lỗi này có phải lỗi mình đã lường trước hay là bug chết người?”
+    this.data = data;
     Error.captureStackTrace(this, this.constructor);
   }
 }

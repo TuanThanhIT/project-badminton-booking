@@ -26,13 +26,33 @@ const walletWithdrawRequestController = asyncHandler(async (req, res) => {
     await walletService.walletWithdrawRequestService(data);
   return res
     .status(201)
-    .json(new SuccessResponse("Rút tiền khỏi ví thành công", withDrawRequest));
+    .json(
+      new SuccessResponse(
+        "Gửi yêu cầu rút tiền khỏi ví thành công",
+        withDrawRequest,
+      ),
+    );
+});
+
+const walletWithdrawConfirmController = asyncHandler(async (req, res) => {
+  const data = { ...req.body };
+  const withDrawRequest =
+    await walletService.walletWithdrawConfirmService(data);
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse(
+        "Xác nhận rút tiền khỏi ví thành công",
+        withDrawRequest,
+      ),
+    );
 });
 
 const walletController = {
   walletDepositController,
   walletCallbackController,
   walletWithdrawRequestController,
+  walletWithdrawConfirmController,
 };
 
 export default walletController;

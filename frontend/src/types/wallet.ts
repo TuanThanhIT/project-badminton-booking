@@ -22,3 +22,27 @@ export type WalletCallbackRequest = {
 };
 
 export type WalletCallbackResponse = ApiResponse<null>;
+
+export type WalletWithdrawRequest = {
+  amount: number;
+  bankName: string;
+  bankAccount: string;
+  accountHolder: string;
+};
+
+export type WalletWithdrawConfirmRequest = {
+  withdrawRequestId: number;
+  otpCode: string;
+};
+
+export type WalletWithdrawData = {
+  id: 2;
+  amount: number;
+  bankName: string;
+  bankAccount: string;
+  accountHolder: string;
+  status: string;
+  createdDate: string;
+};
+
+export type WalletWithdrawResponse = ApiResponse<WalletWithdrawData>;

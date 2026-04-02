@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import dotenv from "dotenv";
+import crypto from "crypto";
 import sequelize from "../../config/db.js";
 import Payment from "../../models/payment.js";
 import {
@@ -16,6 +17,8 @@ import WalletTransaction from "../../models/walletTransaction.js";
 import { VnpLocale, dateFormat, VNPay } from "vnpay";
 import { verifyVNPayURL } from "../../utils/handleVNPayURL.js";
 import WithdrawRequest from "../../models/withDrawRequest.js";
+import mailer from "../../helpers/mailer.js";
+import User from "../../models/user.js";
 
 dotenv.config();
 
@@ -152,6 +155,11 @@ const walletWithdrawRequestService = async (data) => {
   const { amount, bankName, bankAccount, accountHolder, userId } = data;
 
   return sequelize.transaction(async (t) => {
+    const user = await User.findByPk(userId, { transaction: t });
+    if (!user) {
+      throw new NotFoundError("Người dùng không tồn tại");
+    }
+
     const wallet = await Wallet.findOne({
       where: { userId },
       transaction: t,
@@ -168,10 +176,12 @@ const walletWithdrawRequestService = async (data) => {
       throw new BadRequestError("Số dư không đủ");
     }
 
-    const newBalance = currentBalance - amount;
-
-    wallet.balance = newBalance;
+    wallet.balanceLocked += amount;
     await wallet.save({ transaction: t });
+
+    const otpCode = crypto.randomInt(100000, 999999).toString();
+    const otpHash = crypto.createHash("sha256").update(otpCode).digest("hex");
+    const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
 
     const withdrawRequest = await WithdrawRequest.create(
       {
@@ -181,6 +191,8 @@ const walletWithdrawRequestService = async (data) => {
         bankAccount,
         accountHolder,
         status: WITHDRAW_REQUEST_STATUS.PENDING,
+        otpCode: otpHash,
+        otpExpiry,
       },
       { transaction: t },
     );
@@ -191,8 +203,87 @@ const walletWithdrawRequestService = async (data) => {
         withdrawRequestId: withdrawRequest.id,
         amount,
         type: WALLET_TRANSACTION_TYPE.WITHDRAW,
-        balanceAfter: newBalance,
+        balanceAfter: currentBalance,
         description: `Yêu cầu rút ${amount} VND về ${bankName} - ${bankAccount}`,
+      },
+      { transaction: t },
+    );
+
+    t.afterCommit(() =>
+      mailer
+        .sendOtpMail(user.email, otpCode, "Mã OTP xác thực rút tiền")
+        .catch((err) => console.error("Send OTP email failed", err)),
+    );
+
+    const withdrawRequestReturn = {
+      id: withdrawRequest.id,
+      amount: withdrawRequest.amount,
+      bankName: withdrawRequest.bankName,
+      bankAccount: withdrawRequest.bankAccount,
+      accountHolder: withdrawRequest.accountHolder,
+      status: withdrawRequest.status,
+      createdDate: withdrawRequest.createdDate,
+    };
+
+    return withdrawRequestReturn;
+  });
+};
+
+const walletWithdrawConfirmService = async (data) => {
+  const { withdrawRequestId, otpCode } = data;
+
+  return sequelize.transaction(async (t) => {
+    const withdrawRequest = await WithdrawRequest.findByPk(withdrawRequestId, {
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+
+    if (!withdrawRequest) {
+      throw new NotFoundError("Yêu cầu rút tiền không tồn tại");
+    }
+
+    if (withdrawRequest.status !== WITHDRAW_REQUEST_STATUS.PENDING) {
+      throw new BadRequestError("Yêu cầu không hợp lệ hoặc đã xử lý");
+    }
+
+    // attempts check
+    if (withdrawRequest.attempts >= 5) {
+      await withdrawRequest.update(
+        {
+          status: WITHDRAW_REQUEST_STATUS.FAILED,
+          otpCode: null,
+          otpExpiry: null,
+        },
+        { transaction: t },
+      );
+
+      throw new BadRequestError("OTP đã bị khóa");
+    }
+
+    const otpCodeHash = crypto
+      .createHash("sha256")
+      .update(otpCode)
+      .digest("hex");
+
+    if (new Date(withdrawRequest.otpExpiry) <= new Date()) {
+      throw new BadRequestError("Mã OTP đã hết hạn");
+    }
+
+    if (withdrawRequest.otpCode !== otpCodeHash) {
+      await withdrawRequest.update(
+        { attempts: withdrawRequest.attempts + 1 },
+        { transaction: t },
+      );
+
+      throw new BadRequestError("Mã OTP không chính xác");
+    }
+
+    // đúng OTP
+    await withdrawRequest.update(
+      {
+        status: WITHDRAW_REQUEST_STATUS.CONFIRMED,
+        otpCode: null,
+        otpExpiry: null,
       },
       { transaction: t },
     );
@@ -205,6 +296,7 @@ const walletService = {
   walletDepositService,
   walletCallbackService,
   walletWithdrawRequestService,
+  walletWithdrawConfirmService,
 };
 
 export default walletService;

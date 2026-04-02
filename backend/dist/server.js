@@ -3,6 +3,7 @@
 var _express = _interopRequireDefault(require("express"));
 var _dotenv = _interopRequireDefault(require("dotenv"));
 var _cors = _interopRequireDefault(require("cors"));
+var _cookieParser = _interopRequireDefault(require("cookie-parser"));
 var _db = _interopRequireDefault(require("./config/db.js"));
 var _http = require("http");
 var _index = require("./socket/index.js");
@@ -22,7 +23,11 @@ app.use(_express["default"].json());
 app.use(_express["default"].urlencoded({
   extended: true
 }));
-app.use((0, _cors["default"])());
+app.use((0, _cors["default"])({
+  origin: "http://localhost:5173",
+  credentials: true
+}));
+app.use((0, _cookieParser["default"])());
 
 // User
 (0, _authRoute["default"])(app);

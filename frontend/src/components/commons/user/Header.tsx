@@ -10,7 +10,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../redux/hook";
-import { logout } from "../../../redux/slices/user/authSlice";
+import { logout, logoutLocal } from "../../../redux/slices/user/authSlice";
 
 interface HeaderProps {
   cartRef: React.RefObject<HTMLDivElement | null>; // cho phép null
@@ -20,12 +20,13 @@ const Header = ({ cartRef }: HeaderProps) => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const dispatch = useAppDispatch();
-  const { user, token } = useAppSelector((state) => state.auth);
+  const { user, accessToken } = useAppSelector((state) => state.auth);
   const cart = useAppSelector((state) => state.cart.cart);
   const [countCartItem, setCountCartItem] = useState(0);
 
   const handleLogout = () => {
     dispatch(logout());
+    dispatch(logoutLocal());
     navigate("/login");
   };
 
@@ -107,7 +108,7 @@ const Header = ({ cartRef }: HeaderProps) => {
             <span>Giỏ hàng</span>
           </NavLink>
 
-          {!token && !user ? (
+          {!accessToken && !user ? (
             <div className="flex items-center gap-3">
               <NavLink
                 to="/login"

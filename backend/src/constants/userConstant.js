@@ -16,3 +16,8 @@ export const PLAYER_LEVEL = Object.freeze({
   SEMIPRO: "SEMI_PRO", // Trình bán chuyên
   PRO: "PRO", //Trình chuyên nghiệp
 });
+
+export const OTP_TYPE = Object.freeze({
+  REGISTER: "REGISTER",
+  RESET_PASSWORD: "RESET_PASSWORD",
+});

@@ -57,6 +57,7 @@ import CashRegister from "./cashRegister.js";
 
 import CoachProfile from "./coachProfile.js";
 import WithdrawRequest from "./withDrawRequest.js";
+import RefreshToken from "./refreshToken.js";
 
 //////////////////////////////////////////////////////
 //////////////// USER SYSTEM /////////////////////////
@@ -70,6 +71,9 @@ Profile.belongsTo(User, { foreignKey: "userId", as: "user" });
 
 User.hasMany(UserOtp, { foreignKey: "userId", as: "otps" });
 UserOtp.belongsTo(User, { foreignKey: "userId", as: "user" });
+
+User.hasMany(RefreshToken, { foreignKey: "userId", as: "tokens" });
+RefreshToken.belongsTo(User, { foreignKey: "userId", as: "user" });
 
 //////////////////////////////////////////////////////
 //////////////// WALLET //////////////////////////////

@@ -1,8 +1,13 @@
 import { z } from "zod";
 
-export const FormForgotPasswordSchema = z
+export const FormForgotPasswordSchema = z.object({
+  email: z.string().email("Email không hợp lệ"),
+});
+
+export type formForgotPassword = z.infer<typeof FormForgotPasswordSchema>;
+
+export const FormResetPasswordSchema = z
   .object({
-    email: z.string().email("Email không hợp lệ"),
     newPassword: z.string().min(8, "Mật khẩu mới phải có ít nhất 8 ký tự"),
     confirmPassword: z.string(),
   })
@@ -11,4 +16,4 @@ export const FormForgotPasswordSchema = z
     path: ["confirmPassword"], // báo lỗi ở trường confirmPassword
   });
 
-export type formForgotPassword = z.infer<typeof FormForgotPasswordSchema>;
+export type formResetPassword = z.infer<typeof FormResetPasswordSchema>;

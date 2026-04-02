@@ -41,11 +41,11 @@ const addItemToCartService = async (data) => {
         transaction: t,
       }),
     ]);
-    if (!user) throw new NotFoundError("User không tồn tại");
+    if (!user) throw new NotFoundError("Người dùng không tồn tại");
     if (!variant) throw new NotFoundError("Sản phẩm không tồn tại");
     if (quantity > variant.stock) {
       throw new BadRequestError(
-        `Số lượng vượt quá tồn kho (Còn lại: ${variant.stock})`,
+        `Số lượng vượt quá tồn kho (Còn lại: ${variant.stock}).`,
       );
     }
     const cart = await Cart.findOrCreate({

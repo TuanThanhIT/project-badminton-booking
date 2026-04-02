@@ -1,8 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
-import authService from "../../services/user/authService";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import type { ApiErrorType } from "../../types/error";
 import type {
   OtpSendRequest,
   OtpVerifyRequest,
@@ -10,16 +8,31 @@ import type {
 } from "../../types/auth";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import {
+  clearOtpFlow,
   otpSend,
   otpVerify,
   resetPassword,
+  setOtpFlow,
 } from "../../redux/slices/user/authSlice";
+
+import { walletWithdrawConfirm } from "../../redux/slices/user/walletSlice";
 
 const OTPPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
   const loading = useAppSelector((state) => state.ui.loadingCount > 0);
+  const otpFlow = useAppSelector((state) => state.auth.otpFlow);
+  const { email, withdrawRequestId, type } = otpFlow;
+
+  useEffect(() => {
+    if (!otpFlow.email) {
+      const saved = sessionStorage.getItem("otpFlow");
+      if (saved) {
+        dispatch(setOtpFlow(JSON.parse(saved)));
+      }
+    }
+  }, []);
 
   const getInitialCountdown = () => {
     const time = localStorage.getItem("countdown");
@@ -28,10 +41,6 @@ const OTPPage: React.FC = () => {
   const [countdown, setCountdown] = useState(getInitialCountdown); // 5 phút
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-  const location = useLocation();
-  const email = location.state?.email;
-  const newPassword = location.state?.newPassword;
 
   const formatTime = (sec: number) => {
     const m = Math.floor(sec / 60);
@@ -82,46 +91,54 @@ const OTPPage: React.FC = () => {
 
   const handleSubmitOpt = async () => {
     const otpCode: string = otp.join("");
-    if (!newPassword) {
-      const data: OtpVerifyRequest = {
-        email,
-        otpCode,
-      };
-      const res = await dispatch(otpVerify({ data }));
-      if (otpVerify.fulfilled.match(res)) {
-        toast.success("Xác thực tài khoản đăng kí thành công");
-        setTimeout(() => {
-          navigate("/login");
-        }, 1000);
-      }
-    } else {
-      const data: ResetPasswordRequest = {
-        email,
-        otpCode,
-        newPassword,
-      };
-      const res = await dispatch(resetPassword({ data }));
-      if (resetPassword.fulfilled.match(res)) {
-        toast.success("Thay đổi mật khẩu thành công");
-        setTimeout(() => {
-          navigate("/login");
-        }, 1000);
-      }
+    // RESET PASSWORD
+    if (type === "RESET-PASSWORD") {
+      setTimeout(() => navigate("/login"), 2000);
+      return;
     }
+
+    // WITHDRAW CONFIRM
+    if (withdrawRequestId && email) {
+      await dispatch(
+        walletWithdrawConfirm({
+          data: { withdrawRequestId, otpCode },
+        }),
+      ).unwrap();
+      toast.success("Xác nhận rút tiền thành công");
+      dispatch(clearOtpFlow());
+      setTimeout(() => navigate("/wallet"), 2000);
+      return;
+    }
+
+    // VERIFY REGISTER
+    if (email) {
+      await dispatch(
+        otpVerify({
+          data: { email, otpCode },
+        }),
+      ).unwrap();
+      toast.success("Xác thực tài khoản đăng ký thành công");
+      dispatch(clearOtpFlow());
+      setTimeout(() => navigate("/login"), 2000);
+      return;
+    }
+
     setCountdown(300); // reset 5 phút
     setOtp(Array(6).fill("")); // xóa OTP cũ
   };
 
   const handleResendOtp = async () => {
+    if (!email) return;
     const data: OtpSendRequest = {
       email,
     };
-    const res = await dispatch(otpSend({ data }));
-    if (otpSend.fulfilled.match(res)) {
-      setCountdown(300); // reset 5 phút
-      setOtp(Array(6).fill("")); // xóa OTP cũ
-      toast.success("Mã OTP đã được gửi. Vui lòng kiểm tra email.");
-    }
+    await dispatch(otpSend({ data }))
+      .unwrap()
+      .then(() => {
+        setCountdown(300); // reset 5 phút
+        setOtp(Array(6).fill("")); // xóa OTP cũ
+        toast.success("Mã OTP đã được gửi. Vui lòng kiểm tra email.");
+      });
   };
 
   return (

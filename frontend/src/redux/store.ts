@@ -1,6 +1,15 @@
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import storage from "redux-persist/lib/storage"; // dùng localStorage
-import { persistReducer, persistStore } from "redux-persist";
+import {
+  FLUSH,
+  PAUSE,
+  PERSIST,
+  persistReducer,
+  persistStore,
+  PURGE,
+  REGISTER,
+  REHYDRATE,
+} from "redux-persist";
 import authReducer from "./slices/user/authSlice";
 import uiReducer from "./slices/uiSlice";
 import cateReducer from "./slices/user/cateSlice";
@@ -9,6 +18,7 @@ import branchReducer from "./slices/user/branchSlice";
 import cartReducer from "./slices/user/cartSlice";
 import walletReducer from "./slices/user/walletSlice";
 import { authMiddleware } from "./middlewares/authMiddleware";
+import { setStore } from "./storeRef";
 
 const persistConfig = {
   key: "root",
@@ -31,10 +41,17 @@ const persistedReducer = persistReducer(persistConfig, rootReducer);
 export const store = configureStore({
   reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(authMiddleware),
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
+    }).concat(authMiddleware),
 });
+
+setStore(store);
 
 export const persistor = persistStore(store);
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
+export type AppStore = typeof store;

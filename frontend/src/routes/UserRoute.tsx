@@ -20,6 +20,7 @@ import BookingCourtPage from "../pages/user/BookingCourtPage";
 import BookingPage from "../pages/user/BookingPage";
 import WalletDepositSuccess from "../pages/user/WalletDepositSuccess";
 import WalletPage from "../pages/user/WalletPage";
+import ResetPasswordPage from "../pages/user/ResetPasswordPage";
 
 const UserRoute = () => {
   return (
@@ -33,6 +34,7 @@ const UserRoute = () => {
         <Route path="register" element={<RegisterPage />} />
         <Route path="verify-otp" element={<OTPPage />} />
         <Route path="forgot-pass" element={<ForgotPasswordPage />} />
+        <Route path="reset-password" element={<ResetPasswordPage />} />
       </Route>
 
       {/* Private */}

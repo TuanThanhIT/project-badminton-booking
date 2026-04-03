@@ -32,6 +32,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { setOtpFlow } from "../../redux/slices/user/authSlice";
 import type { OtpFlowData } from "../../types/auth";
+import { OTP_TYPE } from "../../constants/otpType";
 
 type TabType = "deposit" | "withdraw" | "payment" | "refund";
 type Status = "success" | "pending";
@@ -50,7 +51,9 @@ const WalletPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const paymentUrl = useAppSelector((state) => state.wallet.paymentUrl);
   const user = useAppSelector((state) => state.auth.user);
-  const loading = useAppSelector((state) => state.ui.loadingCount > 0);
+  const withdrawLoading = useAppSelector(
+    (state) => state.ui.loadingMap["wallet/walletWithdrawRequest"],
+  );
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>("deposit");
   const [search, setSearch] = useState("");
@@ -97,6 +100,7 @@ const WalletPage: React.FC = () => {
         const dta: OtpFlowData = {
           withdrawRequestId: res.data.id,
           email: user?.email,
+          type: OTP_TYPE.WITHDRAW_REQUEST,
         };
         toast.success("Gửi yêu cầu rút tiền thành công");
         dispatch(setOtpFlow({ data: dta }));
@@ -391,7 +395,7 @@ const WalletPage: React.FC = () => {
         <WithdrawRequestForm
           setOpenWithdraw={setOpenWithdraw}
           onSubmit={handleWithdrawRequest}
-          loading={loading}
+          loading={withdrawLoading}
         />
       )}
     </div>

@@ -20,4 +20,5 @@ export const PLAYER_LEVEL = Object.freeze({
 export const OTP_TYPE = Object.freeze({
   REGISTER: "REGISTER",
   RESET_PASSWORD: "RESET_PASSWORD",
+  WITHDRAW_REQUEST: "WITHDRAW_REQUEST",
 });

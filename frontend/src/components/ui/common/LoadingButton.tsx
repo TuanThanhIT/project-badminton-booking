@@ -13,7 +13,7 @@ const LoadingButton: React.FC<LoadingButtonProps> = ({
   return (
     <button
       disabled={loading}
-      className={`flex items-center justify-center gap-2 px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed ${className}`}
+      className={`flex items-center justify-center gap-2 px-4 py-2 rounded-md bg-sky-600 text-white hover:bg-sky-700 disabled:opacity-70 disabled:cursor-not-allowed ${className}`}
       {...props}
     >
       {loading && (

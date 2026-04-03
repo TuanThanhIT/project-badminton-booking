@@ -50,6 +50,7 @@ instance.interceptors.response.use(
         message: data?.message || "Refresh token failed",
         success: false,
         errors: data?.errors || null,
+        data: data?.data || null,
       } satisfies ApiErrorType);
     }
 
@@ -60,6 +61,7 @@ instance.interceptors.response.use(
         message: data?.message || "Có lỗi xảy ra",
         success: data?.success || false,
         errors: data?.errors || null,
+        data: data?.data || null,
       } satisfies ApiErrorType);
     }
 
@@ -70,6 +72,7 @@ instance.interceptors.response.use(
         message: "Unauthorized",
         success: false,
         errors: undefined,
+        data: undefined,
       } satisfies ApiErrorType);
     }
 
@@ -82,8 +85,9 @@ instance.interceptors.response.use(
               statusCode: 401,
               message: "Refresh failed",
               success: false,
-              errors: null,
-            });
+              errors: undefined,
+              data: undefined,
+            } satisfies ApiErrorType);
           }
           originalRequest.headers.Authorization = `Bearer ${token}`;
           resolve(instance(originalRequest));
@@ -109,6 +113,7 @@ instance.interceptors.response.use(
         message: err?.message ?? "Refresh token expired",
         success: false,
         errors: err?.errors ?? null,
+        data: err?.data ?? null,
       } satisfies ApiErrorType);
     } finally {
       isRefreshing = false;

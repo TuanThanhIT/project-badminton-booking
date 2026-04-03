@@ -12,11 +12,16 @@ import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { otpSend, setOtpFlow } from "../../redux/slices/user/authSlice";
 import LoadingButton from "../../components/ui/common/LoadingButton";
 import InputForm from "../../components/ui/common/InputForm";
+import { OTP_TYPE } from "../../constants/otpType";
 
 const ForgotPasswordPage: React.FC = () => {
   const dispatch = useAppDispatch();
-  const loading = useAppSelector((state) => state.ui.loadingCount > 0);
+  const sendLoading = useAppSelector(
+    (state) => state.ui.loadingMap["auth/otpSend"],
+  );
   const navigate = useNavigate();
+
+  const RESEND_EXPIRE_KEY = "otp_resend_at";
 
   const {
     register,
@@ -31,10 +36,11 @@ const ForgotPasswordPage: React.FC = () => {
     const { email } = dt;
     const data: OtpSendRequest = {
       email,
+      type: OTP_TYPE.RESET_PASSWORD,
     };
     const dta: OtpFlowData = {
       email,
-      type: "RESET-PASSWORD",
+      type: OTP_TYPE.RESET_PASSWORD,
     };
     await dispatch(otpSend({ data }))
       .unwrap()
@@ -43,25 +49,48 @@ const ForgotPasswordPage: React.FC = () => {
         dispatch(setOtpFlow({ data: dta }));
         setTimeout(() => {
           navigate("/verify-otp");
-        }, 3000);
+        }, 1000);
+      })
+      .catch((error) => {
+        const remainingTime = error?.data?.remainingTime;
+
+        if (remainingTime) {
+          const resendExpireAt = Date.now() + remainingTime * 1000;
+          localStorage.setItem(RESEND_EXPIRE_KEY, resendExpireAt.toString());
+          toast.warning(`Vui lòng đợi ${remainingTime}s trước khi gửi lại OTP`);
+        }
       });
   };
 
   return (
     <div className="p-20 w-3/4 mx-auto">
       <div className="grid grid-cols-2 rounded-2xl gap-5 border border-gray-200">
-        <div className="h-full">
+        <div className="relative hidden md:block">
           <img
-            src="/img/forgetpass.webp"
-            alt="Đăng nhập"
+            src="/img/forget-pass.webp"
+            alt="Quên mật khẩu"
             className="w-full h-full object-cover rounded-l-2xl"
           />
+
+          <div className="absolute inset-0 bg-black/30 flex items-center justify-center p-10 rounded-l-2xl">
+            <div className="text-white text-center">
+              <h2 className="text-3xl font-bold mb-3">Quên mật khẩu?</h2>
+              <p className="text-sm">
+                Nhập email đã đăng ký để nhận hướng dẫn đặt lại mật khẩu và truy
+                cập lại tài khoản của bạn.
+              </p>
+            </div>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-10">
-          <h2 className="text-2xl font-bold mb-6 text-center">
-            Đặt lại mật khẩu!
-          </h2>
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-1">Khôi phục mật khẩu</h2>
+            <p className="text-sm text-gray-500">
+              Nhập email đã đăng ký để nhận mã xác thực đặt lại mật khẩu.
+            </p>
+          </div>
+
           {/* Email */}
           <div>
             <label className="block text-gray-700 font-medium mb-1">
@@ -71,15 +100,12 @@ const ForgotPasswordPage: React.FC = () => {
               register={register}
               error={errors.email}
               field={"email"}
-            ></InputForm>
+            />
           </div>
 
-          <LoadingButton
-            loading={loading}
-            children={"Xác nhận"}
-            type="submit"
-            className="w-full"
-          ></LoadingButton>
+          <LoadingButton loading={sendLoading} type="submit" className="w-full">
+            Gửi yêu cầu
+          </LoadingButton>
 
           <p className="text-center text-gray-500 mt-5">
             Nhớ mật khẩu?{" "}

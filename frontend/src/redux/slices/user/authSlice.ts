@@ -12,6 +12,7 @@ import type {
   OtpSendRequest,
   OtpSendResponse,
   OtpVerifyRequest,
+  OtpVerifyResetResponse,
   OtpVerifyResponse,
   RefreshTokenResponse,
   RegisterData,
@@ -23,6 +24,7 @@ import type {
 } from "../../../types/auth";
 import type { ApiErrorType } from "../../../types/error";
 import authService from "../../../services/user/authService";
+import { da } from "zod/v4/locales";
 
 const accessToken = localStorage.getItem("accessToken");
 interface AuthState {
@@ -103,6 +105,19 @@ export const otpSend = createAsyncThunk<
   try {
     const res = await authService.sendOtpService(data);
     return res.data as OtpSendResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
+export const otpVerifyReset = createAsyncThunk<
+  OtpVerifyResetResponse,
+  { data: OtpVerifyRequest },
+  { rejectValue: ApiErrorType }
+>("auth/otpVerifyReset", async ({ data }, { rejectWithValue }) => {
+  try {
+    const res = await authService.verifyOtpResetService(data);
+    return res.data as OtpVerifyResetResponse;
   } catch (error) {
     return rejectWithValue(error as ApiErrorType);
   }

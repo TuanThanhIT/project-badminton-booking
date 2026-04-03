@@ -11,8 +11,9 @@ export const authMiddleware: Middleware =
     if (isRejectedWithValue(action)) {
       const status = action.payload?.statusCode;
       const message = action.payload?.message || "Something went wrong";
+      const remainingTime = action.payload?.data?.remainingTime;
 
-      if (status !== 401) {
+      if (!remainingTime && status !== 401) {
         toast.error(message, { toastId: message });
       }
 

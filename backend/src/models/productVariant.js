@@ -91,6 +91,14 @@ const ProductVariant = sequelize.define(
         },
       },
     },
+    weight: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      defaultValue: 0.5,
+      validate: {
+        min: { args: [0], msg: "Weight must be >= 0" },
+      },
+    },
     productId: {
       type: DataTypes.INTEGER,
       allowNull: false,

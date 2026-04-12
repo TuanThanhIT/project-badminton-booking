@@ -88,12 +88,16 @@ const ResetPasswordPage: React.FC = () => {
 
           {/* New Password */}
           <div>
-            <label className="block text-gray-700 font-medium mb-1">
-              Mật khẩu mới
-            </label>
+            <div className="flex flex-row items-center justify-between">
+              <label className="block text-gray-700 font-medium mb-1">
+                Mật khẩu mới
+              </label>
+              <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
+                {errors.newPassword?.message || " "}
+              </p>
+            </div>
             <PasswordInput
               register={register}
-              error={errors.newPassword}
               field={"newPassword"}
               value={newPasswordValue}
             />
@@ -101,14 +105,15 @@ const ResetPasswordPage: React.FC = () => {
 
           {/* Confirm Password */}
           <div>
-            <label className="block text-gray-700 font-medium mb-1">
-              Xác nhận mật khẩu
-            </label>
-            <PasswordInput
-              register={register}
-              error={errors.confirmPassword}
-              field={"confirmPassword"}
-            />
+            <div className="flex flex-row items-center justify-between">
+              <label className="block text-gray-700 font-medium mb-1">
+                Xác nhận mật khẩu
+              </label>
+              <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
+                {errors.confirmPassword?.message || " "}
+              </p>
+            </div>
+            <PasswordInput register={register} field={"confirmPassword"} />
           </div>
 
           <LoadingButton

@@ -9,7 +9,7 @@ const initCateRoute = (app) => {
   cateRoute.get(
     "/group/:groupName",
     auth,
-    authorize("User"),
+    authorize("USER"),
     categoryController.getCategoriesByMenuGroupController,
   );
   cateRoute.get(
@@ -19,7 +19,7 @@ const initCateRoute = (app) => {
   cateRoute.get(
     "/:cateId/siblings",
     auth,
-    authorize("User"),
+    authorize("USER"),
     categoryController.getOtherCategoriesInSameGroupController,
   );
   cateRoute.get("/groups", categoryController.getAllMenuGroupsController);

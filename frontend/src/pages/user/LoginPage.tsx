@@ -7,9 +7,9 @@ import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { login } from "../../redux/slices/user/authSlice";
 import type { LoginRequest } from "../../types/auth";
 import LoadingButton from "../../components/ui/common/LoadingButton";
-import PasswordInput from "../../components/ui/common/PasswordInput";
 import InputForm from "../../components/ui/common/InputForm";
 import { useEffect } from "react";
+import PasswordInput from "../../components/ui/common/PasswordInput";
 
 const LoginPage = () => {
   const dispatch = useAppDispatch();
@@ -96,36 +96,40 @@ const LoginPage = () => {
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-col justify-between gap-3 p-10"
         >
-          <div>
-            <h1 className="font-bold text-2xl mb-1">Đăng nhập tài khoản</h1>
+          <div className="mb-2">
+            <h1 className="font-bold text-2xl">Đăng nhập tài khoản</h1>
             <p className="text-gray-500 text-sm">
               Vui lòng nhập thông tin đăng nhập để tiếp tục.
             </p>
           </div>
 
           <div>
-            <label className="block text-gray-700 font-medium mb-1">
-              Tên đăng nhập
-            </label>
-            <InputForm
-              register={register}
-              error={errors.username}
-              field={"username"}
-            />
+            <div className="flex flex-row items-center justify-between">
+              <label className="block text-gray-700 font-medium mb-1">
+                Tên đăng nhập
+              </label>
+              <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
+                {errors.username?.message || " "}
+              </p>
+            </div>
+            <InputForm register={register} field={"username"} />
           </div>
 
           <div>
-            <label className="block text-gray-700 font-medium mb-1">
-              Mật khẩu
-            </label>
-            <PasswordInput
-              register={register}
-              error={errors.password}
-              field={"password"}
-            />
+            <div className="flex flex-row items-center justify-between">
+              <label className="block text-gray-700 font-medium mb-1">
+                Mật khẩu
+              </label>
+              {errors && (
+                <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
+                  {errors.password?.message || " "}
+                </p>
+              )}
+            </div>
+            <PasswordInput register={register} field={"password"} />
           </div>
 
-          <div className="flex flex-row justify-between items-center mb-3">
+          <div className="flex flex-row justify-between items-center">
             <div>
               <input
                 type="checkbox"
@@ -147,7 +151,7 @@ const LoginPage = () => {
             Đăng nhập
           </LoadingButton>
 
-          <p className="text-sm text-center mt-2">
+          <p className="text-center mt-2">
             Chưa có tài khoản?{" "}
             <Link
               to="/register"

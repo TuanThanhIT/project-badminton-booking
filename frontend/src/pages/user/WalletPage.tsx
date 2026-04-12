@@ -30,8 +30,8 @@ import type { formWithdrawRequest } from "../../schemas/FormWithdrawRequestSchem
 import WithdrawRequestForm from "../../components/ui/user/WithdrawRequestForm";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { setOtpFlow } from "../../redux/slices/user/authSlice";
-import type { OtpFlowData } from "../../types/auth";
+import { otpSend, setOtpFlow } from "../../redux/slices/user/authSlice";
+import type { OtpFlowData, OtpSendRequest } from "../../types/auth";
 import { OTP_TYPE } from "../../constants/otpType";
 
 type TabType = "deposit" | "withdraw" | "payment" | "refund";
@@ -88,6 +88,7 @@ const WalletPage: React.FC = () => {
       "Hủy",
     );
     if (!confirmed) return;
+    if (!user) return;
     const data: WalletWithdrawRequest = {
       amount: dt.amount,
       bankName: dt.bankName,
@@ -99,10 +100,15 @@ const WalletPage: React.FC = () => {
       .then((res) => {
         const dta: OtpFlowData = {
           withdrawRequestId: res.data.id,
-          email: user?.email,
+          email: user.email,
+          type: OTP_TYPE.WITHDRAW_REQUEST,
+        };
+        const d: OtpSendRequest = {
+          email: user.email,
           type: OTP_TYPE.WITHDRAW_REQUEST,
         };
         toast.success("Gửi yêu cầu rút tiền thành công");
+        dispatch(otpSend({ data: d }));
         dispatch(setOtpFlow({ data: dta }));
         setTimeout(() => {
           navigate("/verify-otp");

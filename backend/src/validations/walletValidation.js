@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { amountField } from "./common/walletField.js";
 import { idParams } from "./common/numberField.js";
-import { otpCodeField } from "./common/authFields.js";
+import { emailField, otpCodeField } from "./common/authFields.js";
 
 export const walletDepositSchema = {
   body: Joi.object({
@@ -110,5 +110,6 @@ export const walletWithdrawConfirmSchema = {
   body: Joi.object({
     withdrawRequestId: idParams("withdrawRequestId"),
     otpCode: otpCodeField,
+    email: emailField,
   }),
 };

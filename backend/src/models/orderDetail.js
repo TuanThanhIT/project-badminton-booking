@@ -106,4 +106,8 @@ const OrderDetail = sequelize.define(
   },
 );
 
+OrderDetail.beforeValidate((detail) => {
+  detail.subTotal = detail.quantity * detail.unitPrice;
+});
+
 export default OrderDetail;

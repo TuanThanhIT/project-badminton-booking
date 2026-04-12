@@ -24,7 +24,6 @@ import type {
 } from "../../../types/auth";
 import type { ApiErrorType } from "../../../types/error";
 import authService from "../../../services/user/authService";
-import { da } from "zod/v4/locales";
 
 const accessToken = localStorage.getItem("accessToken");
 interface AuthState {

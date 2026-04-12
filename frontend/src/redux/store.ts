@@ -17,6 +17,7 @@ import productReducer from "./slices/user/productSlice";
 import branchReducer from "./slices/user/branchSlice";
 import cartReducer from "./slices/user/cartSlice";
 import walletReducer from "./slices/user/walletSlice";
+import addressReducer from "./slices/user/addressSlice";
 import { authMiddleware } from "./middlewares/authMiddleware";
 import { setStore } from "./storeRef";
 
@@ -34,6 +35,7 @@ const rootReducer = combineReducers({
   branch: branchReducer,
   cart: cartReducer,
   wallet: walletReducer,
+  address: addressReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

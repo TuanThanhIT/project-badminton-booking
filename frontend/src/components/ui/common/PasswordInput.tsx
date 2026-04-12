@@ -1,21 +1,8 @@
 import { useState } from "react";
 import { AlertCircle, CheckCircle, Eye, EyeOff } from "lucide-react";
-import type { UseFormRegister } from "react-hook-form";
 import { getStrengthBlocks } from "../../../utils/password";
 
-interface PasswordInputProps {
-  register: UseFormRegister<any>;
-  error?: any;
-  field: string;
-  value?: string;
-}
-
-const PasswordInput = ({
-  register,
-  error,
-  field,
-  value,
-}: PasswordInputProps) => {
+const PasswordInput = ({ register, field, value }: any) => {
   const [showPassword, setShowPassword] = useState(false);
   const strength = getStrengthBlocks(value || "");
 
@@ -78,7 +65,6 @@ const PasswordInput = ({
           </div>
         </div>
       )}
-      {error && <p className="text-red-500 text-sm mt-1">{error.message}</p>}
     </div>
   );
 };

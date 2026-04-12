@@ -18,7 +18,7 @@ const RegisterPage = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const registerLoading = useAppSelector(
-    (state) => state.ui.loadingMap["auth/register"],
+    (state) => state.ui.loadingMap["auth/registerAccount"],
   );
 
   const {
@@ -78,7 +78,7 @@ const RegisterPage = () => {
 
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-col justify-between gap-5 p-10"
+          className="flex flex-col justify-between gap-3 p-10"
         >
           <div>
             <h1 className="font-bold text-2xl mb-1">Đăng ký tài khoản</h1>
@@ -89,57 +89,64 @@ const RegisterPage = () => {
 
           <div className="flex flex-col gap-2">
             <div>
-              <label className="block text-gray-700 font-medium mb-1">
-                Tên đăng nhập
-              </label>
-              <InputForm
-                register={register}
-                error={errors.username}
-                field={"username"}
-              />
+              <div className="flex flex-row items-center justify-between">
+                <label className="block text-gray-700 font-medium mb-1">
+                  Tên đăng nhập
+                </label>
+                <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
+                  {errors.username?.message || " "}
+                </p>
+              </div>
+              <InputForm register={register} field={"username"} />
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-1">
-                Email
-              </label>
-              <InputForm
-                register={register}
-                error={errors.email}
-                field={"email"}
-              />
+              <div className="flex flex-row items-center justify-between">
+                <label className="block text-gray-700 font-medium mb-1">
+                  Email
+                </label>
+                <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
+                  {errors.email?.message || " "}
+                </p>
+              </div>
+              <InputForm register={register} field={"email"} />
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-1">
-                Mật khẩu
-              </label>
+              <div className="flex flex-row items-center justify-between">
+                <label className="block text-gray-700 font-medium mb-1">
+                  Mật khẩu
+                </label>
+                <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
+                  {errors.password?.message || " "}
+                </p>
+              </div>
               <PasswordInput
                 register={register}
-                error={errors.password}
                 field={"password"}
                 value={passwordValue}
               />
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-1">
-                Xác nhận mật khẩu
-              </label>
-              <PasswordInput
-                register={register}
-                error={errors.confirmPassword}
-                field={"confirmPassword"}
-              />
+              <div className="flex flex-row items-center justify-between">
+                <label className="block text-gray-700 font-medium mb-1">
+                  Xác nhận mật khẩu
+                </label>
+                <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
+                  {errors.confirmPassword?.message || " "}
+                </p>
+              </div>
+              <PasswordInput register={register} field={"confirmPassword"} />
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 mt-2">
             <LoadingButton loading={registerLoading} type="submit">
               Tạo tài khoản
             </LoadingButton>
 
-            <p className="text-sm text-center">
+            <p className="text-center">
               Đã có tài khoản?{" "}
               <Link
                 to="/login"

@@ -148,7 +148,53 @@ const ProductPage = () => {
       {/* Nội dung chính */}
       <div className="flex flex-col md:flex-row gap-6 px-6 py-6 items-start">
         {/* Sidebar danh mục */}
+
         <div className="w-full md:w-1/5 bg-white rounded-2xl shadow-sm border border-gray-300 p-5 h-fit flex flex-col gap-6">
+          {/* CHI NHÁNH */}
+          <div>
+            <h3 className="font-semibold mb-4 flex items-center gap-2 border-b pb-2 border-gray-500">
+              <MapPinned size={20} className="text-sky-500" />
+              CHI NHÁNH CỬA HÀNG
+            </h3>
+
+            {/* SEARCH */}
+            <div className="relative flex-1">
+              <span className="absolute left-3 top-1/3 -translate-y-1/3 text-gray-500">
+                <Search size={18} className="text-sky-700" />
+              </span>
+              <input
+                type="text"
+                placeholder="Tìm chi nhánh..."
+                className="w-full mb-3 pl-10 pr-3 py-1 border border-gray-400 rounded-lg outline-none "
+                value={searchBranch}
+                onChange={(e) => setSearchBranch(e.target.value)}
+              />
+            </div>
+
+            {/* LIST */}
+            <ul className="flex flex-col gap-2 max-h-100 overflow-y-auto pr-1">
+              {branches
+                .filter((branch) =>
+                  branch.branchName
+                    .toLowerCase()
+                    .includes(searchBranch.toLowerCase()),
+                )
+                .map((branch) => (
+                  <li
+                    key={branch.id}
+                    className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-sky-50 hover:text-sky-600 hover:-translate-0.5 transition"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedBranch.includes(branch.id)}
+                      onChange={() => handleChange(branch.id)}
+                      className="cursor-pointer w-4 h-4 accent-sky-500"
+                    />
+                    <span className="text-gray-700">{branch.branchName}</span>
+                  </li>
+                ))}
+            </ul>
+          </div>
           {/* DANH MỤC */}
           <div>
             <h3 className="font-semibold mb-4 flex items-center gap-2 border-b pb-2 border-gray-500">
@@ -172,53 +218,6 @@ const ProductPage = () => {
                   {cate.cateName}
                 </li>
               ))}
-            </ul>
-          </div>
-          {/* CHI NHÁNH */}
-          <div>
-            <h3 className="font-semibold mb-4 flex items-center gap-2 border-b pb-2 border-gray-500">
-              <MapPinned size={20} className="text-sky-500" />
-              CHI NHÁNH CỬA HÀNG
-            </h3>
-
-            {/* SEARCH */}
-            <div className="relative flex-1">
-              <span className="absolute left-3 top-1/3 -translate-y-1/3 text-gray-500">
-                <Search size={18} className="text-sky-700" />
-              </span>
-              <input
-                type="text"
-                placeholder="Tìm chi nhánh..."
-                className="w-full mb-3 pl-10 pr-3 py-1 border border-gray-400 rounded-lg outline-none "
-                value={searchBranch}
-                onChange={(e) => setSearchBranch(e.target.value)}
-              />
-            </div>
-
-            {/* LIST */}
-            <ul className="flex flex-col gap-2 max-h-60 overflow-y-auto pr-1">
-              {branches
-                .filter((branch) =>
-                  branch.branchName
-                    .toLowerCase()
-                    .includes(searchBranch.toLowerCase()),
-                )
-                .map((branch) => (
-                  <li
-                    key={branch.id}
-                    className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-sky-50 hover:text-sky-600 hover:-translate-0.5 transition"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedBranch.includes(branch.id)}
-                      onChange={() => handleChange(branch.id)}
-                      className="cursor-pointer w-4 h-4 accent-sky-500"
-                    />
-                    <span className="text-gray-700 text-sm">
-                      {branch.branchName}
-                    </span>
-                  </li>
-                ))}
             </ul>
           </div>
         </div>

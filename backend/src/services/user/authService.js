@@ -1,4 +1,4 @@
-import { Profile, Role, User } from "../../models/index.js";
+import { Profile, Role, User, Wallet } from "../../models/index.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import dotenv from "dotenv";
@@ -17,6 +17,7 @@ import {
 } from "../../utils/jwt.js";
 import RefreshToken from "../../models/refreshToken.js";
 import UnauthorizedError from "../../errors/UnauthorizedError.js";
+import { WALLET_STATUS } from "../../constants/paymentConstant.js";
 
 // Bước tiếp theo nâng cấp lên để tránh spam gửi OTP
 
@@ -61,6 +62,14 @@ const handleRegisterService = async (data) => {
         type: OTP_TYPE.REGISTER,
         attempts: 0,
         isUsed: false,
+      },
+      { transaction: t },
+    );
+
+    await Wallet.create(
+      {
+        userId: user.id,
+        status: WALLET_STATUS.ACTIVE,
       },
       { transaction: t },
     );
@@ -120,7 +129,9 @@ const verifyOtpService = async (data) => {
 
   if (userOtp.attempts >= 5) {
     await userOtp.update({ isUsed: true });
-    throw new BadRequestError("Mã OTP đăng ký tài khoản đã bị khóa");
+    throw new BadRequestError(
+      "Mã OTP đăng ký tài khoản đã bị khóa do nhập sai quá 5 lần liên tiếp",
+    );
   }
 
   if (userOtp.otpCode !== otpCodeHash) {
@@ -146,12 +157,15 @@ const sendOtpService = async (data) => {
     }
 
     // check flow
-    if (type === OTP_TYPE.REGISTER && user.isVerified) {
+    if (user.isVerified && type === OTP_TYPE.REGISTER) {
       throw new BadRequestError("Tài khoản đã được xác thực");
     }
 
-    if (type === OTP_TYPE.RESET_PASSWORD && !user.isVerified) {
-      throw new BadRequestError("Tài khoản chưa được xác thực");
+    if (
+      !user.isVerified &&
+      (type === OTP_TYPE.WITHDRAW_REQUEST || type === OTP_TYPE.RESET_PASSWORD)
+    ) {
+      throw BadRequestError("Tài khoản chưa được xác thực");
     }
 
     // chống spam + trả remainingTime
@@ -245,7 +259,9 @@ const verifyResetOtpService = async (data) => {
 
   if (userOtp.attempts >= 5) {
     await userOtp.update({ isUsed: true });
-    throw new BadRequestError("Mã OTP đổi mật khẩu đã bị khóa");
+    throw new BadRequestError(
+      "Mã OTP đổi mật khẩu đã bị khóa do nhập sai quá 5 lần liên tiếp",
+    );
   }
 
   if (userOtp.otpCode !== otpCodeHash) {

@@ -1,12 +1,9 @@
-import { CANCELLED } from "dns";
-
 export const PAYMENT_STATUS = Object.freeze({
   PENDING: "PENDING",
-  SUCCESS: "SUCCESS",
-  FAILED: "FAILED",
-  CANCELLED: "CANCELLED",
-  REFUNDED: "REFUNDED",
   PAID: "PAID",
+  FAILED: "FAILED",
+  PARTIALLY_REFUNDED: "PARTIALLY_REFUNDED",
+  REFUNDED: "REFUNDED",
 });
 
 export const PAYMENT_METHOD_STATUS = Object.freeze({

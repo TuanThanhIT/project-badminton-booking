@@ -33,6 +33,7 @@ export type WalletWithdrawRequest = {
 export type WalletWithdrawConfirmRequest = {
   withdrawRequestId: number;
   otpCode: string;
+  email: string;
 };
 
 export type WalletWithdrawData = {

@@ -2,6 +2,7 @@ import User from "./user.js";
 import Role from "./role.js";
 import Profile from "./profile.js";
 import UserOtp from "./userOtp.js";
+import UserAddress from "./userAddress.js";
 
 import Branch from "./branch.js";
 import BranchManager from "./branchManager.js";
@@ -58,6 +59,8 @@ import CashRegister from "./cashRegister.js";
 import CoachProfile from "./coachProfile.js";
 import WithdrawRequest from "./withDrawRequest.js";
 import RefreshToken from "./refreshToken.js";
+import OrderGroup from "./orderGroup.js";
+import ShippingPartner from "./shippingPartner.js";
 
 //////////////////////////////////////////////////////
 //////////////// USER SYSTEM /////////////////////////
@@ -71,6 +74,9 @@ Profile.belongsTo(User, { foreignKey: "userId", as: "user" });
 
 User.hasMany(UserOtp, { foreignKey: "userId", as: "otps" });
 UserOtp.belongsTo(User, { foreignKey: "userId", as: "user" });
+
+User.hasMany(UserAddress, { foreignKey: "userId", as: "addresses" });
+UserAddress.belongsTo(User, { foreignKey: "userId", as: "user" });
 
 User.hasMany(RefreshToken, { foreignKey: "userId", as: "tokens" });
 RefreshToken.belongsTo(User, { foreignKey: "userId", as: "user" });
@@ -300,9 +306,9 @@ ProductImage.belongsTo(Product, {
 
 User.hasMany(Order, {
   foreignKey: "userId",
-  as: "orders",
+  as: "orderGroups",
 });
-Order.belongsTo(User, {
+OrderGroup.belongsTo(User, {
   foreignKey: "userId",
   as: "user",
 });
@@ -316,13 +322,31 @@ Order.belongsTo(Branch, {
   as: "branch",
 });
 
-Discount.hasMany(Order, {
+Discount.hasMany(OrderGroup, {
   foreignKey: "discountId",
-  as: "orders",
+  as: "orderGroup",
 });
-Order.belongsTo(Discount, {
+OrderGroup.belongsTo(Discount, {
   foreignKey: "discountId",
   as: "discount",
+});
+
+OrderGroup.hasMany(Order, {
+  foreignKey: "orderGroupId",
+  as: "orders",
+});
+Order.belongsTo(OrderGroup, {
+  foreignKey: "orderGroupId",
+  as: "orderGroup",
+});
+
+ShippingPartner.hasMany(Order, {
+  foreignKey: "shippingPartnerId",
+  as: "orders",
+});
+Order.belongsTo(ShippingPartner, {
+  foreignKey: "shippingPartnerId",
+  as: "shippingPartner",
 });
 
 Order.hasMany(OrderDetail, {
@@ -638,6 +662,7 @@ export {
   Role,
   Profile,
   UserOtp,
+  UserAddress,
   Branch,
   BranchManager,
   BranchImage,
@@ -676,4 +701,5 @@ export {
   WorkShiftEmployee,
   CashRegister,
   CoachProfile,
+  ShippingPartner,
 };

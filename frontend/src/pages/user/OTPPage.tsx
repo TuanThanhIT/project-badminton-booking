@@ -186,10 +186,17 @@ const OTPPage: React.FC = () => {
         );
         return;
       }
+      if (!email) {
+        toast.error(
+          "Phiên xác thực đã hết hạn. Vui lòng yêu cầu mã OTP mới để tiếp tục.",
+        );
+        return;
+      }
 
       const data: WalletWithdrawConfirmRequest = {
         withdrawRequestId,
         otpCode,
+        email,
       };
 
       await dispatch(walletWithdrawConfirm({ data }))

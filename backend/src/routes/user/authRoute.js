@@ -49,7 +49,7 @@ const initAuthRoute = (app) => {
   authRoute.get(
     "/me",
     auth,
-    authorize("User"),
+    authorize("USER"),
     authController.getAccountController,
   );
   authRoute.post("/logout", authController.logoutController);

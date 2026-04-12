@@ -22,3 +22,8 @@ export const OTP_TYPE = Object.freeze({
   RESET_PASSWORD: "RESET_PASSWORD",
   WITHDRAW_REQUEST: "WITHDRAW_REQUEST",
 });
+
+export const USER_ADDRESS_LABEL = Object.freeze({
+  HOME: "HOME",
+  OFFICE: "OFFICE",
+});

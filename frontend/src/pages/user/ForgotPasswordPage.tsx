@@ -93,9 +93,14 @@ const ForgotPasswordPage: React.FC = () => {
 
           {/* Email */}
           <div>
-            <label className="block text-gray-700 font-medium mb-1">
-              Email đăng ký
-            </label>
+            <div className="flex flex-row items-center justify-between">
+              <label className="block text-gray-700 font-medium mb-1">
+                Email đăng ký
+              </label>
+              <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
+                {errors.email?.message || " "}
+              </p>
+            </div>
             <InputForm
               register={register}
               error={errors.email}

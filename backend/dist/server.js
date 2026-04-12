@@ -15,6 +15,7 @@ var _productRoute = _interopRequireDefault(require("./routes/user/productRoute.j
 var _branchRoute = _interopRequireDefault(require("./routes/user/branchRoute.js"));
 var _cartRoute = _interopRequireDefault(require("./routes/user/cartRoute.js"));
 var _walletRoute = _interopRequireDefault(require("./routes/user/walletRoute.js"));
+var _addressRoute = _interopRequireDefault(require("./routes/user/addressRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -36,6 +37,7 @@ app.use((0, _cookieParser["default"])());
 (0, _branchRoute["default"])(app);
 (0, _cartRoute["default"])(app);
 (0, _walletRoute["default"])(app);
+(0, _addressRoute["default"])(app);
 
 // create http server
 var httpServer = (0, _http.createServer)(app);

@@ -59,7 +59,7 @@ export type CourtAvailable = {
   location: string;
   thumbnailUrl: string;
   totalPrice: number;
-  duration: string; // ⚠️ backend trả string
+  duration: string; // ?? backend tr? string
   status: CourtStatus;
 };
 
@@ -71,3 +71,12 @@ export type GetAvailableCourtsRequest = {
   startTime: string; // "HH:mm"
   endTime: string; // "HH:mm"
 };
+export type Branch = {
+  id: number;
+  branchName: string;
+  address: string;
+  district: string;
+  city: string;
+};
+
+export type BranchResponse = ApiResponse<Branch[]>;

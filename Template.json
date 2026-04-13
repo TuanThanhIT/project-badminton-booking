@@ -1,0 +1,96 @@
+// tìm người chơi chung
+{
+    "title": "Tìm người chơi chung Bài số 3",
+    "content": "Trình độ trung bình, chia đều tiền sân. Vui vẻ, fair-play.",
+    "type": "Find_player",
+    "formData": {
+      "location": {
+        "branchId": 8,
+        "courtId": 12
+      },
+      "schedule": {
+        "date": "2026-03-22",
+        "startTime": "18:00",
+        "endTime": "20:00"
+      },
+      "playerRequirement": {
+        "level": "Trung bình",
+        "customLevel": null,
+        "slotsNeeded": 2
+      },
+      "cost": {
+        "method": "Tiền mặt",
+        "note": "Tiền sân chia đều, cầu tự túc"
+      },
+      "contact": {
+        "inApp": true,
+        "phone": "0901234567",
+        "zalo": "0901234567"
+      },
+      "notes": "Đi đúng giờ, vui vẻ, fair-play."
+    }
+  }
+ 
+// lớp học 
+{
+  "title": "Lớp căn bản tối 2–4–6",
+  "content": "Nội dung học, mục tiêu, yêu cầu...",
+  "type": "Class",
+  "formData": {
+    "inputLevel": "Beginner",
+    "ageRange": "16+",
+    "schedule": {
+      "weekdays": [2, 4, 6],
+      "startTime": "19:00",
+      "endTime": "21:00",
+      "startDate": "2026-04-01"
+    },
+    "location": {
+      "branchId": 3,
+      "address": "..."
+    },
+    "maxStudents": 10,
+    "tuition": {
+      "type": "monthly",
+      "amount": 500000,
+      "currency": "VND",
+      "note": "Đóng đầu tháng"
+    },
+    "registerEndDate": "2026-03-28",
+    "paymentMethod": "onsite",
+    "contact": {
+      "inAppChat": true,
+      "phone": "0901234567",
+      "zalo": "0901234567"
+    },
+    "notes": "Có buổi học thử. Mang vợt nếu có."
+  }
+}
+// giải đấu 
+{
+  "title": "Giải phong trào Thủ Đức Open 2026",
+  "content": "Thể lệ, hạng mục, phí đăng ký xem trong nội dung hoặc chi tiết giải.",
+  "type": "Tournament",
+  "formData": {
+    "organizerName": "CLB Cầu lông Thủ Đức",
+    "location": { "branchId": 3, "courtId": 12 },
+    "registration": { "startDate": "2026-03-01", "endDate": "2026-03-15" },
+    "eventDate": "2026-03-20",
+    "categories": ["Đơn nam", "Đôi nam nữ"],
+    "paymentMethod": "both",
+    "contact": { "phone": "0901234567", "email": "clb@example.com", "inApp": true }
+  }
+}
+// nhóm chơi 
+{
+  "title": "Nhóm đánh cố định T2–T5 sân A",
+  "content": "Mục tiêu nhóm: chơi đều, văn hóa tốt. Quy định: đúng giờ.",
+  "type": "Group",
+  "formData": {
+    "area": { "city": "TP.HCM", "district": "Thủ Đức" },
+    "weeklySchedule": { "weekdays": [2, 3, 4, 5], "startTime": "19:00", "endTime": "21:00" },
+    "levelWanted": "Trung bình",
+    "contact": { "inApp": true, "zaloGroupLink": "https://zalo.me/g/xxxx" }
+  }
+}
+  

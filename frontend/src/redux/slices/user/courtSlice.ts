@@ -1,5 +1,3 @@
-// redux/slices/user/courtSlice.ts
-
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type {
   CourtAvailable,
@@ -9,17 +7,29 @@ import type {
 import type { ApiErrorType } from "../../../types/error";
 import courtService from "../../../services/user/courtService";
 
+// 👉 thêm type nếu chưa có
+type CourtInfo = {
+  id: number;
+  courtName: string;
+};
+
+type CourtInfoResponse = {
+  data: CourtInfo[];
+};
+
 interface CourtState {
   availableCourts: CourtAvailable[];
+  courts: CourtInfo[];
   loading: boolean;
 }
 
 const initialState: CourtState = {
   availableCourts: [],
+  courts: [],
   loading: false,
 };
 
-// 🔥 THUNK
+// 🔥 THUNK 1
 export const getAvailableCourts = createAsyncThunk<
   CourtAvailableResponse,
   GetAvailableCourtsRequest,
@@ -32,23 +42,63 @@ export const getAvailableCourts = createAsyncThunk<
     return rejectWithValue(error as ApiErrorType);
   }
 });
+
+// 🔥 THUNK 2
+export const getCourtsByIds = createAsyncThunk<
+  CourtInfoResponse,
+  { ids: number[] },
+  { rejectValue: ApiErrorType }
+>("court/getCourtsByIds", async ({ ids }, { rejectWithValue }) => {
+  try {
+    const res = await courtService.getCourtsByIdsService(ids);
+    return res.data;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
+// 🔥 THUNK 3
+export const getAllCourts = createAsyncThunk<
+  CourtInfoResponse,
+  void,
+  { rejectValue: ApiErrorType }
+>("court/getAllCourts", async (_, { rejectWithValue }) => {
+  try {
+    const res = await courtService.getAllCourtsService();
+    return res.data;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
+// ✅ SINGLE SLICE
 const courtSlice = createSlice({
   name: "court",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
-    builder.addCase(getAvailableCourts.pending, (state) => {
-      state.loading = true;
-    });
+    builder
+      // available courts
+      .addCase(getAvailableCourts.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getAvailableCourts.fulfilled, (state, action) => {
+        state.availableCourts = action.payload.data;
+        state.loading = false;
+      })
+      .addCase(getAvailableCourts.rejected, (state) => {
+        state.loading = false;
+      })
 
-    builder.addCase(getAvailableCourts.fulfilled, (state, action) => {
-      state.availableCourts = action.payload.data;
-      state.loading = false;
-    });
+      // courts by ids
+      .addCase(getCourtsByIds.fulfilled, (state, action) => {
+        state.courts = action.payload.data;
+      })
 
-    builder.addCase(getAvailableCourts.rejected, (state) => {
-      state.loading = false;
-    });
+      // all courts
+      .addCase(getAllCourts.fulfilled, (state, action) => {
+        state.courts = action.payload.data;
+      });
   },
 });
 

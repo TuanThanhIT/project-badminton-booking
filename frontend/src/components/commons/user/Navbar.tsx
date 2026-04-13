@@ -1,9 +1,10 @@
 import { NavLink } from "react-router-dom";
 import { Calendar, Contact, History, Home, Info } from "lucide-react";
+import CategoryMenu from "../../ui/user/CategoryMenu";
 import { useAppSelector } from "../../../redux/hook";
 
 const Navbar = () => {
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { accessToken, user } = useAppSelector((state) => state.auth);
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `group flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium transition-all duration-200
@@ -23,8 +24,8 @@ const Navbar = () => {
       <ul className="flex flex-wrap justify-center items-center gap-6 py-3">
         {/* Trang chủ */}
         <li>
-          {isAuthenticated ? (
-            <NavLink to="/home" className={linkClass}>
+          {!accessToken && !user ? (
+            <NavLink to="/" className={linkClass}>
               {({ isActive }) => (
                 <>
                   <Home className={iconClass({ isActive })} />
@@ -33,7 +34,7 @@ const Navbar = () => {
               )}
             </NavLink>
           ) : (
-            <NavLink to="/" className={linkClass}>
+            <NavLink to="/home" className={linkClass}>
               {({ isActive }) => (
                 <>
                   <Home className={iconClass({ isActive })} />
@@ -46,14 +47,7 @@ const Navbar = () => {
 
         {/* Sản phẩm (thay bằng CategoryMenu) */}
         <li>
-          <NavLink to="/products" className={linkClass}>
-            {({ isActive }) => (
-              <>
-                <Calendar className={iconClass({ isActive })} />
-                SẢN PHẨM
-              </>
-            )}
-          </NavLink>
+          <CategoryMenu />
         </li>
 
         {/* Đặt sân */}
@@ -68,13 +62,13 @@ const Navbar = () => {
           </NavLink>
         </li>
 
-        {/* Lịch sử */}
+        {/* Bài đăng (feed) */}
         <li>
-          <NavLink to="/history" className={linkClass}>
+          <NavLink to="/posts" className={linkClass}>
             {({ isActive }) => (
               <>
                 <History className={iconClass({ isActive })} />
-                LỊCH SỬ
+                THẢO LUẬN
               </>
             )}
           </NavLink>

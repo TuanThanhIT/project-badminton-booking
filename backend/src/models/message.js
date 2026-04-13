@@ -43,19 +43,23 @@ const Message = sequelize.define(
     },
     body: {
       type: DataTypes.TEXT,
-      allowNull: false,
+      allowNull: true,
+      defaultValue: "",
       validate: {
-        notNull: {
-          msg: "Message body is required",
-        },
-        notEmpty: {
-          msg: "Message body cannot be empty",
-        },
         len: {
-          args: [1, 5000],
-          msg: "Message body must be between 1 and 5000 characters",
+          args: [0, 5000],
+          msg: "Message body must be at most 5000 characters",
         },
       },
+    },
+    mediaUrl: {
+      type: DataTypes.STRING(2048),
+      allowNull: true,
+    },
+    isRecalled: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     },
     type: {
       type: DataTypes.ENUM(...Object.values(MESSAGE_TYPE)),

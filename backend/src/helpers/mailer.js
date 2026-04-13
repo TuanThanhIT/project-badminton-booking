@@ -9,11 +9,11 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const sendOtpMail = async (email, otpCode) => {
+const sendOtpMail = async (email, otpCode, subject) => {
   await transporter.sendMail({
     from: `"Hỗ trợ B-Hub" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: "Mã OTP xác thực tài khoản",
+    subject,
     text: `Mã OTP của bạn là: ${otpCode}`,
     html: `<p>Mã OTP của bạn là: <b>${otpCode}</b></p><p>Có hiệu lực trong 5 phút.</p>`,
   });

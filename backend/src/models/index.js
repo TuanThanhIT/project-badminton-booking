@@ -2,6 +2,7 @@ import User from "./user.js";
 import Role from "./role.js";
 import Profile from "./profile.js";
 import UserOtp from "./userOtp.js";
+import UserAddress from "./userAddress.js";
 
 import Branch from "./branch.js";
 import BranchManager from "./branchManager.js";
@@ -56,6 +57,10 @@ import WorkShiftEmployee from "./workShiftEmployee.js";
 import CashRegister from "./cashRegister.js";
 
 import CoachProfile from "./coachProfile.js";
+import WithdrawRequest from "./withDrawRequest.js";
+import RefreshToken from "./refreshToken.js";
+import OrderGroup from "./orderGroup.js";
+import ShippingPartner from "./shippingPartner.js";
 
 //////////////////////////////////////////////////////
 //////////////// USER SYSTEM /////////////////////////
@@ -70,6 +75,12 @@ Profile.belongsTo(User, { foreignKey: "userId", as: "user" });
 User.hasMany(UserOtp, { foreignKey: "userId", as: "otps" });
 UserOtp.belongsTo(User, { foreignKey: "userId", as: "user" });
 
+User.hasMany(UserAddress, { foreignKey: "userId", as: "addresses" });
+UserAddress.belongsTo(User, { foreignKey: "userId", as: "user" });
+
+User.hasMany(RefreshToken, { foreignKey: "userId", as: "tokens" });
+RefreshToken.belongsTo(User, { foreignKey: "userId", as: "user" });
+
 //////////////////////////////////////////////////////
 //////////////// WALLET //////////////////////////////
 //////////////////////////////////////////////////////
@@ -79,11 +90,38 @@ Wallet.belongsTo(User, { foreignKey: "userId", as: "user" });
 
 Wallet.hasMany(WalletTransaction, {
   foreignKey: "walletId",
-  as: "transactions",
+  as: "walletTransactions", // ✅ đổi
 });
 WalletTransaction.belongsTo(Wallet, {
   foreignKey: "walletId",
   as: "wallet",
+});
+
+Wallet.hasMany(WithdrawRequest, {
+  foreignKey: "walletId",
+  as: "withdrawRequests",
+});
+WithdrawRequest.belongsTo(Wallet, {
+  foreignKey: "walletId",
+  as: "wallet",
+});
+
+Payment.hasMany(WalletTransaction, {
+  foreignKey: "paymentId",
+  as: "paymentTransactions",
+});
+WalletTransaction.belongsTo(Payment, {
+  foreignKey: "paymentId",
+  as: "payment",
+});
+
+WithdrawRequest.hasMany(WalletTransaction, {
+  foreignKey: "withdrawRequestId",
+  as: "withdrawTransactions", // ✅ đổi
+});
+WalletTransaction.belongsTo(WithdrawRequest, {
+  foreignKey: "withdrawRequestId",
+  as: "withdrawRequest",
 });
 
 //////////////////////////////////////////////////////
@@ -113,6 +151,15 @@ Branch.hasMany(BranchImage, {
   as: "images",
 });
 BranchImage.belongsTo(Branch, {
+  foreignKey: "branchId",
+  as: "branch",
+});
+
+Branch.hasMany(ProductVariant, {
+  foreignKey: "branchId",
+  as: "variants",
+});
+ProductVariant.belongsTo(Branch, {
   foreignKey: "branchId",
   as: "branch",
 });
@@ -259,9 +306,9 @@ ProductImage.belongsTo(Product, {
 
 User.hasMany(Order, {
   foreignKey: "userId",
-  as: "orders",
+  as: "orderGroups",
 });
-Order.belongsTo(User, {
+OrderGroup.belongsTo(User, {
   foreignKey: "userId",
   as: "user",
 });
@@ -275,13 +322,31 @@ Order.belongsTo(Branch, {
   as: "branch",
 });
 
-Discount.hasMany(Order, {
+Discount.hasMany(OrderGroup, {
   foreignKey: "discountId",
-  as: "orders",
+  as: "orderGroup",
 });
-Order.belongsTo(Discount, {
+OrderGroup.belongsTo(Discount, {
   foreignKey: "discountId",
   as: "discount",
+});
+
+OrderGroup.hasMany(Order, {
+  foreignKey: "orderGroupId",
+  as: "orders",
+});
+Order.belongsTo(OrderGroup, {
+  foreignKey: "orderGroupId",
+  as: "orderGroup",
+});
+
+ShippingPartner.hasMany(Order, {
+  foreignKey: "shippingPartnerId",
+  as: "orders",
+});
+Order.belongsTo(ShippingPartner, {
+  foreignKey: "shippingPartnerId",
+  as: "shippingPartner",
 });
 
 Order.hasMany(OrderDetail, {
@@ -398,6 +463,10 @@ OfflineBooking.belongsTo(DraftBooking, {
 
 User.hasMany(Post, { foreignKey: "authorId", as: "posts" });
 Post.belongsTo(User, { foreignKey: "authorId", as: "author" });
+
+// Repost relationship (self-reference)
+Post.belongsTo(Post, { foreignKey: "repostOfPostId", as: "repostOf" });
+Post.hasMany(Post, { foreignKey: "repostOfPostId", as: "reposts" });
 
 Post.hasMany(Comment, { foreignKey: "postId", as: "comments" });
 Comment.belongsTo(Post, { foreignKey: "postId", as: "post" });
@@ -597,6 +666,7 @@ export {
   Role,
   Profile,
   UserOtp,
+  UserAddress,
   Branch,
   BranchManager,
   BranchImage,
@@ -635,4 +705,5 @@ export {
   WorkShiftEmployee,
   CashRegister,
   CoachProfile,
+  ShippingPartner,
 };

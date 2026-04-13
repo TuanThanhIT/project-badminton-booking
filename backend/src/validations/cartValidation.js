@@ -3,7 +3,7 @@ import { idParams, quantityField } from "./common/numberField.js";
 
 export const addItemToCartSchema = {
   body: Joi.object({
-    varientId: idParams("varientId"),
+    variantId: idParams("variantId"),
     quantity: quantityField,
   }),
 };

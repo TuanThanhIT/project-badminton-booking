@@ -16,9 +16,15 @@ import CheckoutPage from "../pages/user/CheckoutPage";
 import OrderPage from "../pages/user/OrderPage";
 import UserPublicLayout from "../components/layouts/UserPublicLayout";
 import UserPrivateLayout from "../components/layouts/UserPrivateLayout";
-import AuthGuard from "../components/guards/AuthUserGuard";
 import BookingCourtPage from "../pages/user/BookingCourtPage";
 import BookingPage from "../pages/user/BookingPage";
+import WalletDepositSuccess from "../pages/user/WalletDepositSuccess";
+import WalletPage from "../pages/user/WalletPage";
+import ResetPasswordPage from "../pages/user/ResetPasswordPage";
+import CreatePostPage from "../pages/user/CreatePostPage";
+import PostListPage from "../pages/user/postList/PostListPage";
+import PublicProfilePage from "../pages/user/PublicProfilePage";
+import MessagesPage from "../pages/user/MessagesPage";
 import BranchPage from "../pages/user/BranchesPage";
 import BranchDetailPage from "../pages/user/BranchDetailPage";
 import CourtPage from "../pages/user/CourtPage";
@@ -35,31 +41,39 @@ const UserRoute = () => {
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
         <Route path="verify-otp" element={<OTPPage />} />
-        <Route path="forgotpass" element={<ForgotPasswordPage />} />
+        <Route path="forgot-pass" element={<ForgotPasswordPage />} />
+        <Route path="reset-password" element={<ResetPasswordPage />} />
       </Route>
 
       {/* Private */}
-      <Route
+      <Route element={<UserPrivateLayout />}>
+<Route
         element={
           //<AuthGuard>
           <UserPrivateLayout />
           //</AuthGuard>
         }
-      >
-        <Route path="home" element={<HomePage />} />
+      >        <Route path="home" element={<HomePage />} />
         <Route path="products" element={<ProductPage />} />
         <Route path="product/:id" element={<ProductDetailPage />} />
         <Route path="booking" element={<BookingCourtPage />} />
         <Route path="history" element={<HistoryPage />} />
         <Route path="profile" element={<ProfilePage />} />
+        <Route path="profile/:userId" element={<PublicProfilePage />} />
         <Route path="cart" element={<CartPage />} />
         <Route path="checkout" element={<CheckoutPage />} />
         <Route path="orders" element={<OrderPage />} />
         <Route path="bookings" element={<BookingPage />} />
-        <Route path="branches" element={<BranchPage />} />
-        <Route path="branches/:branchId" element={<BranchDetailPage />} />
-        <Route path="courts" element={<CourtPage />} />
-        <Route path="tournament-post" element={<TournamentPost />} />
+		<Route path="branches" element={<BranchPage />} />
+        <Route path="wallet" element={<WalletPage />}></Route>
+        <Route
+          path="wallet/deposit/success"
+          element={<WalletDepositSuccess />}
+        ></Route>
+        <Route path="create-post" element={<CreatePostPage />} />
+        <Route path="posts" element={<PostListPage />} />
+        <Route path="messages" element={<MessagesPage />} />
+        <Route path="messages/:conversationId" element={<MessagesPage />} />
       </Route>
     </Routes>
   );

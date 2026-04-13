@@ -5,100 +5,135 @@ import {
   LogOut,
   Package,
   Calendar,
+  MessageCircle,
 } from "lucide-react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../redux/hook";
-import { logout } from "../../../redux/slices/user/authSlice";
+import { logout, logoutLocal } from "../../../redux/slices/user/authSlice";
+import { getMyProfile } from "../../../redux/slices/user/profileSlice";
 
-const Header = () => {
+interface HeaderProps {
+  cartRef: React.RefObject<HTMLDivElement | null>; // cho phép null
+}
+
+const Header = ({ cartRef }: HeaderProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const dispatch = useAppDispatch();
-  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+  const { user, accessToken } = useAppSelector((state) => state.auth);
+  const myProfile = useAppSelector((state) => state.profile.myProfile);
+  const cart = useAppSelector((state) => state.cart.cart);
+  const [countCartItem, setCountCartItem] = useState(0);
 
   const handleLogout = () => {
     dispatch(logout());
-    localStorage.removeItem("persist:root");
+    dispatch(logoutLocal());
     navigate("/login");
   };
 
+  useEffect(() => {
+    if (!cart) return;
+    setCountCartItem(cart.cartItems.length);
+  }, [cart]);
+
+  useEffect(() => {
+    // Đồng bộ avatar/fullName cho header qua profile slice (thunk)
+    if (!accessToken || !user?.id) return;
+      if (myProfile?.id) return;
+      dispatch(getMyProfile());
+  }, [dispatch, accessToken, user?.id, myProfile?.id]);
+
+  const headerDisplayName =
+    myProfile?.profile?.fullName?.trim() || user?.username || "Tài khoản";
+  const headerAvatarUrl = myProfile?.profile?.avatar || user?.profile?.avatar || "";
+  const headerAvatarLetter = headerDisplayName.charAt(0).toUpperCase();
+  const isPostsPage = location.pathname.startsWith("/posts");
+
   return (
     <header className="bg-white shadow-sm">
-      <div className="flex justify-between items-center px-10 py-5">
+      <div className="mx-auto w-full max-w-screen-2xl px-3 py-3 sm:px-4 lg:px-6 flex items-center justify-between gap-3 flex-wrap">
         {/* Logo + Hotline */}
         <div
-          className="flex items-center gap-24 cursor-pointer"
+          className="flex items-center gap-3 sm:gap-6 lg:gap-10 cursor-pointer shrink-0"
           onClick={() => navigate("/")}
         >
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-3">
             <img
               src="/img/logo_badminton.jpg"
               alt="Logo"
-              className="w-14 h-14 rounded-xl shadow-sm"
+              className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-xl shadow-sm"
             />
-            <h1 className="text-3xl font-bold text-sky-600 tracking-wide">
+            <h1 className="text-2xl sm:text-3xl font-bold text-sky-600 tracking-wide leading-none">
               B-Hub
             </h1>
           </div>
 
-          <div className="hidden md:flex items-center gap-2 bg-sky-100 px-4 py-2 rounded-full shadow-sm">
-            <span className="text-gray-700 font-medium text-base">
+          <div className="hidden xl:flex items-center gap-2 bg-sky-100 px-4 py-2 rounded-full shadow-sm">
+            <span className="text-gray-700 font-medium text-sm 2xl:text-base">
               Hotline:
             </span>
             <a
               href="tel:0901234567"
-              className="text-red-600 font-semibold text-base hover:text-red-700"
+              className="text-red-600 font-semibold text-sm 2xl:text-base hover:text-red-700"
             >
               0901 234 567
             </a>
           </div>
         </div>
         {/* Actions */}
-        <div className="flex items-center">
+        <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-end">
           <NavLink
-            to="/bookings"
-            className="flex items-center gap-2 px-4 py-2 rounded-full text-gray-700 hover:bg-gray-100 transition text-base font-medium"
+            to="/create-post"
+            className="flex items-center gap-2 px-2.5 sm:px-3 lg:px-4 py-2 rounded-full text-gray-700 hover:bg-gray-100 transition text-sm lg:text-base font-medium"
           >
             <div className="relative">
-              <Calendar className="w-6 h-6 text-sky-600" />
+              <Calendar className="w-5 h-5 lg:w-6 lg:h-6 text-sky-600" />
               {/* <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md">
                 {countBookingItems}
               </span> */}
             </div>
-            <span>Lịch sân</span>
+            <span className="hidden xl:inline">Đăng bài</span>
           </NavLink>
 
           <NavLink
             to="/orders"
-            className="flex items-center gap-2 px-4 py-2 rounded-full text-gray-700 hover:bg-gray-100 transition text-base font-medium"
+            className="flex items-center gap-2 px-2.5 sm:px-3 lg:px-4 py-2 rounded-full text-gray-700 hover:bg-gray-100 transition text-sm lg:text-base font-medium"
           >
             <div className="relative">
-              <Package className="w-6 h-6 text-sky-600" />
+              <Package className="w-5 h-5 lg:w-6 lg:h-6 text-sky-600" />
               {/* <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md">
                 {countOrderItems}
               </span> */}
             </div>
-            <span>Đơn hàng</span>
+            <span className="hidden xl:inline">Đơn hàng</span>
+          </NavLink>
+
+          <NavLink
+            to="/messages"
+            className="flex items-center gap-2 px-2.5 sm:px-3 lg:px-4 py-2 rounded-full text-gray-700 hover:bg-gray-100 transition text-sm lg:text-base font-medium"
+          >
+            <MessageCircle className="w-5 h-5 lg:w-6 lg:h-6 text-sky-600" />
+            <span className="hidden xl:inline">Tin nhắn</span>
           </NavLink>
 
           {/* Cart */}
           <NavLink
             to="/cart"
-            className="flex items-center gap-2 px-4 py-2 rounded-full text-gray-700 hover:bg-gray-100 transition text-base font-medium"
+            className="flex items-center gap-2 px-2.5 sm:px-3 lg:px-4 py-2 rounded-full text-gray-700 hover:bg-gray-100 transition text-sm lg:text-base font-medium"
           >
-            <div className="relative">
-              <ShoppingCart className="w-6 h-6 text-sky-600" />
-
-              {/* <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md">
-                {countCartItems}
-              </span> */}
+            <div ref={cartRef} className="relative">
+              <ShoppingCart className="w-5 h-5 lg:w-6 lg:h-6 text-sky-600" />
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md">
+                {countCartItem}
+              </span>
             </div>
-            <span>Giỏ hàng</span>
+            <span className="hidden xl:inline">Giỏ hàng</span>
           </NavLink>
 
-          {!isAuthenticated ? (
+          {!accessToken && !user ? (
             <div className="flex items-center gap-3">
               <NavLink
                 to="/login"
@@ -120,16 +155,33 @@ const Header = () => {
             <div className="flex items-center gap-3">
               <NavLink
                 to="/profile"
-                className="flex items-center gap-2 px-5 py-2 rounded-full text-gray-700 hover:bg-gray-100 transition text-base font-medium"
+                className="flex items-center gap-2 px-2.5 sm:px-3 lg:px-4 py-2 rounded-full text-gray-700 hover:bg-gray-100 transition text-sm lg:text-base font-medium min-w-0"
               >
-                <UserPlus className="w-6 h-6 text-sky-600" />
-                {user?.username}
+                <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-full bg-sky-100 overflow-hidden flex items-center justify-center shrink-0">
+                  {headerAvatarUrl ? (
+                    <img
+                      src={headerAvatarUrl}
+                      alt={headerDisplayName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-sky-700 font-semibold">
+                      {headerAvatarLetter}
+                    </span>
+                  )}
+                </div>
+                <div className="hidden lg:flex flex-col leading-tight min-w-0">
+                  <span className="text-sm font-semibold text-gray-900 max-w-[160px] truncate">
+                    {headerDisplayName}
+                  </span>
+                  <span className="text-xs text-gray-500">@{user?.username}</span>
+                </div>
               </NavLink>
 
               {/* Notification Icon + Popup */}
               <div className="relative">
                 <button
-                  // onClick={toggleNotifications}
+                  onClick={() => setIsOpen((prev) => !prev)}
                   className="relative p-2 rounded-full hover:bg-white/20 transition"
                 >
                   <svg
@@ -179,17 +231,27 @@ const Header = () => {
 
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-5 py-2 rounded-full border border-gray-300 text-gray-700 hover:bg-red-50 hover:text-red-600 transition text-base font-medium"
+                className="flex items-center gap-2 px-2.5 sm:px-3 lg:px-4 py-2 rounded-full border border-gray-300 text-gray-700 hover:bg-red-50 hover:text-red-600 transition text-sm lg:text-base font-medium"
               >
-                <LogOut className="w-6 h-6" />
-                Logout
+                <LogOut className="w-5 h-5 lg:w-6 lg:h-6" />
+                <span className="hidden xl:inline">Logout</span>
               </button>
             </div>
           )}
         </div>
       </div>
 
-      <Navbar />
+      {isPostsPage ? (
+        <div className="group relative">
+          {/* Vung kich hoat: chi can re chuot vao mep duoi header la navbar hien */}
+          <div className="absolute left-0 right-0 -bottom-2 h-4 z-10" />
+          <div className="max-h-0 overflow-hidden opacity-0 -translate-y-2 pointer-events-none transition-all duration-200 ease-out group-hover:max-h-28 group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto group-focus-within:max-h-28 group-focus-within:opacity-100 group-focus-within:translate-y-0 group-focus-within:pointer-events-auto">
+            <Navbar />
+          </div>
+        </div>
+      ) : (
+        <Navbar />
+      )}
     </header>
   );
 };

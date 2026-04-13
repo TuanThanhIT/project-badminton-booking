@@ -1,6 +1,6 @@
-import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import UnauthorizedError from "../errors/UnauthorizedError.js";
+import { verifyAccessToken } from "../utils/jwt.js";
 
 dotenv.config();
 
@@ -11,14 +11,14 @@ const auth = (req, res, next) => {
     if (!authHeader) {
       next(
         new UnauthorizedError(
-          "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.",
+          "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
         ),
       );
     }
 
     const token = authHeader.split(" ")[1];
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = verifyAccessToken(token);
 
     req.user = {
       id: decoded?.id,
@@ -29,6 +29,7 @@ const auth = (req, res, next) => {
 
     next();
   } catch (err) {
+    console.log(err);
     next(
       new UnauthorizedError(
         "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",

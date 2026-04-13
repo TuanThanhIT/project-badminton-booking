@@ -6,26 +6,32 @@ import {
   type formRegister,
 } from "../../schemas/FormRegisterSchema";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
-import { registerAccount } from "../../redux/slices/user/authSlice";
-import type { RegisterRequest } from "../../types/auth";
+import { registerAccount, setOtpFlow } from "../../redux/slices/user/authSlice";
+import type { OtpFlowData, RegisterRequest } from "../../types/auth";
 import { toast } from "react-toastify";
 import LoadingButton from "../../components/ui/common/LoadingButton";
 import InputForm from "../../components/ui/common/InputForm";
 import PasswordInput from "../../components/ui/common/PasswordInput";
+import { OTP_TYPE } from "../../constants/otpType";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const loading = useAppSelector((state) => state.ui.loadingCount > 0);
+  const registerLoading = useAppSelector(
+    (state) => state.ui.loadingMap["auth/registerAccount"],
+  );
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<formRegister>({
     resolver: zodResolver(FormRegisterSchema),
     mode: "onChange",
   });
+
+  const passwordValue = watch("password");
 
   const onSubmit = async (dt: formRegister) => {
     const { email, username, password } = dt;
@@ -34,61 +40,122 @@ const RegisterPage = () => {
       password,
       email,
     };
-    const res = dispatch(registerAccount({ data }));
-    if (registerAccount.fulfilled.match(res)) {
-      toast.success("Đăng kí tài khoản người dùng thành công");
-      setTimeout(() => {
-        navigate("/verify-otp", { state: { email } });
-      }, 3000);
-    }
+    const dta: OtpFlowData = {
+      email,
+      type: OTP_TYPE.REGISTER,
+    };
+    await dispatch(registerAccount({ data }))
+      .unwrap()
+      .then(() => {
+        toast.success("Đăng kí tài khoản người dùng thành công");
+        dispatch(setOtpFlow({ data: dta }));
+        setTimeout(() => {
+          navigate("/verify-otp");
+        }, 2000);
+      });
   };
 
   return (
     <div className="p-20 w-3/4 mx-auto">
-      <div className="grid grid-cols-2 rounded-2xl gap-5 text-sm border border-gray-200">
-        <div className="flex justify-center p-3">
-          <img src="/img/register.jpg"></img>
+      <div className="grid grid-cols-2 rounded-2xl gap-5 border border-gray-200">
+        <div className="relative hidden md:block">
+          <img
+            src="/img/register.jpg"
+            alt="Đăng ký"
+            className="w-full h-full object-cover rounded-l-2xl"
+          />
+
+          <div className="absolute inset-0 bg-black/30 flex items-center justify-center p-10 rounded-l-2xl">
+            <div className="text-white text-center">
+              <h2 className="text-3xl font-bold mb-3">Tạo tài khoản mới</h2>
+              <p className="text-sm">
+                Đăng ký để bắt đầu sử dụng hệ thống và khám phá đầy đủ các tính
+                năng dành cho bạn.
+              </p>
+            </div>
+          </div>
         </div>
+
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-col justify-between gap-2 p-10"
+          className="flex flex-col justify-between gap-3 p-10"
         >
-          <h1 className="font-bold text-2xl">
-            Tham gia cùng chúng tôi và không bỏ lỡ điều gì - ĐĂNG KÝ NGAY!
-          </h1>
-          <label>Tên đăng nhập</label>
-          <InputForm
-            register={register}
-            error={errors.username}
-            field={"username"}
-          ></InputForm>
+          <div>
+            <h1 className="font-bold text-2xl mb-1">Đăng ký tài khoản</h1>
+            <p className="text-sm text-gray-500">
+              Điền thông tin bên dưới để tạo tài khoản mới.
+            </p>
+          </div>
 
-          <label>Mật khẩu</label>
-          <PasswordInput
-            register={register}
-            error={errors.password}
-            field={"password"}
-          ></PasswordInput>
+          <div className="flex flex-col gap-2">
+            <div>
+              <div className="flex flex-row items-center justify-between">
+                <label className="block text-gray-700 font-medium mb-1">
+                  Tên đăng nhập
+                </label>
+                <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
+                  {errors.username?.message || " "}
+                </p>
+              </div>
+              <InputForm register={register} field={"username"} />
+            </div>
 
-          <label>Email</label>
-          <InputForm
-            register={register}
-            error={errors.email}
-            field={"email"}
-          ></InputForm>
+            <div>
+              <div className="flex flex-row items-center justify-between">
+                <label className="block text-gray-700 font-medium mb-1">
+                  Email
+                </label>
+                <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
+                  {errors.email?.message || " "}
+                </p>
+              </div>
+              <InputForm register={register} field={"email"} />
+            </div>
 
-          <LoadingButton
-            loading={loading}
-            children={"Đăng ký"}
-            type="submit"
-          ></LoadingButton>
+            <div>
+              <div className="flex flex-row items-center justify-between">
+                <label className="block text-gray-700 font-medium mb-1">
+                  Mật khẩu
+                </label>
+                <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
+                  {errors.password?.message || " "}
+                </p>
+              </div>
+              <PasswordInput
+                register={register}
+                field={"password"}
+                value={passwordValue}
+              />
+            </div>
 
-          <label>
-            Đã có tài khoản? Đăng nhập{" "}
-            <Link to="/login" className="text-blue-700 hover:text-red-500">
-              tại đây
-            </Link>
-          </label>
+            <div>
+              <div className="flex flex-row items-center justify-between">
+                <label className="block text-gray-700 font-medium mb-1">
+                  Xác nhận mật khẩu
+                </label>
+                <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
+                  {errors.confirmPassword?.message || " "}
+                </p>
+              </div>
+              <PasswordInput register={register} field={"confirmPassword"} />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2 mt-2">
+            <LoadingButton loading={registerLoading} type="submit">
+              Tạo tài khoản
+            </LoadingButton>
+
+            <p className="text-center">
+              Đã có tài khoản?{" "}
+              <Link
+                to="/login"
+                className="text-blue-700 hover:text-red-500 text-sm font-medium"
+              >
+                Đăng nhập
+              </Link>
+            </p>
+          </div>
         </form>
       </div>
     </div>

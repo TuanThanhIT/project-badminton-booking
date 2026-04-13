@@ -5,6 +5,10 @@ export type User = {
   email: string;
   username: string;
   role: string;
+  profile?: {
+    fullName?: string;
+    avatar?: string | null;
+  } | null;
 };
 
 export type LoginRequest = {
@@ -13,7 +17,7 @@ export type LoginRequest = {
 };
 
 export type LoginData = {
-  access_token: string;
+  accessToken: string;
   user: User;
 };
 
@@ -48,14 +52,51 @@ export type OtpVerifyResponse = ApiResponse<null>;
 
 export type OtpSendRequest = {
   email: string;
+  type: string;
 };
 
 export type OtpSendResponse = ApiResponse<null>;
 
+export type OtpVerifyResetData = {
+  resetToken: string;
+};
+
+export type OtpVerifyResetResponse = ApiResponse<OtpVerifyResetData>;
+
 export type ResetPasswordRequest = {
-  email: string;
-  otpCode: string;
+  resetToken: string;
   newPassword: string;
 };
 
 export type ResetPasswordResponse = ApiResponse<null>;
+
+export type RefreshTokenData = {
+  accessToken: string;
+};
+
+export type RefreshTokenResponse = ApiResponse<RefreshTokenData>;
+
+export type OtpFlowData = {
+  email?: string;
+  withdrawRequestId?: number;
+  type?: string;
+};
+
+export type ConfirmEmailResponse = ApiResponse<null>;
+
+export type LogoutResponse = ApiResponse<null>;
+
+export interface AuthState {
+  isAuthenticated: boolean;
+  user: {
+    id: number;
+    email: string;
+    username: string;
+    role: string;
+  };
+}
+
+export interface AuthContextType {
+  auth: AuthState;
+  setAuth: React.Dispatch<React.SetStateAction<AuthState>>;
+}

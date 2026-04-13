@@ -7,8 +7,8 @@ const getAllBranchesSimpleService = async () => {
     where: {
       isActive: true,
     },
-    attributes: ["id", "branchName"], // Chỉ lấy đúng 2 cột này
-    order: [["branchName", "ASC"]], // Sắp xếp theo tên cho dễ tìm
+    attributes: ["id", "branchName"], // Ch? l?y d�ng 2 c?t n�y
+    order: [["branchName", "ASC"]], // S?p x?p theo t�n cho d? t�m
   });
 
   return branches;
@@ -51,7 +51,7 @@ const getBranchesService = async (data) => {
     order: [["createdDate", "DESC"]],
   });
 
-  // optional: ghép full address trả về cho frontend
+  // optional: gh�p full address tr? v? cho frontend
   const formattedRows = rows.map((item) => {
     const data = item.toJSON();
     return {
@@ -88,7 +88,7 @@ const getBranchByIdService = async (branchId) => {
     include: [
       {
         model: BranchImage,
-        as: "images", // ⚠️ nhớ define association
+        as: "images", // ?? nh? define association
         attributes: ["id", "imageUrl"],
       },
     ],
@@ -96,7 +96,7 @@ const getBranchByIdService = async (branchId) => {
 
   if (!branch)
     throw new NotFoundError(
-      "Không tìm thấy chi nhánh hoặc chi nhánh không hoạt động",
+      "Kh�ng t�m th?y chi nh�nh ho?c chi nh�nh kh�ng ho?t d?ng",
     );
 
   const data = branch.toJSON();
@@ -106,8 +106,15 @@ const getBranchByIdService = async (branchId) => {
     fullAddress: `${data.address}, ${data.district}, ${data.city}`,
   };
 };
+const getAllBranchService = async () => {
+  const branches = await Branch.findAll({
+    attributes: ["id", "branchName", "address", "district", "city"],
+  });
+  return branches;
+};
 export default {
   getBranchesService,
   getBranchByIdService,
   getAllBranchesSimpleService,
+  getAllBranchService,
 };

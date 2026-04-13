@@ -8,7 +8,7 @@ import type {
   ProductResponse,
   ProPrams,
 } from "../../../types/product";
-import ProductsRelated from "./ProductsRelated";
+import ProductsRelated from "../user/ProductsRelated";
 import { useNavigate } from "react-router-dom";
 import { Box } from "lucide-react";
 

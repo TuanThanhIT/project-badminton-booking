@@ -1,7 +1,23 @@
 export const ORDER_STATUS = Object.freeze({
-  PENDING: "Pending",
-  CONFIRMED: "Confirmed",
-  PAID: "Paid",
-  COMPLETED: "Completed",
-  CANCELLED: "Cancelled",
+  PENDING: "PENDING",
+  CONFIRMED: "CONFIRMED",
+  PREPARING: "PREPARING",
+  SHIPPING: "SHIPPING",
+  DELIVERED: "DELIVERED",
+  CANCELLED: "CANCELLED",
+});
+
+export const ORDER_GROUP_STATUS = Object.freeze({
+  PENDING_PAYMENT: "PENDING_PAYMENT",
+  PAID: "PAID",
+  FAILED: "FAILED",
+  CANCELLED: "CANCELLED",
+});
+
+export const SHIPPING_STATUS = Object.freeze({
+  PENDING: "PENDING",
+  ASSIGNED: "ASSIGNED",
+  IN_TRANSIT: "IN_TRANSIT",
+  DELIVERED: "DELIVERED",
+  FAILED: "FAILED",
 });

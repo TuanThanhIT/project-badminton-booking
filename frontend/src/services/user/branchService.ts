@@ -15,10 +15,13 @@ const getBranchByIdService = (data: BranchDetailRequest) =>
 
 const getAllBranchesService = () =>
   instance.get<BranchSimpleListResponse>("/branches/all");
-
+const getAllBranchService = () => {
+  return instance.get("/user/branches");
+};
 const branchService = {
   getBranchesService,
   getBranchByIdService,
   getAllBranchesService,
+  getAllBranchService,
 };
 export default branchService;

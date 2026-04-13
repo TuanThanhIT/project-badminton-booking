@@ -1,6 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
 import User from "./user.js";
+import { WALLET_STATUS } from "../constants/paymentConstant.js";
 
 const Wallet = sequelize.define(
   "Wallet",
@@ -35,6 +36,31 @@ const Wallet = sequelize.define(
         min: {
           args: [0],
           msg: "Balance cannot be negative",
+        },
+      },
+    },
+    balanceLocked: {
+      type: DataTypes.DECIMAL(12, 2),
+      allowNull: false,
+      defaultValue: 0,
+      validate: {
+        notNull: { msg: "Locked balance is required" },
+        isDecimal: { msg: "Locked balance must be a valid number" },
+        min: {
+          args: [0],
+          msg: "Locked balance cannot be negative",
+        },
+      },
+    },
+    status: {
+      type: DataTypes.ENUM(...Object.values(WALLET_STATUS)),
+      allowNull: false,
+      defaultValue: WALLET_STATUS.ACTIVE,
+      validate: {
+        notNull: { msg: "Wallet status is required" },
+        isIn: {
+          args: [Object.values(WALLET_STATUS)],
+          msg: "Invalid wallet status",
         },
       },
     },

@@ -9,6 +9,7 @@ import {
   resetPasswordSchema,
   sendOtpSchema,
   verifyOtpSchema,
+  verifyResetOtpSchema,
 } from "../../validations/authValidation.js";
 
 const authRoute = express.Router();
@@ -30,10 +31,16 @@ const initAuthRoute = (app) => {
     authController.sendOtpController,
   );
   authRoute.post(
+    "/reset-password/verify-otp",
+    validate(verifyResetOtpSchema),
+    authController.verifyResetOtpController,
+  );
+  authRoute.post(
     "/reset-password",
     validate(resetPasswordSchema),
     authController.resetPasswordController,
   );
+  authRoute.post("/refresh-token", authController.refreshTokenController);
   authRoute.post(
     "/login",
     validate(handleLoginSchema),
@@ -42,9 +49,10 @@ const initAuthRoute = (app) => {
   authRoute.get(
     "/me",
     auth,
-    authorize("User"),
+    authorize("USER"),
     authController.getAccountController,
   );
+  authRoute.post("/logout", authController.logoutController);
   app.use("/user/auth", authRoute);
 };
 export default initAuthRoute;

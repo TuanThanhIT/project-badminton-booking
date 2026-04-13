@@ -43,6 +43,11 @@ export const initSocket = (httpServer) => {
     // Join role room
     socket.join(`role:${role}`);
 
+    socket.on("chat:join", (conversationId) => {
+      if (!conversationId) return;
+      socket.join(`conversation:${conversationId}`);
+    });
+
     socket.on("disconnect", () => {
       console.log("Socket disconnected:", socket.id);
     });

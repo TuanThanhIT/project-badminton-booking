@@ -2,7 +2,7 @@ import { Facebook, Twitter, Instagram, Youtube } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-50 border-t mt-10">
+    <footer className="bg-gray-50 border-t border-gray-400 mt-10">
       <div className="grid grid-cols-4 gap-8 px-12 py-10 text-gray-700">
         {/* Địa chỉ */}
         <div>
@@ -76,7 +76,7 @@ const Footer = () => {
       </div>
 
       {/* Bản quyền */}
-      <div className="border-t py-4 text-center text-sm text-gray-500">
+      <div className="border-t border-gray-400 py-4 text-center text-sm text-gray-500">
         <p>© 2025 B-Hub. Tất cả quyền được bảo lưu.</p>
         <div className="flex justify-center gap-4 mt-2">
           <Facebook className="w-5 h-5 text-blue-600 hover:text-blue-800 cursor-pointer" />

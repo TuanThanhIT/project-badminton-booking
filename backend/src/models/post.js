@@ -73,31 +73,20 @@ const Post = sequelize.define(
         },
       },
     },
-    courtFee: {
-      type: DataTypes.DOUBLE,
+    repostOfPostId: {
+      type: DataTypes.INTEGER,
       allowNull: true,
       validate: {
-        isFloat: {
-          msg: "Court fee must be a number",
-        },
-        min: {
-          args: [0],
-          msg: "Court fee must be greater than or equal to 0",
-        },
+        isInt: { msg: "repostOfPostId must be an integer" },
+        min: { args: [1], msg: "repostOfPostId must be a positive number" },
       },
     },
-    referralFee: {
-      type: DataTypes.DOUBLE,
+    isRepost: {
+      type: DataTypes.BOOLEAN,
       allowNull: false,
+      defaultValue: false,
       validate: {
-        notNull: { msg: "Referral fee is required" },
-        isFloat: {
-          msg: "Referral fee must be a number",
-        },
-        min: {
-          args: [0],
-          msg: "Referral must be greater than or equal to 0",
-        },
+        isBoolean: { msg: "isRepost must be a boolean" },
       },
     },
     isActive: {

@@ -1,11 +1,11 @@
 export const ROLE_IN_SHIFT = Object.freeze({
-  CASHIER: "Cashier",
-  STAFF: "Staff",
+  CASHIER: "CASHIER",
+  STAFF: "STAFF",
 });
 
 export const WORK_SHIFT_STATUS = Object.freeze({
-  SCHEDULED: "Scheduled",
-  INPROGESS: "Inprogess",
-  COMPLETED: "Completed",
-  CANCELLED: "Cancelled",
+  SCHEDULED: "SCHEDULED",
+  INPROGESS: "INPROGRESS",
+  COMPLETED: "COMPLETED",
+  CANCELLED: "CANCELLED",
 });

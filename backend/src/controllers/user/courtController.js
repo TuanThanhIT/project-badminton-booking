@@ -22,10 +22,17 @@ const getCourtByIdController = asyncHandler(async (req, res) => {
     .status(200)
     .json(new SuccessResponse("Lấy thông tin sân thành công", result));
 });
-
+const getCourtsController = asyncHandler(async (req, res) => {
+  const data = { ...req.query };
+  const courts = await courtService.getCourtsService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Lấy danh sách sân thành công", courts));
+});
 const courtController = {
   getAvailableCourtsController,
   getCourtByIdController,
+getCourtsController,
 };
 
 export default courtController;

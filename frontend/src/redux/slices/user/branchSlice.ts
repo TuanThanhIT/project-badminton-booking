@@ -12,8 +12,6 @@ import type {
 } from "../../../types/branch";
 import type { ApiErrorType } from "../../../types/error";
 import branchService from "../../../services/user/branchService";
-import { data } from "react-router-dom";
-import { da } from "zod/v4/locales";
 
 interface BranchState {
   branches: Branch[];
@@ -29,6 +27,7 @@ const initialState: BranchState = {
   branchDetail: undefined,
 };
 
+// 🔥 1. LIST PAGINATION
 export const getBranches = createAsyncThunk<
   BranchListResponse,
   { data: BranchesRequest },
@@ -36,11 +35,13 @@ export const getBranches = createAsyncThunk<
 >("branch/getBranches", async ({ data }, { rejectWithValue }) => {
   try {
     const res = await branchService.getBranchesService(data);
-    return res.data as BranchListResponse;
+    return res.data;
   } catch (error) {
     return rejectWithValue(error as ApiErrorType);
   }
 });
+
+// 🔥 2. DETAIL
 export const getBranchById = createAsyncThunk<
   BranchDetailResponse,
   { data: BranchDetailRequest },
@@ -48,11 +49,13 @@ export const getBranchById = createAsyncThunk<
 >("branch/getBranchById", async ({ data }, { rejectWithValue }) => {
   try {
     const res = await branchService.getBranchByIdService(data);
-    return res.data as BranchDetailResponse;
+    return res.data;
   } catch (error) {
     return rejectWithValue(error as ApiErrorType);
   }
 });
+
+// 🔥 3. SIMPLE LIST (dropdown)
 export const getAllBranches = createAsyncThunk<
   BranchSimpleListResponse,
   void,
@@ -65,21 +68,48 @@ export const getAllBranches = createAsyncThunk<
     return rejectWithValue(error as ApiErrorType);
   }
 });
+
+// 🔥 4. FULL LIST (nếu cần)
+export const getAllBranchesFull = createAsyncThunk<
+  BranchListResponse,
+  void,
+  { rejectValue: ApiErrorType }
+>("branch/getAllBranchesFull", async (_, { rejectWithValue }) => {
+  try {
+    const res = await branchService.getAllBranchService();
+    return res.data;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
+// ✅ SINGLE SLICE
 const branchSlice = createSlice({
   name: "branch",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
-    builder.addCase(getBranches.fulfilled, (state, action) => {
-      state.branches = action.payload.data.data;
-      state.pagination = action.payload.data.pagination;
-    });
-    builder.addCase(getBranchById.fulfilled, (state, action) => {
-      state.branchDetail = action.payload.data;
-    });
-    builder.addCase(getAllBranches.fulfilled, (state, action) => {
-      state.branchSimpleList = action.payload.data;
-    });
+    builder
+      // pagination
+      .addCase(getBranches.fulfilled, (state, action) => {
+        state.branches = action.payload.data.data;
+        state.pagination = action.payload.data.pagination;
+      })
+
+      // detail
+      .addCase(getBranchById.fulfilled, (state, action) => {
+        state.branchDetail = action.payload.data;
+      })
+
+      // simple list
+      .addCase(getAllBranches.fulfilled, (state, action) => {
+        state.branchSimpleList = action.payload.data;
+      })
+
+      // full list
+      .addCase(getAllBranchesFull.fulfilled, (state, action) => {
+        state.branches = action.payload.data;
+      });
   },
 });
 

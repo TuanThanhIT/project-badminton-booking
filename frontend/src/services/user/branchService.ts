@@ -4,19 +4,21 @@ import type {
   BranchesRequest,
   BranchDetailRequest,
   BranchSimpleListResponse,
+  BranchResponse,
 } from "../../types/branch";
 import instance from "../../utils/axiosCustomize";
 
 const getBranchesService = (data: BranchesRequest) =>
-  instance.get<BranchListResponse>("/branches", { params: data });
+  instance.get<BranchListResponse>("/user/branches", { params: data });
 
 const getBranchByIdService = (data: BranchDetailRequest) =>
-  instance.get<BranchDetailResponse>(`/branches/${data.branchId}`);
+  instance.get<BranchDetailResponse>(`/user/branches/${data.branchId}`);
 
 const getAllBranchesService = () =>
-  instance.get<BranchSimpleListResponse>("/branches/all");
+  instance.get<BranchSimpleListResponse>("/user/branches/simple");
+
 const getAllBranchService = () => {
-  return instance.get("/user/branches");
+  return instance.get<BranchResponse>("/user/branches/all");
 };
 const branchService = {
   getBranchesService,

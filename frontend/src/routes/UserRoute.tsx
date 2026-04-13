@@ -25,10 +25,9 @@ import CreatePostPage from "../pages/user/CreatePostPage";
 import PostListPage from "../pages/user/postList/PostListPage";
 import PublicProfilePage from "../pages/user/PublicProfilePage";
 import MessagesPage from "../pages/user/MessagesPage";
-import BranchPage from "../pages/user/BranchesPage";
 import BranchDetailPage from "../pages/user/BranchDetailPage";
+import BranchPage from "../pages/user/BranchesPage";
 import CourtPage from "../pages/user/CourtPage";
-import TournamentPost from "../pages/user/TournamentPost";
 
 const UserRoute = () => {
   return (
@@ -47,13 +46,7 @@ const UserRoute = () => {
 
       {/* Private */}
       <Route element={<UserPrivateLayout />}>
-<Route
-        element={
-          //<AuthGuard>
-          <UserPrivateLayout />
-          //</AuthGuard>
-        }
-      >        <Route path="home" element={<HomePage />} />
+        <Route path="home" element={<HomePage />} />
         <Route path="products" element={<ProductPage />} />
         <Route path="product/:id" element={<ProductDetailPage />} />
         <Route path="booking" element={<BookingCourtPage />} />
@@ -64,7 +57,6 @@ const UserRoute = () => {
         <Route path="checkout" element={<CheckoutPage />} />
         <Route path="orders" element={<OrderPage />} />
         <Route path="bookings" element={<BookingPage />} />
-		<Route path="branches" element={<BranchPage />} />
         <Route path="wallet" element={<WalletPage />}></Route>
         <Route
           path="wallet/deposit/success"
@@ -74,6 +66,9 @@ const UserRoute = () => {
         <Route path="posts" element={<PostListPage />} />
         <Route path="messages" element={<MessagesPage />} />
         <Route path="messages/:conversationId" element={<MessagesPage />} />
+        <Route path="branches" element={<BranchPage />} />
+        <Route path="branches/:branchId" element={<BranchDetailPage />} />
+        <Route path="courts" element={<CourtPage />} />
       </Route>
     </Routes>
   );

@@ -1,4 +1,6 @@
 import type { ApiResponse } from "./api";
+
+// 🔥 FULL BRANCH
 export type Branch = {
   id: number;
   branchName: string;
@@ -7,16 +9,33 @@ export type Branch = {
   city: string;
   phoneNumber: string;
 };
+
+// 🔥 BASIC BRANCH (đã đổi tên)
+export type BranchBasic = {
+  id: number;
+  branchName: string;
+  address: string;
+  district: string;
+  city: string;
+};
+
+export type BranchResponse = ApiResponse<BranchBasic[]>;
+
+// ================= OTHER TYPES =================
+
 export type Pagination = {
   page: number;
   limit: number;
   total: number;
 };
+
 export type BranchListData = {
   data: Branch[];
   pagination: Pagination;
 };
+
 export type BranchListResponse = ApiResponse<BranchListData>;
+
 export type BranchImage = {
   id: number;
   imageUrl: string;
@@ -36,20 +55,26 @@ export type BranchDetail = {
 };
 
 export type BranchDetailResponse = ApiResponse<BranchDetail>;
+
 export type BranchesRequest = {
   page?: number;
   limit?: number;
   city?: string;
   district?: string;
 };
+
 export type BranchDetailRequest = {
   branchId: number;
 };
+
 export type BranchSimple = {
   id: number;
   branchName: string;
 };
+
 export type BranchSimpleListResponse = ApiResponse<BranchSimple[]>;
+
+// ================= COURT =================
 
 export type CourtStatus = "available" | "booked" | "maintenance";
 
@@ -59,7 +84,7 @@ export type CourtAvailable = {
   location: string;
   thumbnailUrl: string;
   totalPrice: number;
-  duration: string; // ?? backend tr? string
+  duration: string;
   status: CourtStatus;
 };
 
@@ -67,16 +92,7 @@ export type CourtAvailableResponse = ApiResponse<CourtAvailable[]>;
 
 export type GetAvailableCourtsRequest = {
   branchId: number;
-  date: string; // "YYYY-MM-DD"
-  startTime: string; // "HH:mm"
-  endTime: string; // "HH:mm"
+  date: string;
+  startTime: string;
+  endTime: string;
 };
-export type Branch = {
-  id: number;
-  branchName: string;
-  address: string;
-  district: string;
-  city: string;
-};
-
-export type BranchResponse = ApiResponse<Branch[]>;

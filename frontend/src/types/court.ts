@@ -20,3 +20,11 @@ export type GetAvailableCourtsRequest = {
   startTime: string; // "HH:mm"
   endTime: string; // "HH:mm"
 };
+export type CourtInfo = {
+  id: number;
+  branchId: number;
+  courtName: string;
+  location: string;
+};
+
+export type CourtInfoResponse = ApiResponse<CourtInfo[]>;

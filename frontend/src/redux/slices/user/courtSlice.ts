@@ -3,19 +3,11 @@ import type {
   CourtAvailable,
   CourtAvailableResponse,
   GetAvailableCourtsRequest,
+  CourtInfo,
+  CourtInfoResponse,
 } from "../../../types/court";
 import type { ApiErrorType } from "../../../types/error";
 import courtService from "../../../services/user/courtService";
-
-// 👉 thêm type nếu chưa có
-type CourtInfo = {
-  id: number;
-  courtName: string;
-};
-
-type CourtInfoResponse = {
-  data: CourtInfo[];
-};
 
 interface CourtState {
   availableCourts: CourtAvailable[];

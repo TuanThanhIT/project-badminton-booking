@@ -9,6 +9,8 @@ import type {
   BranchDetailRequest,
   BranchSimple,
   BranchSimpleListResponse,
+  BranchBasic,
+  BranchResponse,
 } from "../../../types/branch";
 import type { ApiErrorType } from "../../../types/error";
 import branchService from "../../../services/user/branchService";
@@ -18,6 +20,7 @@ interface BranchState {
   pagination?: Pagination;
   branchDetail?: BranchDetail;
   branchSimpleList: BranchSimple[];
+  branchBasic: BranchBasic[];
 }
 
 const initialState: BranchState = {
@@ -25,6 +28,7 @@ const initialState: BranchState = {
   pagination: undefined,
   branchSimpleList: [],
   branchDetail: undefined,
+  branchBasic: [],
 };
 
 // 🔥 1. LIST PAGINATION
@@ -71,7 +75,7 @@ export const getAllBranches = createAsyncThunk<
 
 // 🔥 4. FULL LIST (nếu cần)
 export const getAllBranchesFull = createAsyncThunk<
-  BranchListResponse,
+  BranchResponse,
   void,
   { rejectValue: ApiErrorType }
 >("branch/getAllBranchesFull", async (_, { rejectWithValue }) => {
@@ -108,7 +112,7 @@ const branchSlice = createSlice({
 
       // full list
       .addCase(getAllBranchesFull.fulfilled, (state, action) => {
-        state.branches = action.payload.data;
+        state.branchBasic = action.payload.data;
       });
   },
 });

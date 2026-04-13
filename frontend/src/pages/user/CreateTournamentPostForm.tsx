@@ -8,7 +8,10 @@ import {
   createPost,
   clearLastCreatedPost,
 } from "../../redux/slices/user/postSlice";
-import { getAllBranches } from "../../redux/slices/user/branchSlice";
+import {
+  getAllBranches,
+  getAllBranchesFull,
+} from "../../redux/slices/user/branchSlice";
 import { getAllCourts } from "../../redux/slices/user/courtSlice";
 import type { CreatePostRequest } from "../../types/post";
 import LoadingButton from "../../components/ui/common/LoadingButton";
@@ -91,7 +94,7 @@ const CreateTournamentPostForm = ({
   };
 
   useEffect(() => {
-    dispatch(getAllBranches());
+    dispatch(getAllBranchesFull());
     dispatch(getAllCourts());
   }, [dispatch]);
 

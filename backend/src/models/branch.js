@@ -99,7 +99,27 @@ const Branch = sequelize.define(
         isUrl: { msg: "Thumbnail URL must be a valid URL" },
       },
     },
-
+    provinceCode: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      validate: {
+        notNull: { msg: "Province code is required" },
+      },
+    },
+    districtCode: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      validate: {
+        notNull: { msg: "District code is required" },
+      },
+    },
+    wardCode: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      validate: {
+        notNull: { msg: "Ward code is required" },
+      },
+    },
     isActive: {
       type: DataTypes.BOOLEAN,
       allowNull: false,

@@ -14,7 +14,7 @@ import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import type { PostWithAuthor } from "../../types/post";
 import PostCard from "./postList/PostCard";
 import ProfileHeroBanner from "./components/ProfileHeroBanner";
-import { getAllBranch } from "../../redux/slices/user/branchSlice";
+import { getAllBranchesFull } from "../../redux/slices/user/branchSlice";
 import { getCourtsByIds } from "../../redux/slices/user/courtSlice";
 import {
   getMyPosts,
@@ -122,7 +122,7 @@ const ProfilePage = () => {
   }, [form.avatar]);
 
   useEffect(() => {
-    dispatch(getAllBranch());
+    dispatch(getAllBranchesFull());
     fetchProfileAndPosts();
   }, [currentUser?.id, dispatch]);
 
@@ -139,7 +139,9 @@ const ProfilePage = () => {
     if (ids.length > 0) dispatch(getCourtsByIds({ ids }));
   }, [dispatch, posts]);
 
-  const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
@@ -225,7 +227,12 @@ const ProfilePage = () => {
       branches.reduce<
         Record<
           number,
-          { branchName: string; address?: string; district?: string; city?: string }
+          {
+            branchName: string;
+            address?: string;
+            district?: string;
+            city?: string;
+          }
         >
       >((acc, branch) => {
         acc[branch.id] = {
@@ -322,7 +329,9 @@ const ProfilePage = () => {
                 <span className="flex-1">Bài đăng</span>
                 <span
                   className={`text-xs tabular-nums px-2 py-0.5 rounded-lg ${
-                    tab === "posts" ? "bg-white/20" : "bg-gray-100 text-gray-600"
+                    tab === "posts"
+                      ? "bg-white/20"
+                      : "bg-gray-100 text-gray-600"
                   }`}
                 >
                   {posts.length}
@@ -330,8 +339,8 @@ const ProfilePage = () => {
               </button>
             </nav>
             <p className="mt-3 text-xs text-gray-500 hidden lg:block px-1 leading-relaxed">
-              Chọn tab để chỉnh thông tin hoặc xem bài đăng. Ảnh đại diện: bấm icon máy ảnh để chọn file
-              (tối đa 5MB).
+              Chọn tab để chỉnh thông tin hoặc xem bài đăng. Ảnh đại diện: bấm
+              icon máy ảnh để chọn file (tối đa 5MB).
             </p>
           </aside>
 
@@ -340,10 +349,12 @@ const ProfilePage = () => {
             {tab === "profile" && (
               <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-5 sm:px-6 py-4 border-b border-gray-100 bg-gray-50/80">
-                  <h2 className="text-sm font-semibold text-gray-800">Thông tin tài khoản</h2>
+                  <h2 className="text-sm font-semibold text-gray-800">
+                    Thông tin tài khoản
+                  </h2>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Cập nhật họ tên, liên hệ. Ảnh đại diện tải lên bằng nút máy ảnh trên banner; hoặc dán URL
-                    bên dưới.
+                    Cập nhật họ tên, liên hệ. Ảnh đại diện tải lên bằng nút máy
+                    ảnh trên banner; hoặc dán URL bên dưới.
                   </p>
                 </div>
 
@@ -374,46 +385,64 @@ const ProfilePage = () => {
                         className={inputClass}
                         placeholder="https://..."
                         value={form.avatar}
-                        onChange={(e) => setForm((p) => ({ ...p, avatar: e.target.value }))}
+                        onChange={(e) =>
+                          setForm((p) => ({ ...p, avatar: e.target.value }))
+                        }
                       />
                       <p className="text-xs text-gray-500">
-                        Dùng khi bạn đã có URL (Cloudinary, CDN). Sau đó bấm &quot;Lưu hồ sơ&quot; để ghi nhận.
+                        Dùng khi bạn đã có URL (Cloudinary, CDN). Sau đó bấm
+                        &quot;Lưu hồ sơ&quot; để ghi nhận.
                       </p>
                     </div>
                   )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     <div>
-                      <label className={`flex items-center gap-1.5 ${labelClass}`}>
+                      <label
+                        className={`flex items-center gap-1.5 ${labelClass}`}
+                      >
                         <User className="w-3.5 h-3.5" strokeWidth={2} />
                         Tên hiển thị
                       </label>
                       <input
                         className={inputClass}
                         value={form.fullName}
-                        onChange={(e) => setForm((p) => ({ ...p, fullName: e.target.value }))}
+                        onChange={(e) =>
+                          setForm((p) => ({ ...p, fullName: e.target.value }))
+                        }
                       />
                     </div>
                     <div>
-                      <label className={`flex items-center gap-1.5 ${labelClass}`}>
+                      <label
+                        className={`flex items-center gap-1.5 ${labelClass}`}
+                      >
                         <Phone className="w-3.5 h-3.5" strokeWidth={2} />
                         Số điện thoại
                       </label>
                       <input
                         className={inputClass}
                         value={form.phoneNumber}
-                        onChange={(e) => setForm((p) => ({ ...p, phoneNumber: e.target.value }))}
+                        onChange={(e) =>
+                          setForm((p) => ({
+                            ...p,
+                            phoneNumber: e.target.value,
+                          }))
+                        }
                       />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className={`flex items-center gap-1.5 ${labelClass}`}>
+                      <label
+                        className={`flex items-center gap-1.5 ${labelClass}`}
+                      >
                         <MapPin className="w-3.5 h-3.5" strokeWidth={2} />
                         Địa chỉ
                       </label>
                       <input
                         className={inputClass}
                         value={form.address}
-                        onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
+                        onChange={(e) =>
+                          setForm((p) => ({ ...p, address: e.target.value }))
+                        }
                       />
                     </div>
                     <div>
@@ -421,7 +450,9 @@ const ProfilePage = () => {
                       <select
                         className={inputClass}
                         value={form.gender}
-                        onChange={(e) => setForm((p) => ({ ...p, gender: e.target.value }))}
+                        onChange={(e) =>
+                          setForm((p) => ({ ...p, gender: e.target.value }))
+                        }
                       >
                         <option value="male">Nam</option>
                         <option value="female">Nữ</option>
@@ -429,7 +460,9 @@ const ProfilePage = () => {
                       </select>
                     </div>
                     <div>
-                      <label className={`flex items-center gap-1.5 ${labelClass}`}>
+                      <label
+                        className={`flex items-center gap-1.5 ${labelClass}`}
+                      >
                         <CalendarDays className="w-3.5 h-3.5" strokeWidth={2} />
                         Ngày sinh
                       </label>
@@ -437,7 +470,9 @@ const ProfilePage = () => {
                         type="date"
                         className={inputClass}
                         value={form.dob}
-                        onChange={(e) => setForm((p) => ({ ...p, dob: e.target.value }))}
+                        onChange={(e) =>
+                          setForm((p) => ({ ...p, dob: e.target.value }))
+                        }
                       />
                     </div>
                   </div>
@@ -464,8 +499,12 @@ const ProfilePage = () => {
             {tab === "posts" && (
               <section className="space-y-4">
                 <div className="flex items-baseline justify-between gap-3">
-                  <h2 className="text-lg font-bold text-gray-900">Bài đăng của tôi</h2>
-                  <span className="text-sm text-gray-500 tabular-nums">{posts.length} bài</span>
+                  <h2 className="text-lg font-bold text-gray-900">
+                    Bài đăng của tôi
+                  </h2>
+                  <span className="text-sm text-gray-500 tabular-nums">
+                    {posts.length} bài
+                  </span>
                 </div>
 
                 <div className="space-y-5">

@@ -17,7 +17,6 @@ import productReducer from "./slices/user/productSlice";
 import branchReducer from "./slices/user/branchSlice";
 import courtReducer from "./slices/user/courtSlice";
 import discountReducer from "./slices/user/discountSlice";
-import courtReducer from "./slices/user/courtSlice";
 import cartReducer from "./slices/user/cartSlice";
 import walletReducer from "./slices/user/walletSlice";
 import addressReducer from "./slices/user/addressSlice";
@@ -46,8 +45,8 @@ const rootReducer = combineReducers({
   post: postReducer,
   profile: profileReducer,
   conversation: conversationReducer,
+  discount: discountReducer,
 });
-
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 

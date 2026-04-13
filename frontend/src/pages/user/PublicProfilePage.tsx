@@ -8,7 +8,7 @@ import {
   getPublicProfile,
 } from "../../redux/slices/user/profileSlice";
 import { createOrGetDirectConversation } from "../../redux/slices/user/conversationSlice";
-import { getAllBranch } from "../../redux/slices/user/branchSlice";
+import { getAllBranchesFull } from "../../redux/slices/user/branchSlice";
 import { getCourtsByIds } from "../../redux/slices/user/courtSlice";
 import ProfileHeroBanner from "./components/ProfileHeroBanner";
 import PostCard from "./postList/PostCard";
@@ -28,7 +28,7 @@ const PublicProfilePage = () => {
   const parsedUserId = useMemo(() => Number(userId), [userId]);
 
   useEffect(() => {
-    dispatch(getAllBranch());
+    dispatch(getAllBranchesFull());
   }, [dispatch]);
 
   useEffect(() => {
@@ -89,7 +89,12 @@ const PublicProfilePage = () => {
       branches.reduce<
         Record<
           number,
-          { branchName: string; address?: string; district?: string; city?: string }
+          {
+            branchName: string;
+            address?: string;
+            district?: string;
+            city?: string;
+          }
         >
       >((acc, branch) => {
         acc[branch.id] = {
@@ -164,7 +169,9 @@ const PublicProfilePage = () => {
         <section className="mt-10">
           <div className="flex items-baseline justify-between gap-3 mb-4">
             <h2 className="text-lg font-bold text-gray-900">Bài đăng</h2>
-            <span className="text-sm text-gray-500 tabular-nums">{posts.length} bài</span>
+            <span className="text-sm text-gray-500 tabular-nums">
+              {posts.length} bài
+            </span>
           </div>
 
           <div className="space-y-5">

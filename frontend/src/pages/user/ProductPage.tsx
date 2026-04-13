@@ -10,7 +10,7 @@ import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { getOtherCategoriesInSameGroup } from "../../redux/slices/user/cateSlice";
 import type { OtherCatesParamsRequest } from "../../types/cate";
 import { getProductsByFilter } from "../../redux/slices/user/productSlice";
-import { getAllBranch } from "../../redux/slices/user/branchSlice";
+import { getAllBranchesFull } from "../../redux/slices/user/branchSlice";
 import type { ProductQueriesRequest } from "../../types/product";
 
 const ProductPage = () => {
@@ -113,7 +113,7 @@ const ProductPage = () => {
   }, [productQuery, dispatch]);
 
   useEffect(() => {
-    dispatch(getAllBranch());
+    dispatch(getAllBranchesFull());
   }, [dispatch]);
 
   const handleChange = (value: number) => {

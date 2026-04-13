@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "../../../redux/hook";
 import { getPosts } from "../../../redux/slices/user/postSlice";
-import { getAllBranch } from "../../../redux/slices/user/branchSlice";
+import { getAllBranchesFull } from "../../../redux/slices/user/branchSlice";
 import { getCourtsByIds } from "../../../redux/slices/user/courtSlice";
 import type { PostType } from "../../../types/post";
 import { POST_TYPE_LABEL, POST_TYPES } from "../../../constants/postConstant";
@@ -15,11 +15,15 @@ const PostListPage = () => {
   const { posts, total, limit } = useAppSelector((state) => state.post);
   const branches = useAppSelector((state) => state.branch.branches);
   const courts = useAppSelector((state) => state.court.courts);
-  const loading = useAppSelector((state) => state.ui.loadingCount > 0);
+  //const loading = useAppSelector((state) => state.ui > 0);
 
   const [selectedType, setSelectedType] = useState<PostType | "">("");
-  const [filterValues, setFilterValues] = useState<Record<string, string | number>>({});
-  const [appliedFilters, setAppliedFilters] = useState<Record<string, string | number>>({});
+  const [filterValues, setFilterValues] = useState<
+    Record<string, string | number>
+  >({});
+  const [appliedFilters, setAppliedFilters] = useState<
+    Record<string, string | number>
+  >({});
   const [search, setSearch] = useState("");
   const [searchDebounce, setSearchDebounce] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,10 +41,17 @@ const PostListPage = () => {
       if (v !== "" && v !== undefined) params[`formData[${k}]`] = v;
     });
     dispatch(getPosts({ params }));
-  }, [dispatch, currentPage, selectedType, searchDebounce, appliedFilters, hideReposts]);
+  }, [
+    dispatch,
+    currentPage,
+    selectedType,
+    searchDebounce,
+    appliedFilters,
+    hideReposts,
+  ]);
 
   useEffect(() => {
-    dispatch(getAllBranch());
+    dispatch(getAllBranchesFull());
   }, [dispatch]);
 
   useEffect(() => {
@@ -159,7 +170,9 @@ const PostListPage = () => {
               type="button"
               onClick={() => handleTypeChange("")}
               className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium ${
-                selectedType === "" ? "bg-sky-600 text-white" : "bg-white text-gray-700"
+                selectedType === ""
+                  ? "bg-sky-600 text-white"
+                  : "bg-white text-gray-700"
               }`}
             >
               Tất cả
@@ -170,7 +183,9 @@ const PostListPage = () => {
                 type="button"
                 onClick={() => handleTypeChange(type)}
                 className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium ${
-                  selectedType === type ? "bg-sky-600 text-white" : "bg-white text-gray-700"
+                  selectedType === type
+                    ? "bg-sky-600 text-white"
+                    : "bg-white text-gray-700"
                 }`}
               >
                 {POST_TYPE_LABEL[type]}
@@ -180,7 +195,7 @@ const PostListPage = () => {
 
           {/* Danh sách bài đăng */}
           <div className="mt-4 space-y-4">
-            {loading && posts.length === 0 ? (
+            {/* {loading && posts.length === 0 ? (
               <div className="flex justify-center py-12">
                 <div className="animate-spin w-10 h-10 border-2 border-sky-600 border-t-transparent rounded-full" />
               </div>
@@ -197,7 +212,7 @@ const PostListPage = () => {
                   courtNameById={courtNameById}
                 />
               ))
-            )}
+            )} */}
           </div>
 
           {/* Phân trang */}
@@ -205,7 +220,7 @@ const PostListPage = () => {
             <div className="flex justify-center gap-2 mt-6">
               <button
                 type="button"
-                disabled={currentPage <= 1 || loading}
+                //disabled={currentPage <= 1 || loading}
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-sm font-medium disabled:opacity-50 hover:bg-gray-50"
               >
@@ -216,8 +231,10 @@ const PostListPage = () => {
               </span>
               <button
                 type="button"
-                disabled={currentPage >= totalPages || loading}
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                //disabled={currentPage >= totalPages || loading}
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
                 className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-sm font-medium disabled:opacity-50 hover:bg-gray-50"
               >
                 Sau
@@ -231,4 +248,3 @@ const PostListPage = () => {
 };
 
 export default PostListPage;
-

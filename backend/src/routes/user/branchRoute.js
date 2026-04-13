@@ -11,28 +11,26 @@ import {
 const branchRoute = express.Router();
 
 const initBranchRoute = (app) => {
-  // 1. Route "/all" ph?i n?m TR�N "/:branchId"
-  branchRoute.get("/all", branchController.getAllBranchesSimpleController);
+  // 🔥 1. Simple list (dropdown)
+  branchRoute.get("/simple", branchController.getAllBranchesSimpleController);
 
-  // 2. Route l?y danh s�ch c� ph�n trang
+  // 🔥 2. Full list (không phân trang)
+  branchRoute.get("/all", branchController.getAllBranchController);
+
+  // 🔥 3. List có phân trang + filter
   branchRoute.get(
     "/",
     validate(getBranchesSchema),
     branchController.getBranchesController,
   );
 
-  // 3. Route l?y chi ti?t theo ID
+  // 🔥 4. Detail theo ID (luôn để cuối)
   branchRoute.get(
     "/:branchId",
     validate(getBranchByIdSchema),
     branchController.getBranchByIdController,
   );
-  branchRoute.get(
-    "/",
-    //auth,
-    //authorize("USER", "COACH"),
-    branchController.getAllBranchController,
-  );
+
   app.use("/user/branches", branchRoute);
 };
 

@@ -7,8 +7,11 @@ import {
   type formCreateFindPlayerPost,
 } from "../../schemas/FormCreateFindPlayerPostSchema";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
-import { createPost, clearLastCreatedPost } from "../../redux/slices/user/postSlice";
-import { getAllBranch } from "../../redux/slices/user/branchSlice";
+import {
+  createPost,
+  clearLastCreatedPost,
+} from "../../redux/slices/user/postSlice";
+import { getAllBranchesFull } from "../../redux/slices/user/branchSlice";
 import { getAllCourts } from "../../redux/slices/user/courtSlice";
 import type { CreatePostRequest } from "../../types/post";
 import { toast } from "react-toastify";
@@ -29,7 +32,9 @@ const CreateFindPlayerPostForm = ({
 }: CreateFindPlayerPostFormProps) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const loading = useAppSelector((state) => Boolean(state.ui.loadingMap["post/createPost"]));
+  const loading = useAppSelector((state) =>
+    Boolean(state.ui.loadingMap["post/createPost"]),
+  );
   const lastCreatedPost = useAppSelector((state) => state.post.lastCreatedPost);
   const branches = useAppSelector((state) => state.branch.branches);
   const courts = useAppSelector((state) => state.court.courts);
@@ -65,10 +70,12 @@ const CreateFindPlayerPostForm = ({
 
   const level = watch("formData.playerRequirement.level");
   const selectedBranchId = watch("formData.location.branchId");
-  const courtsByBranch = courts.filter((court) => court.branchId === selectedBranchId);
+  const courtsByBranch = courts.filter(
+    (court) => court.branchId === selectedBranchId,
+  );
 
   useEffect(() => {
-    dispatch(getAllBranch());
+    dispatch(getAllBranchesFull());
     dispatch(getAllCourts());
   }, [dispatch]);
 

@@ -10,8 +10,11 @@ import {
 } from "../../schemas/FormCreateClassPostSchema";
 
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
-import { createPost, clearLastCreatedPost } from "../../redux/slices/user/postSlice";
-import { getAllBranch } from "../../redux/slices/user/branchSlice";
+import {
+  createPost,
+  clearLastCreatedPost,
+} from "../../redux/slices/user/postSlice";
+import { getAllBranchesFull } from "../../redux/slices/user/branchSlice";
 import type { CreatePostRequest } from "../../types/post";
 import { toast } from "react-toastify";
 import LoadingButton from "../../components/ui/common/LoadingButton";
@@ -32,7 +35,9 @@ const CreateClassPostForm = ({
 }: CreateClassPostFormProps) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const loading = useAppSelector((state) => Boolean(state.ui.loadingMap["post/createPost"]));
+  const loading = useAppSelector((state) =>
+    Boolean(state.ui.loadingMap["post/createPost"]),
+  );
   const lastCreatedPost = useAppSelector((state) => state.post.lastCreatedPost);
   const branches = useAppSelector((state) => state.branch.branches);
 
@@ -79,12 +84,14 @@ const CreateClassPostForm = ({
 
   const toggleWeekday = (d: number) => {
     const current = weekdays ?? [];
-    const next = current.includes(d) ? current.filter((x) => x !== d) : [...current, d];
+    const next = current.includes(d)
+      ? current.filter((x) => x !== d)
+      : [...current, d];
     setValue("formData.schedule.weekdays", next, { shouldValidate: true });
   };
 
   useEffect(() => {
-    dispatch(getAllBranch());
+    dispatch(getAllBranchesFull());
   }, [dispatch]);
 
   /**
@@ -192,91 +199,94 @@ const CreateClassPostForm = ({
       <div className="rounded-lg border border-gray-200 bg-gray-50/80 p-4 space-y-4">
         <p className="text-sm font-semibold text-gray-800">Lịch học</p>
 
-      <div>
-        <label className="block font-medium mb-1">Các ngày trong tuần</label>
-        <div className="flex flex-wrap gap-3">
-          {[
-            { d: 2, label: "Thứ 2" },
-            { d: 3, label: "Thứ 3" },
-            { d: 4, label: "Thứ 4" },
-            { d: 5, label: "Thứ 5" },
-            { d: 6, label: "Thứ 6" },
-            { d: 7, label: "Thứ 7" },
-            { d: 1, label: "Chủ nhật" },
-          ].map(({ d, label }) => {
-            const checked = (weekdays ?? []).includes(d);
-            return (
-              <button
-                key={d}
-                type="button"
-                onClick={() => toggleWeekday(d)}
-                className={`px-4 py-2 rounded-lg border text-sm ${
-                  checked
-                    ? "bg-sky-600 text-white border-sky-600"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                }`}
-              >
-                {label}
-              </button>
-            );
-          })}
+        <div>
+          <label className="block font-medium mb-1">Các ngày trong tuần</label>
+          <div className="flex flex-wrap gap-3">
+            {[
+              { d: 2, label: "Thứ 2" },
+              { d: 3, label: "Thứ 3" },
+              { d: 4, label: "Thứ 4" },
+              { d: 5, label: "Thứ 5" },
+              { d: 6, label: "Thứ 6" },
+              { d: 7, label: "Thứ 7" },
+              { d: 1, label: "Chủ nhật" },
+            ].map(({ d, label }) => {
+              const checked = (weekdays ?? []).includes(d);
+              return (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => toggleWeekday(d)}
+                  className={`px-4 py-2 rounded-lg border text-sm ${
+                    checked
+                      ? "bg-sky-600 text-white border-sky-600"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          {errors.formData?.schedule?.weekdays && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors.formData.schedule.weekdays.message}
+            </p>
+          )}
         </div>
-        {errors.formData?.schedule?.weekdays && (
-          <p className="text-red-500 text-sm mt-1">
-            {errors.formData.schedule.weekdays.message}
-          </p>
-        )}
-      </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <div>
-          <label className="block font-medium mb-1">Ngày bắt đầu khóa</label>
-          <input
-            type="date"
-            {...register("formData.schedule.startDate")}
-            className="w-full border rounded-md px-3 py-2"
-          />
-          {errors.formData?.schedule?.startDate && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.formData.schedule.startDate.message}
-            </p>
-          )}
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label className="block font-medium mb-1">Ngày bắt đầu khóa</label>
+            <input
+              type="date"
+              {...register("formData.schedule.startDate")}
+              className="w-full border rounded-md px-3 py-2"
+            />
+            {errors.formData?.schedule?.startDate && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.formData.schedule.startDate.message}
+              </p>
+            )}
+          </div>
+          <div>
+            <label className="block font-medium mb-1">Giờ vào lớp</label>
+            <input
+              type="time"
+              {...register("formData.schedule.startTime")}
+              className="w-full border rounded-md px-3 py-2"
+            />
+            {errors.formData?.schedule?.startTime && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.formData.schedule.startTime.message}
+              </p>
+            )}
+          </div>
+          <div>
+            <label className="block font-medium mb-1">Giờ tan lớp</label>
+            <input
+              type="time"
+              {...register("formData.schedule.endTime")}
+              className="w-full border rounded-md px-3 py-2"
+            />
+            {errors.formData?.schedule?.endTime && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.formData.schedule.endTime.message}
+              </p>
+            )}
+          </div>
         </div>
-        <div>
-          <label className="block font-medium mb-1">Giờ vào lớp</label>
-          <input
-            type="time"
-            {...register("formData.schedule.startTime")}
-            className="w-full border rounded-md px-3 py-2"
-          />
-          {errors.formData?.schedule?.startTime && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.formData.schedule.startTime.message}
-            </p>
-          )}
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Giờ tan lớp</label>
-          <input
-            type="time"
-            {...register("formData.schedule.endTime")}
-            className="w-full border rounded-md px-3 py-2"
-          />
-          {errors.formData?.schedule?.endTime && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.formData.schedule.endTime.message}
-            </p>
-          )}
-        </div>
-      </div>
-      <p className="text-xs text-gray-500">
-        Khung giờ trên áp dụng cho mỗi buổi vào các thứ đã chọn (cùng giờ mỗi tuần). Nếu lịch đặc biệt, ghi thêm ở phần nội dung hoặc Ghi chú.
-      </p>
+        <p className="text-xs text-gray-500">
+          Khung giờ trên áp dụng cho mỗi buổi vào các thứ đã chọn (cùng giờ mỗi
+          tuần). Nếu lịch đặc biệt, ghi thêm ở phần nội dung hoặc Ghi chú.
+        </p>
       </div>
 
       {/* Địa điểm: chỉ chi nhánh */}
       <div>
-        <label className="block font-medium mb-1">Chi nhánh (địa điểm dạy học)</label>
+        <label className="block font-medium mb-1">
+          Chi nhánh (địa điểm dạy học)
+        </label>
         <select
           {...register("formData.location.branchId", { valueAsNumber: true })}
           className="w-full border rounded-md px-3 py-2 bg-white max-w-xl"
@@ -284,7 +294,9 @@ const CreateClassPostForm = ({
           <option value={0}>-- Chọn chi nhánh --</option>
           {branches.map((branch) => (
             <option key={branch.id} value={branch.id}>
-              {[branch.branchName, branch.address, branch.district, branch.city].filter(Boolean).join(" · ")}
+              {[branch.branchName, branch.address, branch.district, branch.city]
+                .filter(Boolean)
+                .join(" · ")}
             </option>
           ))}
         </select>
@@ -297,7 +309,9 @@ const CreateClassPostForm = ({
 
       {/* Số lượng học viên tối đa */}
       <div>
-        <label className="block font-medium mb-1">Số lượng học viên tối đa</label>
+        <label className="block font-medium mb-1">
+          Số lượng học viên tối đa
+        </label>
         <input
           type="number"
           {...register("formData.maxStudents", { valueAsNumber: true })}
@@ -320,7 +334,9 @@ const CreateClassPostForm = ({
           placeholder="VD: 2 triệu/khóa, 500k/tháng × 3 tháng, đóng đầu kỳ…"
         />
         {errors.formData?.tuitionFee && (
-          <p className="text-red-500 text-sm mt-1">{errors.formData.tuitionFee.message}</p>
+          <p className="text-red-500 text-sm mt-1">
+            {errors.formData.tuitionFee.message}
+          </p>
         )}
       </div>
 
@@ -372,4 +388,3 @@ const CreateClassPostForm = ({
 };
 
 export default CreateClassPostForm;
-

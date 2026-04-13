@@ -408,6 +408,10 @@ OfflineBooking.belongsTo(DraftBooking, {
 User.hasMany(Post, { foreignKey: "authorId", as: "posts" });
 Post.belongsTo(User, { foreignKey: "authorId", as: "author" });
 
+// Repost relationship (self-reference)
+Post.belongsTo(Post, { foreignKey: "repostOfPostId", as: "repostOf" });
+Post.hasMany(Post, { foreignKey: "repostOfPostId", as: "reposts" });
+
 Post.hasMany(Comment, { foreignKey: "postId", as: "comments" });
 Comment.belongsTo(Post, { foreignKey: "postId", as: "post" });
 

@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import { useNavigate } from "react-router-dom";
+
 import {
   FormCreateClassPostSchema,
   type formCreateClassPost,
@@ -9,14 +11,30 @@ import {
 
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { createPost, clearLastCreatedPost } from "../../redux/slices/user/postSlice";
+import { getAllBranch } from "../../redux/slices/user/branchSlice";
 import type { CreatePostRequest } from "../../types/post";
 import { toast } from "react-toastify";
 import LoadingButton from "../../components/ui/common/LoadingButton";
+import { CLASS_INPUT_LEVEL_OPTIONS } from "../../constants/postConstant";
 
-const CreateClassPostForm = () => {
+type CreateClassPostFormProps = {
+  initialValues?: Partial<formCreateClassPost>;
+  submitText?: string;
+  onSubmitForm?: (data: formCreateClassPost) => Promise<void> | void;
+  redirectOnSuccess?: boolean;
+};
+
+const CreateClassPostForm = ({
+  initialValues,
+  submitText = "Đăng lớp",
+  onSubmitForm,
+  redirectOnSuccess = true,
+}: CreateClassPostFormProps) => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const loading = useAppSelector((state) => state.ui.loadingCount > 0);
   const lastCreatedPost = useAppSelector((state) => state.post.lastCreatedPost);
+  const branches = useAppSelector((state) => state.branch.branches);
 
   const {
     register,
@@ -33,34 +51,27 @@ const CreateClassPostForm = () => {
       content: "",
       type: "Class",
       formData: {
-        inputLevel: "Beginner",
-        ageRange: "16+",
+        inputLevel: "Trung bình",
+        ageRange: "",
         schedule: {
           weekdays: [2, 4, 6],
           startTime: "19:00",
           endTime: "21:00",
-          startDate: "2026-04-01",
+          startDate: "",
         },
         location: {
-          branchId: 1,
-          address: "...",
+          branchId: 0,
         },
         maxStudents: 10,
-        tuition: {
-          type: "monthly",
-          amount: 500000,
-          currency: "VND",
-          note: "Đóng đầu tháng",
-        },
-        registerEndDate: "2026-03-28",
-        paymentMethod: "onsite",
+        tuitionFee: "",
         contact: {
           inAppChat: true,
-          phone: "0901234567",
-          zalo: "0901234567",
+          phone: "",
+          zalo: "",
         },
-        notes: "Có buổi học thử. Mang vợt nếu có.",
+        notes: "",
       },
+      ...initialValues,
     },
   });
 
@@ -72,23 +83,47 @@ const CreateClassPostForm = () => {
     setValue("formData.schedule.weekdays", next, { shouldValidate: true });
   };
 
-  const onSubmit = (dt: formCreateClassPost) => {
+  useEffect(() => {
+    dispatch(getAllBranch());
+  }, [dispatch]);
+
+  /**
+   * Đăng bài: Redux gọi POST /user/posts. Axios gửi một JSON body (Content-Type: application/json).
+   * Cấu trúc: { title, content?, type: "Class", formData: { ... } } — formData là object JS,
+   * được serialize thành chuỗi JSON trong body HTTP (không phải chuỗi riêng lẻ; server parse JSON rồi lưu formData vào DB).
+   */
+  const onSubmit = async (dt: formCreateClassPost) => {
     const data: CreatePostRequest = {
       title: dt.title,
       content: dt.content ?? "",
       type: dt.type,
       formData: dt.formData,
     };
-    dispatch(createPost({ data })).unwrap();
+    if (onSubmitForm) {
+      await onSubmitForm(dt);
+      return;
+    }
+    try {
+      await dispatch(createPost({ data })).unwrap();
+    } catch {
+      toast.error("Đăng bài thất bại. Vui lòng thử lại.");
+    }
   };
 
   useEffect(() => {
-    if (lastCreatedPost) {
-      toast.success("Đăng bài lớp học thành công!");
-      reset();
+    if (!redirectOnSuccess) return;
+    if (lastCreatedPost?.type !== "Class") return;
+
+    toast.success("Đăng bài lớp học thành công!");
+    reset();
+
+    const timer = setTimeout(() => {
       dispatch(clearLastCreatedPost());
-    }
-  }, [lastCreatedPost, reset, dispatch]);
+      navigate("/posts", { replace: true });
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [dispatch, lastCreatedPost, navigate, reset, redirectOnSuccess]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -118,15 +153,20 @@ const CreateClassPostForm = () => {
         )}
       </div>
 
-      {/* Trình độ đầu vào & Độ tuổi */}
+      {/* Trình độ: chọn nhanh; độ tuổi: nhập tự do (vd 6–25, từ 8 tuổi…) */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block font-medium mb-1">Trình độ đầu vào</label>
-          <input
+          <select
             {...register("formData.inputLevel")}
-            className="w-full border rounded-md px-3 py-2"
-            placeholder="Ví dụ: Beginner, Intermediate..."
-          />
+            className="w-full border rounded-md px-3 py-2 bg-white"
+          >
+            {CLASS_INPUT_LEVEL_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
           {errors.formData?.inputLevel && (
             <p className="text-red-500 text-sm mt-1">
               {errors.formData.inputLevel.message}
@@ -138,7 +178,7 @@ const CreateClassPostForm = () => {
           <input
             {...register("formData.ageRange")}
             className="w-full border rounded-md px-3 py-2"
-            placeholder="Ví dụ: 16+, 18-25..."
+            placeholder="VD: 6–25 tuổi, hoặc từ 8 tuổi trở lên"
           />
           {errors.formData?.ageRange && (
             <p className="text-red-500 text-sm mt-1">
@@ -148,9 +188,12 @@ const CreateClassPostForm = () => {
         </div>
       </div>
 
-      {/* Weekdays (7 boxes) */}
+      {/* Một khối lịch: thứ + ngày bắt đầu + giờ (không trùng ô “giờ học” tách riêng) */}
+      <div className="rounded-lg border border-gray-200 bg-gray-50/80 p-4 space-y-4">
+        <p className="text-sm font-semibold text-gray-800">Lịch học</p>
+
       <div>
-        <label className="block font-medium mb-1">Chọn các ngày học trong tuần</label>
+        <label className="block font-medium mb-1">Các ngày trong tuần</label>
         <div className="flex flex-wrap gap-3">
           {[
             { d: 2, label: "Thứ 2" },
@@ -185,10 +228,9 @@ const CreateClassPostForm = () => {
         )}
       </div>
 
-      {/* Thời gian học */}
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <label className="block font-medium mb-1">Ngày bắt đầu</label>
+          <label className="block font-medium mb-1">Ngày bắt đầu khóa</label>
           <input
             type="date"
             {...register("formData.schedule.startDate")}
@@ -201,7 +243,7 @@ const CreateClassPostForm = () => {
           )}
         </div>
         <div>
-          <label className="block font-medium mb-1">Giờ bắt đầu</label>
+          <label className="block font-medium mb-1">Giờ vào lớp</label>
           <input
             type="time"
             {...register("formData.schedule.startTime")}
@@ -214,7 +256,7 @@ const CreateClassPostForm = () => {
           )}
         </div>
         <div>
-          <label className="block font-medium mb-1">Giờ kết thúc</label>
+          <label className="block font-medium mb-1">Giờ tan lớp</label>
           <input
             type="time"
             {...register("formData.schedule.endTime")}
@@ -227,36 +269,30 @@ const CreateClassPostForm = () => {
           )}
         </div>
       </div>
+      <p className="text-xs text-gray-500">
+        Khung giờ trên áp dụng cho mỗi buổi vào các thứ đã chọn (cùng giờ mỗi tuần). Nếu lịch đặc biệt, ghi thêm ở phần nội dung hoặc Ghi chú.
+      </p>
+      </div>
 
-      {/* Địa điểm học */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block font-medium mb-1">Chi nhánh (ID)</label>
-          <input
-            type="number"
-            {...register("formData.location.branchId", { valueAsNumber: true })}
-            className="w-full border rounded-md px-3 py-2"
-            placeholder="Nhập mã chi nhánh..."
-          />
-          {errors.formData?.location?.branchId && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.formData.location.branchId.message}
-            </p>
-          )}
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Địa chỉ</label>
-          <input
-            {...register("formData.location.address")}
-            className="w-full border rounded-md px-3 py-2"
-            placeholder="Nhập địa chỉ sân..."
-          />
-          {errors.formData?.location?.address && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.formData.location.address.message}
-            </p>
-          )}
-        </div>
+      {/* Địa điểm: chỉ chi nhánh */}
+      <div>
+        <label className="block font-medium mb-1">Chi nhánh (địa điểm dạy học)</label>
+        <select
+          {...register("formData.location.branchId", { valueAsNumber: true })}
+          className="w-full border rounded-md px-3 py-2 bg-white max-w-xl"
+        >
+          <option value={0}>-- Chọn chi nhánh --</option>
+          {branches.map((branch) => (
+            <option key={branch.id} value={branch.id}>
+              {[branch.branchName, branch.address, branch.district, branch.city].filter(Boolean).join(" · ")}
+            </option>
+          ))}
+        </select>
+        {errors.formData?.location?.branchId && (
+          <p className="text-red-500 text-sm mt-1">
+            {errors.formData.location.branchId.message}
+          </p>
+        )}
       </div>
 
       {/* Số lượng học viên tối đa */}
@@ -275,61 +311,17 @@ const CreateClassPostForm = () => {
         )}
       </div>
 
-      {/* Học phí */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block font-medium mb-1">Loại học phí</label>
-          <input
-            {...register("formData.tuition.type")}
-            className="w-full border rounded-md px-3 py-2"
-            placeholder="Theo tháng, theo buổi..."
-          />
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Số tiền</label>
-          <input
-            type="number"
-            {...register("formData.tuition.amount", { valueAsNumber: true })}
-            className="w-full border rounded-md px-3 py-2"
-            placeholder="Nhập số tiền..."
-          />
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Đơn vị tiền tệ</label>
-          <input
-            {...register("formData.tuition.currency")}
-            className="w-full border rounded-md px-3 py-2"
-            placeholder="VND, USD..."
-          />
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Ghi chú học phí</label>
-          <input
-            {...register("formData.tuition.note")}
-            className="w-full border rounded-md px-3 py-2"
-            placeholder="Ví dụ: Đóng đầu tháng, giảm giá..."
-          />
-        </div>
-      </div>
-
-      {/* Đăng ký & thanh toán */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block font-medium mb-1">Hạn đăng ký</label>
-          <input
-            type="date"
-            {...register("formData.registerEndDate")}
-            className="w-full border rounded-md px-3 py-2"
-          />
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Hình thức thanh toán</label>
-          <input
-            {...register("formData.paymentMethod")}
-            className="w-full border rounded-md px-3 py-2"
-            placeholder="Tại sân, chuyển khoản..."
-          />
-        </div>
+      {/* Học phí — một ô mô tả tự do */}
+      <div>
+        <label className="block font-medium mb-1">Học phí</label>
+        <textarea
+          {...register("formData.tuitionFee")}
+          className="w-full border rounded-md px-3 py-2 min-h-[72px]"
+          placeholder="VD: 2 triệu/khóa, 500k/tháng × 3 tháng, đóng đầu kỳ…"
+        />
+        {errors.formData?.tuitionFee && (
+          <p className="text-red-500 text-sm mt-1">{errors.formData.tuitionFee.message}</p>
+        )}
       </div>
 
       {/* Liên hệ */}
@@ -340,7 +332,7 @@ const CreateClassPostForm = () => {
             {...register("formData.contact.inAppChat")}
             className="h-4 w-4"
           />
-          <span>Nhắn tin trong app</span>
+          <span>Nhận tin nhắn trực tiếp trên website</span>
         </div>
         <div>
           <label className="block font-medium mb-1">Số điện thoại</label>
@@ -362,17 +354,17 @@ const CreateClassPostForm = () => {
 
       {/* Ghi chú */}
       <div>
-        <label className="block font-medium mb-1">Ghi chú thêm</label>
+        <label className="block font-medium mb-1">Ghi chú</label>
         <textarea
           {...register("formData.notes")}
           className="w-full border rounded-md px-3 py-2 min-h-[60px]"
-          placeholder="Nhập ghi chú thêm nếu có..."
+          placeholder="Thông tin thêm nếu cần…"
         />
       </div>
 
       <div className="flex justify-end">
         <LoadingButton loading={loading} type="submit">
-          Đăng lớp
+          {submitText}
         </LoadingButton>
       </div>
     </form>

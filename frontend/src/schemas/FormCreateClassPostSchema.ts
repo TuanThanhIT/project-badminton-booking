@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CLASS_INPUT_LEVEL_VALUES } from "../constants/postConstant";
 
 export const FormCreateClassPostSchema = z.object({
   title: z.string().min(3, "Tiêu đề tối thiểu 3 ký tự").max(200, "Tiêu đề tối đa 200 ký tự"),
@@ -7,32 +8,33 @@ export const FormCreateClassPostSchema = z.object({
   type: z.literal("Class"),
 
   formData: z.object({
-    inputLevel: z.string().min(1, "Vui lòng nhập level"),
-    ageRange: z.string().min(1, "Vui lòng nhập độ tuổi"),
+    inputLevel: z.enum(CLASS_INPUT_LEVEL_VALUES, {
+      message: "Vui lòng chọn trình độ đầu vào",
+    }),
+    ageRange: z
+      .string()
+      .trim()
+      .min(1, "Vui lòng nhập độ tuổi")
+      .max(120, "Độ tuổi tối đa 120 ký tự"),
 
     schedule: z.object({
       weekdays: z.array(z.number().int()).min(1, "Vui lòng chọn ít nhất 1 ngày"),
-      startTime: z.string().min(1, "Vui lòng chọn startTime"),
-      endTime: z.string().min(1, "Vui lòng chọn endTime"),
-      startDate: z.string().min(1, "Vui lòng chọn startDate"),
+      startTime: z.string().min(1, "Vui lòng chọn giờ bắt đầu"),
+      endTime: z.string().min(1, "Vui lòng chọn giờ kết thúc"),
+      startDate: z.string().min(1, "Vui lòng chọn ngày bắt đầu"),
     }),
 
     location: z.object({
-      branchId: z.number().int().min(1, "Vui lòng chọn chi nhánh"),
-      address: z.string().min(1, "Vui lòng nhập địa chỉ"),
+      branchId: z.number().int().min(1, "Vui lòng chọn chi nhánh (địa điểm dạy học)"),
     }),
 
-    maxStudents: z.number().int().min(1, "Max students phải >= 1"),
+    maxStudents: z.number().int().min(1, "Số học viên tối đa phải >= 1"),
 
-    tuition: z.object({
-      type: z.string().min(1, "Vui lòng nhập loại học phí"),
-      amount: z.number().int().min(0, "Số tiền không hợp lệ"),
-      currency: z.string().min(1, "Vui lòng nhập currency"),
-      note: z.string().nullable().optional(),
-    }),
-
-    registerEndDate: z.string().min(1, "Vui lòng chọn registerEndDate"),
-    paymentMethod: z.string().min(1, "Vui lòng nhập paymentMethod"),
+    tuitionFee: z
+      .string()
+      .trim()
+      .min(1, "Vui lòng nhập học phí")
+      .max(500, "Học phí tối đa 500 ký tự"),
 
     contact: z.object({
       inAppChat: z.boolean(),
@@ -45,4 +47,3 @@ export const FormCreateClassPostSchema = z.object({
 });
 
 export type formCreateClassPost = z.infer<typeof FormCreateClassPostSchema>;
-

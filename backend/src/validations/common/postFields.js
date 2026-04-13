@@ -28,11 +28,3 @@ export const postTypeField = Joi.string()
 export const formDataField = Joi.object()
   .unknown(true)
   .allow(null);
-export const idParamField = Joi.number()
-  .integer()
-  .min(1)
-  .required()
-  .messages({
-    "number.base": "ID bài đăng không hợp lệ",
-    "any.required": "ID bài đăng là bắt buộc",
-  });

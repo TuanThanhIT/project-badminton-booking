@@ -10,8 +10,13 @@ import initAuthRoute from "./routes/user/authRoute.js";
 import initCateRoute from "./routes/user/cateRoute.js";
 import initProductRoute from "./routes/user/productRoute.js";
 import initBranchRoute from "./routes/user/branchRoute.js";
+import initCourtRoute from "./routes/user/courtRoute.js";
 import initCartRoute from "./routes/user/cartRoute.js";
 import initPostRoute from "./routes/user/postRoute.js";
+import initPostSocialRoute from "./routes/user/postSocialRoute.js";
+import initProfileRoute from "./routes/user/profileRoute.js";
+import initConversationRoute from "./routes/user/conversationRoute.js";
+import initUserSearchRoute from "./routes/user/userSearchRoute.js";
 
 dotenv.config();
 
@@ -28,10 +33,15 @@ initAuthRoute(app);
 initCateRoute(app);
 initProductRoute(app);
 initBranchRoute(app);
+initCourtRoute(app);
 initCartRoute(app);
 
 // Post
 initPostRoute(app);
+initPostSocialRoute(app);
+initProfileRoute(app);
+initConversationRoute(app);
+initUserSearchRoute(app);
 
 // create http server
 const httpServer = createServer(app);

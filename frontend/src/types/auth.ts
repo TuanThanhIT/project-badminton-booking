@@ -5,6 +5,10 @@ export type User = {
   email: string;
   username: string;
   role: string;
+  profile?: {
+    fullName?: string;
+    avatar?: string | null;
+  } | null;
 };
 
 export type LoginRequest = {

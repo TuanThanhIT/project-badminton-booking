@@ -73,6 +73,22 @@ const Post = sequelize.define(
         },
       },
     },
+    repostOfPostId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: {
+        isInt: { msg: "repostOfPostId must be an integer" },
+        min: { args: [1], msg: "repostOfPostId must be a positive number" },
+      },
+    },
+    isRepost: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      validate: {
+        isBoolean: { msg: "isRepost must be a boolean" },
+      },
+    },
     isActive: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,

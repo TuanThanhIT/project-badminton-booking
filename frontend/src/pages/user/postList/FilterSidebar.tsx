@@ -1,5 +1,6 @@
 import type { PostType } from "../../../types/post";
 import type { FilterField } from "../../../constants/postConstant";
+import type { Branch } from "../../../types/branch";
 
 import {
   POST_TYPES,
@@ -10,17 +11,23 @@ import {
 type Props = {
   selectedType: PostType | "";
   onTypeChange: (t: PostType | "") => void;
+  hideReposts: boolean;
+  onHideRepostsChange: (value: boolean) => void;
   filterValues: Record<string, string | number>;
   onFilterChange: (key: string, value: string | number) => void;
   onApply: () => void;
+  branches: Branch[];
 };
 
 const FilterSidebar = ({
   selectedType,
   onTypeChange,
+  hideReposts,
+  onHideRepostsChange,
   filterValues,
   onFilterChange,
   onApply,
+  branches,
 }: Props) => {
   const filters: FilterField[] = selectedType
     ? POST_TYPE_FILTERS[selectedType]
@@ -62,6 +69,22 @@ const FilterSidebar = ({
         </div>
       </div>
 
+      {/* Repost filter */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
+          Tuỳ chọn
+        </p>
+        <label className="flex items-center gap-2 text-sm text-gray-700 select-none">
+          <input
+            type="checkbox"
+            checked={hideReposts}
+            onChange={(e) => onHideRepostsChange(e.target.checked)}
+            className="h-4 w-4"
+          />
+          Ẩn bài đăng lại
+        </label>
+      </div>
+
       {/* Filter con theo loại */}
       {filters.length > 0 && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
@@ -74,7 +97,23 @@ const FilterSidebar = ({
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   {f.label}
                 </label>
-                {f.type === "select" && f.options ? (
+                {f.key === "location.branchId" ? (
+                  <select
+                    value={String(filterValues[f.key] ?? "")}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      onFilterChange(f.key, v === "" ? "" : Number(v));
+                    }}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                  >
+                    <option value="">-- Tất cả chi nhánh --</option>
+                    {branches.map((branch) => (
+                      <option key={branch.id} value={branch.id}>
+                        {branch.branchName}
+                      </option>
+                    ))}
+                  </select>
+                ) : f.type === "select" && f.options ? (
                   <select
                     value={String(filterValues[f.key] ?? "")}
                     onChange={(e) => onFilterChange(f.key, e.target.value)}

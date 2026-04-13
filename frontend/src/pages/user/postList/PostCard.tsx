@@ -1,29 +1,58 @@
-import { MessageCircle, Share2, ThumbsUp, MoreHorizontal, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import type { PostWithAuthor } from "../../../types/post";
 import { POST_TYPE_LABEL } from "../../../constants/postConstant";
+import { useAppSelector } from "../../../redux/hook";
 import FormDataSummary from "./FormDataSummary";
+import PostActions from "./components/PostActions";
+import RepostOriginalEmbed from "./components/RepostOriginalEmbed";
+import { formatRelativeTimeVi } from "../../../utils/formatRelativeTimeVi";
 
-/** Format thời gian tương đối (giống Facebook: "46 phút trước") */
-const formatDate = (dateStr: string) => {
-  const d = new Date(dateStr);
-  const now = new Date();
-  const diff = now.getTime() - d.getTime();
-
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-
-  if (minutes < 1) return "Vừa xong";
-  if (minutes < 60) return `${minutes} phút trước`;
-  if (hours < 24) return `${hours} giờ trước`;
-  if (days < 7) return `${days} ngày trước`;
-  return d.toLocaleDateString("vi-VN");
+type PostCardProps = {
+  post: PostWithAuthor;
+  branchInfoById: Record<
+    number,
+    { branchName: string; address?: string; district?: string; city?: string }
+  >;
+  courtNameById: Record<number, string>;
+  /** Chỉ dùng trên trang profile: menu ⋮ với chỉnh sửa / xóa */
+  ownerMenuActions?: {
+    onEdit: () => void;
+    onDelete: () => void;
+  };
 };
 
-const PostCard = ({ post }: { post: PostWithAuthor }) => {
+const PostCard = ({
+  post,
+  branchInfoById,
+  courtNameById,
+  ownerMenuActions,
+}: PostCardProps) => {
+  const navigate = useNavigate();
+  const myUserId = useAppSelector((state) => state.auth.user?.id);
+  const [ownerMenuOpen, setOwnerMenuOpen] = useState(false);
+  const ownerMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!ownerMenuOpen) return;
+    const close = (e: MouseEvent) => {
+      if (ownerMenuRef.current && !ownerMenuRef.current.contains(e.target as Node)) {
+        setOwnerMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [ownerMenuOpen]);
   const authorName =
     post.author?.profile?.fullName || post.author?.username || "Ẩn danh";
   const avatar = post.author?.profile?.avatar;
+
+  const repostOfPostId = (() => {
+    const n = post.repostOfPostId ?? null;
+    return n && n > 0 ? n : null;
+  })();
+  const isRepost = repostOfPostId != null;
 
   return (
     <article className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -44,45 +73,105 @@ const PostCard = ({ post }: { post: PostWithAuthor }) => {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-gray-900">{authorName}</span>
-            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-sky-100 text-sky-700">
-              {POST_TYPE_LABEL[post.type]}
-            </span>
+            <button
+              type="button"
+              className="font-semibold text-gray-900 hover:underline"
+              onClick={() => {
+                const id = post.author?.id;
+                if (!id) return;
+                navigate(id === myUserId ? "/profile" : `/profile/${id}`);
+              }}
+            >
+              {authorName}
+            </button>
+            {!isRepost && (
+              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-sky-100 text-sky-700">
+                {POST_TYPE_LABEL[post.type]}
+              </span>
+            )}
           </div>
+          {isRepost && (
+            <p className="text-sm text-emerald-600 mt-0.5 font-medium">
+              Bài đăng lại
+            </p>
+          )}
           <p className="text-sm text-gray-500 flex items-center gap-1">
-            {formatDate(post.createdDate)}
+            {formatRelativeTimeVi(post.createdDate)}
             <span className="inline-flex items-center text-gray-400">
               • Công khai
             </span>
           </p>
         </div>
 
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            className="p-1.5 rounded-full hover:bg-gray-100 text-gray-500"
-            title="Menu"
-          >
-            <MoreHorizontal className="w-5 h-5" />
-          </button>
-          <button
-            type="button"
-            className="p-1.5 rounded-full hover:bg-gray-100 text-gray-500"
-            title="Ẩn"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+        {ownerMenuActions && (
+          <div className="relative shrink-0" ref={ownerMenuRef}>
+            <button
+              type="button"
+              className="p-1.5 rounded-full hover:bg-gray-100 text-gray-500"
+              title="Tùy chọn bài đăng"
+              aria-expanded={ownerMenuOpen}
+              aria-haspopup="menu"
+              onClick={() => setOwnerMenuOpen((o) => !o)}
+            >
+              <MoreHorizontal className="w-5 h-5" />
+            </button>
+            {ownerMenuOpen && (
+              <div
+                className="absolute right-0 top-full mt-1 w-44 py-1 bg-white rounded-xl border border-gray-200 shadow-lg z-30"
+                role="menu"
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="w-full text-left px-3 py-2.5 text-sm text-gray-700 hover:bg-sky-50 flex items-center gap-2"
+                  onClick={() => {
+                    ownerMenuActions.onEdit();
+                    setOwnerMenuOpen(false);
+                  }}
+                >
+                  <Pencil className="w-4 h-4 shrink-0 text-sky-600" />
+                  Chỉnh sửa
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="w-full text-left px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                  onClick={() => {
+                    ownerMenuActions.onDelete();
+                    setOwnerMenuOpen(false);
+                  }}
+                >
+                  <Trash2 className="w-4 h-4 shrink-0" />
+                  Xóa bài
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="px-4 pb-3">
-        <h3 className="font-medium text-gray-900 mb-1">{post.title}</h3>
-        {post.content && (
-          <p className="text-gray-700 text-sm whitespace-pre-wrap">
-            {post.content}
-          </p>
+        {!isRepost ? (
+          <FormDataSummary
+            post={post}
+            branchInfoById={branchInfoById}
+            courtNameById={courtNameById}
+          />
+        ) : (
+          <>
+            {/* Caption của người repost (optional) */}
+            {post.content && (
+              <p className="text-gray-700 text-sm whitespace-pre-wrap">
+                {post.content}
+              </p>
+            )}
+            <RepostOriginalEmbed
+              originalPostId={repostOfPostId!}
+              branchInfoById={branchInfoById}
+              courtNameById={courtNameById}
+            />
+          </>
         )}
-        <FormDataSummary post={post} />
       </div>
 
       <div className="px-4 py-2 flex items-center justify-between text-sm text-gray-500 border-b border-gray-100">
@@ -95,34 +184,12 @@ const PostCard = ({ post }: { post: PostWithAuthor }) => {
               😂
             </span>
           </span>
-          <span>0</span>
+          <span>{post.likesCount ?? 0}</span>
         </span>
-        <span>0 bình luận</span>
+        <span>{post.commentsCount ?? 0} bình luận</span>
       </div>
 
-      <div className="flex border-t border-gray-100">
-        <button
-          type="button"
-          className="flex-1 flex items-center justify-center gap-2 py-3 text-gray-600 hover:bg-gray-50 transition text-sm font-medium"
-        >
-          <ThumbsUp className="w-4 h-4" />
-          Thích
-        </button>
-        <button
-          type="button"
-          className="flex-1 flex items-center justify-center gap-2 py-3 text-gray-600 hover:bg-gray-50 transition text-sm font-medium"
-        >
-          <MessageCircle className="w-4 h-4" />
-          Bình luận
-        </button>
-        <button
-          type="button"
-          className="flex-1 flex items-center justify-center gap-2 py-3 text-gray-600 hover:bg-gray-50 transition text-sm font-medium"
-        >
-          <Share2 className="w-4 h-4" />
-          Chia sẻ
-        </button>
-      </div>
+      <PostActions post={post} />
     </article>
   );
 };

@@ -3,10 +3,10 @@ import {
   titleField,
   contentField,
   postTypeField,
-  formDataField,
-  idParamField,
+  formDataField
 } from "./common/postFields.js";
 import { pageField, limitField } from "./common/paginationFields.js";
+import { idParams } from "./common/numberField.js";
 
 export const createPostSchema = {
   body: Joi.object({
@@ -27,13 +27,13 @@ export const getPostsSchema = {
 
 export const getPostByIdSchema = {
   params: Joi.object({
-    id: idParamField,
+    postId: idParams("postId"),
   }),
 };
 
 export const updatePostSchema = {
   params: Joi.object({
-    id: idParamField,
+    postId: idParams("postId"),
   }),
   body: Joi.object({
     title: titleField.optional(),
@@ -44,6 +44,6 @@ export const updatePostSchema = {
 
 export const deletePostSchema = {
   params: Joi.object({
-    id: idParamField,
+   postId: idParams("postId"),
   }),
 };

@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "../../../redux/hook";
 import { getPosts } from "../../../redux/slices/user/postSlice";
+import { getAllBranch } from "../../../redux/slices/user/branchSlice";
+import { getCourtsByIds } from "../../../redux/slices/user/courtSlice";
 import type { PostType } from "../../../types/post";
 import { POST_TYPE_LABEL, POST_TYPES } from "../../../constants/postConstant";
 import { Search } from "lucide-react";
@@ -11,6 +13,8 @@ import FilterSidebar from "./FilterSidebar";
 const PostListPage = () => {
   const dispatch = useAppDispatch();
   const { posts, total, limit } = useAppSelector((state) => state.post);
+  const branches = useAppSelector((state) => state.branch.branches);
+  const courts = useAppSelector((state) => state.court.courts);
   const loading = useAppSelector((state) => state.ui.loadingCount > 0);
 
   const [selectedType, setSelectedType] = useState<PostType | "">("");
@@ -19,6 +23,7 @@ const PostListPage = () => {
   const [search, setSearch] = useState("");
   const [searchDebounce, setSearchDebounce] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [hideReposts, setHideReposts] = useState(false);
 
   const fetchPosts = useCallback(() => {
     const params: Record<string, string | number> = {
@@ -27,11 +32,32 @@ const PostListPage = () => {
     };
     if (selectedType) params.type = selectedType;
     if (searchDebounce) params.search = searchDebounce;
+    if (hideReposts) params.hideReposts = 1;
     Object.entries(appliedFilters).forEach(([k, v]) => {
       if (v !== "" && v !== undefined) params[`formData[${k}]`] = v;
     });
     dispatch(getPosts({ params }));
-  }, [dispatch, currentPage, selectedType, searchDebounce, appliedFilters]);
+  }, [dispatch, currentPage, selectedType, searchDebounce, appliedFilters, hideReposts]);
+
+  useEffect(() => {
+    dispatch(getAllBranch());
+  }, [dispatch]);
+
+  useEffect(() => {
+    const ids = posts
+      .map((post) => {
+        const formData = post.formData as
+          | { location?: { courtId?: number } }
+          | null
+          | undefined;
+        return formData?.location?.courtId;
+      })
+      .filter((courtId): courtId is number => Boolean(courtId && courtId > 0));
+
+    if (ids.length > 0) {
+      dispatch(getCourtsByIds({ ids }));
+    }
+  }, [dispatch, posts]);
 
   useEffect(() => {
     fetchPosts();
@@ -63,9 +89,30 @@ const PostListPage = () => {
   const totalPages = Math.ceil(total / limit) || 1;
 
   const handleApplyFilter = useCallback(() => {
-    setAppliedFilters(filterValues);
+    // Copy to ensure state change triggers fetch even if same reference
+    setAppliedFilters({ ...filterValues });
     setCurrentPage(1);
   }, [filterValues]);
+
+  const branchInfoById = branches.reduce<
+    Record<
+      number,
+      { branchName: string; address?: string; district?: string; city?: string }
+    >
+  >((acc, branch) => {
+    acc[branch.id] = {
+      branchName: branch.branchName,
+      address: branch.address,
+      district: branch.district,
+      city: branch.city,
+    };
+    return acc;
+  }, {});
+
+  const courtNameById = courts.reduce<Record<number, string>>((acc, court) => {
+    acc[court.id] = court.courtName;
+    return acc;
+  }, {});
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -75,9 +122,15 @@ const PostListPage = () => {
           <FilterSidebar
             selectedType={selectedType}
             onTypeChange={handleTypeChange}
+            hideReposts={hideReposts}
+            onHideRepostsChange={(v) => {
+              setHideReposts(v);
+              setCurrentPage(1);
+            }}
             filterValues={filterValues}
             onFilterChange={handleFilterChange}
             onApply={handleApplyFilter}
+            branches={branches}
           />
         </div>
 
@@ -136,7 +189,14 @@ const PostListPage = () => {
                 Chưa có bài đăng nào. Hãy đăng bài đầu tiên!
               </div>
             ) : (
-              posts.map((post) => <PostCard key={post.id} post={post} />)
+              posts.map((post) => (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  branchInfoById={branchInfoById}
+                  courtNameById={courtNameById}
+                />
+              ))
             )}
           </div>
 

@@ -20,6 +20,8 @@ import BookingCourtPage from "../pages/user/BookingCourtPage";
 import BookingPage from "../pages/user/BookingPage";
 import CreatePostPage from "../pages/user/CreatePostPage";
 import PostListPage from "../pages/user/postList/PostListPage";
+import PublicProfilePage from "../pages/user/PublicProfilePage";
+import MessagesPage from "../pages/user/MessagesPage";
 
 const UserRoute = () => {
   return (
@@ -43,12 +45,15 @@ const UserRoute = () => {
         <Route path="booking" element={<BookingCourtPage />} />
         <Route path="history" element={<HistoryPage />} />
         <Route path="profile" element={<ProfilePage />} />
+        <Route path="profile/:userId" element={<PublicProfilePage />} />
         <Route path="cart" element={<CartPage />} />
         <Route path="checkout" element={<CheckoutPage />} />
         <Route path="orders" element={<OrderPage />} />
         <Route path="bookings" element={<BookingPage />} />
         <Route path="create-post" element={<CreatePostPage />} />
         <Route path="posts" element={<PostListPage />} />
+        <Route path="messages" element={<MessagesPage />} />
+        <Route path="messages/:conversationId" element={<MessagesPage />} />
       </Route>
     </Routes>
   );

@@ -12,8 +12,13 @@ var _authRoute = _interopRequireDefault(require("./routes/user/authRoute.js"));
 var _cateRoute = _interopRequireDefault(require("./routes/user/cateRoute.js"));
 var _productRoute = _interopRequireDefault(require("./routes/user/productRoute.js"));
 var _branchRoute = _interopRequireDefault(require("./routes/user/branchRoute.js"));
+var _courtRoute = _interopRequireDefault(require("./routes/user/courtRoute.js"));
 var _cartRoute = _interopRequireDefault(require("./routes/user/cartRoute.js"));
 var _postRoute = _interopRequireDefault(require("./routes/user/postRoute.js"));
+var _postSocialRoute = _interopRequireDefault(require("./routes/user/postSocialRoute.js"));
+var _profileRoute = _interopRequireDefault(require("./routes/user/profileRoute.js"));
+var _conversationRoute = _interopRequireDefault(require("./routes/user/conversationRoute.js"));
+var _userSearchRoute = _interopRequireDefault(require("./routes/user/userSearchRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -29,10 +34,15 @@ app.use((0, _cors["default"])());
 (0, _cateRoute["default"])(app);
 (0, _productRoute["default"])(app);
 (0, _branchRoute["default"])(app);
+(0, _courtRoute["default"])(app);
 (0, _cartRoute["default"])(app);
 
 // Post
 (0, _postRoute["default"])(app);
+(0, _postSocialRoute["default"])(app);
+(0, _profileRoute["default"])(app);
+(0, _conversationRoute["default"])(app);
+(0, _userSearchRoute["default"])(app);
 
 // create http server
 var httpServer = (0, _http.createServer)(app);

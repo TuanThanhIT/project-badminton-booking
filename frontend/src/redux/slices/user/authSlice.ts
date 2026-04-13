@@ -16,6 +16,7 @@ import type {
 } from "../../../types/auth";
 import type { ApiErrorType } from "../../../types/error";
 import authService from "../../../services/user/authService";
+import type { UserProfileData } from "../../../types/profile";
 
 const token = localStorage.getItem("access_token");
 
@@ -113,6 +114,14 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
+    syncAuthUserProfile: (state, action: { payload: UserProfileData }) => {
+      if (!state.user) return;
+      state.user.username = action.payload.username || state.user.username;
+      state.user.profile = {
+        fullName: action.payload.profile?.fullName,
+        avatar: action.payload.profile?.avatar || null,
+      };
+    },
     logout: (state) => {
       state.user = undefined;
       state.token = undefined;
@@ -140,5 +149,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout } = authSlice.actions;
+export const { logout, syncAuthUserProfile } = authSlice.actions;
 export default authSlice.reducer;

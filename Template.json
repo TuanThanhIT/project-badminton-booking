@@ -14,7 +14,7 @@
         "endTime": "20:00"
       },
       "playerRequirement": {
-        "level": "Intermediate",
+        "level": "Trung bình",
         "customLevel": null,
         "slotsNeeded": 2
       },
@@ -89,8 +89,7 @@
   "formData": {
     "area": { "city": "TP.HCM", "district": "Thủ Đức" },
     "weeklySchedule": { "weekdays": [2, 3, 4, 5], "startTime": "19:00", "endTime": "21:00" },
-    "levelWanted": "Intermediate",
-    "settings": { "joinType": "manual", "privacy": "public" },
+    "levelWanted": "Trung bình",
     "contact": { "inApp": true, "zaloGroupLink": "https://zalo.me/g/xxxx" }
   }
 }

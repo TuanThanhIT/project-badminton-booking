@@ -25,4 +25,23 @@ const uploadBuffer = async (fileBuffer, folder) => {
   });
 };
 
+/** Upload chat attachment (image hoặc file khác, resource_type auto). */
+const uploadChatBuffer = async (fileBuffer, mimetype) => {
+  const isImage = typeof mimetype === "string" && mimetype.startsWith("image/");
+  return new Promise((resolve, reject) => {
+    const options = {
+      folder: "chat",
+      resource_type: isImage ? "image" : "auto",
+    };
+
+    cloudinary.uploader
+      .upload_stream(options, (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      })
+      .end(fileBuffer);
+  });
+};
+
 export default uploadBuffer;
+export { uploadChatBuffer };

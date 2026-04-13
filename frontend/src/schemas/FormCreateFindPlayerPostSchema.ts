@@ -1,6 +1,7 @@
 import { z } from "zod";
+import { FIND_PLAYER_LEVEL_VALUES } from "../constants/postConstant";
 
-const LevelEnum = z.enum(["Beginner", "Intermediate", "Advanced", "Custom"]);
+const LevelEnum = z.enum(FIND_PLAYER_LEVEL_VALUES);
 
 export const FormCreateFindPlayerPostSchema = z.object({
   title: z
@@ -29,10 +30,6 @@ export const FormCreateFindPlayerPostSchema = z.object({
         .number()
         .int()
         .min(1, "Cần ít nhất 1 slot"),
-    }),
-    cost: z.object({
-      method: z.string().min(1, "Vui lòng chọn hình thức thanh toán"),
-      note: z.string().nullable().optional(),
     }),
     contact: z.object({
       inApp: z.boolean(),

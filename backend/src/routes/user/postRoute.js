@@ -31,7 +31,7 @@ const initPostRoute = (app) => {
   );
 
   postRoute.get(
-    "/:id",
+    "/:postId",
     auth,
     authorize("User", "Coach"),
     validate(getPostByIdSchema),

@@ -5,7 +5,7 @@ export const FormCreateClassPostSchema = z.object({
   title: z.string().min(3, "Tiêu đề tối thiểu 3 ký tự").max(200, "Tiêu đề tối đa 200 ký tự"),
   content: z.string().max(2000, "Mô tả tối đa 2000 ký tự").optional(),
 
-  type: z.literal("Class"),
+  type: z.literal("CLASS"),
 
   formData: z.object({
     inputLevel: z.enum(CLASS_INPUT_LEVEL_VALUES, {

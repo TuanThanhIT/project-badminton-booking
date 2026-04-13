@@ -1,11 +1,11 @@
 import type { ApiResponse } from "./api";
 
 export type PostType =
-  | "Find_player"
-  | "Tournament"
-  | "Group"
-  | "Find_coach"
-  | "Class";
+  | "FIND_PLAYER"
+  | "TOURNAMENT"
+  | "GROUP"
+  | "FIND_COACH"
+  | "CLASS";
 
 export type FindPlayerFormData = {
   location: {

@@ -15,14 +15,14 @@ const initProfileRoute = (app) => {
   profileRoute.get(
     "/me",
     auth,
-    authorize("User", "Coach"),
+    authorize("USER","COACH"),
     profileController.getMyProfileController,
   );
 
   profileRoute.patch(
     "/me",
     auth,
-    authorize("User", "Coach"),
+    authorize("USER","COACH"),
     validate(updateMyProfileSchema),
     profileController.updateMyProfileController,
   );
@@ -30,7 +30,7 @@ const initProfileRoute = (app) => {
   profileRoute.post(
     "/me/avatar",
     auth,
-    authorize("User", "Coach"),
+    authorize("USER","COACH"),
     profileAvatarUpload.single("avatar"),
     profileController.uploadMyAvatarController,
   );
@@ -38,7 +38,7 @@ const initProfileRoute = (app) => {
   profileRoute.get(
     "/:userId",
     auth,
-    authorize("User", "Coach"),
+    authorize("USER","COACH"),
     validate(getPublicProfileSchema),
     profileController.getPublicProfileController,
   );

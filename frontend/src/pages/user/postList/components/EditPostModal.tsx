@@ -27,14 +27,14 @@ const EditPostModal = ({ editTarget, onClose, onSave }: EditPostModalProps) => {
   };
 
   const renderForm = () => {
-    if (editTarget.type === "Find_player") {
+    if (editTarget.type === "FIND_PLAYER") {
       return (
         <CreateFindPlayerPostForm
           {...commonProps}
           initialValues={{
             title: editTarget.title,
             content: editTarget.content || "",
-            type: "Find_player",
+            type: "FIND_PLAYER",
             formData: editTarget.formData,
           }}
           onSubmitForm={async (dt) =>
@@ -47,14 +47,14 @@ const EditPostModal = ({ editTarget, onClose, onSave }: EditPostModalProps) => {
         />
       );
     }
-    if (editTarget.type === "Class") {
+    if (editTarget.type === "CLASS") {
       return (
         <CreateClassPostForm
           {...commonProps}
           initialValues={{
             title: editTarget.title,
             content: editTarget.content || "",
-            type: "Class",
+            type: "CLASS",
             formData: editTarget.formData,
           }}
           onSubmitForm={async (dt) =>
@@ -67,14 +67,14 @@ const EditPostModal = ({ editTarget, onClose, onSave }: EditPostModalProps) => {
         />
       );
     }
-    if (editTarget.type === "Tournament") {
+    if (editTarget.type === "TOURNAMENT") {
       return (
         <CreateTournamentPostForm
           {...commonProps}
           initialValues={{
             title: editTarget.title,
             content: editTarget.content || "",
-            type: "Tournament",
+            type: "TOURNAMENT",
             formData: editTarget.formData,
           }}
           onSubmitForm={async (dt) =>
@@ -87,14 +87,14 @@ const EditPostModal = ({ editTarget, onClose, onSave }: EditPostModalProps) => {
         />
       );
     }
-    if (editTarget.type === "Group") {
+    if (editTarget.type === "GROUP") {
       return (
         <CreateGroupPostForm
           {...commonProps}
           initialValues={{
             title: editTarget.title,
             content: editTarget.content || "",
-            type: "Group",
+            type: "GROUP",
             formData: editTarget.formData,
           }}
           onSubmitForm={async (dt) =>

@@ -35,7 +35,7 @@ const CreateGroupPostForm = ({
 }: CreateGroupPostFormProps) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const loading = useAppSelector((state) => state.ui.loadingCount > 0);
+  const loading = useAppSelector((state) => Boolean(state.ui.loadingMap["post/createPost"]));
   const lastCreatedPost = useAppSelector((state) => state.post.lastCreatedPost);
 
   const {
@@ -51,7 +51,7 @@ const CreateGroupPostForm = ({
     defaultValues: {
       title: "",
       content: "",
-      type: "Group",
+      type: "GROUP",
       formData: {
         area: {
           city: "",
@@ -76,7 +76,7 @@ const CreateGroupPostForm = ({
 
   useEffect(() => {
     if (!redirectOnSuccess) return;
-    if (lastCreatedPost?.type !== "Group") return;
+    if (lastCreatedPost?.type !== "GROUP") return;
 
     toast.success("Đăng bài nhóm thành công!");
     reset();

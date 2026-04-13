@@ -29,7 +29,7 @@ const CreateFindPlayerPostForm = ({
 }: CreateFindPlayerPostFormProps) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const loading = useAppSelector((state) => state.ui.loadingCount > 0);
+  const loading = useAppSelector((state) => Boolean(state.ui.loadingMap["post/createPost"]));
   const lastCreatedPost = useAppSelector((state) => state.post.lastCreatedPost);
   const branches = useAppSelector((state) => state.branch.branches);
   const courts = useAppSelector((state) => state.court.courts);
@@ -47,7 +47,7 @@ const CreateFindPlayerPostForm = ({
     defaultValues: {
       title: "",
       content: "",
-      type: "Find_player",
+      type: "FIND_PLAYER",
       formData: {
         location: { branchId: 0, courtId: 0 },
         schedule: { date: "", startTime: "", endTime: "" },

@@ -12,7 +12,7 @@ export const FormCreateFindPlayerPostSchema = z.object({
     .string()
     .max(2000, "Mô tả tối đa 2000 ký tự")
     .optional(),
-  type: z.literal("Find_player"),
+  type: z.literal("FIND_PLAYER"),
   formData: z.object({
     location: z.object({
       branchId: z.number().int().min(1, "Vui lòng chọn chi nhánh"),

@@ -9,7 +9,7 @@ const initBranchRoute = (app) => {
   branchRoute.get(
     "/",
     auth,
-    authorize("USER", "Coach"),
+    authorize("USER", "COACH"),
     branchController.getAllBranchController,
   );
 

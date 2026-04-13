@@ -6,27 +6,27 @@ import CreateTournamentPostForm from "./CreateTournamentPostForm";
 import CreateGroupPostForm from "./CreateGroupPostForm";
 
 const POST_TYPE_LABEL: Record<PostType, string> = {
-  Find_player: "Tìm người chơi cùng",
-  Tournament: "Giải đấu",
-  Group: "Nhóm",
-  Find_coach: "Tìm HLV",
-  Class: "Lớp học",
+  FIND_PLAYER: "Tìm người chơi cùng",
+  TOURNAMENT: "Giải đấu",
+  GROUP: "Nhóm",
+  FIND_COACH: "Tìm HLV",
+  CLASS: "Lớp học",
 };
 
-const AVAILABLE_TYPES: PostType[] = ["Find_player", "Class", "Tournament", "Group"];
+const AVAILABLE_TYPES: PostType[] = ["FIND_PLAYER", "CLASS", "TOURNAMENT", "GROUP"];
 
 const CreatePostPage = () => {
-  const [selectedType, setSelectedType] = useState<PostType>("Find_player");
+  const [selectedType, setSelectedType] = useState<PostType>("FIND_PLAYER");
 
   const renderForm = () => {
     switch (selectedType) {
-      case "Find_player":
+      case "FIND_PLAYER":
         return <CreateFindPlayerPostForm />;
-      case "Class":
+      case "CLASS":
         return <CreateClassPostForm />;
-      case "Tournament":
+      case "TOURNAMENT":
         return <CreateTournamentPostForm />;
-      case "Group":
+      case "GROUP":
         return <CreateGroupPostForm />;
       default:
         return null;

@@ -30,7 +30,7 @@ const CreateTournamentPostForm = ({
 }: CreateTournamentPostFormProps) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const loading = useAppSelector((state) => state.ui.loadingCount > 0);
+  const loading = useAppSelector((state) => Boolean(state.ui.loadingMap["post/createPost"]));
   const lastCreatedPost = useAppSelector((state) => state.post.lastCreatedPost);
   const branches = useAppSelector((state) => state.branch.branches);
   const courts = useAppSelector((state) => state.court.courts);
@@ -48,7 +48,7 @@ const CreateTournamentPostForm = ({
     defaultValues: {
       title: "",
       content: "",
-      type: "Tournament",
+      type: "TOURNAMENT",
       formData: {
         organizerName: "",
         location: {
@@ -94,7 +94,7 @@ const CreateTournamentPostForm = ({
 
   useEffect(() => {
     if (!redirectOnSuccess) return;
-    if (lastCreatedPost?.type !== "Tournament") return;
+    if (lastCreatedPost?.type !== "TOURNAMENT") return;
 
     toast.success("Đăng bài giải đấu thành công!");
     reset();

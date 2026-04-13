@@ -5,10 +5,10 @@ import BadRequestError from "../../errors/BadRequestError.js";
 import uploadBuffer from "../../utils/cloudinary.js";
 
 const getMyProfileService = async (data) => {
-  const { User } = data;
+  const { User:currentUser } = data;
   return sequelize.transaction(async (t) => {
     const user = await User.findOne({
-      where: { id: User.id },
+      where: { id: currentUser.id },
       transaction: t,
       attributes: ["id", "username", "email", "createdDate"],
       include: [

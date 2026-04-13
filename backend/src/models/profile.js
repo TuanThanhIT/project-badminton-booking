@@ -33,6 +33,19 @@ const Profile = sequelize.define(
         },
       },
     },
+    address: {
+      type: DataTypes.STRING(255),
+      defaultValue: "123 Đường ABC, Phường XYZ, Quận 1, TP.HCM",
+      allowNull: false,
+      validate: {
+        notNull: { msg: "Address is required" },
+        notEmpty: { msg: "Address cannot be empty" },
+        len: {
+          args: [5, 255],
+          msg: "Address must be between 5 and 255 characters",
+        },
+      },
+    },
     gender: {
       type: DataTypes.STRING(255),
       defaultValue: "male",

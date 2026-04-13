@@ -6,7 +6,7 @@ import courtController from "../../controllers/user/courtController.js";
 const courtRoute = express.Router();
 
 const initCourtRoute = (app) => {
-  courtRoute.get("/", auth, authorize("User", "Coach"), courtController.getCourtsController);
+  courtRoute.get("/", auth, authorize("USER", "COACH"), courtController.getCourtsController);
   app.use("/user/courts", courtRoute);
 };
 

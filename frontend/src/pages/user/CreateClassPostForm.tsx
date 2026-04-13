@@ -32,7 +32,7 @@ const CreateClassPostForm = ({
 }: CreateClassPostFormProps) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const loading = useAppSelector((state) => state.ui.loadingCount > 0);
+  const loading = useAppSelector((state) => Boolean(state.ui.loadingMap["post/createPost"]));
   const lastCreatedPost = useAppSelector((state) => state.post.lastCreatedPost);
   const branches = useAppSelector((state) => state.branch.branches);
 
@@ -49,7 +49,7 @@ const CreateClassPostForm = ({
     defaultValues: {
       title: "",
       content: "",
-      type: "Class",
+      type: "CLASS",
       formData: {
         inputLevel: "Trung bình",
         ageRange: "",
@@ -89,7 +89,7 @@ const CreateClassPostForm = ({
 
   /**
    * Đăng bài: Redux gọi POST /user/posts. Axios gửi một JSON body (Content-Type: application/json).
-   * Cấu trúc: { title, content?, type: "Class", formData: { ... } } — formData là object JS,
+   * Cấu trúc: { title, content?, type: "CLASS", formData: { ... } } — formData là object JS,
    * được serialize thành chuỗi JSON trong body HTTP (không phải chuỗi riêng lẻ; server parse JSON rồi lưu formData vào DB).
    */
   const onSubmit = async (dt: formCreateClassPost) => {
@@ -112,7 +112,7 @@ const CreateClassPostForm = ({
 
   useEffect(() => {
     if (!redirectOnSuccess) return;
-    if (lastCreatedPost?.type !== "Class") return;
+    if (lastCreatedPost?.type !== "CLASS") return;
 
     toast.success("Đăng bài lớp học thành công!");
     reset();

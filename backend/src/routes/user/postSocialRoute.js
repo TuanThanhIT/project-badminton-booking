@@ -17,7 +17,7 @@ const initPostSocialRoute = (app) => {
   postSocialRoute.post(
     "/:postId/like",
     auth,
-    authorize("User", "Coach"),
+    authorize("USER", "COACH"),
     validate(toggleLikeSchema),
     postSocialController.toggleLikeController,
   );
@@ -26,14 +26,14 @@ const initPostSocialRoute = (app) => {
   postSocialRoute.post(
     "/:postId/comments",
     auth,
-    authorize("User", "Coach"),
+    authorize("USER", "COACH"),
     validate(createCommentSchema),
     postSocialController.createCommentController,
   );
   postSocialRoute.get(
     "/:postId/comments",
     auth,
-    authorize("User", "Coach"),
+    authorize("USER", "COACH"),
     validate(getCommentsSchema),
     postSocialController.getCommentsController,
   );
@@ -42,7 +42,7 @@ const initPostSocialRoute = (app) => {
   postSocialRoute.post(
     "/:postId/repost",
     auth,
-    authorize("User", "Coach"),
+    authorize("USER", "COACH"),
     validate(createRepostSchema),
     postSocialController.createRepostController,
   );

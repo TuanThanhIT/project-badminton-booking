@@ -11,7 +11,7 @@ const initUserSearchRoute = (app) => {
   userSearchRoute.get(
     "/search",
     auth,
-    authorize("User", "Coach"),
+    authorize("USER", "COACH"),
     validate(searchUsersSchema),
     userSearchController.searchUsersController,
   );

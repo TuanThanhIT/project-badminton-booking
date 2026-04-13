@@ -7,19 +7,19 @@ import type { PostType } from "../types/post";
 
 /** Nhãn hiển thị cho từng loại bài đăng */
 export const POST_TYPE_LABEL: Record<PostType, string> = {
-  Find_player: "Tìm người chơi cùng",
-  Tournament: "Giải đấu",
-  Group: "Nhóm",
-  Find_coach: "Tìm HLV",
-  Class: "Lớp học",
+  FIND_PLAYER: "Tìm người chơi cùng",
+  TOURNAMENT: "Giải đấu",
+  GROUP: "Nhóm",
+  FIND_COACH: "Tìm HLV",
+  CLASS: "Lớp học",
 };
 
 /** Danh sách loại bài đăng (dùng cho tab/filter) */
 export const POST_TYPES: PostType[] = [
-  "Find_player",
-  "Class",
-  "Tournament",
-  "Group",
+  "FIND_PLAYER",
+  "CLASS",
+  "TOURNAMENT",
+  "GROUP",
 ];
 
 /**
@@ -181,9 +181,9 @@ export const FIND_COACH_FILTERS: FilterField[] = [
 
 /** Map loại bài -> danh sách filter tương ứng */
 export const POST_TYPE_FILTERS: Record<PostType, FilterField[]> = {
-  Find_player: FIND_PLAYER_FILTERS,
-  Class: CLASS_FILTERS,
-  Tournament: TOURNAMENT_FILTERS,
-  Group: GROUP_FILTERS,
-  Find_coach: FIND_COACH_FILTERS,
+  FIND_PLAYER: FIND_PLAYER_FILTERS,
+  CLASS: CLASS_FILTERS,
+  TOURNAMENT: TOURNAMENT_FILTERS,
+  GROUP: GROUP_FILTERS,
+  FIND_COACH: FIND_COACH_FILTERS,
 };

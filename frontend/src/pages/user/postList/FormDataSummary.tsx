@@ -33,7 +33,7 @@ const LegacyFormDataSummary = ({ post, branchInfoById, courtNameById }: Props) =
   const right: string[] = [];
 
   // Copy toàn bộ logic cũ vào đây
-  if (post.type === "Find_player") {
+  if (post.type === "FIND_PLAYER") {
     const schedule = fd.schedule as
       | { date?: string; startTime?: string; endTime?: string }
       | undefined;
@@ -77,7 +77,7 @@ const LegacyFormDataSummary = ({ post, branchInfoById, courtNameById }: Props) =
     if (notes) right.push(`Ghi chú: ${notes}`);
   }
 
-  if (post.type === "Class") {
+  if (post.type === "CLASS") {
     const schedule = fd.schedule as
       | { weekdays?: number[]; startTime?: string; endTime?: string; startDate?: string }
       | undefined;
@@ -122,7 +122,7 @@ const LegacyFormDataSummary = ({ post, branchInfoById, courtNameById }: Props) =
     if (notes) right.push(`📝 ${notes}`);
   }
 
-  if (post.type === "Tournament") {
+  if (post.type === "TOURNAMENT") {
     const organizerName = fd.organizerName as string | undefined;
     if (organizerName) left.push(`Ban tổ chức: ${organizerName}`);
 
@@ -162,7 +162,7 @@ const LegacyFormDataSummary = ({ post, branchInfoById, courtNameById }: Props) =
     if (contact?.inApp) right.push("Nhận tin nhắn trên website: Có");
   }
 
-  if (post.type === "Group") {
+  if (post.type === "GROUP") {
     const weekly = fd.weeklySchedule as
       | { weekdays?: number[]; startTime?: string; endTime?: string }
       | undefined;
@@ -217,7 +217,7 @@ const FormDataSummary = ({ post, branchInfoById, courtNameById }: Props) => {
 
   // Render template theo type
   switch (post.type) {
-    case "Tournament":
+    case "TOURNAMENT":
       return (
         <TournamentPost
           post={post}
@@ -227,7 +227,7 @@ const FormDataSummary = ({ post, branchInfoById, courtNameById }: Props) => {
         />
       );
 
-    case "Class":
+    case "CLASS":
       return (
         <ClassPost
           post={post}
@@ -236,7 +236,7 @@ const FormDataSummary = ({ post, branchInfoById, courtNameById }: Props) => {
         />
       );
 
-    case "Find_player":
+    case "FIND_PLAYER":
       return (
         <FindPlayerPost
           post={post}
@@ -247,7 +247,7 @@ const FormDataSummary = ({ post, branchInfoById, courtNameById }: Props) => {
         />
       );
 
-    case "Group":
+    case "GROUP":
       return (
         <GroupPost
           post={post}

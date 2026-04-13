@@ -126,7 +126,7 @@ const getConversationsService = async (data) => {
 };
 
 const createOrGetDirectConversationService = async (data) => {
-  const { currentUser, targetUserId } = data;
+  const {User: currentUser, targetUserId } = data;
   if (Number(targetUserId) === Number(currentUser.id)) {
     throw new ForbiddenError("Không thể tự nhắn tin cho chính bạn.");
   }
@@ -192,7 +192,7 @@ const createOrGetDirectConversationService = async (data) => {
 };
 
 const createGroupConversationService = async (data) => {
-  const { currentUser, name, userIds } = data;
+  const { User:currentUser, name, userIds } = data;
   const uniqueIds = [...new Set((userIds || []).map(Number))].filter((id) => id !== currentUser.id);
   if (!name?.trim()) throw new BadRequestError("Tên nhóm không được để trống.");
   if (uniqueIds.length < 1) {
@@ -241,7 +241,7 @@ const createGroupConversationService = async (data) => {
 };
 
 const updateDirectNicknameService = async (data) => {
-  const { currentUser, conversationId, nickname } = data;
+  const {User: currentUser, conversationId, nickname } = data;
   const value = String(nickname || "").trim();
   if (!value) throw new BadRequestError("Biệt danh không được để trống.");
 
@@ -268,7 +268,7 @@ const ensureGroupAdmin = (membership, conversation) => {
 };
   
 const addMembersToGroupService = async (data) => {
-  const { currentUser, conversationId, userIds } = data;
+  const {User: currentUser, conversationId, userIds } = data;
   const addIds = [...new Set((userIds || []).map(Number))].filter(Boolean);
   if (addIds.length < 1) throw new BadRequestError("Danh sách thành viên không hợp lệ.");
 
@@ -322,7 +322,7 @@ const addMembersToGroupService = async (data) => {
 };
 
 const removeMemberFromGroupService = async (data) => {
-  const { currentUser, conversationId, targetUserId } = data;
+  const {User: currentUser, conversationId, targetUserId } = data;
   return sequelize.transaction(async (t) => {
     const membership = await ensureMembership(conversationId, currentUser.id, t);
     const conversation = await Conversation.findByPk(conversationId, { transaction: t });
@@ -393,7 +393,7 @@ const leaveGroupService = async (data) => {
 };
 
 const deleteGroupConversationService = async (data) => {
-  const { currentUser, conversationId } = data;
+  const {User: currentUser, conversationId } = data;
   return sequelize.transaction(async (t) => {
     const membership = await ensureMembership(conversationId, currentUser.id, t);
     const conversation = await Conversation.findByPk(conversationId, { transaction: t });

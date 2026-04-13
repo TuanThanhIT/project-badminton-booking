@@ -115,14 +115,13 @@ const buildSendPayload = async (message, currentUser, transaction) => {
 };
 
 const sendMessageService = async (data) => {
-  const {
-    User: currentUser,
-    conversationId,
-    text,
-    mediaUrl,
-    type,
-  } = data;
-  if (!text && !mediaUrl) {
+  const { User: currentUser, conversationId, mediaUrl, type } = data;
+  // API payload uses "body" (validated by Joi). Keep backward-compat with "text".
+  const rawText = data?.text ?? data?.body;
+  const text = typeof rawText === "string" ? rawText : "";
+  const trimmedText = text.trim();
+
+  if (!trimmedText && !mediaUrl) {
     throw new BadRequestError("Nội dung tin nhắn không được để trống.");
   }
 
@@ -144,7 +143,7 @@ const sendMessageService = async (data) => {
       {
         conversationId,
         senderId: currentUser.id,
-        body: text,
+        body: trimmedText || null,
         type: msgType,
         mediaUrl,
         isRead: false,

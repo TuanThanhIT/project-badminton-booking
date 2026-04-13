@@ -104,3 +104,16 @@ export const createWeeklySlotsSchema = {
       }),
   }),
 };
+// Thêm vào file validations/courtValidation.js
+export const getAvailableCourtsSchema = {
+  query: Joi.object({
+    branchId: idParams("branchId").required(),
+    date: dateField.required(),
+    startTime: Joi.string()
+      .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
+      .required(),
+    endTime: Joi.string()
+      .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
+      .required(),
+  }),
+};

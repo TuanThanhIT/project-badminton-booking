@@ -8,6 +8,9 @@ import errorHandler from "./middlewares/errorHandler.js";
 import "./models/index.js";
 import initAuthRoute from "./routes/user/authRoute.js";
 import initUBranchRoute from "./routes/user/branchRoute.js";
+import initCourtRoute from "./routes/user/courtRoute.js";
+import initBookingRoute from "./routes/user/bookingRoute.js";
+import initDiscountRoute from "./routes/user/discountRoute.js";
 
 dotenv.config();
 
@@ -22,6 +25,9 @@ app.use(cors());
 // User
 initAuthRoute(app);
 initUBranchRoute(app);
+initCourtRoute(app);
+initBookingRoute(app);
+initDiscountRoute(app);
 
 // create http server
 const httpServer = createServer(app);

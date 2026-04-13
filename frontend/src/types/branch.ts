@@ -45,3 +45,29 @@ export type BranchesRequest = {
 export type BranchDetailRequest = {
   branchId: number;
 };
+export type BranchSimple = {
+  id: number;
+  branchName: string;
+};
+export type BranchSimpleListResponse = ApiResponse<BranchSimple[]>;
+
+export type CourtStatus = "available" | "booked" | "maintenance";
+
+export type CourtAvailable = {
+  id: number;
+  courtName: string;
+  location: string;
+  thumbnailUrl: string;
+  totalPrice: number;
+  duration: string; // ⚠️ backend trả string
+  status: CourtStatus;
+};
+
+export type CourtAvailableResponse = ApiResponse<CourtAvailable[]>;
+
+export type GetAvailableCourtsRequest = {
+  branchId: number;
+  date: string; // "YYYY-MM-DD"
+  startTime: string; // "HH:mm"
+  endTime: string; // "HH:mm"
+};

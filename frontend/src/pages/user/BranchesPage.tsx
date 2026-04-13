@@ -3,6 +3,16 @@ import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { getBranches } from "../../redux/slices/user/branchSlice";
 import type { BranchesRequest } from "../../types/branch";
 import { useNavigate } from "react-router-dom";
+import {
+  MapPin,
+  Phone,
+  Search,
+  ChevronRight,
+  Map as MapIcon,
+  Filter,
+  RotateCcw,
+  Navigation2,
+} from "lucide-react";
 
 const BranchPage = () => {
   const dispatch = useAppDispatch();
@@ -35,7 +45,6 @@ const BranchPage = () => {
       setDistricts([]);
       return;
     }
-
     const selectedCity = cities.find((c) => c.name === city);
     setDistricts(selectedCity?.districts || []);
   }, [city, cities]);
@@ -46,125 +55,225 @@ const BranchPage = () => {
       page: 1,
       limit: 10,
     };
-
     if (city) data.city = normalizeCity(city);
     if (district) data.district = district;
 
     dispatch(getBranches({ data }));
   }, [city, district, dispatch]);
 
-  // Reset selected branch when filter changes
   useEffect(() => {
     setSelectedBranch(null);
   }, [city, district]);
 
   const mapQuery = selectedBranch
     ? `${selectedBranch.address}, ${selectedBranch.district}, ${selectedBranch.city}`
-    : city || "Vietnam";
+    : city
+      ? `${city}, Vietnam`
+      : "Vietnam";
 
   return (
-    <div className="w-11/12 mx-auto py-10">
-      <div className="grid grid-cols-12 gap-6">
-        {/* LEFT PANEL */}
-        <div className="col-span-4 bg-white border rounded-lg shadow-sm p-4">
-          {/* FILTER */}
-          <div className="flex flex-col gap-3 mb-4">
-            {/* CITY */}
-            <select
-              className="border p-2 rounded-md"
-              value={city}
-              onChange={(e) => {
-                setCity(e.target.value);
-                setDistrict("");
-              }}
-            >
-              <option value="">Tất cả thành phố</option>
-              {cities.map((c) => (
-                <option key={c.code} value={c.name}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-
-            {/* DISTRICT */}
-            <select
-              className="border p-2 rounded-md"
-              value={district}
-              onChange={(e) => setDistrict(e.target.value)}
-              disabled={!city}
-            >
-              <option value="">Chọn quận/huyện</option>
-              {districts.map((d) => (
-                <option key={d.code} value={d.name}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
-
-            {/* RESET */}
-            <button
-              className="bg-gray-200 hover:bg-gray-300 p-2 rounded-md text-sm"
-              onClick={() => {
-                setCity("");
-                setDistrict("");
-                setSelectedBranch(null);
-              }}
-            >
-              Reset bộ lọc
-            </button>
-          </div>
-
-          {/* LIST BRANCH */}
-          <div className="flex flex-col gap-4 max-h-[500px] overflow-y-auto">
-            {branches.length === 0 ? (
-              <p className="text-center text-gray-500">
-                Không có chi nhánh phù hợp
-              </p>
-            ) : (
-              branches.map((branch) => (
-                <div
-                  key={branch.id}
-                  className={`border-b pb-3 p-2 rounded transition ${
-                    selectedBranch?.id === branch.id
-                      ? "bg-blue-50 border-blue-300"
-                      : "hover:bg-gray-50"
-                  }`}
-                >
-                  {/* CLICK NAME -> DETAIL */}
-                  <h3
-                    onClick={() => navigate(`/branches/${branch.id}`)}
-                    className="font-semibold text-md text-blue-700 cursor-pointer hover:underline"
-                  >
-                    {branch.branchName}
-                  </h3>
-
-                  {/* CLICK ADDRESS -> MAP */}
-                  <p
-                    onClick={() => setSelectedBranch(branch)}
-                    className="text-sm text-gray-600 cursor-pointer hover:text-blue-600"
-                  >
-                    📍 {branch.address}, {branch.district}, {branch.city}
-                  </p>
-
-                  <p className="text-sm text-gray-600">
-                    📞 {branch.phoneNumber}
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
+    <div className="min-h-screen bg-gray-50 pb-20">
+      {/* HEADER SECTION */}
+      <div className="bg-sky-900 text-white py-12 mb-10">
+        <div className="w-11/12 mx-auto">
+          <h1 className="text-3xl font-bold flex items-center gap-3">
+            <MapIcon className="text-sky-400" /> Hệ thống chi nhánh B-Hub
+          </h1>
+          <p className="text-sky-200 mt-2">
+            Tìm kiếm sân cầu lông gần bạn nhất và bắt đầu trải nghiệm
+          </p>
         </div>
+      </div>
 
-        {/* MAP */}
-        <div className="col-span-8 rounded-lg overflow-hidden shadow-sm border">
-          <iframe
-            title="map"
-            src={`https://www.google.com/maps?q=${encodeURIComponent(
-              mapQuery,
-            )}&output=embed`}
-            className="w-full h-[600px] border-0"
-            loading="lazy"
-          ></iframe>
+      <div className="w-11/12 mx-auto">
+        <div className="grid grid-cols-12 gap-8">
+          {/* LEFT PANEL: FILTERS & LIST */}
+          <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
+            {/* FILTER CARD */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <div className="flex items-center gap-2 mb-4 text-gray-800 font-bold">
+                <Filter size={18} className="text-sky-600" />
+                <span>Bộ lọc tìm kiếm</span>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-500 ml-1">
+                    Thành phố
+                  </label>
+                  <div className="relative">
+                    <select
+                      className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none appearance-none transition-all cursor-pointer text-sm"
+                      value={city}
+                      onChange={(e) => {
+                        setCity(e.target.value);
+                        setDistrict("");
+                      }}
+                    >
+                      <option value="">Tất cả thành phố</option>
+                      {cities.map((c) => (
+                        <option key={c.code} value={c.name}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                    <Search
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                      size={18}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-500 ml-1">
+                    Quận / Huyện
+                  </label>
+                  <div className="relative">
+                    <select
+                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 outline-none appearance-none transition-all cursor-pointer text-sm ${
+                        !city
+                          ? "bg-gray-100 text-gray-400"
+                          : "bg-gray-50 text-gray-700 border-gray-200"
+                      }`}
+                      value={district}
+                      onChange={(e) => setDistrict(e.target.value)}
+                      disabled={!city}
+                    >
+                      <option value="">Chọn quận/huyện</option>
+                      {districts.map((d) => (
+                        <option key={d.code} value={d.name}>
+                          {d.name}
+                        </option>
+                      ))}
+                    </select>
+                    <MapPin
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                      size={18}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  className="flex items-center justify-center gap-2 mt-2 text-sm text-sky-600 font-medium hover:text-sky-700 transition"
+                  onClick={() => {
+                    setCity("");
+                    setDistrict("");
+                    setSelectedBranch(null);
+                  }}
+                >
+                  <RotateCcw size={16} /> Làm mới bộ lọc
+                </button>
+              </div>
+            </div>
+
+            {/* LIST BRANCH CARD */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-4 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">
+                <span className="font-bold text-gray-700 text-sm">
+                  Kết quả ({branches.length})
+                </span>
+              </div>
+
+              <div className="flex flex-col max-h-[550px] overflow-y-auto custom-scrollbar">
+                {branches.length === 0 ? (
+                  <div className="py-20 text-center">
+                    <div className="bg-gray-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Search className="text-gray-400" size={24} />
+                    </div>
+                    <p className="text-gray-500 text-sm">
+                      Không tìm thấy chi nhánh nào
+                    </p>
+                  </div>
+                ) : (
+                  branches.map((branch) => (
+                    <div
+                      key={branch.id}
+                      onClick={() => setSelectedBranch(branch)}
+                      className={`p-5 border-b border-gray-50 cursor-pointer transition-all relative group ${
+                        selectedBranch?.id === branch.id
+                          ? "bg-sky-50 border-l-4 border-l-sky-500"
+                          : "hover:bg-gray-50 border-l-4 border-l-transparent"
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-bold text-sky-900 group-hover:text-sky-600 transition-colors">
+                          {branch.branchName}
+                        </h3>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/branches/${branch.id}`);
+                          }}
+                          className="p-1 hover:bg-sky-100 rounded-full text-sky-600 transition-colors"
+                          title="Xem chi tiết"
+                        >
+                          <ChevronRight size={20} />
+                        </button>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-2 text-sm text-gray-600">
+                          <MapPin
+                            size={16}
+                            className="text-sky-500 mt-0.5 shrink-0"
+                          />
+                          <p>
+                            {branch.address}, {branch.district}, {branch.city}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <Phone
+                            size={16}
+                            className="text-green-500 shrink-0"
+                          />
+                          <p>{branch.phoneNumber}</p>
+                        </div>
+                      </div>
+
+                      {selectedBranch?.id === branch.id && (
+                        <div className="mt-3 flex items-center gap-1 text-xs font-bold text-sky-600 uppercase tracking-wider">
+                          <Navigation2 size={12} fill="currentColor" /> Đang
+                          hiển thị trên bản đồ
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT PANEL: MAP */}
+          <div className="col-span-12 lg:col-span-8">
+            <div className="bg-white p-2 rounded-[2rem] shadow-xl border border-gray-100 h-[750px] sticky top-10">
+              {/* Map Overlay info */}
+              {selectedBranch && (
+                <div className="absolute top-6 left-6 right-6 z-10 bg-white/90 backdrop-blur-md p-4 rounded-2xl shadow-lg border border-sky-100 animate-fade-in flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-bold text-sky-600 uppercase mb-1">
+                      Đang xem vị trí:
+                    </p>
+                    <h4 className="font-bold text-gray-900">
+                      {selectedBranch.branchName}
+                    </h4>
+                  </div>
+                  <button
+                    onClick={() => navigate(`/branches/${selectedBranch.id}`)}
+                    className="bg-sky-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-sky-700 transition"
+                  >
+                    Đặt sân tại đây
+                  </button>
+                </div>
+              )}
+
+              <iframe
+                title="map"
+                src={`https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`}
+                className="w-full h-full rounded-[1.6rem] border-0"
+                loading="lazy"
+              ></iframe>
+            </div>
+          </div>
         </div>
       </div>
     </div>

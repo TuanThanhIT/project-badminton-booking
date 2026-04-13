@@ -2,6 +2,17 @@ import { NOTFOUND } from "dns";
 import { Branch, BranchImage } from "../../models/index.js";
 import { Op } from "sequelize";
 import NotFoundError from "../../errors/NotFoundError.js";
+const getAllBranchesSimpleService = async () => {
+  const branches = await Branch.findAll({
+    where: {
+      isActive: true,
+    },
+    attributes: ["id", "branchName"], // Chỉ lấy đúng 2 cột này
+    order: [["branchName", "ASC"]], // Sắp xếp theo tên cho dễ tìm
+  });
+
+  return branches;
+};
 const getBranchesService = async (data) => {
   const { page = 1, limit = 10, city, district } = data;
 
@@ -98,4 +109,5 @@ const getBranchByIdService = async (branchId) => {
 export default {
   getBranchesService,
   getBranchByIdService,
+  getAllBranchesSimpleService,
 };

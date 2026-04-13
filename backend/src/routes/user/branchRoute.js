@@ -11,16 +11,23 @@ import {
 const branchRoute = express.Router();
 
 const initBranchRoute = (app) => {
+  // 1. Route "/all" phải nằm TRÊN "/:branchId"
+  branchRoute.get("/all", branchController.getAllBranchesSimpleController);
+
+  // 2. Route lấy danh sách có phân trang
   branchRoute.get(
     "/",
     validate(getBranchesSchema),
     branchController.getBranchesController,
   );
+
+  // 3. Route lấy chi tiết theo ID
   branchRoute.get(
     "/:branchId",
     validate(getBranchByIdSchema),
     branchController.getBranchByIdController,
   );
+
   app.use("/branches", branchRoute);
 };
 

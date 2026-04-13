@@ -21,6 +21,8 @@ import BookingCourtPage from "../pages/user/BookingCourtPage";
 import BookingPage from "../pages/user/BookingPage";
 import BranchPage from "../pages/user/BranchesPage";
 import BranchDetailPage from "../pages/user/BranchDetailPage";
+import CourtPage from "../pages/user/CourtPage";
+import TournamentPost from "../pages/user/TournamentPost";
 
 const UserRoute = () => {
   return (
@@ -56,6 +58,8 @@ const UserRoute = () => {
         <Route path="bookings" element={<BookingPage />} />
         <Route path="branches" element={<BranchPage />} />
         <Route path="branches/:branchId" element={<BranchDetailPage />} />
+        <Route path="courts" element={<CourtPage />} />
+        <Route path="tournament-post" element={<TournamentPost />} />
       </Route>
     </Routes>
   );

@@ -4,6 +4,8 @@ import { persistReducer, persistStore } from "redux-persist";
 import authReducer from "./slices/user/authSlice";
 import uiReducer from "./slices/uiSlice";
 import branchReducer from "./slices/user/branchSlice";
+import courtReducer from "./slices/user/courtSlice";
+import discountReducer from "./slices/user/discountSlice";
 
 const persistConfig = {
   key: "root",
@@ -15,6 +17,8 @@ const rootReducer = combineReducers({
   auth: authReducer,
   ui: uiReducer,
   branch: branchReducer,
+  court: courtReducer,
+  discount: discountReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

@@ -10,6 +10,9 @@ var _errorHandler = _interopRequireDefault(require("./middlewares/errorHandler.j
 require("./models/index.js");
 var _authRoute = _interopRequireDefault(require("./routes/user/authRoute.js"));
 var _branchRoute = _interopRequireDefault(require("./routes/user/branchRoute.js"));
+var _courtRoute = _interopRequireDefault(require("./routes/user/courtRoute.js"));
+var _bookingRoute = _interopRequireDefault(require("./routes/user/bookingRoute.js"));
+var _discountRoute = _interopRequireDefault(require("./routes/user/discountRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -23,6 +26,9 @@ app.use((0, _cors["default"])());
 // User
 (0, _authRoute["default"])(app);
 (0, _branchRoute["default"])(app);
+(0, _courtRoute["default"])(app);
+(0, _bookingRoute["default"])(app);
+(0, _discountRoute["default"])(app);
 
 // create http server
 var httpServer = (0, _http.createServer)(app);

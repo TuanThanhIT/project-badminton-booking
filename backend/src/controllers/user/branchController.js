@@ -20,9 +20,22 @@ const getBranchByIdController = asyncHandler(async (req, res) => {
     .status(200)
     .json(new SuccessResponse("Lấy chi nhánh thành công", result));
 });
+const getAllBranchesSimpleController = asyncHandler(async (req, res) => {
+  const result = await branchService.getAllBranchesSimpleService();
+
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse(
+        "Lấy danh sách chi nhánh đơn giản thành công",
+        result,
+      ),
+    );
+});
 const branchController = {
   getBranchesController,
   getBranchByIdController,
+  getAllBranchesSimpleController,
 };
 
 export default branchController;

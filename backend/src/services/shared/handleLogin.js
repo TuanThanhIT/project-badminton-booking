@@ -1,9 +1,10 @@
 import { Role, User } from "../../models/index.js";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import sequelize from "../../config/db.js";
 import BadRequestError from "../../errors/BadRequestError.js";
+import RefreshToken from "../../models/refreshToken.js";
+import { generateAccessToken, generateRefreshToken } from "../../utils/jwt.js";
 dotenv.config();
 
 export const handleLogin = async (username, password) => {
@@ -38,19 +39,31 @@ export const handleLogin = async (username, password) => {
       throw new BadRequestError("Thông tin đăng nhập không chính xác!");
     }
 
-    const payload = {
+    const payloadAccessToken = {
       id: user.id,
       username: user.username,
       email: user.email,
       role: user.role.roleName,
     };
 
-    const access_token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRE,
+    const accessToken = generateAccessToken(payloadAccessToken);
+
+    const payloadRefreshToken = {
+      id: user.id,
+    };
+
+    const refreshToken = generateRefreshToken(payloadRefreshToken);
+
+    // 🔥 lưu DB
+    await RefreshToken.create({
+      token: refreshToken,
+      userId: user.id,
+      expiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
     return {
-      access_token,
+      accessToken,
+      refreshToken,
       user: {
         id: user.id,
         email: user.email,

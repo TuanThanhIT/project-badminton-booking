@@ -5,12 +5,16 @@ import {
   isRejectedWithValue,
 } from "@reduxjs/toolkit";
 
+const getLoadingKey = (action: any) => {
+  return action.type.split("/").slice(0, 2).join("/");
+};
+
 interface UiState {
-  loadingCount: number;
+  loadingMap: Record<string, boolean>;
 }
 
 const initialState: UiState = {
-  loadingCount: 0,
+  loadingMap: {},
 };
 
 const uiSlice = createSlice({
@@ -19,14 +23,17 @@ const uiSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addMatcher(isPending, (state) => {
-        state.loadingCount += 1;
+      .addMatcher(isPending, (state, action) => {
+        const key = getLoadingKey(action);
+        state.loadingMap[key] = true;
       })
-      .addMatcher(isFulfilled, (state) => {
-        state.loadingCount = Math.max(0, state.loadingCount - 1);
+      .addMatcher(isFulfilled, (state, action) => {
+        const key = getLoadingKey(action);
+        state.loadingMap[key] = false;
       })
-      .addMatcher(isRejectedWithValue, (state) => {
-        state.loadingCount = Math.max(0, state.loadingCount - 1);
+      .addMatcher(isRejectedWithValue, (state, action) => {
+        const key = getLoadingKey(action);
+        state.loadingMap[key] = false;
       });
   },
 });

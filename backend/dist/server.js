@@ -3,6 +3,7 @@
 var _express = _interopRequireDefault(require("express"));
 var _dotenv = _interopRequireDefault(require("dotenv"));
 var _cors = _interopRequireDefault(require("cors"));
+var _cookieParser = _interopRequireDefault(require("cookie-parser"));
 var _db = _interopRequireDefault(require("./config/db.js"));
 var _http = require("http");
 var _index = require("./socket/index.js");
@@ -14,6 +15,8 @@ var _productRoute = _interopRequireDefault(require("./routes/user/productRoute.j
 var _branchRoute = _interopRequireDefault(require("./routes/user/branchRoute.js"));
 var _courtRoute = _interopRequireDefault(require("./routes/user/courtRoute.js"));
 var _cartRoute = _interopRequireDefault(require("./routes/user/cartRoute.js"));
+var _walletRoute = _interopRequireDefault(require("./routes/user/walletRoute.js"));
+var _addressRoute = _interopRequireDefault(require("./routes/user/addressRoute.js"));
 var _postRoute = _interopRequireDefault(require("./routes/user/postRoute.js"));
 var _postSocialRoute = _interopRequireDefault(require("./routes/user/postSocialRoute.js"));
 var _profileRoute = _interopRequireDefault(require("./routes/user/profileRoute.js"));
@@ -27,7 +30,11 @@ app.use(_express["default"].json());
 app.use(_express["default"].urlencoded({
   extended: true
 }));
-app.use((0, _cors["default"])());
+app.use((0, _cors["default"])({
+  origin: "http://localhost:5173",
+  credentials: true
+}));
+app.use((0, _cookieParser["default"])());
 
 // User
 (0, _authRoute["default"])(app);
@@ -36,6 +43,8 @@ app.use((0, _cors["default"])());
 (0, _branchRoute["default"])(app);
 (0, _courtRoute["default"])(app);
 (0, _cartRoute["default"])(app);
+(0, _walletRoute["default"])(app);
+(0, _addressRoute["default"])(app);
 
 // Post
 (0, _postRoute["default"])(app);

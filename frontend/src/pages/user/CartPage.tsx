@@ -47,19 +47,9 @@ const CartPage = () => {
       });
   };
 
-  // const handleCheckout = async () => {
-  //   const result = await Swal.fire({
-  //     title: "Xác nhận thanh toán",
-  //     text: "Bạn có chắc chắn thanh toán cho các sản phẩm trong giỏ hàng?",
-  //     icon: "question",
-  //     showCancelButton: true,
-  //     confirmButtonText: "Chắc chắn",
-  //     cancelButtonText: "Hủy",
-  //   });
-  //   if (result.isConfirmed) {
-  //     navigate("/checkout");
-  //   }
-  // };
+  const handleCheckout = async () => {
+    navigate("/checkout");
+  };
 
   // Xử lý update quantity
   const debouncedUpdateRef = useRef(
@@ -282,7 +272,7 @@ const CartPage = () => {
             </div>
 
             <button
-              // onClick={handleCheckout}
+              onClick={handleCheckout}
               className="w-full mt-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg shadow-sm transition"
             >
               Thanh toán

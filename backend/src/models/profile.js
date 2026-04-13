@@ -44,18 +44,6 @@ const Profile = sequelize.define(
         },
       },
     },
-    address: {
-      type: DataTypes.STRING(255),
-      allowNull: false,
-      defaultValue: "231 Lê Văn Chí, Phường Linh Trung, TP. Thủ Đức, TP.HCM",
-      validate: {
-        notNull: { msg: "Address is required" },
-        len: {
-          args: [0, 255],
-          msg: "Address must not exceed 255 characters",
-        },
-      },
-    },
     phoneNumber: {
       type: DataTypes.STRING(255),
       allowNull: false,

@@ -104,6 +104,27 @@ const Branch = sequelize.define(
         isBoolean: { msg: "isActive must be a boolean" },
       },
     },
+    provinceCode: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      validate: {
+        notNull: { msg: "Province code is required" },
+      },
+    },
+    districtCode: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      validate: {
+        notNull: { msg: "District code is required" },
+      },
+    },
+    wardCode: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      validate: {
+        notNull: { msg: "Ward code is required" },
+      },
+    },
   },
   {
     tableName: "Branches",

@@ -1,10 +1,9 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
-import { ORDER_STATUS } from "../constants/orderConstant.js";
+import { ORDER_STATUS, SHIPPING_STATUS } from "../constants/orderConstant.js";
 import { CANCELLED_BY } from "../constants/bookingConstant.js";
 import Branch from "./branch.js";
-import User from "./user.js";
-import Discount from "./discount.js";
+import ShippingPartner from "./shippingPartner.js";
 
 const Order = sequelize.define(
   "Order",
@@ -22,31 +21,42 @@ const Order = sequelize.define(
       },
     },
     subtotal: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(12, 2),
       allowNull: false,
+      defaultValue: 0,
       validate: {
         notNull: { msg: "Subtotal is required" },
-        isFloat: { msg: "Subtotal must be a number" },
-        min: { args: [0], msg: "Subtotal must be >= 0" },
+        isDecimal: { msg: "Subtotal must be a number" },
+        min: {
+          args: [0],
+          msg: "Subtotal must be >= 0",
+        },
       },
     },
     shippingFee: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(12, 2),
       allowNull: false,
       defaultValue: 0,
       validate: {
         notNull: { msg: "Shipping fee is required" },
-        isFloat: { msg: "Shipping fee must be a number" },
-        min: { args: [0], msg: "Shipping fee must be >= 0" },
+        isDecimal: { msg: "Shipping fee must be a number" },
+        min: {
+          args: [0],
+          msg: "Shipping fee must be >= 0",
+        },
       },
     },
     totalAmount: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(12, 2),
       allowNull: false,
+      defaultValue: 0,
       validate: {
         notNull: { msg: "Total amount is required" },
-        isFloat: { msg: "Total amount must be a number" },
-        min: { args: [0], msg: "Total amount must be >= 0" },
+        isDecimal: { msg: "Total amount must be a number" },
+        min: {
+          args: [0],
+          msg: "Total amount must be >= 0",
+        },
       },
     },
     shippingName: {
@@ -62,7 +72,7 @@ const Order = sequelize.define(
       },
     },
     shippingPhone: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.STRING(20),
       allowNull: false,
       validate: {
         notNull: { msg: "Phone number is required" },
@@ -84,12 +94,88 @@ const Order = sequelize.define(
         },
       },
     },
-    shippingDistance: {
-      type: DataTypes.FLOAT,
+    shippingPartnerId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: ShippingPartner, key: "id" },
+      validate: {
+        isInt: { msg: "Shipping partner ID must be an integer" },
+        min: {
+          args: [1],
+          msg: "Shipping partner ID must be positive",
+        },
+      },
+    },
+    shippingStatus: {
+      type: DataTypes.ENUM(...Object.values(SHIPPING_STATUS)),
+      allowNull: false,
+      defaultValue: SHIPPING_STATUS.PENDING,
+      validate: {
+        notNull: { msg: "Shipping status is required" },
+        isIn: {
+          args: [Object.values(SHIPPING_STATUS)],
+          msg: "Invalid shipping status",
+        },
+      },
+    },
+    assignedAt: {
+      type: DataTypes.DATE,
       allowNull: true,
       validate: {
-        isFloat: { msg: "Distance must be a number" },
-        min: { args: [0], msg: "Distance must be >= 0" },
+        isDate: {
+          msg: "assignedAt must be a valid date",
+        },
+      },
+    },
+    deliveredAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      validate: {
+        isDate: {
+          msg: "deliveredAt must be a valid date",
+        },
+      },
+    },
+    trackingCode: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      validate: {
+        len: {
+          args: [0, 255],
+          msg: "Tracking code must be at most 255 characters",
+        },
+      },
+    },
+    shippingOrderCode: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      validate: {
+        len: {
+          args: [0, 255],
+          msg: "Shipping order code must be at most 255 characters",
+        },
+      },
+    },
+    estimatedDelivery: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      validate: {
+        isDate: {
+          msg: "Estimated delivery must be a valid date",
+        },
+      },
+    },
+    shippingFeeReal: {
+      type: DataTypes.DECIMAL(12, 2),
+      allowNull: true,
+      validate: {
+        isDecimal: {
+          msg: "Shipping fee must be a number",
+        },
+        min: {
+          args: [0],
+          msg: "Shipping fee must be >= 0",
+        },
       },
     },
     branchId: {
@@ -97,56 +183,23 @@ const Order = sequelize.define(
       allowNull: false,
       references: { model: Branch, key: "id" },
       validate: {
-        notNull: {
-          msg: "Branch ID is required",
-        },
-        isInt: {
-msg: "Branch ID must be an integer",
-        },
+        notNull: { msg: "Branch ID is required" },
+        isInt: { msg: "Branch ID must be an integer" },
         min: {
           args: [1],
           msg: "Branch ID must be a positive number",
         },
       },
     },
-    userId: {
+    orderGroupId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: { model: User, key: "id" },
       validate: {
-        notNull: {
-          msg: "User ID is required",
-        },
-        isInt: {
-          msg: "User ID must be an integer",
-        },
+        notNull: { msg: "Order group ID is required" },
+        isInt: { msg: "Order group ID must be an integer" },
         min: {
           args: [1],
-          msg: "User ID must be a positive number",
-        },
-      },
-    },
-    discountId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: { model: Discount, key: "id" },
-      validate: {
-        isInt: {
-          msg: "Discount ID must be an integer",
-        },
-        min: {
-          args: [1],
-          msg: "Discount ID must be a positive number",
-        },
-      },
-    },
-    note: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-      validate: {
-        len: {
-          args: [0, 255],
-          msg: "Note must be at most 255 characters",
+          msg: "Order group ID must be positive",
         },
       },
     },
@@ -172,25 +225,26 @@ msg: "Branch ID must be an integer",
     },
   },
   {
-    indexes: [
-      { fields: ["userId"] },
-      { fields: ["branchId"] },
-      { fields: ["createdDate"] },
-    ],
     tableName: "Orders",
     timestamps: true,
     createdAt: "createdDate",
     updatedAt: "updatedDate",
+
+    indexes: [
+      { fields: ["orderGroupId"] },
+      { fields: ["branchId"] },
+      { fields: ["shippingStatus"] },
+      { fields: ["shippingPartnerId"] },
+      { fields: ["trackingCode"] },
+    ],
   },
 );
 
 Order.beforeValidate((order) => {
-  if (order.subtotal != null && order.shippingFee != null) {
-    const expected = order.subtotal + order.shippingFee;
+  const expected = Number(order.subtotal) + Number(order.shippingFee);
 
-    if (order.totalAmount !== expected) {
-      throw new Error("Invalid total amount");
-    }
+  if (Number(order.totalAmount).toFixed(2) !== expected.toFixed(2)) {
+    throw new Error("Invalid order total amount");
   }
 });
 

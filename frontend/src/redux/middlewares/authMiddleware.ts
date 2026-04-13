@@ -1,27 +1,31 @@
 import { isRejectedWithValue, type Middleware } from "@reduxjs/toolkit";
-import { logout } from "../slices/user/authSlice";
+import { logout, logoutLocal } from "../slices/user/authSlice";
 import { toast } from "react-toastify";
+import type { AppDispatch } from "../store";
 
 export const authMiddleware: Middleware =
   (store) => (next) => (action: any) => {
+    const result = next(action);
+    const dispatch = store.dispatch as AppDispatch;
+
     if (isRejectedWithValue(action)) {
-      // bắt tất cả action bị reject từ createAsyncThunk
-      const status = action.payload.statusCode;
+      const status = action.payload?.statusCode;
+      const message = action.payload?.message || "Something went wrong";
+      const remainingTime = action.payload?.data?.remainingTime;
 
-      const message = action.payload.message || "Something went wrong";
+      if (!remainingTime && status !== 401) {
+        toast.error(message, { toastId: message });
+      }
 
-      toast.error(message, { toastId: message });
-      console.log("error>>", action.payload);
-
-      // xử lý global
-      if (status === 401) {
-        console.log("Token hết hạn -> logout");
-        store.dispatch(logout());
+      if (status === 401 && action.type === "auth/refreshTokenThunk/rejected") {
+        toast.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+        dispatch(logoutLocal());
+        dispatch(logout());
         setTimeout(() => {
           window.location.href = "/login";
-        }, 3000);
+        }, 2000);
       }
     }
 
-    return next(action);
+    return result;
   };

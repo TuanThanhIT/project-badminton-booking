@@ -2,6 +2,7 @@ import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
 import { WALLET_TRANSACTION_TYPE } from "../constants/paymentConstant.js";
 import Wallet from "./wallet.js";
+import Payment from "./payment.js";
 
 const WalletTransaction = sequelize.define(
   "WalletTransaction",
@@ -17,19 +18,44 @@ const WalletTransaction = sequelize.define(
         isInt: {
           msg: "Wallet ID must be an integer",
         },
+        min: {
+          args: [1],
+          msg: "Wallet ID must be a positive number",
+        },
+      },
+    },
+    paymentId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: Payment, key: "id" },
+      validate: {
+        isInt: { msg: "Payment ID must be integer" },
+        min: {
+          args: [1],
+          msg: "Payment ID must be a positive number",
+        },
+      },
+    },
+    withdrawRequestId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: {
+        isInt: { msg: "WithdrawRequest ID must be integer" },
+        min: {
+          args: [1],
+          msg: "WithdrawRequest ID must be a positive number",
+        },
       },
     },
     amount: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(12, 2),
       allowNull: false,
       validate: {
         notNull: { msg: "Amount is required" },
-        isFloat: {
-          msg: "Amount must be a number",
-        },
+        isDecimal: { msg: "Amount must be number" },
         min: {
           args: [0.01],
-          msg: "Amount must be greater than 0",
+          msg: "Amount must be > 0",
         },
       },
     },
@@ -41,6 +67,18 @@ const WalletTransaction = sequelize.define(
         isIn: {
           args: [Object.values(WALLET_TRANSACTION_TYPE)],
           msg: "Invalid wallet transaction type",
+        },
+      },
+    },
+    balanceAfter: {
+      type: DataTypes.DECIMAL(12, 2),
+      allowNull: false,
+      validate: {
+        notNull: { msg: "Balance after is required" },
+        isDecimal: { msg: "Balance after must be number" },
+        min: {
+          args: [0.01],
+          msg: "Balance after must be > 0",
         },
       },
     },
@@ -60,6 +98,7 @@ const WalletTransaction = sequelize.define(
     timestamps: true,
     createdAt: "createdDate",
     updatedAt: "updatedDate",
+    indexes: [{ fields: ["walletId"] }, { fields: ["paymentId"] }],
   },
 );
 

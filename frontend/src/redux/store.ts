@@ -1,14 +1,14 @@
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import storage from "redux-persist/lib/storage"; // dùng localStorage
 import {
-  persistReducer,
-  persistStore,
   FLUSH,
-  REHYDRATE,
   PAUSE,
   PERSIST,
+  persistReducer,
+  persistStore,
   PURGE,
   REGISTER,
+  REHYDRATE,
 } from "redux-persist";
 import authReducer from "./slices/user/authSlice";
 import uiReducer from "./slices/uiSlice";
@@ -17,7 +17,10 @@ import productReducer from "./slices/user/productSlice";
 import branchReducer from "./slices/user/branchSlice";
 import courtReducer from "./slices/user/courtSlice";
 import cartReducer from "./slices/user/cartSlice";
+import walletReducer from "./slices/user/walletSlice";
+import addressReducer from "./slices/user/addressSlice";
 import { authMiddleware } from "./middlewares/authMiddleware";
+import { setStore } from "./storeRef";
 import postReducer from "./slices/user/postSlice";
 import profileReducer from "./slices/user/profileSlice";
 import conversationReducer from "./slices/user/conversationSlice";
@@ -36,6 +39,8 @@ const rootReducer = combineReducers({
   branch: branchReducer,
   court: courtReducer,
   cart: cartReducer,
+  wallet: walletReducer,
+  address: addressReducer,
   post: postReducer,
   profile: profileReducer,
   conversation: conversationReducer,
@@ -51,9 +56,17 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
+    }{
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
     }).concat(authMiddleware),
 });
+
+setStore(store);
+
 export const persistor = persistStore(store);
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
+export type AppStore = typeof store;

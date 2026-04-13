@@ -10,16 +10,14 @@ const Payment = sequelize.define(
   "Payment",
   {
     paymentAmount: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(12, 2),
       allowNull: false,
       validate: {
         notNull: { msg: "Payment amount is required" },
-        isFloat: {
-          msg: "Payment amount must be a number",
-        },
+        isDecimal: { msg: "Payment amount must be a number" },
         min: {
           args: [0],
-          msg: "Payment amount must be greater than or equal to 0",
+          msg: "Payment amount must be >= 0",
         },
       },
     },
@@ -55,6 +53,17 @@ const Payment = sequelize.define(
         },
       },
     },
+    externalId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true,
+      validate: {
+        len: {
+          args: [0, 255],
+          msg: "External ID must be at most 255 characters",
+        },
+      },
+    },
     paidAt: {
       type: DataTypes.DATE,
       allowNull: true,
@@ -65,15 +74,13 @@ const Payment = sequelize.define(
       },
     },
     refundAmount: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(12, 2),
       allowNull: true,
       validate: {
-        isFloat: {
-          msg: "Refund amount must be a number",
-        },
+        isDecimal: { msg: "Refund must be a number" },
         min: {
           args: [0],
-          msg: "Refund amount must be greater than or equal to 0",
+          msg: "Refund must be >= 0",
         },
       },
     },
@@ -118,6 +125,7 @@ const Payment = sequelize.define(
   {
     tableName: "Payments",
     timestamps: false,
+    indexes: [{ fields: ["targetPaymentId"] }, { fields: ["externalId"] }],
   },
 );
 

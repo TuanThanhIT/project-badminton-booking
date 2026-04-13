@@ -1,22 +1,22 @@
 import "./App.css";
-import { BrowserRouter as Router, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import AllRoute from "./routes/AllRoute";
 import { useEffect } from "react";
-import { useAppDispatch } from "./redux/hook";
+import { useAppDispatch, useAppSelector } from "./redux/hook";
 import { getAccount } from "./redux/slices/user/authSlice";
 import { getCategoriesGrouped } from "./redux/slices/user/cateSlice";
 
 const App = () => {
-  const token = localStorage.getItem("access_token");
   const dispatch = useAppDispatch();
+  const { accessToken } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
-    if (token) {
+    if (accessToken) {
       dispatch(getAccount());
     }
     dispatch(getCategoriesGrouped());
-  }, [dispatch, token]);
+  }, [dispatch, accessToken]);
 
   return (
     <Router>
@@ -24,7 +24,7 @@ const App = () => {
 
       <ToastContainer
         position="top-right"
-        autoClose={3000}
+        autoClose={2000}
         hideProgressBar={false}
         closeOnClick
         draggable

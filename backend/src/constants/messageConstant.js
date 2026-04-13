@@ -1,15 +1,15 @@
 export const CONVERSATION_TYPE = Object.freeze({
-  PRIVATE: "Private",
-  GROUP: "Group",
+  PRIVATE: "PRIVATE",
+  GROUP: "GROUP",
 });
 
 export const ROLE_CONVERSATION = Object.freeze({
-  ADMIN: "Admin",
-  MEMBER: "Member",
+  ADMIN: "ADMIN",
+  MEMBER: "MEMBER",
 });
 
 export const MESSAGE_TYPE = Object.freeze({
-  TEXT: "Text",
-  IMAGE: "Image",
-  FILE: "File",
+  TEXT: "TEXT",
+  IMAGE: "IMAGE",
+  FILE: "FILE",
 });

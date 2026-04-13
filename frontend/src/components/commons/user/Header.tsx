@@ -11,8 +11,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../redux/hook";
-import { logout } from "../../../redux/slices/user/authSlice";
-import { getMyProfile } from "../../../redux/slices/user/profileSlice";
+import { logout, logoutLocal } from "../../../redux/slices/user/authSlice";
 
 interface HeaderProps {
   cartRef: React.RefObject<HTMLDivElement | null>; // cho phép null
@@ -23,13 +22,14 @@ const Header = ({ cartRef }: HeaderProps) => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const dispatch = useAppDispatch();
-  const { user, token } = useAppSelector((state) => state.auth);
+  const { user, accessToken } = useAppSelector((state) => state.auth);
   const myProfile = useAppSelector((state) => state.profile.myProfile);
   const cart = useAppSelector((state) => state.cart.cart);
   const [countCartItem, setCountCartItem] = useState(0);
 
   const handleLogout = () => {
     dispatch(logout());
+    dispatch(logoutLocal());
     navigate("/login");
   };
 
@@ -132,7 +132,7 @@ const Header = ({ cartRef }: HeaderProps) => {
             <span className="hidden xl:inline">Giỏ hàng</span>
           </NavLink>
 
-          {!token && !user ? (
+          {!accessToken && !user ? (
             <div className="flex items-center gap-3">
               <NavLink
                 to="/login"

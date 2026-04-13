@@ -18,6 +18,9 @@ import UserPublicLayout from "../components/layouts/UserPublicLayout";
 import UserPrivateLayout from "../components/layouts/UserPrivateLayout";
 import BookingCourtPage from "../pages/user/BookingCourtPage";
 import BookingPage from "../pages/user/BookingPage";
+import WalletDepositSuccess from "../pages/user/WalletDepositSuccess";
+import WalletPage from "../pages/user/WalletPage";
+import ResetPasswordPage from "../pages/user/ResetPasswordPage";
 import CreatePostPage from "../pages/user/CreatePostPage";
 import PostListPage from "../pages/user/postList/PostListPage";
 import PublicProfilePage from "../pages/user/PublicProfilePage";
@@ -35,6 +38,7 @@ const UserRoute = () => {
         <Route path="register" element={<RegisterPage />} />
         <Route path="verify-otp" element={<OTPPage />} />
         <Route path="forgot-pass" element={<ForgotPasswordPage />} />
+        <Route path="reset-password" element={<ResetPasswordPage />} />
       </Route>
 
       {/* Private */}
@@ -50,6 +54,11 @@ const UserRoute = () => {
         <Route path="checkout" element={<CheckoutPage />} />
         <Route path="orders" element={<OrderPage />} />
         <Route path="bookings" element={<BookingPage />} />
+        <Route path="wallet" element={<WalletPage />}></Route>
+        <Route
+          path="wallet/deposit/success"
+          element={<WalletDepositSuccess />}
+        ></Route>
         <Route path="create-post" element={<CreatePostPage />} />
         <Route path="posts" element={<PostListPage />} />
         <Route path="messages" element={<MessagesPage />} />

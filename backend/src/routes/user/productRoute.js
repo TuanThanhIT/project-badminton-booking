@@ -14,14 +14,14 @@ const initProductRoute = (app) => {
   productRoute.get(
     "/",
     auth,
-    authorize("User"),
+    authorize("USER"),
     validate(getProductsByFilterSchema),
     productController.getProductsByFilterController,
   );
   productRoute.get(
     "/:productId",
     auth,
-    authorize("User"),
+    authorize("USER"),
     validate(getProductDetailSchema),
     productController.getProductDetailController,
   );

@@ -1,4 +1,4 @@
-const InputForm = ({ register, error, field }: any) => {
+const InputForm = ({ register, field }: any) => {
   return (
     <div className="relative">
       <input
@@ -7,8 +7,6 @@ const InputForm = ({ register, error, field }: any) => {
         {...register(field)}
         className="w-full border border-gray-400 p-2 px-4 rounded-md outline-none pr-10"
       />
-
-      {error && <p className="text-red-500 text-sm mt-1">{error.message}</p>}
     </div>
   );
 };

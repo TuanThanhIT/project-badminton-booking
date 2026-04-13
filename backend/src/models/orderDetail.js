@@ -93,6 +93,8 @@ const OrderDetail = sequelize.define(
     },
   },
   {
+    tableName: "OrderDetails",
+    timestamps: false,
     indexes: [
       {
         unique: true,
@@ -101,9 +103,11 @@ const OrderDetail = sequelize.define(
       { fields: ["orderId"] },
       { fields: ["variantId"] },
     ],
-    tableName: "OrderDetails",
-    timestamps: false,
   },
 );
+
+OrderDetail.beforeValidate((detail) => {
+  detail.subTotal = detail.quantity * detail.unitPrice;
+});
 
 export default OrderDetail;

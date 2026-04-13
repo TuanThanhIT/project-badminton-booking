@@ -1,10 +1,10 @@
 export const DISCOUNT_TYPE = Object.freeze({
-  AMOUNT: "Amount",
-  PERCENT: "Percent",
+  AMOUNT: "AMOUNT",
+  PERCENT: "PERCENT",
 });
 
 export const DISCOUNT_APPLY_TYPE = Object.freeze({
-  ORDER: "Order",
-  BOOKING: "Booking",
-  ALL: "All",
+  ORDER: "ORDER",
+  BOOKING: "BOOKING",
+  ALL: "ALL",
 });

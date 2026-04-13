@@ -187,6 +187,12 @@ const authSlice = createSlice({
       };
       sessionStorage.removeItem("otpFlow");
     },
+    syncAuthUserProfile: (state, action: PayloadAction<{ data?: any } | any>) => {
+      // nếu payload là ApiResponse (has .data) lấy .data, còn không lấy payload trực tiếp
+      const payload = (action.payload && action.payload.data) ? action.payload.data : action.payload;
+      state.user = payload;
+    },
+
   },
   extraReducers: (builder) => {
     builder
@@ -215,5 +221,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logoutLocal, setOtpFlow, clearOtpFlow } = authSlice.actions;
+export const { logoutLocal, setOtpFlow, clearOtpFlow, syncAuthUserProfile } = authSlice.actions;
 export default authSlice.reducer;

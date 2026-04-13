@@ -12,6 +12,7 @@ import Navbar from "./Navbar";
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../redux/hook";
 import { logout, logoutLocal } from "../../../redux/slices/user/authSlice";
+import { getMyProfile } from "../../../redux/slices/user/profileSlice";
 
 interface HeaderProps {
   cartRef: React.RefObject<HTMLDivElement | null>; // cho phép null
@@ -40,10 +41,10 @@ const Header = ({ cartRef }: HeaderProps) => {
 
   useEffect(() => {
     // Đồng bộ avatar/fullName cho header qua profile slice (thunk)
-    if (!token || !user?.id) return;
-    if (myProfile?.id) return;
-    dispatch(getMyProfile());
-  }, [dispatch, token, user?.id, myProfile?.id]);
+    if (!accessToken || !user?.id) return;
+      if (myProfile?.id) return;
+      dispatch(getMyProfile());
+  }, [dispatch, accessToken, user?.id, myProfile?.id]);
 
   const headerDisplayName =
     myProfile?.profile?.fullName?.trim() || user?.username || "Tài khoản";

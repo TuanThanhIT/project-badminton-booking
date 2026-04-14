@@ -14,7 +14,7 @@ import PasswordInput from "../../components/ui/common/PasswordInput";
 const LoginPage = () => {
   const dispatch = useAppDispatch();
   const loginLoading = useAppSelector(
-    (state) => state.ui.loadingMap["auth/login"],
+    (state) => state.ui.loadingMap["user/login"] || false,
   );
 
   const navigate = useNavigate();

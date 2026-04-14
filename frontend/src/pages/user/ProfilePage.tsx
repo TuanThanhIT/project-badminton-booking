@@ -55,9 +55,15 @@ const ProfilePage = () => {
   const courts = useAppSelector((state) => state.court.courts);
   const profile = useAppSelector((state) => state.profile.myProfile);
   const posts = useAppSelector((state) => state.profile.myPosts);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const loading = useAppSelector(
+    (state) =>
+      Boolean(state.ui.loadingMap["profile/getMyProfile"]) ||
+      Boolean(state.ui.loadingMap["profile/getMyPosts"]),
+  );
+  const saving = useAppSelector((state) => Boolean(state.ui.loadingMap["profile/updateMyProfile"]));
+  const uploadingAvatar = useAppSelector(
+    (state) => Boolean(state.ui.loadingMap["profile/uploadMyAvatar"]),
+  );
   const [editTarget, setEditTarget] = useState<EditTarget>(null);
   const [tab, setTab] = useState<ProfileTab>("profile");
   const [showAvatarUrlField, setShowAvatarUrlField] = useState(false);
@@ -91,15 +97,12 @@ const ProfilePage = () => {
   const fetchProfileAndPosts = async () => {
     if (!currentUser?.id) return;
     try {
-      setLoading(true);
       await Promise.all([
         dispatch(getMyProfile()).unwrap(),
         dispatch(getMyPosts({ userId: currentUser.id })).unwrap(),
       ]);
     } catch {
       // middleware xử lý toast lỗi
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -154,21 +157,17 @@ const ProfilePage = () => {
       return;
     }
     try {
-      setUploadingAvatar(true);
       const updated = await dispatch(uploadMyAvatar(file)).unwrap();
       dispatch(syncAuthUserProfile(updated));
       toast.success("Đã cập nhật ảnh đại diện");
     } catch (err: unknown) {
       const msg = (err as { message?: string })?.message;
       toast.error(msg || "Không thể tải ảnh lên");
-    } finally {
-      setUploadingAvatar(false);
     }
   };
 
   const handleSaveProfile = async () => {
     try {
-      setSaving(true);
       const updated = await dispatch(
         updateMyProfile({
           data: {
@@ -186,8 +185,6 @@ const ProfilePage = () => {
       setShowAvatarUrlField(false);
     } catch {
       // middleware xử lý toast lỗi
-    } finally {
-      setSaving(false);
     }
   };
 

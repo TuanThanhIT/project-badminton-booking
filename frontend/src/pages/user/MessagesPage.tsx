@@ -31,6 +31,18 @@ const MessagesPage = () => {
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
 
   const authUser = useAppSelector((state) => state.auth.user);
+  const loadingConversations = useAppSelector(
+    (state) => Boolean(state.ui.loadingMap["conversation/getConversations"]),
+  );
+  const loadingMessages = useAppSelector(
+    (state) => Boolean(state.ui.loadingMap["conversation/getMessages"]),
+  );
+  const sendingMessage = useAppSelector(
+    (state) => Boolean(state.ui.loadingMap["conversation/sendMessage"]),
+  );
+  const uploadingAttachment = useAppSelector(
+    (state) => Boolean(state.ui.loadingMap["conversation/uploadChatAttachment"]),
+  );
   const conversations = useAppSelector((state) => state.conversation.conversations);
   const selectedConversationId = useAppSelector(
     (state) => state.conversation.selectedConversationId,
@@ -77,7 +89,7 @@ const MessagesPage = () => {
 
     const s = connectSocket(token);
 
-    s.on("chat:new-message", (payload: never) => {
+    s.on("chat:new-message", (payload: any) => {
       dispatch(appendSocketMessage({ message: payload, currentUserId: uid }));
     });
 
@@ -128,14 +140,20 @@ const MessagesPage = () => {
           openConversation(id);
         }}
       />
-      <div className="h-[78vh] border border-gray-200 rounded-xl overflow-hidden bg-white flex">
-        <ConversationSidebar
-          conversations={conversations}
-          selectedConversationId={selectedConversationId}
-          currentUserId={authUser?.id}
-          onSelect={openConversation}
-          onCreateGroup={() => setCreateGroupOpen(true)}
-        />
+      <div className="h-[78vh] border border-gray-200 rounded-xl overflow-hidden bg-white flex relative">
+        {loadingConversations && conversations.length === 0 ? (
+          <aside className="w-80 border-r border-gray-200 bg-white flex items-center justify-center text-sm text-gray-500">
+            Đang tải hội thoại…
+          </aside>
+        ) : (
+          <ConversationSidebar
+            conversations={conversations}
+            selectedConversationId={selectedConversationId}
+            currentUserId={authUser?.id}
+            onSelect={openConversation}
+            onCreateGroup={() => setCreateGroupOpen(true)}
+          />
+        )}
         <ChatPanel
           conversation={selectedConversation}
           messages={messages}
@@ -143,10 +161,12 @@ const MessagesPage = () => {
           isGroupAdmin={isGroupAdmin}
           onSend={async (text) => {
             if (!selectedConversationId) return;
+            if (sendingMessage || uploadingAttachment) return;
             await dispatch(sendMessage({ conversationId: selectedConversationId, data: { body: text } }));
           }}
           onUploadFile={async (file, caption) => {
             if (!selectedConversationId) return;
+            if (sendingMessage || uploadingAttachment) return;
             await dispatch(
               uploadChatAttachment({ conversationId: selectedConversationId, file, caption }),
             );
@@ -195,6 +215,11 @@ const MessagesPage = () => {
               : undefined
           }
         />
+        {loadingMessages && messages.length === 0 && selectedConversationId ? (
+          <div className="absolute inset-y-0 right-0 left-80 flex items-center justify-center pointer-events-none">
+            <div className="text-sm text-gray-500">Đang tải tin nhắn…</div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

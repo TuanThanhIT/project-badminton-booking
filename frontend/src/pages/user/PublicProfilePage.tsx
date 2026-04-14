@@ -22,8 +22,12 @@ const PublicProfilePage = () => {
   const courts = useAppSelector((state) => state.court.courts);
   const profile = useAppSelector((state) => state.profile.publicProfile);
   const posts = useAppSelector((state) => state.profile.publicPosts);
-  const [loading, setLoading] = useState(true);
   const [avatarLoadError, setAvatarLoadError] = useState(false);
+  const loading = useAppSelector(
+    (state) =>
+      Boolean(state.ui.loadingMap["profile/getPublicProfile"]) ||
+      Boolean(state.ui.loadingMap["profile/getPublicPosts"]),
+  );
 
   const parsedUserId = useMemo(() => Number(userId), [userId]);
 
@@ -41,15 +45,12 @@ const PublicProfilePage = () => {
 
     const fetchData = async () => {
       try {
-        setLoading(true);
         await Promise.all([
           dispatch(getPublicProfile({ userId: parsedUserId })).unwrap(),
           dispatch(getPublicPosts({ userId: parsedUserId })).unwrap(),
         ]);
       } catch {
         // middleware xử lý toast lỗi
-      } finally {
-        setLoading(false);
       }
     };
 

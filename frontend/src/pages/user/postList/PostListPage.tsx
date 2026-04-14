@@ -15,7 +15,7 @@ const PostListPage = () => {
   const { posts, total, limit } = useAppSelector((state) => state.post);
   const branches = useAppSelector((state) => state.branch.branches);
   const courts = useAppSelector((state) => state.court.courts);
-  //const loading = useAppSelector((state) => state.ui > 0);
+  const loading = useAppSelector((state) => state.ui.loadingMap["post/getPosts"]);
 
   const [selectedType, setSelectedType] = useState<PostType | "">("");
   const [filterValues, setFilterValues] = useState<
@@ -195,7 +195,7 @@ const PostListPage = () => {
 
           {/* Danh sách bài đăng */}
           <div className="mt-4 space-y-4">
-            {/* {loading && posts.length === 0 ? (
+            {loading && posts.length === 0 ? (
               <div className="flex justify-center py-12">
                 <div className="animate-spin w-10 h-10 border-2 border-sky-600 border-t-transparent rounded-full" />
               </div>
@@ -212,7 +212,7 @@ const PostListPage = () => {
                   courtNameById={courtNameById}
                 />
               ))
-            )} */}
+            )}
           </div>
 
           {/* Phân trang */}
@@ -220,7 +220,7 @@ const PostListPage = () => {
             <div className="flex justify-center gap-2 mt-6">
               <button
                 type="button"
-                //disabled={currentPage <= 1 || loading}
+                disabled={currentPage <= 1 || Boolean(loading)}
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-sm font-medium disabled:opacity-50 hover:bg-gray-50"
               >
@@ -231,7 +231,7 @@ const PostListPage = () => {
               </span>
               <button
                 type="button"
-                //disabled={currentPage >= totalPages || loading}
+                disabled={currentPage >= totalPages || Boolean(loading)}
                 onClick={() =>
                   setCurrentPage((p) => Math.min(totalPages, p + 1))
                 }

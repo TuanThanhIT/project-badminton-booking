@@ -8,10 +8,10 @@ import {
   getPublicProfile,
 } from "../../redux/slices/user/profileSlice";
 import { createOrGetDirectConversation } from "../../redux/slices/user/conversationSlice";
-import { getAllBranchesFull } from "../../redux/slices/user/branchSlice";
 import { getCourtsByIds } from "../../redux/slices/user/courtSlice";
-import ProfileHeroBanner from "./components/ProfileHeroBanner";
-import PostCard from "./postList/PostCard";
+import ProfileHeroBanner from "../../components/ui/user/profile/ProfileHeroBanner";
+import PostCard from "../../components/ui/user/postList/PostCard";
+import { getAllBranches } from "../../redux/slices/user/branchSlice";
 
 const PublicProfilePage = () => {
   const dispatch = useAppDispatch();
@@ -32,7 +32,7 @@ const PublicProfilePage = () => {
   const parsedUserId = useMemo(() => Number(userId), [userId]);
 
   useEffect(() => {
-    dispatch(getAllBranchesFull());
+    dispatch(getAllBranches());
   }, [dispatch]);
 
   useEffect(() => {
@@ -93,16 +93,18 @@ const PublicProfilePage = () => {
           {
             branchName: string;
             address?: string;
+            ward?: string;
             district?: string;
-            city?: string;
+            province?: string;
           }
         >
       >((acc, branch) => {
         acc[branch.id] = {
           branchName: branch.branchName,
           address: branch.address,
-          district: branch.district,
-          city: branch.city,
+          ward: branch.wardName,
+          district: branch.districtName,
+          province: branch.provinceName,
         };
         return acc;
       }, {}),

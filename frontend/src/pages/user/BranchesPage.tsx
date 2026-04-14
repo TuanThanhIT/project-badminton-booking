@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
-import { getBranches } from "../../redux/slices/user/branchSlice";
 import type { BranchesRequest } from "../../types/branch";
 import { useNavigate } from "react-router-dom";
 import {
@@ -13,11 +12,15 @@ import {
   RotateCcw,
   Navigation2,
 } from "lucide-react";
+import { getPagedBranches } from "../../redux/slices/user/branchSlice";
 
 const BranchPage = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { branches } = useAppSelector((state) => state.branch);
+
+  const pagedBranch = useAppSelector((state) => state.branch.pagedBranch);
+
+  const branches = pagedBranch?.branches || [];
 
   const [city, setCity] = useState<string>("");
   const [district, setDistrict] = useState<string>("");
@@ -31,7 +34,8 @@ const BranchPage = () => {
     return name;
   };
 
-  // Load provinces
+  // ================= LOAD PROVINCES =================
+
   useEffect(() => {
     fetch("https://provinces.open-api.vn/api/?depth=2")
       .then((res) => res.json())
@@ -39,40 +43,46 @@ const BranchPage = () => {
       .catch(() => setCities([]));
   }, []);
 
-  // Load districts when city changes
+  // ================= LOAD DISTRICTS =================
+
   useEffect(() => {
     if (!city) {
       setDistricts([]);
       return;
     }
+
     const selectedCity = cities.find((c) => c.name === city);
     setDistricts(selectedCity?.districts || []);
   }, [city, cities]);
 
-  // Call API branches
+  // ================= CALL API =================
+
   useEffect(() => {
     const data: BranchesRequest = {
       page: 1,
       limit: 10,
     };
-    if (city) data.city = normalizeCity(city);
-    if (district) data.district = district;
 
-    dispatch(getBranches({ data }));
+    if (city) data.provinceName = normalizeCity(city);
+    if (district) data.districtName = district;
+
+    dispatch(getPagedBranches({ data }));
   }, [city, district, dispatch]);
 
   useEffect(() => {
     setSelectedBranch(null);
   }, [city, district]);
 
+  // ================= MAP QUERY =================
+
   const mapQuery = selectedBranch
-    ? `${selectedBranch.address}, ${selectedBranch.district}, ${selectedBranch.city}`
+    ? `${selectedBranch.latitude},${selectedBranch.longitude}`
     : city
       ? `${city}, Vietnam`
       : "Vietnam";
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen pb-20">
       {/* HEADER SECTION */}
       <div className="bg-sky-900 text-white py-12 mb-10">
         <div className="w-11/12 mx-auto">
@@ -87,9 +97,11 @@ const BranchPage = () => {
 
       <div className="w-11/12 mx-auto">
         <div className="grid grid-cols-12 gap-8">
-          {/* LEFT PANEL: FILTERS & LIST */}
+          {/* LEFT PANEL */}
+
           <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
             {/* FILTER CARD */}
+
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <div className="flex items-center gap-2 mb-4 text-gray-800 font-bold">
                 <Filter size={18} className="text-sky-600" />
@@ -97,10 +109,13 @@ const BranchPage = () => {
               </div>
 
               <div className="flex flex-col gap-4">
+                {/* CITY */}
+
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-gray-500 ml-1">
                     Thành phố
                   </label>
+
                   <div className="relative">
                     <select
                       className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none appearance-none transition-all cursor-pointer text-sm"
@@ -111,12 +126,14 @@ const BranchPage = () => {
                       }}
                     >
                       <option value="">Tất cả thành phố</option>
+
                       {cities.map((c) => (
                         <option key={c.code} value={c.name}>
                           {c.name}
                         </option>
                       ))}
                     </select>
+
                     <Search
                       className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                       size={18}
@@ -124,10 +141,13 @@ const BranchPage = () => {
                   </div>
                 </div>
 
+                {/* DISTRICT */}
+
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-gray-500 ml-1">
                     Quận / Huyện
                   </label>
+
                   <div className="relative">
                     <select
                       className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 outline-none appearance-none transition-all cursor-pointer text-sm ${
@@ -140,18 +160,22 @@ const BranchPage = () => {
                       disabled={!city}
                     >
                       <option value="">Chọn quận/huyện</option>
+
                       {districts.map((d) => (
                         <option key={d.code} value={d.name}>
                           {d.name}
                         </option>
                       ))}
                     </select>
+
                     <MapPin
                       className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                       size={18}
                     />
                   </div>
                 </div>
+
+                {/* RESET FILTER */}
 
                 <button
                   className="flex items-center justify-center gap-2 mt-2 text-sm text-sky-600 font-medium hover:text-sky-700 transition"
@@ -167,6 +191,7 @@ const BranchPage = () => {
             </div>
 
             {/* LIST BRANCH CARD */}
+
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-4 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">
                 <span className="font-bold text-gray-700 text-sm">
@@ -180,6 +205,7 @@ const BranchPage = () => {
                     <div className="bg-gray-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Search className="text-gray-400" size={24} />
                     </div>
+
                     <p className="text-gray-500 text-sm">
                       Không tìm thấy chi nhánh nào
                     </p>
@@ -199,13 +225,13 @@ const BranchPage = () => {
                         <h3 className="font-bold text-sky-900 group-hover:text-sky-600 transition-colors">
                           {branch.branchName}
                         </h3>
+
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate(`/branches/${branch.id}`);
                           }}
                           className="p-1 hover:bg-sky-100 rounded-full text-sky-600 transition-colors"
-                          title="Xem chi tiết"
                         >
                           <ChevronRight size={20} />
                         </button>
@@ -217,10 +243,13 @@ const BranchPage = () => {
                             size={16}
                             className="text-sky-500 mt-0.5 shrink-0"
                           />
+
                           <p>
-                            {branch.address}, {branch.district}, {branch.city}
+                            {branch.address}, {branch.districtName},{" "}
+                            {branch.provinceName}
                           </p>
                         </div>
+
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <Phone
                             size={16}
@@ -244,19 +273,21 @@ const BranchPage = () => {
           </div>
 
           {/* RIGHT PANEL: MAP */}
+
           <div className="col-span-12 lg:col-span-8">
             <div className="bg-white p-2 rounded-[2rem] shadow-xl border border-gray-100 h-[750px] sticky top-10">
-              {/* Map Overlay info */}
               {selectedBranch && (
-                <div className="absolute top-6 left-6 right-6 z-10 bg-white/90 backdrop-blur-md p-4 rounded-2xl shadow-lg border border-sky-100 animate-fade-in flex items-center justify-between">
+                <div className="absolute top-6 left-6 right-6 z-10 bg-white/90 backdrop-blur-md p-4 rounded-2xl shadow-lg border border-sky-100 flex items-center justify-between">
                   <div>
                     <p className="text-xs font-bold text-sky-600 uppercase mb-1">
                       Đang xem vị trí:
                     </p>
+
                     <h4 className="font-bold text-gray-900">
                       {selectedBranch.branchName}
                     </h4>
                   </div>
+
                   <button
                     onClick={() => navigate(`/branches/${selectedBranch.id}`)}
                     className="bg-sky-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-sky-700 transition"
@@ -268,7 +299,9 @@ const BranchPage = () => {
 
               <iframe
                 title="map"
-                src={`https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`}
+                src={`https://www.google.com/maps?q=${encodeURIComponent(
+                  mapQuery,
+                )}&z=16&output=embed`}
                 className="w-full h-full rounded-[1.6rem] border-0"
                 loading="lazy"
               ></iframe>

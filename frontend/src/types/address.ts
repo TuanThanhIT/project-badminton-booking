@@ -5,12 +5,12 @@ export type Address = {
   label: string;
   fullName: string;
   phoneNumber: string;
-  province: string;
-  district: string;
-  ward: string;
+  provinceName: string;
+  districtName: string;
+  wardName: string;
   address: string;
-  provinceCode: string;
-  districtCode: string;
+  provinceId: number;
+  districtId: number;
   wardCode: string;
   latitude: number;
   longitude: number;
@@ -35,11 +35,11 @@ export type AddUserAddressRequest = {
   fullName: string;
   phoneNumber: string;
   address: string;
-  province: string;
-  district: string;
-  ward: string;
-  provinceCode: string;
-  districtCode: string;
+  provinceName: string;
+  districtName: string;
+  wardName: string;
+  provinceId: string;
+  districtId: string;
   wardCode: string;
   latitude: number;
   longitude: number;
@@ -51,11 +51,11 @@ export type UpdateUserAddressRequest = {
   fullName?: string;
   phoneNumber?: string;
   address?: string;
-  province?: string;
-  district?: string;
-  ward?: string;
-  provinceCode?: string;
-  districtCode?: string;
+  provinceName?: string;
+  districtName?: string;
+  wardName?: string;
+  provinceId?: string;
+  districtId?: string;
   wardCode?: string;
   latitude?: number;
   longitude?: number;
@@ -67,9 +67,17 @@ export type DeleteUserAddressRequest = {
   addressId: number;
 };
 
-export type Province = { code: number; name: string };
-export type District = { code: number; name: string };
-export type Ward = { code: number; name: string };
+export type Province = { ProvinceID: number; ProvinceName: string };
+
+export type District = {
+  DistrictID: number;
+  DistrictName: string;
+};
+
+export type Ward = {
+  WardCode: string;
+  WardName: string;
+};
 
 export type FullAddress = {
   address: string;

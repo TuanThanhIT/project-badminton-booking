@@ -16,9 +16,9 @@ import {
   getProductDetail,
   getProductsByFilter,
 } from "../../redux/slices/user/productSlice";
-import Breadcrumb from "../../components/ui/user/Breadcrumb";
+import Breadcrumb from "../../components/ui/user/category/Breadcrumb";
 import type { Branch } from "../../types/branch";
-import ProductsRelated from "../../components/ui/user/ProductsRelated";
+import ProductsRelated from "../../components/ui/user/product/ProductsRelated";
 import type { AddCartItemRequest } from "../../types/cart";
 import { addCartItem, getCart } from "../../redux/slices/user/cartSlice";
 import { toast } from "react-toastify";

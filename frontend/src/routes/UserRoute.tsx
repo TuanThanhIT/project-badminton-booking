@@ -22,12 +22,13 @@ import WalletDepositSuccess from "../pages/user/WalletDepositSuccess";
 import WalletPage from "../pages/user/WalletPage";
 import ResetPasswordPage from "../pages/user/ResetPasswordPage";
 import CreatePostPage from "../pages/user/CreatePostPage";
-import PostListPage from "../pages/user/postList/PostListPage";
+import PostListPage from "../components/ui/user/postList/PostListPage";
 import PublicProfilePage from "../pages/user/PublicProfilePage";
 import MessagesPage from "../pages/user/MessagesPage";
 import BranchDetailPage from "../pages/user/BranchDetailPage";
 import BranchPage from "../pages/user/BranchesPage";
 import CourtPage from "../pages/user/CourtPage";
+import NotFoundPage from "../pages/NotFoundPage";
 
 const UserRoute = () => {
   return (
@@ -70,6 +71,7 @@ const UserRoute = () => {
         <Route path="branches/:branchId" element={<BranchDetailPage />} />
         <Route path="courts" element={<CourtPage />} />
       </Route>
+      <Route path="*" element={<NotFoundPage />}></Route>
     </Routes>
   );
 };

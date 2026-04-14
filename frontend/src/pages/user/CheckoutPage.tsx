@@ -18,7 +18,7 @@ import {
   ShieldCheck,
   Plus,
 } from "lucide-react";
-import AddressForm from "../../components/ui/user/AddressForm";
+import AddressForm from "../../components/ui/user/address/AddressForm";
 import type { AddOrUpdateAddressPayload } from "../../schemas/FormAddAddressSchema";
 import type {
   Address,
@@ -27,7 +27,7 @@ import type {
   UpdateUserAddressRequest,
 } from "../../types/address";
 import { toast } from "react-toastify";
-import AddOrUpdateAddressForm from "../../components/ui/user/AddOrUpdateAddressForm";
+import AddOrUpdateAddressForm from "../../components/ui/user/address/AddOrUpdateAddressForm";
 
 const CheckoutPage = () => {
   const dispatch = useAppDispatch();
@@ -42,6 +42,8 @@ const CheckoutPage = () => {
   const selectedAddress = useAppSelector(
     (state) => state.address.selectedAddress,
   );
+
+  // const cart = useAppSelector((state) => state.cart.cart);
 
   useEffect(() => {
     dispatch(getUserAddress());
@@ -67,15 +69,16 @@ const CheckoutPage = () => {
 
   const handleAddAddress = async (dt: AddOrUpdateAddressPayload) => {
     if (!dt.latitude || !dt.longitude) return;
+    console.log("abc>>>", dt);
     const data: AddUserAddressRequest = {
       fullName: dt.fullName,
       phoneNumber: dt.phoneNumber,
       address: dt.address,
-      province: dt.provinceName,
-      district: dt.districtName,
-      ward: dt.wardName,
-      provinceCode: dt.provinceCode,
-      districtCode: dt.districtCode,
+      provinceName: dt.provinceName,
+      districtName: dt.districtName,
+      wardName: dt.wardName,
+      provinceId: dt.provinceId,
+      districtId: dt.districtId,
       wardCode: dt.wardCode,
       label: dt.label,
       longitude: dt.longitude,
@@ -94,15 +97,16 @@ const CheckoutPage = () => {
 
   const handleUpdateAddress = async (dt: AddOrUpdateAddressPayload) => {
     if (!dt.latitude || !dt.longitude || !dt.addressId) return;
+
     const data: UpdateUserAddressRequest = {
       fullName: dt.fullName,
       phoneNumber: dt.phoneNumber,
       address: dt.address,
-      province: dt.provinceName,
-      district: dt.districtName,
-      ward: dt.wardName,
-      provinceCode: dt.provinceCode,
-      districtCode: dt.districtCode,
+      provinceName: dt.provinceName,
+      districtName: dt.districtName,
+      wardName: dt.wardName,
+      provinceId: dt.provinceId,
+      districtId: dt.districtId,
       wardCode: dt.wardCode,
       label: dt.label,
       longitude: dt.longitude,
@@ -187,7 +191,7 @@ const CheckoutPage = () => {
                   </div>
 
                   <p className="text-slate-600 mt-2">
-                    {`${selectedAddress.address}, ${selectedAddress.ward}, ${selectedAddress.district}, ${selectedAddress.province}`}
+                    {`${selectedAddress.address}, ${selectedAddress.wardName}, ${selectedAddress.districtName}, ${selectedAddress.provinceName}`}
                   </p>
                 </div>
 

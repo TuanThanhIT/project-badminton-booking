@@ -1,29 +1,31 @@
 import type {
-  BranchListResponse,
+  BranchDetailRequest,
   BranchDetailResponse,
   BranchesRequest,
-  BranchDetailRequest,
-  BranchSimpleListResponse,
-  BranchResponse,
+  BranchListItemResponse,
+  BranchListResponse,
+  BranchOptionsListResponse,
 } from "../../types/branch";
 import instance from "../../utils/axiosCustomize";
 
-const getBranchesService = (data: BranchesRequest) =>
+const getPagedBranchesService = (data: BranchesRequest) =>
   instance.get<BranchListResponse>("/user/branches", { params: data });
 
-const getBranchByIdService = (data: BranchDetailRequest) =>
+const getBranchDetailService = (data: BranchDetailRequest) =>
   instance.get<BranchDetailResponse>(`/user/branches/${data.branchId}`);
 
-const getAllBranchesService = () =>
-  instance.get<BranchSimpleListResponse>("/user/branches/simple");
-
-const getAllBranchService = () => {
-  return instance.get<BranchResponse>("/user/branches/all");
+const getBranchOptionsService = () => {
+  return instance.get<BranchOptionsListResponse>("/user/branches/options");
 };
+
+const getAllBranchesService = () => {
+  return instance.get<BranchListItemResponse>("/user/branches/all");
+};
+
 const branchService = {
-  getBranchesService,
-  getBranchByIdService,
+  getBranchDetailService,
+  getPagedBranchesService,
+  getBranchOptionsService,
   getAllBranchesService,
-  getAllBranchService,
 };
 export default branchService;

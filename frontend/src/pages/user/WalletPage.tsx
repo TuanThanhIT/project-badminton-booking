@@ -24,10 +24,10 @@ import {
   walletDeposit,
   walletWithdrawRequest,
 } from "../../redux/slices/user/walletSlice";
-import DepositForm from "../../components/ui/user/DepositForm";
+import DepositForm from "../../components/ui/user/wallet/DepositForm";
 import { showConfirmDialog } from "../../utils/swalHelper";
 import type { formWithdrawRequest } from "../../schemas/FormWithdrawRequestSchema";
-import WithdrawRequestForm from "../../components/ui/user/WithdrawRequestForm";
+import WithdrawRequestForm from "../../components/ui/user/wallet/WithdrawRequestForm";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { otpSend, setOtpFlow } from "../../redux/slices/user/authSlice";

@@ -12,9 +12,8 @@ import {
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import type { PostWithAuthor } from "../../types/post";
-import PostCard from "./postList/PostCard";
-import ProfileHeroBanner from "./components/ProfileHeroBanner";
-import { getAllBranchesFull } from "../../redux/slices/user/branchSlice";
+import PostCard from "../../components/ui/user/postList/PostCard";
+import ProfileHeroBanner from "../../components/ui/user/profile/ProfileHeroBanner";
 import { getCourtsByIds } from "../../redux/slices/user/courtSlice";
 import {
   getMyPosts,
@@ -24,7 +23,11 @@ import {
 } from "../../redux/slices/user/profileSlice";
 import { syncAuthUserProfile } from "../../redux/slices/user/authSlice";
 import { deletePost, updatePost } from "../../redux/slices/user/postSlice";
-import EditPostModal from "./postList/components/EditPostModal";
+import EditPostModal from "../../components/ui/user/postList/EditPostModal";
+import {
+  getAllBranches,
+  getBranchOptions,
+} from "../../redux/slices/user/branchSlice";
 
 type EditTarget = {
   id: number;
@@ -60,9 +63,11 @@ const ProfilePage = () => {
       Boolean(state.ui.loadingMap["profile/getMyProfile"]) ||
       Boolean(state.ui.loadingMap["profile/getMyPosts"]),
   );
-  const saving = useAppSelector((state) => Boolean(state.ui.loadingMap["profile/updateMyProfile"]));
-  const uploadingAvatar = useAppSelector(
-    (state) => Boolean(state.ui.loadingMap["profile/uploadMyAvatar"]),
+  const saving = useAppSelector((state) =>
+    Boolean(state.ui.loadingMap["profile/updateMyProfile"]),
+  );
+  const uploadingAvatar = useAppSelector((state) =>
+    Boolean(state.ui.loadingMap["profile/uploadMyAvatar"]),
   );
   const [editTarget, setEditTarget] = useState<EditTarget>(null);
   const [tab, setTab] = useState<ProfileTab>("profile");
@@ -125,7 +130,7 @@ const ProfilePage = () => {
   }, [form.avatar]);
 
   useEffect(() => {
-    dispatch(getAllBranchesFull());
+    dispatch(getAllBranches());
     fetchProfileAndPosts();
   }, [currentUser?.id, dispatch]);
 
@@ -227,16 +232,18 @@ const ProfilePage = () => {
           {
             branchName: string;
             address?: string;
+            ward?: string;
             district?: string;
-            city?: string;
+            province?: string;
           }
         >
       >((acc, branch) => {
         acc[branch.id] = {
           branchName: branch.branchName,
           address: branch.address,
-          district: branch.district,
-          city: branch.city,
+          ward: branch.wardName,
+          district: branch.districtName,
+          province: branch.provinceName,
         };
         return acc;
       }, {}),

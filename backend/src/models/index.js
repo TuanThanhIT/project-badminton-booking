@@ -59,8 +59,10 @@ import CashRegister from "./cashRegister.js";
 import CoachProfile from "./coachProfile.js";
 import WithdrawRequest from "./withDrawRequest.js";
 import RefreshToken from "./refreshToken.js";
+
 import OrderGroup from "./orderGroup.js";
 import ShippingPartner from "./shippingPartner.js";
+import ShippingPartnerShop from "./shippingPartnerShop.js";
 
 //////////////////////////////////////////////////////
 //////////////// USER SYSTEM /////////////////////////
@@ -162,6 +164,26 @@ Branch.hasMany(ProductVariant, {
 ProductVariant.belongsTo(Branch, {
   foreignKey: "branchId",
   as: "branch",
+});
+
+// Branch -> ShippingPartnerShop
+Branch.hasMany(ShippingPartnerShop, {
+  foreignKey: "branchId",
+  as: "shippingPartnerShops",
+});
+ShippingPartnerShop.belongsTo(Branch, {
+  foreignKey: "branchId",
+  as: "branch",
+});
+
+// ShippingPartner -> ShippingPartnerShop
+ShippingPartner.hasMany(ShippingPartnerShop, {
+  foreignKey: "shippingPartnerId",
+  as: "shops",
+});
+ShippingPartnerShop.belongsTo(ShippingPartner, {
+  foreignKey: "shippingPartnerId",
+  as: "shippingPartner",
 });
 //////////////////////////////////////////////////////
 /////////////// BRANCH MANAGER ///////////////////////
@@ -706,4 +728,5 @@ export {
   CashRegister,
   CoachProfile,
   ShippingPartner,
+  ShippingPartnerShop,
 };

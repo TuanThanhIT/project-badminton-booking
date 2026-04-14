@@ -1,9 +1,9 @@
 import { useState } from "react";
 import type { PostType } from "../../types/post";
-import CreateFindPlayerPostForm from "./CreateFindPlayerPostForm";
-import CreateClassPostForm from "./CreateClassPostForm";
-import CreateTournamentPostForm from "./CreateTournamentPostForm";
-import CreateGroupPostForm from "./CreateGroupPostForm";
+import CreateFindPlayerPostForm from "../../components/ui/user/postList/CreateFindPlayerPostForm";
+import CreateClassPostForm from "../../components/ui/user/postList/CreateClassPostForm";
+import CreateTournamentPostForm from "../../components/ui/user/postList/CreateTournamentPostForm";
+import CreateGroupPostForm from "../../components/ui/user/postList/CreateGroupPostForm";
 
 const POST_TYPE_LABEL: Record<PostType, string> = {
   FIND_PLAYER: "Tìm người chơi cùng",
@@ -13,7 +13,12 @@ const POST_TYPE_LABEL: Record<PostType, string> = {
   CLASS: "Lớp học",
 };
 
-const AVAILABLE_TYPES: PostType[] = ["FIND_PLAYER", "CLASS", "TOURNAMENT", "GROUP"];
+const AVAILABLE_TYPES: PostType[] = [
+  "FIND_PLAYER",
+  "CLASS",
+  "TOURNAMENT",
+  "GROUP",
+];
 
 const CreatePostPage = () => {
   const [selectedType, setSelectedType] = useState<PostType>("FIND_PLAYER");

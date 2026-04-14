@@ -2,6 +2,7 @@ import { Discount } from "../../models/index.js";
 import { Op } from "sequelize";
 import NotFoundError from "../../errors/NotFoundError.js";
 import BadRequestError from "../../errors/BadRequestError.js"; // Giả định bạn có class này
+import { DISCOUNT_TYPE } from "../../constants/discountConstant.js";
 
 const checkDiscountBookingService = async (data) => {
   const { code, bookingAmount } = data;
@@ -25,7 +26,7 @@ const checkDiscountBookingService = async (data) => {
   }
 
   let discountValue = 0;
-  if (discount.type === "PERCENTAGE") {
+  if (discount.type === DISCOUNT_TYPE.PERCENT) {
     discountValue = (bookingAmount * discount.value) / 100;
   } else {
     discountValue = discount.value;

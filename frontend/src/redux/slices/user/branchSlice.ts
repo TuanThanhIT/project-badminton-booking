@@ -1,118 +1,106 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import type {
-  Branch,
-  BranchListResponse,
-  Pagination,
-  BranchDetail,
-  BranchDetailResponse,
-  BranchesRequest,
-  BranchDetailRequest,
-  BranchSimple,
-  BranchSimpleListResponse,
-  BranchBasic,
-  BranchResponse,
-} from "../../../types/branch";
+
 import type { ApiErrorType } from "../../../types/error";
 import branchService from "../../../services/user/branchService";
+import type {
+  BranchDetail,
+  BranchDetailRequest,
+  BranchDetailResponse,
+  BranchesRequest,
+  BranchListData,
+  BranchListItem,
+  BranchListItemResponse,
+  BranchListResponse,
+  BranchOptions,
+  BranchOptionsListResponse,
+} from "../../../types/branch";
 
 interface BranchState {
-  branches: Branch[];
-  pagination?: Pagination;
+  pagedBranch?: BranchListData;
+  branchOptions: BranchOptions[];
   branchDetail?: BranchDetail;
-  branchSimpleList: BranchSimple[];
-  branchBasic: BranchBasic[];
+  branches: BranchListItem[];
 }
 
 const initialState: BranchState = {
-  branches: [],
-  pagination: undefined,
-  branchSimpleList: [],
+  pagedBranch: undefined,
+  branchOptions: [],
   branchDetail: undefined,
-  branchBasic: [],
+  branches: [],
 };
 
-// 🔥 1. LIST PAGINATION
-export const getBranches = createAsyncThunk<
+export const getPagedBranches = createAsyncThunk<
   BranchListResponse,
   { data: BranchesRequest },
   { rejectValue: ApiErrorType }
->("branch/getBranches", async ({ data }, { rejectWithValue }) => {
+>("branch/getPageBranches", async ({ data }, { rejectWithValue }) => {
   try {
-    const res = await branchService.getBranchesService(data);
-    return res.data;
+    const res = await branchService.getPagedBranchesService(data);
+    return res.data as BranchListResponse;
   } catch (error) {
     return rejectWithValue(error as ApiErrorType);
   }
 });
 
-// 🔥 2. DETAIL
-export const getBranchById = createAsyncThunk<
+export const getBranchDetail = createAsyncThunk<
   BranchDetailResponse,
   { data: BranchDetailRequest },
   { rejectValue: ApiErrorType }
 >("branch/getBranchById", async ({ data }, { rejectWithValue }) => {
   try {
-    const res = await branchService.getBranchByIdService(data);
-    return res.data;
+    const res = await branchService.getBranchDetailService(data);
+    return res.data as BranchDetailResponse;
   } catch (error) {
     return rejectWithValue(error as ApiErrorType);
   }
 });
 
-// 🔥 3. SIMPLE LIST (dropdown)
+export const getBranchOptions = createAsyncThunk<
+  BranchOptionsListResponse,
+  void,
+  { rejectValue: ApiErrorType }
+>("branch/getBranchOptions", async (_, { rejectWithValue }) => {
+  try {
+    const res = await branchService.getBranchOptionsService();
+    return res.data as BranchOptionsListResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
 export const getAllBranches = createAsyncThunk<
-  BranchSimpleListResponse,
+  BranchListItemResponse,
   void,
   { rejectValue: ApiErrorType }
 >("branch/getAllBranches", async (_, { rejectWithValue }) => {
   try {
     const res = await branchService.getAllBranchesService();
-    return res.data;
+    return res.data as BranchListItemResponse;
   } catch (error) {
     return rejectWithValue(error as ApiErrorType);
   }
 });
 
-// 🔥 4. FULL LIST (nếu cần)
-export const getAllBranchesFull = createAsyncThunk<
-  BranchResponse,
-  void,
-  { rejectValue: ApiErrorType }
->("branch/getAllBranchesFull", async (_, { rejectWithValue }) => {
-  try {
-    const res = await branchService.getAllBranchService();
-    return res.data;
-  } catch (error) {
-    return rejectWithValue(error as ApiErrorType);
-  }
-});
-
-// ✅ SINGLE SLICE
 const branchSlice = createSlice({
   name: "branch",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // pagination
-      .addCase(getBranches.fulfilled, (state, action) => {
-        state.branches = action.payload.data.data;
-        state.pagination = action.payload.data.pagination;
+      .addCase(getPagedBranches.fulfilled, (state, action) => {
+        state.pagedBranch = action.payload.data;
       })
 
-      // detail
-      .addCase(getBranchById.fulfilled, (state, action) => {
+      .addCase(getBranchDetail.fulfilled, (state, action) => {
         state.branchDetail = action.payload.data;
       })
 
-      // simple list
-      .addCase(getAllBranches.fulfilled, (state, action) => {
-        state.branchSimpleList = action.payload.data;
+      .addCase(getBranchOptions.fulfilled, (state, action) => {
+        state.branchOptions = action.payload.data;
       })
 
-      // full list
-      .addCase(getAllBranchesFull.fulfilled, (state, action) => {
-        state.branchBasic = action.payload.data;
+      .addCase(getAllBranches.fulfilled, (state, action) => {
+        state.branches = action.payload.data;
       });
   },
 });

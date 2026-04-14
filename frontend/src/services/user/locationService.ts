@@ -1,38 +1,58 @@
 import type { District, Province, Ward } from "../../types/address";
 
-/* PROVINCES */
+const GHN_TOKEN = import.meta.env.VITE_GHN_TOKEN;
+
 const getProvincesService = async (): Promise<Province[]> => {
-  const res = await fetch("https://provinces.open-api.vn/api/p/");
-
+  const res = await fetch(
+    "https://online-gateway.ghn.vn/shiip/public-api/master-data/province",
+    {
+      method: "GET",
+      headers: {
+        Token: GHN_TOKEN,
+        "Content-Type": "application/json",
+      },
+    },
+  );
   if (!res.ok) throw new Error("Failed to fetch provinces");
-
-  return res.json();
+  const data = await res.json();
+  return data.data;
 };
 
-/* DISTRICTS */
-const getDistrictsService = async (
-  provinceCode: number,
-): Promise<{ districts: District[] }> => {
+export const getDistrictsService = async (
+  provinceId: number,
+): Promise<District[]> => {
   const res = await fetch(
-    `https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`,
+    "https://online-gateway.ghn.vn/shiip/public-api/master-data/district",
+    {
+      method: "POST",
+      headers: {
+        Token: GHN_TOKEN,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        province_id: provinceId,
+      }),
+    },
   );
-
   if (!res.ok) throw new Error("Failed to fetch districts");
-
-  return res.json();
+  const data = await res.json();
+  return data.data;
 };
 
-/* WARDS */
-const getWardsService = async (
-  districtCode: number,
-): Promise<{ wards: Ward[] }> => {
+export const getWardsService = async (districtId: number): Promise<Ward[]> => {
   const res = await fetch(
-    `https://provinces.open-api.vn/api/d/${districtCode}?depth=2`,
+    `https://online-gateway.ghn.vn/shiip/public-api/master-data/ward?district_id=${districtId}`,
+    {
+      headers: {
+        Token: GHN_TOKEN,
+      },
+    },
   );
-
-  if (!res.ok) throw new Error("Failed to fetch wards");
-
-  return res.json();
+  if (!res.ok) {
+    throw new Error("Failed to fetch wards");
+  }
+  const json = await res.json();
+  return json.data;
 };
 
 const locationService = {

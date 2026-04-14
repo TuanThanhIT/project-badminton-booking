@@ -2,23 +2,23 @@ import { useEffect, useMemo, useState } from "react";
 import debounce from "lodash.debounce";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Folder, Filter, Search, MapPinned } from "lucide-react";
-import Breadcrumb from "../../components/ui/user/Breadcrumb";
-import ProductFilter from "../../components/ui/user/ProductFilter";
-import ProductCard from "../../components/ui/user/ProductCard";
-import PaginatedItems from "../../components/ui/user/PaginatedItems";
+import Breadcrumb from "../../components/ui/user/category/Breadcrumb";
+import ProductFilter from "../../components/ui/user/product/ProductFilter";
+import ProductCard from "../../components/ui/user/product/ProductCard";
+import PaginatedItems from "../../components/ui/user/pagination/PaginatedItems";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { getOtherCategoriesInSameGroup } from "../../redux/slices/user/cateSlice";
 import type { OtherCatesParamsRequest } from "../../types/cate";
 import { getProductsByFilter } from "../../redux/slices/user/productSlice";
-import { getAllBranchesFull } from "../../redux/slices/user/branchSlice";
 import type { ProductQueriesRequest } from "../../types/product";
+import { getBranchOptions } from "../../redux/slices/user/branchSlice";
 
 const ProductPage = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const products = useAppSelector((state) => state.product.products);
   const otherCategories = useAppSelector((state) => state.cate.otherCategories);
-  const branches = useAppSelector((state) => state.branch.branches);
+  const branches = useAppSelector((state) => state.branch.branchOptions);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const query = useMemo(() => {
@@ -113,7 +113,7 @@ const ProductPage = () => {
   }, [productQuery, dispatch]);
 
   useEffect(() => {
-    dispatch(getAllBranchesFull());
+    dispatch(getBranchOptions());
   }, [dispatch]);
 
   const handleChange = (value: number) => {

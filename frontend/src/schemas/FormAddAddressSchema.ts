@@ -11,14 +11,16 @@ export const FormAddAddressSchema = z
 
     address: z.string().trim().min(1, "Vui lòng nhập địa chỉ cụ thể"),
 
-    provinceCode: z.string().min(1, "Vui lòng chọn tỉnh"),
-    districtCode: z.string().min(1, "Vui lòng chọn quận"),
+    provinceId: z.string().min(1, "Vui lòng chọn tỉnh"),
+
+    districtId: z.string().min(1, "Vui lòng chọn quận"),
+
     wardCode: z.string().min(1, "Vui lòng chọn phường"),
 
     latitude: z.number().nullable(),
     longitude: z.number().nullable(),
 
-    label: z.string().refine((val) => ["HOME", "OFFICE"].includes(val), {
+    label: z.enum(["HOME", "OFFICE"], {
       message: "Loại địa chỉ không hợp lệ",
     }),
 
@@ -34,9 +36,9 @@ export const FormAddAddressSchema = z
     }
   });
 
-export type formAddAddress = z.infer<typeof FormAddAddressSchema>;
+export type FormAddAddress = z.infer<typeof FormAddAddressSchema>;
 
-export type AddOrUpdateAddressPayload = formAddAddress & {
+export type AddOrUpdateAddressPayload = FormAddAddress & {
   provinceName: string;
   districtName: string;
   wardName: string;

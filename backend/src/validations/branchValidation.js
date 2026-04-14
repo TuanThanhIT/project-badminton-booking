@@ -17,8 +17,26 @@ export const getBranchesSchema = {
   query: Joi.object({
     page: pageField,
     limit: limitField,
-    city: Joi.string().optional(),
-    district: Joi.string().optional(),
+    provinceName: Joi.string()
+      .trim()
+      .min(2)
+      .max(100)
+      .messages({
+        "string.base": "Province name must be a string",
+        "string.min": "Province name must be at least 2 characters",
+        "string.max": "Province name must not exceed 100 characters",
+      })
+      .optional(),
+    districtName: Joi.string()
+      .trim()
+      .min(2)
+      .max(100)
+      .messages({
+        "string.base": "District name must be a string",
+        "string.min": "District name must be at least 2 characters",
+        "string.max": "District name must not exceed 100 characters",
+      })
+      .optional(),
   }),
 };
 

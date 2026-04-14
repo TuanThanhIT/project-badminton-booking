@@ -4,6 +4,7 @@ import sequelize from "../config/db.js";
 const Branch = sequelize.define(
   "Branch",
   {
+    // ================= BASIC INFO =================
     branchName: {
       type: DataTypes.STRING(255),
       allowNull: false,
@@ -15,65 +16,21 @@ const Branch = sequelize.define(
         notNull: { msg: "Branch name is required" },
         notEmpty: { msg: "Branch name cannot be empty" },
         len: {
-          args: [1, 255],
-          msg: "Branch name must not exceed 255 characters",
-        },
-      },
-    },
-
-    // 👇 address chi tiết (số nhà, đường)
-    address: {
-      type: DataTypes.STRING(255),
-      allowNull: false,
-      defaultValue: "231 Lê Văn Chí",
-      validate: {
-        notNull: { msg: "Address is required" },
-        len: {
-          args: [1, 255],
-          msg: "Address must not exceed 255 characters",
-        },
-      },
-    },
-
-    // 👇 quận / huyện
-    district: {
-      type: DataTypes.STRING(100),
-      allowNull: false,
-      defaultValue: "Thủ Đức",
-      validate: {
-        notNull: { msg: "District is required" },
-        notEmpty: { msg: "District cannot be empty" },
-        len: {
-          args: [1, 100],
-          msg: "District must not exceed 100 characters",
-        },
-      },
-    },
-
-    // 👇 thành phố
-    city: {
-      type: DataTypes.STRING(100),
-      allowNull: false,
-      defaultValue: "TP.HCM",
-      validate: {
-        notNull: { msg: "City is required" },
-        notEmpty: { msg: "City cannot be empty" },
-        len: {
-          args: [1, 100],
-          msg: "City must not exceed 100 characters",
+          args: [2, 255],
+          msg: "Branch name must be 2-255 characters",
         },
       },
     },
 
     phoneNumber: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.STRING(20),
       allowNull: false,
-      defaultValue: "0912345678",
       validate: {
         notNull: { msg: "Phone number is required" },
+        notEmpty: { msg: "Phone number cannot be empty" },
         is: {
           args: /^[0-9]{9,11}$/,
-          msg: "Phone number must contain 9 to 11 digits",
+          msg: "Phone number must be 9-11 digits",
         },
       },
     },
@@ -82,51 +39,153 @@ const Branch = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: false,
       validate: {
-        notNull: { msg: "Description branch is required" },
-        notEmpty: { msg: "Description branch cannot be empty" },
+        notNull: { msg: "Description is required" },
+        notEmpty: { msg: "Description cannot be empty" },
         len: {
-          args: [1, 65535],
-          msg: "Description must not exceed 65535 characters",
+          args: [10, 65535],
+          msg: "Description must be at least 10 characters",
         },
       },
     },
 
-    thumbnailUrl: {
-      type: DataTypes.STRING,
+    // ================= ADDRESS DISPLAY =================
+    address: {
+      type: DataTypes.STRING(255),
       allowNull: false,
       validate: {
-        notNull: { msg: "Thumbnail URL is required" },
-        isUrl: { msg: "Thumbnail URL must be a valid URL" },
+        notNull: { msg: "Address is required" },
+        notEmpty: { msg: "Address cannot be empty" },
+        len: {
+          args: [5, 255],
+          msg: "Address must be 5-255 characters",
+        },
       },
     },
-    provinceCode: {
-      type: DataTypes.STRING(20),
+
+    districtName: {
+      type: DataTypes.STRING(100),
       allowNull: false,
       validate: {
-        notNull: { msg: "Province code is required" },
+        notNull: { msg: "District name is required" },
+        notEmpty: { msg: "District name cannot be empty" },
+        len: {
+          args: [2, 100],
+          msg: "District name must be 2-100 characters",
+        },
       },
     },
-    districtCode: {
-      type: DataTypes.STRING(20),
+
+    provinceName: {
+      type: DataTypes.STRING(100),
       allowNull: false,
       validate: {
-        notNull: { msg: "District code is required" },
+        notNull: { msg: "Province name is required" },
+        notEmpty: { msg: "Province name cannot be empty" },
+        len: {
+          args: [2, 100],
+          msg: "Province name must be 2-100 characters",
+        },
       },
     },
+
+    wardName: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      validate: {
+        len: {
+          args: [0, 100],
+          msg: "Ward name must be <= 100 characters",
+        },
+      },
+    },
+
+    // ================= GHN SHIPPING ORIGIN =================
+    provinceId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: {
+        notNull: { msg: "ProvinceId is required" },
+        isInt: { msg: "ProvinceId must be integer" },
+        min: {
+          args: [1],
+          msg: "ProvinceId must be greater than 0",
+        },
+      },
+    },
+
+    districtId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: {
+        notNull: { msg: "DistrictId is required" },
+        isInt: { msg: "DistrictId must be integer" },
+        min: {
+          args: [1],
+          msg: "DistrictId must be greater than 0",
+        },
+      },
+    },
+
     wardCode: {
       type: DataTypes.STRING(20),
-      allowNull: false,
+      allowNull: true,
       validate: {
-        notNull: { msg: "Ward code is required" },
+        len: {
+          args: [0, 20],
+          msg: "WardCode must be <= 20 characters",
+        },
+        is: {
+          args: /^[0-9A-Za-z]*$/,
+          msg: "WardCode format invalid",
+        },
       },
     },
+
+    // ================= GEO =================
+    latitude: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      validate: {
+        notNull: { msg: "Latitude is required" },
+        isFloat: { msg: "Latitude must be number" },
+        min: {
+          args: [-90],
+          msg: "Latitude must be >= -90",
+        },
+        max: {
+          args: [90],
+          msg: "Latitude must be <= 90",
+        },
+      },
+    },
+
+    longitude: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      validate: {
+        notNull: { msg: "Longitude is required" },
+        isFloat: { msg: "Longitude must be number" },
+        min: {
+          args: [-180],
+          msg: "Longitude must be >= -180",
+        },
+        max: {
+          args: [180],
+          msg: "Longitude must be <= 180",
+        },
+      },
+    },
+
+    // ================= STATUS =================
     isActive: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true,
       validate: {
-        notNull: { msg: "isActive is required" },
-        isBoolean: { msg: "isActive must be a boolean" },
+        isIn: {
+          args: [[true, false]],
+          msg: "isActive must be boolean",
+        },
       },
     },
   },
@@ -135,6 +194,11 @@ const Branch = sequelize.define(
     timestamps: true,
     createdAt: "createdDate",
     updatedAt: "updatedDate",
+    indexes: [
+      { fields: ["provinceId"] },
+      { fields: ["districtId"] },
+      { fields: ["isActive"] },
+    ],
   },
 );
 

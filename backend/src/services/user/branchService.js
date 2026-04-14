@@ -1,20 +1,21 @@
-import { NOTFOUND } from "dns";
-import { Branch, BranchImage } from "../../models/index.js";
+import { Branch, BranchImage, Profile, User } from "../../models/index.js";
 import { Op } from "sequelize";
 import NotFoundError from "../../errors/NotFoundError.js";
-const getAllBranchesSimpleService = async () => {
+
+const getBranchOptionsService = async () => {
   const branches = await Branch.findAll({
     where: {
       isActive: true,
     },
-    attributes: ["id", "branchName"], // Ch? l?y d�ng 2 c?t n�y
-    order: [["branchName", "ASC"]], // S?p x?p theo t�n cho d? t�m
+    attributes: ["id", "branchName"],
+    order: [["branchName", "ASC"]],
   });
 
   return branches;
 };
-const getBranchesService = async (data) => {
-  const { page = 1, limit = 10, city, district } = data;
+
+const getPagedBranchesService = async (data) => {
+  const { page = 1, limit = 10, provinceName, districtName } = data;
 
   const offset = (page - 1) * limit;
 
@@ -22,17 +23,15 @@ const getBranchesService = async (data) => {
     isActive: true,
   };
 
-  // filter theo city
-  if (city) {
-    where.city = {
-      [Op.like]: `%${city}%`,
+  if (provinceName) {
+    where.provinceName = {
+      [Op.like]: `%${provinceName}%`,
     };
   }
 
-  // filter theo district
-  if (district) {
-    where.district = {
-      [Op.like]: `%${district}%`,
+  if (districtName) {
+    where.districtName = {
+      [Op.like]: `%${districtName}%`,
     };
   }
 
@@ -41,9 +40,12 @@ const getBranchesService = async (data) => {
       "id",
       "branchName",
       "address",
-      "district",
-      "city",
+      "wardName",
+      "districtName",
+      "provinceName",
       "phoneNumber",
+      "latitude",
+      "longitude",
     ],
     where,
     limit: Number(limit),
@@ -51,17 +53,17 @@ const getBranchesService = async (data) => {
     order: [["createdDate", "DESC"]],
   });
 
-  // optional: gh�p full address tr? v? cho frontend
-  const formattedRows = rows.map((item) => {
-    const data = item.toJSON();
+  const branches = rows.map((item) => {
+    const branch = item.toJSON();
+
     return {
-      ...data,
-      fullAddress: `${data.address}, ${data.district}, ${data.city}`,
+      ...branch,
+      fullAddress: `${branch.address}, ${branch.wardName}, ${branch.districtName}, ${branch.provinceName}`,
     };
   });
 
   return {
-    data: formattedRows,
+    branches,
     pagination: {
       page: Number(page),
       limit: Number(limit),
@@ -69,7 +71,10 @@ const getBranchesService = async (data) => {
     },
   };
 };
-const getBranchByIdService = async (branchId) => {
+
+const getBranchDetailService = async (data) => {
+  const { branchId } = data;
+
   const branch = await Branch.findOne({
     where: {
       id: branchId,
@@ -79,42 +84,79 @@ const getBranchByIdService = async (branchId) => {
       "id",
       "branchName",
       "address",
-      "district",
-      "city",
+      "wardName",
+      "districtName",
+      "provinceName",
       "phoneNumber",
+      "longitude",
+      "latitude",
       "description",
-      "thumbnailUrl",
     ],
     include: [
       {
         model: BranchImage,
-        as: "images", // ?? nh? define association
+        as: "images",
         attributes: ["id", "imageUrl"],
+      },
+      {
+        model: User,
+        as: "managers",
+        attributes: ["email"],
+        include: {
+          model: Profile,
+          as: "profile",
+          attributes: ["fullName", "phoneNumber"],
+        },
       },
     ],
   });
 
   if (!branch)
     throw new NotFoundError(
-      "Kh�ng t�m th?y chi nh�nh ho?c chi nh�nh kh�ng ho?t d?ng",
+      "Không tìm thấy chi nhánh hoặc chi nhánh không hoạt động",
     );
 
-  const data = branch.toJSON();
+  const dataBranch = branch.toJSON();
+
+  // flatten managers
+  const managers = dataBranch.managers.map((m) => ({
+    email: m.email,
+    fullName: m.profile?.fullName,
+    phoneNumber: m.profile?.phoneNumber,
+  }));
 
   return {
-    ...data,
-    fullAddress: `${data.address}, ${data.district}, ${data.city}`,
+    id: dataBranch.id,
+    branchName: dataBranch.branchName,
+    phoneNumber: dataBranch.phoneNumber,
+    description: dataBranch.description,
+    longitude: dataBranch.longitude,
+    latitude: dataBranch.latitude,
+    fullAddress: `${dataBranch.address}, ${dataBranch.wardName}, ${dataBranch.districtName}, ${dataBranch.provinceName}`,
+    images: dataBranch.images,
+    managers,
   };
 };
-const getAllBranchService = async () => {
+
+const getAllBranchesService = async () => {
   const branches = await Branch.findAll({
-    attributes: ["id", "branchName", "address", "district", "city"],
+    attributes: [
+      "id",
+      "branchName",
+      "address",
+      "wardName",
+      "districtName",
+      "provinceName",
+    ],
   });
   return branches;
 };
-export default {
-  getBranchesService,
-  getBranchByIdService,
-  getAllBranchesSimpleService,
-  getAllBranchService,
+
+const branchService = {
+  getBranchOptionsService,
+  getPagedBranchesService,
+  getBranchDetailService,
+  getAllBranchesService,
 };
+
+export default branchService;

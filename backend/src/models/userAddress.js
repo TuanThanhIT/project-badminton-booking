@@ -5,6 +5,7 @@ import { USER_ADDRESS_LABEL } from "../constants/userConstant.js";
 const UserAddress = sequelize.define(
   "UserAddress",
   {
+    // ================= USER INFO =================
     fullName: {
       type: DataTypes.STRING(255),
       allowNull: false,
@@ -13,10 +14,15 @@ const UserAddress = sequelize.define(
         notEmpty: { msg: "Full name cannot be empty" },
         len: {
           args: [2, 255],
-          msg: "Full name must be between 2 and 255 characters",
+          msg: "Full name must be 2-255 characters",
+        },
+        is: {
+          args: /^[\p{L} ]+$/u,
+          msg: "Full name must contain only letters",
         },
       },
     },
+
     phoneNumber: {
       type: DataTypes.STRING(20),
       allowNull: false,
@@ -25,10 +31,11 @@ const UserAddress = sequelize.define(
         notEmpty: { msg: "Phone number cannot be empty" },
         is: {
           args: /^[0-9]{9,11}$/,
-          msg: "Phone number must contain 9 to 11 digits",
+          msg: "Phone number must be 9-11 digits",
         },
       },
     },
+
     address: {
       type: DataTypes.STRING(255),
       allowNull: false,
@@ -37,131 +44,130 @@ const UserAddress = sequelize.define(
         notEmpty: { msg: "Address cannot be empty" },
         len: {
           args: [5, 255],
-          msg: "Address must be between 5 and 255 characters",
+          msg: "Address must be 5-255 characters",
         },
       },
     },
-    latitude: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
-      validate: {
-        notNull: { msg: "Latitude is required" },
-        isFloat: { msg: "Latitude must be a number" },
-        min: { args: [-90], msg: "Latitude must be >= -90" },
-        max: { args: [90], msg: "Latitude must be <= 90" },
-      },
-    },
-    longitude: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
-      validate: {
-        notNull: { msg: "Longitude is required" },
-        isFloat: { msg: "Longitude must be a number" },
-        min: { args: [-180], msg: "Longitude must be >= -180" },
-        max: { args: [180], msg: "Longitude must be <= 180" },
-      },
-    },
-    isDefault: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
-      validate: {
-        isBoolean: { msg: "isDefault must be a boolean value" },
-      },
-    },
-    ward: {
+
+    // ================= DISPLAY =================
+    provinceName: {
       type: DataTypes.STRING(100),
       allowNull: false,
       validate: {
-        notNull: { msg: "Ward is required" },
-        notEmpty: { msg: "Ward cannot be empty" },
-        len: {
-          args: [1, 100],
-          msg: "Ward must not exceed 100 characters",
-        },
+        notEmpty: { msg: "Province name is required" },
+        len: { args: [2, 100] },
       },
     },
-    district: {
+
+    districtName: {
       type: DataTypes.STRING(100),
       allowNull: false,
       validate: {
-        notNull: { msg: "District is required" },
-        notEmpty: { msg: "District cannot be empty" },
-        len: {
-          args: [1, 100],
-          msg: "District must not exceed 100 characters",
-        },
+        notEmpty: { msg: "District name is required" },
+        len: { args: [2, 100] },
       },
     },
-    province: {
+
+    wardName: {
       type: DataTypes.STRING(100),
       allowNull: false,
       validate: {
-        notNull: { msg: "Province is required" },
-        notEmpty: { msg: "Province cannot be empty" },
-        len: {
-          args: [1, 100],
-          msg: "Province must not exceed 100 characters",
-        },
+        notEmpty: { msg: "Ward name is required" },
+        len: { args: [2, 100] },
       },
     },
-    provinceCode: {
-      type: DataTypes.STRING(20),
+
+    // ================= GHN SHIPPING (IMPORTANT) =================
+    provinceId: {
+      type: DataTypes.INTEGER,
       allowNull: false,
       validate: {
-        notNull: { msg: "Province code is required" },
-        notEmpty: { msg: "Province code cannot be empty" },
-        len: {
-          args: [1, 20],
-          msg: "Province code must be <= 20 characters",
+        notNull: { msg: "ProvinceId is required" },
+        isInt: { msg: "ProvinceId must be an integer" },
+        min: {
+          args: [1],
+          msg: "ProvinceId must be greater than 0",
         },
       },
     },
-    districtCode: {
-      type: DataTypes.STRING(20),
+
+    districtId: {
+      type: DataTypes.INTEGER,
       allowNull: false,
       validate: {
-        notNull: { msg: "District code is required" },
-        notEmpty: { msg: "District code cannot be empty" },
-        len: {
-          args: [1, 20],
-          msg: "District code must be <= 20 characters",
+        notNull: { msg: "DistrictId is required" },
+        isInt: { msg: "DistrictId must be an integer" },
+        min: {
+          args: [1],
+          msg: "DistrictId must be greater than 0",
         },
       },
     },
+
     wardCode: {
       type: DataTypes.STRING(20),
       allowNull: false,
       validate: {
-        notNull: { msg: "Ward code is required" },
-        notEmpty: { msg: "Ward code cannot be empty" },
+        notNull: { msg: "WardCode is required" },
+        notEmpty: { msg: "WardCode cannot be empty" },
         len: {
           args: [1, 20],
-          msg: "Ward code must be <= 20 characters",
+          msg: "WardCode must be <= 20 characters",
+        },
+        is: {
+          args: /^[0-9A-Za-z]+$/,
+          msg: "WardCode invalid format",
         },
       },
     },
+
+    // ================= OPTIONAL =================
+    latitude: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+      validate: {
+        isFloat: true,
+        min: -90,
+        max: 90,
+      },
+    },
+
+    longitude: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+      validate: {
+        isFloat: true,
+        min: -180,
+        max: 180,
+      },
+    },
+
+    isDefault: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+
     label: {
       type: DataTypes.ENUM(...Object.values(USER_ADDRESS_LABEL)),
       allowNull: false,
       defaultValue: USER_ADDRESS_LABEL.HOME,
       validate: {
-        notNull: { msg: "Address label is required" },
         isIn: {
           args: [Object.values(USER_ADDRESS_LABEL)],
           msg: "Invalid address label",
         },
       },
     },
+
     userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       validate: {
-        notNull: { msg: "User ID is required" },
-        isInt: { msg: "User ID must be an integer" },
+        notNull: { msg: "UserId is required" },
+        isInt: { msg: "UserId must be an integer" },
         min: {
           args: [1],
-          msg: "User ID must be positive",
+          msg: "UserId must be positive",
         },
       },
     },
@@ -171,8 +177,8 @@ const UserAddress = sequelize.define(
     timestamps: true,
     indexes: [
       { fields: ["userId"] },
-      { fields: ["provinceCode"] },
-      { fields: ["districtCode"] },
+      { fields: ["provinceId"] },
+      { fields: ["districtId"] },
       { fields: ["wardCode"] },
     ],
   },

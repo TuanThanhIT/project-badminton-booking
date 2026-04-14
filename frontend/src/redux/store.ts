@@ -10,6 +10,8 @@ import {
   REGISTER,
   REHYDRATE,
 } from "redux-persist";
+import { authMiddleware } from "./middlewares/authMiddleware";
+import { setStore } from "./storeRef";
 import authReducer from "./slices/user/authSlice";
 import uiReducer from "./slices/uiSlice";
 import cateReducer from "./slices/user/cateSlice";
@@ -20,8 +22,6 @@ import discountReducer from "./slices/user/discountSlice";
 import cartReducer from "./slices/user/cartSlice";
 import walletReducer from "./slices/user/walletSlice";
 import addressReducer from "./slices/user/addressSlice";
-import { authMiddleware } from "./middlewares/authMiddleware";
-import { setStore } from "./storeRef";
 import postReducer from "./slices/user/postSlice";
 import profileReducer from "./slices/user/profileSlice";
 import conversationReducer from "./slices/user/conversationSlice";

@@ -21,7 +21,7 @@ export const addressField = Joi.string().min(5).max(255).messages({
   "any.required": "Address is required",
 });
 
-export const provinceField = Joi.string().min(1).max(100).messages({
+export const provinceNameField = Joi.string().min(1).max(100).messages({
   "string.base": "Province must be a string",
   "string.empty": "Province cannot be empty",
   "string.min": "Province must be at least 1 character",
@@ -29,7 +29,7 @@ export const provinceField = Joi.string().min(1).max(100).messages({
   "any.required": "Province is required",
 });
 
-export const districtField = Joi.string().min(1).max(100).messages({
+export const districtNameField = Joi.string().min(1).max(100).messages({
   "string.base": "District must be a string",
   "string.empty": "District cannot be empty",
   "string.min": "District must be at least 1 character",
@@ -37,26 +37,21 @@ export const districtField = Joi.string().min(1).max(100).messages({
   "any.required": "District is required",
 });
 
-export const wardField = Joi.string().min(1).max(100).messages({
+export const wardNameField = Joi.string().min(1).max(100).messages({
   "string.base": "Ward must be a string",
   "string.empty": "Ward cannot be empty",
   "string.min": "Ward must be at least 1 character",
   "string.max": "Ward must not exceed 100 characters",
   "any.required": "Ward is required",
 });
-
-export const provinceCodeField = Joi.string().max(20).messages({
-  "string.base": "Province code must be a string",
-  "string.empty": "Province code cannot be empty",
-  "string.max": "Province code must not exceed 20 characters",
-  "any.required": "Province code is required",
+export const provinceIdField = Joi.number().messages({
+  "number.base": "Province id must be a number",
+  "any.required": "Province id is required",
 });
 
-export const districtCodeField = Joi.string().max(20).messages({
-  "string.base": "District code must be a string",
-  "string.empty": "District code cannot be empty",
-  "string.max": "District code must not exceed 20 characters",
-  "any.required": "District code is required",
+export const districtIdField = Joi.number().messages({
+  "number.base": "District id must be a number",
+  "any.required": "District id is required",
 });
 
 export const wardCodeField = Joi.string().max(20).messages({

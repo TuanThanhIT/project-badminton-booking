@@ -22,7 +22,7 @@ import WalletDepositSuccess from "../pages/user/WalletDepositSuccess";
 import WalletPage from "../pages/user/WalletPage";
 import ResetPasswordPage from "../pages/user/ResetPasswordPage";
 import CreatePostPage from "../pages/user/CreatePostPage";
-import PostListPage from "../components/ui/user/postList/PostListPage";
+import PostListPage from "../pages/user/PostListPage";
 import PublicProfilePage from "../pages/user/PublicProfilePage";
 import MessagesPage from "../pages/user/MessagesPage";
 import BranchDetailPage from "../pages/user/BranchDetailPage";

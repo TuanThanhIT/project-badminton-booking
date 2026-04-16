@@ -1,7 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
 import Product from "./product.js";
-import Branch from "./branch.js";
 
 const ProductVariant = sequelize.define(
   "ProductVariant",
@@ -21,26 +20,10 @@ const ProductVariant = sequelize.define(
       allowNull: false,
       validate: {
         notNull: { msg: "Price is required" },
-        isFloat: {
-          msg: "Price must be a number",
-        },
+        isFloat: { msg: "Price must be a number" },
         min: {
           args: [0],
-          msg: "Price must be greater than or equal to 0",
-        },
-      },
-    },
-    stock: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      validate: {
-        notNull: { msg: "Stock is required" },
-        isInt: {
-          msg: "Stock must be an integer",
-        },
-        min: {
-          args: [0],
-          msg: "Stock must be greater than or equal to 0",
+          msg: "Price must be >= 0",
         },
       },
     },
@@ -48,17 +31,9 @@ const ProductVariant = sequelize.define(
       type: DataTypes.FLOAT,
       allowNull: true,
       validate: {
-        isFloat: {
-          msg: "Discount must be a number",
-        },
-        min: {
-          args: [0],
-          msg: "Discount cannot be less than 0",
-        },
-        max: {
-          args: [100],
-          msg: "Discount cannot be greater than 100",
-        },
+        isFloat: { msg: "Discount must be a number" },
+        min: { args: [0], msg: "Discount >= 0" },
+        max: { args: [100], msg: "Discount <= 100" },
       },
     },
     color: {
@@ -102,35 +77,13 @@ const ProductVariant = sequelize.define(
     productId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: { model: Product, key: "id" },
-      validate: {
-        notNull: {
-          msg: "Product ID is required",
-        },
-        isInt: {
-          msg: "Product ID must be an integer",
-        },
-        min: {
-          args: [1],
-          msg: "Product ID must be a positive number",
-        },
+      references: {
+        model: Product,
+        key: "id",
       },
-    },
-    branchId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: { model: Branch, key: "id" },
       validate: {
-        notNull: {
-          msg: "Branch ID is required",
-        },
-        isInt: {
-          msg: "Branch ID must be an integer",
-        },
-        min: {
-          args: [1],
-          msg: "Branch ID must be a positive number",
-        },
+        notNull: { msg: "Product ID is required" },
+        isInt: { msg: "Product ID must be an integer" },
       },
     },
   },

@@ -104,8 +104,6 @@ const AddOrUpdateAddressForm = ({
   const [districts, setDistricts] = useState<District[]>([]);
   const [wards, setWards] = useState<Ward[]>([]);
 
-  const [loadingEdit, setLoadingEdit] = useState(false);
-
   /* LOAD PROVINCES */
   useEffect(() => {
     const load = async () => {
@@ -122,7 +120,7 @@ const AddOrUpdateAddressForm = ({
 
   /* LOAD DISTRICTS */
   useEffect(() => {
-    if (!provinceId || loadingEdit) return;
+    if (!provinceId) return;
 
     const load = async () => {
       try {
@@ -131,34 +129,40 @@ const AddOrUpdateAddressForm = ({
         );
 
         setDistricts(data);
-        setValue("districtId", "");
-        setValue("wardCode", "");
-        setWards([]);
+
+        if (!isEdit) {
+          setValue("districtId", "");
+          setValue("wardCode", "");
+          setWards([]);
+        }
       } catch {
         toast.error("Không lấy được dữ liệu quận");
       }
     };
 
     load();
-  }, [provinceId]);
+  }, [provinceId, isEdit, setValue]);
 
   /* LOAD WARDS */
   useEffect(() => {
-    if (!districtId || loadingEdit) return;
+    if (!districtId) return;
 
     const load = async () => {
       try {
         const data = await locationService.getWardsService(Number(districtId));
 
         setWards(data);
-        setValue("wardCode", "");
+
+        if (!isEdit) {
+          setValue("wardCode", "");
+        }
       } catch {
         toast.error("Không lấy được dữ liệu phường");
       }
     };
 
     load();
-  }, [districtId]);
+  }, [districtId, isEdit, setValue]);
 
   /* LOAD DATA WHEN EDIT */
   useEffect(() => {
@@ -166,8 +170,6 @@ const AddOrUpdateAddressForm = ({
 
     const loadEdit = async () => {
       try {
-        setLoadingEdit(true);
-
         const resDistrict = await locationService.getDistrictsService(
           Number(address.provinceId),
         );
@@ -185,7 +187,7 @@ const AddOrUpdateAddressForm = ({
           address: address.address,
           provinceId: String(address.provinceId),
           districtId: String(address.districtId),
-          wardCode: String(address.wardCode),
+          wardCode: address.wardCode,
           label: address.label as "HOME" | "OFFICE",
           latitude: address.latitude,
           longitude: address.longitude,
@@ -197,21 +199,23 @@ const AddOrUpdateAddressForm = ({
         }
       } catch {
         toast.error("Không load được địa chỉ");
-      } finally {
-        setLoadingEdit(false);
       }
     };
 
     loadEdit();
-  }, [address]);
+  }, [address, reset]);
 
+  /* MAP CLICK */
   const MapClick = () => {
     useMapEvents({
       click(e) {
-        setMarker([e.latlng.lat, e.latlng.lng]);
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
 
-        setValue("latitude", e.latlng.lat);
-        setValue("longitude", e.latlng.lng);
+        setMarker([lat, lng]);
+
+        setValue("latitude", lat);
+        setValue("longitude", lng);
       },
     });
 

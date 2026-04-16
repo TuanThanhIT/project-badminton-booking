@@ -4,6 +4,7 @@ import {
   Product,
   ProductImage,
   ProductVariant,
+  VariantStock,
 } from "../../models/index.js";
 import { col, fn, Op } from "sequelize";
 import { SORT_OPTIONS } from "../../constants/productConstant.js";
@@ -71,6 +72,7 @@ const getProductsByFilterService = async (data) => {
       "thumbnailUrl",
       "createdDate",
       [fn("MIN", col("variants.price")), "minPrice"],
+      [fn("SUM", col("variants->stocks.stock")), "totalStock"], // 👈 tổng stock
     ],
     include: [
       {
@@ -88,6 +90,13 @@ const getProductsByFilterService = async (data) => {
             branchId: { [Op.in]: branchIds },
           }),
         },
+        include: [
+          {
+            model: VariantStock,
+            as: "stocks",
+            attributes: [], // 👈 QUAN TRỌNG
+          },
+        ],
         required: true,
       },
       {
@@ -105,20 +114,43 @@ const getProductsByFilterService = async (data) => {
   const productFormatted = await Promise.all(
     productsFilter.map(async (p) => {
       const minPrice = parseFloat(p.get("minPrice"));
+
       const variant = await ProductVariant.findOne({
         where: { productId: p.id, price: minPrice },
         attributes: ["discount"],
+        include: [
+          {
+            model: VariantStock,
+            as: "stocks",
+            attributes: ["stock"],
+          },
+        ],
       });
+
       const discount = variant ? variant.discount : 0;
+
       const minDiscountedPrice = minPrice - (minPrice * discount) / 100;
+
+      let totalStock = 0;
+
+      if (variant && variant.stocks) {
+        totalStock = variant.stocks.reduce((sum, s) => sum + s.stock, 0);
+      }
 
       const created = new Date(p.get("createdDate"));
       const now = new Date();
       const diffDays =
         (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
+
       const isNew = diffDays <= 15;
 
-      return { ...p.toJSON(), discount, minDiscountedPrice, isNew };
+      return {
+        ...p.toJSON(),
+        discount,
+        minDiscountedPrice,
+        totalStock,
+        isNew,
+      };
     }),
   );
 
@@ -127,6 +159,7 @@ const getProductsByFilterService = async (data) => {
 
 const getProductDetailService = async (data) => {
   const { productId } = data;
+
   const product = await Product.findByPk(productId, {
     attributes: ["id", "productName", "brand", "description"],
     include: [
@@ -137,17 +170,25 @@ const getProductDetailService = async (data) => {
           "id",
           "sku",
           "price",
-          "stock",
           "discount",
           "color",
           "size",
           "material",
         ],
-        include: {
-          model: Branch,
-          as: "branch",
-          attributes: ["id", "branchName"],
-        },
+        include: [
+          {
+            model: VariantStock,
+            as: "stocks",
+            attributes: ["id", "stock"],
+            include: [
+              {
+                model: Branch,
+                as: "branch",
+                attributes: ["id", "branchName"],
+              },
+            ],
+          },
+        ],
       },
       {
         model: ProductImage,
@@ -160,17 +201,34 @@ const getProductDetailService = async (data) => {
     throw new NotFoundError("Sản phẩm không tồn tại");
   }
 
-  const variantsWithDiscount = product.variants.map((v) => {
-    const discountPrice = v.price - (v.price * v.discount) / 100;
+  const variantsFormatted = product.variants.map((v) => {
+    const variant = v.toJSON();
+
+    const discountPrice =
+      variant.price - (variant.price * variant.discount) / 100;
+
+    // tổng stock
+    const totalStock = variant.stocks.reduce((total, s) => total + s.stock, 0);
+
+    // chuyển stocks -> branches
+    const branches = variant.stocks.map((s) => ({
+      id: s.branch.id,
+      branchName: s.branch.branchName,
+      stock: s.stock,
+    }));
+
     return {
-      ...v.toJSON(),
+      ...variant,
       discountPrice,
+      totalStock,
+      branches,
+      stocks: undefined,
     };
   });
 
   const productDetail = {
     ...product.toJSON(),
-    variants: variantsWithDiscount,
+    variants: variantsFormatted,
   };
 
   return productDetail;

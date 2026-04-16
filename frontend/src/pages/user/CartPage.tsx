@@ -66,9 +66,9 @@ const CartPage = () => {
 
   const handleQuantityChange = (item: CartItem, value: number) => {
     if (value <= 0) return;
-    if (value > item.stock) {
-      toast.warn(`Chỉ còn ${item.stock} sản phẩm trong kho!`);
-      value = item.stock;
+    if (value > item.totalStock) {
+      toast.warn(`Chỉ còn ${item.totalStock} sản phẩm trong kho!`);
+      value = item.totalStock;
     }
     const data: UpdateCartItemRequest = {
       cartItemId: item.id,
@@ -209,7 +209,7 @@ const CartPage = () => {
                           <input
                             type="number"
                             min={1}
-                            max={item.stock}
+                            max={item.totalStock}
                             value={item.quantity}
                             onChange={(e) =>
                               handleQuantityChange(item, Number(e.target.value))
@@ -218,7 +218,7 @@ const CartPage = () => {
                           />
                         </div>
                         <span className="text-xs text-gray-400">
-                          (Còn {item.stock})
+                          (Còn {item.totalStock})
                         </span>
                       </div>
                     </div>

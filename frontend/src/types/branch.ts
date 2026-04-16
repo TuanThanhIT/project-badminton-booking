@@ -5,6 +5,12 @@ export type BranchOptions = {
   branchName: string;
 };
 
+export type BranchStock = {
+  id: number;
+  branchName: string;
+  stock: number;
+};
+
 export type BranchOptionsListResponse = ApiResponse<BranchOptions[]>;
 
 export type Pagination = {

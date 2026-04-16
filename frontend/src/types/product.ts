@@ -1,5 +1,5 @@
 import type { ApiResponse } from "./api";
-import type { Branch } from "./branch";
+import type { BranchStock } from "./branch";
 import type { Category } from "./cate";
 
 export type Product = {
@@ -42,13 +42,13 @@ export type ProductVariant = {
   id: number;
   sku: string;
   price: number;
-  stock: number;
+  totalStock: number;
   discount: number;
   color: string;
   size: string;
   material: string;
-  branch: Branch;
   discountPrice: number;
+  branches: BranchStock[];
 };
 
 export type ProductImage = {

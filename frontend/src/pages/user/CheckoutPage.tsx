@@ -43,7 +43,8 @@ const CheckoutPage = () => {
     (state) => state.address.selectedAddress,
   );
 
-  // const cart = useAppSelector((state) => state.cart.cart);
+  const cart = useAppSelector((state) => state.cart.cart);
+  console.log("cart>>", cart);
 
   useEffect(() => {
     dispatch(getUserAddress());
@@ -51,25 +52,37 @@ const CheckoutPage = () => {
 
   useEffect(() => {
     if (!addresses?.length) return;
-    const saved = localStorage.getItem("addressSelectedId");
-    if (saved) {
-      const id = Number(saved);
-      const found = addresses.find((a) => a.id === id);
 
-      if (found) {
-        dispatch(setSelectedAddress(found));
-        return;
-      }
+    // 1. nếu redux đã có selected → không overwrite
+    if (selectedAddress) return;
+
+    const savedId = localStorage.getItem("addressSelectedId");
+
+    let foundAddress = null;
+
+    // 2. ưu tiên localStorage
+    if (savedId) {
+      foundAddress = addresses.find((a) => a.id === Number(savedId));
     }
-    const defaultAddr = addresses.find((a) => a.isDefault);
-    if (defaultAddr) {
-      dispatch(setSelectedAddress(defaultAddr));
+
+    // 3. fallback default
+    if (!foundAddress) {
+      foundAddress = addresses.find((a) => a.isDefault);
     }
-  }, [addresses, dispatch]);
+
+    // 4. fallback cuối cùng
+    if (!foundAddress) {
+      foundAddress = addresses[0];
+    }
+
+    if (foundAddress) {
+      dispatch(setSelectedAddress(foundAddress));
+      localStorage.setItem("addressSelectedId", String(foundAddress.id));
+    }
+  }, [addresses]);
 
   const handleAddAddress = async (dt: AddOrUpdateAddressPayload) => {
     if (!dt.latitude || !dt.longitude) return;
-    console.log("abc>>>", dt);
     const data: AddUserAddressRequest = {
       fullName: dt.fullName,
       phoneNumber: dt.phoneNumber,

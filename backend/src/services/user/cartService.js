@@ -4,6 +4,7 @@ import {
   Product,
   ProductVariant,
   User,
+  VariantStock,
 } from "../../models/index.js";
 import sequelize from "../../config/db.js";
 import BadRequestError from "../../errors/BadRequestError.js";
@@ -101,31 +102,33 @@ const getCartItemsService = async (data) => {
       {
         model: ProductVariant,
         as: "variant",
-        attributes: [
-          "id",
-          "price",
-          "discount",
-          "stock",
-          "color",
-          "size",
-          "material",
-        ],
+        attributes: ["id", "price", "discount", "color", "size", "material"],
         include: [
           {
             model: Product,
             as: "product",
             attributes: ["id", "productName", "thumbnailUrl"],
           },
+          {
+            model: VariantStock,
+            as: "stocks",
+            attributes: ["id", "stock"],
+          },
         ],
       },
     ],
   });
+
   const updatedCartItems = cartItems.map((item) => {
     const obj = item.get({ plain: true });
     const price =
       obj.quantity > 0
         ? obj.variant.price * (1 - (obj.variant.discount || 0) / 100)
         : 0;
+    const totalStock = obj.variant.stocks.reduce((sum, it) => {
+      return sum + it.stock;
+    }, 0);
+
     return {
       id: obj.id,
       quantity: obj.quantity,
@@ -133,7 +136,7 @@ const getCartItemsService = async (data) => {
       productName: obj.variant.product.productName,
       thumbnailUrl: obj.variant.product.thumbnailUrl,
       variantId: obj.variant.id,
-      stock: obj.variant.stock,
+      totalStock,
       color: obj.variant.color,
       size: obj.variant.size,
       material: obj.variant.material,

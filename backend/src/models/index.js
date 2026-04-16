@@ -63,6 +63,7 @@ import RefreshToken from "./refreshToken.js";
 import OrderGroup from "./orderGroup.js";
 import ShippingPartner from "./shippingPartner.js";
 import ShippingPartnerShop from "./shippingPartnerShop.js";
+import VariantStock from "./variantStock.js";
 
 //////////////////////////////////////////////////////
 //////////////// USER SYSTEM /////////////////////////
@@ -153,15 +154,6 @@ Branch.hasMany(BranchImage, {
   as: "images",
 });
 BranchImage.belongsTo(Branch, {
-  foreignKey: "branchId",
-  as: "branch",
-});
-
-Branch.hasMany(ProductVariant, {
-  foreignKey: "branchId",
-  as: "variants",
-});
-ProductVariant.belongsTo(Branch, {
   foreignKey: "branchId",
   as: "branch",
 });
@@ -289,6 +281,23 @@ ProductVariant.hasMany(CartItem, {
 CartItem.belongsTo(ProductVariant, {
   foreignKey: "variantId",
   as: "variant",
+});
+
+ProductVariant.hasMany(VariantStock, {
+  foreignKey: "variantId",
+  as: "stocks",
+});
+VariantStock.belongsTo(ProductVariant, {
+  foreignKey: "variantId",
+  as: "variant",
+});
+Branch.hasMany(VariantStock, {
+  foreignKey: "branchId",
+  as: "variantStocks",
+});
+VariantStock.belongsTo(Branch, {
+  foreignKey: "branchId",
+  as: "branch",
 });
 
 //////////////////////////////////////////////////////
@@ -729,4 +738,5 @@ export {
   CoachProfile,
   ShippingPartner,
   ShippingPartnerShop,
+  VariantStock,
 };

@@ -2,7 +2,7 @@ import { Facebook, Twitter, Instagram, Youtube } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-50 border-t border-gray-400 mt-10">
+    <footer className="bg-gray-50 border-t border-gray-400">
       <div className="grid grid-cols-4 gap-8 px-12 py-10 text-gray-700">
         {/* Địa chỉ */}
         <div>

@@ -86,3 +86,22 @@ export const countOrderByOrderStatusSchema = {
     date: dateField,
   }),
 };
+
+export const checkoutPreviewSchema = {
+  body: Joi.object({
+    cartId: idParams("cartId"),
+    addressId: idParams("addressId"),
+  }),
+};
+
+export const calculateShippingSchema = {
+  body: Joi.object({
+    cartId: idParams("cartId"),
+  }),
+};
+
+export const clearCheckoutSessionSchema = {
+  body: Joi.object({
+    cartId: idParams("cartId"),
+  }),
+};

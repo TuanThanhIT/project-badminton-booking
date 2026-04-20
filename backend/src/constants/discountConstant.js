@@ -8,3 +8,8 @@ export const DISCOUNT_APPLY_TYPE = Object.freeze({
   BOOKING: "BOOKING",
   ALL: "ALL",
 });
+
+export const DISCOUNT_TARGET_TYPE = Object.freeze({
+  ORDER: "ORDER",
+  BOOKING: "BOOKING",
+});

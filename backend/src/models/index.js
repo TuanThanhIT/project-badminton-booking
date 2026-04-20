@@ -26,6 +26,7 @@ import Order from "./order.js";
 import OrderDetail from "./orderDetail.js";
 import Payment from "./payment.js";
 import Discount from "./discount.js";
+import DiscountUsage from "./discountUsage.js";
 
 import DraftBooking from "./draftBooking.js";
 import DraftBookingItem from "./draftBookingItem.js";
@@ -351,6 +352,24 @@ Branch.hasMany(Order, {
 Order.belongsTo(Branch, {
   foreignKey: "branchId",
   as: "branch",
+});
+
+Discount.hasMany(DiscountUsage, {
+  foreignKey: "discountId",
+  as: "discountUsages",
+});
+DiscountUsage.belongsTo(Discount, {
+  foreignKey: "discountId",
+  as: "discount",
+});
+
+User.hasMany(DiscountUsage, {
+  foreignKey: "userId",
+  as: "discountUsages",
+});
+DiscountUsage.belongsTo(User, {
+  foreignKey: "discountId",
+  as: "user",
 });
 
 Discount.hasMany(OrderGroup, {
@@ -739,4 +758,5 @@ export {
   ShippingPartner,
   ShippingPartnerShop,
   VariantStock,
+  DiscountUsage,
 };

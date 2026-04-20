@@ -1,17 +1,17 @@
 import { useEffect, useState, useCallback } from "react";
-import { useAppDispatch, useAppSelector } from "../../../../redux/hook";
-import { getPosts } from "../../../../redux/slices/user/postSlice";
-import { getCourtsByIds } from "../../../../redux/slices/user/courtSlice";
-import type { PostType } from "../../../../types/post";
+import { useAppDispatch, useAppSelector } from "../../redux/hook";
+import { getPosts } from "../../redux/slices/user/postSlice";
+import { getCourtsByIds } from "../../redux/slices/user/courtSlice";
+import type { PostType } from "../../types/post";
 import {
   POST_TYPE_LABEL,
   POST_TYPES,
-} from "../../../../constants/postConstant";
+} from "../../constants/postConstant";
 import { Search } from "lucide-react";
-import PostCard from "./PostCard";
-import CreatePostBar from "./CreatePostBar";
-import FilterSidebar from "./FilterSidebar";
-import { getAllBranches } from "../../../../redux/slices/user/branchSlice";
+import PostCard from "../../components/ui/user/postList/PostCard";
+import CreatePostBar from "../../components/ui/user/postList/CreatePostBar";
+import FilterSidebar from "../../components/ui/user/postList/FilterSidebar";
+import { getAllBranches } from "../../redux/slices/user/branchSlice";
 
 const PostListPage = () => {
   const dispatch = useAppDispatch();

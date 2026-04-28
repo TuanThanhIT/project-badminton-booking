@@ -24,6 +24,9 @@ import {
   Ruler,
   Palette,
   HomeIcon,
+  AlertTriangle,
+  Wallet2Icon,
+  WalletCards,
 } from "lucide-react";
 
 import AddressForm from "../../components/ui/user/address/AddressForm";
@@ -170,11 +173,8 @@ const CheckoutPage = () => {
     };
     await dispatch(addUserAddress({ data }))
       .unwrap()
-      .then((res) => {
+      .then(() => {
         toast.success("Thêm địa chỉ mới thành công");
-        const newId = res.data.id;
-        localStorage.setItem("addressSelectedId", String(newId));
-        dispatch(setSelectedAddress(res.data));
       });
   };
 
@@ -212,7 +212,7 @@ const CheckoutPage = () => {
     dispatch(deleteUserAddressLocal({ data }));
     dispatch(deleteUserAddress({ data }))
       .unwrap()
-      .then(() => toast.success("Đã xóa"));
+      .then(() => toast.success("Xóa địa chỉ thành công"));
   };
 
   const handleApplyDiscount = (dt: FormDiscount) => {
@@ -234,7 +234,7 @@ const CheckoutPage = () => {
         {/* LEFT */}
         <div className="lg:col-span-2 space-y-5">
           {/* HEADER */}
-          <div className="bg-white border border-gray-300 rounded-xl p-6 shadow-sm">
+          <div className="bg-white border border-sky-700 rounded-xl p-6 shadow-sm">
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
@@ -254,8 +254,7 @@ const CheckoutPage = () => {
             </div>
           </div>
 
-          {/* ADDRESS */}
-          <div className="bg-white border border-gray-300 rounded-xl p-6 shadow-sm">
+          <div className="bg-white border border-sky-700 rounded-xl p-6 shadow-sm">
             <div className="flex justify-between items-start">
               <div>
                 <h2 className="flex items-center gap-2 text-sky-600 font-semibold text-lg">
@@ -263,7 +262,8 @@ const CheckoutPage = () => {
                   Địa chỉ nhận hàng
                 </h2>
 
-                {selectedAddress && (
+                {/* ===== CASE: CÓ ĐỊA CHỈ ===== */}
+                {selectedAddress ? (
                   <div className="mt-3 text-base space-y-1">
                     <p className="font-semibold text-gray-900">
                       {selectedAddress.fullName}
@@ -272,75 +272,92 @@ const CheckoutPage = () => {
                       {selectedAddress.phoneNumber}
                     </p>
                     <p className="text-gray-700">
-                      {selectedAddress.address}, {selectedAddress.districtName}
+                      {selectedAddress.address}, {selectedAddress.districtName},{" "}
+                      {selectedAddress.provinceName}
                     </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 bg-gradient-to-r from-red-50 to-orange-50 px-4 py-3 rounded-xl shadow-sm mt-2">
+                    <div className="bg-red-100 p-2 rounded-full">
+                      <AlertTriangle size={20} className="text-red-500" />
+                    </div>
+
+                    <div className="flex-1">
+                      <p className="text-red-600 font-semibold">
+                        Chưa có địa chỉ nhận hàng
+                      </p>
+                      <p className="text-sm text-slate-600">
+                        Thêm địa chỉ để xem phí ship và tiếp tục đặt hàng
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
 
               <button
                 onClick={() => setOpenAddress(true)}
-                className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                  selectedAddress
+                    ? "bg-sky-500 hover:bg-sky-600 text-white"
+                    : "bg-red-500 hover:bg-red-600 text-white"
+                }`}
               >
-                Thay đổi
+                {selectedAddress ? "Thay đổi" : "Thêm địa chỉ"}
               </button>
             </div>
           </div>
 
-          {/* GROUP */}
           {checkoutPreview?.groups?.map((group: any) => (
             <div
               key={group.groupId}
-              className="bg-white border border-gray-300 rounded-xl p-6 space-y-6 shadow-sm"
+              className="bg-white border border-sky-700 rounded-xl p-6 space-y-6 shadow-sm"
             >
               {/* SHOP */}
-              <div className="flex justify-between items-center pb-3 border-b border-gray-300">
-                <div className="flex items-center gap-2 text-sky-700 font-semibold text-lg">
-                  <Store size={20} />
+              <div className="flex justify-between items-center pb-3 border-b border-sky-400">
+                <div className="flex items-center gap-2 text-sky-600 font-semibold text-xl">
+                  <Store size={22} />
                   {group.branchName}
                 </div>
 
-                <span className="text-sm bg-gray-200 px-2 py-1 rounded">
+                <span className="text-sm bg-sky-50 text-sky-600 px-3 py-1 rounded-full font-medium">
                   {group.weight} kg
                 </span>
               </div>
 
               {/* ITEMS */}
-              <div className="divide-y divide-gray-300">
+              <div className="divide-y divide-gray-200">
                 {group.items.map((item: any) => (
                   <div key={item.variantId} className="flex gap-4 py-4">
                     <img
                       src={item.thumbnail}
-                      className="w-24 h-28 object-cover rounded-lg border border-gray-300"
+                      className="w-24 h-28 object-cover rounded-lg border border-gray-200"
                     />
 
                     <div className="flex-1 flex flex-col justify-between">
-                      {/* INFO */}
                       <div>
-                        <p className="text-sm font-medium text-gray-800">
+                        <p className="text-base font-semibold text-gray-800">
                           {item.productName}
                         </p>
 
-                        <div className="text-xs text-gray-600 mt-1 space-y-1">
+                        <div className="text-sm text-gray-600 mt-2 space-y-1">
                           <div className="flex items-center gap-1.5">
-                            <Palette size={13} />
+                            <Palette size={14} />
                             Màu: {item.color}
                           </div>
 
                           <div className="flex items-center gap-1.5">
-                            <Ruler size={13} />
+                            <Ruler size={14} />
                             Size: {item.size}
                           </div>
                         </div>
                       </div>
 
-                      {/* PRICE */}
-                      <div className="flex justify-between items-center mt-3">
-                        <p className="text-xs text-gray-600">
+                      <div className="flex justify-between items-center mt-4">
+                        <p className="text-sm text-gray-600">
                           SL: {item.quantity} × {formatPrice(item.price)}
                         </p>
 
-                        <p className="text-lg font-bold text-sky-600">
+                        <p className="text-xl font-bold text-sky-600">
                           {formatPrice(item.lineTotal)}
                         </p>
                       </div>
@@ -350,17 +367,17 @@ const CheckoutPage = () => {
               </div>
 
               {/* DIVIDER */}
-              <div className="h-[2px] bg-gray-300 rounded-full" />
+              <div className="border-t border-sky-400" />
 
               {/* SHIPPING */}
               <div className="flex justify-between items-start">
                 <div>
-                  <div className="flex items-center gap-2 text-base font-semibold text-gray-800">
-                    <Truck size={18} />
+                  <div className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+                    <Truck size={20} />
                     Giao hàng tiêu chuẩn
                   </div>
 
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 mt-1">
                     Giao nhanh & tiết kiệm
                   </p>
 
@@ -371,42 +388,41 @@ const CheckoutPage = () => {
 
                 <div className="text-right">
                   <p className="text-sm text-gray-500">Phí ship</p>
-                  <p className="text-orange-600 font-bold text-base">
+                  <p className="text-lg font-bold text-red-500">
                     {formatPrice(group.shippingFee)}
                   </p>
                 </div>
               </div>
 
               {/* DIVIDER */}
-              <div className="h-[2px] bg-gray-300 rounded-full" />
+              <div className="border-t border-sky-400" />
 
               {/* VOUCHER */}
-              <div className="space-y-2">
-                {/* HEADER */}
+              <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2 text-base font-semibold">
-                    <Ticket size={18} />
+                  <div className="flex items-center gap-2 text-lg font-semibold">
+                    <Ticket size={20} />
                     Mã giảm giá
                   </div>
 
                   <button
                     onClick={() => setOpenDiscount(true)}
-                    className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded text-sm font-medium"
+                    className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-lg text-sm font-medium"
                   >
                     {checkoutPreview?.discount?.code ? "Đổi mã" : "Chọn mã"}
                   </button>
                 </div>
 
                 {(checkoutPreview?.discount?.amount ?? 0) > 0 && (
-                  <div className="flex justify-between items-center text-sm py-2">
-                    <span className="text-gray-600">
+                  <div className="flex justify-between items-center text-base py-2">
+                    <span className="text-gray-700">
                       Giảm giá
-                      <span className="ml-2 px-2 py-0.5 bg-sky-100 text-sky-700 text-xs font-semibold rounded">
+                      <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-600 text-xs font-semibold rounded">
                         {checkoutPreview?.discount?.code}
                       </span>
                     </span>
 
-                    <span className="text-red-500 font-semibold">
+                    <span className="text-green-600 font-semibold">
                       -{formatPrice(checkoutPreview?.discount?.amount ?? 0)}
                     </span>
                   </div>
@@ -414,55 +430,54 @@ const CheckoutPage = () => {
               </div>
 
               {/* DIVIDER */}
-              <div className="h-[2px] bg-gray-300 rounded-full" />
+              <div className="border-t border-sky-400" />
 
               {/* NOTE */}
               <div>
-                <div className="flex items-center gap-2 text-base font-semibold mb-2">
-                  <FileText size={18} />
+                <div className="flex items-center gap-2 text-lg font-semibold mb-2">
+                  <FileText size={20} />
                   Ghi chú
                 </div>
 
-                <textarea className="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-sky-200 outline-none" />
+                <textarea className="w-full border border-gray-400 rounded-lg p-3 text-sm focus:ring-2 focus:ring-sky-200 outline-none" />
               </div>
             </div>
           ))}
 
           {/* PAYMENT */}
-          <div className="bg-white border border-gray-300 rounded-xl p-6 shadow-sm">
+          <div className="bg-white border border-sky-700 rounded-xl p-6 shadow-sm">
             <h2 className="font-semibold text-sky-700 mb-4 text-lg flex items-center gap-2">
               <CreditCard size={20} />
               Thanh toán
             </h2>
 
-            <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-4">
               {paymentMethods.map((m) => (
                 <div
                   key={m}
                   onClick={() => setPaymentMethod(m)}
-                  className={`p-4 border rounded-xl flex justify-between items-center cursor-pointer
-    ${
-      paymentMethod === m
-        ? "border-sky-500 bg-sky-50"
-        : "border-gray-300 hover:border-sky-400"
-    }`}
+                  className={`p-4 border rounded-xl flex items-center justify-between cursor-pointer transition
+        ${
+          paymentMethod === m
+            ? "border-sky-500 bg-sky-50"
+            : "border-gray-300 hover:border-sky-400"
+        }`}
                 >
                   <div className="flex items-center gap-3">
                     <div className="bg-sky-100 p-2 rounded">
                       {m === "COD" && <HomeIcon size={18} />}
                       {m === "VNPAY" && <CreditCard size={18} />}
-                      {m === "WALLET" && <Wallet size={18} />}
-                      {/* sau này đổi icon ví riêng cũng được */}
+                      {m === "WALLET" && <WalletCards size={18} />}
                     </div>
 
                     <div>
-                      <p className="text-base font-medium text-gray-800">
+                      <p className="text-sm font-medium text-gray-800">
                         {m === "COD" && "Thanh toán khi nhận hàng"}
                         {m === "VNPAY" && "Thanh toán VNPay"}
                         {m === "WALLET" && "Ví thanh toán BHub"}
                       </p>
 
-                      <p className="text-sm text-gray-600">
+                      <p className="text-xs text-gray-600">
                         {m === "COD" && "COD"}
                         {m === "VNPAY" && "ATM / QR / Visa"}
                         {m === "WALLET" && "Số dư trong ví"}
@@ -471,7 +486,7 @@ const CheckoutPage = () => {
                   </div>
 
                   {paymentMethod === m && (
-                    <CheckCircle className="text-sky-500" size={20} />
+                    <CheckCircle className="text-sky-500" size={18} />
                   )}
                 </div>
               ))}
@@ -481,7 +496,7 @@ const CheckoutPage = () => {
 
         {/* RIGHT */}
         <div>
-          <div className="bg-white border border-gray-300 rounded-xl p-6 sticky top-20 shadow-sm">
+          <div className="bg-white border border-sky-700 rounded-xl p-6 sticky top-20 shadow-sm">
             <h2 className="font-semibold text-sky-700 mb-4 text-lg">
               Tóm tắt đơn hàng
             </h2>
@@ -520,8 +535,15 @@ const CheckoutPage = () => {
               </span>
             </div>
 
-            <button className="w-full mt-5 bg-sky-500 hover:bg-sky-600 text-white py-3 rounded-xl font-medium text-base">
-              Đặt hàng
+            <button
+              disabled={!selectedAddress}
+              className={`w-full mt-5 py-3 rounded-xl font-medium text-base ${
+                selectedAddress
+                  ? "bg-sky-500 hover:bg-sky-600 text-white"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
+            >
+              {selectedAddress ? "Đặt hàng" : "Vui lòng thêm địa chỉ"}
             </button>
           </div>
         </div>
@@ -533,7 +555,10 @@ const CheckoutPage = () => {
           setOpenAdd={setOpenAddAddress}
           onSelect={(id) => {
             const addr = addresses.find((a) => a.id === id);
-            if (addr) dispatch(setSelectedAddress(addr));
+            if (addr) {
+              dispatch(setSelectedAddress(addr));
+              localStorage.setItem("addressSelectedId", String(id));
+            }
           }}
           onDelete={handleDeleteAddress}
           onEdit={(addr) => {

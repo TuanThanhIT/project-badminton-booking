@@ -1,9 +1,11 @@
 export const ORDER_STATUS = Object.freeze({
-  PENDING: "PENDING",
-  CONFIRMED: "CONFIRMED",
-  PREPARING: "PREPARING",
-  SHIPPING: "SHIPPING",
-  DELIVERED: "DELIVERED",
+  PENDING: "PENDING", // vừa tạo
+  CONFIRMED: "CONFIRMED", // shop xác nhận
+  PREPARING: "PREPARING", // đang chuẩn bị hàng
+  READY_TO_SHIP: "READY_TO_SHIP", // sẵn sàng giao
+  SHIPPING: "SHIPPING", // đã giao GHN
+  DELIVERED: "DELIVERED", // giao thành công
+  FAILED: "FAILED", // giao thất bại
   CANCELLED: "CANCELLED",
 });
 
@@ -15,9 +17,10 @@ export const ORDER_GROUP_STATUS = Object.freeze({
 });
 
 export const SHIPPING_STATUS = Object.freeze({
-  PENDING: "PENDING",
-  ASSIGNED: "ASSIGNED",
-  IN_TRANSIT: "IN_TRANSIT",
-  DELIVERED: "DELIVERED",
-  FAILED: "FAILED",
+  PENDING: "PENDING", // chưa tạo GHN
+  CREATED: "CREATED", // đã tạo đơn GHN
+  PICKING: "PICKING", // GHN đang lấy hàng
+  IN_TRANSIT: "IN_TRANSIT", // đang vận chuyển
+  DELIVERED: "DELIVERED", // giao thành công
+  FAILED: "FAILED", // giao thất bại / hoàn
 });

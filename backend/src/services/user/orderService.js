@@ -20,13 +20,17 @@ import { pickDefaultService } from "../../utils/ghnService.js";
 
 dotenv.config();
 
-const getAvailableServices = async (fromDistrictId, toDistrictId) => {
+const getAvailableServices = async ({
+  fromDistrictId,
+  toDistrictId,
+  ghnShopId,
+}) => {
   const res = await axios.post(
     "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/available-services",
     {
       from_district: fromDistrictId,
       to_district: toDistrictId,
-      shop_id: Number(process.env.GHN_SHOP_ID_DEV),
+      shop_id: ghnShopId,
     },
     {
       headers: {
@@ -44,6 +48,7 @@ const getLeadtimeService = async ({
   toDistrictId,
   toWardCode,
   serviceId,
+  ghnShopId,
 }) => {
   const res = await axios.post(
     "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/leadtime",
@@ -57,7 +62,7 @@ const getLeadtimeService = async ({
     {
       headers: {
         Token: process.env.GHN_TOKEN_DEV,
-        ShopId: Number(process.env.GHN_SHOP_ID_DEV),
+        ShopId: ghnShopId,
       },
     },
   );
@@ -69,6 +74,83 @@ const getLeadtimeService = async ({
     fromDate: data?.leadtime_order?.from_estimate_date,
     toDate: data?.leadtime_order?.to_estimate_date,
   };
+};
+
+const createGHNOrderService = async (order, preview) => {
+  // ===== lấy branch =====
+  const branch = await Branch.findByPk(order.branchId);
+  if (!branch) throw new BadRequestError("Branch not found");
+
+  // ===== lấy address từ session =====
+  const address = await UserAddress.findByPk(preview.address.addressId);
+  if (!address) throw new BadRequestError("Address not found");
+
+  // ===== lấy group tương ứng =====
+  const group = preview.groups.find((g) => g.branchId === order.branchId);
+
+  if (!group) throw new BadRequestError("Group not found");
+
+  // ===== convert weight kg -> gram =====
+  const weight = Math.max(100, Math.ceil(group.weight * 1000));
+
+  // ===== items =====
+  const items = group.items.map((i) => ({
+    name: i.productName,
+    code: String(i.variantId),
+    quantity: i.quantity,
+    price: i.price,
+    length: 20,
+    width: 20,
+    height: 10,
+    weight: 200,
+    category: { level1: "Thời trang" },
+  }));
+
+  const body = {
+    payment_type_id: 2,
+    required_note: "KHONGCHOXEMHANG",
+
+    // ===== FROM =====
+    from_name: branch.branchName,
+    from_phone: branch.phoneNumber,
+    from_address: branch.address,
+    from_ward_name: branch.wardName,
+    from_district_name: branch.districtName,
+    from_province_name: branch.provinceName,
+
+    // ===== TO =====
+    to_name: address.fullName,
+    to_phone: address.phoneNumber,
+    to_address: address.address,
+    to_ward_code: address.wardCode,
+    to_district_id: address.districtId,
+
+    cod_amount: order.totalAmount,
+    content: "Đơn hàng ecommerce",
+
+    weight,
+    length: 20,
+    width: 20,
+    height: 10,
+
+    service_id: preview.serviceId, // 👈 dùng chung
+    service_type_id: 2,
+
+    items,
+  };
+
+  const res = await axios.post(
+    "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/create",
+    body,
+    {
+      headers: {
+        Token: process.env.GHN_TOKEN_DEV,
+        ShopId: Number(process.env.GHN_SHOP_ID_DEV),
+      },
+    },
+  );
+
+  return res.data.data;
 };
 
 const checkoutPreviewService = async (data) => {
@@ -307,6 +389,7 @@ const checkoutPreviewService = async (data) => {
     const session = {
       cartId,
       address: {
+        addressId: address.id,
         districtId: address.districtId,
         wardCode: address.wardCode,
       },
@@ -372,10 +455,11 @@ const calculateShippingService = async (data) => {
 
     try {
       // ===== SERVICE =====
-      const services = await getAvailableServices(
-        branch.districtId,
-        session.address.districtId,
-      );
+      const services = await getAvailableServices({
+        fromDistrictId: branch.districtId,
+        toDistrictId: session.address.districtId,
+        ghnShopId: branch.ghnShopId,
+      });
 
       const selectedService = pickDefaultService(services);
 
@@ -392,6 +476,7 @@ const calculateShippingService = async (data) => {
         toDistrictId: session.address.districtId,
         toWardCode: session.address.wardCode,
         serviceId: selectedService.service_id,
+        ghnShopId: branch.ghnShopId,
       });
 
       if (leadtimeData?.leadtime) {
@@ -419,7 +504,7 @@ const calculateShippingService = async (data) => {
         {
           headers: {
             Token: process.env.GHN_TOKEN_DEV,
-            ShopId: Number(process.env.GHN_SHOP_ID_DEV),
+            ShopId: branch.ghnShopId,
           },
         },
       );

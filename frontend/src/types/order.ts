@@ -1,6 +1,7 @@
 import type { ApiResponse } from "./api";
 
 export type CheckoutPreviewAddress = {
+  addressId: number;
   districtId: number;
   wardCode: string;
 };

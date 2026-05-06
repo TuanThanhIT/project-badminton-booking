@@ -3,7 +3,7 @@
  * Mỗi loại bài có formData khác nhau, dùng cho filter và hiển thị
  */
 
-import type { PostType } from "../types/post";
+import type { PostType } from "../../types/post";
 
 /** Nhãn hiển thị cho từng loại bài đăng */
 export const POST_TYPE_LABEL: Record<PostType, string> = {
@@ -82,10 +82,17 @@ export const FIND_PLAYER_FILTERS: FilterField[] = [
 ];
 
 /** Giá trị lưu trong formData.inputLevel — trùng với filter feed */
-export const CLASS_INPUT_LEVEL_VALUES = ["Mới chơi", "Trung bình", "Nâng cao"] as const;
+export const CLASS_INPUT_LEVEL_VALUES = [
+  "Mới chơi",
+  "Trung bình",
+  "Nâng cao",
+] as const;
 export type ClassInputLevelValue = (typeof CLASS_INPUT_LEVEL_VALUES)[number];
 
-export const CLASS_INPUT_LEVEL_OPTIONS: { value: ClassInputLevelValue; label: string }[] = [
+export const CLASS_INPUT_LEVEL_OPTIONS: {
+  value: ClassInputLevelValue;
+  label: string;
+}[] = [
   { value: "Mới chơi", label: "Mới chơi" },
   { value: "Trung bình", label: "Trung bình" },
   { value: "Nâng cao", label: "Nâng cao" },
@@ -97,7 +104,10 @@ export const CLASS_FILTERS: FilterField[] = [
     key: "inputLevel",
     label: "Trình độ đầu vào",
     type: "select",
-    options: CLASS_INPUT_LEVEL_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+    options: CLASS_INPUT_LEVEL_OPTIONS.map((o) => ({
+      value: o.value,
+      label: o.label,
+    })),
   },
   {
     key: "ageRange",
@@ -144,11 +154,12 @@ export const TOURNAMENT_FILTERS: FilterField[] = [
 export const GROUP_LEVEL_VALUES = ["Mới chơi", "Trung bình", "Cao"] as const;
 export type GroupLevelValue = (typeof GROUP_LEVEL_VALUES)[number];
 
-export const GROUP_LEVEL_OPTIONS: { value: GroupLevelValue; label: string }[] = [
-  { value: "Mới chơi", label: "Mới chơi" },
-  { value: "Trung bình", label: "Trung bình" },
-  { value: "Cao", label: "Cao" },
-];
+export const GROUP_LEVEL_OPTIONS: { value: GroupLevelValue; label: string }[] =
+  [
+    { value: "Mới chơi", label: "Mới chơi" },
+    { value: "Trung bình", label: "Trung bình" },
+    { value: "Cao", label: "Cao" },
+  ];
 
 /** Filter cho Group: trình độ (khớp chính xác), khu vực (tìm gần đúng — backend LIKE) */
 export const GROUP_FILTERS: FilterField[] = [
@@ -156,7 +167,10 @@ export const GROUP_FILTERS: FilterField[] = [
     key: "levelWanted",
     label: "Trình độ",
     type: "select",
-    options: GROUP_LEVEL_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+    options: GROUP_LEVEL_OPTIONS.map((o) => ({
+      value: o.value,
+      label: o.label,
+    })),
   },
   {
     key: "area.city",

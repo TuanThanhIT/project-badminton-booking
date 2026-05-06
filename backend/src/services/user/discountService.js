@@ -1,4 +1,4 @@
-import { Discount, DiscountUsage } from "../../models/index.js";
+import { Discount } from "../../models/index.js";
 import { Op } from "sequelize";
 import NotFoundError from "../../errors/NotFoundError.js";
 import BadRequestError from "../../errors/BadRequestError.js"; // Giả định bạn có class này
@@ -92,23 +92,6 @@ const applyDiscountService = async ({ code, userId, cartId }) => {
       throw new BadRequestError("Mã giảm giá đã hết lượt sử dụng");
     }
 
-    if (discount.usagePerUser) {
-      const usedCount = await DiscountUsage.count({
-        where: {
-          discountId: discount.id,
-          userId,
-          targetType: DISCOUNT_TARGET_TYPE.ORDER,
-        },
-        transaction: t,
-      });
-
-      if (usedCount >= discount.usagePerUser) {
-        throw new BadRequestError(
-          "Đã vượt quá số lần sử dụng mã cho mỗi người",
-        );
-      }
-    }
-
     if (
       discount.applyType !== DISCOUNT_APPLY_TYPE.ALL &&
       discount.applyType !== DISCOUNT_APPLY_TYPE.ORDER
@@ -119,7 +102,7 @@ const applyDiscountService = async ({ code, userId, cartId }) => {
     let amount = 0;
 
     if (discount.type === DISCOUNT_TYPE.PERCENT) {
-      amount = (session.subTotal * discount.value) / 100;
+      amount = (session.group.subTotal * discount.value) / 100;
 
       if (discount.maxDiscount) {
         amount = Math.min(amount, discount.maxDiscount);
@@ -128,18 +111,18 @@ const applyDiscountService = async ({ code, userId, cartId }) => {
       amount = discount.value;
     }
 
-    amount = Math.min(amount, session.subTotal);
+    amount = Math.min(amount, session.group.subTotal);
 
-    session.discount = {
+    session.group.discount = {
+      id: discount.id,
       code: normalizedCode,
       amount,
     };
 
-    session.total = session.subTotal + session.shippingFeeTotal - amount;
+    session.group.total =
+      session.group.subTotal + session.group.shippingFeeTotal - amount;
 
-    await redisClient.set(redisKey, JSON.stringify(session), {
-      EX: 1800,
-    });
+    await redisClient.set(redisKey, JSON.stringify(session), "EX", 1800);
 
     return session;
   });

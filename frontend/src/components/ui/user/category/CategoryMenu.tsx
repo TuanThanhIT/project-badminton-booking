@@ -112,7 +112,7 @@ const CategoryMenu = () => {
                         to={`/products?cateId=${item.id}&cateName=${encodeURIComponent(
                           item.cateName,
                         )}`}
-                        className="text-sm text-gray-700 hover:text-sky-600"
+                        className="text-gray-700 hover:text-sky-600"
                         onClick={() => setIsOpen(false)}
                       >
                         {item.cateName}

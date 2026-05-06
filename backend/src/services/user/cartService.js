@@ -66,6 +66,7 @@ const addItemToCartService = async (data) => {
       await cartItem.save({ transaction: t });
     }
     await recalcCartTotal(cart.id, t);
+
     return {
       id: cartItem.id,
       quantity: cartItem.quantity,

@@ -34,10 +34,15 @@ export const codeField = Joi.string().trim().optional().messages({
   "string.base": "Discount code must be a string",
 });
 
-export const noteField = Joi.string().trim().max(500).optional().messages({
-  "string.base": "Note must be a string",
-  "string.max": "Note must be at most 500 characters",
-});
+export const noteField = Joi.string()
+  .trim()
+  .max(500)
+  .allow("")
+  .optional()
+  .messages({
+    "string.base": "Note must be a string",
+    "string.max": "Note must be at most 500 characters",
+  });
 
 export const totalAmountField = Joi.number().positive().required().messages({
   "number.base": "Total amount must be a number",

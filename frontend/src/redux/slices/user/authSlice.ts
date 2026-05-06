@@ -24,7 +24,6 @@ import type {
 } from "../../../types/auth";
 import type { ApiErrorType } from "../../../types/error";
 import authService from "../../../services/user/authService";
-import type { UserProfileData } from "../../../types/profile";
 
 const accessToken = localStorage.getItem("accessToken");
 interface AuthState {
@@ -187,12 +186,17 @@ const authSlice = createSlice({
       };
       sessionStorage.removeItem("otpFlow");
     },
-    syncAuthUserProfile: (state, action: PayloadAction<{ data?: any } | any>) => {
+    syncAuthUserProfile: (
+      state,
+      action: PayloadAction<{ data?: any } | any>,
+    ) => {
       // nếu payload là ApiResponse (has .data) lấy .data, còn không lấy payload trực tiếp
-      const payload = (action.payload && action.payload.data) ? action.payload.data : action.payload;
+      const payload =
+        action.payload && action.payload.data
+          ? action.payload.data
+          : action.payload;
       state.user = payload;
     },
-
   },
   extraReducers: (builder) => {
     builder
@@ -221,5 +225,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { logoutLocal, setOtpFlow, clearOtpFlow, syncAuthUserProfile } = authSlice.actions;
+export const { logoutLocal, setOtpFlow, clearOtpFlow, syncAuthUserProfile } =
+  authSlice.actions;
 export default authSlice.reducer;

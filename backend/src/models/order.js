@@ -3,7 +3,6 @@ import sequelize from "../config/db.js";
 import { ORDER_STATUS, SHIPPING_STATUS } from "../constants/orderConstant.js";
 import { CANCELLED_BY } from "../constants/bookingConstant.js";
 import Branch from "./branch.js";
-import ShippingPartner from "./shippingPartner.js";
 
 const Order = sequelize.define(
   "Order",
@@ -94,15 +93,66 @@ const Order = sequelize.define(
         },
       },
     },
-    shippingPartnerId: {
+    shippingDistrictId: {
       type: DataTypes.INTEGER,
-      allowNull: true,
-      references: { model: ShippingPartner, key: "id" },
+      allowNull: false,
       validate: {
-        isInt: { msg: "Shipping partner ID must be an integer" },
+        notNull: { msg: "Shipping districtId is required" },
+        isInt: { msg: "DistrictId must be an integer" },
         min: {
           args: [1],
-          msg: "Shipping partner ID must be positive",
+          msg: "Shipping districtId must be greater than 0",
+        },
+      },
+    },
+    shippingWardCode: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      validate: {
+        notNull: { msg: "WardCode is required" },
+        notEmpty: { msg: "WardCode cannot be empty" },
+        len: {
+          args: [1, 20],
+          msg: "WardCode must be <= 20 characters",
+        },
+        is: {
+          args: /^[0-9A-Za-z]+$/,
+          msg: "WardCode invalid format",
+        },
+      },
+    },
+    shippingWeight: {
+      type: DataTypes.DOUBLE,
+      allowNull: false,
+      validate: {
+        notNull: { msg: "Shipping weight is required" },
+        isFloat: { msg: "Shipping weight must be a number" },
+        min: {
+          args: [0.01],
+          msg: "Shipping weight must be greater than 0",
+        },
+      },
+    },
+    shippingServiceId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: {
+        notNull: { msg: "Shipping service ID is required" },
+        isInt: { msg: "Shipping service ID must be an integer" },
+        min: {
+          args: [1],
+          msg: "Shipping service ID must be positive",
+        },
+      },
+    },
+    shippingFeeReal: {
+      type: DataTypes.DECIMAL(12, 2),
+      allowNull: true,
+      validate: {
+        isDecimal: { msg: "Shipping fee real must be a number" },
+        min: {
+          args: [0],
+          msg: "Shipping fee real must be >= 0",
         },
       },
     },
@@ -115,15 +165,6 @@ const Order = sequelize.define(
         isIn: {
           args: [Object.values(SHIPPING_STATUS)],
           msg: "Invalid shipping status",
-        },
-      },
-    },
-    assignedAt: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      validate: {
-        isDate: {
-          msg: "assignedAt must be a valid date",
         },
       },
     },
@@ -162,19 +203,6 @@ const Order = sequelize.define(
       validate: {
         isDate: {
           msg: "Estimated delivery must be a valid date",
-        },
-      },
-    },
-    shippingFeeReal: {
-      type: DataTypes.DECIMAL(12, 2),
-      allowNull: true,
-      validate: {
-        isDecimal: {
-          msg: "Shipping fee must be a number",
-        },
-        min: {
-          args: [0],
-          msg: "Shipping fee must be >= 0",
         },
       },
     },
@@ -233,8 +261,6 @@ const Order = sequelize.define(
     indexes: [
       { fields: ["orderGroupId"] },
       { fields: ["branchId"] },
-      { fields: ["shippingStatus"] },
-      { fields: ["shippingPartnerId"] },
       { fields: ["trackingCode"] },
     ],
   },

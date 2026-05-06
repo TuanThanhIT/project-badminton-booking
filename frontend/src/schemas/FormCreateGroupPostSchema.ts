@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { GROUP_LEVEL_VALUES } from "../constants/postConstant";
+import { GROUP_LEVEL_VALUES } from "../utils/constants/postConstant";
 
 const timeToMinutes = (t: string) => {
   const [h, m] = t.split(":").map(Number);

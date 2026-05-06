@@ -18,7 +18,6 @@ import UserPublicLayout from "../components/layouts/UserPublicLayout";
 import UserPrivateLayout from "../components/layouts/UserPrivateLayout";
 import BookingCourtPage from "../pages/user/BookingCourtPage";
 import BookingPage from "../pages/user/BookingPage";
-import WalletDepositSuccess from "../pages/user/WalletDepositSuccess";
 import WalletPage from "../pages/user/WalletPage";
 import ResetPasswordPage from "../pages/user/ResetPasswordPage";
 import CreatePostPage from "../pages/user/CreatePostPage";
@@ -29,6 +28,8 @@ import BranchDetailPage from "../pages/user/BranchDetailPage";
 import BranchPage from "../pages/user/BranchesPage";
 import CourtPage from "../pages/user/CourtPage";
 import NotFoundPage from "../pages/NotFoundPage";
+import OrderResultPage from "../pages/user/OrderResultPage";
+import VNPayResultPage from "../pages/user/VNPayResultPage";
 
 const UserRoute = () => {
   return (
@@ -59,10 +60,7 @@ const UserRoute = () => {
         <Route path="orders" element={<OrderPage />} />
         <Route path="bookings" element={<BookingPage />} />
         <Route path="wallet" element={<WalletPage />}></Route>
-        <Route
-          path="wallet/deposit/success"
-          element={<WalletDepositSuccess />}
-        ></Route>
+        <Route path="vnpay/result" element={<VNPayResultPage />}></Route>
         <Route path="create-post" element={<CreatePostPage />} />
         <Route path="posts" element={<PostListPage />} />
         <Route path="messages" element={<MessagesPage />} />
@@ -70,6 +68,7 @@ const UserRoute = () => {
         <Route path="branches" element={<BranchPage />} />
         <Route path="branches/:branchId" element={<BranchDetailPage />} />
         <Route path="courts" element={<CourtPage />} />
+        <Route path="order-result" element={<OrderResultPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />}></Route>
     </Routes>

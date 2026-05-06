@@ -37,6 +37,11 @@ const DiscountsForm = ({
 
   const code = watch("code");
 
+  const isSameAsSaved = code === codeSaved;
+  const isEmpty = !code?.trim();
+
+  const isDisableApply = isSameAsSaved || isEmpty;
+
   const handleSelectDiscount = (value: string) => {
     setValue("code", value, { shouldValidate: true });
   };
@@ -174,12 +179,22 @@ const DiscountsForm = ({
 
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl bg-sky-500 hover:bg-sky-600  text-white font-semibold "
+              disabled={isDisableApply}
+              className={`px-5 py-2 rounded-xl font-semibold transition
+    ${
+      isDisableApply
+        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+        : "bg-sky-500 hover:bg-sky-600 text-white"
+    }`}
             >
               Áp dụng
             </button>
           </div>
         </form>
+
+        {isSameAsSaved && !isEmpty && (
+          <p className="text-xs text-gray-400 mt-1">Mã này đã được áp dụng</p>
+        )}
       </div>
     </div>
   );

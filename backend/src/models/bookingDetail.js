@@ -8,19 +8,18 @@ const BookingDetail = sequelize.define(
   {
     bookingId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true, // ĐỔI THÀNH TRUE: Vì nếu là đặt tháng, buổi tập này sẽ link tới monthlyBookingId thay vì bookingId
       references: { model: Booking, key: "id" },
       validate: {
-        notNull: {
-          msg: "Booking ID is required",
-        },
-        isInt: {
-          msg: "Booking ID must be an integer",
-        },
-        min: {
-          args: [1],
-          msg: "Booking ID must be a positive number",
-        },
+        isInt: { msg: "Booking ID must be an integer" },
+      },
+    },
+    monthlyBookingId: {
+      type: DataTypes.INTEGER,
+      allowNull: true, // Để null nếu là đặt lẻ, có giá trị nếu là đặt theo tháng
+      references: { model: "MonthlyBookings", key: "id" },
+      validate: {
+        isInt: { msg: "Monthly Booking ID must be an integer" },
       },
     },
     courtId: {
@@ -28,37 +27,23 @@ const BookingDetail = sequelize.define(
       allowNull: false,
       references: { model: Court, key: "id" },
       validate: {
-        notNull: {
-          msg: "Court ID is required",
-        },
-        isInt: {
-          msg: "Court ID must be an integer",
-        },
-        min: {
-          args: [1],
-          msg: "Court ID must be a positive number",
-        },
+        notNull: { msg: "Court ID is required" },
+        isInt: { msg: "Court ID must be an integer" },
       },
     },
     playDate: {
       type: DataTypes.DATEONLY,
       allowNull: false,
       validate: {
-        notNull: {
-          msg: "Play date is required",
-        },
-        isDate: {
-          msg: "Play date must be a valid date",
-        },
+        notNull: { msg: "Play date is required" },
+        isDate: { msg: "Play date must be a valid date" },
       },
     },
     startTime: {
       type: DataTypes.TIME,
       allowNull: false,
       validate: {
-        notNull: {
-          msg: "Start time is required",
-        },
+        notNull: { msg: "Start time is required" },
         is: {
           args: /^([01]\d|2[0-3]):([0-5]\d)$/,
           msg: "Start time must be in HH:mm format",
@@ -69,9 +54,7 @@ const BookingDetail = sequelize.define(
       type: DataTypes.TIME,
       allowNull: false,
       validate: {
-        notNull: {
-          msg: "End time is required",
-        },
+        notNull: { msg: "End time is required" },
         is: {
           args: /^([01]\d|2[0-3]):([0-5]\d)$/,
           msg: "End time must be in HH:mm format",
@@ -82,16 +65,9 @@ const BookingDetail = sequelize.define(
       type: DataTypes.DOUBLE,
       allowNull: false,
       validate: {
-        notNull: {
-          msg: "Price is required",
-        },
-        isFloat: {
-          msg: "Price must be a number",
-        },
-        min: {
-          args: [0],
-          msg: "Price must be greater than or equal to 0",
-        },
+        notNull: { msg: "Price is required" },
+        isFloat: { msg: "Price must be a number" },
+        min: { args: [0], msg: "Price cannot be negative" },
       },
     },
   },

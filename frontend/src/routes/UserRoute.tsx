@@ -29,6 +29,7 @@ import BranchDetailPage from "../pages/user/BranchDetailPage";
 import BranchPage from "../pages/user/BranchesPage";
 import CourtPage from "../pages/user/CourtPage";
 import NotFoundPage from "../pages/NotFoundPage";
+import PaymentPage from "../pages/user/PaymentPage";
 
 const UserRoute = () => {
   return (
@@ -70,6 +71,7 @@ const UserRoute = () => {
         <Route path="branches" element={<BranchPage />} />
         <Route path="branches/:branchId" element={<BranchDetailPage />} />
         <Route path="courts" element={<CourtPage />} />
+        <Route path="/payment" element={<PaymentPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />}></Route>
     </Routes>

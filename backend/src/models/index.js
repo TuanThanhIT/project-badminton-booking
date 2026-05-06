@@ -13,6 +13,7 @@ import CourtPrice from "./courtPrice.js";
 
 import Booking from "./booking.js";
 import BookingDetail from "./bookingDetail.js";
+import MonthlyBooking from "./monthlyBooking.js";
 
 import Cart from "./cart.js";
 import CartItem from "./cartItem.js";
@@ -489,6 +490,32 @@ OfflineBooking.belongsTo(DraftBooking, {
 });
 
 //////////////////////////////////////////////////////
+//////////////// MONTHLY BOOKING /////////////////////
+//////////////////////////////////////////////////////
+// Quan hệ cho Đặt sân tháng
+User.hasMany(MonthlyBooking, { foreignKey: "userId", as: "monthlyBookings" });
+MonthlyBooking.belongsTo(User, { foreignKey: "userId", as: "user" });
+
+Branch.hasMany(MonthlyBooking, {
+  foreignKey: "branchId",
+  as: "monthlyBookings",
+});
+MonthlyBooking.belongsTo(Branch, { foreignKey: "branchId", as: "branch" });
+
+Court.hasMany(MonthlyBooking, { foreignKey: "courtId", as: "monthlyBookings" });
+MonthlyBooking.belongsTo(Court, { foreignKey: "courtId", as: "court" });
+
+// Quan hệ kết nối Gói tháng với các Buổi tập chi tiết
+MonthlyBooking.hasMany(BookingDetail, {
+  foreignKey: "monthlyBookingId",
+  as: "details",
+});
+BookingDetail.belongsTo(MonthlyBooking, {
+  foreignKey: "monthlyBookingId",
+  as: "monthlyBooking",
+});
+
+//////////////////////////////////////////////////////
 //////////////// SOCIAL //////////////////////////////
 //////////////////////////////////////////////////////
 
@@ -739,4 +766,5 @@ export {
   ShippingPartner,
   ShippingPartnerShop,
   VariantStock,
+  MonthlyBooking,
 };

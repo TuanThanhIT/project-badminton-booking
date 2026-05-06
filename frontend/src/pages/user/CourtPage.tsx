@@ -1,395 +1,713 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Calendar,
+  CheckCircle2,
   Clock,
   MapPin,
-  ChevronRight,
-  Star,
-  AlertCircle,
-  Search,
-  ChevronDown,
-  CheckCircle2,
-  Ticket,
-  Zap,
-  Info,
+  Navigation,
 } from "lucide-react";
 
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
-import { getAllBranches } from "../../redux/slices/user/branchSlice";
+
+import { getBranchOptions } from "../../redux/slices/user/branchSlice";
+
 import { getAvailableCourts } from "../../redux/slices/user/courtSlice";
-import {
-  checkBookingDiscount,
-  clearDiscount,
-} from "../../redux/slices/user/discountSlice";
 
-interface Court {
-  id: number;
-  name: string;
-  type: string;
-  price: number;
-  rating: number;
-  image: string;
-  status: "available" | "booked" | "maintenance";
-}
+import type { BranchOptions } from "../../types/branch";
+import type { CourtAvailable } from "../../types/court";
+import { createMonthlyBooking } from "../../redux/slices/user/monthlyBookingSlice";
+import { calculateMonthlyBooking } from "../../redux/slices/user/monthlyBookingSlice";
+import { useNavigate } from "react-router-dom";
 
-interface Branch {
-  id: number;
-  name: string;
-  location: string;
-  city: string;
-}
+// ======================================================
+// HELPERS
+// ======================================================
+
+const generateTimeOptions = () => {
+  const options = [];
+
+  for (let hour = 5; hour <= 23; hour++) {
+    const h = hour.toString().padStart(2, "0");
+
+    options.push(`${h}:00`);
+    options.push(`${h}:30`);
+  }
+
+  return options;
+};
+
+const TIME_OPTIONS = generateTimeOptions();
+
+const WEEK_DAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
+// ======================================================
+// COMPONENT
+// ======================================================
 
 const CourtPage: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { branchSimpleList } = useAppSelector((state) => state.branch);
+  const navigate = useNavigate();
+
+  const { branchOptions } = useAppSelector((state) => state.branch);
+
   const { availableCourts } = useAppSelector((state) => state.court);
-  const { discount, loading: discountLoading } = useAppSelector(
-    (state) => state.discount,
+
+  // ======================================================
+  // MODE
+  // ======================================================
+
+  const [mode, setMode] = useState<"daily" | "monthly">("daily");
+
+  // ======================================================
+  // COMMON STATES
+  // ======================================================
+
+  const [selectedBranch, setSelectedBranch] = useState<BranchOptions | null>(
+    null,
   );
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isOpenBranch, setIsOpenBranch] = useState(false);
-  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
-  const [selectedCourt, setSelectedCourt] = useState<Court | null>(null);
+  const [selectedCourt, setSelectedCourt] = useState<CourtAvailable | null>(
+    null,
+  );
+
   const [startTime, setStartTime] = useState("08:00");
+
   const [endTime, setEndTime] = useState("10:00");
+
+  // ======================================================
+  // DAILY STATES
+  // ======================================================
+
   const [bookingDate, setBookingDate] = useState(
     new Date().toISOString().split("T")[0],
   );
-  const [voucher, setVoucher] = useState("");
-  const [isApplied, setIsApplied] = useState(false);
+
+  // ======================================================
+  // MONTHLY STATES
+  // ======================================================
+
+  const [monthlyStartDate, setMonthlyStartDate] = useState("");
+
+  const [monthlyEndDate, setMonthlyEndDate] = useState("");
+
+  const [daysOfWeek, setDaysOfWeek] = useState<string[]>([]);
+
+  const [monthlyPrice, setMonthlyPrice] = useState(0);
+
+  const [monthlySessions, setMonthlySessions] = useState(0);
+
+  // ======================================================
+  // LOAD BRANCHES
+  // ======================================================
 
   useEffect(() => {
-    dispatch(getAllBranches());
+    dispatch(getBranchOptions());
   }, [dispatch]);
 
-  useEffect(() => {
-    if (!selectedBranch) return;
-    const timeout = setTimeout(() => {
-      dispatch(
-        getAvailableCourts({
-          branchId: selectedBranch.id,
-          date: bookingDate,
-          startTime,
-          endTime,
-        }),
-      );
-    }, 300);
-    return () => clearTimeout(timeout);
-  }, [dispatch, selectedBranch, bookingDate, startTime, endTime]);
+  // ======================================================
+  // DURATION
+  // ======================================================
 
-  const branches: Branch[] = useMemo(() => {
-    return (branchSimpleList || []).map((b) => ({
-      id: b.id,
-      name: b.branchName,
-      location: "Khu vực TP. Hồ Chí Minh",
-      city: "TP. Hồ Chí Minh",
-    }));
-  }, [branchSimpleList]);
-
-  useEffect(() => {
-    if (branches.length > 0 && !selectedBranch) setSelectedBranch(branches[0]);
-  }, [branches, selectedBranch]);
-
-  useEffect(() => {
-    dispatch(clearDiscount());
-    setIsApplied(false);
-  }, [selectedCourt, startTime, endTime, dispatch]);
-
-  const courts: Court[] = useMemo(() => {
-    return (availableCourts || []).map((c) => ({
-      id: c.id,
-      name: c.courtName,
-      type: "Sân tiêu chuẩn",
-      price: c.totalPrice,
-      rating: 4.9,
-      image:
-        c.thumbnailUrl ||
-        "https://images.unsplash.com/photo-1626224580194-860047ee93b9?q=80&w=800&auto=format&fit=crop",
-      status: c.status as any,
-    }));
-  }, [availableCourts]);
-
-  const filteredBranches = branches.filter((b) =>
-    b.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
-
-  const handleApplyVoucher = () => {
-    if (!voucher || subTotal <= 0) return;
-    dispatch(checkBookingDiscount({ code: voucher, bookingAmount: subTotal }));
-    setIsApplied(true);
-  };
-
-  const duration = useMemo(() => {
+  const durationNum = useMemo(() => {
     const [sH, sM] = startTime.split(":").map(Number);
+
     const [eH, eM] = endTime.split(":").map(Number);
+
     const start = sH + sM / 60;
+
     const end = eH + eM / 60;
+
     return end > start ? end - start : 0;
   }, [startTime, endTime]);
 
-  const subTotal = selectedCourt ? selectedCourt.price * duration : 0;
-  const finalTotal = discount ? discount.finalAmount : subTotal;
+  // ======================================================
+  // LOAD AVAILABLE COURTS (ONLY DAILY)
+  // ======================================================
+
+  useEffect(() => {
+    if (!selectedBranch || durationNum <= 0) return;
+
+    dispatch(
+      getAvailableCourts({
+        branchId: selectedBranch.id,
+        date:
+          mode === "daily"
+            ? bookingDate
+            : monthlyStartDate || new Date().toISOString().split("T")[0],
+
+        startTime,
+        endTime,
+      }),
+    );
+
+    setSelectedCourt(null);
+  }, [
+    mode,
+    selectedBranch,
+    bookingDate,
+    monthlyStartDate,
+    startTime,
+    endTime,
+    durationNum,
+    dispatch,
+  ]);
+
+  useEffect(() => {
+    const calculate = async () => {
+      if (
+        mode !== "monthly" ||
+        !selectedBranch ||
+        !selectedCourt ||
+        !monthlyStartDate ||
+        !monthlyEndDate ||
+        daysOfWeek.length === 0
+      ) {
+        return;
+      }
+
+      try {
+        const res = await dispatch(
+          calculateMonthlyBooking({
+            branchId: selectedBranch.id,
+            courtId: selectedCourt.id,
+
+            startDate: monthlyStartDate,
+            endDate: monthlyEndDate,
+
+            daysOfWeek,
+
+            startTime,
+            endTime,
+          }),
+        ).unwrap();
+
+        setMonthlyPrice(res.data.totalAmount);
+
+        setMonthlySessions(res.data.totalSessions);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    calculate();
+  }, [
+    mode,
+    selectedBranch,
+    selectedCourt,
+    monthlyStartDate,
+    monthlyEndDate,
+    daysOfWeek,
+    startTime,
+    endTime,
+    dispatch,
+  ]);
+
+  // ======================================================
+  // MONTHLY SESSIONS COUNT
+  // ======================================================
+
+  const totalSessions = useMemo(() => {
+    if (
+      mode !== "monthly" ||
+      !monthlyStartDate ||
+      !monthlyEndDate ||
+      daysOfWeek.length === 0
+    ) {
+      return 0;
+    }
+
+    let count = 0;
+
+    const start = new Date(monthlyStartDate);
+
+    const end = new Date(monthlyEndDate);
+
+    const mapDays = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+
+    while (start <= end) {
+      const dayName = mapDays[start.getDay()];
+
+      if (daysOfWeek.includes(dayName)) {
+        count++;
+      }
+
+      start.setDate(start.getDate() + 1);
+    }
+
+    return count;
+  }, [mode, monthlyStartDate, monthlyEndDate, daysOfWeek]);
+
+  // ======================================================
+  // PRICE
+  // ======================================================
+
+  const totalPrice = useMemo(() => {
+    if (!selectedCourt) return 0;
+
+    if (mode === "daily") {
+      return selectedCourt.totalPrice * durationNum;
+    }
+
+    return monthlyPrice;
+  }, [selectedCourt, mode, durationNum, monthlyPrice]);
+
+  // ======================================================
+  // TOGGLE WEEK DAY
+  // ======================================================
+
+  const toggleDay = (day: string) => {
+    setDaysOfWeek((prev) => {
+      if (prev.includes(day)) {
+        return prev.filter((d) => d !== day);
+      }
+
+      return [...prev, day];
+    });
+  };
+
+  // ======================================================
+  // BOOKING
+  // ======================================================
+
+  const handleBooking = async () => {
+    if (!selectedCourt || !selectedBranch) {
+      alert("Vui lòng chọn sân");
+      return;
+    }
+
+    try {
+      // ==================================================
+      // DAILY BOOKING
+      // ==================================================
+
+      if (mode === "daily") {
+        console.log({
+          type: "daily",
+          branchId: selectedBranch.id,
+          courtId: selectedCourt.id,
+          bookingDate,
+          startTime,
+          endTime,
+        });
+
+        navigate("/payment", {
+          state: {
+            type: "daily",
+
+            branchId: selectedBranch.id,
+            branchName: selectedBranch.branchName,
+
+            courtId: selectedCourt.id,
+            courtName: selectedCourt.courtName,
+
+            bookingDate,
+
+            startTime,
+            endTime,
+
+            totalAmount: totalPrice,
+          },
+        });
+      }
+
+      // ==================================================
+      // MONTHLY BOOKING
+      // ==================================================
+      else {
+        if (!monthlyStartDate || !monthlyEndDate || daysOfWeek.length === 0) {
+          alert("Vui lòng nhập đầy đủ thông tin");
+          return;
+        }
+
+        await dispatch(
+          createMonthlyBooking({
+            branchId: selectedBranch.id,
+            courtId: selectedCourt.id,
+
+            startDate: monthlyStartDate,
+            endDate: monthlyEndDate,
+
+            daysOfWeek,
+
+            startTime,
+            endTime,
+
+            totalAmount: totalPrice,
+
+            note: "Booking tháng",
+          }),
+        ).unwrap();
+
+        alert("Đặt sân tháng thành công");
+      }
+    } catch (error: any) {
+      console.log(error);
+
+      alert(error?.response?.data?.message || "Có lỗi xảy ra khi đặt sân");
+    }
+  };
+
+  // ======================================================
+  // UI
+  // ======================================================
 
   return (
-    <div className="bg-[#F8FAFC] min-h-screen font-sans pb-20 text-slate-900">
+    <div className="bg-slate-100 min-h-screen pb-20">
+      {/* ================================================= */}
       {/* HEADER */}
-      <section className="bg-[#0F172A] pt-16 pb-32 px-6 text-white relative">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="w-full md:w-1/2">
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-3">
-              B-HUB <span className="text-sky-400">COURTS</span>
-            </h1>
-            <p className="text-slate-400 text-lg">
-              Trải nghiệm thảm tiêu chuẩn BWF chuyên nghiệp.
-            </p>
-          </div>
+      {/* ================================================= */}
 
-          {/* BRANCH SELECTOR - FIXED POSITIONING */}
-          <div className="relative w-full md:w-[400px] z-[100]">
-            <label className="block text-[10px] uppercase font-bold text-slate-400 mb-2 ml-1 tracking-widest">
-              Chi nhánh yêu thích
-            </label>
-            <button
-              onClick={() => setIsOpenBranch(!isOpenBranch)}
-              className="w-full bg-white/5 hover:bg-white/10 border border-white/10 p-4 rounded-2xl flex items-center justify-between transition-all backdrop-blur-md"
-            >
-              <div className="flex items-center gap-4">
-                <div className="bg-sky-500 p-2 rounded-xl">
-                  <MapPin size={20} className="text-white" />
-                </div>
-                <div className="text-left">
-                  <p className="text-sm font-bold truncate max-w-[200px]">
-                    {selectedBranch?.name || "Chọn chi nhánh"}
-                  </p>
-                  <p className="text-[11px] text-slate-400">
-                    {selectedBranch?.city}
-                  </p>
-                </div>
-              </div>
-              <ChevronDown
-                size={20}
-                className={`text-slate-400 transition-transform ${isOpenBranch ? "rotate-180" : ""}`}
-              />
-            </button>
+      <section className="bg-slate-900 text-white pt-16 pb-28 px-6">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-5xl font-black">ĐẶT SÂN ONLINE</h1>
 
-            {isOpenBranch && (
-              <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden text-slate-800 animate-in fade-in zoom-in-95 duration-200">
-                <div className="p-4 border-b flex items-center gap-3 bg-slate-50">
-                  <Search size={18} className="text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder="Tìm theo tên..."
-                    className="bg-transparent outline-none text-sm w-full font-medium"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <div className="max-h-60 overflow-y-auto">
-                  {filteredBranches.map((b) => (
-                    <button
-                      key={b.id}
-                      onClick={() => {
-                        setSelectedBranch(b);
-                        setIsOpenBranch(false);
-                      }}
-                      className="w-full p-4 text-left hover:bg-sky-50 flex items-center justify-between border-b border-slate-50 last:border-none"
-                    >
-                      <div>
-                        <p className="font-bold text-sm">{b.name}</p>
-                        <p className="text-[11px] text-slate-400">
-                          {b.location}
-                        </p>
-                      </div>
-                      {selectedBranch?.id === b.id && (
-                        <CheckCircle2 size={18} className="text-sky-500" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          <p className="text-slate-400 mt-3">
+            Đặt sân theo ngày hoặc theo tháng
+          </p>
         </div>
       </section>
 
-      {/* MAIN CONTENT */}
-      <div className="max-w-7xl mx-auto px-6 -mt-16 relative z-10">
-        <div className="grid lg:grid-cols-12 gap-8 items-start">
-          <div className="lg:col-span-8 space-y-8">
-            {/* TIME FILTER */}
-            <div className="bg-white p-6 rounded-[2rem] shadow-xl border border-white flex flex-wrap md:flex-nowrap items-center gap-6">
-              <div className="flex-1 min-w-[140px]">
-                <label className="text-[11px] font-bold text-slate-400 uppercase mb-2 block ml-1">
-                  Ngày đặt
-                </label>
-                <input
-                  type="date"
-                  value={bookingDate}
-                  onChange={(e) => setBookingDate(e.target.value)}
-                  className="w-full bg-slate-50 p-3 rounded-xl font-bold outline-none border-none focus:ring-2 focus:ring-sky-500 transition-all"
-                />
+      {/* ================================================= */}
+      {/* CONTENT */}
+      {/* ================================================= */}
+
+      <div className="max-w-7xl mx-auto px-6 -mt-12">
+        <div className="grid lg:grid-cols-12 gap-8">
+          {/* ================================================= */}
+          {/* LEFT */}
+          {/* ================================================= */}
+
+          <div className="lg:col-span-8 space-y-6">
+            {/* ================================================= */}
+            {/* FILTER */}
+            {/* ================================================= */}
+
+            <div className="bg-white rounded-3xl p-8 shadow-xl space-y-6">
+              {/* MODE */}
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setMode("daily")}
+                  className={`px-5 py-3 rounded-2xl font-bold transition ${
+                    mode === "daily" ? "bg-sky-500 text-white" : "bg-slate-200"
+                  }`}
+                >
+                  Đặt theo ngày
+                </button>
+
+                <button
+                  onClick={() => setMode("monthly")}
+                  className={`px-5 py-3 rounded-2xl font-bold transition ${
+                    mode === "monthly"
+                      ? "bg-sky-500 text-white"
+                      : "bg-slate-200"
+                  }`}
+                >
+                  Đặt theo tháng
+                </button>
               </div>
-              <div className="flex-1 min-w-[120px]">
-                <label className="text-[11px] font-bold text-slate-400 uppercase mb-2 block ml-1">
-                  Bắt đầu
+
+              {/* BRANCH */}
+
+              <div>
+                <label className="font-bold text-sm mb-2 block">
+                  Chi nhánh
                 </label>
-                <input
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full bg-slate-50 p-3 rounded-xl font-bold outline-none border-none focus:ring-2 focus:ring-sky-500 transition-all"
-                />
+
+                <div className="relative">
+                  <select
+                    className="w-full bg-slate-100 p-4 rounded-2xl outline-none"
+                    onChange={(e) => {
+                      const branch = branchOptions.find(
+                        (b: BranchOptions) => b.id === Number(e.target.value),
+                      );
+
+                      setSelectedBranch(branch || null);
+                    }}
+                  >
+                    <option value="">-- Chọn chi nhánh --</option>
+
+                    {branchOptions.map((branch: BranchOptions) => (
+                      <option key={branch.id} value={branch.id}>
+                        {branch.branchName}
+                      </option>
+                    ))}
+                  </select>
+
+                  <MapPin
+                    size={18}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-sky-500"
+                  />
+                </div>
               </div>
-              <div className="flex-1 min-w-[120px]">
-                <label className="text-[11px] font-bold text-slate-400 uppercase mb-2 block ml-1">
-                  Kết thúc
-                </label>
-                <input
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full bg-slate-50 p-3 rounded-xl font-bold outline-none border-none focus:ring-2 focus:ring-sky-500 transition-all"
-                />
+
+              {/* DAILY */}
+
+              {mode === "daily" && (
+                <div>
+                  <label className="font-bold text-sm mb-2 block">
+                    Ngày thi đấu
+                  </label>
+
+                  <input
+                    type="date"
+                    value={bookingDate}
+                    min={new Date().toISOString().split("T")[0]}
+                    onChange={(e) => setBookingDate(e.target.value)}
+                    className="w-full bg-slate-100 p-4 rounded-2xl"
+                  />
+                </div>
+              )}
+
+              {/* MONTHLY */}
+
+              {mode === "monthly" && (
+                <div className="space-y-5">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="font-bold text-sm mb-2 block">
+                        Ngày bắt đầu
+                      </label>
+
+                      <input
+                        type="date"
+                        value={monthlyStartDate}
+                        onChange={(e) => setMonthlyStartDate(e.target.value)}
+                        className="w-full bg-slate-100 p-4 rounded-2xl"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-sm mb-2 block">
+                        Ngày kết thúc
+                      </label>
+
+                      <input
+                        type="date"
+                        value={monthlyEndDate}
+                        onChange={(e) => setMonthlyEndDate(e.target.value)}
+                        className="w-full bg-slate-100 p-4 rounded-2xl"
+                      />
+                    </div>
+                  </div>
+
+                  {/* DAYS */}
+
+                  <div>
+                    <label className="font-bold text-sm mb-3 block">
+                      Chọn thứ trong tuần
+                    </label>
+
+                    <div className="flex flex-wrap gap-3">
+                      {WEEK_DAYS.map((day) => (
+                        <button
+                          key={day}
+                          onClick={() => toggleDay(day)}
+                          className={`px-4 py-2 rounded-xl font-bold transition ${
+                            daysOfWeek.includes(day)
+                              ? "bg-sky-500 text-white"
+                              : "bg-slate-200"
+                          }`}
+                        >
+                          {day}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TIME */}
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="font-bold text-sm mb-2 block">
+                    Giờ bắt đầu
+                  </label>
+
+                  <select
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    className="w-full bg-slate-100 p-4 rounded-2xl"
+                  >
+                    {TIME_OPTIONS.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="font-bold text-sm mb-2 block">
+                    Giờ kết thúc
+                  </label>
+
+                  <select
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    className="w-full bg-slate-100 p-4 rounded-2xl"
+                  >
+                    {TIME_OPTIONS.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
-            {/* COURT LIST */}
-            <div>
-              <div className="flex items-center gap-3 mb-6">
-                <h2 className="text-xl font-extrabold">Danh sách sân</h2>
-                <span className="bg-sky-100 text-sky-600 py-1 px-3 rounded-lg text-xs font-bold">
-                  {courts.length} Sân trống
-                </span>
-              </div>
+            {/* ================================================= */}
+            {/* COURTS */}
+            {/* ================================================= */}
 
-              {duration <= 0 ? (
-                <div className="bg-orange-50 border border-orange-100 p-8 rounded-[2rem] text-center">
-                  <AlertCircle className="mx-auto text-orange-400 mb-2" />
-                  <p className="font-bold text-orange-800">
-                    Thời gian không hợp lệ
-                  </p>
-                </div>
-              ) : (
-                <div className="grid md:grid-cols-2 gap-6">
-                  {courts.map((court) => (
-                    <div
-                      key={court.id}
-                      onClick={() => setSelectedCourt(court)}
-                      className={`bg-white p-4 rounded-[2rem] cursor-pointer transition-all border-2 ${selectedCourt?.id === court.id ? "border-sky-500 shadow-2xl scale-[1.02]" : "border-transparent shadow-md hover:shadow-xl"}`}
-                    >
-                      <img
-                        src={court.image}
-                        className="h-44 w-full object-cover rounded-[1.5rem] mb-4"
-                        alt={court.name}
-                      />
-                      <div className="flex justify-between items-center px-2">
-                        <div>
-                          <h3 className="font-bold text-lg">{court.name}</h3>
-                          <p className="text-xs text-slate-400 uppercase">
-                            {court.type}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sky-600 font-bold text-lg">
-                            {court.price.toLocaleString()}đ
-                          </p>
-                          <div className="flex items-center gap-1 justify-end text-yellow-500">
-                            <Star size={12} fill="currentColor" />{" "}
-                            <span className="text-xs font-bold text-slate-600">
-                              4.9
-                            </span>
-                          </div>
-                        </div>
+            <div className="space-y-5">
+              <h2 className="text-2xl font-black flex items-center gap-3">
+                <Navigation className="text-sky-500" />
+                Danh sách sân
+              </h2>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                {availableCourts.map((court: CourtAvailable) => (
+                  <div
+                    key={court.id}
+                    // onClick={() =>
+                    //   court.status === "available" && setSelectedCourt(court)
+                    // }
+                    onClick={() => {
+                      console.log("SELECT COURT: ", court);
+
+                      setSelectedCourt(court);
+                    }}
+                    className={`bg-white rounded-3xl p-5 shadow-lg border-2 transition cursor-pointer ${
+                      selectedCourt?.id === court.id
+                        ? "border-sky-500"
+                        : "border-transparent"
+                    } ${
+                      court.status?.toLowerCase() === "booked"
+                        ? "opacity-60 cursor-not-allowed"
+                        : ""
+                    }`}
+                  >
+                    <img
+                      src={court.thumbnailUrl}
+                      className="w-full h-48 object-cover rounded-2xl mb-4"
+                    />
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-black">{court.courtName}</h3>
+                        <p className="text-sm font-bold text-sky-500 mt-2">
+                          {court.totalPrice.toLocaleString()}đ / giờ
+                        </p>
+
+                        <p className="text-sm text-slate-400">
+                          {court.location}
+                        </p>
                       </div>
+
+                      {selectedCourt?.id === court.id && (
+                        <CheckCircle2 className="text-sky-500" />
+                      )}
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* SIDEBAR - STAYS IN PLACE */}
-          <div className="lg:col-span-4 lg:sticky lg:top-8 z-20">
-            <div className="bg-[#0F172A] text-white p-8 rounded-[2.5rem] shadow-2xl border border-white/5">
-              <h2 className="text-2xl font-black mb-8 flex items-center gap-3">
-                <div className="w-8 h-8 bg-sky-500 rounded-lg flex items-center justify-center">
-                  <ChevronRight size={20} />
-                </div>
-                Thanh toán
-              </h2>
+          {/* ================================================= */}
+          {/* RIGHT */}
+          {/* ================================================= */}
 
-              {selectedCourt && duration > 0 ? (
-                <div className="space-y-6">
-                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex justify-between items-center">
-                    <div>
-                      <p className="text-[10px] uppercase font-bold text-slate-500">
-                        Sân đã chọn
-                      </p>
-                      <p className="font-bold text-sky-400">
-                        {selectedCourt.name}
-                      </p>
-                    </div>
-                    <p className="font-bold">{duration} giờ</p>
-                  </div>
+          <div className="lg:col-span-4">
+            <div className="bg-slate-900 text-white rounded-3xl p-8 sticky top-10 shadow-2xl space-y-6">
+              <h2 className="text-2xl font-black">Thông tin đặt sân</h2>
 
-                  <div className="space-y-3 text-sm border-b border-white/10 pb-6">
-                    <div className="flex justify-between text-slate-400">
-                      <span>Tạm tính:</span>
-                      <span className="text-white font-bold">
-                        {subTotal.toLocaleString()}đ
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
-                      <input
-                        value={voucher}
-                        onChange={(e) => {
-                          setVoucher(e.target.value);
-                          dispatch(clearDiscount());
-                          setIsApplied(false);
-                        }}
-                        placeholder="Mã giảm giá"
-                        className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 flex-1 text-sm outline-none focus:border-sky-500 transition-all"
-                      />
-                      <button
-                        onClick={handleApplyVoucher}
-                        disabled={discountLoading}
-                        className="bg-sky-500 px-4 rounded-xl text-xs font-bold hover:bg-sky-400 disabled:opacity-50"
-                      >
-                        {discountLoading ? "..." : "ÁP DỤNG"}
-                      </button>
-                    </div>
-                    {discount && (
-                      <div className="flex justify-between text-emerald-400 text-xs font-bold">
-                        <span>Đã giảm:</span>
-                        <span>-{discount.discountValue.toLocaleString()}đ</span>
-                      </div>
-                    )}
-                  </div>
+              <div className="space-y-3 text-sm">
+                <p>
+                  Hình thức:
+                  <b className="ml-2">
+                    {mode === "daily" ? "Theo ngày" : "Theo tháng"}
+                  </b>
+                </p>
 
-                  <div className="flex justify-between items-end">
-                    <div>
-                      <p className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">
-                        Tổng cộng
-                      </p>
-                      <p className="text-3xl font-black">
-                        {finalTotal.toLocaleString()}đ
-                      </p>
-                    </div>
-                    <div className="bg-sky-500/20 text-sky-400 p-2 rounded-lg">
-                      <Info size={18} />
-                    </div>
-                  </div>
+                <p>
+                  Chi nhánh:
+                  <b className="ml-2">{selectedBranch?.branchName || "---"}</b>
+                </p>
 
-                  <button className="w-full bg-sky-500 hover:bg-sky-400 py-4 rounded-2xl font-black transition-all shadow-lg shadow-sky-500/20 active:scale-95">
-                    XÁC NHẬN ĐẶT SÂN
-                  </button>
-                </div>
-              ) : (
-                <div className="py-12 text-center opacity-30 italic text-sm">
-                  Vui lòng chọn sân để thanh toán
-                </div>
-              )}
+                {mode === "daily" ? (
+                  <p>
+                    Ngày:
+                    <b className="ml-2">{bookingDate}</b>
+                  </p>
+                ) : (
+                  <>
+                    <p>
+                      Từ:
+                      <b className="ml-2">{monthlyStartDate || "---"}</b>
+                    </p>
+
+                    <p>
+                      Đến:
+                      <b className="ml-2">{monthlyEndDate || "---"}</b>
+                    </p>
+
+                    <p>
+                      Số buổi:
+                      <b className="ml-2">{monthlySessions}</b>
+                    </p>
+                  </>
+                )}
+
+                <p>
+                  Giờ:
+                  <b className="ml-2">
+                    {startTime} - {endTime}
+                  </b>
+                </p>
+
+                {selectedCourt && (
+                  <p className="text-sky-400">
+                    Sân:
+                    <b className="ml-2">{selectedCourt.courtName}</b>
+                  </p>
+                )}
+              </div>
+
+              <div className="border-t border-slate-700 pt-5 flex items-end justify-between">
+                <span className="text-slate-400">Tổng tiền</span>
+
+                <span className="text-3xl font-black text-sky-400">
+                  {totalPrice.toLocaleString()}đ
+                </span>
+              </div>
+
+              <button
+                onClick={handleBooking}
+                disabled={!selectedCourt}
+                className="w-full py-5 rounded-2xl font-black bg-sky-500 disabled:bg-slate-700 transition"
+              >
+                THANH TOÁN NGAY
+              </button>
             </div>
           </div>
         </div>

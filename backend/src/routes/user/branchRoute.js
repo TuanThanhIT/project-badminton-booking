@@ -14,26 +14,26 @@ const initBranchRoute = (app) => {
   branchRoute.get(
     "/",
     auth,
-    authorize("USER"),
+    authorize("USER", "EMPLOYEE", "CUSTOMER"),
     validate(getBranchesSchema),
     branchController.getPagedBranchesController,
   );
   branchRoute.get(
     "/all",
     auth,
-    authorize("USER"),
+    authorize("USER", "EMPLOYEE", "CUSTOMER"),
     branchController.getAllBranchesController,
   );
   branchRoute.get(
     "/options",
     auth,
-    authorize("USER"),
+    authorize("USER", "EMPLOYEE", "CUSTOMER"),
     branchController.getBranchOptionsController,
   );
   branchRoute.get(
     "/:branchId",
     auth,
-    authorize("USER"),
+    authorize("USER", "EMPLOYEE", "CUSTOMER"),
     validate(getBranchByIdSchema),
     branchController.getBranchDetailController,
   );

@@ -23,6 +23,7 @@ var _postSocialRoute = _interopRequireDefault(require("./routes/user/postSocialR
 var _profileRoute = _interopRequireDefault(require("./routes/user/profileRoute.js"));
 var _conversationRoute = _interopRequireDefault(require("./routes/user/conversationRoute.js"));
 var _userSearchRoute = _interopRequireDefault(require("./routes/user/userSearchRoute.js"));
+var _monthlyBookingRoute = _interopRequireDefault(require("./routes/user/monthlyBookingRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -47,6 +48,7 @@ app.use((0, _cookieParser["default"])());
 (0, _cartRoute["default"])(app);
 (0, _walletRoute["default"])(app);
 (0, _addressRoute["default"])(app);
+(0, _monthlyBookingRoute["default"])(app);
 
 // Post
 (0, _postRoute["default"])(app);

@@ -21,6 +21,7 @@ import initPostSocialRoute from "./routes/user/postSocialRoute.js";
 import initProfileRoute from "./routes/user/profileRoute.js";
 import initConversationRoute from "./routes/user/conversationRoute.js";
 import initUserSearchRoute from "./routes/user/userSearchRoute.js";
+import initMonthlyBookingRoute from "./routes/user/monthlyBookingRoute.js";
 
 dotenv.config();
 
@@ -48,6 +49,7 @@ initBookingRoute(app);
 initCartRoute(app);
 initWalletRoute(app);
 initAddressRoute(app);
+initMonthlyBookingRoute(app);
 
 // Post
 initPostRoute(app);

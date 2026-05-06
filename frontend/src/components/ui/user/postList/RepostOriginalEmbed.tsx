@@ -114,8 +114,7 @@ const RepostOriginalEmbed = ({
       </button>
 
       <PostDetailModal
-        open={detailOpen}
-        postId={originalPostId}
+        post={detailOpen ? original : null}
         onClose={() => setDetailOpen(false)}
         branchInfoById={branchInfoById}
         courtNameById={courtNameById}

@@ -61,9 +61,8 @@ const toggleLikeService = async (data) => {
 };
 
 const createCommentService = async (data) => {
-  const { postId, content, User, parentId } = data;
-  const currentUserId = User?.id;
-  if (!currentUserId) throw new BadRequestError("Thiếu thông tin người dùng.");
+  const { postId, content, userId, parentId } = data;
+  if (!userId) throw new BadRequestError("Thiếu thông tin người dùng.");
 
   const text = (content ?? "").toString().trim();
   if (!text) throw new BadRequestError("Nội dung bình luận không được để trống.");
@@ -87,7 +86,7 @@ const createCommentService = async (data) => {
 
     const type = parentIdNum ? COMMENT_TYPE.REPLY : COMMENT_TYPE.COMMENT;
     const created = await Comment.create(
-      { authorId: currentUserId, postId, content: text, type, parentId: parentIdNum },
+      { authorId: userId, postId, content: text, type, parentId: parentIdNum },
       { transaction: t },
     );
 
@@ -104,7 +103,7 @@ const createCommentService = async (data) => {
       ],
     });
 
-    const counts = await buildPostCounts(postId, currentUserId, t);
+    const counts = await buildPostCounts(postId, userId, t);
     return { comment: result, ...counts };
   });
 };

@@ -9,13 +9,16 @@ import PostRepostModal from "./PostRepostModal";
 
 type Props = {
   post: PostWithAuthor;
+  /** Khi true: comments luôn hiển thị và không toggle được (dùng trong PostDetailModal) */
+  alwaysShowComments?: boolean;
 };
 
-const PostActions = ({ post }: Props) => {
+const PostActions = ({ post, alwaysShowComments = false }: Props) => {
   const dispatch = useAppDispatch();
   const [busy, setBusy] = useState(false);
   const [commentsExpanded, setCommentsExpanded] = useState(false);
   const [repostOpen, setRepostOpen] = useState(false);
+  const isCommentsOpen = alwaysShowComments || commentsExpanded;
 
   const likesCount = post.likesCount ?? 0;
   const commentsCount = post.commentsCount ?? 0;
@@ -66,10 +69,10 @@ const PostActions = ({ post }: Props) => {
 
         <button
           type="button"
-          onClick={() => setCommentsExpanded((v) => !v)}
+          onClick={() => !alwaysShowComments && setCommentsExpanded((v) => !v)}
           className={`flex-1 flex items-center justify-center gap-2 py-3 hover:bg-gray-50 transition text-sm font-medium ${
-            commentsExpanded ? "text-sky-700 bg-sky-50/80" : "text-gray-600"
-          }`}
+            isCommentsOpen ? "text-sky-700 bg-sky-50/80" : "text-gray-600"
+          } ${alwaysShowComments ? "cursor-default" : ""}`}
         >
           <MessageCircle className="w-4 h-4" />
           Bình luận
@@ -90,7 +93,7 @@ const PostActions = ({ post }: Props) => {
         </button>
       </div>
 
-      <PostCommentsSection postId={post.id} open={commentsExpanded} />
+      <PostCommentsSection postId={post.id} open={isCommentsOpen} />
       <PostRepostModal open={repostOpen} postId={post.id} onClose={() => setRepostOpen(false)} />
     </>
   );

@@ -1,12 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import {
-  CalendarDays,
   Camera,
   FileText,
   Loader2,
-  MapPin,
-  Phone,
   Save,
   User,
 } from "lucide-react";
@@ -24,10 +21,12 @@ import {
 import { syncAuthUserProfile } from "../../redux/slices/user/authSlice";
 import { deletePost, updatePost } from "../../redux/slices/user/postSlice";
 import EditPostModal from "../../components/ui/user/postList/EditPostModal";
+import PostDetailModal from "../../components/ui/user/postList/PostDetailModal";
+import { getAllBranches } from "../../redux/slices/user/branchSlice";
 import {
-  getAllBranches,
-  getBranchOptions,
-} from "../../redux/slices/user/branchSlice";
+  PLAYER_LEVEL_LABEL,
+  PLAYER_LEVELS,
+} from "../../constants/profileConstant";
 
 type EditTarget = {
   id: number;
@@ -70,8 +69,8 @@ const ProfilePage = () => {
     Boolean(state.ui.loadingMap["profile/uploadMyAvatar"]),
   );
   const [editTarget, setEditTarget] = useState<EditTarget>(null);
+  const [detailPost, setDetailPost] = useState<PostWithAuthor | null>(null);
   const [tab, setTab] = useState<ProfileTab>("profile");
-  const [showAvatarUrlField, setShowAvatarUrlField] = useState(false);
   const [avatarLoadError, setAvatarLoadError] = useState(false);
   const avatarFileRef = useRef<HTMLInputElement>(null);
 
@@ -82,6 +81,7 @@ const ProfilePage = () => {
     gender: "male",
     dob: "",
     avatar: "",
+    level: "",
   });
 
   const displayName = form.fullName.trim() || profile?.username || "Bạn";
@@ -122,6 +122,7 @@ const ProfilePage = () => {
         ? new Date(profile.profile.dob).toISOString().slice(0, 10)
         : "",
       avatar: profile.profile?.avatar || "",
+      level: profile.profile?.level || "",
     });
   }, [profile]);
 
@@ -182,12 +183,12 @@ const ProfilePage = () => {
             gender: form.gender as "male" | "female" | "other",
             dob: form.dob || null,
             avatar: form.avatar.trim() || null,
+            level: form.level || null,
           },
         }),
       ).unwrap();
       dispatch(syncAuthUserProfile(updated));
       toast.success("Cập nhật hồ sơ thành công");
-      setShowAvatarUrlField(false);
     } catch {
       // middleware xử lý toast lỗi
     }
@@ -292,6 +293,7 @@ const ProfilePage = () => {
           avatarLoadError={avatarLoadError}
           onAvatarImgError={() => setAvatarLoadError(true)}
           avatarBusy={uploadingAvatar}
+          levelLabel={form.level ? PLAYER_LEVEL_LABEL[form.level] : undefined}
           avatarOverlay={
             <button
               type="button"
@@ -311,7 +313,7 @@ const ProfilePage = () => {
 
         <div className="mt-8 flex flex-col lg:flex-row gap-8 lg:gap-10 items-start">
           {/* Cột trái: tab dọc */}
-          <aside className="w-full lg:w-56 shrink-0 lg:sticky lg:top-24">
+          <aside className="w-full lg:w-56 shrink-0">
             <nav
               className="flex flex-row lg:flex-col gap-2 p-2 rounded-2xl bg-white border border-gray-100 shadow-sm overflow-x-auto lg:overflow-visible"
               aria-label="Khu vực hồ sơ"
@@ -342,10 +344,6 @@ const ProfilePage = () => {
                 </span>
               </button>
             </nav>
-            <p className="mt-3 text-xs text-gray-500 hidden lg:block px-1 leading-relaxed">
-              Chọn tab để chỉnh thông tin hoặc xem bài đăng. Ảnh đại diện: bấm
-              icon máy ảnh để chọn file (tối đa 5MB).
-            </p>
           </aside>
 
           {/* Cột phải: nội dung */}
@@ -357,98 +355,48 @@ const ProfilePage = () => {
                     Thông tin tài khoản
                   </h2>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Cập nhật họ tên, liên hệ. Ảnh đại diện tải lên bằng nút máy
-                    ảnh trên banner; hoặc dán URL bên dưới.
+                    Cập nhật thông tin cá nhân. Ảnh đại diện thay đổi qua nút camera trên ảnh bìa.
                   </p>
                 </div>
 
-                <div className="p-5 sm:p-6 space-y-5">
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      disabled={uploadingAvatar}
-                      onClick={() => avatarFileRef.current?.click()}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-sky-50 text-sky-800 border border-sky-100 hover:bg-sky-100 disabled:opacity-50"
-                    >
-                      <Camera className="w-4 h-4" />
-                      Chọn ảnh đại diện
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowAvatarUrlField((v) => !v)}
-                      className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium border border-gray-200 text-gray-700 hover:bg-gray-50"
-                    >
-                      {showAvatarUrlField ? "Ẩn link ảnh" : "Dán link ảnh"}
-                    </button>
-                  </div>
-
-                  {showAvatarUrlField && (
-                    <div className="rounded-xl bg-sky-50/60 border border-sky-100 p-4 space-y-2">
-                      <label className={labelClass}>Link ảnh đại diện</label>
-                      <input
-                        className={inputClass}
-                        placeholder="https://..."
-                        value={form.avatar}
-                        onChange={(e) =>
-                          setForm((p) => ({ ...p, avatar: e.target.value }))
-                        }
-                      />
-                      <p className="text-xs text-gray-500">
-                        Dùng khi bạn đã có URL (Cloudinary, CDN). Sau đó bấm
-                        &quot;Lưu hồ sơ&quot; để ghi nhận.
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                <div className="p-5 sm:p-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
                     <div>
-                      <label
-                        className={`flex items-center gap-1.5 ${labelClass}`}
-                      >
-                        <User className="w-3.5 h-3.5" strokeWidth={2} />
-                        Tên hiển thị
-                      </label>
+                      <label className={labelClass}>Tên hiển thị</label>
                       <input
                         className={inputClass}
+                        placeholder="Nhập tên hiển thị"
                         value={form.fullName}
                         onChange={(e) =>
                           setForm((p) => ({ ...p, fullName: e.target.value }))
                         }
                       />
                     </div>
+
                     <div>
-                      <label
-                        className={`flex items-center gap-1.5 ${labelClass}`}
-                      >
-                        <Phone className="w-3.5 h-3.5" strokeWidth={2} />
-                        Số điện thoại
-                      </label>
+                      <label className={labelClass}>Số điện thoại</label>
                       <input
                         className={inputClass}
+                        placeholder="Nhập số điện thoại"
                         value={form.phoneNumber}
                         onChange={(e) =>
-                          setForm((p) => ({
-                            ...p,
-                            phoneNumber: e.target.value,
-                          }))
+                          setForm((p) => ({ ...p, phoneNumber: e.target.value }))
                         }
                       />
                     </div>
+
                     <div className="sm:col-span-2">
-                      <label
-                        className={`flex items-center gap-1.5 ${labelClass}`}
-                      >
-                        <MapPin className="w-3.5 h-3.5" strokeWidth={2} />
-                        Địa chỉ
-                      </label>
+                      <label className={labelClass}>Địa chỉ</label>
                       <input
                         className={inputClass}
+                        placeholder="Nhập địa chỉ"
                         value={form.address}
                         onChange={(e) =>
                           setForm((p) => ({ ...p, address: e.target.value }))
                         }
                       />
                     </div>
+
                     <div>
                       <label className={labelClass}>Giới tính</label>
                       <select
@@ -463,13 +411,9 @@ const ProfilePage = () => {
                         <option value="other">Khác</option>
                       </select>
                     </div>
+
                     <div>
-                      <label
-                        className={`flex items-center gap-1.5 ${labelClass}`}
-                      >
-                        <CalendarDays className="w-3.5 h-3.5" strokeWidth={2} />
-                        Ngày sinh
-                      </label>
+                      <label className={labelClass}>Ngày sinh</label>
                       <input
                         type="date"
                         className={inputClass}
@@ -479,9 +423,30 @@ const ProfilePage = () => {
                         }
                       />
                     </div>
+
+                    <div className="sm:col-span-2">
+                      <label className={labelClass}>Trình độ cầu lông</label>
+                      <select
+                        className={inputClass}
+                        value={form.level}
+                        onChange={(e) =>
+                          setForm((p) => ({ ...p, level: e.target.value }))
+                        }
+                      >
+                        <option value="">-- Chưa chọn --</option>
+                        {PLAYER_LEVELS.map((val) => (
+                          <option key={val} value={val}>
+                            {PLAYER_LEVEL_LABEL[val]}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="mt-1.5 text-xs text-gray-400">
+                        Hiển thị công khai để mọi người dễ kết nối giao lưu.
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2 border-t border-gray-100">
+                  <div className="flex justify-end pt-5 mt-1 border-t border-gray-100">
                     <button
                       type="button"
                       disabled={saving}
@@ -523,6 +488,7 @@ const ProfilePage = () => {
                       post={post}
                       branchInfoById={branchInfoById}
                       courtNameById={courtNameById}
+                      onOpenDetail={() => setDetailPost(post)}
                       ownerMenuActions={{
                         onEdit: () =>
                           setEditTarget({
@@ -547,6 +513,13 @@ const ProfilePage = () => {
         editTarget={editTarget}
         onClose={() => setEditTarget(null)}
         onSave={handleSavePost}
+      />
+
+      <PostDetailModal
+        post={detailPost}
+        onClose={() => setDetailPost(null)}
+        branchInfoById={branchInfoById}
+        courtNameById={courtNameById}
       />
     </div>
   );

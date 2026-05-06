@@ -20,6 +20,7 @@ import {
 } from "../../redux/slices/user/conversationSlice";
 import { store } from "../../redux/store";
 import { connectSocket, socket } from "../../socket";
+import type { ChatMessage } from "../../types/message";
 import ChatPanel from "../../components/ui/user/message/ChatPanel";
 import ConversationSidebar from "../../components/ui/user/message/ConversationSidebar";
 import CreateGroupModal from "../../components/ui/user/message/CreateGroupModal";
@@ -43,9 +44,7 @@ const MessagesPage = () => {
   const uploadingAttachment = useAppSelector((state) =>
     Boolean(state.ui.loadingMap["conversation/uploadChatAttachment"]),
   );
-  const conversations = useAppSelector(
-    (state) => state.conversation.conversations,
-  );
+  const conversations = useAppSelector((state) => state.conversation.conversations);
   const selectedConversationId = useAppSelector(
     (state) => state.conversation.selectedConversationId,
   );
@@ -54,9 +53,7 @@ const MessagesPage = () => {
   );
   const messages = useMemo(
     () =>
-      selectedConversationId
-        ? messagesByConversation[selectedConversationId] || []
-        : [],
+      selectedConversationId ? messagesByConversation[selectedConversationId] || [] : [],
     [selectedConversationId, messagesByConversation],
   );
 
@@ -66,15 +63,11 @@ const MessagesPage = () => {
   );
 
   const isGroupAdmin = useMemo(() => {
-    if (
-      !selectedConversation ||
-      selectedConversation.type !== "Group" ||
-      !authUser?.id
-    ) {
+    if (!selectedConversation || selectedConversation.type !== "GROUP" || !authUser?.id) {
       return false;
     }
     return selectedConversation.participants.some(
-      (p) => p.userId === authUser.id && p.role === "Admin",
+      (p) => p.userId === authUser.id && p.role === "ADMIN",
     );
   }, [selectedConversation, authUser?.id]);
 
@@ -86,9 +79,7 @@ const MessagesPage = () => {
     const cid = Number(conversationId);
     if (cid && !Number.isNaN(cid)) {
       dispatch(selectConversation(cid));
-      dispatch(
-        getMessages({ conversationId: cid, params: { page: 1, limit: 100 } }),
-      );
+      dispatch(getMessages({ conversationId: cid, params: { page: 1, limit: 100 } }));
       socket?.emit("chat:join", cid);
     }
   }, [conversationId, dispatch]);
@@ -104,36 +95,25 @@ const MessagesPage = () => {
       dispatch(appendSocketMessage({ message: payload, currentUserId: uid }));
     });
 
-    s.on(
-      "chat:message-recalled",
-      (p: { id: number; conversationId: number }) => {
-        dispatch(
-          markMessageRecalled({ id: p.id, conversationId: p.conversationId }),
-        );
-      },
-    );
+    s.on("chat:message-recalled", (p: { id: number; conversationId: number }) => {
+      dispatch(markMessageRecalled({ id: p.id, conversationId: p.conversationId }));
+    });
 
-    s.on(
-      "chat:messages-read",
-      (p: { conversationId: number; readerId: number }) => {
-        dispatch(clearUnreadFromSocket({ ...p, selfId: uid }));
-      },
-    );
+    s.on("chat:messages-read", (p: { conversationId: number; readerId: number }) => {
+      dispatch(clearUnreadFromSocket({ ...p, selfId: uid }));
+    });
 
-    s.on(
-      "chat:conversation-updated",
-      (p: { conversationId: number; action?: string }) => {
-        if (p.action === "deleted") {
-          dispatch(removeConversationLocal(p.conversationId));
-          const sel = store.getState().conversation.selectedConversationId;
-          if (sel === p.conversationId) {
-            navigate("/messages", { replace: true });
-          }
-        } else {
-          dispatch(getConversations());
+    s.on("chat:conversation-updated", (p: { conversationId: number; action?: string }) => {
+      if (p.action === "deleted") {
+        dispatch(removeConversationLocal(p.conversationId));
+        const sel = store.getState().conversation.selectedConversationId;
+        if (sel === p.conversationId) {
+          navigate("/messages", { replace: true });
         }
-      },
-    );
+      } else {
+        dispatch(getConversations());
+      }
+    });
 
     return () => {
       s.off("chat:new-message");
@@ -145,11 +125,22 @@ const MessagesPage = () => {
 
   const openConversation = (id: number) => {
     dispatch(selectConversation(id));
-    dispatch(
-      getMessages({ conversationId: id, params: { page: 1, limit: 100 } }),
-    );
+    dispatch(getMessages({ conversationId: id, params: { page: 1, limit: 100 } }));
     socket?.emit("chat:join", id);
     navigate(`/messages/${id}`);
+  };
+
+  const handleForward = async (toConversationId: number, message: ChatMessage) => {
+    await dispatch(
+      sendMessage({
+        conversationId: toConversationId,
+        data: {
+          body: message.body || "",
+          type: message.type,
+          mediaUrl: message.mediaUrl || undefined,
+        },
+      }),
+    );
   };
 
   return (
@@ -159,16 +150,13 @@ const MessagesPage = () => {
         currentUserId={authUser?.id}
         onClose={() => setCreateGroupOpen(false)}
         onSubmit={async (name, userIds) => {
-          const res = await dispatch(
-            createGroupConversation({ name, userIds }),
-          ).unwrap();
-          const id = res.data.id;
-          openConversation(id);
+          const res = await dispatch(createGroupConversation({ name, userIds })).unwrap();
+          openConversation(res.data.id);
         }}
       />
-      <div className="h-[78vh] border border-gray-200 rounded-xl overflow-hidden bg-white flex relative">
+      <div className="h-[80vh] border border-gray-200 rounded-2xl overflow-hidden bg-white flex relative shadow-sm">
         {loadingConversations && conversations.length === 0 ? (
-          <aside className="w-80 border-r border-gray-200 bg-white flex items-center justify-center text-sm text-gray-500">
+          <aside className="w-80 border-r border-gray-200 bg-white flex items-center justify-center text-sm text-gray-400">
             Đang tải hội thoại…
           </aside>
         ) : (
@@ -182,16 +170,17 @@ const MessagesPage = () => {
         )}
         <ChatPanel
           conversation={selectedConversation}
+          conversations={conversations}
           messages={messages}
           currentUserId={authUser?.id}
           isGroupAdmin={isGroupAdmin}
-          onSend={async (text) => {
+          onSend={async (text, replyToId) => {
             if (!selectedConversationId) return;
             if (sendingMessage || uploadingAttachment) return;
             await dispatch(
               sendMessage({
                 conversationId: selectedConversationId,
-                data: { body: text },
+                data: { body: text, replyToId },
               }),
             );
           }}
@@ -199,78 +188,54 @@ const MessagesPage = () => {
             if (!selectedConversationId) return;
             if (sendingMessage || uploadingAttachment) return;
             await dispatch(
-              uploadChatAttachment({
-                conversationId: selectedConversationId,
-                file,
-                caption,
-              }),
+              uploadChatAttachment({ conversationId: selectedConversationId, file, caption }),
             );
           }}
           onRecall={async (messageId) => {
             if (!selectedConversationId) return;
-            await dispatch(
-              recallMessage({
-                conversationId: selectedConversationId,
-                messageId,
-              }),
-            );
+            if (!window.confirm("Thu hồi tin nhắn này?")) return;
+            await dispatch(recallMessage({ conversationId: selectedConversationId, messageId }));
           }}
+          onForward={handleForward}
           onLeaveGroup={
-            selectedConversation?.type === "Group"
+            selectedConversation?.type === "GROUP"
               ? async () => {
-                  if (
-                    !selectedConversationId ||
-                    !window.confirm("Rời nhóm này?")
-                  )
-                    return;
-                  await dispatch(
-                    leaveGroup({ conversationId: selectedConversationId }),
-                  );
+                  if (!selectedConversationId || !window.confirm("Rời nhóm này?")) return;
+                  await dispatch(leaveGroup({ conversationId: selectedConversationId }));
                   navigate("/messages", { replace: true });
                 }
               : undefined
           }
           onDeleteGroup={
-            selectedConversation?.type === "Group" && isGroupAdmin
+            selectedConversation?.type === "GROUP" && isGroupAdmin
               ? async () => {
                   if (
                     !selectedConversationId ||
                     !window.confirm("Xóa hẳn nhóm cho mọi thành viên?")
-                  ) {
+                  )
                     return;
-                  }
                   await dispatch(
-                    deleteGroupConversation({
-                      conversationId: selectedConversationId,
-                    }),
+                    deleteGroupConversation({ conversationId: selectedConversationId }),
                   );
                   navigate("/messages", { replace: true });
                 }
               : undefined
           }
           onAddMembers={
-            selectedConversation?.type === "Group" && isGroupAdmin
+            selectedConversation?.type === "GROUP" && isGroupAdmin
               ? async (userIds) => {
                   if (!selectedConversationId) return;
-                  await dispatch(
-                    addMembersToGroup({
-                      conversationId: selectedConversationId,
-                      userIds,
-                    }),
-                  );
+                  await dispatch(addMembersToGroup({ conversationId: selectedConversationId, userIds }));
                 }
               : undefined
           }
           onRemoveMember={
-            selectedConversation?.type === "Group" && isGroupAdmin
+            selectedConversation?.type === "GROUP" && isGroupAdmin
               ? async (userId) => {
                   if (!selectedConversationId) return;
                   if (!window.confirm("Xóa thành viên khỏi nhóm?")) return;
                   await dispatch(
-                    removeMemberFromGroup({
-                      conversationId: selectedConversationId,
-                      userId,
-                    }),
+                    removeMemberFromGroup({ conversationId: selectedConversationId, userId }),
                   );
                 }
               : undefined
@@ -278,7 +243,7 @@ const MessagesPage = () => {
         />
         {loadingMessages && messages.length === 0 && selectedConversationId ? (
           <div className="absolute inset-y-0 right-0 left-80 flex items-center justify-center pointer-events-none">
-            <div className="text-sm text-gray-500">Đang tải tin nhắn…</div>
+            <div className="text-sm text-gray-400">Đang tải tin nhắn…</div>
           </div>
         ) : null}
       </div>

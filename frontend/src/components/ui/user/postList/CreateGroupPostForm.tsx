@@ -70,7 +70,7 @@ const CreateGroupPostForm = ({
           startTime: "",
           endTime: "",
         },
-        levelWanted: "Trung bình",
+        levelWanted: "INTERMEDIATE",
         contact: {
           inApp: true,
           zaloGroupLink: "",

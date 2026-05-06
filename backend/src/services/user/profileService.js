@@ -5,10 +5,10 @@ import BadRequestError from "../../errors/BadRequestError.js";
 import uploadBuffer from "../../utils/cloudinary.js";
 
 const getMyProfileService = async (data) => {
-  const { User:currentUser } = data;
+  const { userId } = data;
   return sequelize.transaction(async (t) => {
     const user = await User.findOne({
-      where: { id: currentUser.id },
+      where: { id: userId },
       transaction: t,
       attributes: ["id", "username", "email", "createdDate"],
       include: [
@@ -47,8 +47,8 @@ const getMyProfileService = async (data) => {
 };
 
 const updateMyProfileService = async (data) => {
-  const {User} = data;
-  const allowed = ["fullName", "dob", "gender", "address", "phoneNumber", "avatar"];
+  const { userId } = data;
+  const allowed = ["fullName", "dob", "gender", "address", "phoneNumber", "avatar", "level"];
   const payload = {};
   allowed.forEach((key) => {
     if (data[key] !== undefined) payload[key] = data[key];
@@ -56,7 +56,7 @@ const updateMyProfileService = async (data) => {
 
   return sequelize.transaction(async (t) => {
     const profile = await Profile.findOne({
-      where: { userId: User.id, isDeleted: false },
+      where: { userId },
       transaction: t,
       lock: t.LOCK.UPDATE,
     });
@@ -69,7 +69,7 @@ const updateMyProfileService = async (data) => {
 };
 
 const uploadMyAvatarService = async (data) => {
-  const { currentUser, file } = data;
+  const { userId, file } = data;
   if (!file?.buffer) throw new BadRequestError("Vui lòng chọn file ảnh.");
   if (!file.mimetype?.startsWith("image/")) {
     throw new BadRequestError("Chỉ chấp nhận file ảnh (jpg, png, webp…).");
@@ -77,7 +77,7 @@ const uploadMyAvatarService = async (data) => {
   const result = await uploadBuffer(file.buffer, "profile_avatars");
   const avatarUrl = result?.secure_url || result?.url;
   if (!avatarUrl) throw new BadRequestError("Tải ảnh lên thất bại.");
-  return updateMyProfileService(currentUser, { avatar: avatarUrl });
+  return updateMyProfileService({ userId, avatar: avatarUrl });
 };
 
 const getPublicProfileService = async (data) => {
@@ -91,7 +91,7 @@ const getPublicProfileService = async (data) => {
         {
           model: Profile,
           as: "profile",
-          attributes: ["fullName", "avatar", "phoneNumber"],
+          attributes: ["fullName", "avatar", "phoneNumber", "level"],
         },
       ],
     });

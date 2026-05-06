@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { idParams } from "./common/numberField.js";
 import { limitField ,pageField} from "./common/paginationFields.js";
-import { mediaUrlField, messageBodyField, messageTypeField ,conversationNameField,userIdsField,nicknameField} from "./common/conversationFields.js";
+import { mediaUrlField, messageBodyField, messageTypeField, replyToIdField, conversationNameField, userIdsField, nicknameField } from "./common/conversationFields.js";
 export const directConversationSchema = {
   params: Joi.object({
     targetUserId: idParams("targetUserId"),
@@ -25,7 +25,8 @@ export const sendMessageSchema = {
   body: Joi.object({
     body: messageBodyField,
     mediaUrl: mediaUrlField,
-    type: messageTypeField
+    type: messageTypeField,
+    replyToId: replyToIdField,
   }),
 };
 

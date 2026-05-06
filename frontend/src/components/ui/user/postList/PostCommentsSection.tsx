@@ -246,7 +246,7 @@ const PostCommentsSection = ({ postId, open }: Props) => {
     setSubmitting(true);
     try {
       const result = await dispatch(
-        createComment({ postId, content: content.trim() }),
+        createComment({ data: { postId, content: content.trim() } }),
       ).unwrap();
       setContent("");
       setComments((prev) => [result.comment, ...prev]);
@@ -264,9 +264,7 @@ const PostCommentsSection = ({ postId, open }: Props) => {
     try {
       const result = await dispatch(
         createComment({
-          postId,
-          content: replyContent.trim(),
-          parentId,
+          data: { postId, content: replyContent.trim(), parentId },
         }),
       ).unwrap();
       setReplyContent("");

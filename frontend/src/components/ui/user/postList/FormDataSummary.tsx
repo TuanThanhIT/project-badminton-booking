@@ -1,5 +1,6 @@
 import type { PostWithAuthor } from "../../../../types/post";
 import { formatFindPlayerLevelForDisplay } from "../../../../constants/postConstant";
+import { PLAYER_LEVEL_LABEL } from "../../../../constants/profileConstant";
 import TournamentPost from "./TournamentPost";
 import ClassPost from "./ClassPost";
 import FindPlayerPost from "./FindPlayerPost";
@@ -79,7 +80,7 @@ const LegacyFormDataSummary = ({
     )?.customLevel;
     const levelDisplay = formatFindPlayerLevelForDisplay(level, customLevel);
     if (levelDisplay) right.push(`Trình độ: ${levelDisplay}`);
-    if (customLevel?.trim() && level !== "Tùy chỉnh") {
+    if (customLevel?.trim() && level !== "CUSTOM") {
       right.push(`Mô tả: ${customLevel.trim()}`);
     }
 
@@ -126,7 +127,7 @@ const LegacyFormDataSummary = ({
     }
 
     const inputLevel = fd.inputLevel as string | undefined;
-    if (inputLevel) right.push(`Trình độ đầu vào: ${inputLevel}`);
+    if (inputLevel) right.push(`Trình độ đầu vào: ${PLAYER_LEVEL_LABEL[inputLevel] ?? inputLevel}`);
 
     const ageRange = fd.ageRange as string | undefined;
     if (ageRange) right.push(`Độ tuổi: ${ageRange}`);
@@ -202,7 +203,7 @@ const LegacyFormDataSummary = ({
         `📅 T${weekly.weekdays.join(", T")} • ${weekly.startTime} - ${weekly.endTime}`,
       );
     const levelWanted = fd.levelWanted as string | undefined;
-    if (levelWanted) right.push(`Trình độ: ${levelWanted}`);
+    if (levelWanted) right.push(`Trình độ: ${PLAYER_LEVEL_LABEL[levelWanted] ?? levelWanted}`);
     const area = fd.area as { city?: string; district?: string } | undefined;
     if (area?.district || area?.city) {
       right.push(`📍 ${[area.district, area.city].filter(Boolean).join(", ")}`);

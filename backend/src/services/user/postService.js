@@ -7,17 +7,18 @@ import { Op } from "sequelize";
 
 // Tạo bài đăng mới. Nếu type = Class thì chỉ Coach được đăng.
 const createPostService = async (data) => {
-  const { title, content, type, formData } = data;
-
-  // Rule: chỉ Coach được đăng lớp học
-  if (type === POST_TYPE.CLASS && currentUser.role !== "Coach") {
-    throw new ForbiddenError("Chỉ huấn luyện viên mới được đăng bài lớp học.");
-  }
+  const { title, content, type, formData, userId } = data;
 
   return sequelize.transaction(async (t) => {
+    const currentUser = await User.findByPk(userId, { transaction: t });
+    // Rule: chỉ Coach được đăng lớp học
+    if (type === POST_TYPE.CLASS && currentUser?.role !== "Coach") {
+      throw new ForbiddenError("Chỉ huấn luyện viên mới được đăng bài lớp học.");
+    }
+
     const post = await Post.create(
       {
-        authorId: data.User.id,
+        authorId: userId,
         type,
         title: title?.trim(),
         content: content?.trim() || null,
@@ -165,7 +166,7 @@ const getPostsService = async (data) => {
       where[Op.and] = andConditions;
     }
 
-    const currentUserId = data.User?.id;
+    const currentUserId = data.userId;
     const result = await Post.findAndCountAll({
       where,
       limit,
@@ -251,7 +252,7 @@ const getPostsService = async (data) => {
 // Lấy chi tiết bài đăng theo id.
 const getPostByIdService = async (data) => {
   return sequelize.transaction(async (t) => {
-    const currentUserId = data.User?.id;
+    const currentUserId = data.userId;
     const post = await Post.findByPK(data.postId, {
       where: {  isDeleted: false },
       transaction: t,
@@ -329,13 +330,13 @@ const updatePostService = async (data) => {
   const { title, content, formData } = data;
   return sequelize.transaction(async (t) => {
     const post = await Post.findByPK(data.postId, {
-      where: {  isDeleted: false },
+      where: { isDeleted: false },
       transaction: t,
       lock: t.LOCK.UPDATE,
     });
 
     if (!post) throw new NotFoundError("Không tìm thấy bài đăng.");
-    if (post.authorId !== data.User.id) {
+    if (post.authorId !== data.userId) {
       throw new ForbiddenError("Bạn không có quyền chỉnh sửa bài đăng này.");
     }
 
@@ -352,16 +353,16 @@ const updatePostService = async (data) => {
 
 // Xóa bài đăng (soft-delete) - chỉ tác giả mới được xóa.
 const deletePostService = async (data) => {
-  const { PostId, User } = data;
+  const { postId, userId } = data;
   return sequelize.transaction(async (t) => {
     const post = await Post.findOne({
-      where: { id: PostId, isDeleted: false },
+      where: { id: postId, isDeleted: false },
       transaction: t,
       lock: t.LOCK.UPDATE,
     });
 
     if (!post) throw new NotFoundError("Không tìm thấy bài đăng.");
-    if (post.authorId !== User.id) {
+    if (post.authorId !== userId) {
       throw new ForbiddenError("Bạn không có quyền xóa bài đăng này.");
     }
 

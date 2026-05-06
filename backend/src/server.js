@@ -64,7 +64,7 @@ initSocket(httpServer);
 
 app.use(errorHandler);
 
-sequelize.sync().then(() => {
+sequelize.sync({ alter: true }).then(() => {
   console.log("Database synced");
   httpServer.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

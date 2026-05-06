@@ -1,5 +1,6 @@
 import { Calendar, MapPin, Users, Target, MessageCircle, ExternalLink } from 'lucide-react';
 import type { PostWithAuthor } from '../../../../types/post';
+import { PLAYER_LEVEL_LABEL } from '../../../../constants/profileConstant';
 
 type Props = {
   post: PostWithAuthor;
@@ -76,7 +77,7 @@ const GroupPost = ({ post, formData }: Props) => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Trình độ mong muốn</p>
-                <p className="font-semibold text-gray-800">{levelWanted}</p>
+                <p className="font-semibold text-gray-800">{PLAYER_LEVEL_LABEL[levelWanted] ?? levelWanted}</p>
               </div>
             </div>
           )}

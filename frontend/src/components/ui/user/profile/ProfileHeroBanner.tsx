@@ -17,6 +17,8 @@ type ProfileHeroBannerProps = {
   trailingActions?: ReactNode;
   /** Vòng quanh ảnh khi đang upload */
   avatarBusy?: boolean;
+  /** Trình độ cầu lông (label tiếng Việt) */
+  levelLabel?: string;
 };
 
 /**
@@ -34,6 +36,7 @@ const ProfileHeroBanner = ({
   avatarOverlay,
   trailingActions,
   avatarBusy,
+  levelLabel,
 }: ProfileHeroBannerProps) => {
   return (
     <div className="relative">
@@ -65,7 +68,7 @@ const ProfileHeroBanner = ({
             {avatarOverlay}
           </div>
         </div>
-        <div className="flex-1 text-center sm:text-left pb-1 sm:pb-3 min-w-0 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div className="flex-1 text-center sm:text-left pb-1 sm:pb-3 sm:pt-8 min-w-0 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
           <div className="min-w-0">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight truncate">
               {displayName}
@@ -75,6 +78,11 @@ const ProfileHeroBanner = ({
               <span className="mx-2 text-gray-300">·</span>
               <span className="text-sky-700 font-medium">{postCount} bài đăng</span>
             </p>
+            {levelLabel && (
+              <span className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-sky-50 border border-sky-100 text-sky-700 text-xs font-medium w-fit">
+                🏸 {levelLabel}
+              </span>
+            )}
             {stats != null && (
               <p className="mt-2 flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs text-gray-600">
                 <span className="inline-flex items-center gap-1">

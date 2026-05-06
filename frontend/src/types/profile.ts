@@ -27,4 +27,5 @@ export type UpdateMyProfileRequest = {
   address?: string;
   phoneNumber?: string;
   avatar?: string | null;
+  level?: string | null;
 };

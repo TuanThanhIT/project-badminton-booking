@@ -623,6 +623,9 @@ Message.belongsTo(User, {
   as: "sender",
 });
 
+Message.belongsTo(Message, { foreignKey: "replyToId", as: "replyToMessage" });
+Message.hasMany(Message, { foreignKey: "replyToId", as: "replies" });
+
 //////////////////////////////////////////////////////
 //////////////// NOTIFICATION ////////////////////////
 //////////////////////////////////////////////////////

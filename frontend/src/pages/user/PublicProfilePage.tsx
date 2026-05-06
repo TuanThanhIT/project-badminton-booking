@@ -12,6 +12,7 @@ import { getCourtsByIds } from "../../redux/slices/user/courtSlice";
 import ProfileHeroBanner from "../../components/ui/user/profile/ProfileHeroBanner";
 import PostCard from "../../components/ui/user/postList/PostCard";
 import { getAllBranches } from "../../redux/slices/user/branchSlice";
+import { PLAYER_LEVEL_LABEL } from "../../constants/profileConstant";
 
 const PublicProfilePage = () => {
   const dispatch = useAppDispatch();
@@ -158,6 +159,11 @@ const PublicProfilePage = () => {
           avatarLetter={avatarLetter}
           avatarLoadError={avatarLoadError}
           onAvatarImgError={() => setAvatarLoadError(true)}
+          levelLabel={
+            profile.profile?.level
+              ? PLAYER_LEVEL_LABEL[profile.profile.level]
+              : undefined
+          }
           trailingActions={
             <button
               type="button"

@@ -58,8 +58,19 @@ export const mediaUrlField = Joi.string()
   });
 
 export const messageTypeField = Joi.string()
-  .valid("Text", "Image", "File")
+  .valid("TEXT", "IMAGE", "FILE")
   .optional()
   .messages({
     "any.only": "Loại tin nhắn không hợp lệ.",
+  });
+
+export const replyToIdField = Joi.number()
+  .integer()
+  .positive()
+  .optional()
+  .allow(null)
+  .messages({
+    "number.base": "ID tin nhắn trả lời không hợp lệ.",
+    "number.integer": "ID tin nhắn trả lời phải là số nguyên.",
+    "number.positive": "ID tin nhắn trả lời phải là số dương.",
   });

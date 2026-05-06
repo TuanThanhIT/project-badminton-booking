@@ -56,7 +56,7 @@ const CreateClassPostForm = ({
       content: "",
       type: "CLASS",
       formData: {
-        inputLevel: "Trung bình",
+        inputLevel: "INTERMEDIATE",
         ageRange: "",
         schedule: {
           weekdays: [2, 4, 6],

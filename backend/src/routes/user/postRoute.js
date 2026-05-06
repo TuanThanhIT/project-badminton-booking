@@ -39,7 +39,7 @@ const initPostRoute = (app) => {
   );
 
   postRoute.put(
-    "/:id",
+    "/:postId",
     auth,
     authorize("USER", "COACH"),
     validate(updatePostSchema),
@@ -47,7 +47,7 @@ const initPostRoute = (app) => {
   );
 
   postRoute.delete(
-    "/:id",
+    "/:postId",
     auth,
     authorize("USER", "COACH"),
     validate(deletePostSchema),

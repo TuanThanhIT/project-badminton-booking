@@ -4,6 +4,7 @@
  */
 
 import type { PostType } from "../types/post";
+import { PLAYER_LEVELS, PLAYER_LEVEL_LABEL, PLAYER_LEVEL_OPTIONS } from "./profileConstant";
 
 /** Nhãn hiển thị cho từng loại bài đăng */
 export const POST_TYPE_LABEL: Record<PostType, string> = {
@@ -35,34 +36,44 @@ export type FilterField = {
   options?: { value: string; label: string }[];
 };
 
-/** Giá trị lưu & lọc cho Find_player — thống nhất tiếng Việt với form đăng bài */
-export const FIND_PLAYER_LEVEL_VALUES = [
-  "Mới chơi",
-  "Trung bình",
-  "Cao",
-  "Tùy chỉnh",
-] as const;
+// ─── Trình độ dùng chung cho TẤT CẢ loại bài ───────────────────────────────
+// Nguồn gốc từ profileConstant — đảm bảo profile và bài đăng dùng cùng thang đo
 
-/** Chuỗi hiển thị trình độ (preset hoặc mô tả khi chọn "Tùy chỉnh") */
+/** Giá trị lưu & lọc cho FIND_PLAYER — 5 mức chuẩn + CUSTOM cho mô tả tự do */
+export const FIND_PLAYER_LEVEL_VALUES = [...PLAYER_LEVELS, "CUSTOM"] as const;
+export type FindPlayerLevelValue = (typeof FIND_PLAYER_LEVEL_VALUES)[number];
+
+/** Chuỗi hiển thị trình độ (preset hoặc mô tả khi chọn "CUSTOM") */
 export function formatFindPlayerLevelForDisplay(
   level: string | null | undefined,
   customLevel?: string | null,
 ): string {
   if (!level) return "";
-  if (level === "Tùy chỉnh") {
+  if (level === "CUSTOM") {
     const t = customLevel?.trim();
-    return t || level;
+    return t || "Tùy chỉnh";
   }
-  return level;
+  return PLAYER_LEVEL_LABEL[level] ?? level;
 }
 
-/** Filter cho Find_player: level, ngày, chi nhánh, slot */
+/** CLASS và GROUP dùng đúng 5 mức chuẩn từ profileConstant */
+export const CLASS_INPUT_LEVEL_VALUES = PLAYER_LEVELS;
+export type ClassInputLevelValue = (typeof CLASS_INPUT_LEVEL_VALUES)[number];
+export const CLASS_INPUT_LEVEL_OPTIONS = PLAYER_LEVEL_OPTIONS;
+
+export const GROUP_LEVEL_VALUES = PLAYER_LEVELS;
+export type GroupLevelValue = (typeof GROUP_LEVEL_VALUES)[number];
+export const GROUP_LEVEL_OPTIONS = PLAYER_LEVEL_OPTIONS;
+
+// ─── Filters ────────────────────────────────────────────────────────────────
+
+/** Filter cho Find_player: level (5 mức chuẩn, không có CUSTOM), ngày, chi nhánh, slot */
 export const FIND_PLAYER_FILTERS: FilterField[] = [
   {
     key: "playerRequirement.level",
     label: "Trình độ",
     type: "select",
-    options: FIND_PLAYER_LEVEL_VALUES.map((v) => ({ value: v, label: v })),
+    options: PLAYER_LEVELS.map((v) => ({ value: v, label: PLAYER_LEVEL_LABEL[v] })),
   },
   {
     key: "schedule.date",
@@ -81,23 +92,13 @@ export const FIND_PLAYER_FILTERS: FilterField[] = [
   },
 ];
 
-/** Giá trị lưu trong formData.inputLevel — trùng với filter feed */
-export const CLASS_INPUT_LEVEL_VALUES = ["Mới chơi", "Trung bình", "Nâng cao"] as const;
-export type ClassInputLevelValue = (typeof CLASS_INPUT_LEVEL_VALUES)[number];
-
-export const CLASS_INPUT_LEVEL_OPTIONS: { value: ClassInputLevelValue; label: string }[] = [
-  { value: "Mới chơi", label: "Mới chơi" },
-  { value: "Trung bình", label: "Trung bình" },
-  { value: "Nâng cao", label: "Nâng cao" },
-];
-
 /** Filter cho Class: trình độ, độ tuổi, chi nhánh */
 export const CLASS_FILTERS: FilterField[] = [
   {
     key: "inputLevel",
     label: "Trình độ đầu vào",
     type: "select",
-    options: CLASS_INPUT_LEVEL_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+    options: PLAYER_LEVEL_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
   },
   {
     key: "ageRange",
@@ -140,23 +141,13 @@ export const TOURNAMENT_FILTERS: FilterField[] = [
   },
 ];
 
-/** Trình độ nhóm — dùng chung form đăng + filter feed */
-export const GROUP_LEVEL_VALUES = ["Mới chơi", "Trung bình", "Cao"] as const;
-export type GroupLevelValue = (typeof GROUP_LEVEL_VALUES)[number];
-
-export const GROUP_LEVEL_OPTIONS: { value: GroupLevelValue; label: string }[] = [
-  { value: "Mới chơi", label: "Mới chơi" },
-  { value: "Trung bình", label: "Trung bình" },
-  { value: "Cao", label: "Cao" },
-];
-
 /** Filter cho Group: trình độ (khớp chính xác), khu vực (tìm gần đúng — backend LIKE) */
 export const GROUP_FILTERS: FilterField[] = [
   {
     key: "levelWanted",
     label: "Trình độ",
     type: "select",
-    options: GROUP_LEVEL_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+    options: PLAYER_LEVEL_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
   },
   {
     key: "area.city",

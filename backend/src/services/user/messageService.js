@@ -31,6 +31,17 @@ const broadcastToConversation = (userIds, conversationId, event, payload) => {
 
 const rowToMessageDto = (m, senderName, senderAvatar) => {
   const recalled = Boolean(m.isRecalled);
+  const replyToMsg = m.replyToMessage ?? null;
+  const replyTo = replyToMsg
+    ? {
+        id: replyToMsg.id,
+        senderName: replyToMsg.sender?.username ?? null,
+        body: replyToMsg.isRecalled ? "" : replyToMsg.body || "",
+        type: replyToMsg.type,
+        mediaUrl: replyToMsg.isRecalled ? null : replyToMsg.mediaUrl || null,
+        isRecalled: Boolean(replyToMsg.isRecalled),
+      }
+    : null;
   return {
     id: m.id,
     conversationId: m.conversationId,
@@ -43,17 +54,18 @@ const rowToMessageDto = (m, senderName, senderAvatar) => {
     createdDate: m.createdDate,
     mediaUrl: recalled ? null : m.mediaUrl || null,
     isRecalled: recalled,
+    replyTo,
   };
 };
 
 const getMessagesService = async (data) => {
-  const { User: currentUser, conversationId, query } = data;
+  const { userId, conversationId, query } = data;
   const page = Number(query.page || 1);
   const limit = Number(query.limit || 30);
   const offset = (page - 1) * limit;
 
   return sequelize.transaction(async (t) => {
-    await ensureMembership(conversationId, currentUser.id, t);
+    await ensureMembership(conversationId, userId, t);
 
     const result = await Message.findAndCountAll({
       where: { conversationId },
@@ -64,19 +76,30 @@ const getMessagesService = async (data) => {
           attributes: ["id", "username"],
           include: [{ model: Profile, as: "profile", attributes: ["avatar"] }],
         },
+        {
+          model: Message,
+          as: "replyToMessage",
+          required: false,
+          include: [
+            {
+              model: User,
+              as: "sender",
+              attributes: ["id", "username"],
+            },
+          ],
+        },
       ],
       order: [["createdDate", "ASC"]],
       offset,
       limit,
       transaction: t,
     });
-
     await Message.update(
       { isRead: true },
       {
         where: {
           conversationId,
-          senderId: { [Op.ne]: currentUser.id },
+          senderId: { [Op.ne]: userId },
           isRead: false,
         },
         transaction: t,
@@ -91,7 +114,7 @@ const getMessagesService = async (data) => {
     const userIds = participants.map((p) => p.userId);
     broadcastToConversation(userIds, conversationId, "chat:messages-read", {
       conversationId,
-      readerId: currentUser.id,
+      readerId: userId,
     });
 
     return {
@@ -105,17 +128,29 @@ const getMessagesService = async (data) => {
   });
 };
 
-const buildSendPayload = async (message, currentUser, transaction) => {
+const buildSendPayload = async (message, userId, transaction) => {
+  const currentUser = await User.findByPk(userId, { transaction });
   const profile = await Profile.findOne({
-    where: { userId: currentUser.id },
+    where: { userId },
     attributes: ["avatar"],
     transaction,
   });
-  return rowToMessageDto(message, currentUser.username, profile?.avatar || null);
+  const messageWithReply = await Message.findByPk(message.id, {
+    include: [
+      {
+        model: Message,
+        as: "replyToMessage",
+        required: false,
+        include: [{ model: User, as: "sender", attributes: ["id", "username"] }],
+      },
+    ],
+    transaction,
+  });
+  return rowToMessageDto(messageWithReply || message, currentUser?.username || null, profile?.avatar || null);
 };
 
 const sendMessageService = async (data) => {
-  const { User: currentUser, conversationId, mediaUrl, type } = data;
+  const { userId, conversationId, mediaUrl, type, replyToId } = data;
   // API payload uses "body" (validated by Joi). Keep backward-compat with "text".
   const rawText = data?.text ?? data?.body;
   const text = typeof rawText === "string" ? rawText : "";
@@ -134,7 +169,7 @@ const sendMessageService = async (data) => {
   }
 
   return sequelize.transaction(async (t) => {
-    await ensureMembership(conversationId, currentUser.id, t);
+    await ensureMembership(conversationId, userId, t);
 
     const conversation = await Conversation.findByPk(conversationId, { transaction: t });
     if (!conversation) throw new NotFoundError("Không tìm thấy cuộc trò chuyện.");
@@ -142,10 +177,11 @@ const sendMessageService = async (data) => {
     const message = await Message.create(
       {
         conversationId,
-        senderId: currentUser.id,
+        senderId: userId,
         body: trimmedText || null,
         type: msgType,
         mediaUrl,
+        replyToId: replyToId || null,
         isRead: false,
         isRecalled: false,
       },
@@ -154,7 +190,7 @@ const sendMessageService = async (data) => {
 
     await conversation.update({ updatedDate: new Date() }, { transaction: t });
 
-    const payload = await buildSendPayload(message, currentUser, t);
+    const payload = await buildSendPayload(message, userId, t);
 
     const participants = await ConversationParticipant.findAll({
       where: { conversationId },
@@ -169,7 +205,7 @@ const sendMessageService = async (data) => {
 };
 
 const uploadAndSendMessageService = async (data) => {
-  const { User: currentUser, conversationId, file, caption } = data;
+  const { userId, conversationId, file, caption } = data;
   if (!file?.buffer) throw new BadRequestError("Không có file tải lên.");
 
   const isImage = file.mimetype?.startsWith("image/");
@@ -180,7 +216,7 @@ const uploadAndSendMessageService = async (data) => {
   if (!mediaUrl) throw new BadRequestError("Tải file thất bại.");
 
   return sendMessageService({
-    User: currentUser,
+    userId,
     conversationId,
     text: caption || "",
     type,
@@ -189,16 +225,16 @@ const uploadAndSendMessageService = async (data) => {
 };
 
 const recallMessageService = async (data) => {
-  const { User: currentUser, conversationId, messageId } = data;
+  const { userId, conversationId, messageId } = data;
   return sequelize.transaction(async (t) => {
-    await ensureMembership(conversationId, currentUser.id, t);
+    await ensureMembership(conversationId, userId, t);
 
     const message = await Message.findOne({
       where: { id: messageId, conversationId },
       transaction: t,
     });
     if (!message) throw new NotFoundError("Không tìm thấy tin nhắn.");
-    if (Number(message.senderId) !== Number(currentUser.id)) {
+    if (Number(message.senderId) !== Number(userId)) {
       throw new ForbiddenError("Chỉ người gửi mới thu hồi được tin nhắn.");
     }
     if (message.isRecalled) throw new BadRequestError("Tin nhắn đã được thu hồi.");

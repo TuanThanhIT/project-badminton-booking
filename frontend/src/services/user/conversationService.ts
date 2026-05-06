@@ -29,7 +29,7 @@ const getMessagesService = (conversationId: number, params?: { page?: number; li
 
 const sendMessageService = (
   conversationId: number,
-  data: { body?: string; type?: "Text" | "Image" | "File"; mediaUrl?: string },
+  data: { body?: string; type?: "TEXT" | "IMAGE" | "FILE"; mediaUrl?: string; replyToId?: number },
 ) =>
   instance.post<SendMessageResponse>(`/user/conversations/${conversationId}/messages`, data);
 

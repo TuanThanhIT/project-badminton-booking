@@ -13,6 +13,7 @@ import type {
   OrderRequest,
   OrderTrackingResponse,
   TrackingProgressResponse,
+  UserOrdersRequest,
   UserOrdersResponse,
   WalletOrderConfirmRequest,
   WalletOrderConfirmResponse,
@@ -52,8 +53,10 @@ const clearCheckoutSessionService = (data: ClearCheckoutSessionRequest) =>
 const getOrderGroupIdService = (data: OrderGroupIdRequest) =>
   instance.get<OrderGroupIdResponse>(`/user/orders/group/${data.orderGroupId}`);
 
-const getUserOrdersService = () => {
-  return instance.get<UserOrdersResponse>("/user/orders");
+const getUserOrdersService = (data: UserOrdersRequest) => {
+  return instance.get<UserOrdersResponse>("/user/orders", {
+    params: data,
+  });
 };
 
 const getOrderDetailService = (data: OrderRequest) => {

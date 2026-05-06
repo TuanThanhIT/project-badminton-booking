@@ -71,7 +71,7 @@ const getOrderGroupByIdController = asyncHandler(async (req, res) => {
 });
 
 const getUserOrdersController = asyncHandler(async (req, res) => {
-  const data = { userId: req.user.id };
+  const data = { userId: req.user.id, ...req.query };
   const result = await orderService.getUserOrdersService(data);
   return res
     .status(200)

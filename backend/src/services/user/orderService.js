@@ -964,9 +964,38 @@ const getOrderGroupByIdService = async (data) => {
 };
 
 const getUserOrdersService = async (data) => {
-  const { userId } = data;
-  const orderGroups = await OrderGroup.findAll({
-    where: { userId },
+  const {
+    userId,
+    status,
+    page = 1,
+    limit = 10,
+    dateFrom,
+    dateTo,
+    sort = "newest",
+  } = data;
+
+  const offset = (page - 1) * limit;
+
+  // WHERE cho OrderGroup
+  const where = { userId };
+
+  // filter status
+  if (status && status !== "ALL") {
+    where.status = status;
+  }
+
+  // filter date range
+  if (dateFrom || dateTo) {
+    where.createdAt = {};
+    if (dateFrom) where.createdAt[Op.gte] = new Date(dateFrom);
+    if (dateTo) where.createdAt[Op.lte] = new Date(dateTo);
+  }
+
+  // sort
+  const order = [["createdAt", sort === "oldest" ? "ASC" : "DESC"]];
+
+  const { rows, count } = await OrderGroup.findAndCountAll({
+    where,
     include: [
       {
         model: Order,
@@ -979,44 +1008,51 @@ const getUserOrdersService = async (data) => {
               {
                 model: ProductVariant,
                 as: "variant",
-                include: [
-                  {
-                    model: Product,
-                    as: "product",
-                  },
-                ],
+                include: [{ model: Product, as: "product" }],
               },
             ],
           },
         ],
       },
     ],
-    order: [["createdAt", "DESC"]],
+    order,
+    limit: Number(limit),
+    offset: Number(offset),
+    distinct: true,
   });
 
-  return orderGroups.map((group) => ({
-    orderGroupId: group.id,
-    totalAmount: group.totalAmount,
-    totalShippingFee: group.totalShippingFee,
-    finalAmount: group.finalAmount,
-    status: group.status,
-    createdDate: group.createdAt,
+  return {
+    items: rows.map((group) => ({
+      orderGroupId: group.id,
+      totalAmount: group.totalAmount,
+      totalShippingFee: group.totalShippingFee,
+      finalAmount: group.finalAmount,
+      status: group.status,
+      createdDate: group.createdAt,
 
-    orders: group.orders.map((o) => ({
-      orderId: o.id,
-      shippingStatus: o.shippingStatus,
-      orderStatus: o.orderStatus,
+      orders: group.orders.map((o) => ({
+        orderId: o.id,
+        shippingStatus: o.shippingStatus,
+        orderStatus: o.orderStatus,
 
-      displayStatus: getDisplayStatus(o),
+        displayStatus: getDisplayStatus(o),
 
-      items: o.details.map((i) => ({
-        name: i.productName,
-        quantity: i.quantity,
-        price: i.unitPrice,
-        thumbnailUrl: i.variant.product.thumbnailUrl,
+        items: o.details.map((i) => ({
+          name: i.productName,
+          quantity: i.quantity,
+          price: i.unitPrice,
+          thumbnailUrl: i.variant.product.thumbnailUrl,
+        })),
       })),
     })),
-  }));
+
+    pagination: {
+      total: count,
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(count / limit),
+    },
+  };
 };
 
 const getOrderDetailService = async (data) => {

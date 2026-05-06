@@ -176,7 +176,7 @@ export type UserOrder = {
 
 export type UserOrderGroup = {
   orderGroupId: number;
-  totalAmount: string; // BE trả string (decimal)
+  totalAmount: string;
   totalShippingFee: string;
   finalAmount: string;
   status: string;
@@ -184,7 +184,28 @@ export type UserOrderGroup = {
   orders: UserOrder[];
 };
 
-export type UserOrdersResponse = ApiResponse<UserOrderGroup[]>;
+export type UserOrderPagination = {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
+export type UserOrderResponseData = {
+  items: UserOrderGroup[];
+  pagination: UserOrderPagination;
+};
+
+export type UserOrdersResponse = ApiResponse<UserOrderResponseData>;
+
+export type UserOrdersRequest = {
+  page?: number;
+  limit?: number;
+  dateFrom?: string;
+  dateTo?: string;
+  sort?: "newest" | "oldest";
+  status?: string;
+};
 
 export type OrderDetailAddress = {
   name: string;

@@ -20,6 +20,9 @@ import type {
   OrderTrackingResponse,
   TrackingProgressResponse,
   UserOrderGroup,
+  UserOrderPagination,
+  UserOrderResponseData,
+  UserOrdersRequest,
   UserOrdersResponse,
   WalletOrderConfirmRequest,
   WalletOrderConfirmResponse,
@@ -32,6 +35,7 @@ import type { VNPayCallbackRequest } from "../../../types/wallet";
 interface OrderState {
   checkoutPreview?: CheckoutPreviewData;
   userOrderGroup: UserOrderGroup[];
+  userOrderPagination?: UserOrderPagination;
   orderDetailData?: OrderDetailData;
   orderTrackingItem: OrderTrackingItem[];
   orderTrackingProgressItem: OrderTrackingProgressItem[];
@@ -40,6 +44,7 @@ interface OrderState {
 const initialState: OrderState = {
   checkoutPreview: undefined,
   userOrderGroup: [],
+  userOrderPagination: undefined,
   orderDetailData: undefined,
   orderTrackingItem: [],
   orderTrackingProgressItem: [],
@@ -151,11 +156,11 @@ export const getOrderGroupId = createAsyncThunk<
 
 export const getUserOrders = createAsyncThunk<
   UserOrdersResponse,
-  void,
+  { data: UserOrdersRequest },
   { rejectValue: ApiErrorType }
->("order/getUserOrders", async (_, { rejectWithValue }) => {
+>("order/getUserOrders", async ({ data }, { rejectWithValue }) => {
   try {
-    const res = await orderService.getUserOrdersService();
+    const res = await orderService.getUserOrdersService(data);
     return res.data as UserOrdersResponse;
   } catch (error) {
     return rejectWithValue(error as ApiErrorType);
@@ -217,7 +222,8 @@ const orderSlice = createSlice({
         state.checkoutPreview = action.payload.data;
       })
       .addCase(getUserOrders.fulfilled, (state, action) => {
-        state.userOrderGroup = action.payload.data;
+        state.userOrderGroup = action.payload.data.items;
+        state.userOrderPagination = action.payload.data.pagination;
       })
       .addCase(getOrderDetail.fulfilled, (state, action) => {
         state.orderDetailData = action.payload.data;

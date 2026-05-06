@@ -11,6 +11,7 @@ import {
   getOrderGroupByIdSchema,
   getOrderTrackingSchema,
   getTrackingProgressSchema,
+  getUserOrdersSchema,
   orderCallbackSchema,
   walletOrderConfirmSchema,
 } from "../../validations/orderValidation.js";
@@ -19,7 +20,6 @@ import orderController from "../../controllers/user/orderController.js";
 const orderRoute = express.Router();
 
 const initOrderRoute = (app) => {
-  // ===== CHECKOUT =====
   orderRoute.post(
     "/checkout/preview",
     auth,
@@ -44,7 +44,6 @@ const initOrderRoute = (app) => {
     orderController.clearCheckoutSessionController,
   );
 
-  // ===== CREATE ORDER =====
   orderRoute.post(
     "/",
     auth,
@@ -53,7 +52,6 @@ const initOrderRoute = (app) => {
     orderController.createOrderController,
   );
 
-  // ===== PAYMENT =====
   orderRoute.patch(
     "/vnpay/callback",
     auth,
@@ -70,7 +68,6 @@ const initOrderRoute = (app) => {
     orderController.walletOrderConfirmController,
   );
 
-  // ===== TRACKING (PHẢI ĐẶT TRƯỚC) =====
   orderRoute.get(
     "/tracking/:orderId",
     auth,
@@ -87,7 +84,6 @@ const initOrderRoute = (app) => {
     orderController.getTrackingProgressController,
   );
 
-  // ===== ORDER DETAIL =====
   orderRoute.get(
     "/detail/:orderId",
     auth,
@@ -96,20 +92,19 @@ const initOrderRoute = (app) => {
     orderController.getOrderDetailController,
   );
 
-  // ===== ORDER GROUP ===== (dynamic → để dưới)
   orderRoute.get(
-    "/group/:orderGroupId", // 🔥 đổi prefix để tránh conflict
+    "/group/:orderGroupId",
     auth,
     authorize("USER"),
     validate(getOrderGroupByIdSchema),
     orderController.getOrderGroupByIdController,
   );
 
-  // ===== LIST ORDERS ===== (root luôn cuối)
   orderRoute.get(
     "/",
     auth,
     authorize("USER"),
+    validate(getUserOrdersSchema),
     orderController.getUserOrdersController,
   );
 

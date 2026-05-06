@@ -8,7 +8,10 @@ import {
   paymentStatusField,
   totalAmountField,
 } from "./common/bookingFields.js";
-import { orderStatusField } from "./common/orderFields.js";
+import {
+  orderGroupStatusField,
+  orderStatusField,
+} from "./common/orderFields.js";
 import { idParams, quantityField } from "./common/numberField.js";
 import { dateField, keywordField } from "./common/searchFields.js";
 import { limitField, pageField } from "./common/paginationFields.js";
@@ -222,5 +225,19 @@ export const getOrderTrackingSchema = {
 export const getTrackingProgressSchema = {
   params: Joi.object({
     orderId: idParams("orderId"),
+  }),
+};
+
+export const getUserOrdersSchema = {
+  query: Joi.object({
+    sort: Joi.string().valid("newest", "oldest").default("newest").messages({
+      "any.only": "Sort must be 'newest' or 'oldest'",
+      "string.base": "Sort must be a string",
+    }),
+    status: orderGroupStatusField,
+    page: pageField,
+    limit: limitField,
+    dateFrom: dateField,
+    dateTo: dateField,
   }),
 };

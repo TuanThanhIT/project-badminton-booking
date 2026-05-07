@@ -186,10 +186,18 @@ const authSlice = createSlice({
       };
       sessionStorage.removeItem("otpFlow");
     },
-    syncAuthUserProfile: (state, action: PayloadAction<{ data?: any } | any>) => {
-      // nếu payload là ApiResponse (has .data) lấy .data, còn không lấy payload trực tiếp
-      const payload = (action.payload && action.payload.data) ? action.payload.data : action.payload;
-      state.user = payload;
+    syncAuthUserProfile: (state, action: PayloadAction<any>) => {
+      if (!state.user) return;
+      const profileData = action.payload?.data !== undefined ? action.payload.data : action.payload;
+      if (!profileData) return;
+      state.user = {
+        ...state.user,
+        username: profileData.username || state.user.username,
+        profile: {
+          fullName: profileData.profile?.fullName,
+          avatar: profileData.profile?.avatar ?? null,
+        },
+      };
     },
 
   },

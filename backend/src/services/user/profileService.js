@@ -54,7 +54,7 @@ const updateMyProfileService = async (data) => {
     if (data[key] !== undefined) payload[key] = data[key];
   });
 
-  return sequelize.transaction(async (t) => {
+  await sequelize.transaction(async (t) => {
     const profile = await Profile.findOne({
       where: { userId },
       transaction: t,
@@ -64,8 +64,9 @@ const updateMyProfileService = async (data) => {
     if (!profile) throw new NotFoundError("Không tìm thấy hồ sơ người dùng.");
 
     await profile.update(payload, { transaction: t });
-    return profile;
   });
+
+  return getMyProfileService({ userId });
 };
 
 const uploadMyAvatarService = async (data) => {

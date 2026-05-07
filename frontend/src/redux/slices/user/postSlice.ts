@@ -79,8 +79,7 @@ export const createComment = createAsyncThunk<
   async ({ data }, { rejectWithValue }) => {
     try {
       const { postId } = data;
-      const res = await postSocialService.createCommentService({
-        postId,
+      const res = await postSocialService.createCommentService(postId, {
         content: data.content,
         parentId: data.parentId ?? undefined,
       });

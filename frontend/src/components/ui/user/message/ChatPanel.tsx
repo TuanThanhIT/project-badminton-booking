@@ -5,6 +5,7 @@ import {
   CornerUpRight,
   MessageCircle,
   Paperclip,
+  Search,
   Send,
   Trash2,
   Users,
@@ -126,24 +127,56 @@ const ForwardModal = ({
   message,
   conversations,
   currentConversationId,
+  currentUserId,
   onSelect,
   onClose,
 }: {
   message: ChatMessage;
   conversations: Conversation[];
   currentConversationId: number;
+  currentUserId?: number;
   onSelect: (conversationId: number) => Promise<void>;
   onClose: () => void;
 }) => {
-  const others = conversations.filter((c) => c.id !== currentConversationId);
+  const [query, setQuery] = useState("");
+  const [sendingId, setSendingId] = useState<number | null>(null);
+
   const preview = message.isRecalled
     ? "Tin nhắn đã thu hồi"
     : message.body?.trim() || (message.type === "IMAGE" ? "📷 Ảnh" : "📎 Tệp đính kèm");
 
+  const getDisplayInfo = (c: Conversation) => {
+    if (c.type === "GROUP") {
+      return {
+        name: c.conversationName,
+        avatar: null,
+        sub: `${c.participants.length} thành viên`,
+      };
+    }
+    const other = c.participants.find((p) => p.userId !== currentUserId);
+    return {
+      name: other?.fullName?.trim() || other?.username || c.conversationName,
+      avatar: other?.avatar ?? null,
+      sub: "Nhắn tin 1-1",
+    };
+  };
+
+  const filtered = conversations
+    .filter((c) => c.id !== currentConversationId)
+    .filter((c) => {
+      if (!query.trim()) return true;
+      const { name } = getDisplayInfo(c);
+      return name.toLowerCase().includes(query.toLowerCase().trim());
+    });
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col max-h-[80vh]">
+        {/* Header */}
+        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
           <h3 className="font-semibold text-gray-900 text-sm">Chuyển tiếp tin nhắn</h3>
           <button
             type="button"
@@ -153,37 +186,70 @@ const ForwardModal = ({
             <X className="w-4 h-4" />
           </button>
         </div>
-        <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+
+        {/* Message preview */}
+        <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100 shrink-0">
           <p className="text-xs text-gray-500 bg-white rounded-xl px-3 py-2 border border-gray-100 line-clamp-2">
             {preview}
           </p>
         </div>
-        <div className="max-h-72 overflow-y-auto py-1">
-          {others.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-8">Không có hội thoại nào khác</p>
+
+        {/* Search */}
+        <div className="px-4 py-2.5 border-b border-gray-100 shrink-0">
+          <div className="flex items-center gap-2 bg-gray-100 rounded-xl px-3 py-2">
+            <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Tìm kiếm hội thoại…"
+              className="flex-1 bg-transparent text-sm text-gray-800 placeholder-gray-400 outline-none"
+              autoFocus
+            />
+            {query && (
+              <button type="button" onClick={() => setQuery("")} className="text-gray-400 hover:text-gray-600">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* List */}
+        <div className="overflow-y-auto flex-1 py-1">
+          {filtered.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-8">
+              {query ? "Không tìm thấy hội thoại" : "Không có hội thoại nào khác"}
+            </p>
           ) : (
-            others.map((c) => {
-              const letter = c.conversationName.trim().charAt(0).toUpperCase();
+            filtered.map((c) => {
+              const { name, avatar, sub } = getDisplayInfo(c);
+              const isSending = sendingId === c.id;
               return (
                 <button
                   key={c.id}
                   type="button"
-                  onClick={() => onSelect(c.id)}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+                  disabled={isSending}
+                  onClick={async () => {
+                    setSendingId(c.id);
+                    await onSelect(c.id);
+                    setSendingId(null);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left disabled:opacity-60"
                 >
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sky-400 to-emerald-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                    {letter}
+                  {c.type === "GROUP" ? (
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sky-400 to-emerald-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                      {name.charAt(0).toUpperCase()}
+                    </div>
+                  ) : (
+                    <UserAvatar key={c.id} name={name} url={avatar} sizeClass="w-9 h-9" />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-900 truncate">{name}</p>
+                    <p className="text-xs text-gray-400">{sub}</p>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {c.conversationName}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {c.type === "GROUP"
-                        ? `${c.participants.length} thành viên`
-                        : "Nhắn tin 1-1"}
-                    </p>
-                  </div>
+                  {isSending && (
+                    <div className="w-4 h-4 border-2 border-sky-500 border-t-transparent rounded-full animate-spin shrink-0" />
+                  )}
                 </button>
               );
             })
@@ -735,6 +801,7 @@ const ChatPanel = ({
           message={forwardTarget}
           conversations={conversations}
           currentConversationId={conversation.id}
+          currentUserId={currentUserId}
           onSelect={async (toId) => {
             await onForward?.(toId, forwardTarget);
             setForwardTarget(null);

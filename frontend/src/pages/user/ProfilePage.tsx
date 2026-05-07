@@ -182,7 +182,6 @@ const ProfilePage = () => {
             address: form.address.trim(),
             gender: form.gender as "male" | "female" | "other",
             dob: form.dob || null,
-            avatar: form.avatar.trim() || null,
             level: form.level || null,
           },
         }),

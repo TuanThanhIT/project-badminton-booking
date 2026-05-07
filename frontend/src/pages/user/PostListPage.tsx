@@ -6,7 +6,7 @@ import type { PostType, PostWithAuthor } from "../../types/post";
 import {
   POST_TYPE_LABEL,
   POST_TYPES,
-} from "../../constants/postConstant";
+} from "../../utils/constants/postConstant";
 import { Search } from "lucide-react";
 import PostCard from "../../components/ui/user/postList/PostCard";
 import PostDetailModal from "../../components/ui/user/postList/PostDetailModal";

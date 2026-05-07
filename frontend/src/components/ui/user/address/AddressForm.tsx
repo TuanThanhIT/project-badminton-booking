@@ -63,7 +63,9 @@ const AddressForm = ({
           </h2>
 
           <button
-            onClick={() => setOpen(false)}
+            onClick={() => {
+              setOpen(false);
+            }}
             className="text-slate-500 hover:text-black text-lg"
           >
             ✕

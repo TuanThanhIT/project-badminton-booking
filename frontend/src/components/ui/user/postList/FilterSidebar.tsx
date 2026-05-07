@@ -1,12 +1,12 @@
 import type { PostType } from "../../../../types/post";
-import type { FilterField } from "../../../../constants/postConstant";
+import type { FilterField } from "../../../../utils/constants/postConstant";
 import type { BranchListItem } from "../../../../types/branch";
 
 import {
   POST_TYPES,
   POST_TYPE_LABEL,
   POST_TYPE_FILTERS,
-} from "../../../../constants/postConstant";
+} from "../../../../utils/constants/postConstant";
 
 type Props = {
   selectedType: PostType | "";

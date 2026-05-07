@@ -20,7 +20,7 @@ import {
 
 import { useAppSelector } from "../../../../redux/hook";
 import { toast } from "react-toastify";
-import { MapPinHouse, X } from "lucide-react";
+import { Building2, Home, MapPinHouse, X } from "lucide-react";
 
 import type {
   Address,
@@ -30,6 +30,7 @@ import type {
 } from "../../../../types/address";
 
 import locationService from "../../../../services/user/locationService";
+import { showConfirmDialog } from "../../../../utils/swalHelper";
 
 /* FIX LEAFLET ICON */
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -78,7 +79,7 @@ const AddOrUpdateAddressForm = ({
     setValue,
     watch,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<FormAddAddress>({
     resolver: zodResolver(FormAddAddressSchema),
     defaultValues: {
@@ -97,12 +98,19 @@ const AddOrUpdateAddressForm = ({
 
   const provinceId = watch("provinceId");
   const districtId = watch("districtId");
+  const isDefaultValue = watch("isDefault");
 
   const [marker, setMarker] = useState<[number, number] | null>(null);
 
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [wards, setWards] = useState<Ward[]>([]);
+
+  useEffect(() => {
+    if (!hasDefault && !isEdit) {
+      setValue("isDefault", true);
+    }
+  }, [hasDefault, isEdit, setValue]);
 
   /* LOAD PROVINCES */
   useEffect(() => {
@@ -262,6 +270,23 @@ const AddOrUpdateAddressForm = ({
     setOpen(true);
   };
 
+  const handleClose = async () => {
+    if (isDirty) {
+      const confirmedExit = await showConfirmDialog(
+        "Xác nhận thoát",
+        "Bạn có thay đổi chưa lưu. Bạn có chắc muốn thoát không?",
+        "Chắc chắn",
+        "Hủy",
+      );
+
+      if (!confirmedExit) return;
+    }
+
+    setOpenAdd(false);
+    setOpen(true);
+    setEditing(null);
+  };
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white w-[70vw] h-[70vh] max-w-[900px] rounded-xl shadow-xl flex flex-col">
@@ -273,36 +298,45 @@ const AddOrUpdateAddressForm = ({
           </div>
 
           <button
-            onClick={() => {
-              setOpenAdd(false);
-              setOpen(true);
-              setEditing(null);
-            }}
-            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-sky-500"
+            onClick={handleClose}
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-800"
           >
             <X size={18} />
           </button>
         </div>
 
         {/* BODY */}
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="p-6 grid grid-cols-2 gap-3 overflow-y-auto"
-        >
+        <div className="p-6 grid grid-cols-2 gap-3 overflow-y-auto">
+          {/* FULL NAME */}
           <div>
-            <label>Họ và tên</label>
+            <div className="flex flex-row items-center justify-between">
+              <label className="block  mb-1">Họ và tên</label>
+              <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
+                {errors.fullName?.message || " "}
+              </p>
+            </div>
             <input className="input" {...register("fullName")} />
-            <p className="error">{errors.fullName?.message}</p>
           </div>
 
+          {/* PHONE */}
           <div>
-            <label>Số điện thoại</label>
+            <div className="flex flex-row items-center justify-between">
+              <label className="block mb-1">Số điện thoại</label>
+              <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
+                {errors.phoneNumber?.message || " "}
+              </p>
+            </div>
             <input className="input" {...register("phoneNumber")} />
-            <p className="error">{errors.phoneNumber?.message}</p>
           </div>
 
+          {/* PROVINCE */}
           <div>
-            <label>Tỉnh</label>
+            <div className="flex flex-row items-center justify-between">
+              <label className="block  mb-1">Tỉnh / Thành phố</label>
+              <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
+                {errors.provinceId?.message || " "}
+              </p>
+            </div>
             <select className="input" {...register("provinceId")}>
               <option value="">Chọn tỉnh</option>
               {provinces.map((p) => (
@@ -313,8 +347,14 @@ const AddOrUpdateAddressForm = ({
             </select>
           </div>
 
+          {/* DISTRICT */}
           <div>
-            <label>Quận</label>
+            <div className="flex flex-row items-center justify-between">
+              <label className="block mb-1">Quận / Huyện</label>
+              <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
+                {errors.districtId?.message || " "}
+              </p>
+            </div>
             <select className="input" {...register("districtId")}>
               <option value="">Chọn quận</option>
               {districts.map((d) => (
@@ -325,8 +365,14 @@ const AddOrUpdateAddressForm = ({
             </select>
           </div>
 
+          {/* WARD */}
           <div>
-            <label>Phường</label>
+            <div className="flex flex-row items-center justify-between">
+              <label className="block mb-1">Phường / Xã</label>
+              <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
+                {errors.fullName?.message || " "}
+              </p>
+            </div>
             <select className="input" {...register("wardCode")}>
               <option value="">Chọn phường</option>
               {wards.map((w) => (
@@ -337,35 +383,74 @@ const AddOrUpdateAddressForm = ({
             </select>
           </div>
 
+          {/* ADDRESS */}
           <div>
-            <label>Địa chỉ</label>
+            <div className="flex flex-row items-center justify-between">
+              <label className="block  mb-1">Địa chỉ chính xác</label>
+              <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
+                {errors.address?.message || " "}
+              </p>
+            </div>
             <input className="input" {...register("address")} />
           </div>
 
-          {/* MAP */}
-          <div className="col-span-2 h-[320px] rounded-xl overflow-hidden border">
-            <MapContainer
-              center={marker || defaultCenter}
-              zoom={15}
-              style={{ height: "100%" }}
-            >
-              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-              {marker && <ChangeMapView center={marker} />}
-              <MapClick />
-            </MapContainer>
+          {/* LABEL */}
+          <div className="col-span-2">
+            <div className="flex gap-6">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="radio" value="HOME" {...register("label")} />
+                Nhà riêng
+                <Home size={16} className="text-sky-500" />
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="radio" value="OFFICE" {...register("label")} />
+                Văn phòng
+                <Building2 size={16} className="text-sky-500" />
+              </label>
+            </div>
           </div>
-        </form>
+
+          {/* DEFAULT CHECKBOX */}
+          <div className="col-span-2 flex items-center gap-2">
+            <input
+              type="checkbox"
+              {...register("isDefault")}
+              checked={isDefaultValue}
+              disabled={
+                (!isEdit && !hasDefault) || (isEdit && address?.isDefault)
+              }
+              onChange={(e) => {
+                if (!e.target.checked) return;
+                setValue("isDefault", true);
+              }}
+            />
+            <span>Đặt làm mặc định</span>
+          </div>
+
+          {/* MAP */}
+          <div className="col-span-2">
+            <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200 text-end">
+              {errors.latitude?.message || " "}
+            </p>
+
+            <div className="h-[320px] rounded-xl overflow-hidden border">
+              <MapContainer
+                center={defaultCenter}
+                zoom={15}
+                style={{ height: "100%" }}
+              >
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                {marker && <ChangeMapView center={marker} />}
+                <MapClick />
+              </MapContainer>
+            </div>
+          </div>
+        </div>
 
         {/* FOOTER */}
-        <div className="p-5 flex justify-end gap-3 border-t">
-          <button
-            onClick={() => {
-              setOpenAdd(false);
-              setOpen(true);
-              setEditing(null);
-            }}
-            className="px-4 py-2 rounded border"
-          >
+        <div className="p-5 flex justify-end gap-3 border-t border-gray-600">
+          <button onClick={handleClose} className="px-4 py-2 rounded border">
             Trở lại
           </button>
 
@@ -379,21 +464,17 @@ const AddOrUpdateAddressForm = ({
       </div>
 
       <style>{`
-        .input{
-          width:100%;
-          padding:8px;
-          border:1px solid #e5e7eb;
-          border-radius:8px;
+        .input {
+          width: 100%;
+          padding: 8px 10px;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          outline: none;
         }
 
-        .input:focus{
-          border-color:#38bdf8;
-          outline:none;
-        }
-
-        .error{
-          font-size:12px;
-          color:#ef4444;
+        .input:focus {
+          border-color: #38bdf8;
+          box-shadow: 0 0 0 2px rgba(56,189,248,0.2);
         }
       `}</style>
     </div>

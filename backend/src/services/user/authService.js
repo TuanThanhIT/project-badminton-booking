@@ -1,8 +1,14 @@
-import { Profile, Role, User, Wallet } from "../../models/index.js";
+import {
+  Profile,
+  Role,
+  User,
+  Wallet,
+  UserOtp,
+  RefreshToken,
+} from "../../models/index.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import dotenv from "dotenv";
-import UserOtp from "../../models/userOtp.js";
 import mailer from "../../helpers/mailer.js";
 import sequelize from "../../config/db.js";
 import ConflictError from "../../errors/ConflictError.js";
@@ -15,7 +21,6 @@ import {
   generateRefreshToken,
   verifyRefreshToken,
 } from "../../utils/jwt.js";
-import RefreshToken from "../../models/refreshToken.js";
 import UnauthorizedError from "../../errors/UnauthorizedError.js";
 import { WALLET_STATUS } from "../../constants/paymentConstant.js";
 
@@ -96,51 +101,59 @@ const verifyOtpService = async (data) => {
   const { email, otpCode } = data;
 
   const user = await User.findOne({ where: { email } });
-
-  if (!user) {
-    throw new BadRequestError("Thông tin xác thực không hợp lệ");
-  }
-
-  if (user.isVerified) {
-    throw new BadRequestError("Tài khoản đã được xác thực");
-  }
+  if (!user) throw new NotFoundError("Người dùng không tồn tại");
 
   const otpCodeHash = crypto.createHash("sha256").update(otpCode).digest("hex");
 
   const userOtp = await UserOtp.findOne({
     where: {
       userId: user.id,
-      type: OTP_TYPE.REGISTER,
+      type: OTP_TYPE.WALLET_PAYMENT,
+      isUsed: false,
     },
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
   });
 
-  if (!userOtp) {
-    throw new BadRequestError("Không tìm thấy mã OTP đăng ký tài khoản");
-  }
-
-  if (userOtp.isUsed) {
-    throw new BadRequestError("Mã OTP đăng ký tài khoản đã được sử dụng");
-  }
+  if (!userOtp) throw new BadRequestError("OTP không tồn tại hoặc ko hợp lệ");
 
   if (userOtp.otpExpiry < new Date()) {
-    throw new BadRequestError("Mã OTP đăng ký tài khoản đã hết hạn");
+    throw new BadRequestError("OTP hết hạn");
   }
 
-  if (userOtp.attempts >= 5) {
-    await userOtp.update({ isUsed: true });
-    throw new BadRequestError(
-      "Mã OTP đăng ký tài khoản đã bị khóa do nhập sai quá 5 lần liên tiếp",
-    );
-  }
-
+  // Sai OTP
   if (userOtp.otpCode !== otpCodeHash) {
-    await userOtp.increment("attempts", { by: 1 });
-    throw new BadRequestError("Mã OTP đăng ký tài khoản không chính xác");
+    await UserOtp.update(
+      {
+        attempts: sequelize.literal("attempts + 1"),
+        isUsed: sequelize.literal(
+          "CASE WHEN attempts + 1 >= 5 THEN true ELSE isUsed END",
+        ),
+      },
+      { where: { id: userOtp.id } },
+    );
+
+    throw new BadRequestError("OTP không đúng");
   }
 
-  await user.update({ isVerified: true });
-  await userOtp.update({ isUsed: true });
+  // verify trước
+  await userOtp.update({ isVerified: true });
+
+  return sequelize.transaction(async (t) => {
+    const otp = await UserOtp.findOne({
+      where: {
+        id: userOtp.id,
+        isVerified: true,
+        isUsed: false,
+      },
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+
+    if (!otp) throw new BadRequestError("OTP không hợp lệ");
+
+    await user.update({ isVerified: true }, { transaction: t });
+    await otp.update({ isUsed: true }, { transaction: t });
+  });
 };
 
 const sendOtpService = async (data) => {
@@ -163,7 +176,9 @@ const sendOtpService = async (data) => {
 
     if (
       !user.isVerified &&
-      (type === OTP_TYPE.WITHDRAW_REQUEST || type === OTP_TYPE.RESET_PASSWORD)
+      (type === OTP_TYPE.WITHDRAW_REQUEST ||
+        type === OTP_TYPE.RESET_PASSWORD ||
+        type === OTP_TYPE.WALLET_PAYMENT)
     ) {
       throw BadRequestError("Tài khoản chưa được xác thực");
     }
@@ -230,10 +245,7 @@ const verifyResetOtpService = async (data) => {
   const { email, otpCode } = data;
 
   const user = await User.findOne({ where: { email } });
-
-  if (!user) {
-    throw new BadRequestError("Thông tin xác thực không hợp lệ");
-  }
+  if (!user) throw new NotFoundError("Người dùng không tồn tại");
 
   const otpCodeHash = crypto.createHash("sha256").update(otpCode).digest("hex");
 
@@ -241,50 +253,66 @@ const verifyResetOtpService = async (data) => {
     where: {
       userId: user.id,
       type: OTP_TYPE.RESET_PASSWORD,
+      isUsed: false,
     },
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
   });
 
-  if (!userOtp) {
-    throw new BadRequestError("Không tìm thấy mã OTP đổi mật khẩu");
-  }
-
-  if (userOtp.isUsed) {
-    throw new BadRequestError("Mã OTP đổi mật khẩu đã được sử dụng");
-  }
+  if (!userOtp)
+    throw new BadRequestError("OTP không tồn tại hoặc không hợp lệ");
 
   if (userOtp.otpExpiry < new Date()) {
-    throw new BadRequestError("Mã OTP đổi mật khẩu đã hết hạn");
+    throw new BadRequestError("OTP hết hạn");
   }
 
-  if (userOtp.attempts >= 5) {
-    await userOtp.update({ isUsed: true });
-    throw new BadRequestError(
-      "Mã OTP đổi mật khẩu đã bị khóa do nhập sai quá 5 lần liên tiếp",
-    );
-  }
-
+  // Sai OTP
   if (userOtp.otpCode !== otpCodeHash) {
-    await userOtp.increment("attempts", { by: 1 });
-    throw new BadRequestError("Mã OTP đổi mật khẩu không chính xác");
+    await UserOtp.update(
+      {
+        attempts: sequelize.literal("attempts + 1"),
+        isUsed: sequelize.literal(
+          "CASE WHEN attempts + 1 >= 5 THEN true ELSE isUsed END",
+        ),
+      },
+      { where: { id: userOtp.id } },
+    );
+
+    throw new BadRequestError("OTP không đúng");
   }
 
-  // tạo resetToken
-  const resetToken = crypto.randomBytes(32).toString("hex");
-  const resetTokenHash = crypto
-    .createHash("sha256")
-    .update(resetToken)
-    .digest("hex");
+  // verify trước
+  await userOtp.update({ isVerified: true });
 
-  const resetTokenExpiry = new Date(Date.now() + 10 * 60 * 1000);
+  return sequelize.transaction(async (t) => {
+    const otp = await UserOtp.findOne({
+      where: {
+        id: userOtp.id,
+        isVerified: true,
+        isUsed: false,
+      },
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
 
-  await userOtp.update({
-    isUsed: true,
-    resetToken: resetTokenHash,
-    resetTokenExpiry,
+    if (!otp) throw new BadRequestError("OTP không hợp lệ");
+
+    // tạo resetToken
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenHash = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    const resetTokenExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
+    await otp.update({
+      isUsed: true,
+      resetToken: resetTokenHash,
+      resetTokenExpiry,
+    });
+
+    return { resetToken };
   });
-
-  return { resetToken };
 };
 
 const resetPasswordService = async (data) => {

@@ -199,7 +199,6 @@ const authSlice = createSlice({
         },
       };
     },
-
   },
   extraReducers: (builder) => {
     builder
@@ -228,5 +227,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { logoutLocal, setOtpFlow, clearOtpFlow, syncAuthUserProfile } = authSlice.actions;
+export const { logoutLocal, setOtpFlow, clearOtpFlow, syncAuthUserProfile } =
+  authSlice.actions;
 export default authSlice.reducer;

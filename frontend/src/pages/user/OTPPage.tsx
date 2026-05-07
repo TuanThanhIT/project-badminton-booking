@@ -11,8 +11,11 @@ import {
 } from "../../redux/slices/user/authSlice";
 import { walletWithdrawConfirm } from "../../redux/slices/user/walletSlice";
 import type { WalletWithdrawConfirmRequest } from "../../types/wallet";
-import { OTP_TYPE } from "../../constants/otpType";
+import { OTP_TYPE } from "../../utils/constants/otpType";
 import { showConfirmDialog } from "../../utils/swalHelper";
+import type { WalletOrderConfirmRequest } from "../../types/order";
+import { walletOrderConfirm } from "../../redux/slices/user/orderSlice";
+import { PAYMENT_METHOD } from "../../utils/constants/paymentMethod";
 
 const OTPPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -30,7 +33,7 @@ const OTPPage: React.FC = () => {
     Object.values(state.ui.loadingMap).some(Boolean),
   );
 
-  const { email, withdrawRequestId, type } = otpFlow;
+  const { email, withdrawRequestId, type, orderGroupId } = otpFlow;
 
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
 
@@ -42,7 +45,6 @@ const OTPPage: React.FC = () => {
     if (!expireAt) return 0;
 
     const diff = Math.floor((Number(expireAt) - Date.now()) / 1000);
-    console.log("diff", diff);
     return diff > 0 ? diff : 0;
   };
 
@@ -234,6 +236,41 @@ const OTPPage: React.FC = () => {
           localStorage.removeItem(RESEND_EXPIRE_KEY);
 
           setTimeout(() => navigate("/login"), 2000);
+        })
+        .catch(() => {
+          setOtp(Array(6).fill(""));
+        });
+    }
+
+    // WALLET-PAYMENT
+    if (type === OTP_TYPE.WALLET_PAYMENT) {
+      if (!email) {
+        toast.error(
+          "Không tìm thấy thông tin đăng ký. Vui lòng thực hiện lại bước đăng ký.",
+        );
+        return;
+      }
+
+      if (!orderGroupId) {
+        toast.error(
+          "Không tìm thấy thông tin đơn hàng. Vui lòng kiểm tra lại.",
+        );
+        return;
+      }
+
+      const data: WalletOrderConfirmRequest = { email, otpCode, orderGroupId };
+
+      await dispatch(walletOrderConfirm({ data }))
+        .unwrap()
+        .then((res) => {
+          toast.success("Xác nhận thanh toán đơn hàng thành công.");
+          dispatch(clearOtpFlow());
+          localStorage.removeItem(OTP_EXPIRE_KEY);
+          localStorage.removeItem(RESEND_EXPIRE_KEY);
+
+          setTimeout(() => {
+            navigate(`/order-result?orderGroupId=${res.data.orderGroupId}`);
+          }, 2000);
         })
         .catch(() => {
           setOtp(Array(6).fill(""));

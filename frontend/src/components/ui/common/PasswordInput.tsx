@@ -11,7 +11,7 @@ const PasswordInput = ({ register, field, value }: any) => {
       <div className="relative">
         <input
           type={showPassword ? "text" : "password"}
-          placeholder="Mật khẩu"
+          placeholder="Nhập mật khẩu"
           {...register(field)}
           className="w-full border border-gray-400 p-2 px-4 rounded-md outline-none pr-10"
         />

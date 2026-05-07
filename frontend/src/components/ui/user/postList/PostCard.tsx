@@ -2,7 +2,7 @@ import { memo, useEffect, useRef, useState } from "react";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { PostWithAuthor } from "../../../../types/post";
-import { POST_TYPE_LABEL } from "../../../../constants/postConstant";
+import { POST_TYPE_LABEL } from "../../../../utils/constants/postConstant";
 import { useAppSelector } from "../../../../redux/hook";
 import FormDataSummary from "./FormDataSummary";
 import PostActions from "./PostActions";

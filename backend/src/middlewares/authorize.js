@@ -1,5 +1,5 @@
-import BadRequestError from "../errors/BadRequestError.js";
 import UnauthorizedError from "../errors/UnauthorizedError.js";
+import ForbiddenError from "../errors/ForbiddenError.js";
 
 const authorize = (...allowedRoles) => {
   return (req, res, next) => {
@@ -14,9 +14,7 @@ const authorize = (...allowedRoles) => {
 
     if (!allowedRoles.includes(req.user.role)) {
       return next(
-        new BadRequestError(
-          "Tài khoản của bạn không hợp lệ. Bạn không có quyền truy cập.",
-        ),
+        new ForbiddenError("Bạn không có quyền truy cập chức năng này."),
       );
     }
 

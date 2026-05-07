@@ -1,41 +1,30 @@
-// AdminLayout.tsx
-import Header from "../commons/admin/Header";
-import Footer from "../commons/admin/Footer";
-import Sidebar from "../commons/admin/Sidebar";
+// =========================
+// layouts/admin/AdminLayout.tsx
+// =========================
+
 import { Outlet } from "react-router-dom";
-import { SideBarContext } from "../contexts/sidebarContext";
 import { useState } from "react";
+import AdminSidebar from "../commons/admin/AdminSidebar";
+import AdminHeader from "../commons/admin/AdminHeader";
+import AdminFooter from "../commons/admin/AdminFooter";
 
 const AdminLayout = () => {
-  const [expanded, setExpanded] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <SideBarContext.Provider value={{ expanded, setExpanded }}>
-      <div
-        className={`h-screen grid overflow-hidden ${
-          expanded ? "grid-cols-[260px_1fr]" : "grid-cols-[80px_1fr]"
-        }`}
-      >
-        {/* SIDEBAR */}
-        <Sidebar />
+    <div className="h-screen flex overflow-hidden bg-slate-100">
+      <AdminSidebar collapsed={collapsed} setCollapsed={setCollapsed} />
 
-        {/* MAIN */}
-        <div className="flex flex-col min-h-screen bg-white">
-          {/* HEADER */}
-          <div className="sticky top-0 z-40">
-            <Header />
-          </div>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <AdminHeader collapsed={collapsed} />
 
-          {/* CONTENT + FOOTER */}
-          <div className="flex-1 flex flex-col overflow-y-auto">
-            <div className="flex-1">
-              <Outlet />
-            </div>
-            <Footer />
-          </div>
-        </div>
+        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-sky-50 via-white to-cyan-50 p-6 lg:p-8">
+          <Outlet />
+        </main>
+
+        <AdminFooter />
       </div>
-    </SideBarContext.Provider>
+    </div>
   );
 };
 

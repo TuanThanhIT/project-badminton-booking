@@ -112,7 +112,11 @@ const LoginPage = () => {
                 {errors.username?.message || " "}
               </p>
             </div>
-            <InputForm register={register} field={"username"} />
+            <InputForm
+              register={register}
+              field={"username"}
+              textHolder={"Nhập tên đăng nhập"}
+            />
           </div>
 
           <div>

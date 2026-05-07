@@ -21,7 +21,6 @@ const Branch = sequelize.define(
         },
       },
     },
-
     phoneNumber: {
       type: DataTypes.STRING(20),
       allowNull: false,
@@ -34,7 +33,6 @@ const Branch = sequelize.define(
         },
       },
     },
-
     description: {
       type: DataTypes.TEXT,
       allowNull: false,
@@ -47,7 +45,6 @@ const Branch = sequelize.define(
         },
       },
     },
-
     // ================= ADDRESS DISPLAY =================
     address: {
       type: DataTypes.STRING(255),
@@ -61,7 +58,6 @@ const Branch = sequelize.define(
         },
       },
     },
-
     districtName: {
       type: DataTypes.STRING(100),
       allowNull: false,
@@ -74,7 +70,6 @@ const Branch = sequelize.define(
         },
       },
     },
-
     provinceName: {
       type: DataTypes.STRING(100),
       allowNull: false,
@@ -87,7 +82,6 @@ const Branch = sequelize.define(
         },
       },
     },
-
     wardName: {
       type: DataTypes.STRING(100),
       allowNull: true,
@@ -98,7 +92,6 @@ const Branch = sequelize.define(
         },
       },
     },
-
     // ================= GHN SHIPPING ORIGIN =================
     provinceId: {
       type: DataTypes.INTEGER,
@@ -112,7 +105,6 @@ const Branch = sequelize.define(
         },
       },
     },
-
     districtId: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -125,7 +117,6 @@ const Branch = sequelize.define(
         },
       },
     },
-
     wardCode: {
       type: DataTypes.STRING(20),
       allowNull: true,
@@ -140,8 +131,6 @@ const Branch = sequelize.define(
         },
       },
     },
-
-    // ================= GEO =================
     latitude: {
       type: DataTypes.FLOAT,
       allowNull: false,
@@ -158,7 +147,6 @@ const Branch = sequelize.define(
         },
       },
     },
-
     longitude: {
       type: DataTypes.FLOAT,
       allowNull: false,
@@ -175,8 +163,6 @@ const Branch = sequelize.define(
         },
       },
     },
-
-    // ================= STATUS =================
     isActive: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
@@ -185,6 +171,17 @@ const Branch = sequelize.define(
         isIn: {
           args: [[true, false]],
           msg: "isActive must be boolean",
+        },
+      },
+    },
+    ghnShopId: {
+      type: DataTypes.INTEGER,
+      allowNull: true, // có thể cho null nếu chưa setup GHN
+      validate: {
+        isInt: { msg: "ghnShopId must be integer" },
+        min: {
+          args: [1],
+          msg: "ghnShopId must be > 0",
         },
       },
     },

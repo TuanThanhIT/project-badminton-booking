@@ -39,19 +39,6 @@ const Wallet = sequelize.define(
         },
       },
     },
-    balanceLocked: {
-      type: DataTypes.DECIMAL(12, 2),
-      allowNull: false,
-      defaultValue: 0,
-      validate: {
-        notNull: { msg: "Locked balance is required" },
-        isDecimal: { msg: "Locked balance must be a valid number" },
-        min: {
-          args: [0],
-          msg: "Locked balance cannot be negative",
-        },
-      },
-    },
     status: {
       type: DataTypes.ENUM(...Object.values(WALLET_STATUS)),
       allowNull: false,

@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { ApiErrorType } from "../../../types/error";
 import type {
-  WalletCallbackRequest,
+  VNPayCallbackRequest,
   WalletCallbackResponse,
   WalletDepositRequest,
   WalletDepositResponse,
@@ -36,7 +36,7 @@ export const walletDeposit = createAsyncThunk<
 
 export const walletCallback = createAsyncThunk<
   WalletCallbackResponse,
-  { data: WalletCallbackRequest },
+  { data: VNPayCallbackRequest },
   { rejectValue: ApiErrorType }
 >("wallet/walletCallback", async ({ data }, { rejectWithValue }) => {
   try {

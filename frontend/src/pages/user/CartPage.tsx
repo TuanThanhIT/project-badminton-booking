@@ -18,7 +18,8 @@ import type {
   UpdateCartItemRequest,
 } from "../../types/cart";
 import { normalizeColor } from "../../utils/color";
-import { COLOR_MAP } from "../../constants/color";
+import { COLOR_MAP } from "../../utils/constants/color";
+import { showConfirmDialog } from "../../utils/swalHelper";
 
 const CartPage = () => {
   const dispatch = useAppDispatch();
@@ -48,6 +49,15 @@ const CartPage = () => {
   };
 
   const handleCheckout = async () => {
+    const isConfirmed = await showConfirmDialog(
+      "Xác nhận thanh toán",
+      "Bạn có muốn tiếp tục không?",
+      "Thanh toán",
+      "Hủy",
+    );
+
+    if (!isConfirmed) return;
+
     navigate("/checkout");
   };
 
@@ -104,7 +114,7 @@ const CartPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white py-10 px-20">
+    <div className="min-h-screen py-10 px-20">
       <div className="max-w-8xl mx-auto">
         {/* Header */}
         <div className="mb-10 text-center">
@@ -123,8 +133,8 @@ const CartPage = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Danh sách sản phẩm */}
-          <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-300 p-6">
+          {/* LEFT */}
+          <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-gray-800">
                 Sản phẩm ({cart.cartItems.length})
@@ -143,18 +153,18 @@ const CartPage = () => {
                 return (
                   <div
                     key={item.id}
-                    className="flex items-stretch gap-5 bg-white p-10 transition-all border-t border-t-gray-300"
+                    className="flex items-stretch gap-5 bg-white p-6 border-t border-gray-200"
                   >
-                    {/* Ảnh sản phẩm */}
+                    {/* IMAGE */}
                     <div className="flex-shrink-0">
                       <img
                         src={item.thumbnailUrl}
                         alt={item.productName}
-                        className="w-36 h-full object-cover rounded-xl border border-gray-100"
+                        className="w-36 h-full object-cover rounded-xl border border-gray-200"
                       />
                     </div>
 
-                    {/* Thông tin chính */}
+                    {/* INFO */}
                     <div className="flex-1 flex flex-col justify-between py-2">
                       <div>
                         <h3 className="font-semibold text-gray-800 text-lg">
@@ -162,7 +172,6 @@ const CartPage = () => {
                         </h3>
 
                         <div className="flex flex-wrap items-center gap-x-6 text-sm text-gray-600 mt-1">
-                          {/* SIZE */}
                           <div className="flex items-center gap-1">
                             <span className="font-semibold text-gray-700">
                               Size:
@@ -170,14 +179,13 @@ const CartPage = () => {
                             <span>{item.size || "—"}</span>
                           </div>
 
-                          {/* COLOR */}
                           <div className="flex items-center gap-2">
                             <span className="font-semibold text-gray-700">
                               Màu:
                             </span>
 
                             <div
-                              className="w-5 h-5 rounded-full ring-1 ring-black ring-offset-2"
+                              className="w-5 h-5 rounded-full ring-1 ring-gray-300 ring-offset-2"
                               style={{
                                 backgroundColor: COLOR_MAP[key] || "#ccc",
                                 border:
@@ -188,7 +196,6 @@ const CartPage = () => {
                             />
                           </div>
 
-                          {/* MATERIAL */}
                           <div className="flex items-center gap-1">
                             <span className="font-semibold text-gray-700">
                               Chất liệu:
@@ -196,13 +203,13 @@ const CartPage = () => {
                             <span>{item.material || "—"}</span>
                           </div>
                         </div>
-                        {/* Giá đơn vị */}
+
                         <p className="text-sky-600 font-semibold mt-2 text-base">
                           {item.price.toLocaleString()}₫
                         </p>
                       </div>
 
-                      {/* Số lượng */}
+                      {/* QUANTITY */}
                       <div className="flex items-center gap-3 mt-3">
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <label className="font-medium">Số lượng:</label>
@@ -223,15 +230,15 @@ const CartPage = () => {
                       </div>
                     </div>
 
-                    {/* Giá tổng + nút xóa */}
-                    <div className="flex flex-col items-end justify-between py-2">
+                    {/* RIGHT */}
+                    <div className="flex flex-col items-end justify-between py-">
                       <p className="font-bold text-gray-800 text-lg">
                         {(item.price * item.quantity).toLocaleString()}₫
                       </p>
                       <button
                         onClick={() => handleRemove(item.id)}
                         title="Xóa"
-                        className="flex items-center gap-1 text-red-500 hover:text-red-600 border rounded-full p-2"
+                        className="flex items-center gap-1 text-red-500 hover:text-red-600 border border-gray-200 rounded-full p-2"
                       >
                         <Trash2 size={15} />
                       </button>
@@ -242,8 +249,8 @@ const CartPage = () => {
             </div>
           </div>
 
-          {/* Tóm tắt đơn hàng */}
-          <div className="bg-white rounded-2xl border border-gray-300 p-6 h-fit sticky top-20">
+          {/* RIGHT */}
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 h-fit sticky top-20">
             <h2 className="text-xl font-semibold text-gray-800 mb-2">
               Tóm tắt đơn hàng
             </h2>
@@ -273,7 +280,7 @@ const CartPage = () => {
 
             <button
               onClick={handleCheckout}
-              className="w-full mt-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg shadow-sm transition"
+              className="w-full mt-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg transition"
             >
               Thanh toán
             </button>

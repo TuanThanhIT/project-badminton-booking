@@ -61,9 +61,8 @@ import WithdrawRequest from "./withDrawRequest.js";
 import RefreshToken from "./refreshToken.js";
 
 import OrderGroup from "./orderGroup.js";
-import ShippingPartner from "./shippingPartner.js";
-import ShippingPartnerShop from "./shippingPartnerShop.js";
 import VariantStock from "./variantStock.js";
+import OrderShippingLog from "./orderShippingLog.js";
 
 //////////////////////////////////////////////////////
 //////////////// USER SYSTEM /////////////////////////
@@ -93,7 +92,7 @@ Wallet.belongsTo(User, { foreignKey: "userId", as: "user" });
 
 Wallet.hasMany(WalletTransaction, {
   foreignKey: "walletId",
-  as: "walletTransactions", // ✅ đổi
+  as: "walletTransactions",
 });
 WalletTransaction.belongsTo(Wallet, {
   foreignKey: "walletId",
@@ -120,7 +119,7 @@ WalletTransaction.belongsTo(Payment, {
 
 WithdrawRequest.hasMany(WalletTransaction, {
   foreignKey: "withdrawRequestId",
-  as: "withdrawTransactions", // ✅ đổi
+  as: "withdrawTransactions",
 });
 WalletTransaction.belongsTo(WithdrawRequest, {
   foreignKey: "withdrawRequestId",
@@ -158,25 +157,6 @@ BranchImage.belongsTo(Branch, {
   as: "branch",
 });
 
-// Branch -> ShippingPartnerShop
-Branch.hasMany(ShippingPartnerShop, {
-  foreignKey: "branchId",
-  as: "shippingPartnerShops",
-});
-ShippingPartnerShop.belongsTo(Branch, {
-  foreignKey: "branchId",
-  as: "branch",
-});
-
-// ShippingPartner -> ShippingPartnerShop
-ShippingPartner.hasMany(ShippingPartnerShop, {
-  foreignKey: "shippingPartnerId",
-  as: "shops",
-});
-ShippingPartnerShop.belongsTo(ShippingPartner, {
-  foreignKey: "shippingPartnerId",
-  as: "shippingPartner",
-});
 //////////////////////////////////////////////////////
 /////////////// BRANCH MANAGER ///////////////////////
 //////////////////////////////////////////////////////
@@ -335,7 +315,7 @@ ProductImage.belongsTo(Product, {
 //////////////// ORDER ///////////////////////////////
 //////////////////////////////////////////////////////
 
-User.hasMany(Order, {
+User.hasMany(OrderGroup, {
   foreignKey: "userId",
   as: "orderGroups",
 });
@@ -371,15 +351,6 @@ Order.belongsTo(OrderGroup, {
   as: "orderGroup",
 });
 
-ShippingPartner.hasMany(Order, {
-  foreignKey: "shippingPartnerId",
-  as: "orders",
-});
-Order.belongsTo(ShippingPartner, {
-  foreignKey: "shippingPartnerId",
-  as: "shippingPartner",
-});
-
 Order.hasMany(OrderDetail, {
   foreignKey: "orderId",
   as: "details",
@@ -387,6 +358,15 @@ Order.hasMany(OrderDetail, {
 OrderDetail.belongsTo(Order, {
   foreignKey: "orderId",
   as: "order",
+});
+
+OrderShippingLog.belongsTo(Order, {
+  foreignKey: "orderId",
+  as: "order",
+});
+Order.hasMany(OrderShippingLog, {
+  foreignKey: "orderId",
+  as: "shippingLogs",
 });
 
 ProductVariant.hasMany(OrderDetail, {
@@ -694,6 +674,27 @@ CoachProfile.belongsTo(User, {
 });
 
 //////////////////////////////////////////////////////
+//////////////// FEEDBACK ///////////////////////////////
+//////////////////////////////////////////////////////
+User.hasMany(Feedback, { foreignKey: "userId", as: "feedbacks" });
+Feedback.belongsTo(User, { foreignKey: "userId", as: "user" });
+
+Order.hasMany(Feedback, { foreignKey: "orderId", as: "feedbacks" });
+Feedback.belongsTo(Order, { foreignKey: "orderId", as: "order" });
+
+ProductVariant.hasMany(Feedback, {
+  foreignKey: "productVariantId",
+  as: "feedbacks",
+});
+Feedback.belongsTo(ProductVariant, {
+  foreignKey: "productVariantId",
+  as: "variant",
+});
+
+Branch.hasMany(Feedback, { foreignKey: "branchId", as: "feedbacks" });
+Feedback.belongsTo(Branch, { foreignKey: "branchId", as: "branch" });
+
+//////////////////////////////////////////////////////
 
 export {
   User,
@@ -714,8 +715,10 @@ export {
   ProductVariant,
   ProductImage,
   Category,
+  OrderGroup,
   Order,
   OrderDetail,
+  OrderShippingLog,
   Payment,
   Discount,
   DraftBooking,
@@ -726,6 +729,7 @@ export {
   Beverage,
   Wallet,
   WalletTransaction,
+  WithdrawRequest,
   Feedback,
   Post,
   PostLike,
@@ -739,7 +743,6 @@ export {
   WorkShiftEmployee,
   CashRegister,
   CoachProfile,
-  ShippingPartner,
-  ShippingPartnerShop,
   VariantStock,
+  RefreshToken,
 };

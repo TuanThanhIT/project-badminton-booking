@@ -16,7 +16,7 @@ import {
   FormCreateTournamentPostSchema,
   type FormCreateTournamentPost,
 } from "../../../../schemas/FormCreateTournamentPostSchema";
-import { TOURNAMENT_CATEGORY_OPTIONS } from "../../../../constants/postConstant";
+import { TOURNAMENT_CATEGORY_OPTIONS } from "../../../../utils/constants/postConstant";
 import { getBranchOptions } from "../../../../redux/slices/user/branchSlice";
 
 type CreateTournamentPostFormProps = {

@@ -12,7 +12,7 @@ import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { otpSend, setOtpFlow } from "../../redux/slices/user/authSlice";
 import LoadingButton from "../../components/ui/common/LoadingButton";
 import InputForm from "../../components/ui/common/InputForm";
-import { OTP_TYPE } from "../../constants/otpType";
+import { OTP_TYPE } from "../../utils/constants/otpType";
 
 const ForgotPasswordPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -103,8 +103,8 @@ const ForgotPasswordPage: React.FC = () => {
             </div>
             <InputForm
               register={register}
-              error={errors.email}
               field={"email"}
+              textHolder={"Nhập email"}
             />
           </div>
 

@@ -88,14 +88,6 @@ const Discount = sequelize.define(
         min: { args: [0], msg: "Usage count cannot be negative" },
       },
     },
-    usagePerUser: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      validate: {
-        isInt: { msg: "Usage per user must be an integer" },
-        min: { args: [1], msg: "Usage per user must be greater than 0" },
-      },
-    },
     isActive: {
       type: DataTypes.BOOLEAN,
       allowNull: false,

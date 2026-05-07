@@ -1,7 +1,7 @@
 import { Op } from "sequelize";
 import sequelize from "../../config/db.js";
 import NotFoundError from "../../errors/NotFoundError.js";
-import Category from "../../models/category.js";
+import { Category } from "../../models/index.js";
 
 const getCategoriesGroupedByMenuGroupService = async () => {
   const categories = await Category.findAll();

@@ -1,8 +1,11 @@
 import { z } from "zod";
-import { CLASS_INPUT_LEVEL_VALUES } from "../constants/postConstant";
+import { CLASS_INPUT_LEVEL_VALUES } from "../utils/constants/postConstant";
 
 export const FormCreateClassPostSchema = z.object({
-  title: z.string().min(3, "Tiêu đề tối thiểu 3 ký tự").max(200, "Tiêu đề tối đa 200 ký tự"),
+  title: z
+    .string()
+    .min(3, "Tiêu đề tối thiểu 3 ký tự")
+    .max(200, "Tiêu đề tối đa 200 ký tự"),
   content: z.string().max(2000, "Mô tả tối đa 2000 ký tự").optional(),
 
   type: z.literal("CLASS"),
@@ -18,14 +21,19 @@ export const FormCreateClassPostSchema = z.object({
       .max(120, "Độ tuổi tối đa 120 ký tự"),
 
     schedule: z.object({
-      weekdays: z.array(z.number().int()).min(1, "Vui lòng chọn ít nhất 1 ngày"),
+      weekdays: z
+        .array(z.number().int())
+        .min(1, "Vui lòng chọn ít nhất 1 ngày"),
       startTime: z.string().min(1, "Vui lòng chọn giờ bắt đầu"),
       endTime: z.string().min(1, "Vui lòng chọn giờ kết thúc"),
       startDate: z.string().min(1, "Vui lòng chọn ngày bắt đầu"),
     }),
 
     location: z.object({
-      branchId: z.number().int().min(1, "Vui lòng chọn chi nhánh (địa điểm dạy học)"),
+      branchId: z
+        .number()
+        .int()
+        .min(1, "Vui lòng chọn chi nhánh (địa điểm dạy học)"),
     }),
 
     maxStudents: z.number().int().min(1, "Số học viên tối đa phải >= 1"),

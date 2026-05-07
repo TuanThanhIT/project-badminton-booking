@@ -671,6 +671,27 @@ CoachProfile.belongsTo(User, {
 });
 
 //////////////////////////////////////////////////////
+//////////////// FEEDBACK ///////////////////////////////
+//////////////////////////////////////////////////////
+User.hasMany(Feedback, { foreignKey: "userId", as: "feedbacks" });
+Feedback.belongsTo(User, { foreignKey: "userId", as: "user" });
+
+Order.hasMany(Feedback, { foreignKey: "orderId", as: "feedbacks" });
+Feedback.belongsTo(Order, { foreignKey: "orderId", as: "order" });
+
+ProductVariant.hasMany(Feedback, {
+  foreignKey: "productVariantId",
+  as: "feedbacks",
+});
+Feedback.belongsTo(ProductVariant, {
+  foreignKey: "productVariantId",
+  as: "variant",
+});
+
+Branch.hasMany(Feedback, { foreignKey: "branchId", as: "feedbacks" });
+Feedback.belongsTo(Branch, { foreignKey: "branchId", as: "branch" });
+
+//////////////////////////////////////////////////////
 
 export {
   User,

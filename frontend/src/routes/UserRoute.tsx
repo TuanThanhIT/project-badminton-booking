@@ -27,7 +27,6 @@ import MessagesPage from "../pages/user/MessagesPage";
 import BranchDetailPage from "../pages/user/BranchDetailPage";
 import BranchPage from "../pages/user/BranchesPage";
 import CourtPage from "../pages/user/CourtPage";
-import NotFoundPage from "../pages/NotFoundPage";
 import OrderResultPage from "../pages/user/OrderResultPage";
 import VNPayResultPage from "../pages/user/VNPayResultPage";
 
@@ -70,7 +69,6 @@ const UserRoute = () => {
         <Route path="courts" element={<CourtPage />} />
         <Route path="order-result" element={<OrderResultPage />} />
       </Route>
-      <Route path="*" element={<NotFoundPage />}></Route>
     </Routes>
   );
 };

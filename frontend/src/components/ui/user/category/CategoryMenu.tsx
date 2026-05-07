@@ -96,7 +96,7 @@ const CategoryMenu = () => {
                 <div key={group.menuGroup}>
                   <div className="font-semibold text-sky-700 border-b border-sky-100 mb-3 pb-2 uppercase">
                     <NavLink
-                      to={`/products?group=${encodeURIComponent(
+                      to={`/products?groupName=${encodeURIComponent(
                         group.menuGroup,
                       )}`}
                       onClick={() => setIsOpen(false)}
@@ -111,7 +111,7 @@ const CategoryMenu = () => {
                         key={item.id}
                         to={`/products?cateId=${item.id}&cateName=${encodeURIComponent(
                           item.cateName,
-                        )}`}
+                        )}&groupName=${encodeURIComponent(group.menuGroup)}`}
                         className="text-gray-700 hover:text-sky-600"
                         onClick={() => setIsOpen(false)}
                       >

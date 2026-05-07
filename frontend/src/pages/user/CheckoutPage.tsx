@@ -588,6 +588,20 @@ const CheckoutPage = () => {
               </span>
             </div>
 
+            {(checkoutPreview?.group?.discount?.amount ?? 0) > 0 && (
+              <div className="flex justify-between items-center text-base mb-2 text-green-600">
+                {" "}
+                <span className="text-gray-600">Giảm giá</span>{" "}
+                <span>
+                  {" "}
+                  -
+                  {formatPrice(
+                    checkoutPreview?.group?.discount?.amount ?? 0,
+                  )}{" "}
+                </span>{" "}
+              </div>
+            )}
+
             <div className="flex justify-between text-gray-700 mb-2">
               <span>Sản phẩm</span>
               <span>{mergedItems.length}</span>

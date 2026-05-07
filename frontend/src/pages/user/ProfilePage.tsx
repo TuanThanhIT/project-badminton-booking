@@ -26,7 +26,7 @@ import { getAllBranches } from "../../redux/slices/user/branchSlice";
 import {
   PLAYER_LEVEL_LABEL,
   PLAYER_LEVELS,
-} from "../../constants/profileConstant";
+} from "../../utils/constants/profileConstant";
 
 type EditTarget = {
   id: number;

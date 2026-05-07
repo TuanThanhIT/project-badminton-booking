@@ -12,7 +12,7 @@ import { getCourtsByIds } from "../../redux/slices/user/courtSlice";
 import ProfileHeroBanner from "../../components/ui/user/profile/ProfileHeroBanner";
 import PostCard from "../../components/ui/user/postList/PostCard";
 import { getAllBranches } from "../../redux/slices/user/branchSlice";
-import { PLAYER_LEVEL_LABEL } from "../../constants/profileConstant";
+import { PLAYER_LEVEL_LABEL } from "../../utils/constants/profileConstant";
 
 const PublicProfilePage = () => {
   const dispatch = useAppDispatch();

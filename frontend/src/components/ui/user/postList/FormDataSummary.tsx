@@ -1,6 +1,6 @@
 import type { PostWithAuthor } from "../../../../types/post";
-import { formatFindPlayerLevelForDisplay } from "../../../../constants/postConstant";
-import { PLAYER_LEVEL_LABEL } from "../../../../constants/profileConstant";
+import { formatFindPlayerLevelForDisplay } from "../../../../utils/constants/postConstant";
+import { PLAYER_LEVEL_LABEL } from "../../../../utils/constants/profileConstant";
 import TournamentPost from "./TournamentPost";
 import ClassPost from "./ClassPost";
 import FindPlayerPost from "./FindPlayerPost";

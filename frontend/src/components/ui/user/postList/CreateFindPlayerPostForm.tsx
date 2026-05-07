@@ -15,8 +15,8 @@ import { getAllCourts } from "../../../../redux/slices/user/courtSlice";
 import { toast } from "react-toastify";
 import LoadingButton from "../../common/LoadingButton";
 import { getBranchOptions } from "../../../../redux/slices/user/branchSlice";
-import { FIND_PLAYER_LEVEL_VALUES } from "../../../../constants/postConstant";
-import { PLAYER_LEVEL_LABEL } from "../../../../constants/profileConstant";
+import { FIND_PLAYER_LEVEL_VALUES } from "../../../../utils/constants/postConstant";
+import { PLAYER_LEVEL_LABEL } from "../../../../utils/constants/profileConstant";
 
 type CreateFindPlayerPostFormProps = {
   initialValues?: Partial<formCreateFindPlayerPost>;

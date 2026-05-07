@@ -1,6 +1,6 @@
 import { Calendar, Clock, MapPin, Users, DollarSign, Phone, MessageCircle, FileText } from 'lucide-react';
 import type { PostWithAuthor } from '../../../../types/post';
-import { PLAYER_LEVEL_LABEL } from '../../../../constants/profileConstant';
+import { PLAYER_LEVEL_LABEL } from '../../../../utils/constants/profileConstant';
 
 type Props = {
   post: PostWithAuthor;

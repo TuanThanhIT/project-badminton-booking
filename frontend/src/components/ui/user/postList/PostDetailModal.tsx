@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { PostWithAuthor } from "../../../../types/post";
-import { POST_TYPE_LABEL } from "../../../../constants/postConstant";
+import { POST_TYPE_LABEL } from "../../../../utils/constants/postConstant";
 import { formatRelativeTimeVi } from "../../../../utils/formatRelativeTimeVi";
 import FormDataSummary from "./FormDataSummary";
 import PostActions from "./PostActions";

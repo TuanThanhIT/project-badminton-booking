@@ -7,6 +7,7 @@ import {
   getProductsByFilterSchema,
 } from "../../validations/productValidation.js";
 import productController from "../../controllers/user/productController.js";
+import { ROLE_NAME } from "../../constants/userConstant.js";
 
 const productRoute = express.Router();
 
@@ -14,14 +15,14 @@ const initProductRoute = (app) => {
   productRoute.get(
     "/",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     validate(getProductsByFilterSchema),
     productController.getProductsByFilterController,
   );
   productRoute.get(
     "/:productId",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     validate(getProductDetailSchema),
     productController.getProductDetailController,
   );

@@ -11,6 +11,7 @@ import {
   verifyOtpSchema,
   verifyResetOtpSchema,
 } from "../../validations/authValidation.js";
+import { ROLE_NAME } from "../../constants/userConstant.js";
 
 const authRoute = express.Router();
 
@@ -49,7 +50,12 @@ const initAuthRoute = (app) => {
   authRoute.get(
     "/me",
     auth,
-    authorize("USER"),
+    authorize(
+      ROLE_NAME.USER,
+      ROLE_NAME.MANAGER,
+      ROLE_NAME.EMPLOYEE,
+      ROLE_NAME.COACH,
+    ),
     authController.getAccountController,
   );
   authRoute.post("/logout", authController.logoutController);

@@ -29,6 +29,7 @@ import BranchPage from "../pages/user/BranchesPage";
 import CourtPage from "../pages/user/CourtPage";
 import OrderResultPage from "../pages/user/OrderResultPage";
 import VNPayResultPage from "../pages/user/VNPayResultPage";
+import UserProtectedRoute from "./ProtectedRoute/UserProtectedRoute";
 
 const UserRoute = () => {
   return (
@@ -46,28 +47,30 @@ const UserRoute = () => {
       </Route>
 
       {/* Private */}
-      <Route element={<UserPrivateLayout />}>
-        <Route path="home" element={<HomePage />} />
-        <Route path="products" element={<ProductPage />} />
-        <Route path="product/:id" element={<ProductDetailPage />} />
-        <Route path="booking" element={<BookingCourtPage />} />
-        <Route path="history" element={<HistoryPage />} />
-        <Route path="profile" element={<ProfilePage />} />
-        <Route path="profile/:userId" element={<PublicProfilePage />} />
-        <Route path="cart" element={<CartPage />} />
-        <Route path="checkout" element={<CheckoutPage />} />
-        <Route path="orders" element={<OrderPage />} />
-        <Route path="bookings" element={<BookingPage />} />
-        <Route path="wallet" element={<WalletPage />}></Route>
-        <Route path="vnpay/result" element={<VNPayResultPage />}></Route>
-        <Route path="create-post" element={<CreatePostPage />} />
-        <Route path="posts" element={<PostListPage />} />
-        <Route path="messages" element={<MessagesPage />} />
-        <Route path="messages/:conversationId" element={<MessagesPage />} />
-        <Route path="branches" element={<BranchPage />} />
-        <Route path="branches/:branchId" element={<BranchDetailPage />} />
-        <Route path="courts" element={<CourtPage />} />
-        <Route path="order-result" element={<OrderResultPage />} />
+      <Route element={<UserProtectedRoute />}>
+        <Route element={<UserPrivateLayout />}>
+          <Route path="home" element={<HomePage />} />
+          <Route path="products" element={<ProductPage />} />
+          <Route path="product/:id" element={<ProductDetailPage />} />
+          <Route path="booking" element={<BookingCourtPage />} />
+          <Route path="history" element={<HistoryPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+          <Route path="profile/:userId" element={<PublicProfilePage />} />
+          <Route path="cart" element={<CartPage />} />
+          <Route path="checkout" element={<CheckoutPage />} />
+          <Route path="orders" element={<OrderPage />} />
+          <Route path="bookings" element={<BookingPage />} />
+          <Route path="wallet" element={<WalletPage />}></Route>
+          <Route path="vnpay/result" element={<VNPayResultPage />}></Route>
+          <Route path="create-post" element={<CreatePostPage />} />
+          <Route path="posts" element={<PostListPage />} />
+          <Route path="messages" element={<MessagesPage />} />
+          <Route path="messages/:conversationId" element={<MessagesPage />} />
+          <Route path="branches" element={<BranchPage />} />
+          <Route path="branches/:branchId" element={<BranchDetailPage />} />
+          <Route path="courts" element={<CourtPage />} />
+          <Route path="order-result" element={<OrderResultPage />} />
+        </Route>
       </Route>
     </Routes>
   );

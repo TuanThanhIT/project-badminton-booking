@@ -4,6 +4,7 @@ import authorize from "../../middlewares/authorize.js";
 import validate from "../../middlewares/validate.js";
 import userSearchController from "../../controllers/user/userSearchController.js";
 import { searchUsersSchema } from "../../validations/userSearchValidation.js";
+import { ROLE_NAME } from "../../constants/userConstant.js";
 
 const userSearchRoute = express.Router();
 
@@ -11,7 +12,7 @@ const initUserSearchRoute = (app) => {
   userSearchRoute.get(
     "/search",
     auth,
-    authorize("USER", "COACH"),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(searchUsersSchema),
     userSearchController.searchUsersController,
   );

@@ -2,6 +2,7 @@ import express from "express";
 import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
 import categoryController from "../../controllers/user/cateController.js";
+import { ROLE_NAME } from "../../constants/userConstant.js";
 
 const cateRoute = express.Router();
 
@@ -9,7 +10,7 @@ const initCateRoute = (app) => {
   cateRoute.get(
     "/group/:groupName",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     categoryController.getCategoriesByMenuGroupController,
   );
   cateRoute.get(
@@ -19,7 +20,7 @@ const initCateRoute = (app) => {
   cateRoute.get(
     "/:cateId/siblings",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     categoryController.getOtherCategoriesInSameGroupController,
   );
   cateRoute.get("/groups", categoryController.getAllMenuGroupsController);

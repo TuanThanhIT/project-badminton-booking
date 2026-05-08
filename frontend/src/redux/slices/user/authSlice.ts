@@ -31,6 +31,7 @@ interface AuthState {
   accessToken?: string;
   userRegister?: RegisterData;
   otpFlow: OtpFlowData;
+  authInitialized: boolean;
 }
 
 const initialState: AuthState = {
@@ -42,6 +43,7 @@ const initialState: AuthState = {
     withdrawRequestId: undefined,
     type: undefined,
   },
+  authInitialized: false,
 };
 
 export const login = createAsyncThunk<
@@ -177,7 +179,9 @@ const authSlice = createSlice({
       // lưu localStorage
       sessionStorage.setItem("otpFlow", JSON.stringify(action.payload));
     },
-
+    setAuthInitialized: (state, action: PayloadAction<boolean>) => {
+      state.authInitialized = action.payload;
+    },
     clearOtpFlow: (state) => {
       state.otpFlow = {
         email: undefined,
@@ -188,7 +192,10 @@ const authSlice = createSlice({
     },
     syncAuthUserProfile: (state, action: PayloadAction<any>) => {
       if (!state.user) return;
-      const profileData = action.payload?.data !== undefined ? action.payload.data : action.payload;
+      const profileData =
+        action.payload?.data !== undefined
+          ? action.payload.data
+          : action.payload;
       if (!profileData) return;
       state.user = {
         ...state.user,
@@ -212,6 +219,12 @@ const authSlice = createSlice({
       // getAccount
       .addCase(getAccount.fulfilled, (state, action) => {
         state.user = action.payload.data;
+        state.authInitialized = true;
+      })
+
+      .addCase(getAccount.rejected, (state) => {
+        state.user = undefined;
+        state.authInitialized = true;
       })
 
       // register
@@ -227,6 +240,11 @@ const authSlice = createSlice({
   },
 });
 
-export const { logoutLocal, setOtpFlow, clearOtpFlow, syncAuthUserProfile } =
-  authSlice.actions;
+export const {
+  logoutLocal,
+  setOtpFlow,
+  clearOtpFlow,
+  syncAuthUserProfile,
+  setAuthInitialized,
+} = authSlice.actions;
 export default authSlice.reducer;

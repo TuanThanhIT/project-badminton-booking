@@ -11,10 +11,15 @@ import {
   Users,
   X,
 } from "lucide-react";
-import type { ChatMessage, Conversation, ReplyToMessage } from "../../../../types/message";
+import type {
+  ChatMessage,
+  Conversation,
+  ReplyToMessage,
+} from "../../../../types/message";
 import type { UserSearchHit } from "../../../../types/userSearch";
 import MemberSearchPicker from "./MemberSearchPicker";
 import { formatRelativeTimeVi } from "../../../../utils/formatRelativeTimeVi";
+import { ROLE_NAME } from "../../../../utils/constants/role";
 
 type ChatPanelProps = {
   conversation?: Conversation;
@@ -83,7 +88,8 @@ const ReplyQuoteBar = ({
 }) => {
   const isImage = replyTarget.type === "IMAGE";
   const isFile = replyTarget.type === "FILE";
-  const hasMedia = (isImage || isFile) && replyTarget.mediaUrl && !replyTarget.isRecalled;
+  const hasMedia =
+    (isImage || isFile) && replyTarget.mediaUrl && !replyTarget.isRecalled;
   const preview = replyTarget.isRecalled
     ? "Tin nhắn đã thu hồi"
     : replyTarget.body?.trim() ||
@@ -94,9 +100,7 @@ const ReplyQuoteBar = ({
       type="button"
       onClick={onJump}
       className={`mb-1.5 w-full text-left rounded-xl overflow-hidden border-l-[3px] flex items-center gap-2 transition-opacity hover:opacity-75 active:opacity-60 ${
-        isMine
-          ? "border-sky-300 bg-sky-700/30"
-          : "border-sky-400 bg-sky-50/80"
+        isMine ? "border-sky-300 bg-sky-700/30" : "border-sky-400 bg-sky-50/80"
       } ${onJump ? "cursor-pointer" : "cursor-default"}`}
     >
       {/* Image thumbnail */}
@@ -110,12 +114,18 @@ const ReplyQuoteBar = ({
 
       {/* Text content */}
       <div className="min-w-0 flex-1 px-2.5 py-1.5">
-        <p className={`text-[11px] font-semibold truncate ${isMine ? "text-sky-200" : "text-sky-600"}`}>
+        <p
+          className={`text-[11px] font-semibold truncate ${isMine ? "text-sky-200" : "text-sky-600"}`}
+        >
           {replyTarget.senderName}
         </p>
-        <p className={`text-[11px] truncate flex items-center gap-1 ${isMine ? "text-sky-100/80" : "text-gray-500"}`}>
+        <p
+          className={`text-[11px] truncate flex items-center gap-1 ${isMine ? "text-sky-100/80" : "text-gray-500"}`}
+        >
           {isImage && !replyTarget.isRecalled && <span>📷</span>}
-          {isFile && !replyTarget.isRecalled && <Paperclip className="w-3 h-3 shrink-0" />}
+          {isFile && !replyTarget.isRecalled && (
+            <Paperclip className="w-3 h-3 shrink-0" />
+          )}
           {preview}
         </p>
       </div>
@@ -143,7 +153,8 @@ const ForwardModal = ({
 
   const preview = message.isRecalled
     ? "Tin nhắn đã thu hồi"
-    : message.body?.trim() || (message.type === "IMAGE" ? "📷 Ảnh" : "📎 Tệp đính kèm");
+    : message.body?.trim() ||
+      (message.type === "IMAGE" ? "📷 Ảnh" : "📎 Tệp đính kèm");
 
   const getDisplayInfo = (c: Conversation) => {
     if (c.type === "GROUP") {
@@ -172,12 +183,16 @@ const ForwardModal = ({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col max-h-[80vh]">
         {/* Header */}
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
-          <h3 className="font-semibold text-gray-900 text-sm">Chuyển tiếp tin nhắn</h3>
+          <h3 className="font-semibold text-gray-900 text-sm">
+            Chuyển tiếp tin nhắn
+          </h3>
           <button
             type="button"
             onClick={onClose}
@@ -207,7 +222,11 @@ const ForwardModal = ({
               autoFocus
             />
             {query && (
-              <button type="button" onClick={() => setQuery("")} className="text-gray-400 hover:text-gray-600">
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                className="text-gray-400 hover:text-gray-600"
+              >
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
@@ -218,7 +237,9 @@ const ForwardModal = ({
         <div className="overflow-y-auto flex-1 py-1">
           {filtered.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-8">
-              {query ? "Không tìm thấy hội thoại" : "Không có hội thoại nào khác"}
+              {query
+                ? "Không tìm thấy hội thoại"
+                : "Không có hội thoại nào khác"}
             </p>
           ) : (
             filtered.map((c) => {
@@ -241,10 +262,17 @@ const ForwardModal = ({
                       {name.charAt(0).toUpperCase()}
                     </div>
                   ) : (
-                    <UserAvatar key={c.id} name={name} url={avatar} sizeClass="w-9 h-9" />
+                    <UserAvatar
+                      key={c.id}
+                      name={name}
+                      url={avatar}
+                      sizeClass="w-9 h-9"
+                    />
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-gray-900 truncate">{name}</p>
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {name}
+                    </p>
                     <p className="text-xs text-gray-400">{sub}</p>
                   </div>
                   {isSending && (
@@ -291,12 +319,17 @@ const ChatPanel = ({
   const scrollToMessage = (messageId: number) => {
     const container = scrollAreaRef.current;
     if (!container) return;
-    const el = container.querySelector(`[data-msg-id="${messageId}"]`) as HTMLElement | null;
+    const el = container.querySelector(
+      `[data-msg-id="${messageId}"]`,
+    ) as HTMLElement | null;
     if (!el) return;
     container.scrollTo({ top: el.offsetTop - 80, behavior: "smooth" });
     if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
     setHighlightedMsgId(messageId);
-    highlightTimerRef.current = setTimeout(() => setHighlightedMsgId(null), 1500);
+    highlightTimerRef.current = setTimeout(
+      () => setHighlightedMsgId(null),
+      1500,
+    );
   };
 
   const participantIds = useMemo(
@@ -315,7 +348,8 @@ const ChatPanel = ({
   const sorted = useMemo(
     () =>
       [...messages].sort(
-        (a, b) => new Date(a.createdDate).getTime() - new Date(b.createdDate).getTime(),
+        (a, b) =>
+          new Date(a.createdDate).getTime() - new Date(b.createdDate).getTime(),
       ),
     [messages],
   );
@@ -338,7 +372,10 @@ const ChatPanel = ({
       const sameSender = prev?.senderId === m.senderId;
       const gapMin =
         prev &&
-        (new Date(m.createdDate).getTime() - new Date(prev.createdDate).getTime()) / 60000 < 4;
+        (new Date(m.createdDate).getTime() -
+          new Date(prev.createdDate).getTime()) /
+          60000 <
+          4;
       out.push({ kind: "msg", message: m, showMeta: !(sameSender && gapMin) });
       prev = m;
     }
@@ -366,7 +403,9 @@ const ChatPanel = ({
     }
   };
 
-  const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleTextareaKeyDown = (
+    e: React.KeyboardEvent<HTMLTextAreaElement>,
+  ) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -386,8 +425,12 @@ const ChatPanel = ({
           <MessageCircle className="w-10 h-10 text-sky-300" strokeWidth={1.5} />
         </div>
         <div className="text-center">
-          <p className="text-sm font-semibold text-gray-500">Chào mừng đến B-Hub Chat</p>
-          <p className="text-xs text-gray-400 mt-1">Chọn một hội thoại để bắt đầu nhắn tin</p>
+          <p className="text-sm font-semibold text-gray-500">
+            Chào mừng đến B-Hub Chat
+          </p>
+          <p className="text-xs text-gray-400 mt-1">
+            Chọn một hội thoại để bắt đầu nhắn tin
+          </p>
         </div>
       </div>
     );
@@ -396,7 +439,9 @@ const ChatPanel = ({
   const isGroup = conversation.type === "GROUP";
   const headerDisplayName = isGroup
     ? conversation.conversationName
-    : (otherParticipant?.fullName?.trim() || otherParticipant?.username || conversation.conversationName);
+    : otherParticipant?.fullName?.trim() ||
+      otherParticipant?.username ||
+      conversation.conversationName;
 
   return (
     <section className="flex-1 bg-gray-50 flex flex-col min-w-0 min-h-0">
@@ -420,7 +465,9 @@ const ChatPanel = ({
               {headerDisplayName}
             </h3>
             {isGroup ? (
-              <p className="text-xs text-gray-500">{conversation.participants.length} thành viên</p>
+              <p className="text-xs text-gray-500">
+                {conversation.participants.length} thành viên
+              </p>
             ) : (
               <p className="text-xs text-emerald-500 font-medium">Trực tuyến</p>
             )}
@@ -433,7 +480,11 @@ const ChatPanel = ({
             className={`p-2 rounded-xl transition-colors shrink-0 ${showMembers ? "bg-sky-100 text-sky-600" : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"}`}
             title="Thành viên nhóm"
           >
-            {showMembers ? <ChevronUp className="w-4 h-4" /> : <Users className="w-4 h-4" />}
+            {showMembers ? (
+              <ChevronUp className="w-4 h-4" />
+            ) : (
+              <Users className="w-4 h-4" />
+            )}
           </button>
         )}
       </div>
@@ -443,14 +494,25 @@ const ChatPanel = ({
         <div className="border-b border-gray-100 bg-white px-4 py-3 space-y-3 max-h-64 overflow-y-auto shrink-0">
           <div className="space-y-2">
             {conversation.participants.map((p) => {
-              const displayName = p.fullName?.trim() ? `${p.fullName} (${p.username})` : p.username;
+              const displayName = p.fullName?.trim()
+                ? `${p.fullName} (${p.username})`
+                : p.username;
               return (
-                <div key={p.userId} className="flex items-center justify-between gap-2">
+                <div
+                  key={p.userId}
+                  className="flex items-center justify-between gap-2"
+                >
                   <div className="flex items-center gap-2 min-w-0">
-                    <UserAvatar name={p.fullName || p.username} url={p.avatar} sizeClass="w-7 h-7" />
+                    <UserAvatar
+                      name={p.fullName || p.username}
+                      url={p.avatar}
+                      sizeClass="w-7 h-7"
+                    />
                     <div className="min-w-0">
-                      <p className="text-xs font-medium text-gray-800 truncate">{displayName}</p>
-                      {p.role === "ADMIN" && (
+                      <p className="text-xs font-medium text-gray-800 truncate">
+                        {displayName}
+                      </p>
+                      {p.role === ROLE_NAME.ADMIN && (
                         <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-medium">
                           Admin
                         </span>
@@ -472,7 +534,9 @@ const ChatPanel = ({
           </div>
           {isGroupAdmin && (
             <div className="pt-2 border-t border-gray-100 space-y-2">
-              <p className="text-xs text-gray-500 font-medium">Thêm thành viên</p>
+              <p className="text-xs text-gray-500 font-medium">
+                Thêm thành viên
+              </p>
               <MemberSearchPicker
                 excludeUserIds={participantIds}
                 selected={pendingAdds}
@@ -515,7 +579,10 @@ const ChatPanel = ({
       )}
 
       {/* Messages area */}
-      <div ref={scrollAreaRef} className="flex-1 overflow-y-auto px-3 py-4 min-h-0">
+      <div
+        ref={scrollAreaRef}
+        className="flex-1 overflow-y-auto px-3 py-4 min-h-0"
+      >
         {rows.map((row, idx) => {
           if (row.kind === "day") {
             return (
@@ -542,7 +609,11 @@ const ChatPanel = ({
               {/* Avatar — group, non-mine */}
               {!mine && isGroup ? (
                 row.showMeta ? (
-                  <UserAvatar name={m.senderName} url={m.senderAvatar} sizeClass="w-8 h-8" />
+                  <UserAvatar
+                    name={m.senderName}
+                    url={m.senderAvatar}
+                    sizeClass="w-8 h-8"
+                  />
                 ) : (
                   <div className="w-8 shrink-0" />
                 )
@@ -608,12 +679,12 @@ const ChatPanel = ({
                             mine ? "text-sky-200/80" : "text-gray-500"
                           }`}
                         >
-                          {!m.replyTo.isRecalled && m.replyTo.type === "IMAGE" && (
-                            <span>📷</span>
-                          )}
-                          {!m.replyTo.isRecalled && m.replyTo.type === "FILE" && (
-                            <Paperclip className="w-3 h-3 shrink-0" />
-                          )}
+                          {!m.replyTo.isRecalled &&
+                            m.replyTo.type === "IMAGE" && <span>📷</span>}
+                          {!m.replyTo.isRecalled &&
+                            m.replyTo.type === "FILE" && (
+                              <Paperclip className="w-3 h-3 shrink-0" />
+                            )}
                           {m.replyTo.isRecalled
                             ? "Tin nhắn đã thu hồi"
                             : m.replyTo.body?.trim() ||
@@ -636,7 +707,9 @@ const ChatPanel = ({
                     }`}
                   >
                     {recalled ? (
-                      <p className="text-xs italic opacity-80">Tin nhắn đã thu hồi</p>
+                      <p className="text-xs italic opacity-80">
+                        Tin nhắn đã thu hồi
+                      </p>
                     ) : (
                       <>
                         {m.type === "IMAGE" && m.mediaUrl ? (
@@ -665,7 +738,9 @@ const ChatPanel = ({
                           </a>
                         ) : null}
                         {m.body?.trim() ? (
-                          <p className="whitespace-pre-wrap break-words leading-relaxed">{m.body}</p>
+                          <p className="whitespace-pre-wrap break-words leading-relaxed">
+                            {m.body}
+                          </p>
                         ) : null}
                       </>
                     )}
@@ -683,7 +758,9 @@ const ChatPanel = ({
               {/* Hover action buttons */}
               <div
                 className={`flex items-center gap-0.5 shrink-0 transition-opacity duration-100 ${
-                  hoveredMsgId === m.id ? "opacity-100" : "opacity-0 pointer-events-none"
+                  hoveredMsgId === m.id
+                    ? "opacity-100"
+                    : "opacity-0 pointer-events-none"
                 } ${mine ? "flex-row-reverse" : "flex-row"}`}
               >
                 <button

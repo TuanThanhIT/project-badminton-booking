@@ -3,8 +3,12 @@
  * Mỗi loại bài có formData khác nhau, dùng cho filter và hiển thị
  */
 
-import type { PostType } from "../types/post";
-import { PLAYER_LEVELS, PLAYER_LEVEL_LABEL, PLAYER_LEVEL_OPTIONS } from "./profileConstant";
+import type { PostType } from "../../types/post";
+import {
+  PLAYER_LEVELS,
+  PLAYER_LEVEL_LABEL,
+  PLAYER_LEVEL_OPTIONS,
+} from "./profileConstant";
 
 /** Nhãn hiển thị cho từng loại bài đăng */
 export const POST_TYPE_LABEL: Record<PostType, string> = {
@@ -73,7 +77,10 @@ export const FIND_PLAYER_FILTERS: FilterField[] = [
     key: "playerRequirement.level",
     label: "Trình độ",
     type: "select",
-    options: PLAYER_LEVELS.map((v) => ({ value: v, label: PLAYER_LEVEL_LABEL[v] })),
+    options: PLAYER_LEVELS.map((v) => ({
+      value: v,
+      label: PLAYER_LEVEL_LABEL[v],
+    })),
   },
   {
     key: "schedule.date",
@@ -98,7 +105,10 @@ export const CLASS_FILTERS: FilterField[] = [
     key: "inputLevel",
     label: "Trình độ đầu vào",
     type: "select",
-    options: PLAYER_LEVEL_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+    options: PLAYER_LEVEL_OPTIONS.map((o) => ({
+      value: o.value,
+      label: o.label,
+    })),
   },
   {
     key: "ageRange",
@@ -147,7 +157,10 @@ export const GROUP_FILTERS: FilterField[] = [
     key: "levelWanted",
     label: "Trình độ",
     type: "select",
-    options: PLAYER_LEVEL_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+    options: PLAYER_LEVEL_OPTIONS.map((o) => ({
+      value: o.value,
+      label: o.label,
+    })),
   },
   {
     key: "area.city",

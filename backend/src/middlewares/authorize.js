@@ -1,5 +1,6 @@
 import UnauthorizedError from "../errors/UnauthorizedError.js";
 import ForbiddenError from "../errors/ForbiddenError.js";
+import { ROLE_NAME } from "../constants/userConstant.js";
 
 const authorize = (...allowedRoles) => {
   return (req, res, next) => {
@@ -8,7 +9,7 @@ const authorize = (...allowedRoles) => {
     }
 
     // Admin có quyền truy cập tất cả
-    if (req.user.role === "ADMIN") {
+    if (req.user.role === ROLE_NAME.ADMIN) {
       return next();
     }
 

@@ -34,7 +34,7 @@ const AdminSidebar = ({ collapsed, setCollapsed }: Props) => {
   const handleLogout = () => {
     dispatch(logout());
     dispatch(logoutLocal());
-    navigate("/login");
+    navigate("/admin/login");
   };
 
   const menus = [

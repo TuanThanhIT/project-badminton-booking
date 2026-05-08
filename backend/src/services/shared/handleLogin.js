@@ -54,7 +54,7 @@ export const handleLogin = async (username, password) => {
 
     const refreshToken = generateRefreshToken(payloadRefreshToken);
 
-    // 🔥 lưu DB
+    // lưu DB
     await RefreshToken.create({
       token: refreshToken,
       userId: user.id,

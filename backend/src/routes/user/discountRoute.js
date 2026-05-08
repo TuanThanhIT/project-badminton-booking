@@ -8,6 +8,7 @@ import {
   getDiscountsCheckoutSchema,
 } from "../../validations/discountValidation.js";
 import authorize from "../../middlewares/authorize.js";
+import { ROLE_NAME } from "../../constants/userConstant.js";
 
 const discountRoute = express.Router();
 
@@ -22,14 +23,14 @@ const initDiscountRoute = (app) => {
   discountRoute.post(
     "/apply",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     validate(applyDiscountSchema),
     discountController.applyDiscountController,
   );
   discountRoute.get(
     "/",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     validate(getDiscountsCheckoutSchema),
     discountController.getDiscountsCheckoutController,
   );

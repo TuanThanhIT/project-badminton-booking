@@ -16,6 +16,7 @@ import {
   walletOrderConfirmSchema,
 } from "../../validations/orderValidation.js";
 import orderController from "../../controllers/user/orderController.js";
+import { ROLE_NAME } from "../../constants/userConstant.js";
 
 const orderRoute = express.Router();
 
@@ -23,7 +24,7 @@ const initOrderRoute = (app) => {
   orderRoute.post(
     "/checkout/preview",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     validate(checkoutPreviewSchema),
     orderController.checkoutPreviewController,
   );
@@ -31,7 +32,7 @@ const initOrderRoute = (app) => {
   orderRoute.post(
     "/checkout/shipping",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     validate(calculateShippingSchema),
     orderController.calculateShippingController,
   );
@@ -39,7 +40,7 @@ const initOrderRoute = (app) => {
   orderRoute.delete(
     "/checkout/session",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     validate(clearCheckoutSessionSchema),
     orderController.clearCheckoutSessionController,
   );
@@ -47,7 +48,7 @@ const initOrderRoute = (app) => {
   orderRoute.post(
     "/",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     validate(createOrderSchema),
     orderController.createOrderController,
   );
@@ -55,7 +56,7 @@ const initOrderRoute = (app) => {
   orderRoute.patch(
     "/vnpay/callback",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     validate(orderCallbackSchema),
     orderController.orderCallbackController,
   );
@@ -63,7 +64,7 @@ const initOrderRoute = (app) => {
   orderRoute.patch(
     "/wallet/confirm",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     validate(walletOrderConfirmSchema),
     orderController.walletOrderConfirmController,
   );
@@ -71,7 +72,7 @@ const initOrderRoute = (app) => {
   orderRoute.get(
     "/tracking/:orderId",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     validate(getOrderTrackingSchema),
     orderController.getOrderTrackingController,
   );
@@ -79,7 +80,7 @@ const initOrderRoute = (app) => {
   orderRoute.get(
     "/progress/:orderId",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     validate(getTrackingProgressSchema),
     orderController.getTrackingProgressController,
   );
@@ -87,7 +88,7 @@ const initOrderRoute = (app) => {
   orderRoute.get(
     "/detail/:orderId",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     validate(getOrderDetailSchema),
     orderController.getOrderDetailController,
   );
@@ -95,7 +96,7 @@ const initOrderRoute = (app) => {
   orderRoute.get(
     "/group/:orderGroupId",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     validate(getOrderGroupByIdSchema),
     orderController.getOrderGroupByIdController,
   );
@@ -103,7 +104,7 @@ const initOrderRoute = (app) => {
   orderRoute.get(
     "/",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     validate(getUserOrdersSchema),
     orderController.getUserOrdersController,
   );

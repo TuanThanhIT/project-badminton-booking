@@ -282,86 +282,68 @@ const CourtPage: React.FC = () => {
   };
 
   // ======================================================
-  // BOOKING
-  // ======================================================
+// BOOKING
+// ======================================================
 
-  const handleBooking = async () => {
-    if (!selectedCourt || !selectedBranch) {
-      alert("Vui lòng chọn sân");
-      return;
-    }
+const handleBooking = async () => {
+  if (!selectedCourt || !selectedBranch) {
+    alert("Vui lòng chọn sân");
+    return;
+  }
 
-    try {
-      // ==================================================
-      // DAILY BOOKING
-      // ==================================================
+  try {
+    // ==================================================
+    // VALIDATE MONTHLY
+    // ==================================================
 
-      if (mode === "daily") {
-        console.log({
-          type: "daily",
-          branchId: selectedBranch.id,
-          courtId: selectedCourt.id,
-          bookingDate,
-          startTime,
-          endTime,
-        });
-
-        navigate("/payment", {
-          state: {
-            type: "daily",
-
-            branchId: selectedBranch.id,
-            branchName: selectedBranch.branchName,
-
-            courtId: selectedCourt.id,
-            courtName: selectedCourt.courtName,
-
-            bookingDate,
-
-            startTime,
-            endTime,
-
-            totalAmount: totalPrice,
-          },
-        });
+    if (mode === "monthly") {
+      if (!monthlyStartDate || !monthlyEndDate) {
+        alert("Vui lòng chọn ngày bắt đầu và kết thúc");
+        return;
       }
 
-      // ==================================================
-      // MONTHLY BOOKING
-      // ==================================================
-      else {
-        if (!monthlyStartDate || !monthlyEndDate || daysOfWeek.length === 0) {
-          alert("Vui lòng nhập đầy đủ thông tin");
-          return;
-        }
-
-        await dispatch(
-          createMonthlyBooking({
-            branchId: selectedBranch.id,
-            courtId: selectedCourt.id,
-
-            startDate: monthlyStartDate,
-            endDate: monthlyEndDate,
-
-            daysOfWeek,
-
-            startTime,
-            endTime,
-
-            totalAmount: totalPrice,
-
-            note: "Booking tháng",
-          }),
-        ).unwrap();
-
-        alert("Đặt sân tháng thành công");
+      if (daysOfWeek.length === 0) {
+        alert("Vui lòng chọn ít nhất 1 thứ trong tuần");
+        return;
       }
-    } catch (error: any) {
-      console.log(error);
-
-      alert(error?.response?.data?.message || "Có lỗi xảy ra khi đặt sân");
     }
-  };
+
+    // ==================================================
+    // CHUYỂN TỚI PAYMENT PAGE CHO CẢ 2 MODE
+    // ==================================================
+
+    navigate("/payment", {
+      state: {
+        type: mode,
+
+        branchId: selectedBranch.id,
+        branchName: selectedBranch.branchName,
+
+        courtId: selectedCourt.id,
+        courtName: selectedCourt.courtName,
+
+        // DAILY
+        bookingDate: mode === "daily" ? bookingDate : null,
+
+        // MONTHLY
+        startDate: mode === "monthly" ? monthlyStartDate : null,
+        endDate: mode === "monthly" ? monthlyEndDate : null,
+        daysOfWeek: mode === "monthly" ? daysOfWeek : [],
+        totalSessions: mode === "monthly" ? monthlySessions : 0,
+
+        // COMMON
+        startTime,
+        endTime,
+
+        totalAmount: totalPrice,
+      },
+    });
+  } catch (error: any) {
+    console.log(error);
+
+    alert(error?.response?.data?.message || "Có lỗi xảy ra");
+  }
+};
 
   // ======================================================
   // UI

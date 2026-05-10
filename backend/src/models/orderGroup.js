@@ -57,6 +57,14 @@ const OrderGroup = sequelize.define(
         },
       },
     },
+    isDiscountApplied: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      validate: {
+        isBoolean: { msg: "isDiscountApplied must be a boolean" },
+      },
+    },
     finalAmount: {
       type: DataTypes.DECIMAL(12, 2),
       allowNull: false,

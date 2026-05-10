@@ -109,25 +109,25 @@ const mapConversation = async (conversation, currentUserId, transaction) => {
 };
 
 const getConversationsService = async (data) => {
-  const { User: currentUser } = data;
+  const { userId } = data;
   return sequelize.transaction(async (t) => {
     const rows = await ConversationParticipant.findAll({
-      where: { userId: currentUser.id },
+      where: { userId },
       include: [{ model: Conversation, as: "conversation" }],
       order: [[{ model: Conversation, as: "conversation" }, "updatedDate", "DESC"]],
       transaction: t,
     });
 
     const conversations = await Promise.all(
-      rows.map((row) => mapConversation(row.conversation, currentUser.id, t)),
+      rows.map((row) => mapConversation(row.conversation, userId, t)),
     );
     return conversations;
   });
 };
 
 const createOrGetDirectConversationService = async (data) => {
-  const {User: currentUser, targetUserId } = data;
-  if (Number(targetUserId) === Number(currentUser.id)) {
+  const { userId, targetUserId } = data;
+  if (Number(targetUserId) === Number(userId)) {
     throw new ForbiddenError("Không thể tự nhắn tin cho chính bạn.");
   }
 
@@ -139,7 +139,7 @@ const createOrGetDirectConversationService = async (data) => {
     if (!targetUser) throw new NotFoundError("Không tìm thấy người dùng.");
 
     const memberships = await ConversationParticipant.findAll({
-      where: { userId: [currentUser.id, targetUserId] },
+      where: { userId: [userId, targetUserId] },
       attributes: ["conversationId", "userId"],
       include: [{ model: Conversation, as: "conversation", attributes: ["id", "type"] }],
       transaction: t,
@@ -153,13 +153,13 @@ const createOrGetDirectConversationService = async (data) => {
     }, {});
 
     const matchedId = Object.entries(groups).find(
-      ([, users]) => users.includes(currentUser.id) && users.includes(targetUserId),
+      ([, users]) => users.includes(userId) && users.includes(targetUserId),
     )?.[0];
 
     if (matchedId) {
       const existed = await Conversation.findByPk(Number(matchedId), { transaction: t });
       if (existed?.type === CONVERSATION_TYPE.PRIVATE) {
-        return mapConversation(existed, currentUser.id, t);
+        return mapConversation(existed, userId, t);
       }
     }
 
@@ -175,7 +175,7 @@ const createOrGetDirectConversationService = async (data) => {
       [
         {
           conversationId: conversation.id,
-          userId: currentUser.id,
+          userId,
           role: ROLE_CONVERSATION.ADMIN,
         },
         {
@@ -187,13 +187,13 @@ const createOrGetDirectConversationService = async (data) => {
       { transaction: t },
     );
 
-    return mapConversation(conversation, currentUser.id, t);
+    return mapConversation(conversation, userId, t);
   });
 };
 
 const createGroupConversationService = async (data) => {
-  const { User:currentUser, name, userIds } = data;
-  const uniqueIds = [...new Set((userIds || []).map(Number))].filter((id) => id !== currentUser.id);
+  const { userId, name, userIds } = data;
+  const uniqueIds = [...new Set((userIds || []).map(Number))].filter((id) => id !== userId);
   if (!name?.trim()) throw new BadRequestError("Tên nhóm không được để trống.");
   if (uniqueIds.length < 1) {
     throw new BadRequestError("Nhóm cần ít nhất một thành viên khác ngoài bạn.");
@@ -219,7 +219,7 @@ const createGroupConversationService = async (data) => {
     const rows = [
       {
         conversationId: conversation.id,
-        userId: currentUser.id,
+        userId,
         role: ROLE_CONVERSATION.ADMIN,
       },
       ...uniqueIds.map((userId) => ({
@@ -230,8 +230,8 @@ const createGroupConversationService = async (data) => {
     ];
     await ConversationParticipant.bulkCreate(rows, { transaction: t });
 
-    const mapped = await mapConversation(conversation, currentUser.id, t);
-    const allUserIds = [currentUser.id, ...uniqueIds];
+    const mapped = await mapConversation(conversation, userId, t);
+    const allUserIds = [userId, ...uniqueIds];
     broadcastToConversation(allUserIds, conversation.id, "chat:conversation-updated", {
       conversationId: conversation.id,
       action: "created",
@@ -241,12 +241,12 @@ const createGroupConversationService = async (data) => {
 };
 
 const updateDirectNicknameService = async (data) => {
-  const {User: currentUser, conversationId, nickname } = data;
+  const { userId, conversationId, nickname } = data;
   const value = String(nickname || "").trim();
   if (!value) throw new BadRequestError("Biệt danh không được để trống.");
 
   return sequelize.transaction(async (t) => {
-    await ensureMembership(conversationId, currentUser.id, t);
+    await ensureMembership(conversationId, userId, t);
     const conversation = await Conversation.findByPk(conversationId, { transaction: t });
     if (!conversation) throw new NotFoundError("Không tìm thấy cuộc trò chuyện.");
     if (conversation.type !== CONVERSATION_TYPE.PRIVATE) {
@@ -254,7 +254,7 @@ const updateDirectNicknameService = async (data) => {
     }
 
     await conversation.update({ conversationName: value }, { transaction: t });
-    return mapConversation(conversation, currentUser.id, t);
+    return mapConversation(conversation, userId, t);
   });
 };
 
@@ -268,12 +268,12 @@ const ensureGroupAdmin = (membership, conversation) => {
 };
   
 const addMembersToGroupService = async (data) => {
-  const {User: currentUser, conversationId, userIds } = data;
+  const { userId, conversationId, userIds } = data;
   const addIds = [...new Set((userIds || []).map(Number))].filter(Boolean);
   if (addIds.length < 1) throw new BadRequestError("Danh sách thành viên không hợp lệ.");
 
   return sequelize.transaction(async (t) => {
-    const membership = await ensureMembership(conversationId, currentUser.id, t);
+    const membership = await ensureMembership(conversationId, userId, t);
     const conversation = await Conversation.findByPk(conversationId, { transaction: t });
     if (!conversation) throw new NotFoundError("Không tìm thấy cuộc trò chuyện.");
     ensureGroupAdmin(membership, conversation);
@@ -317,21 +317,21 @@ const addMembersToGroupService = async (data) => {
       action: "members_changed",
     });
 
-    return mapConversation(conversation, currentUser.id, t);
+    return mapConversation(conversation, userId, t);
   });
 };
 
 const removeMemberFromGroupService = async (data) => {
-  const {User: currentUser, conversationId, targetUserId } = data;
+  const { userId, conversationId, targetUserId } = data;
   return sequelize.transaction(async (t) => {
-    const membership = await ensureMembership(conversationId, currentUser.id, t);
+    const membership = await ensureMembership(conversationId, userId, t);
     const conversation = await Conversation.findByPk(conversationId, { transaction: t });
     if (!conversation) throw new NotFoundError("Không tìm thấy cuộc trò chuyện.");
     if (conversation.type !== CONVERSATION_TYPE.GROUP) {
       throw new BadRequestError("Thao tác chỉ áp dụng cho nhóm.");
     }
 
-    const isSelf = Number(targetUserId) === Number(currentUser.id);
+    const isSelf = Number(targetUserId) === Number(userId);
     if (!isSelf) ensureGroupAdmin(membership, conversation);
     else if (membership.role === ROLE_CONVERSATION.ADMIN) {
       const adminCount = await ConversationParticipant.count({
@@ -359,7 +359,7 @@ const removeMemberFromGroupService = async (data) => {
     if (remaining === 0) {
       await Message.destroy({ where: { conversationId }, transaction: t });
       await conversation.destroy({ transaction: t });
-      broadcastToConversation([currentUser.id, targetUserId], conversationId, "chat:conversation-updated", {
+      broadcastToConversation([userId, targetUserId], conversationId, "chat:conversation-updated", {
         conversationId,
         action: "deleted",
       });
@@ -383,19 +383,19 @@ const removeMemberFromGroupService = async (data) => {
       return { left: true, conversationId };
     }
 
-    return mapConversation(conversation, currentUser.id, t);
+    return mapConversation(conversation, userId, t);
   });
 };
 
 const leaveGroupService = async (data) => {
-  const { currentUser, conversationId } = data;
-  return removeMemberFromGroupService({ currentUser, conversationId, targetUserId: currentUser.id });
+  const { userId, conversationId } = data;
+  return removeMemberFromGroupService({ userId, conversationId, targetUserId: userId });
 };
 
 const deleteGroupConversationService = async (data) => {
-  const {User: currentUser, conversationId } = data;
+  const { userId, conversationId } = data;
   return sequelize.transaction(async (t) => {
-    const membership = await ensureMembership(conversationId, currentUser.id, t);
+    const membership = await ensureMembership(conversationId, userId, t);
     const conversation = await Conversation.findByPk(conversationId, { transaction: t });
     if (!conversation) throw new NotFoundError("Không tìm thấy cuộc trò chuyện.");
     ensureGroupAdmin(membership, conversation);

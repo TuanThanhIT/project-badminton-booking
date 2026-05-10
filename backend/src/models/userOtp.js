@@ -35,6 +35,14 @@ const UserOtp = sequelize.define(
         isBoolean: { msg: "isUsed must be a boolean" },
       },
     },
+    isVerified: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      validate: {
+        isBoolean: { msg: "isVerified must be a boolean" },
+      },
+    },
     type: {
       type: DataTypes.ENUM(...Object.values(OTP_TYPE)),
       allowNull: false,

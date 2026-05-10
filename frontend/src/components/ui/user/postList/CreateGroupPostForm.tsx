@@ -14,7 +14,7 @@ import {
   FormCreateGroupPostSchema,
   type FormCreateGroupPost,
 } from "../../../../schemas/FormCreateGroupPostSchema";
-import { GROUP_LEVEL_OPTIONS } from "../../../../constants/postConstant";
+import { GROUP_LEVEL_OPTIONS } from "../../../../utils/constants/postConstant";
 
 const weekdayOptions = [
   { d: 2, label: "Thứ 2" },
@@ -70,7 +70,7 @@ const CreateGroupPostForm = ({
           startTime: "",
           endTime: "",
         },
-        levelWanted: "Trung bình",
+        levelWanted: "INTERMEDIATE",
         contact: {
           inApp: true,
           zaloGroupLink: "",

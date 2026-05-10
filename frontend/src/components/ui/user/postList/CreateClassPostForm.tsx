@@ -17,7 +17,7 @@ import {
 import type { CreatePostRequest } from "../../../../types/post";
 import { toast } from "react-toastify";
 import LoadingButton from "../../common/LoadingButton";
-import { CLASS_INPUT_LEVEL_OPTIONS } from "../../../../constants/postConstant";
+import { CLASS_INPUT_LEVEL_OPTIONS } from "../../../../utils/constants/postConstant";
 import { getAllBranches } from "../../../../redux/slices/user/branchSlice";
 
 type CreateClassPostFormProps = {
@@ -56,7 +56,7 @@ const CreateClassPostForm = ({
       content: "",
       type: "CLASS",
       formData: {
-        inputLevel: "Trung bình",
+        inputLevel: "INTERMEDIATE",
         ageRange: "",
         schedule: {
           weekdays: [2, 4, 6],

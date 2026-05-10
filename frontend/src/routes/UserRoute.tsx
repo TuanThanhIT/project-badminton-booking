@@ -18,7 +18,6 @@ import UserPublicLayout from "../components/layouts/UserPublicLayout";
 import UserPrivateLayout from "../components/layouts/UserPrivateLayout";
 import BookingCourtPage from "../pages/user/BookingCourtPage";
 import BookingPage from "../pages/user/BookingPage";
-import WalletDepositSuccess from "../pages/user/WalletDepositSuccess";
 import WalletPage from "../pages/user/WalletPage";
 import ResetPasswordPage from "../pages/user/ResetPasswordPage";
 import CreatePostPage from "../pages/user/CreatePostPage";
@@ -28,7 +27,9 @@ import MessagesPage from "../pages/user/MessagesPage";
 import BranchDetailPage from "../pages/user/BranchDetailPage";
 import BranchPage from "../pages/user/BranchesPage";
 import CourtPage from "../pages/user/CourtPage";
-import NotFoundPage from "../pages/NotFoundPage";
+import OrderResultPage from "../pages/user/OrderResultPage";
+import VNPayResultPage from "../pages/user/VNPayResultPage";
+import UserProtectedRoute from "./ProtectedRoute/UserProtectedRoute";
 import PaymentPage from "../pages/user/PaymentPage";
 
 const UserRoute = () => {
@@ -47,33 +48,32 @@ const UserRoute = () => {
       </Route>
 
       {/* Private */}
-      <Route element={<UserPrivateLayout />}>
-        <Route path="home" element={<HomePage />} />
-        <Route path="products" element={<ProductPage />} />
-        <Route path="product/:id" element={<ProductDetailPage />} />
-        <Route path="booking" element={<BookingCourtPage />} />
-        <Route path="history" element={<HistoryPage />} />
-        <Route path="profile" element={<ProfilePage />} />
-        <Route path="profile/:userId" element={<PublicProfilePage />} />
-        <Route path="cart" element={<CartPage />} />
-        <Route path="checkout" element={<CheckoutPage />} />
-        <Route path="orders" element={<OrderPage />} />
-        <Route path="bookings" element={<BookingPage />} />
-        <Route path="wallet" element={<WalletPage />}></Route>
-        <Route
-          path="wallet/deposit/success"
-          element={<WalletDepositSuccess />}
-        ></Route>
-        <Route path="create-post" element={<CreatePostPage />} />
-        <Route path="posts" element={<PostListPage />} />
-        <Route path="messages" element={<MessagesPage />} />
-        <Route path="messages/:conversationId" element={<MessagesPage />} />
-        <Route path="branches" element={<BranchPage />} />
-        <Route path="branches/:branchId" element={<BranchDetailPage />} />
-        <Route path="courts" element={<CourtPage />} />
+      <Route element={<UserProtectedRoute />}>
+        <Route element={<UserPrivateLayout />}>
+          <Route path="home" element={<HomePage />} />
+          <Route path="products" element={<ProductPage />} />
+          <Route path="product/:id" element={<ProductDetailPage />} />
+          <Route path="booking" element={<BookingCourtPage />} />
+          <Route path="history" element={<HistoryPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+          <Route path="profile/:userId" element={<PublicProfilePage />} />
+          <Route path="cart" element={<CartPage />} />
+          <Route path="checkout" element={<CheckoutPage />} />
+          <Route path="orders" element={<OrderPage />} />
+          <Route path="bookings" element={<BookingPage />} />
+          <Route path="wallet" element={<WalletPage />}></Route>
+          <Route path="vnpay/result" element={<VNPayResultPage />}></Route>
+          <Route path="create-post" element={<CreatePostPage />} />
+          <Route path="posts" element={<PostListPage />} />
+          <Route path="messages" element={<MessagesPage />} />
+          <Route path="messages/:conversationId" element={<MessagesPage />} />
+          <Route path="branches" element={<BranchPage />} />
+          <Route path="branches/:branchId" element={<BranchDetailPage />} />
+          <Route path="courts" element={<CourtPage />} />
+          <Route path="order-result" element={<OrderResultPage />} />
+        </Route>
         <Route path="/payment" element={<PaymentPage />} />
       </Route>
-      <Route path="*" element={<NotFoundPage />}></Route>
     </Routes>
   );
 };

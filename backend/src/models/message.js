@@ -73,6 +73,13 @@ const Message = sequelize.define(
         },
       },
     },
+    replyToId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: "Messages", key: "id" },
+      onDelete: "SET NULL",
+      onUpdate: "CASCADE",
+    },
     isRead: {
       type: DataTypes.BOOLEAN,
       allowNull: true,

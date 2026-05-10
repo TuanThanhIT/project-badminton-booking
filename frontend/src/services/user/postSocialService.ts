@@ -19,9 +19,9 @@ type CreateRepostResponse = ApiResponse<{
 const toggleLikeService = (postId: number) =>
   instance.post<ToggleLikeResponse>(`/user/posts/${postId}/like`);
 
-const createCommentService = (data: CreateCommentRequest) =>
+const createCommentService = (postId: number, data: CreateCommentRequest) =>
   instance.post<CreateCommentResponse>(
-    `/user/posts/${data.postId}/comments`,data
+    `/user/posts/${postId}/comments`,data
   );
 
 const getCommentsService = (postId: number) =>

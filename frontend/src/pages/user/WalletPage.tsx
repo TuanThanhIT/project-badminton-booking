@@ -32,7 +32,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { otpSend, setOtpFlow } from "../../redux/slices/user/authSlice";
 import type { OtpFlowData, OtpSendRequest } from "../../types/auth";
-import { OTP_TYPE } from "../../constants/otpType";
+import { OTP_TYPE } from "../../utils/constants/otpType";
 
 type TabType = "deposit" | "withdraw" | "payment" | "refund";
 type Status = "success" | "pending";
@@ -69,8 +69,8 @@ const WalletPage: React.FC = () => {
   const handleWalletDeposit = async (dt: formWalletDeposit) => {
     const confirmed = await showConfirmDialog(
       "Xác nhận nạp tiền",
-      "Bạn có chắc chắn muốn nạp số tiền này vào ví ?",
-      "Chắc chắn",
+      "Bạn sẽ được chuyển đến cổng thanh toán. Tiếp tục?",
+      "Xác nhận",
       "Hủy",
     );
     if (!confirmed) return;
@@ -235,175 +235,179 @@ const WalletPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-8 my-10 bg-white rounded-2xl border border-gray-300">
-      {/* HEADER */}
-      <header className="flex items-center gap-3 mb-6">
-        <Wallet className="w-7 h-7 text-blue-600" />
-        <h1 className="text-2xl font-semibold text-gray-800 underline">
-          Ví thanh toán
-        </h1>
-      </header>
+    <div className="max-w-5xl mx-auto py-20">
+      <div className="rounded-2xl border border-sky-400 p-10 bg-white">
+        {/* HEADER */}
+        <header className="flex items-center gap-3 mb-6">
+          <Wallet className="w-7 h-7 text-blue-600" />
+          <h1 className="text-2xl font-semibold text-gray-800 underline">
+            Ví thanh toán
+          </h1>
+        </header>
 
-      {/* BALANCE + CHART */}
-      <div className="mb-6 p-6 rounded-2xl bg-gradient-to-t from-white to-sky-50 shadow-sm">
-        <div className="flex justify-between items-start">
-          {/* LEFT */}
-          <div>
-            <p className="text-sm text-gray-500 font-bold">Số dư</p>
-            <p className="text-3xl font-bold text-green-600">1,200,000 VND</p>
+        {/* BALANCE + CHART */}
+        <div className="mb-6 p-6 rounded-2xl bg-gradient-to-t from-white to-sky-50 shadow-sm">
+          <div className="flex justify-between items-start">
+            {/* LEFT */}
+            <div>
+              <p className="text-sm text-gray-500 font-bold">Số dư</p>
+              <p className="text-3xl font-bold text-green-600">1,200,000 VND</p>
 
-            <p className="flex items-center gap-1 text-sm text-gray-500 mt-1">
-              <Lock className="w-4 h-4" />
-              Khả dụng: 1,000,000 VND
-            </p>
-          </div>
+              <p className="flex items-center gap-1 text-sm text-gray-500 mt-1">
+                <Lock className="w-4 h-4" />
+                Khả dụng: 1,000,000 VND
+              </p>
+            </div>
 
-          {/* RIGHT - ACTION BUTTONS */}
-          <div className="flex gap-3">
-            {/* NẠP */}
-            <button
-              onClick={() => setOpenDeposit(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500 hover:bg-green-600 text-white text-sm font-medium shadow-sm transition"
-            >
-              <ArrowDownCircle className="w-5 h-5" />
-              Nạp tiền
-            </button>
+            {/* RIGHT - ACTION BUTTONS */}
+            <div className="flex gap-3">
+              {/* NẠP */}
+              <button
+                onClick={() => setOpenDeposit(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500 hover:bg-green-600 text-white text-sm font-medium shadow-sm transition"
+              >
+                <ArrowDownCircle className="w-5 h-5" />
+                Nạp tiền
+              </button>
 
-            {/* RÚT */}
-            <button
-              onClick={() => setOpenWithdraw(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-medium shadow-sm transition"
-            >
-              <ArrowUpCircle className="w-5 h-5" />
-              Rút tiền
-            </button>
-          </div>
-        </div>
-
-        {/* CHART */}
-        <div className="mt-4 h-40">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
-              <Tooltip
-                formatter={(value: number) => value.toLocaleString() + " VND"}
-              />
-              <Legend />
-
-              <Line
-                type="monotone"
-                dataKey="deposit"
-                stroke="#22c55e"
-                strokeWidth={2}
-              />
-              <Line
-                type="monotone"
-                dataKey="withdraw"
-                stroke="#ef4444"
-                strokeWidth={2}
-              />
-              <Line
-                type="monotone"
-                dataKey="payment"
-                stroke="#3b82f6"
-                strokeWidth={2}
-              />
-              <Line
-                type="monotone"
-                dataKey="refund"
-                stroke="#06b6d4"
-                strokeWidth={2}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* SEARCH */}
-      <input
-        placeholder="Tìm giao dịch..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="w-full mb-5 p-3 rounded-xl bg-gray-100 focus:outline-none"
-      />
-
-      {/* TABS */}
-      <div className="flex gap-6 mb-6">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setActiveTab(t.key as TabType)}
-            className={`pb-2 text-sm font-medium ${
-              activeTab === t.key
-                ? "text-blue-600 border-b-2 border-blue-500"
-                : "text-gray-400"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {/* LIST */}
-      <div className="max-h-[500px] overflow-y-auto space-y-4">
-        {Object.entries(grouped).map(([date, list]) => (
-          <div key={date}>
-            <p className="text-sm text-gray-400 mb-2">
-              {formatDateLabel(date)} ({date})
-            </p>
-
-            <div className="space-y-2">
-              {list.map((t) => {
-                const isIncome = t.type === "deposit" || t.type === "refund";
-
-                return (
-                  <div
-                    key={t.id}
-                    className="flex justify-between items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-white rounded-full shadow-sm">
-                        {getIcon(t.type)}
-                      </div>
-
-                      <div>
-                        <p className="font-medium">{t.note}</p>
-                        <p className="text-xs text-gray-400">
-                          {t.time} •{" "}
-                          {t.status === "pending" ? "Đang xử lý" : "Thành công"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <p
-                      className={`font-semibold ${
-                        isIncome ? "text-green-600" : "text-red-500"
-                      }`}
-                    >
-                      {isIncome ? "+" : "-"}
-                      {t.amount.toLocaleString()}
-                    </p>
-                  </div>
-                );
-              })}
+              {/* RÚT */}
+              <button
+                onClick={() => setOpenWithdraw(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-medium shadow-sm transition"
+              >
+                <ArrowUpCircle className="w-5 h-5" />
+                Rút tiền
+              </button>
             </div>
           </div>
-        ))}
+
+          {/* CHART */}
+          <div className="mt-4 h-40">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData}>
+                <Tooltip
+                  formatter={(value: number) => value.toLocaleString() + " VND"}
+                />
+                <Legend />
+
+                <Line
+                  type="monotone"
+                  dataKey="deposit"
+                  stroke="#22c55e"
+                  strokeWidth={2}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="withdraw"
+                  stroke="#ef4444"
+                  strokeWidth={2}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="payment"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="refund"
+                  stroke="#06b6d4"
+                  strokeWidth={2}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* SEARCH */}
+        <input
+          placeholder="Tìm giao dịch..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full mb-5 p-3 rounded-xl bg-gray-100 focus:outline-none"
+        />
+
+        {/* TABS */}
+        <div className="flex gap-6 mb-6">
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setActiveTab(t.key as TabType)}
+              className={`pb-2 text-sm font-medium ${
+                activeTab === t.key
+                  ? "text-blue-600 border-b-2 border-blue-500"
+                  : "text-gray-400"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* LIST */}
+        <div className="max-h-[500px] overflow-y-auto space-y-4">
+          {Object.entries(grouped).map(([date, list]) => (
+            <div key={date}>
+              <p className="text-sm text-gray-400 mb-2">
+                {formatDateLabel(date)} ({date})
+              </p>
+
+              <div className="space-y-2">
+                {list.map((t) => {
+                  const isIncome = t.type === "deposit" || t.type === "refund";
+
+                  return (
+                    <div
+                      key={t.id}
+                      className="flex justify-between items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-white rounded-full shadow-sm">
+                          {getIcon(t.type)}
+                        </div>
+
+                        <div>
+                          <p className="font-medium">{t.note}</p>
+                          <p className="text-xs text-gray-400">
+                            {t.time} •{" "}
+                            {t.status === "pending"
+                              ? "Đang xử lý"
+                              : "Thành công"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <p
+                        className={`font-semibold ${
+                          isIncome ? "text-green-600" : "text-red-500"
+                        }`}
+                      >
+                        {isIncome ? "+" : "-"}
+                        {t.amount.toLocaleString()}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {openDeposit && (
+          <DepositForm
+            setOpenDeposit={setOpenDeposit}
+            onSubmit={handleWalletDeposit}
+          />
+        )}
+
+        {openWithdraw && (
+          <WithdrawRequestForm
+            setOpenWithdraw={setOpenWithdraw}
+            onSubmit={handleWithdrawRequest}
+            loading={withdrawLoading}
+          />
+        )}
       </div>
-
-      {openDeposit && (
-        <DepositForm
-          setOpenDeposit={setOpenDeposit}
-          onSubmit={handleWalletDeposit}
-        />
-      )}
-
-      {openWithdraw && (
-        <WithdrawRequestForm
-          setOpenWithdraw={setOpenWithdraw}
-          onSubmit={handleWithdrawRequest}
-          loading={withdrawLoading}
-        />
-      )}
     </div>
   );
 };

@@ -7,6 +7,8 @@ import { createServer } from "http";
 import { initSocket } from "./socket/index.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import "./models/index.js";
+import "./workers/ghnWebhookWorker.js";
+
 import initAuthRoute from "./routes/user/authRoute.js";
 import initCateRoute from "./routes/user/cateRoute.js";
 import initProductRoute from "./routes/user/productRoute.js";
@@ -22,6 +24,10 @@ import initProfileRoute from "./routes/user/profileRoute.js";
 import initConversationRoute from "./routes/user/conversationRoute.js";
 import initUserSearchRoute from "./routes/user/userSearchRoute.js";
 import initMonthlyBookingRoute from "./routes/user/monthlyBookingRoute.js";
+import initOrderRoute from "./routes/user/orderRoute.js";
+import initDiscountRoute from "./routes/user/discountRoute.js";
+import initEmployeeOrderRoute from "./routes/employee/orderRoute.js";
+import initWebhookRoute from "./routes/user/webhookRoute.js";
 
 dotenv.config();
 
@@ -50,6 +56,9 @@ initCartRoute(app);
 initWalletRoute(app);
 initAddressRoute(app);
 initMonthlyBookingRoute(app);
+initOrderRoute(app);
+initDiscountRoute(app);
+initWebhookRoute(app);
 
 // Post
 initPostRoute(app);
@@ -57,6 +66,9 @@ initPostSocialRoute(app);
 initProfileRoute(app);
 initConversationRoute(app);
 initUserSearchRoute(app);
+
+// Employee
+initEmployeeOrderRoute(app);
 
 // create http server
 const httpServer = createServer(app);

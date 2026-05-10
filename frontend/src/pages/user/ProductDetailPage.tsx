@@ -22,7 +22,7 @@ import type { AddCartItemRequest } from "../../types/cart";
 import { addCartItem, getCart } from "../../redux/slices/user/cartSlice";
 import { toast } from "react-toastify";
 import { normalizeColor } from "../../utils/color";
-import { COLOR_MAP } from "../../constants/color";
+import { COLOR_MAP } from "../../utils/constants/color";
 import { flyToCart } from "../../utils/flyToCart";
 import type { BranchStock } from "../../types/branch";
 

@@ -13,24 +13,19 @@ import {
   type UpdatePostRequest,
   type CreateCommentPayload,
   type CreateCommentRequest,
+  type PostFilterData,
 } from "../../../types/post";
 import postService from "../../../services/user/postService";
 import postSocialService from "../../../services/user/postSocialService";
 
 interface PostState {
-  posts: PostWithAuthor[];
-  total: number;
-  page: number;
-  limit: number;
+  posts: PostFilterData;
   lastCreatedPost?: Post;
   lastGetPostsQuery?: GetPostsQuery;
 }
 
 const initialState: PostState = {
-  posts: [],
-  total: 0,
-  page: 1,
-  limit: 10,
+  posts: { posts: [], total: 0, page: 1, limit: 10 },
   lastCreatedPost: undefined,
   lastGetPostsQuery: undefined,
 };
@@ -78,27 +73,27 @@ export const toggleLike = createAsyncThunk<
 
 export const createComment = createAsyncThunk<
   CreateCommentPayload,
-  CreateCommentRequest,
+  { data: CreateCommentRequest },
   { rejectValue: ApiErrorType }
->("post/createComment", 
-  async ({ postId, content, parentId }, { rejectWithValue }) => {
+>("post/createComment",
+  async ({ data }, { rejectWithValue }) => {
     try {
-      const res = await postSocialService.createCommentService({
-        postId,
-        content,
-        parentId: parentId ?? undefined,
+      const { postId } = data;
+      const res = await postSocialService.createCommentService(postId, {
+        content: data.content,
+        parentId: data.parentId ?? undefined,
       });
-      const data = res.data.data as { comment: PostComment } & PostCounts;
+      const resData = res.data.data as { comment: PostComment } & PostCounts;
 
       const counts: PostCounts = {
-        likesCount: data.likesCount,
-        commentsCount: data.commentsCount,
-        sharesCount: data.sharesCount,
-        likedByMe: data.likedByMe,
-        sharedByMe: data.sharedByMe ?? false,
+        likesCount: resData.likesCount,
+        commentsCount: resData.commentsCount,
+        sharesCount: resData.sharesCount,
+        likedByMe: resData.likedByMe,
+        sharedByMe: resData.sharedByMe ?? false,
       };
 
-      return { postId, comment: data.comment, counts };
+      return { postId, comment: resData.comment, counts };
     } catch (error) {
       return rejectWithValue(error as ApiErrorType);
     }
@@ -160,20 +155,16 @@ const postSlice = createSlice({
       .addCase(createPost.fulfilled, (state, action) => {
         const post = action.payload.data;
         state.lastCreatedPost = post;
-        state.posts.unshift(post as PostWithAuthor);
+        state.posts.posts.unshift(post as PostWithAuthor);
       })
       .addCase(getPosts.fulfilled, (state, action) => {
         const { data, total, page, limit } = action.payload.data;
-        state.posts = data;
-        state.total = total;
-        state.page = page;
-        state.limit = limit;
-        // Lưu query cuối để các action like/comment/share có thể refresh lại feed
-        state.lastGetPostsQuery = (action.meta.arg as any)?.params;
+        state.posts = { posts: data, total, page, limit };
+        state.lastGetPostsQuery = action.meta.arg.params;
       })
       .addCase(toggleLike.fulfilled, (state, action) => {
-        const { postId } = action.meta.arg as { postId: number };
-        const post = state.posts.find((p) => p.id === postId);
+        const { postId } = action.meta.arg;
+        const post = state.posts.posts.find((p) => p.id === postId);
         if (!post) return;
         const counts = action.payload.data;
         post.likesCount = counts.likesCount;
@@ -183,19 +174,16 @@ const postSlice = createSlice({
         post.sharedByMe = counts.sharedByMe;
       })
       .addCase(createComment.fulfilled, (state, action) => {
-        const {postId,comment, counts} = action.payload;
-        const post = state.posts.find(p => p.id === postId);
-        if(!post) return;
-        // update counts
+        const { postId, comment, counts } = action.payload;
+        const post = state.posts.posts.find((p) => p.id === postId);
+        if (!post) return;
         post.commentsCount = counts.commentsCount;
-        // init commnets nếu chưa có 
-        if(!post.comments) post.comments = [];
-        // thêm comment mới vào post
+        if (!post.comments) post.comments = [];
         post.comments.push(comment);
       })
       .addCase(repostPost.fulfilled, (state, action) => {
-        const { postId } = action.meta.arg as { postId: number; content?: string };
-        const post = state.posts.find((p) => p.id === postId);
+        const { postId } = action.meta.arg;
+        const post = state.posts.posts.find((p) => p.id === postId);
         if (!post) return;
         const counts = action.payload.data;
         post.likesCount = counts.likesCount;
@@ -206,17 +194,17 @@ const postSlice = createSlice({
       })
       .addCase(updatePost.fulfilled, (state, action) => {
         const updated = action.payload.data;
-        const idx = state.posts.findIndex((p) => p.id === updated.id);
+        const idx = state.posts.posts.findIndex((p) => p.id === updated.id);
         if (idx >= 0) {
-          state.posts[idx] = { ...state.posts[idx], ...updated };
+          state.posts.posts[idx] = { ...state.posts.posts[idx], ...updated };
         }
       })
       .addCase(deletePost.fulfilled, (state, action) => {
         const { postId } = action.payload;
-        const before = state.posts.length;
-        state.posts = state.posts.filter((p) => p.id !== postId);
-        if (state.posts.length !== before) {
-          state.total = Math.max(0, state.total - 1);
+        const before = state.posts.posts.length;
+        state.posts.posts = state.posts.posts.filter((p) => p.id !== postId);
+        if (state.posts.posts.length !== before) {
+          state.posts.total = Math.max(0, state.posts.total - 1);
         }
       });
 

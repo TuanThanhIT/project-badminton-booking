@@ -30,6 +30,13 @@ export const WALLET_STATUS = Object.freeze({
   LOCKED: "LOCKED",
 });
 
+export const WALLET_TRANSACTION_STATUS = Object.freeze({
+  PENDING: "PENDING",
+  SUCCESS: "SUCCESS",
+  FAILED: "FAILED",
+  CANCELLED: "CANCELLED",
+});
+
 export const WITHDRAW_REQUEST_STATUS = Object.freeze({
   PENDING: "PENDING",
   CONFIRMED: "CONFIRMED",

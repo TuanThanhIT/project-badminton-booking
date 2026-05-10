@@ -4,7 +4,7 @@ import { ToastContainer } from "react-toastify";
 import AllRoute from "./routes/AllRoute";
 import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "./redux/hook";
-import { getAccount } from "./redux/slices/user/authSlice";
+import { getAccount, setAuthInitialized } from "./redux/slices/user/authSlice";
 import { getCategoriesGrouped } from "./redux/slices/user/cateSlice";
 
 const App = () => {
@@ -14,7 +14,10 @@ const App = () => {
   useEffect(() => {
     if (accessToken) {
       dispatch(getAccount());
+    } else {
+      dispatch(setAuthInitialized(true));
     }
+
     dispatch(getCategoriesGrouped());
   }, [dispatch, accessToken]);
 

@@ -9,6 +9,7 @@ var _http = require("http");
 var _index = require("./socket/index.js");
 var _errorHandler = _interopRequireDefault(require("./middlewares/errorHandler.js"));
 require("./models/index.js");
+require("./workers/ghnWebhookWorker.js");
 var _authRoute = _interopRequireDefault(require("./routes/user/authRoute.js"));
 var _cateRoute = _interopRequireDefault(require("./routes/user/cateRoute.js"));
 var _productRoute = _interopRequireDefault(require("./routes/user/productRoute.js"));
@@ -24,6 +25,10 @@ var _profileRoute = _interopRequireDefault(require("./routes/user/profileRoute.j
 var _conversationRoute = _interopRequireDefault(require("./routes/user/conversationRoute.js"));
 var _userSearchRoute = _interopRequireDefault(require("./routes/user/userSearchRoute.js"));
 var _monthlyBookingRoute = _interopRequireDefault(require("./routes/user/monthlyBookingRoute.js"));
+var _orderRoute = _interopRequireDefault(require("./routes/user/orderRoute.js"));
+var _discountRoute = _interopRequireDefault(require("./routes/user/discountRoute.js"));
+var _orderRoute2 = _interopRequireDefault(require("./routes/employee/orderRoute.js"));
+var _webhookRoute = _interopRequireDefault(require("./routes/user/webhookRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -49,6 +54,9 @@ app.use((0, _cookieParser["default"])());
 (0, _walletRoute["default"])(app);
 (0, _addressRoute["default"])(app);
 (0, _monthlyBookingRoute["default"])(app);
+(0, _orderRoute["default"])(app);
+(0, _discountRoute["default"])(app);
+(0, _webhookRoute["default"])(app);
 
 // Post
 (0, _postRoute["default"])(app);
@@ -57,13 +65,18 @@ app.use((0, _cookieParser["default"])());
 (0, _conversationRoute["default"])(app);
 (0, _userSearchRoute["default"])(app);
 
+// Employee
+(0, _orderRoute2["default"])(app);
+
 // create http server
 var httpServer = (0, _http.createServer)(app);
 
 // init socket
 (0, _index.initSocket)(httpServer);
 app.use(_errorHandler["default"]);
-_db["default"].sync().then(function () {
+_db["default"].sync({
+  alter: true
+}).then(function () {
   console.log("Database synced");
   httpServer.listen(PORT, function () {
     console.log("Server running on http://localhost:".concat(PORT));

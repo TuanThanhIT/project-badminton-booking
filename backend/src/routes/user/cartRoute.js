@@ -8,6 +8,7 @@ import {
   updateQuantitySchema,
 } from "../../validations/cartValidation.js";
 import cartController from "../../controllers/user/cartController.js";
+import { ROLE_NAME } from "../../constants/userConstant.js";
 
 const cartRoute = express.Router();
 
@@ -15,33 +16,33 @@ const initCartRoute = (app) => {
   cartRoute.post(
     "/",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     validate(addItemToCartSchema),
     cartController.addItemToCartController,
   );
   cartRoute.get(
     "/",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     cartController.getCartItemsController,
   );
   cartRoute.patch(
     "/:cartItemId",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     validate(updateQuantitySchema),
     cartController.updateQuantityController,
   );
   cartRoute.delete(
     "/",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     cartController.deleteAllCartItemController,
   );
   cartRoute.delete(
     "/:cartItemId",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     validate(deleteCartItemSchema),
     cartController.deleteCartItemController,
   );

@@ -156,9 +156,9 @@ export type PostAuthor = {
   } | null;
 };
 
-export type PostWithAuthor = Post & {
+export interface PostWithAuthor extends Post {
   author?: PostAuthor;
-};
+}
 
 export type PostComment = {
   id: number;
@@ -214,9 +214,15 @@ export type GetPostsData = {
 };
 
 export type CreateCommentRequest = {
-  postId: number;
   content: string;
   parentId?: number | null;
 };
+
+export type PostFilterData = {
+  posts: PostWithAuthor[];
+  total: number;
+  page: number;
+  limit: number;
+}
 
 export type GetPostsResponse = ApiResponse<GetPostsData>;

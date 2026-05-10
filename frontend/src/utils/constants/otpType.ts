@@ -2,6 +2,7 @@ export const OTP_TYPE = {
   REGISTER: "REGISTER",
   WITHDRAW_REQUEST: "WITHDRAW_REQUEST",
   RESET_PASSWORD: "RESET_PASSWORD",
+  WALLET_PAYMENT: "WALLET_PAYMENT",
 } as const;
 
 export type OtpType = (typeof OTP_TYPE)[keyof typeof OTP_TYPE];

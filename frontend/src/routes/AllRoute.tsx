@@ -1,17 +1,17 @@
 import { Routes, Route } from "react-router-dom";
 import UserRoute from "./UserRoute";
-// import EmployeeRoute from "./EmployeeRoute";
-// import AdminRoute from "./AdminRoute";
 import NotFoundPage from "../pages/NotFoundPage";
+import AdminRoute from "./AdminRoute";
+import ManagerRoute from "./ManagerRoute";
 
 const AllRoute = () => {
   return (
     <Routes>
       {/* Admin */}
-      {/* <Route path="/admin/*" element={<AdminRoute />} /> */}
+      <Route path="/admin/*" element={<AdminRoute />} />
 
-      {/* Employee */}
-      {/* <Route path="/employee/*" element={<EmployeeRoute />} /> */}
+      {/* Manager */}
+      <Route path="/manager/*" element={<ManagerRoute />} />
 
       {/* Customer */}
       <Route path="/*" element={<UserRoute />} />

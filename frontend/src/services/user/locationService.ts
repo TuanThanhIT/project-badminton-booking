@@ -1,10 +1,10 @@
 import type { District, Province, Ward } from "../../types/address";
 
-const GHN_TOKEN = import.meta.env.VITE_GHN_TOKEN;
+const GHN_TOKEN = import.meta.env.VITE_GHN_TOKEN_DEV;
 
 const getProvincesService = async (): Promise<Province[]> => {
   const res = await fetch(
-    "https://online-gateway.ghn.vn/shiip/public-api/master-data/province",
+    "https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/province",
     {
       method: "GET",
       headers: {
@@ -22,7 +22,7 @@ export const getDistrictsService = async (
   provinceId: number,
 ): Promise<District[]> => {
   const res = await fetch(
-    "https://online-gateway.ghn.vn/shiip/public-api/master-data/district",
+    "https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/district",
     {
       method: "POST",
       headers: {
@@ -41,7 +41,7 @@ export const getDistrictsService = async (
 
 export const getWardsService = async (districtId: number): Promise<Ward[]> => {
   const res = await fetch(
-    `https://online-gateway.ghn.vn/shiip/public-api/master-data/ward?district_id=${districtId}`,
+    `https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/ward?district_id=${districtId}`,
     {
       headers: {
         Token: GHN_TOKEN,

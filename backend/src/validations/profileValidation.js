@@ -1,5 +1,6 @@
 import Joi from "joi";
 import { idParams } from "./common/numberField.js";
+import { PLAYER_LEVEL } from "../constants/userConstant.js";
 
 const genderField = Joi.string().valid("male", "female", "other").messages({
   "string.base": "Giới tính phải là chuỗi.",
@@ -38,6 +39,12 @@ export const updateMyProfileSchema = {
       "string.uri": "Avatar phải là URL hợp lệ.",
       "string.max": "Avatar tối đa 1000 ký tự.",
     }),
+    level: Joi.string()
+      .valid(...Object.values(PLAYER_LEVEL))
+      .allow(null, "")
+      .messages({
+        "any.only": "Trình độ không hợp lệ.",
+      }),
   })
     .min(1)
     .messages({

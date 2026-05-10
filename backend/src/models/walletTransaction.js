@@ -1,8 +1,12 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
-import { WALLET_TRANSACTION_TYPE } from "../constants/paymentConstant.js";
+import {
+  WALLET_TRANSACTION_STATUS,
+  WALLET_TRANSACTION_TYPE,
+} from "../constants/paymentConstant.js";
 import Wallet from "./wallet.js";
 import Payment from "./payment.js";
+import { validate } from "uuid";
 
 const WalletTransaction = sequelize.define(
   "WalletTransaction",
@@ -12,30 +16,22 @@ const WalletTransaction = sequelize.define(
       allowNull: false,
       references: { model: Wallet, key: "id" },
       validate: {
-        notNull: {
-          msg: "Wallet ID is required",
-        },
-        isInt: {
-          msg: "Wallet ID must be an integer",
-        },
-        min: {
-          args: [1],
-          msg: "Wallet ID must be a positive number",
-        },
+        notNull: { msg: "Wallet ID is required" },
+        isInt: { msg: "Wallet ID must be an integer" },
+        min: { args: [1], msg: "Wallet ID must be a positive number" },
       },
     },
+
     paymentId: {
       type: DataTypes.INTEGER,
       allowNull: true,
       references: { model: Payment, key: "id" },
       validate: {
         isInt: { msg: "Payment ID must be integer" },
-        min: {
-          args: [1],
-          msg: "Payment ID must be a positive number",
-        },
+        min: { args: [1], msg: "Payment ID must be a positive number" },
       },
     },
+
     withdrawRequestId: {
       type: DataTypes.INTEGER,
       allowNull: true,
@@ -47,18 +43,17 @@ const WalletTransaction = sequelize.define(
         },
       },
     },
+
     amount: {
       type: DataTypes.DECIMAL(12, 2),
       allowNull: false,
       validate: {
         notNull: { msg: "Amount is required" },
         isDecimal: { msg: "Amount must be number" },
-        min: {
-          args: [0.01],
-          msg: "Amount must be > 0",
-        },
+        min: { args: [0.01], msg: "Amount must be > 0" },
       },
     },
+
     type: {
       type: DataTypes.ENUM(...Object.values(WALLET_TRANSACTION_TYPE)),
       allowNull: false,
@@ -70,18 +65,25 @@ const WalletTransaction = sequelize.define(
         },
       },
     },
-    balanceAfter: {
-      type: DataTypes.DECIMAL(12, 2),
+
+    status: {
+      type: DataTypes.ENUM(...Object.values(WALLET_TRANSACTION_STATUS)),
       allowNull: false,
+      defaultValue: WALLET_TRANSACTION_STATUS.PENDING,
       validate: {
-        notNull: { msg: "Balance after is required" },
-        isDecimal: { msg: "Balance after must be number" },
-        min: {
-          args: [0.01],
-          msg: "Balance after must be > 0",
+        notNull: { msg: "Wallet transaction status is required" },
+        isIn: {
+          args: [Object.values(WALLET_TRANSACTION_STATUS)],
+          msg: "Invalid wallet transaction status",
         },
       },
     },
+
+    expiredAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+
     description: {
       type: DataTypes.STRING(500),
       allowNull: true,
@@ -98,7 +100,12 @@ const WalletTransaction = sequelize.define(
     timestamps: true,
     createdAt: "createdDate",
     updatedAt: "updatedDate",
-    indexes: [{ fields: ["walletId"] }, { fields: ["paymentId"] }],
+    indexes: [
+      { fields: ["walletId"] },
+      { fields: ["paymentId"] },
+      { fields: ["status"] },
+      { fields: ["expiredAt"] },
+    ],
   },
 );
 

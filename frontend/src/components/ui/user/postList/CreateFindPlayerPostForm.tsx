@@ -12,10 +12,11 @@ import {
   clearLastCreatedPost,
 } from "../../../../redux/slices/user/postSlice";
 import { getAllCourts } from "../../../../redux/slices/user/courtSlice";
-import type { CreatePostRequest } from "../../../../types/post";
 import { toast } from "react-toastify";
 import LoadingButton from "../../common/LoadingButton";
 import { getBranchOptions } from "../../../../redux/slices/user/branchSlice";
+import { FIND_PLAYER_LEVEL_VALUES } from "../../../../utils/constants/postConstant";
+import { PLAYER_LEVEL_LABEL } from "../../../../utils/constants/profileConstant";
 
 type CreateFindPlayerPostFormProps = {
   initialValues?: Partial<formCreateFindPlayerPost>;
@@ -57,7 +58,7 @@ const CreateFindPlayerPostForm = ({
         location: { branchId: 0, courtId: 0 },
         schedule: { date: "", startTime: "", endTime: "" },
         playerRequirement: {
-          level: "Trung bình",
+          level: "INTERMEDIATE",
           customLevel: null,
           slotsNeeded: 1,
         },
@@ -84,18 +85,21 @@ const CreateFindPlayerPostForm = ({
   }, [selectedBranchId, setValue]);
 
   const onSubmit = async (dt: formCreateFindPlayerPost) => {
-    const data: CreatePostRequest = {
-      title: dt.title,
-      content: dt.content,
-      type: dt.type,
-      formData: dt.formData,
-    };
     if (onSubmitForm) {
       await onSubmitForm(dt);
       return;
     }
     try {
-      await dispatch(createPost({ data })).unwrap();
+      await dispatch(
+        createPost({
+          data: {
+            title: dt.title,
+            content: dt.content,
+            type: dt.type,
+            formData: dt.formData,
+          },
+        }),
+      ).unwrap();
     } catch {
       toast.error("Đăng bài thất bại. Vui lòng thử lại.");
     }
@@ -224,10 +228,11 @@ const CreateFindPlayerPostForm = ({
             {...register("formData.playerRequirement.level")}
             className="w-full border rounded-md px-3 py-2"
           >
-            <option value="Mới chơi">Mới chơi</option>
-            <option value="Trung bình">Trung bình</option>
-            <option value="Cao">Cao</option>
-            <option value="Tùy chỉnh">Tùy chỉnh</option>
+            {FIND_PLAYER_LEVEL_VALUES.map((val) => (
+              <option key={val} value={val}>
+                {val === "CUSTOM" ? "Tùy chỉnh" : PLAYER_LEVEL_LABEL[val]}
+              </option>
+            ))}
           </select>
         </div>
         <div>
@@ -241,7 +246,7 @@ const CreateFindPlayerPostForm = ({
             className="w-full border rounded-md px-3 py-2"
           />
         </div>
-        {level === "Tùy chỉnh" && (
+        {level === "CUSTOM" && (
           <div>
             <label className="block font-medium mb-1">Mô tả trình độ</label>
             <input

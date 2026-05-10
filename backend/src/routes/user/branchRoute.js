@@ -7,6 +7,7 @@ import {
   getBranchesSchema,
   getBranchByIdSchema,
 } from "../../validations/branchValidation.js";
+import { ROLE_NAME } from "../../constants/userConstant.js";
 
 const branchRoute = express.Router();
 
@@ -14,26 +15,26 @@ const initBranchRoute = (app) => {
   branchRoute.get(
     "/",
     auth,
-    authorize("USER", "EMPLOYEE", "CUSTOMER"),
+    authorize(ROLE_NAME.USER),
     validate(getBranchesSchema),
     branchController.getPagedBranchesController,
   );
   branchRoute.get(
     "/all",
     auth,
-    authorize("USER", "EMPLOYEE", "CUSTOMER"),
+    authorize(ROLE_NAME.USER),
     branchController.getAllBranchesController,
   );
   branchRoute.get(
     "/options",
     auth,
-    authorize("USER", "EMPLOYEE", "CUSTOMER"),
+    authorize(ROLE_NAME.USER),
     branchController.getBranchOptionsController,
   );
   branchRoute.get(
     "/:branchId",
     auth,
-    authorize("USER", "EMPLOYEE", "CUSTOMER"),
+    authorize(ROLE_NAME.USER),
     validate(getBranchByIdSchema),
     branchController.getBranchDetailController,
   );

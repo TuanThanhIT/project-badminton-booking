@@ -106,7 +106,7 @@ export const sendMessage = createAsyncThunk<
   { conversationId: number; payload: SendMessageResponse },
   {
     conversationId: number;
-    data: { body?: string; type?: "Text" | "Image" | "File"; mediaUrl?: string };
+    data: { body?: string; type?: "TEXT" | "IMAGE" | "FILE"; mediaUrl?: string; replyToId?: number };
   },
   { rejectValue: ApiErrorType }
 >("conversation/sendMessage", async ({ conversationId, data }, { rejectWithValue }) => {

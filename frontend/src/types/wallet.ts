@@ -6,7 +6,7 @@ export type WalletDepositRequest = {
   amount: number;
 };
 
-export type WalletCallbackRequest = {
+export type VNPayCallbackRequest = {
   vnp_Amount: string;
   vnp_BankCode: string;
   vnp_BankTranNo: string;

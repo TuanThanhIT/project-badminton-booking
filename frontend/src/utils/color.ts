@@ -1,4 +1,4 @@
-import { COLOR_MAP } from "../constants/color";
+import { COLOR_MAP } from "./constants/color";
 
 export const normalizeColor = (color: string) => {
   return color

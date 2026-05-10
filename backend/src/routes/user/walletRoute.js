@@ -9,6 +9,7 @@ import {
   walletWithdrawRequestSchema,
 } from "../../validations/walletValidation.js";
 import validate from "../../middlewares/validate.js";
+import { ROLE_NAME } from "../../constants/userConstant.js";
 
 const walletRoute = express.Router();
 
@@ -16,28 +17,28 @@ const initWalletRoute = (app) => {
   walletRoute.post(
     "/deposit",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     validate(walletDepositSchema),
     walletController.walletDepositController,
   );
   walletRoute.patch(
     "/vnpay/callback",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     validate(walletCallbackSchema),
     walletController.walletCallbackController,
   );
   walletRoute.post(
     "/withdraw",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     validate(walletWithdrawRequestSchema),
     walletController.walletWithdrawRequestController,
   );
   walletRoute.patch(
     "/withdraw/confirm",
     auth,
-    authorize("USER"),
+    authorize(ROLE_NAME.USER),
     validate(walletWithdrawConfirmSchema),
     walletController.walletWithdrawConfirmController,
   );

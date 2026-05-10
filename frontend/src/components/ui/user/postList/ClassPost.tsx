@@ -1,5 +1,6 @@
 import { Calendar, Clock, MapPin, Users, DollarSign, Phone, MessageCircle, FileText } from 'lucide-react';
 import type { PostWithAuthor } from '../../../../types/post';
+import { PLAYER_LEVEL_LABEL } from '../../../../utils/constants/profileConstant';
 
 type Props = {
   post: PostWithAuthor;
@@ -51,7 +52,7 @@ const ClassPost = ({ post, formData, branchInfo }: Props) => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Trình độ</p>
-                <p className="font-semibold text-gray-800">{inputLevel}</p>
+                <p className="font-semibold text-gray-800">{PLAYER_LEVEL_LABEL[inputLevel] ?? inputLevel}</p>
               </div>
             </div>
           )}

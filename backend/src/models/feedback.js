@@ -1,36 +1,48 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
-import { TARGET_FEEDBACK_TYPE } from "../constants/feedbackConstant.js";
+import User from "./user.js";
+import Order from "./order.js";
+import ProductVariant from "./productVariant.js";
+import Branch from "./branch.js";
 
 const Feedback = sequelize.define(
   "Feedback",
   {
-    targetFeedbackType: {
-      type: DataTypes.ENUM(...Object.values(TARGET_FEEDBACK_TYPE)),
-      allowNull: false,
-      defaultValue: TARGET_FEEDBACK_TYPE.PRODUCT,
-      validate: {
-        notNull: { msg: "Target feedback type is required" },
-        isIn: {
-          args: [Object.values(TARGET_FEEDBACK_TYPE)],
-          msg: "Invalid target feedback type",
-        },
-      },
-    },
-    targetFeedbackId: {
+    userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      references: { model: User, key: "id" },
       validate: {
-        notNull: {
-          msg: "Target feedback ID is required",
-        },
-        isInt: {
-          msg: "Target feedback ID must be an integer",
-        },
-        min: {
-          args: [1],
-          msg: "Target feedback ID must be a positive number",
-        },
+        notNull: { msg: "User ID is required" },
+        isInt: { msg: "User ID must be an integer" },
+        min: { args: [1], msg: "User ID must be positive" },
+      },
+    },
+    orderId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: Order, key: "id" },
+      validate: {
+        isInt: { msg: "Order ID must be an integer" },
+        min: { args: [1], msg: "Order ID must be positive" },
+      },
+    },
+    productVariantId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: ProductVariant, key: "id" },
+      validate: {
+        isInt: { msg: "ProductVariant ID must be an integer" },
+        min: { args: [1], msg: "ProductVariant ID must be positive" },
+      },
+    },
+    branchId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: Branch, key: "id" },
+      validate: {
+        isInt: { msg: "Branch ID must be an integer" },
+        min: { args: [1], msg: "Branch ID must be positive" },
       },
     },
     content: {
@@ -38,9 +50,7 @@ const Feedback = sequelize.define(
       allowNull: false,
       validate: {
         notNull: { msg: "Content is required" },
-        notEmpty: {
-          msg: "Content must not be empty",
-        },
+        notEmpty: { msg: "Content must not be empty" },
         len: {
           args: [1, 1000],
           msg: "Content must be between 1 and 1000 characters",
@@ -52,25 +62,43 @@ const Feedback = sequelize.define(
       allowNull: false,
       validate: {
         notNull: { msg: "Rating is required" },
-        isInt: {
-          msg: "Rating must be an integer",
-        },
-        min: {
-          args: [1],
-          msg: "Rating must be at least 1",
-        },
-        max: {
-          args: [5],
-          msg: "Rating must be at most 5",
-        },
+        isInt: { msg: "Rating must be an integer" },
+        min: { args: [1], msg: "Rating must be at least 1" },
+        max: { args: [5], msg: "Rating must be at most 5" },
       },
     },
   },
   {
-    tableName: "ProductFeedbacks",
+    tableName: "Feedbacks",
     timestamps: true,
     createdAt: "createdDate",
     updatedAt: "updatedDate",
+
+    indexes: [
+      { fields: ["userId"] },
+      { fields: ["orderId"] },
+      { fields: ["productVariantId"] },
+      { fields: ["branchId"] },
+    ],
   },
 );
+
 export default Feedback;
+
+Feedback.beforeValidate((fb) => {
+  const hasProduct = !!fb.productVariantId;
+  const hasBranch = !!fb.branchId;
+
+  if (!hasProduct && !hasBranch) {
+    throw new Error("Feedback must target either product or branch");
+  }
+
+  if (hasProduct && hasBranch) {
+    throw new Error("Feedback cannot target both product and branch");
+  }
+
+  // nếu review product thì phải gắn orderId
+  if (hasProduct && !fb.orderId) {
+    throw new Error("Product feedback must include orderId");
+  }
+});

@@ -79,6 +79,7 @@ export type RefreshTokenResponse = ApiResponse<RefreshTokenData>;
 export type OtpFlowData = {
   email?: string;
   withdrawRequestId?: number;
+  orderGroupId?: number;
   type?: string;
 };
 

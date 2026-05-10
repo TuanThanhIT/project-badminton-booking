@@ -35,7 +35,7 @@ const walletWithdrawRequestController = asyncHandler(async (req, res) => {
 });
 
 const walletWithdrawConfirmController = asyncHandler(async (req, res) => {
-  const data = { ...req.body };
+  const data = { ...req.body, userId: req.user.id };
   const withDrawRequest =
     await walletService.walletWithdrawConfirmService(data);
   return res

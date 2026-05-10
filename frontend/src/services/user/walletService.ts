@@ -1,5 +1,5 @@
 import type {
-  WalletCallbackRequest,
+  VNPayCallbackRequest,
   WalletCallbackResponse,
   WalletDepositRequest,
   WalletDepositResponse,
@@ -12,7 +12,7 @@ import instance from "../../utils/axiosCustomize";
 const walletDepositService = (data: WalletDepositRequest) =>
   instance.post<WalletDepositResponse>("/user/wallet/deposit", data);
 
-const walletCallbackService = (data: WalletCallbackRequest) =>
+const walletCallbackService = (data: VNPayCallbackRequest) =>
   instance.patch<WalletCallbackResponse>("/user/wallet/vnpay/callback", data);
 
 const walletWithdrawRequestService = (data: WalletWithdrawRequest) =>

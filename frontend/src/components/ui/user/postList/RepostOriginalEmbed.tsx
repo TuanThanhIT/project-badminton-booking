@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { PostWithAuthor } from "../../../../types/post";
 import postService from "../../../../services/user/postService";
-import { POST_TYPE_LABEL } from "../../../../constants/postConstant";
+import { POST_TYPE_LABEL } from "../../../../utils/constants/postConstant";
 import FormDataSummary from "./FormDataSummary";
 import PostDetailModal from "./PostDetailModal";
 
@@ -114,8 +114,7 @@ const RepostOriginalEmbed = ({
       </button>
 
       <PostDetailModal
-        open={detailOpen}
-        postId={originalPostId}
+        post={detailOpen ? original : null}
         onClose={() => setDetailOpen(false)}
         branchInfoById={branchInfoById}
         courtNameById={courtNameById}

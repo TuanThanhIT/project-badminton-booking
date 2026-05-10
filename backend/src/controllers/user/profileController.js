@@ -3,7 +3,7 @@ import asyncHandler from "../../middlewares/asyncHandler.js";
 import profileService from "../../services/user/profileService.js";
 
 const getMyProfileController = asyncHandler(async (req, res) => {
-  const data = { User: req.user };
+  const data = { userId: req.user.id };
   const profile = await profileService.getMyProfileService(data);
   return res
     .status(200)
@@ -11,7 +11,7 @@ const getMyProfileController = asyncHandler(async (req, res) => {
 });
 
 const updateMyProfileController = asyncHandler(async (req, res) => {
-  const data = { User: req.user, ...req.body };
+  const data = { userId: req.user.id, ...req.body };
   const profile = await profileService.updateMyProfileService(data);
   return res
     .status(200)
@@ -27,7 +27,7 @@ const getPublicProfileController = asyncHandler(async (req, res) => {
 });
 
 const uploadMyAvatarController = asyncHandler(async (req, res) => {
-  const data = { User: req.user, file: req.file };
+  const data = { userId: req.user.id, file: req.file };
   const profile = await profileService.uploadMyAvatarService(data);
   return res
     .status(200)

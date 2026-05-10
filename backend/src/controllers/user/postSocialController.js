@@ -10,7 +10,7 @@ const toggleLikeController = asyncHandler(async (req, res) => {
 });
 
 const createCommentController = asyncHandler(async (req, res) => {
-  const data = { User: req.user, postId: req.params.postId, ...req.body };
+  const data = { userId: req.user.id, postId: req.params.postId, ...req.body };
   const result = await postSocialService.createCommentService(data);
   return res.status(201).json(new SuccessResponse("Bình luận thành công", result));
 });

@@ -1,21 +1,22 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { getPosts } from "../../redux/slices/user/postSlice";
 import { getCourtsByIds } from "../../redux/slices/user/courtSlice";
-import type { PostType } from "../../types/post";
+import type { PostType, PostWithAuthor } from "../../types/post";
 import {
   POST_TYPE_LABEL,
   POST_TYPES,
-} from "../../constants/postConstant";
+} from "../../utils/constants/postConstant";
 import { Search } from "lucide-react";
 import PostCard from "../../components/ui/user/postList/PostCard";
+import PostDetailModal from "../../components/ui/user/postList/PostDetailModal";
 import CreatePostBar from "../../components/ui/user/postList/CreatePostBar";
 import FilterSidebar from "../../components/ui/user/postList/FilterSidebar";
 import { getAllBranches } from "../../redux/slices/user/branchSlice";
 
 const PostListPage = () => {
   const dispatch = useAppDispatch();
-  const { posts, total, limit } = useAppSelector((state) => state.post);
+  const { posts, total, limit } = useAppSelector((state) => state.post.posts);
   const branches = useAppSelector((state) => state.branch.branches);
   const courts = useAppSelector((state) => state.court.courts);
   const loading = useAppSelector(
@@ -23,16 +24,13 @@ const PostListPage = () => {
   );
 
   const [selectedType, setSelectedType] = useState<PostType | "">("");
-  const [filterValues, setFilterValues] = useState<
-    Record<string, string | number>
-  >({});
-  const [appliedFilters, setAppliedFilters] = useState<
-    Record<string, string | number>
-  >({});
+  const [filterValues, setFilterValues] = useState<Record<string, string | number>>({});
+  const [appliedFilters, setAppliedFilters] = useState<Record<string, string | number>>({});
   const [search, setSearch] = useState("");
   const [searchDebounce, setSearchDebounce] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [hideReposts, setHideReposts] = useState(false);
+  const [detailPost, setDetailPost] = useState<PostWithAuthor | null>(null);
 
   const fetchPosts = useCallback(() => {
     const params: Record<string, string | number> = {
@@ -110,32 +108,40 @@ const PostListPage = () => {
     setCurrentPage(1);
   }, [filterValues]);
 
-  const branchInfoById = branches.reduce<
-    Record<
-      number,
-      {
-        branchName: string;
-        address?: string;
-        ward?: string;
-        district?: string;
-        province?: string;
-      }
-    >
-  >((acc, branch) => {
-    acc[branch.id] = {
-      branchName: branch.branchName,
-      address: branch.address,
-      ward: branch.wardName,
-      district: branch.districtName,
-      province: branch.provinceName,
-    };
-    return acc;
-  }, {});
+  const branchInfoById = useMemo(
+    () =>
+      branches.reduce<
+        Record<
+          number,
+          {
+            branchName: string;
+            address?: string;
+            ward?: string;
+            district?: string;
+            province?: string;
+          }
+        >
+      >((acc, branch) => {
+        acc[branch.id] = {
+          branchName: branch.branchName,
+          address: branch.address,
+          ward: branch.wardName,
+          district: branch.districtName,
+          province: branch.provinceName,
+        };
+        return acc;
+      }, {}),
+    [branches],
+  );
 
-  const courtNameById = courts.reduce<Record<number, string>>((acc, court) => {
-    acc[court.id] = court.courtName;
-    return acc;
-  }, {});
+  const courtNameById = useMemo(
+    () =>
+      courts.reduce<Record<number, string>>((acc, court) => {
+        acc[court.id] = court.courtName;
+        return acc;
+      }, {}),
+    [courts],
+  );
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -222,6 +228,7 @@ const PostListPage = () => {
                   post={post}
                   branchInfoById={branchInfoById}
                   courtNameById={courtNameById}
+                  onOpenDetail={() => setDetailPost(post)}
                 />
               ))
             )}
@@ -255,6 +262,12 @@ const PostListPage = () => {
           )}
         </div>
       </div>
+      <PostDetailModal
+        post={detailPost}
+        onClose={() => setDetailPost(null)}
+        branchInfoById={branchInfoById}
+        courtNameById={courtNameById}
+      />
     </div>
   );
 };

@@ -12,7 +12,7 @@ import { toast } from "react-toastify";
 import LoadingButton from "../../components/ui/common/LoadingButton";
 import InputForm from "../../components/ui/common/InputForm";
 import PasswordInput from "../../components/ui/common/PasswordInput";
-import { OTP_TYPE } from "../../constants/otpType";
+import { OTP_TYPE } from "../../utils/constants/otpType";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -97,7 +97,11 @@ const RegisterPage = () => {
                   {errors.username?.message || " "}
                 </p>
               </div>
-              <InputForm register={register} field={"username"} />
+              <InputForm
+                register={register}
+                field={"username"}
+                textHolder={"Nhập tên đăng nhập"}
+              />
             </div>
 
             <div>
@@ -109,7 +113,11 @@ const RegisterPage = () => {
                   {errors.email?.message || " "}
                 </p>
               </div>
-              <InputForm register={register} field={"email"} />
+              <InputForm
+                register={register}
+                field={"email"}
+                textHolder={"Nhập email"}
+              />
             </div>
 
             <div>

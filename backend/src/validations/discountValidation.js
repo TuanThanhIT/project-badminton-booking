@@ -14,7 +14,13 @@ import { idParams } from "./common/numberField.js";
 export const applyDiscountSchema = {
   body: Joi.object({
     code: codeField,
-    orderAmount: orderAmountField,
+    cartId: idParams("cartId"),
+  }),
+};
+
+export const getDiscountsCheckoutSchema = {
+  query: Joi.object({
+    amount: orderAmountField,
   }),
 };
 

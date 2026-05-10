@@ -1,15 +1,24 @@
 import type { ApiResponse } from "./api";
 
-export type ConversationType = "Private" | "Group";
-export type MessageType = "Text" | "Image" | "File";
+export type ConversationType = "PRIVATE" | "GROUP";
+export type MessageType = "TEXT" | "IMAGE" | "FILE";
 
 export type ConversationParticipant = {
   userId: number;
   username: string;
   fullName?: string | null;
   avatar?: string | null;
-  role: "Admin" | "Member";
+  role: "ADMIN" | "MEMBER";
   joinedAt: string;
+};
+
+export type ReplyToMessage = {
+  id: number;
+  senderName: string;
+  body?: string | null;
+  type: MessageType;
+  mediaUrl?: string | null;
+  isRecalled?: boolean;
 };
 
 export type ChatMessage = {
@@ -24,6 +33,7 @@ export type ChatMessage = {
   createdDate: string;
   mediaUrl?: string | null;
   isRecalled?: boolean;
+  replyTo?: ReplyToMessage | null;
 };
 
 export type Conversation = {

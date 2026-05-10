@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { PostWithAuthor } from "../../../../types/post";
-import { POST_TYPE_LABEL } from "../../../../constants/postConstant";
+import { POST_TYPE_LABEL } from "../../../../utils/constants/postConstant";
 import { useAppSelector } from "../../../../redux/hook";
 import FormDataSummary from "./FormDataSummary";
 import PostActions from "./PostActions";
@@ -27,6 +27,8 @@ type PostCardProps = {
     onEdit: () => void;
     onDelete: () => void;
   };
+  /** Mở modal xem chi tiết bài viết */
+  onOpenDetail?: () => void;
 };
 
 const PostCard = ({
@@ -34,6 +36,7 @@ const PostCard = ({
   branchInfoById,
   courtNameById,
   ownerMenuActions,
+  onOpenDetail,
 }: PostCardProps) => {
   const navigate = useNavigate();
   const myUserId = useAppSelector((state) => state.auth.user?.id);
@@ -159,7 +162,11 @@ const PostCard = ({
         )}
       </div>
 
-      <div className="px-4 pb-3">
+      <div
+        className={`px-4 pb-3 ${onOpenDetail ? "cursor-pointer group/content" : ""}`}
+        onClick={onOpenDetail}
+        title={onOpenDetail ? "Nhấn để xem chi tiết" : undefined}
+      >
         {!isRepost ? (
           <FormDataSummary
             post={post}
@@ -168,7 +175,6 @@ const PostCard = ({
           />
         ) : (
           <>
-            {/* Caption của người repost (optional) */}
             {post.content && (
               <p className="text-gray-700 text-sm whitespace-pre-wrap">
                 {post.content}
@@ -181,21 +187,32 @@ const PostCard = ({
             />
           </>
         )}
+        {onOpenDetail && (
+          <p className="mt-2 text-xs text-sky-500 opacity-0 group-hover/content:opacity-100 transition-opacity">
+            Nhấn để xem bài viết chi tiết và bình luận →
+          </p>
+        )}
       </div>
 
       <div className="px-4 py-2 flex items-center justify-between text-sm text-gray-500 border-b border-gray-100">
         <span className="flex items-center gap-1">
           <span className="flex -space-x-1">
-            <span className="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">
+            <span className="w-4 h-4 rounded-full bg-sky-500 flex items-center justify-center text-white text-xs">
               👍
             </span>
-            <span className="w-4 h-4 rounded-full bg-yellow-400 flex items-center justify-center text-white text-xs">
-              😂
+            <span className="w-4 h-4 rounded-full bg-red-400 flex items-center justify-center text-white text-xs">
+              ❤️
             </span>
           </span>
           <span>{post.likesCount ?? 0}</span>
         </span>
-        <span>{post.commentsCount ?? 0} bình luận</span>
+        <button
+          type="button"
+          onClick={onOpenDetail}
+          className={`${onOpenDetail ? "hover:underline cursor-pointer" : "cursor-default"}`}
+        >
+          {post.commentsCount ?? 0} bình luận
+        </button>
       </div>
 
       <PostActions post={post} />
@@ -203,4 +220,4 @@ const PostCard = ({
   );
 };
 
-export default PostCard;
+export default memo(PostCard);

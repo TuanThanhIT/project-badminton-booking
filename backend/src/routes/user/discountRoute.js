@@ -2,7 +2,13 @@ import express from "express";
 import discountController from "../../controllers/user/discountController.js";
 import validate from "../../middlewares/validate.js";
 import auth from "../../middlewares/auth.js";
-import { applyDiscountBookingSchema } from "../../validations/discountValidation.js";
+import {
+  applyDiscountBookingSchema,
+  applyDiscountSchema,
+  getDiscountsCheckoutSchema,
+} from "../../validations/discountValidation.js";
+import authorize from "../../middlewares/authorize.js";
+import { ROLE_NAME } from "../../constants/userConstant.js";
 
 const discountRoute = express.Router();
 
@@ -14,8 +20,21 @@ const initDiscountRoute = (app) => {
     validate(applyDiscountBookingSchema),
     discountController.checkDiscountController,
   );
-
-  app.use("/discounts", discountRoute);
+  discountRoute.post(
+    "/apply",
+    auth,
+    authorize(ROLE_NAME.USER),
+    validate(applyDiscountSchema),
+    discountController.applyDiscountController,
+  );
+  discountRoute.get(
+    "/",
+    auth,
+    authorize(ROLE_NAME.USER),
+    validate(getDiscountsCheckoutSchema),
+    discountController.getDiscountsCheckoutController,
+  );
+  app.use("/user/discounts", discountRoute);
 };
 
 export default initDiscountRoute;

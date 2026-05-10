@@ -3,7 +3,7 @@ import asyncHandler from "../../middlewares/asyncHandler.js";
 import conversationService from "../../services/user/conversationService.js";
 
 const getConversationsController = asyncHandler(async (req, res) => {
-  const data = { User: req.user };
+  const data = { userId: req.user.id };
   const conversations = await conversationService.getConversationsService(data);
   return res
     .status(200)
@@ -11,7 +11,7 @@ const getConversationsController = asyncHandler(async (req, res) => {
 });
 
 const createOrGetDirectConversationController = asyncHandler(async (req, res) => {
-  const data = { User: req.user, targetUserId: req.params.targetUserId };
+  const data = { userId: req.user.id, targetUserId: req.params.targetUserId };
   const conversation = await conversationService.createOrGetDirectConversationService(data);
   return res
     .status(200)
@@ -19,25 +19,25 @@ const createOrGetDirectConversationController = asyncHandler(async (req, res) =>
 });
 
 const createGroupConversationController = asyncHandler(async (req, res) => {
-  const data = {User: req.user,...req.body};
+  const data = { userId: req.user.id, ...req.body };
   const conversation = await conversationService.createGroupConversationService(data);
   return res.status(201).json(new SuccessResponse("Tạo nhóm thành công", conversation));
 });
 
 const updateDirectNicknameController = asyncHandler(async (req, res) => {
-  const data = {User: req.user,...req.body,conversationId:req.params.conversationId};
+  const data = { userId: req.user.id, ...req.body, conversationId: req.params.conversationId };
   const conversation = await conversationService.updateDirectNicknameService(data);
   return res.status(200).json(new SuccessResponse("Đổi biệt danh thành công", conversation));
 });
 
 const addMembersController = asyncHandler(async (req, res) => {
-  const data = {User: req.user,...req.body,conversationId:req.params.conversationId};
-  const conversation = await conversationService.addMembersToGroupService(data );
+  const data = { userId: req.user.id, ...req.body, conversationId: req.params.conversationId };
+  const conversation = await conversationService.addMembersToGroupService(data);
   return res.status(200).json(new SuccessResponse("Đã thêm thành viên", conversation));
 });
 
 const removeMemberController = asyncHandler(async (req, res) => {
-  const data = {User: req.user,conversationId:req.params.conversationId,userId:req.params.userId};
+  const data = { userId: req.user.id, conversationId: req.params.conversationId, targetUserId: req.params.userId };
   const result = await conversationService.removeMemberFromGroupService(data);
   if (result?.deleted) {
     return res.status(200).json(new SuccessResponse("Cuộc trò chuyện đã kết thúc", result));
@@ -46,7 +46,7 @@ const removeMemberController = asyncHandler(async (req, res) => {
 });
 
 const leaveGroupController = asyncHandler(async (req, res) => {
-  const data = {User: req.user,conversationId:req.params.conversationId};
+  const data = { userId: req.user.id, conversationId: req.params.conversationId };
   const result = await conversationService.leaveGroupService(data);
   if (result?.deleted) {
     return res.status(200).json(new SuccessResponse("Bạn đã rời nhóm", result));
@@ -55,7 +55,7 @@ const leaveGroupController = asyncHandler(async (req, res) => {
 });
 
 const deleteGroupConversationController = asyncHandler(async (req, res) => {
-  const data = {User: req.user,conversationId:req.params.conversationId};
+  const data = { userId: req.user.id, conversationId: req.params.conversationId };
   const result = await conversationService.deleteGroupConversationService(data);
   return res.status(200).json(new SuccessResponse("Đã xóa nhóm", result));
 });

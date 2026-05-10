@@ -24,7 +24,6 @@ import type {
 } from "../../../types/auth";
 import type { ApiErrorType } from "../../../types/error";
 import authService from "../../../services/user/authService";
-import type { UserProfileData } from "../../../types/profile";
 
 const accessToken = localStorage.getItem("accessToken");
 interface AuthState {
@@ -32,6 +31,7 @@ interface AuthState {
   accessToken?: string;
   userRegister?: RegisterData;
   otpFlow: OtpFlowData;
+  authInitialized: boolean;
 }
 
 const initialState: AuthState = {
@@ -43,6 +43,7 @@ const initialState: AuthState = {
     withdrawRequestId: undefined,
     type: undefined,
   },
+  authInitialized: false,
 };
 
 export const login = createAsyncThunk<
@@ -178,7 +179,9 @@ const authSlice = createSlice({
       // lưu localStorage
       sessionStorage.setItem("otpFlow", JSON.stringify(action.payload));
     },
-
+    setAuthInitialized: (state, action: PayloadAction<boolean>) => {
+      state.authInitialized = action.payload;
+    },
     clearOtpFlow: (state) => {
       state.otpFlow = {
         email: undefined,
@@ -187,12 +190,22 @@ const authSlice = createSlice({
       };
       sessionStorage.removeItem("otpFlow");
     },
-    syncAuthUserProfile: (state, action: PayloadAction<{ data?: any } | any>) => {
-      // nếu payload là ApiResponse (has .data) lấy .data, còn không lấy payload trực tiếp
-      const payload = (action.payload && action.payload.data) ? action.payload.data : action.payload;
-      state.user = payload;
+    syncAuthUserProfile: (state, action: PayloadAction<any>) => {
+      if (!state.user) return;
+      const profileData =
+        action.payload?.data !== undefined
+          ? action.payload.data
+          : action.payload;
+      if (!profileData) return;
+      state.user = {
+        ...state.user,
+        username: profileData.username || state.user.username,
+        profile: {
+          fullName: profileData.profile?.fullName,
+          avatar: profileData.profile?.avatar ?? null,
+        },
+      };
     },
-
   },
   extraReducers: (builder) => {
     builder
@@ -206,6 +219,12 @@ const authSlice = createSlice({
       // getAccount
       .addCase(getAccount.fulfilled, (state, action) => {
         state.user = action.payload.data;
+        state.authInitialized = true;
+      })
+
+      .addCase(getAccount.rejected, (state) => {
+        state.user = undefined;
+        state.authInitialized = true;
       })
 
       // register
@@ -221,5 +240,11 @@ const authSlice = createSlice({
   },
 });
 
-export const { logoutLocal, setOtpFlow, clearOtpFlow, syncAuthUserProfile } = authSlice.actions;
+export const {
+  logoutLocal,
+  setOtpFlow,
+  clearOtpFlow,
+  syncAuthUserProfile,
+  setAuthInitialized,
+} = authSlice.actions;
 export default authSlice.reducer;

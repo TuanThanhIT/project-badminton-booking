@@ -1,6 +1,5 @@
 import sequelize from "../../config/db.js";
-import UserAddress from "../../models/userAddress.js";
-import User from "../../models/user.js";
+import { UserAddress, User } from "../../models/index.js";
 import NotFoundError from "../../errors/NotFoundError.js";
 import BadRequestError from "../../errors/BadRequestError.js";
 

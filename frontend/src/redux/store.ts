@@ -25,6 +25,7 @@ import addressReducer from "./slices/user/addressSlice";
 import postReducer from "./slices/user/postSlice";
 import profileReducer from "./slices/user/profileSlice";
 import conversationReducer from "./slices/user/conversationSlice";
+import monthlyBookingReducer from "./slices/user/monthlyBookingSlice";
 import orderReducer from "./slices/user/orderSlice";
 import feedbackReducer from "./slices/user/feedbackSlice";
 
@@ -48,6 +49,7 @@ const rootReducer = combineReducers({
   profile: profileReducer,
   conversation: conversationReducer,
   discount: discountReducer,
+  monthlyBooking: monthlyBookingReducer,
   order: orderReducer,
   feedback: feedbackReducer,
 });

@@ -30,8 +30,7 @@ const BranchPage = () => {
   const [districts, setDistricts] = useState<any[]>([]);
 
   const normalizeCity = (name: string) => {
-    if (name.includes("Hồ Chí Minh")) return "TP.HCM";
-    return name;
+    return name.replace(/^(Thành phố|Tỉnh)\s+/i, "").trim();
   };
 
   // ================= LOAD PROVINCES =================

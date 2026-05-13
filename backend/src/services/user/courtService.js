@@ -84,7 +84,7 @@ const getAvailableCourtsService = async (data) => {
       totalPrice: Math.round(totalCalculatedPrice),
       duration: (endNum - startNum).toFixed(1),
       // Thêm trường status này để UI xử lý 👇
-      status: isBooked ? "booked" : "available",
+      status: isBooked ? "booked" : "ACTIVE",
     };
   });
 };

@@ -30,6 +30,7 @@ import CourtPage from "../pages/user/CourtPage";
 import OrderResultPage from "../pages/user/OrderResultPage";
 import VNPayResultPage from "../pages/user/VNPayResultPage";
 import UserProtectedRoute from "./ProtectedRoute/UserProtectedRoute";
+import PaymentPage from "../pages/user/PaymentPage";
 
 const UserRoute = () => {
   return (
@@ -71,6 +72,7 @@ const UserRoute = () => {
           <Route path="courts" element={<CourtPage />} />
           <Route path="order-result" element={<OrderResultPage />} />
         </Route>
+        <Route path="/payment" element={<PaymentPage />} />
       </Route>
     </Routes>
   );

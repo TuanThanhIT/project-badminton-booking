@@ -13,6 +13,7 @@ import CourtPrice from "./courtPrice.js";
 
 import Booking from "./booking.js";
 import BookingDetail from "./bookingDetail.js";
+import MonthlyBooking from "./monthlyBooking.js";
 
 import Cart from "./cart.js";
 import CartItem from "./cartItem.js";
@@ -469,6 +470,32 @@ OfflineBooking.belongsTo(DraftBooking, {
 });
 
 //////////////////////////////////////////////////////
+//////////////// MONTHLY BOOKING /////////////////////
+//////////////////////////////////////////////////////
+// Quan h? cho Ð?t sân tháng
+User.hasMany(MonthlyBooking, { foreignKey: "userId", as: "monthlyBookings" });
+MonthlyBooking.belongsTo(User, { foreignKey: "userId", as: "user" });
+
+Branch.hasMany(MonthlyBooking, {
+  foreignKey: "branchId",
+  as: "monthlyBookings",
+});
+MonthlyBooking.belongsTo(Branch, { foreignKey: "branchId", as: "branch" });
+
+Court.hasMany(MonthlyBooking, { foreignKey: "courtId", as: "monthlyBookings" });
+MonthlyBooking.belongsTo(Court, { foreignKey: "courtId", as: "court" });
+
+// Quan h? k?t n?i Gói tháng v?i các Bu?i t?p chi ti?t
+MonthlyBooking.hasMany(BookingDetail, {
+  foreignKey: "monthlyBookingId",
+  as: "details",
+});
+BookingDetail.belongsTo(MonthlyBooking, {
+  foreignKey: "monthlyBookingId",
+  as: "monthlyBooking",
+});
+
+//////////////////////////////////////////////////////
 //////////////// SOCIAL //////////////////////////////
 //////////////////////////////////////////////////////
 
@@ -744,5 +771,6 @@ export {
   CashRegister,
   CoachProfile,
   VariantStock,
+  MonthlyBooking,
   RefreshToken,
 };

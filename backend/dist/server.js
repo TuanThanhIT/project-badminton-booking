@@ -24,6 +24,7 @@ var _postSocialRoute = _interopRequireDefault(require("./routes/user/postSocialR
 var _profileRoute = _interopRequireDefault(require("./routes/user/profileRoute.js"));
 var _conversationRoute = _interopRequireDefault(require("./routes/user/conversationRoute.js"));
 var _userSearchRoute = _interopRequireDefault(require("./routes/user/userSearchRoute.js"));
+var _monthlyBookingRoute = _interopRequireDefault(require("./routes/user/monthlyBookingRoute.js"));
 var _orderRoute = _interopRequireDefault(require("./routes/user/orderRoute.js"));
 var _discountRoute = _interopRequireDefault(require("./routes/user/discountRoute.js"));
 var _orderRoute2 = _interopRequireDefault(require("./routes/employee/orderRoute.js"));
@@ -53,6 +54,7 @@ app.use((0, _cookieParser["default"])());
 (0, _cartRoute["default"])(app);
 (0, _walletRoute["default"])(app);
 (0, _addressRoute["default"])(app);
+(0, _monthlyBookingRoute["default"])(app);
 (0, _orderRoute["default"])(app);
 (0, _discountRoute["default"])(app);
 (0, _webhookRoute["default"])(app);

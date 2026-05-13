@@ -1,3 +1,4 @@
+import type { ReviewStatus } from "../utils/constants/review";
 import type { ApiResponse } from "./api";
 
 export type ShippingStatus =
@@ -219,6 +220,7 @@ export type OrderDetailItem = {
   price: number;
   variantInfo: string;
   thumbnailUrl: string;
+  reviewStatus: ReviewStatus;
 };
 
 export type OrderDetailFee = {

@@ -1,28 +1,21 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { ChevronDown, Package } from "lucide-react";
 import { useAppSelector } from "../../../../redux/hook";
 
 const CategoryMenu = () => {
   const categoriesGroup = useAppSelector((state) => state.cate.categoriesGroup);
-
   const [isOpen, setIsOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [dropdownTop, setDropdownTop] = useState(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const buttonRef = useRef<HTMLDivElement | null>(null);
-
-  const [dropdownStyle, setDropdownStyle] = useState({ top: 0, left: 0 });
 
   const location = useLocation();
   const isActive = location.pathname.startsWith("/products");
 
-  // detect mobile
-  const [isMobile, setIsMobile] = useState(false);
-
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
-
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -36,24 +29,29 @@ const CategoryMenu = () => {
 
   const handleMouseLeave = () => {
     if (isMobile) return;
-    timerRef.current = setTimeout(() => setIsOpen(false), 200);
+    timerRef.current = setTimeout(() => setIsOpen(false), 180);
   };
 
   const handleClick = () => {
-    if (isMobile) {
-      setIsOpen((prev) => !prev);
-    }
+    if (isMobile) setIsOpen((prev) => !prev);
   };
 
   useEffect(() => {
     if (buttonRef.current && !isMobile) {
       const rect = buttonRef.current.getBoundingClientRect();
-      setDropdownStyle({
-        top: rect.bottom + window.scrollY + 4,
-        left: window.innerWidth / 2,
-      });
+      setDropdownTop(rect.bottom + window.scrollY + 8);
     }
   }, [isOpen, isMobile]);
+
+  const buttonClass = `group relative flex h-12 items-center gap-2 rounded-full px-5 text-[15px] font-medium leading-none transition-all whitespace-nowrap cursor-pointer select-none after:absolute after:left-5 after:right-5 after:bottom-2.5 after:h-[2px] after:rounded-full after:transition-all ${
+    isActive
+      ? "text-yellow-200 after:bg-yellow-200"
+      : "text-white after:bg-transparent hover:text-yellow-100"
+  }`;
+
+  const iconClass = isActive
+    ? "text-yellow-200"
+    : "text-white group-hover:text-yellow-100";
 
   return (
     <div
@@ -61,92 +59,84 @@ const CategoryMenu = () => {
       onMouseLeave={handleMouseLeave}
       className="relative"
     >
-      {/* BUTTON */}
-      <div
-        ref={buttonRef}
-        onClick={handleClick}
-        className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium cursor-pointer select-none transition-all duration-200
-        ${
-          isActive
-            ? "text-white underline underline-offset-4 decoration-2 decoration-white"
-            : "text-white hover:bg-sky-500/40"
-        }`}
-      >
-        <Package className="w-5 h-5" />
-        SẢN PHẨM
+      <div ref={buttonRef} onClick={handleClick} className={buttonClass}>
+        <Package className={`h-5 w-5 ${iconClass}`} />
+        Sản phẩm
         <ChevronDown
-          className={`w-4 h-4 transition-transform ${
-            isOpen ? "rotate-180" : ""
-          }`}
+          className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
         />
       </div>
 
-      {/* DESKTOP MEGA MENU */}
       {!isMobile && isOpen && (
         <div
-          className="fixed z-50 w-[80vw] max-w-[90rem] -translate-x-1/2"
-          style={{
-            top: `${dropdownStyle.top}px`,
-            left: `${dropdownStyle.left}px`,
-          }}
+          className="fixed left-1/2 z-50 w-[80vw] max-w-[1180px] -translate-x-1/2"
+          style={{ top: `${dropdownTop}px` }}
         >
-          <div className="bg-white shadow-2xl rounded-b-2xl border-t-4 border-sky-500 p-8">
-            <div className="grid grid-cols-5 gap-8">
-              {categoriesGroup.map((group) => (
-                <div key={group.menuGroup}>
-                  <div className="font-semibold text-sky-700 border-b border-sky-100 mb-3 pb-2 uppercase">
+          <div className="max-h-[70vh] overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-xl">
+            <div className="border-b border-slate-100 bg-sky-50 px-6 py-4">
+              <p className="text-sm font-medium text-slate-900">
+                Danh mục sản phẩm cầu lông
+              </p>
+              <p className="mt-1 text-sm text-slate-500">
+                Tìm nhanh vợt, giày, phụ kiện và trang bị theo từng nhóm.
+              </p>
+            </div>
+
+            <div className="max-h-[calc(70vh-82px)] overflow-y-auto p-6">
+              <div className="grid grid-cols-2 gap-5 md:grid-cols-3 xl:grid-cols-4">
+                {categoriesGroup.map((group) => (
+                  <div key={group.menuGroup}>
                     <NavLink
-                      to={`/products?groupName=${encodeURIComponent(
-                        group.menuGroup,
-                      )}`}
+                      to={`/products?groupName=${encodeURIComponent(group.menuGroup)}`}
                       onClick={() => setIsOpen(false)}
+                      className="mb-2 block border-b border-slate-100 pb-2 text-sm font-medium uppercase tracking-wide text-sky-700 transition-colors hover:text-sky-600"
                     >
                       {group.menuGroup}
                     </NavLink>
-                  </div>
 
-                  <div className="flex flex-col space-y-1">
-                    {group.items.map((item) => (
-                      <NavLink
-                        key={item.id}
-                        to={`/products?cateId=${item.id}&cateName=${encodeURIComponent(
-                          item.cateName,
-                        )}&groupName=${encodeURIComponent(group.menuGroup)}`}
-                        className="text-gray-700 hover:text-sky-600"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        {item.cateName}
-                      </NavLink>
-                    ))}
+                    <div className="flex flex-col gap-1">
+                      {group.items.map((item) => (
+                        <NavLink
+                          key={item.id}
+                          to={`/products?cateId=${item.id}&cateName=${encodeURIComponent(
+                            item.cateName,
+                          )}&groupName=${encodeURIComponent(group.menuGroup)}`}
+                          className="rounded-xl px-2 py-1.5 text-sm font-normal text-slate-600 transition-colors hover:bg-sky-50 hover:text-sky-800"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          {item.cateName}
+                        </NavLink>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* MOBILE DROPDOWN */}
       {isMobile && isOpen && (
-        <div className="absolute left-0 right-0 mt-2 bg-white shadow-xl rounded-xl border z-50 p-4">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="mt-2 max-h-[62vh] overflow-y-auto rounded-3xl border border-slate-200 bg-white p-4 shadow-xl">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {categoriesGroup.map((group) => (
               <div key={group.menuGroup}>
-                <div className="font-semibold text-sky-700 mb-2 uppercase text-sm">
-                  <NavLink
-                    to={`/products?group=${encodeURIComponent(group.menuGroup)}`}
-                    onClick={() => setIsOpen(false)}
-                  >
-                    {group.menuGroup}
-                  </NavLink>
-                </div>
+                <NavLink
+                  to={`/products?groupName=${encodeURIComponent(group.menuGroup)}`}
+                  onClick={() => setIsOpen(false)}
+                  className="mb-2 block text-sm font-medium uppercase tracking-wide text-sky-700"
+                >
+                  {group.menuGroup}
+                </NavLink>
 
-                <div className="flex flex-col space-y-1">
+                <div className="flex flex-col gap-1">
                   {group.items.map((item) => (
                     <NavLink
                       key={item.id}
-                      to={`/products?cateId=${item.id}`}
-                      className="text-sm text-gray-600 hover:text-sky-600"
+                      to={`/products?cateId=${item.id}&cateName=${encodeURIComponent(
+                        item.cateName,
+                      )}&groupName=${encodeURIComponent(group.menuGroup)}`}
+                      className="rounded-xl px-2 py-1.5 text-sm text-slate-600 hover:bg-sky-50 hover:text-sky-800"
                       onClick={() => setIsOpen(false)}
                     >
                       {item.cateName}

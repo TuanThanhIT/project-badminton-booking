@@ -1,30 +1,29 @@
 import {
   CheckCircle2,
-  PackageCheck,
-  Truck,
-  Home,
   ClipboardList,
+  Home,
+  PackageCheck,
+  ReceiptText,
+  RotateCcw,
+  Truck,
   Wallet,
   XCircle,
 } from "lucide-react";
-import { useEffect, useState, type JSX } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import {
   clearCheckoutSession,
   getOrderGroupId,
 } from "../../redux/slices/user/orderSlice";
+import { deleteAllCartItem } from "../../redux/slices/user/cartSlice";
 import type {
   ClearCheckoutSessionRequest,
   OrderGroupIdRequest,
 } from "../../types/order";
-import { motion } from "framer-motion";
-import Confetti from "react-confetti";
-import { deleteAllCartItem } from "../../redux/slices/user/cartSlice";
 import { formatOrderCode } from "../../utils/order";
 
-/* COUNT UP */
-const useCountUp = (end: number, duration = 1200) => {
+const useCountUp = (end: number, duration = 900) => {
   const [value, setValue] = useState(0);
 
   useEffect(() => {
@@ -42,7 +41,7 @@ const useCountUp = (end: number, duration = 1200) => {
     }, stepTime);
 
     return () => clearInterval(timer);
-  }, [end]);
+  }, [end, duration]);
 
   return value;
 };
@@ -54,13 +53,10 @@ const OrderResultPage = () => {
   const [searchParams] = useSearchParams();
 
   const orderGroupId = searchParams.get("orderGroupId") || "--";
-
-  /* ===== STATE ===== */
   const [orderData, setOrderData] = useState<any>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [verified, setVerified] = useState(false);
 
-  /* ===== DERIVED ===== */
   const method = orderData?.paymentMethod;
   const amount = Number(orderData?.amount || 0);
   const orderId = orderData?.orderGroupId || "--";
@@ -68,10 +64,8 @@ const OrderResultPage = () => {
 
   const isWallet = method === "WALLET";
   const isCOD = method === "COD";
-
   const animatedAmount = useCountUp(amount);
 
-  /* ===== VERIFY ORDER ===== */
   useEffect(() => {
     if (!orderGroupId || orderGroupId === "--" || !cart) {
       setVerified(true);
@@ -86,24 +80,22 @@ const OrderResultPage = () => {
         };
 
         const res = await dispatch(getOrderGroupId({ data })).unwrap();
-
         const result = res.data;
 
         setOrderData(result);
         setIsSuccess(result.isSuccess);
 
-        /* chỉ clear khi backend xác nhận */
         if (result.isSuccess) {
-          const d: ClearCheckoutSessionRequest = {
+          const clearData: ClearCheckoutSessionRequest = {
             cartId: cart.id,
           };
-          dispatch(clearCheckoutSession({ data: d }));
+          dispatch(clearCheckoutSession({ data: clearData }));
           dispatch(deleteAllCartItem());
 
           localStorage.removeItem("addressSelectedId");
           localStorage.removeItem("discountCode");
         }
-      } catch (err) {
+      } catch {
         setIsSuccess(false);
       } finally {
         setVerified(true);
@@ -111,238 +103,218 @@ const OrderResultPage = () => {
     };
 
     fetchOrder();
-  }, [orderGroupId]);
+  }, [cart, dispatch, orderGroupId]);
 
   if (!verified) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        Đang kiểm tra đơn hàng...
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+        <div className="rounded-2xl border border-slate-200 bg-white px-6 py-5 text-center shadow-sm">
+          <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
+          <p className="text-sm font-medium text-slate-600">
+            Đang kiểm tra đơn hàng...
+          </p>
+        </div>
       </div>
     );
   }
 
+  const title = isSuccess
+    ? isWallet
+      ? "Thanh toán thành công"
+      : "Đặt hàng thành công"
+    : "Thanh toán thất bại";
+
+  const description = isSuccess
+    ? isWallet
+      ? "Giao dịch đã hoàn tất. Bạn có thể theo dõi trạng thái đơn hàng trong trung tâm đơn hàng."
+      : "Đơn hàng đã được tạo. B-Hub sẽ tiếp nhận và xử lý trong thời gian sớm nhất."
+    : "Giao dịch không hợp lệ hoặc đã bị hủy. Bạn có thể quay lại giỏ hàng để thử lại.";
+
   return (
-    <div className="relative flex justify-center items-center min-h-screen bg-gradient-to-br from-sky-50 via-white to-sky-100 overflow-hidden">
-      {/* CONFETTI */}
-      {isSuccess && <Confetti numberOfPieces={120} recycle={false} />}
+    <div className="min-h-screen bg-slate-50 text-slate-700">
+      <section className="relative overflow-hidden bg-sky-950 py-12 sm:py-14 lg:py-16">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.24),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.16),transparent_35%)]" />
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-sky-100">
+            <ReceiptText size={16} className="text-sky-300" />
+            Kết quả đơn hàng
+          </div>
+          <h1 className="mt-5 text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
+            {title}
+          </h1>
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-sky-100 sm:text-base">
+            {description}
+          </p>
+        </div>
+      </section>
 
-      {/* BACKGROUND */}
-      <motion.div
-        animate={{ opacity: [0.3, 0.6, 0.3] }}
-        transition={{ duration: 4, repeat: Infinity }}
-        className="absolute w-[500px] h-[500px] bg-sky-200 blur-[120px] rounded-full top-[-100px] left-[-100px]"
-      />
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-5xl bg-white/80 backdrop-blur-xl border border-sky-400 rounded-3xl p-10 z-10"
-      >
-        {/* HEADER */}
-        <div className="flex items-center gap-6 mb-10">
-          <motion.div className="relative">
-            <motion.div
-              animate={{ scale: [1, 2], opacity: [0.4, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className={`absolute inset-0 rounded-full ${
-                isSuccess ? "bg-green-400" : "bg-red-400"
-              }`}
-            />
-
+      <main className="relative z-10 mx-auto -mt-8 max-w-5xl px-4 pb-14 sm:px-6">
+        <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.08)]">
+          <div className="flex flex-col gap-5 border-b border-slate-100 p-6 sm:flex-row sm:items-center">
             <div
-              className={`p-5 rounded-full relative z-10 ${
-                isSuccess ? "bg-green-100" : "bg-red-100"
+              className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl ${
+                isSuccess
+                  ? "bg-emerald-50 text-emerald-600"
+                  : "bg-red-50 text-red-500"
               }`}
             >
               {isSuccess ? (
-                <CheckCircle2 className="w-16 h-16 text-green-500" />
+                <CheckCircle2 className="h-9 w-9" />
               ) : (
-                <XCircle className="w-16 h-16 text-red-500" />
+                <XCircle className="h-9 w-9" />
               )}
             </div>
-          </motion.div>
 
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800">
-              {isSuccess
-                ? isWallet
-                  ? "Thanh toán thành công"
-                  : "Đặt hàng thành công"
-                : "Thanh toán thất bại"}
-            </h1>
-
-            <p className="text-gray-600 mt-2">
-              {isSuccess
-                ? isWallet
-                  ? "Giao dịch đã hoàn tất 🎉"
-                  : "Đơn hàng đã được tạo 🎉"
-                : "Giao dịch không hợp lệ hoặc đã bị hủy"}
-            </p>
-          </div>
-        </div>
-
-        {/* PROGRESS */}
-        {isSuccess && (
-          <div className="relative mb-14 px-6">
-            <div className="absolute top-6 left-0 w-full h-1 bg-gray-200 rounded-full" />
-
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{
-                width: isWallet ? "calc(50% - 24px)" : "calc(0% + 24px)",
-              }}
-              transition={{ duration: 1.2 }}
-              className="absolute top-6 left-0 h-1 bg-gradient-to-r from-sky-400 to-sky-600 rounded-full"
-            />
-
-            <div className="flex justify-between relative z-10">
-              <Step active icon={<CheckCircle2 />} label="Đặt hàng" />
-
-              <Step
-                active={isWallet}
-                icon={isWallet ? <Wallet /> : <PackageCheck />}
-                label={isWallet ? "Đã thanh toán" : "Xác nhận"}
-              />
-
-              <Step icon={<Truck />} label="Vận chuyển" />
+            <div className="min-w-0">
+              <p className="text-xl font-semibold text-slate-900">{title}</p>
+              <p className="mt-1 text-sm leading-6 text-slate-500">
+                {description}
+              </p>
             </div>
           </div>
-        )}
 
-        {/* INFO */}
-        <div className="grid grid-cols-2 gap-6 mb-10">
           {isSuccess ? (
             <>
-              <GlowCard>
-                <p className="text-sm text-gray-500 mb-2">Mã đơn hàng</p>
-                <p className="text-2xl font-mono font-bold text-sky-700">
-                  {formatOrderCode(orderId, createdDate)}
-                </p>
-              </GlowCard>
+              <div className="grid grid-cols-1 gap-4 bg-slate-50/70 p-5 sm:grid-cols-2 sm:p-6">
+                <InfoCard label="Mã đơn hàng">
+                  <span className="font-mono text-xl font-semibold text-sky-700">
+                    {formatOrderCode(orderId, createdDate)}
+                  </span>
+                </InfoCard>
 
-              <GlowCard>
-                <p className="text-sm text-gray-500 mb-2">Tổng thanh toán</p>
-                <p className="text-2xl font-bold text-sky-600">
-                  {animatedAmount.toLocaleString()} VND
-                </p>
-              </GlowCard>
+                <InfoCard label="Tổng thanh toán">
+                  <span className="text-xl font-semibold text-slate-900">
+                    {animatedAmount.toLocaleString()} VND
+                  </span>
+                </InfoCard>
+
+                <InfoCard label="Phương thức">
+                  <span className="text-base font-medium text-slate-800">
+                    {isCOD
+                      ? "Thanh toán khi nhận hàng"
+                      : isWallet
+                        ? "Ví B-Hub"
+                        : "VNPay"}
+                  </span>
+                </InfoCard>
+
+                <InfoCard label="Trạng thái">
+                  <span className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700">
+                    <CheckCircle2 size={15} />
+                    Thành công
+                  </span>
+                </InfoCard>
+              </div>
+
+              <div className="border-t border-slate-100 p-5 sm:p-6">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <Step active icon={<CheckCircle2 size={18} />} label="Đặt hàng" />
+                  <Step
+                    active={isWallet}
+                    icon={isWallet ? <Wallet size={18} /> : <PackageCheck size={18} />}
+                    label={isWallet ? "Đã thanh toán" : "Chờ xác nhận"}
+                  />
+                  <Step icon={<Truck size={18} />} label="Vận chuyển" />
+                </div>
+              </div>
             </>
           ) : (
-            <GlowCard className="col-span-2 text-center">
-              <p className="text-lg font-semibold text-red-500">
-                Không tìm thấy thông tin đơn hàng hợp lệ
-              </p>
-            </GlowCard>
+            <div className="bg-slate-50/70 p-5 sm:p-6">
+              <div className="rounded-2xl border border-red-100 bg-red-50 p-5 text-center">
+                <p className="font-semibold text-red-600">
+                  Không tìm thấy thông tin đơn hàng hợp lệ
+                </p>
+                <p className="mt-2 text-sm text-slate-600">
+                  Vui lòng kiểm tra lại giao dịch hoặc quay về giỏ hàng để thử lại.
+                </p>
+              </div>
+            </div>
           )}
-        </div>
 
-        {/* ACTION */}
-        <div className="flex justify-between gap-4">
-          <ActionBtn onClick={() => navigate("/")}>
-            <Home size={18} /> Trang chủ
-          </ActionBtn>
+          <div className="flex flex-col gap-3 border-t border-slate-100 p-5 sm:flex-row sm:justify-between sm:p-6">
+            <ActionButton onClick={() => navigate("/home")}>
+              <Home size={18} />
+              Trang chủ
+            </ActionButton>
 
-          {isSuccess ? (
-            <ActionBtn primary onClick={() => navigate("/orders")}>
-              <ClipboardList size={18} /> Xem đơn hàng
-            </ActionBtn>
-          ) : (
-            <ActionBtn primary onClick={() => navigate("/cart")}>
-              Thử lại
-            </ActionBtn>
-          )}
-        </div>
-      </motion.div>
+            {isSuccess ? (
+              <ActionButton primary onClick={() => navigate("/orders")}>
+                <ClipboardList size={18} />
+                Xem đơn hàng
+              </ActionButton>
+            ) : (
+              <ActionButton primary onClick={() => navigate("/cart")}>
+                <RotateCcw size={18} />
+                Thử lại
+              </ActionButton>
+            )}
+          </div>
+        </section>
+      </main>
     </div>
   );
 };
 
-export default OrderResultPage;
-
-/* ===== COMPONENT ===== */
+const InfoCard = ({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) => (
+  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+    <p className="mb-2 text-sm text-slate-500">{label}</p>
+    <div>{children}</div>
+  </div>
+);
 
 const Step = ({
   icon,
   label,
   active,
 }: {
-  icon: JSX.Element;
+  icon: ReactNode;
   label: string;
   active?: boolean;
 }) => (
-  <motion.div
-    initial={{ scale: 0.9, opacity: 0 }}
-    animate={{ scale: 1, opacity: 1 }}
-    className="flex flex-col items-center"
+  <div
+    className={`flex items-center gap-3 rounded-2xl border p-4 ${
+      active
+        ? "border-sky-200 bg-sky-50 text-sky-700"
+        : "border-slate-200 bg-white text-slate-500"
+    }`}
   >
-    <motion.div
-      animate={
-        active
-          ? {
-              scale: [1, 1.2, 1],
-              boxShadow: [
-                "0 0 0px rgba(56,189,248,0.4)",
-                "0 0 20px rgba(56,189,248,0.6)",
-                "0 0 0px rgba(56,189,248,0.4)",
-              ],
-            }
-          : {}
-      }
-      transition={{ duration: 1, repeat: Infinity }}
-      className={`w-12 h-12 flex items-center justify-center rounded-full ${
-        active ? "bg-sky-500 text-white" : "bg-gray-200 text-gray-500"
+    <div
+      className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+        active ? "bg-sky-600 text-white" : "bg-slate-100 text-slate-500"
       }`}
     >
       {icon}
-    </motion.div>
-
-    <span
-      className={`mt-2 text-sm ${
-        active ? "text-sky-600 font-semibold" : "text-gray-500"
-      }`}
-    >
-      {label}
-    </span>
-  </motion.div>
+    </div>
+    <span className="text-sm font-medium">{label}</span>
+  </div>
 );
 
-const GlowCard = ({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) => (
-  <motion.div
-    whileHover={{
-      boxShadow: "0 0 25px rgba(56,189,248,0.3)",
-      y: -4,
-    }}
-    className={`bg-white border border-sky-200 rounded-xl p-6 shadow-sm transition ${className}`}
-  >
-    {children}
-  </motion.div>
-);
-
-const ActionBtn = ({
+const ActionButton = ({
   children,
   primary,
   onClick,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   primary?: boolean;
   onClick?: () => void;
 }) => (
-  <motion.button
-    whileHover={{ scale: 1.08 }}
-    whileTap={{ scale: 0.95 }}
+  <button
+    type="button"
     onClick={onClick}
-    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition ${
+    className={`inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all ${
       primary
-        ? "bg-sky-500 text-white hover:bg-sky-600 shadow"
-        : "border border-gray-300 hover:bg-gray-100"
+        ? "bg-sky-600 text-white hover:bg-sky-700"
+        : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
     }`}
   >
     {children}
-  </motion.button>
+  </button>
 );
+
+export default OrderResultPage;

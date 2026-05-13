@@ -1,120 +1,178 @@
-// import type { ProductFeedbackResponse } from "../../../types/productFeedback";
-// import type { BookingFeedbackResponse } from "../../../types/bookingFeedback";
-// import { Info, Star } from "lucide-react";
+import { Info, Star, Calendar, BadgeCheck } from "lucide-react";
 
-// type ReviewListProps = {
-//   productFeedbacks?: ProductFeedbackResponse;
-//   bookingFeedbacks?: BookingFeedbackResponse;
-//   type: "product" | "booking";
-// };
+import type { ProductFeedbackData } from "../../../../types/product";
 
-// const ReviewList = (props: ReviewListProps) => {
-//   const { productFeedbacks, bookingFeedbacks, type } = props;
-//   const formatDateTime = (isoString: string) => {
-//     if (!isoString) return "";
-//     const date = new Date(isoString);
-//     return date.toLocaleString("vi-VN", {
-//       day: "2-digit",
-//       month: "2-digit",
-//       year: "numeric",
-//       hour: "2-digit",
-//       minute: "2-digit",
-//     });
-//   };
-//   return (
-//     <div className="space-y-6">
-//       {type === "product"
-//         ? productFeedbacks !== undefined &&
-//           productFeedbacks.length === 0 && (
-//             <p className="flex items-center gap-2 text-gray-600">
-//               <Info className="w-5 h-5 text-gray-500" />
-//               Sản phẩm chưa có đánh giá nào
-//             </p>
-//           )
-//         : bookingFeedbacks !== undefined &&
-//           bookingFeedbacks.length === 0 && (
-//             <p className="flex items-center gap-2 text-gray-600">
-//               <Info className="w-5 h-5 text-gray-500" />
-//               Sân chưa có đánh giá nào
-//             </p>
-//           )}
-//       {type === "product"
-//         ? productFeedbacks !== undefined &&
-//           productFeedbacks.map((review) => (
-//             <div
-//               key={review.userId}
-//               className="flex gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200"
-//             >
-//               <img
-//                 src={review.avatar}
-//                 alt={review.username}
-//                 className="w-12 h-12 rounded-full object-cover"
-//               />
-//               <div className="flex-1">
-//                 <div className="flex items-center justify-between mb-1">
-//                   <h6 className="font-semibold text-lg text-gray-700">
-//                     {review.username}
-//                   </h6>
-//                   <span className="text-sm text-gray-500">
-//                     {formatDateTime(review.updatedDate)}
-//                   </span>
-//                 </div>
-//                 <div className="flex items-center mb-2">
-//                   {[1, 2, 3, 4, 5].map((star) => (
-//                     <Star
-//                       key={star}
-//                       size={20}
-//                       className={
-//                         star <= review.rating
-//                           ? "fill-yellow-400 stroke-yellow-400"
-//                           : "stroke-gray-300"
-//                       }
-//                     />
-//                   ))}
-//                 </div>
-//                 <p className="text-gray-700">{review.content}</p>
-//               </div>
-//             </div>
-//           ))
-//         : bookingFeedbacks !== undefined &&
-//           bookingFeedbacks.map((review) => (
-//             <div
-//               key={review.userId}
-//               className="flex gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200"
-//             >
-//               <img
-//                 src={review.avatar}
-//                 alt={review.username}
-//                 className="w-12 h-12 rounded-full object-cover"
-//               />
-//               <div className="flex-1">
-//                 <div className="flex items-center justify-between mb-1">
-//                   <h6 className="font-semibold text-lg text-gray-700">
-//                     {review.username}
-//                   </h6>
-//                   <span className="text-sm text-gray-500">
-//                     {formatDateTime(review.updatedDate)}
-//                   </span>
-//                 </div>
-//                 <div className="flex items-center mb-2">
-//                   {[1, 2, 3, 4, 5].map((star) => (
-//                     <Star
-//                       key={star}
-//                       size={20}
-//                       className={
-//                         star <= review.rating
-//                           ? "fill-yellow-400 stroke-yellow-400"
-//                           : "stroke-gray-300"
-//                       }
-//                     />
-//                   ))}
-//                 </div>
-//                 <p className="text-gray-700">{review.content}</p>
-//               </div>
-//             </div>
-//           ))}
-//     </div>
-//   );
-// };
+type ReviewListProps = {
+  productFeedbacks?: ProductFeedbackData;
+};
 
-// export default ReviewList;
+const ReviewList = ({ productFeedbacks }: ReviewListProps) => {
+  const data = productFeedbacks;
+
+  const feedbacks = data?.feedbacks ?? [];
+
+  const formatDate = (iso: string) => {
+    if (!iso) return "";
+
+    return new Date(iso).toLocaleDateString("vi-VN");
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* EMPTY */}
+      {feedbacks.length === 0 && (
+        <div
+          className="
+            flex items-center gap-3
+            rounded-2xl border border-slate-200
+            bg-slate-50 p-5
+            text-sm text-slate-500
+          "
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-slate-200">
+            <Info size={18} className="text-slate-400" />
+          </div>
+
+          <div>
+            <p className="font-medium text-slate-700">Chưa có đánh giá nào</p>
+
+            <p className="mt-0.5 text-xs text-slate-500">
+              Hãy trở thành người đầu tiên đánh giá sản phẩm này.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* LIST */}
+      <div className="space-y-5">
+        {feedbacks.map((review) => (
+          <div
+            key={review.id}
+            className="
+              rounded-3xl border border-slate-200
+              bg-white p-5
+              shadow-sm transition-all
+              hover:shadow-md
+            "
+          >
+            {/* HEADER */}
+            <div className="flex items-start justify-between gap-4">
+              {/* USER */}
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <img
+                    src={review.user.avatar}
+                    className="
+                      h-12 w-12 rounded-full
+                      border-2 border-white
+                      object-cover shadow-sm
+                    "
+                  />
+
+                  <div
+                    className="
+                      absolute -bottom-1 -right-1
+                      flex h-5 w-5 items-center justify-center
+                      rounded-full bg-sky-500
+                      text-white shadow
+                    "
+                  >
+                    <BadgeCheck size={11} />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-slate-900">
+                      {review.user.fullName}
+                    </p>
+
+                    <span
+                      className="
+                        rounded-full bg-sky-50
+                        px-2 py-0.5
+                        text-[10px] font-semibold
+                        text-sky-700
+                      "
+                    >
+                      Đã mua hàng
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-slate-400">
+                    @{review.user.username}
+                  </p>
+                </div>
+              </div>
+
+              {/* DATE */}
+              <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                <Calendar size={13} />
+                {formatDate(review.updatedDate)}
+              </div>
+            </div>
+
+            {/* STARS */}
+            <div className="mt-4 flex items-center gap-1">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star
+                  key={i}
+                  size={15}
+                  className={
+                    i < review.rating
+                      ? "fill-yellow-400 stroke-yellow-400"
+                      : "stroke-slate-300"
+                  }
+                />
+              ))}
+
+              <span className="ml-2 text-xs font-medium text-slate-500">
+                {review.rating}/5
+              </span>
+            </div>
+
+            {/* CONTENT */}
+            <p className="mt-4 text-[15px] leading-7 text-slate-700">
+              {review.content}
+            </p>
+
+            {/* VARIANT */}
+            <div className="mt-5 flex flex-wrap gap-2">
+              <span
+                className="
+                  rounded-full border border-slate-200
+                  bg-slate-50 px-3 py-1
+                  text-xs font-medium text-slate-600
+                "
+              >
+                Màu: {review.variant.color}
+              </span>
+
+              <span
+                className="
+                  rounded-full border border-slate-200
+                  bg-slate-50 px-3 py-1
+                  text-xs font-medium text-slate-600
+                "
+              >
+                Size: {review.variant.size}
+              </span>
+
+              <span
+                className="
+                  rounded-full border border-slate-200
+                  bg-slate-50 px-3 py-1
+                  text-xs font-medium text-slate-600
+                "
+              >
+                {review.variant.material}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default ReviewList;

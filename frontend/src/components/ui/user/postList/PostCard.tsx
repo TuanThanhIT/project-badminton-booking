@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef, useState } from "react";
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Globe2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { PostWithAuthor } from "../../../../types/post";
 import { POST_TYPE_LABEL } from "../../../../utils/constants/postConstant";
@@ -22,12 +22,10 @@ type PostCardProps = {
     }
   >;
   courtNameById: Record<number, string>;
-  /** Chỉ dùng trên trang profile: menu ⋮ với chỉnh sửa / xóa */
   ownerMenuActions?: {
     onEdit: () => void;
     onDelete: () => void;
   };
-  /** Mở modal xem chi tiết bài viết */
   onOpenDetail?: () => void;
 };
 
@@ -46,48 +44,37 @@ const PostCard = ({
   useEffect(() => {
     if (!ownerMenuOpen) return;
     const close = (e: MouseEvent) => {
-      if (
-        ownerMenuRef.current &&
-        !ownerMenuRef.current.contains(e.target as Node)
-      ) {
+      if (ownerMenuRef.current && !ownerMenuRef.current.contains(e.target as Node)) {
         setOwnerMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
   }, [ownerMenuOpen]);
-  const authorName =
-    post.author?.profile?.fullName || post.author?.username || "Ẩn danh";
-  const avatar = post.author?.profile?.avatar;
 
-  const repostOfPostId = (() => {
-    const n = post.repostOfPostId ?? null;
-    return n && n > 0 ? n : null;
-  })();
+  const authorName = post.author?.profile?.fullName || post.author?.username || "Ẩn danh";
+  const avatar = post.author?.profile?.avatar;
+  const repostOfPostId = post.repostOfPostId && post.repostOfPostId > 0 ? post.repostOfPostId : null;
   const isRepost = repostOfPostId != null;
 
   return (
-    <article className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <div className="p-4 flex items-start gap-3">
-        <div className="shrink-0 w-10 h-10 rounded-full bg-sky-100 overflow-hidden">
+    <article className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_10px_28px_rgba(15,23,42,0.05)] transition-all duration-300 hover:border-sky-200 hover:shadow-[0_14px_34px_rgba(14,165,233,0.1)]">
+      <div className="flex items-start gap-3 p-5">
+        <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-sky-100 ring-4 ring-sky-50">
           {avatar ? (
-            <img
-              src={avatar}
-              alt={authorName}
-              className="w-full h-full object-cover"
-            />
+            <img src={avatar} alt={authorName} className="h-full w-full object-cover" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-sky-600 font-semibold text-sm">
+            <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-sky-700">
               {authorName.charAt(0).toUpperCase()}
             </div>
           )}
         </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              className="font-semibold text-gray-900 hover:underline"
+              className="max-w-[220px] truncate font-semibold text-slate-800 transition-colors hover:text-sky-600 sm:max-w-none"
               onClick={() => {
                 const id = post.author?.id;
                 if (!id) return;
@@ -96,22 +83,25 @@ const PostCard = ({
             >
               {authorName}
             </button>
+
             {!isRepost && (
-              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-sky-100 text-sky-700">
+              <span className="rounded-full border border-sky-100 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700">
                 {POST_TYPE_LABEL[post.type]}
               </span>
             )}
           </div>
+
           {isRepost && (
-            <p className="text-sm text-emerald-600 mt-0.5 font-medium">
+            <p className="mt-0.5 text-sm font-medium text-emerald-600">
               Bài đăng lại
             </p>
           )}
-          <p className="text-sm text-gray-500 flex items-center gap-1">
+
+          <p className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-400">
             {formatRelativeTimeVi(post.createdDate)}
-            <span className="inline-flex items-center text-gray-400">
-              • Công khai
-            </span>
+            <span>-</span>
+            <Globe2 size={13} />
+            <span>Công khai</span>
           </p>
         </div>
 
@@ -119,41 +109,40 @@ const PostCard = ({
           <div className="relative shrink-0" ref={ownerMenuRef}>
             <button
               type="button"
-              className="p-1.5 rounded-full hover:bg-gray-100 text-gray-500"
+              className="rounded-xl p-2 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-700"
               title="Tùy chọn bài đăng"
               aria-expanded={ownerMenuOpen}
               aria-haspopup="menu"
-              onClick={() => setOwnerMenuOpen((o) => !o)}
+              onClick={() => setOwnerMenuOpen((open) => !open)}
             >
-              <MoreHorizontal className="w-5 h-5" />
+              <MoreHorizontal className="h-5 w-5" />
             </button>
+
             {ownerMenuOpen && (
-              <div
-                className="absolute right-0 top-full mt-1 w-44 py-1 bg-white rounded-xl border border-gray-200 shadow-lg z-30"
-                role="menu"
-              >
+              <div className="absolute right-0 top-full z-30 mt-2 w-44 overflow-hidden rounded-2xl border border-slate-100 bg-white py-1 shadow-xl" role="menu">
                 <button
                   type="button"
                   role="menuitem"
-                  className="w-full text-left px-3 py-2.5 text-sm text-gray-700 hover:bg-sky-50 flex items-center gap-2"
+                  className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-sky-50"
                   onClick={() => {
                     ownerMenuActions.onEdit();
                     setOwnerMenuOpen(false);
                   }}
                 >
-                  <Pencil className="w-4 h-4 shrink-0 text-sky-600" />
+                  <Pencil className="h-4 w-4 shrink-0 text-sky-600" />
                   Chỉnh sửa
                 </button>
+
                 <button
                   type="button"
                   role="menuitem"
-                  className="w-full text-left px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                  className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-red-600 hover:bg-red-50"
                   onClick={() => {
                     ownerMenuActions.onDelete();
                     setOwnerMenuOpen(false);
                   }}
                 >
-                  <Trash2 className="w-4 h-4 shrink-0" />
+                  <Trash2 className="h-4 w-4 shrink-0" />
                   Xóa bài
                 </button>
               </div>
@@ -163,59 +152,48 @@ const PostCard = ({
       </div>
 
       <div
-        className={`px-4 pb-3 ${onOpenDetail ? "cursor-pointer group/content" : ""}`}
+        className={`px-5 pb-4 ${onOpenDetail ? "cursor-pointer group/content" : ""}`}
         onClick={onOpenDetail}
         title={onOpenDetail ? "Nhấn để xem chi tiết" : undefined}
       >
         {!isRepost ? (
-          <FormDataSummary
-            post={post}
-            branchInfoById={branchInfoById}
-            courtNameById={courtNameById}
-          />
+          <FormDataSummary post={post} branchInfoById={branchInfoById} courtNameById={courtNameById} />
         ) : (
           <>
             {post.content && (
-              <p className="text-gray-700 text-sm whitespace-pre-wrap">
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
                 {post.content}
               </p>
             )}
-            <RepostOriginalEmbed
-              originalPostId={repostOfPostId!}
-              branchInfoById={branchInfoById}
-              courtNameById={courtNameById}
-            />
+            <RepostOriginalEmbed originalPostId={repostOfPostId!} branchInfoById={branchInfoById} courtNameById={courtNameById} />
           </>
         )}
+
         {onOpenDetail && (
-          <p className="mt-2 text-xs text-sky-500 opacity-0 group-hover/content:opacity-100 transition-opacity">
-            Nhấn để xem bài viết chi tiết và bình luận →
+          <p className="mt-3 text-xs font-medium text-sky-600 opacity-0 transition-opacity group-hover/content:opacity-100">
+            Nhấn để xem bài viết chi tiết và bình luận
           </p>
         )}
       </div>
 
-      <div className="px-4 py-2 flex items-center justify-between text-sm text-gray-500 border-b border-gray-100">
-        <span className="flex items-center gap-1">
-          <span className="flex -space-x-1">
-            <span className="w-4 h-4 rounded-full bg-sky-500 flex items-center justify-center text-white text-xs">
-              👍
-            </span>
-            <span className="w-4 h-4 rounded-full bg-red-400 flex items-center justify-center text-white text-xs">
-              ❤️
-            </span>
-          </span>
-          <span>{post.likesCount ?? 0}</span>
+      <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3 text-sm text-slate-500">
+        <span className="flex items-center gap-2">
+          <span className="font-medium">{post.likesCount ?? 0}</span>
+          lượt thích
         </span>
+
         <button
           type="button"
           onClick={onOpenDetail}
-          className={`${onOpenDetail ? "hover:underline cursor-pointer" : "cursor-default"}`}
+          className={`${onOpenDetail ? "cursor-pointer hover:text-sky-600 hover:underline" : "cursor-default"} transition-colors`}
         >
           {post.commentsCount ?? 0} bình luận
         </button>
       </div>
 
-      <PostActions post={post} />
+      <div className="border-t border-slate-100">
+        <PostActions post={post} />
+      </div>
     </article>
   );
 };

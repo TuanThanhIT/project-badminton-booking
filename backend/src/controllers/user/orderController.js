@@ -82,7 +82,7 @@ const getUserOrdersController = asyncHandler(async (req, res) => {
 
 const getOrderDetailController = asyncHandler(async (req, res) => {
   const orderId = req.params.orderId;
-  const data = { orderId };
+  const data = { orderId, userId: req.user.id };
   const result = await orderService.getOrderDetailService(data);
   return res
     .status(200)

@@ -1,10 +1,14 @@
 import { z } from "zod";
 
 export const FormRatingSchema = z.object({
-  rating: z
-    .number()
-    .min(1, "Vui lòng chọn số sao đánh giá (từ 1 đến 5).")
-    .max(5, "Số sao đánh giá không hợp lệ."),
+  rating: z.union([
+    z.literal(1),
+    z.literal(2),
+    z.literal(3),
+    z.literal(4),
+    z.literal(5),
+  ]),
+
   content: z
     .string()
     .min(10, "Nội dung đánh giá quá ngắn, vui lòng viết ít nhất 10 ký tự.")

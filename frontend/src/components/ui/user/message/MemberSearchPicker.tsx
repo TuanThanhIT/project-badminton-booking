@@ -22,7 +22,7 @@ const MemberSearchPicker = ({
   excludeUserIds,
   selected,
   onSelectedChange,
-  placeholder = "Tìm theo tên hoặc username…",
+  placeholder = "Tìm theo tên hoặc username...",
 }: MemberSearchPickerProps) => {
   const formatUserLabel = (u: UserSearchHit) => {
     const name = u.fullName?.trim();
@@ -87,22 +87,23 @@ const MemberSearchPicker = ({
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+        className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-400 transition-all placeholder:text-slate-400"
         placeholder={placeholder}
         autoComplete="off"
       />
-      {loading ? <p className="text-xs text-gray-500">Đang tìm…</p> : null}
-      {err ? <p className="text-xs text-red-600">{err}</p> : null}
+      {loading ? <p className="text-xs text-slate-500">Đang tìm...</p> : null}
+      {err ? <p className="text-xs text-rose-600">{err}</p> : null}
+
       {hits.length > 0 ? (
-        <ul className="max-h-36 overflow-y-auto border border-gray-100 rounded-lg bg-gray-50 text-sm">
+        <ul className="max-h-40 overflow-y-auto border border-slate-200 rounded-2xl bg-white text-sm shadow-sm">
           {hits.map((u) => (
             <li key={u.id}>
               <button
                 type="button"
-                className="w-full text-left px-3 py-2 hover:bg-white border-b border-gray-100 last:border-0"
+                className="w-full text-left px-4 py-2.5 hover:bg-sky-50 border-b border-slate-100 last:border-0 transition-colors"
                 onClick={() => addOne(u)}
               >
-                <span className="font-medium text-gray-900">
+                <span className="font-semibold text-slate-900">
                   {formatUserLabel(u)}
                 </span>
               </button>
@@ -110,21 +111,22 @@ const MemberSearchPicker = ({
           ))}
         </ul>
       ) : null}
+
       {selected.length > 0 ? (
         <div className="flex flex-wrap gap-1.5">
           {selected.map((u) => (
             <span
               key={u.id}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-100 text-sky-900 text-xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 border border-sky-100 text-sky-800 text-xs font-semibold"
             >
               {formatUserLabel(u)}
               <button
                 type="button"
-                className="hover:text-red-600 font-bold leading-none"
+                className="hover:text-rose-600 font-bold leading-none"
                 aria-label={`Bỏ ${u.username}`}
                 onClick={() => removeOne(u.id)}
               >
-                ×
+                x
               </button>
             </span>
           ))}

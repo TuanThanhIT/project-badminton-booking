@@ -683,11 +683,11 @@ Order.hasMany(Feedback, { foreignKey: "orderId", as: "feedbacks" });
 Feedback.belongsTo(Order, { foreignKey: "orderId", as: "order" });
 
 ProductVariant.hasMany(Feedback, {
-  foreignKey: "productVariantId",
+  foreignKey: "variantId",
   as: "feedbacks",
 });
 Feedback.belongsTo(ProductVariant, {
-  foreignKey: "productVariantId",
+  foreignKey: "variantId",
   as: "variant",
 });
 

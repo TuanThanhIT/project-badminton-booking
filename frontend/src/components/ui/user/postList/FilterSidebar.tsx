@@ -1,12 +1,12 @@
 import type { PostType } from "../../../../types/post";
 import type { FilterField } from "../../../../utils/constants/postConstant";
 import type { BranchListItem } from "../../../../types/branch";
-
 import {
-  POST_TYPES,
-  POST_TYPE_LABEL,
   POST_TYPE_FILTERS,
+  POST_TYPE_LABEL,
+  POST_TYPES,
 } from "../../../../utils/constants/postConstant";
+import { CheckCircle2, EyeOff, SlidersHorizontal } from "lucide-react";
 
 type Props = {
   selectedType: PostType | "";
@@ -29,38 +29,48 @@ const FilterSidebar = ({
   onApply,
   branches,
 }: Props) => {
-  const filters: FilterField[] = selectedType
-    ? POST_TYPE_FILTERS[selectedType]
-    : [];
+  const filters: FilterField[] = selectedType ? POST_TYPE_FILTERS[selectedType] : [];
+
+  const inputClass =
+    "w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition-all hover:border-sky-200 hover:bg-white focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100";
 
   return (
-    <aside className="w-64 shrink-0 space-y-4">
-      {/* Tab loại bài */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2">
-        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2 px-2">
-          Loại bài đăng
-        </p>
-        <div className="space-y-0.5">
+    <aside className="w-[21rem] shrink-0 space-y-5">
+      <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
+        <div className="border-b border-slate-100 bg-slate-50 px-5 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-sky-100 bg-sky-50 text-sky-600">
+              <SlidersHorizontal size={19} />
+            </div>
+            <div>
+              <p className="text-base font-semibold text-slate-800">Bộ lọc</p>
+              <p className="text-sm text-slate-500">Chọn loại bài phù hợp</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-2 p-4">
           <button
             type="button"
             onClick={() => onTypeChange("")}
-            className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition ${
+            className={`w-full rounded-2xl px-4 py-3 text-left text-sm font-medium transition-all ${
               selectedType === ""
-                ? "bg-sky-100 text-sky-700"
-                : "hover:bg-gray-100 text-gray-700"
+                ? "bg-sky-600 text-white shadow-sm"
+                : "text-slate-600 hover:bg-sky-50 hover:text-sky-700"
             }`}
           >
             Tất cả
           </button>
+
           {POST_TYPES.map((type) => (
             <button
               key={type}
               type="button"
               onClick={() => onTypeChange(type)}
-              className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition ${
+              className={`w-full rounded-2xl px-4 py-3 text-left text-sm font-medium transition-all ${
                 selectedType === type
-                  ? "bg-sky-100 text-sky-700"
-                  : "hover:bg-gray-100 text-gray-700"
+                  ? "bg-sky-600 text-white shadow-sm"
+                  : "text-slate-600 hover:bg-sky-50 hover:text-sky-700"
               }`}
             >
               {POST_TYPE_LABEL[type]}
@@ -69,34 +79,47 @@ const FilterSidebar = ({
         </div>
       </div>
 
-      {/* Repost filter */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
-          Tuỳ chọn
-        </p>
-        <label className="flex items-center gap-2 text-sm text-gray-700 select-none">
+      <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
+        <div className="mb-4 flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-600">
+            <EyeOff size={19} />
+          </div>
+          <div>
+            <p className="text-base font-semibold text-slate-800">Tùy chọn</p>
+            <p className="text-sm text-slate-500">Cá nhân hóa bảng tin</p>
+          </div>
+        </div>
+
+        <label className="flex cursor-pointer select-none items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+          <span className="font-medium">Ẩn bài đăng lại</span>
           <input
             type="checkbox"
             checked={hideReposts}
             onChange={(e) => onHideRepostsChange(e.target.checked)}
-            className="h-4 w-4"
+            className="h-4 w-4 accent-sky-600"
           />
-          Ẩn bài đăng lại
         </label>
       </div>
 
-      {/* Filter con theo loại */}
       {filters.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
-            Lọc theo
-          </p>
-          <div className="space-y-3">
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-sky-100 bg-sky-50 text-sky-600">
+              <CheckCircle2 size={19} />
+            </div>
+            <div>
+              <p className="text-base font-semibold text-slate-800">Lọc theo</p>
+              <p className="text-sm text-slate-500">Tinh chỉnh kết quả</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
             {filters.map((f) => (
               <div key={f.key}>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1.5 block text-sm font-medium text-slate-600">
                   {f.label}
                 </label>
+
                 {f.key === "location.branchId" ? (
                   <select
                     value={String(filterValues[f.key] ?? "")}
@@ -104,9 +127,9 @@ const FilterSidebar = ({
                       const v = e.target.value;
                       onFilterChange(f.key, v === "" ? "" : Number(v));
                     }}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                    className={inputClass}
                   >
-                    <option value="">-- Tất cả chi nhánh --</option>
+                    <option value="">Tất cả chi nhánh</option>
                     {branches.map((branch) => (
                       <option key={branch.id} value={branch.id}>
                         {branch.branchName}
@@ -117,9 +140,9 @@ const FilterSidebar = ({
                   <select
                     value={String(filterValues[f.key] ?? "")}
                     onChange={(e) => onFilterChange(f.key, e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                    className={inputClass}
                   >
-                    <option value="">-- Tất cả --</option>
+                    <option value="">Tất cả</option>
                     {f.options.map((o) => (
                       <option key={o.value} value={o.value}>
                         {o.label}
@@ -135,14 +158,14 @@ const FilterSidebar = ({
                       onFilterChange(f.key, v === "" ? "" : Number(v));
                     }}
                     placeholder="Nhập..."
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                    className={inputClass}
                   />
                 ) : f.type === "date" ? (
                   <input
                     type="date"
                     value={String(filterValues[f.key] ?? "")}
                     onChange={(e) => onFilterChange(f.key, e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                    className={inputClass}
                   />
                 ) : (
                   <input
@@ -150,17 +173,18 @@ const FilterSidebar = ({
                     value={String(filterValues[f.key] ?? "")}
                     onChange={(e) => onFilterChange(f.key, e.target.value)}
                     placeholder="Nhập..."
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                    className={inputClass}
                   />
                 )}
               </div>
             ))}
+
             <button
               type="button"
               onClick={onApply}
-              className="w-full py-2 rounded-lg bg-sky-600 text-white text-sm font-medium hover:bg-sky-700"
+              className="w-full rounded-2xl bg-sky-600 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-sky-500 active:scale-[0.98]"
             >
-              Áp dụng
+              Áp dụng bộ lọc
             </button>
           </div>
         </div>

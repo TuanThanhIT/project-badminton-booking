@@ -4,6 +4,7 @@ import authorize from "../../middlewares/authorize.js";
 import validate from "../../middlewares/validate.js";
 import {
   getProductDetailSchema,
+  getProductFeedbacksSchema,
   getProductsByFilterSchema,
 } from "../../validations/productValidation.js";
 import productController from "../../controllers/user/productController.js";
@@ -25,6 +26,13 @@ const initProductRoute = (app) => {
     authorize(ROLE_NAME.USER),
     validate(getProductDetailSchema),
     productController.getProductDetailController,
+  );
+  productRoute.get(
+    "/feedbacks/:productId",
+    auth,
+    authorize(ROLE_NAME.USER),
+    validate(getProductFeedbacksSchema),
+    productController.getProductFeedbacksController,
   );
   app.use("/user/products", productRoute);
 };

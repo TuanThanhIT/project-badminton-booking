@@ -21,7 +21,6 @@ import type {
   TrackingProgressResponse,
   UserOrderGroup,
   UserOrderPagination,
-  UserOrderResponseData,
   UserOrdersRequest,
   UserOrdersResponse,
   WalletOrderConfirmRequest,

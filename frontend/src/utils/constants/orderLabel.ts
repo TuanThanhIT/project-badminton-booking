@@ -17,4 +17,8 @@ export const SHIPPING_STATUS_LABEL: Record<string, string> = {
   DELIVERING: "Đang giao",
   DELIVERED: "Giao thành công",
   FAILED: "Giao thất bại",
+  RETURNING: "Đang hoàn hàng",
+  RETURNED: "Đã hoàn hàng",
+  CANCELLED: "Đã hủy",
+  PENDING: "Chờ xử lý",
 };

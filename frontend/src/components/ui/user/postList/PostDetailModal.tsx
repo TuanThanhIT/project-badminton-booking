@@ -83,14 +83,14 @@ const PostDetailModal = ({ post, onClose, branchInfoById, courtNameById }: Props
         className="w-full max-w-5xl h-[96vh] md:h-[90vh] flex flex-col md:flex-row bg-white rounded-2xl overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ═══ LEFT PANEL: Post content ═══ */}
+        {/* Left panel */}
         <div className="hidden md:flex flex-1 flex-col overflow-hidden bg-gradient-to-br from-slate-50 to-gray-100 border-r border-gray-200">
           {/* Type gradient header */}
           <div className={`bg-gradient-to-r ${gradient} px-6 py-5 shrink-0`}>
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold bg-white/20 text-white border border-white/30 backdrop-blur-sm">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium bg-white/20 text-white border border-white/30 backdrop-blur-sm">
               {POST_TYPE_LABEL[post.type]}
             </span>
-            <h2 className="text-xl font-bold text-white mt-3 leading-snug drop-shadow-sm">
+            <h2 className="text-xl font-semibold text-white mt-3 leading-snug drop-shadow-sm">
               {post.title}
             </h2>
             {post.content && !isRepost && (
@@ -125,7 +125,7 @@ const PostDetailModal = ({ post, onClose, branchInfoById, courtNameById }: Props
           </div>
         </div>
 
-        {/* ═══ RIGHT PANEL: Author + Comments ═══ */}
+        {/* Right panel */}
         <div
           ref={rightPanelRef}
           className="w-full md:w-[390px] flex flex-col shrink-0 bg-white overflow-hidden"
@@ -141,7 +141,7 @@ const PostDetailModal = ({ post, onClose, branchInfoById, courtNameById }: Props
               {avatar ? (
                 <img src={avatar} alt={authorName} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-sky-600 font-bold text-sm">
+                <div className="w-full h-full flex items-center justify-center text-sky-600 font-semibold text-sm">
                   {letter}
                 </div>
               )}
@@ -150,14 +150,14 @@ const PostDetailModal = ({ post, onClose, branchInfoById, courtNameById }: Props
               <button
                 type="button"
                 onClick={handleNavigateToProfile}
-                className="font-semibold text-gray-900 text-sm hover:underline leading-tight block truncate"
+                className="font-semibold text-slate-900 text-sm hover:underline leading-tight block truncate"
               >
                 {authorName}
               </button>
               <p className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1">
                 <span>{formatRelativeTimeVi(post.createdDate)}</span>
                 <span>·</span>
-                <span>🌐 Công khai</span>
+                <span>Công khai</span>
               </p>
             </div>
             <button
@@ -173,7 +173,7 @@ const PostDetailModal = ({ post, onClose, branchInfoById, courtNameById }: Props
           {/* Mobile-only: type + title + content */}
           <div className="md:hidden shrink-0">
             <div className={`bg-gradient-to-r ${gradient} px-4 py-3`}>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/20 text-white border border-white/30">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-white/20 text-white border border-white/30">
                 {POST_TYPE_LABEL[post.type]}
               </span>
               <p className="font-semibold text-white text-sm mt-2 leading-snug">{post.title}</p>
@@ -188,7 +188,7 @@ const PostDetailModal = ({ post, onClose, branchInfoById, courtNameById }: Props
             <div className="flex items-center gap-1.5">
               <div className="flex -space-x-1">
                 <span className="w-5 h-5 rounded-full bg-sky-500 flex items-center justify-center text-[11px] border-2 border-white">
-                  👍
+                  +
                 </span>
                 <span className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center text-[11px] border-2 border-white">
                   ❤️
@@ -204,7 +204,7 @@ const PostDetailModal = ({ post, onClose, branchInfoById, courtNameById }: Props
             </div>
           </div>
 
-          {/* Actions + Comments — scrollable */}
+          {/* Actions and comments */}
           <div className="flex-1 overflow-y-auto min-h-0">
             <PostActions post={post} alwaysShowComments />
           </div>

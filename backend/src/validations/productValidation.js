@@ -19,6 +19,7 @@ import {
 import { limitField, pageField } from "./common/paginationFields.js";
 import { keywordField } from "./common/searchFields.js";
 import { thumbnailUrlField } from "./common/urlField.js";
+import { ratingField } from "./common/feedbackFields.js";
 
 export const getProductsByFilterSchema = {
   query: Joi.object({
@@ -176,5 +177,16 @@ export const updateProductImageSchema = {
 export const getProductImagesSchema = {
   params: Joi.object({
     productId: idParams("productId"),
+  }),
+};
+
+export const getProductFeedbacksSchema = {
+  params: Joi.object({
+    productId: idParams("productId"),
+  }),
+  query: Joi.object({
+    page: pageField,
+    limit: limitField,
+    rating: ratingField.optional(),
   }),
 };

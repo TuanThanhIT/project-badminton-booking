@@ -71,3 +71,45 @@ export type ProductDetailResponse = ApiResponse<ProductDetail>;
 export type ProductDetailRequest = {
   productId: number;
 };
+
+export type ProductFeedbackVariant = {
+  id: number;
+  color: string;
+  size: string;
+  material: string;
+};
+
+export type ProductFeedbackUser = {
+  id: number;
+  username: string;
+  fullName: string;
+  avatar: string;
+};
+
+export type ProductFeedback = {
+  id: number;
+  content: string;
+  rating: number;
+  updatedDate: string;
+  variant: ProductFeedbackVariant;
+  user: ProductFeedbackUser;
+};
+
+export type ProductFeedbackData = {
+  productId: number;
+  totalFeedbacks: number;
+  averageRating: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  feedbacks: ProductFeedback[];
+};
+
+export type ProductFeedbackResponse = ApiResponse<ProductFeedbackData>;
+
+export type ProductFeedbackRequest = {
+  productId: number;
+  page?: number;
+  limit?: number;
+  rating?: number;
+};

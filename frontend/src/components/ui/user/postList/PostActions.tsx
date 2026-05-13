@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { MessageCircle, Share2, ThumbsUp } from "lucide-react";
-import type { PostWithAuthor } from "../../../../types/post";
 import { toast } from "react-toastify";
+import type { PostWithAuthor } from "../../../../types/post";
 import { useAppDispatch } from "../../../../redux/hook";
 import { toggleLike } from "../../../../redux/slices/user/postSlice";
 import PostCommentsSection from "./PostCommentsSection";
@@ -9,7 +9,6 @@ import PostRepostModal from "./PostRepostModal";
 
 type Props = {
   post: PostWithAuthor;
-  /** Khi true: comments luôn hiển thị và không toggle được (dùng trong PostDetailModal) */
   alwaysShowComments?: boolean;
 };
 
@@ -27,17 +26,12 @@ const PostActions = ({ post, alwaysShowComments = false }: Props) => {
   const sharedByMe = Boolean(post.sharedByMe);
 
   const likeButtonClass = useMemo(
-    () =>
-      likedByMe
-        ? "text-sky-700 bg-sky-50 border-t-sky-100"
-        : "text-gray-600",
+    () => (likedByMe ? "text-sky-700 bg-sky-50" : "text-slate-600"),
     [likedByMe],
   );
+
   const shareButtonClass = useMemo(
-    () =>
-      sharedByMe
-        ? "text-emerald-700 bg-emerald-50 border-t-emerald-100"
-        : "text-gray-600",
+    () => (sharedByMe ? "text-emerald-700 bg-emerald-50" : "text-slate-600"),
     [sharedByMe],
   );
 
@@ -55,28 +49,28 @@ const PostActions = ({ post, alwaysShowComments = false }: Props) => {
 
   return (
     <>
-      <div className="flex border-t border-gray-100">
+      <div className="flex border-t border-slate-100">
         <button
           type="button"
           onClick={handleToggleLike}
           disabled={busy}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium hover:bg-gray-50 transition ${likeButtonClass} disabled:opacity-50`}
+          className={`flex flex-1 items-center justify-center gap-2 py-3 text-sm font-medium transition hover:bg-slate-50 disabled:opacity-50 ${likeButtonClass}`}
         >
-          <ThumbsUp className={`w-4 h-4 ${likedByMe ? "text-sky-600" : ""}`} />
+          <ThumbsUp className={`h-4 w-4 ${likedByMe ? "text-sky-600" : ""}`} />
           Thích
-          <span className="text-xs text-gray-400 ml-1">{likesCount}</span>
+          <span className="ml-1 text-xs text-slate-400">{likesCount}</span>
         </button>
 
         <button
           type="button"
           onClick={() => !alwaysShowComments && setCommentsExpanded((v) => !v)}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 hover:bg-gray-50 transition text-sm font-medium ${
-            isCommentsOpen ? "text-sky-700 bg-sky-50/80" : "text-gray-600"
+          className={`flex flex-1 items-center justify-center gap-2 py-3 text-sm font-medium transition hover:bg-slate-50 ${
+            isCommentsOpen ? "bg-sky-50/80 text-sky-700" : "text-slate-600"
           } ${alwaysShowComments ? "cursor-default" : ""}`}
         >
-          <MessageCircle className="w-4 h-4" />
+          <MessageCircle className="h-4 w-4" />
           Bình luận
-          <span className="text-xs text-gray-400 ml-1">{commentsCount}</span>
+          <span className="ml-1 text-xs text-slate-400">{commentsCount}</span>
         </button>
 
         <button
@@ -85,11 +79,11 @@ const PostActions = ({ post, alwaysShowComments = false }: Props) => {
             if (sharedByMe) return;
             setRepostOpen(true);
           }}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 hover:bg-gray-50 transition text-sm font-medium ${shareButtonClass}`}
+          className={`flex flex-1 items-center justify-center gap-2 py-3 text-sm font-medium transition hover:bg-slate-50 ${shareButtonClass}`}
         >
-          <Share2 className={`w-4 h-4 ${sharedByMe ? "text-emerald-600" : ""}`} />
+          <Share2 className={`h-4 w-4 ${sharedByMe ? "text-emerald-600" : ""}`} />
           {sharedByMe ? "Đã chia sẻ" : "Chia sẻ"}
-          <span className="text-xs text-gray-400 ml-1">{sharesCount}</span>
+          <span className="ml-1 text-xs text-slate-400">{sharesCount}</span>
         </button>
       </div>
 
@@ -100,4 +94,3 @@ const PostActions = ({ post, alwaysShowComments = false }: Props) => {
 };
 
 export default PostActions;
-

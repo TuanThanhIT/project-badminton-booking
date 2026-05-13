@@ -10,10 +10,6 @@ import type {
 } from "../../../types/discount";
 import type { ApiErrorType } from "../../../types/error";
 import discountService from "../../../services/user/discountService";
-import type {
-  CheckoutPreviewData,
-  CheckoutPreviewResponse,
-} from "../../../types/order";
 
 interface DiscountState {
   discount: DiscountCheckResult | null;

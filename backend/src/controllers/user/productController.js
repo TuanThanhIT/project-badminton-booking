@@ -51,8 +51,23 @@ const getProductDetailController = asyncHandler(async (req, res) => {
     );
 });
 
+const getProductFeedbacksController = asyncHandler(async (req, res) => {
+  const data = { ...req.query, ...req.params };
+  const productFeedbacks =
+    await productService.getProductFeedbacksService(data);
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse(
+        "Lấy tất cả đánh giá sản phẩm thành công",
+        productFeedbacks,
+      ),
+    );
+});
+
 const productController = {
   getProductsByFilterController,
   getProductDetailController,
+  getProductFeedbacksController,
 };
 export default productController;

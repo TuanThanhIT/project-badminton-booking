@@ -28,6 +28,7 @@ var _orderRoute = _interopRequireDefault(require("./routes/user/orderRoute.js"))
 var _discountRoute = _interopRequireDefault(require("./routes/user/discountRoute.js"));
 var _orderRoute2 = _interopRequireDefault(require("./routes/employee/orderRoute.js"));
 var _webhookRoute = _interopRequireDefault(require("./routes/user/webhookRoute.js"));
+var _feedbackRoute = _interopRequireDefault(require("./routes/user/feedbackRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -55,6 +56,7 @@ app.use((0, _cookieParser["default"])());
 (0, _orderRoute["default"])(app);
 (0, _discountRoute["default"])(app);
 (0, _webhookRoute["default"])(app);
+(0, _feedbackRoute["default"])(app);
 
 // Post
 (0, _postRoute["default"])(app);
@@ -72,9 +74,7 @@ var httpServer = (0, _http.createServer)(app);
 // init socket
 (0, _index.initSocket)(httpServer);
 app.use(_errorHandler["default"]);
-_db["default"].sync({
-  alter: true
-}).then(function () {
+_db["default"].sync().then(function () {
   console.log("Database synced");
   httpServer.listen(PORT, function () {
     console.log("Server running on http://localhost:".concat(PORT));

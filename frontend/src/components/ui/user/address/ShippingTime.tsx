@@ -1,30 +1,33 @@
+import { CalendarClock, Truck } from "lucide-react";
 import { getShippingInfo } from "../../../../utils/checkout";
 
 const ShippingTime = ({ group }: any) => {
   const data = getShippingInfo(group);
 
   if (data.type === "single") {
-    return <p className="text-xs text-gray-500">{data.text}</p>;
+    return <p className="text-xs text-slate-500">{data.text}</p>;
   }
 
   if (data.type === "same-day") {
     return (
-      <>
-        <p className="text-xs text-green-600 font-medium">
-          🚀 Giao trong ngày {data.date}
+      <div className="space-y-0.5">
+        <p className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600">
+          <Truck size={13} />
+          Giao trong ngày {data.date}
         </p>
-        <p className="text-xs text-gray-400">Trước {data.time}</p>
-      </>
+        <p className="text-xs text-slate-400">Trước {data.time}</p>
+      </div>
     );
   }
 
   return (
-    <>
-      <p className="text-xs text-gray-600">
-        📦 {data.from} - {data.to}
+    <div className="space-y-0.5">
+      <p className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600">
+        <CalendarClock size={13} />
+        {data.from} - {data.to}
       </p>
-      <p className="text-xs text-gray-400">Trước {data.time}</p>
-    </>
+      <p className="text-xs text-slate-400">Trước {data.time}</p>
+    </div>
   );
 };
 

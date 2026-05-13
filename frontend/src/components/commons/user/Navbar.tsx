@@ -1,148 +1,125 @@
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import {
   Calendar,
   Contact,
-  History,
   Home,
   Info,
-  Store,
   Menu,
+  MessageSquareText,
+  Store,
   X,
 } from "lucide-react";
 import CategoryMenu from "../../ui/user/category/CategoryMenu";
 import { useAppSelector } from "../../../redux/hook";
-import { useState } from "react";
 
 const Navbar = () => {
   const { accessToken, user } = useAppSelector((state) => state.auth);
   const [isOpen, setIsOpen] = useState(false);
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
-    `group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap
-    ${
+    `group relative flex h-12 items-center gap-2 rounded-full px-5 text-[15px] font-medium leading-none transition-all whitespace-nowrap after:absolute after:left-5 after:right-5 after:bottom-2.5 after:h-[2px] after:rounded-full after:transition-all ${
       isActive
-        ? "text-white underline underline-offset-4 decoration-2 decoration-white"
-        : "text-white hover:bg-sky-500/40"
+        ? "text-yellow-200 after:bg-yellow-200"
+        : "text-white after:bg-transparent hover:text-yellow-100"
     }`;
 
   const iconClass = ({ isActive }: { isActive: boolean }) =>
-    `w-5 h-5 ${isActive ? "text-white" : "text-white group-hover:text-white"}`;
+    `h-5 w-5 ${
+      isActive ? "text-yellow-200" : "text-white group-hover:text-yellow-100"
+    }`;
+
+  const closeMenu = () => setIsOpen(false);
 
   return (
-    <nav className="relative bg-gradient-to-r from-sky-600 to-sky-700 shadow-lg">
-      {/* CONTAINER */}
-      <div className="max-w-screen-xl mx-auto">
-        {/* MOBILE HEADER */}
-        <div className="lg:hidden flex justify-between items-center px-4 py-3">
-          <span className="text-white font-semibold text-lg">Menu</span>
-
+    <nav className="border-t border-sky-600 bg-sky-700">
+      <div className="w-full px-4 sm:px-6 lg:px-10 2xl:px-14">
+        <div className="flex items-center justify-between py-2 lg:hidden">
+          <span className="text-sm font-medium text-white">Menu</span>
           <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="text-white hover:bg-sky-500/40 p-2 rounded-lg transition"
+            type="button"
+            onClick={() => setIsOpen((prev) => !prev)}
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition-all hover:bg-white/15"
+            title="Mở menu"
           >
-            {isOpen ? <X size={26} /> : <Menu size={26} />}
+            {isOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
 
-        {/* MENU */}
         <ul
-          className={`
-          flex flex-col lg:flex-row
-          items-start lg:items-center
-          justify-start lg:justify-center
-          gap-4 lg:gap-8
-          px-6 lg:px-4
-          py-4 lg:py-3
-          min-h-[64px]
-          transition-all duration-300
-
-          ${isOpen ? "flex" : "hidden"}
-          lg:flex
-        `}
+          className={`${
+            isOpen ? "flex" : "hidden"
+          } flex-col gap-2 pb-3 lg:flex lg:min-h-[58px] lg:flex-row lg:items-center lg:justify-center lg:gap-3 lg:pb-0`}
         >
-          {/* Trang chủ */}
           <li>
-            {!accessToken && !user ? (
-              <NavLink to="/" className={linkClass}>
-                {({ isActive }) => (
-                  <>
-                    <Home className={iconClass({ isActive })} />
-                    TRANG CHỦ
-                  </>
-                )}
-              </NavLink>
-            ) : (
-              <NavLink to="/home" className={linkClass}>
-                {({ isActive }) => (
-                  <>
-                    <Home className={iconClass({ isActive })} />
-                    TRANG CHỦ
-                  </>
-                )}
-              </NavLink>
-            )}
+            <NavLink
+              to={!accessToken && !user ? "/" : "/home"}
+              className={linkClass}
+              onClick={closeMenu}
+            >
+              {({ isActive }) => (
+                <>
+                  <Home className={iconClass({ isActive })} />
+                  Trang chủ
+                </>
+              )}
+            </NavLink>
           </li>
 
-          {/* Sản phẩm */}
           <li>
             <CategoryMenu />
           </li>
 
-          {/* Hệ thống cửa hàng */}
           <li>
-            <NavLink to="/branches" className={linkClass}>
+            <NavLink to="/branches" className={linkClass} onClick={closeMenu}>
               {({ isActive }) => (
                 <>
                   <Store className={iconClass({ isActive })} />
-                  CỬA HÀNG
+                  Chi nhánh
                 </>
               )}
             </NavLink>
           </li>
 
-          {/* Đặt sân */}
           <li>
-            <NavLink to="/booking" className={linkClass}>
+            <NavLink to="/booking" className={linkClass} onClick={closeMenu}>
               {({ isActive }) => (
                 <>
                   <Calendar className={iconClass({ isActive })} />
-                  ĐẶT SÂN
+                  Đặt sân
                 </>
               )}
             </NavLink>
           </li>
 
-          {/* Thảo luận */}
           <li>
-            <NavLink to="/posts" className={linkClass}>
+            <NavLink to="/posts" className={linkClass} onClick={closeMenu}>
               {({ isActive }) => (
                 <>
-                  <History className={iconClass({ isActive })} />
-                  THẢO LUẬN
+                  <MessageSquareText className={iconClass({ isActive })} />
+                  Thảo luận
                 </>
               )}
             </NavLink>
           </li>
 
-          {/* Liên hệ */}
           <li>
-            <NavLink to="/contact" className={linkClass}>
+            <NavLink to="/contact" className={linkClass} onClick={closeMenu}>
               {({ isActive }) => (
                 <>
                   <Contact className={iconClass({ isActive })} />
-                  LIÊN HỆ
+                  Liên hệ
                 </>
               )}
             </NavLink>
           </li>
 
-          {/* Giới thiệu */}
           <li>
-            <NavLink to="/about" className={linkClass}>
+            <NavLink to="/about" className={linkClass} onClick={closeMenu}>
               {({ isActive }) => (
                 <>
                   <Info className={iconClass({ isActive })} />
-                  GIỚI THIỆU
+                  Giới thiệu
                 </>
               )}
             </NavLink>

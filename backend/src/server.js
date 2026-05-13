@@ -27,6 +27,7 @@ import initOrderRoute from "./routes/user/orderRoute.js";
 import initDiscountRoute from "./routes/user/discountRoute.js";
 import initEmployeeOrderRoute from "./routes/employee/orderRoute.js";
 import initWebhookRoute from "./routes/user/webhookRoute.js";
+import initFeedbackRoute from "./routes/user/feedbackRoute.js";
 
 dotenv.config();
 
@@ -57,6 +58,7 @@ initAddressRoute(app);
 initOrderRoute(app);
 initDiscountRoute(app);
 initWebhookRoute(app);
+initFeedbackRoute(app);
 
 // Post
 initPostRoute(app);

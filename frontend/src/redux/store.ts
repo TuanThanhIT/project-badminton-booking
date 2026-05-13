@@ -26,6 +26,7 @@ import postReducer from "./slices/user/postSlice";
 import profileReducer from "./slices/user/profileSlice";
 import conversationReducer from "./slices/user/conversationSlice";
 import orderReducer from "./slices/user/orderSlice";
+import feedbackReducer from "./slices/user/feedbackSlice";
 
 const persistConfig = {
   key: "root",
@@ -48,6 +49,7 @@ const rootReducer = combineReducers({
   conversation: conversationReducer,
   discount: discountReducer,
   order: orderReducer,
+  feedback: feedbackReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

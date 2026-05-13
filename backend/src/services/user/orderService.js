@@ -54,6 +54,7 @@ import {
   getDisplayStatus,
   mapGHNStatusToSystem,
 } from "../../utils/shippingMapper.js";
+import { REVIEW_STATUS } from "../../constants/reviewConstant.js";
 
 const checkoutPreviewService = async (data) => {
   const { cartId, addressId, userId } = data;
@@ -604,7 +605,7 @@ const createOrderService = async (data) => {
       const pendingAmount = await WalletTransaction.sum("amount", {
         where: {
           walletId: wallet.id,
-          status: "PENDING",
+          status: WALLET_TRANSACTION_STATUS.PENDING,
         },
         transaction: t,
       });
@@ -1056,7 +1057,8 @@ const getUserOrdersService = async (data) => {
 };
 
 const getOrderDetailService = async (data) => {
-  const { orderId } = data;
+  const { orderId, userId } = data;
+
   const order = await Order.findByPk(orderId, {
     include: [
       {
@@ -1075,16 +1077,58 @@ const getOrderDetailService = async (data) => {
           },
         ],
       },
-      { model: OrderShippingLog, as: "shippingLogs" },
+      {
+        model: OrderShippingLog,
+        as: "shippingLogs",
+      },
     ],
   });
 
-  if (!order) throw new NotFoundError("Đơn hàng không tồn tại");
+  if (!order) {
+    throw new NotFoundError("Đơn hàng không tồn tại");
+  }
+
+  // redis key review
+  const reviewKey = `review:order:${orderId}:user:${userId}`;
+
+  const items = await Promise.all(
+    order.details.map(async (i) => {
+      const variantId = i.variantId;
+
+      // check đã review chưa
+      const isReviewed = await redisClient.sismember(reviewKey, variantId);
+
+      const canReview = order.orderStatus === ORDER_STATUS.COMPLETED;
+
+      return {
+        name: i.productName,
+
+        quantity: i.quantity,
+
+        price: i.unitPrice,
+
+        variantInfo: i.variantInfo,
+
+        thumbnailUrl: i.variant.product.thumbnailUrl,
+
+        variantId,
+
+        reviewStatus: !canReview
+          ? REVIEW_STATUS.NOT_ELIGIBLE
+          : isReviewed
+            ? REVIEW_STATUS.REVIEWED
+            : REVIEW_STATUS.CAN_REVIEW,
+      };
+    }),
+  );
 
   return {
     orderId: order.id,
+
     status: order.orderStatus,
+
     shippingStatus: order.shippingStatus,
+
     trackingCode: order.shippingOrderCode,
 
     address: {
@@ -1093,13 +1137,7 @@ const getOrderDetailService = async (data) => {
       address: order.shippingAddress,
     },
 
-    items: order.details.map((i) => ({
-      name: i.productName,
-      quantity: i.quantity,
-      price: i.unitPrice,
-      variantInfo: i.variantInfo,
-      thumbnailUrl: i.variant.product.thumbnailUrl,
-    })),
+    items,
 
     fee: {
       subtotal: order.subtotal,

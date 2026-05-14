@@ -7,6 +7,7 @@ import {
   Payment,
 } from "../../models/index.js";
 import NotFoundError from "../../errors/NotFoundError.js";
+import BadRequestError from "../../errors/BadRequestError.js";
 import {
   PAYMENT_METHOD_STATUS,
   TARGET_PAYMENT_TYPE,
@@ -149,4 +150,60 @@ export const createGHNOrderService = async (order) => {
   );
 
   return res.data.data;
+};
+
+const GHN_BASE_URL =
+  process.env.GHN_BASE_URL ||
+  "https://dev-online-gateway.ghn.vn/shiip/public-api";
+
+export const cancelGHNOrder = async ({ orderCode, shopId }) => {
+  const res = await axios.post(
+    `${GHN_BASE_URL}/v2/switch-status/cancel`,
+    {
+      order_codes: [orderCode],
+    },
+    {
+      headers: {
+        Token: process.env.GHN_TOKEN_DEV,
+        ShopId: shopId,
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  const result = res.data?.data?.[0];
+
+  if (!result?.result) {
+    throw new BadRequestError(
+      result?.message || "GHN không cho phép hủy vận đơn này",
+    );
+  }
+
+  return result;
+};
+
+export const returnGHNOrder = async ({ orderCode, shopId }) => {
+  const res = await axios.post(
+    `${GHN_BASE_URL}/v2/switch-status/return`,
+    {
+      order_codes: [orderCode],
+    },
+    {
+      headers: {
+        Token: process.env.GHN_TOKEN_DEV,
+        ShopId: shopId,
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  const result = res.data?.data?.[0];
+
+  if (!result?.result) {
+    throw new BadRequestError(
+      result?.message || "GHN không cho phép yêu cầu hoàn vận đơn này",
+    );
+  }
+
+  return result;
 };

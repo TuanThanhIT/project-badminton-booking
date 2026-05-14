@@ -15,7 +15,7 @@ export const PAYMENT_METHOD_STATUS = Object.freeze({
 export const WALLET_TRANSACTION_TYPE = Object.freeze({
   DEPOSIT: "DEPOSIT",
   PAYMENT: "PAYMENT",
-  REFUNDED: "REFUNDED",
+  REFUND: "REFUND",
   WITHDRAW: "WITHDRAW",
 });
 

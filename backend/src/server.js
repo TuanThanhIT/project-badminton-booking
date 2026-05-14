@@ -29,6 +29,7 @@ import initDiscountRoute from "./routes/user/discountRoute.js";
 import initEmployeeOrderRoute from "./routes/employee/orderRoute.js";
 import initWebhookRoute from "./routes/user/webhookRoute.js";
 import initFeedbackRoute from "./routes/user/feedbackRoute.js";
+import initNotificationRoute from "./routes/user/notificationRoute.js";
 
 dotenv.config();
 
@@ -61,6 +62,7 @@ initOrderRoute(app);
 initDiscountRoute(app);
 initWebhookRoute(app);
 initFeedbackRoute(app);
+initNotificationRoute(app);
 
 // Post
 initPostRoute(app);

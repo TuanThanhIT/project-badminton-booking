@@ -19,6 +19,7 @@ import {
   clearCheckoutSession,
   orderCallback,
 } from "../../redux/slices/user/orderSlice";
+import { bookingCallback } from "../../redux/slices/user/bookingSlice";
 import type { VNPayCallbackRequest } from "../../types/wallet";
 import { deleteAllCartItem } from "../../redux/slices/user/cartSlice";
 
@@ -74,6 +75,7 @@ const VNPayResultPage = () => {
   const isTopup =
     vnp_OrderInfo?.toLowerCase().includes("wallet") ||
     vnp_OrderInfo?.toLowerCase().includes("topup");
+  const isBooking = vnp_OrderInfo?.toLowerCase().includes("booking");
 
   const vnpSuccess =
     hasValidParams &&
@@ -143,6 +145,21 @@ const VNPayResultPage = () => {
       return;
     }
 
+    if (isBooking) {
+      dispatch(bookingCallback({ data: payload }))
+        .unwrap()
+        .then(() => {
+          toast.success("Hoàn tất giao dịch thanh toán đặt sân");
+          setCallbackSuccess(true);
+        })
+        .catch(() => {
+          setCallbackSuccess(false);
+        })
+        .finally(() => setCallbackDone(true));
+
+      return;
+    }
+
     dispatch(orderCallback({ data: payload }))
       .unwrap()
       .then(() => {
@@ -167,6 +184,7 @@ const VNPayResultPage = () => {
     cart?.id,
     dispatch,
     hasValidParams,
+    isBooking,
     isTopup,
     vnpSuccess,
     vnp_Amount,
@@ -363,7 +381,9 @@ const VNPayResultPage = () => {
             {isSuccess ? (
               <ActionButton
                 primary
-                onClick={() => navigate(isTopup ? "/wallet" : "/orders")}
+                onClick={() =>
+                  navigate(isTopup ? "/wallet" : isBooking ? "/bookings" : "/orders")
+                }
               >
                 {isTopup ? <Wallet size={18} /> : <PackageCheck size={18} />}
                 {isTopup ? "Quay lại ví" : "Xem đơn hàng"}
@@ -371,7 +391,9 @@ const VNPayResultPage = () => {
             ) : (
               <ActionButton
                 primary
-                onClick={() => navigate(isTopup ? "/wallet" : "/cart")}
+                onClick={() =>
+                  navigate(isTopup ? "/wallet" : isBooking ? "/courts" : "/cart")
+                }
               >
                 <RotateCcw size={18} />
                 {isTopup ? "Thử nạp lại" : "Thử lại"}

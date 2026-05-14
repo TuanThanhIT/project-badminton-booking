@@ -82,7 +82,7 @@ const Navbar = () => {
           </li>
 
           <li>
-            <NavLink to="/booking" className={linkClass} onClick={closeMenu}>
+            <NavLink to="/courts" className={linkClass} onClick={closeMenu}>
               {({ isActive }) => (
                 <>
                   <Calendar className={iconClass({ isActive })} />

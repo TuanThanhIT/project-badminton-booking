@@ -10,6 +10,7 @@ import type { PostWithAuthor } from "../../../types/post";
 import type { GetPostsResponse } from "../../../types/post";
 import profileService from "../../../services/user/profileService";
 import postService from "../../../services/user/postService";
+import { createComment, repostPost, toggleLike } from "./postSlice";
 
 interface ProfileState {
   myProfile?: UserProfileData;
@@ -39,6 +40,27 @@ const patchAuthorProfileInPosts = (
       },
     };
   });
+
+const patchPostCounts = (
+  posts: PostWithAuthor[],
+  postId: number,
+  counts: {
+    likesCount?: number;
+    commentsCount?: number;
+    sharesCount?: number;
+    likedByMe?: boolean;
+    sharedByMe?: boolean;
+  },
+) => {
+  const post = posts.find((item) => item.id === postId);
+  if (!post) return;
+
+  if (counts.likesCount !== undefined) post.likesCount = counts.likesCount;
+  if (counts.commentsCount !== undefined) post.commentsCount = counts.commentsCount;
+  if (counts.sharesCount !== undefined) post.sharesCount = counts.sharesCount;
+  if (counts.likedByMe !== undefined) post.likedByMe = counts.likedByMe;
+  if (counts.sharedByMe !== undefined) post.sharedByMe = counts.sharedByMe;
+};
 
 const initialState: ProfileState = {
   myProfile: undefined,
@@ -174,6 +196,35 @@ const profileSlice = createSlice({
       })
       .addCase(getPublicPosts.fulfilled, (state, action) => {
         state.publicPosts = action.payload.data.data;
+      })
+      .addCase(toggleLike.fulfilled, (state, action) => {
+        const { postId } = action.meta.arg;
+        const counts = action.payload.data;
+        patchPostCounts(state.myPosts, postId, counts);
+        patchPostCounts(state.publicPosts, postId, counts);
+      })
+      .addCase(createComment.fulfilled, (state, action) => {
+        const { postId, comment, counts } = action.payload;
+        patchPostCounts(state.myPosts, postId, counts);
+        patchPostCounts(state.publicPosts, postId, counts);
+
+        const myPost = state.myPosts.find((item) => item.id === postId);
+        if (myPost) {
+          if (!myPost.comments) myPost.comments = [];
+          myPost.comments.push(comment);
+        }
+
+        const publicPost = state.publicPosts.find((item) => item.id === postId);
+        if (publicPost) {
+          if (!publicPost.comments) publicPost.comments = [];
+          publicPost.comments.push(comment);
+        }
+      })
+      .addCase(repostPost.fulfilled, (state, action) => {
+        const { postId } = action.meta.arg;
+        const counts = action.payload.data;
+        patchPostCounts(state.myPosts, postId, counts);
+        patchPostCounts(state.publicPosts, postId, counts);
       });
   },
 });

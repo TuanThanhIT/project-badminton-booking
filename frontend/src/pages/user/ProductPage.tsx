@@ -60,7 +60,7 @@ const ProductPage = () => {
 
   const [page, setPage] = useState(1);
 
-  const limit = 10;
+  const limit = 9;
 
   const [keywordSearch, setKeywordSearch] = useState("");
 

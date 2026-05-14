@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "./redux/hook";
 import { getAccount, setAuthInitialized } from "./redux/slices/user/authSlice";
 import { getCategoriesGrouped } from "./redux/slices/user/cateSlice";
+import RealtimeProvider from "./components/contexts/providers/RealtimeProvider";
 
 const App = () => {
   const dispatch = useAppDispatch();
@@ -23,7 +24,9 @@ const App = () => {
 
   return (
     <Router>
-      <AllRoute />
+      <RealtimeProvider>
+        <AllRoute />
+      </RealtimeProvider>
 
       <ToastContainer
         position="top-right"

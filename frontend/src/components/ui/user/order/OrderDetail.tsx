@@ -5,12 +5,14 @@ import {
   CheckCircle2,
   Circle,
   Clock,
+  Ban,
   CreditCard,
   ListOrdered,
   MapPin,
   Package,
   Phone,
   ReceiptText,
+  RotateCcw,
   Star,
   Truck,
   User,
@@ -21,7 +23,11 @@ import {
   createFeedback,
   updateFeedback,
 } from "../../../../redux/slices/user/feedbackSlice";
-import { getOrderDetail } from "../../../../redux/slices/user/orderSlice";
+import {
+  getOrderDetail,
+  getOrderTracking,
+  getTrackingProgress,
+} from "../../../../redux/slices/user/orderSlice";
 import type {
   CreateFeedbackRequest,
   UpdateFeedbackRequest,
@@ -37,6 +43,8 @@ import {
   REVIEW_STATUS_LABEL,
 } from "../../../../utils/constants/review";
 import { formatOrderItemCode } from "../../../../utils/order";
+import CancelOrderModal from "./CancelOrderModal";
+import ReturnOrderModal from "./ReturnOrderModal";
 import type { formRating } from "./ReviewForm";
 import ReviewForm from "./ReviewForm";
 
@@ -61,8 +69,26 @@ const OrderDetail = () => {
   const [openReviewForm, setOpenReviewForm] = useState(false);
   const [update, setUpdate] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [openCancelModal, setOpenCancelModal] = useState(false);
+  const [openReturnModal, setOpenReturnModal] = useState(false);
 
   if (!orderDetailData) return null;
+
+  const cancellableStatuses = [
+    ORDER_STATUS.PENDING,
+    ORDER_STATUS.CONFIRMED,
+    ORDER_STATUS.PREPARING,
+    ORDER_STATUS.READY_TO_SHIP,
+    ORDER_STATUS.SHIPPING,
+  ];
+
+  const canRequestCancel = cancellableStatuses.some(
+    (status) => status === orderDetailData.status,
+  );
+
+  const canRequestReturn =
+    orderDetailData.status === ORDER_STATUS.COMPLETED &&
+    orderDetailData.shippingStatus === "DELIVERED";
 
   const showShippingProgress =
     orderDetailData.status === ORDER_STATUS.SHIPPING ||
@@ -83,6 +109,14 @@ const OrderDetail = () => {
     setSelectedItem(item);
     setUpdate(true);
     setOpenReviewForm(true);
+  };
+
+  const refreshCurrentOrder = async () => {
+    await Promise.all([
+      dispatch(getOrderDetail({ data: { orderId: orderDetailData.orderId } })),
+      dispatch(getOrderTracking({ data: { orderId: orderDetailData.orderId } })),
+      dispatch(getTrackingProgress({ data: { orderId: orderDetailData.orderId } })),
+    ]);
   };
 
   const handleSubmitReview = async (data: formRating) => {
@@ -161,6 +195,32 @@ const OrderDetail = () => {
                 </div>
               </div>
             </div>
+
+            {(canRequestCancel || canRequestReturn) && (
+              <div className="flex flex-col gap-2 rounded-3xl border border-slate-200 bg-slate-50 p-3 sm:flex-row">
+                {canRequestCancel && (
+                  <button
+                    type="button"
+                    onClick={() => setOpenCancelModal(true)}
+                    className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-2xl border border-red-100 bg-white px-4 text-sm font-medium text-red-600 transition-all hover:bg-red-50"
+                  >
+                    <Ban size={16} />
+                    Yêu cầu hủy đơn
+                  </button>
+                )}
+
+                {canRequestReturn && (
+                  <button
+                    type="button"
+                    onClick={() => setOpenReturnModal(true)}
+                    className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-2xl border border-orange-100 bg-white px-4 text-sm font-medium text-orange-600 transition-all hover:bg-orange-50"
+                  >
+                    <RotateCcw size={16} />
+                    Yêu cầu trả hàng
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -448,6 +508,20 @@ const OrderDetail = () => {
           </section>
         </div>
       </div>
+
+      <CancelOrderModal
+        orderId={orderDetailData.orderId}
+        isOpen={openCancelModal}
+        onClose={() => setOpenCancelModal(false)}
+        onSuccess={refreshCurrentOrder}
+      />
+
+      <ReturnOrderModal
+        orderId={orderDetailData.orderId}
+        isOpen={openReturnModal}
+        onClose={() => setOpenReturnModal(false)}
+        onSuccess={refreshCurrentOrder}
+      />
 
       {openReviewForm &&
         selectedItem &&

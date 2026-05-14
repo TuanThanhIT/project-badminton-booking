@@ -20,7 +20,7 @@ const Footer = () => {
     "flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-all hover:border-sky-200 hover:text-sky-700";
 
   return (
-    <footer className="border-t border-slate-200 bg-[#f5f5f5] text-slate-700">
+    <footer className="border-t border-slate-300 bg-[#f5f5f5] text-slate-700">
       <div className="w-full px-4 py-8 sm:px-6 lg:px-10 2xl:px-14">
         <div className="grid gap-8 lg:grid-cols-[1.35fr_0.75fr_0.75fr_1fr]">
           <div>
@@ -63,7 +63,9 @@ const Footer = () => {
           </div>
 
           <div>
-            <h3 className="mb-3 text-sm font-semibold text-slate-900">Khám phá</h3>
+            <h3 className="mb-3 text-sm font-semibold text-slate-900">
+              Khám phá
+            </h3>
             <ul className="space-y-2.5">
               <li>
                 <Link to="/branches" className={linkClass}>
@@ -71,7 +73,7 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/booking" className={linkClass}>
+                <Link to="/courts" className={linkClass}>
                   Đặt sân cầu lông
                 </Link>
               </li>
@@ -89,7 +91,9 @@ const Footer = () => {
           </div>
 
           <div>
-            <h3 className="mb-3 text-sm font-semibold text-slate-900">Hỗ trợ</h3>
+            <h3 className="mb-3 text-sm font-semibold text-slate-900">
+              Hỗ trợ
+            </h3>
             <ul className="space-y-2.5">
               <li>
                 <Link to="/contact" className={linkClass}>
@@ -141,7 +145,7 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="mt-7 flex flex-col gap-2 border-t border-slate-200 pt-4 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-7 flex flex-col gap-2 border-t border-slate-300 pt-4 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <p>© 2026 B-Hub. All rights reserved.</p>
           <p>Đặt sân, mua sắm và kết nối cộng đồng cầu lông.</p>
         </div>

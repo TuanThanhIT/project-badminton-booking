@@ -1,7 +1,155 @@
-import { Booking, BookingDetail, Court, Branch } from "../../models/index.js";
+import { v4 as uuidv4 } from "uuid";
+import { dateFormat, VNPay, VnpLocale } from "vnpay";
+import { Op } from "sequelize";
+import sequelize from "../../config/db.js";
+import {
+  Booking,
+  BookingDetail,
+  Branch,
+  Court,
+  CourtPrice,
+  Payment,
+  Wallet,
+  WalletTransaction,
+} from "../../models/index.js";
 import NotFoundError from "../../errors/NotFoundError.js";
 import BadRequestError from "../../errors/BadRequestError.js";
-import sequelize from "../../config/db.js";
+import { BOOKING_STATUS } from "../../constants/bookingConstant.js";
+import {
+  PAYMENT_METHOD_STATUS,
+  PAYMENT_STATUS,
+  TARGET_PAYMENT_TYPE,
+  WALLET_TRANSACTION_STATUS,
+  WALLET_TRANSACTION_TYPE,
+} from "../../constants/paymentConstant.js";
+import { verifyVNPayURL } from "../../utils/handleVNPayURL.js";
+
+const timeToNumber = (time) => {
+  const [hour, minute] = time.split(":").map(Number);
+  return hour + minute / 60;
+};
+
+const getBookingPrice = async ({
+  branchId,
+  playDate,
+  startTime,
+  endTime,
+  transaction,
+}) => {
+  const start = timeToNumber(startTime);
+  const end = timeToNumber(endTime);
+
+  if (end <= start) {
+    throw new BadRequestError("Giờ kết thúc phải sau giờ bắt đầu");
+  }
+
+  const dayNames = [
+    "SUNDAY",
+    "MONDAY",
+    "TUESDAY",
+    "WEDNESDAY",
+    "THURSDAY",
+    "FRIDAY",
+    "SATURDAY",
+  ];
+  const dayOfWeek = dayNames[new Date(playDate).getDay()];
+
+  const configs = await CourtPrice.findAll({
+    where: {
+      branchId,
+      dayOfWeek,
+      [Op.and]: [
+        { startTime: { [Op.lt]: endTime } },
+        { endTime: { [Op.gt]: startTime } },
+      ],
+    },
+    transaction,
+  });
+
+  let totalAmount = 0;
+  let coveredDuration = 0;
+
+  for (const config of configs) {
+    const overlapStart = Math.max(start, timeToNumber(config.startTime));
+    const overlapEnd = Math.min(end, timeToNumber(config.endTime));
+
+    if (overlapEnd > overlapStart) {
+      totalAmount += (overlapEnd - overlapStart) * Number(config.price);
+      coveredDuration += overlapEnd - overlapStart;
+    }
+  }
+
+  if (coveredDuration < end - start - 0.01) {
+    throw new BadRequestError("Sân không hoạt động hoặc chưa có giá trong khung giờ này");
+  }
+
+  return Math.round(totalAmount);
+};
+
+const assertBookingSlotAvailable = async ({
+  courtId,
+  playDate,
+  startTime,
+  endTime,
+  transaction,
+}) => {
+  const overlap = await BookingDetail.findOne({
+    where: {
+      courtId,
+      playDate,
+      [Op.and]: [
+        { startTime: { [Op.lt]: endTime } },
+        { endTime: { [Op.gt]: startTime } },
+      ],
+    },
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
+
+  if (overlap) {
+    throw new BadRequestError("Khung giờ này đã có người đặt");
+  }
+};
+
+const createVNPayUrl = async ({ booking, amount, ip, transaction }) => {
+  const txnRef = uuidv4();
+
+  await Payment.create(
+    {
+      paymentAmount: amount,
+      paymentMethod: PAYMENT_METHOD_STATUS.VNPAY,
+      paymentStatus: PAYMENT_STATUS.PENDING,
+      targetPaymentType: TARGET_PAYMENT_TYPE.BOOKING,
+      targetPaymentId: booking.id,
+      externalId: txnRef,
+    },
+    { transaction },
+  );
+
+  const vnpay = new VNPay({
+    tmnCode: process.env.VNP_TMN_CODE,
+    secureSecret: process.env.VNP_HASH_SECRET,
+    vnpayHost: process.env.VNP_URL,
+    testMode: true,
+    hashAlgorithm: "SHA512",
+  });
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  return vnpay.buildPaymentUrl({
+    vnp_Amount: amount,
+    vnp_IpAddr: ip,
+    vnp_TxnRef: txnRef,
+    vnp_OrderInfo: `booking_${booking.id}`,
+    vnp_OrderType: "booking",
+    vnp_ReturnUrl: process.env.VNP_RETURN_URL,
+    vnp_Locale: VnpLocale.VN,
+    vnp_CreateDate: dateFormat(new Date()),
+    vnp_ExpireDate: dateFormat(tomorrow),
+  });
+};
+
 const createBookingService = async (bookingData) => {
   const {
     userId,
@@ -10,80 +158,297 @@ const createBookingService = async (bookingData) => {
     playDate,
     startTime,
     endTime,
+    paymentMethod,
     discountId,
     note,
+    ip,
   } = bookingData;
 
-  // 1. Tính toán lại giá trị ở Backend (Bảo mật: Không tin tưởng giá từ Frontend gửi lên)
-  // Trong thực tế, bạn sẽ gọi lại logic tính giá từ CourtPrice giống như bên CourtService
+  return sequelize.transaction(async (transaction) => {
+    const branch = await Branch.findByPk(branchId, { transaction });
+    if (!branch) throw new NotFoundError("Chi nhánh không tồn tại");
 
-  const t = await sequelize.transaction();
+    const court = await Court.findOne({
+      where: { id: courtId, branchId },
+      transaction,
+    });
+    if (!court) throw new NotFoundError("Sân không tồn tại");
 
-  try {
-    // 2. Tạo bản ghi Booking chính
-    const newBooking = await Booking.create(
+    await assertBookingSlotAvailable({
+      courtId,
+      playDate,
+      startTime,
+      endTime,
+      transaction,
+    });
+
+    const totalAmount = await getBookingPrice({
+      branchId,
+      playDate,
+      startTime,
+      endTime,
+      transaction,
+    });
+
+    const bookingStatus =
+      paymentMethod === PAYMENT_METHOD_STATUS.COD
+        ? BOOKING_STATUS.PENDING
+        : BOOKING_STATUS.PENDING;
+
+    const booking = await Booking.create(
       {
         userId,
         branchId,
         discountId: discountId || null,
-        totalAmount: bookingData.totalAmount, // Giá sau khi đã tính toán logic ở Controller/Service
-        bookingStatus: "PENDING",
+        totalAmount,
+        bookingStatus,
         note,
       },
-      { transaction: t },
+      { transaction },
     );
 
-    // 3. Tạo bản ghi chi tiết BookingDetail
     await BookingDetail.create(
       {
-        bookingId: newBooking.id,
+        bookingId: booking.id,
         courtId,
         playDate,
         startTime,
         endTime,
-        price: bookingData.totalAmount, // Lưu giá thực tế tại thời điểm đặt
+        price: totalAmount,
       },
-      { transaction: t },
+      { transaction },
     );
 
-    await t.commit();
-    return newBooking;
-  } catch (error) {
-    await t.rollback();
-    throw error;
+    if (paymentMethod === PAYMENT_METHOD_STATUS.COD) {
+      await Payment.create(
+        {
+          targetPaymentType: TARGET_PAYMENT_TYPE.BOOKING,
+          targetPaymentId: booking.id,
+          paymentAmount: totalAmount,
+          paymentMethod: PAYMENT_METHOD_STATUS.COD,
+          paymentStatus: PAYMENT_STATUS.PENDING,
+        },
+        { transaction },
+      );
+
+      return {
+        bookingId: booking.id,
+        amount: totalAmount,
+        paymentMethod,
+        status: booking.bookingStatus,
+      };
+    }
+
+    if (paymentMethod === PAYMENT_METHOD_STATUS.WALLET) {
+      const wallet = await Wallet.findOne({
+        where: { userId },
+        transaction,
+        lock: transaction.LOCK.UPDATE,
+      });
+
+      if (!wallet) throw new NotFoundError("Ví không tồn tại");
+
+      if (Number(wallet.balance) < totalAmount) {
+        throw new BadRequestError("Số dư ví không đủ");
+      }
+
+      const payment = await Payment.create(
+        {
+          targetPaymentType: TARGET_PAYMENT_TYPE.BOOKING,
+          targetPaymentId: booking.id,
+          paymentAmount: totalAmount,
+          paymentMethod: PAYMENT_METHOD_STATUS.WALLET,
+          paymentStatus: PAYMENT_STATUS.PAID,
+          paidAt: new Date(),
+        },
+        { transaction },
+      );
+
+      await wallet.update(
+        { balance: sequelize.literal(`balance - ${Number(totalAmount)}`) },
+        { transaction },
+      );
+
+      await WalletTransaction.create(
+        {
+          walletId: wallet.id,
+          paymentId: payment.id,
+          amount: totalAmount,
+          type: WALLET_TRANSACTION_TYPE.PAYMENT,
+          status: WALLET_TRANSACTION_STATUS.SUCCESS,
+          description: `Thanh toán đặt sân #${booking.id}`,
+        },
+        { transaction },
+      );
+
+      await booking.update(
+        { bookingStatus: BOOKING_STATUS.PAID },
+        { transaction },
+      );
+
+      return {
+        bookingId: booking.id,
+        amount: totalAmount,
+        paymentMethod,
+        status: BOOKING_STATUS.PAID,
+      };
+    }
+
+    if (paymentMethod === PAYMENT_METHOD_STATUS.VNPAY) {
+      const paymentUrl = await createVNPayUrl({
+        booking,
+        amount: totalAmount,
+        ip,
+        transaction,
+      });
+
+      return {
+        bookingId: booking.id,
+        amount: totalAmount,
+        paymentMethod,
+        paymentUrl,
+        status: booking.bookingStatus,
+      };
+    }
+
+    throw new BadRequestError("Phương thức thanh toán không hợp lệ");
+  });
+};
+
+const bookingCallbackService = async (data) => {
+  const isValid = verifyVNPayURL(data);
+  if (!isValid) {
+    throw new BadRequestError("Chữ ký không hợp lệ");
   }
+
+  const { vnp_TxnRef, vnp_ResponseCode, vnp_TransactionNo, vnp_Amount } = data;
+  if (vnp_ResponseCode !== "00") {
+    throw new BadRequestError("Thanh toán thất bại");
+  }
+
+  const paymentRaw = await Payment.findOne({
+    where: { externalId: vnp_TxnRef },
+  });
+
+  if (!paymentRaw) throw new NotFoundError("Thanh toán không tồn tại");
+  if (paymentRaw.paymentStatus === PAYMENT_STATUS.PAID) return;
+
+  const paidAmount = Math.round(Number(vnp_Amount) / 100);
+  const expectedAmount = Math.round(Number(paymentRaw.paymentAmount));
+  if (paidAmount !== expectedAmount) {
+    throw new BadRequestError("Số tiền không hợp lệ");
+  }
+
+  return sequelize.transaction(async (transaction) => {
+    const payment = await Payment.findByPk(paymentRaw.id, {
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+
+    if (payment.paymentStatus === PAYMENT_STATUS.PAID) return;
+    if (payment.targetPaymentType !== TARGET_PAYMENT_TYPE.BOOKING) {
+      throw new BadRequestError("Giao dịch không phải thanh toán đặt sân");
+    }
+
+    const booking = await Booking.findByPk(payment.targetPaymentId, {
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+    if (!booking) throw new NotFoundError("Lịch đặt sân không tồn tại");
+
+    await payment.update(
+      {
+        paymentStatus: PAYMENT_STATUS.PAID,
+        transId: vnp_TransactionNo,
+        paidAt: new Date(),
+      },
+      { transaction },
+    );
+
+    await booking.update(
+      { bookingStatus: BOOKING_STATUS.PAID },
+      { transaction },
+    );
+  });
 };
 
 const getMyBookingsService = async (data) => {
-  const { userId, page = 1, limit = 10 } = data;
+  const { userId, page = 1, limit = 10, status, date } = data;
   const offset = (page - 1) * limit;
+  const where = { userId };
+  if (status && status !== "ALL") where.bookingStatus = status;
+
+  const detailWhere = {};
+  if (date) detailWhere.playDate = date;
 
   const { rows, count } = await Booking.findAndCountAll({
-    where: { userId },
+    where,
     limit: Number(limit),
     offset: Number(offset),
     order: [["createdDate", "DESC"]],
+    distinct: true,
     include: [
       {
         model: BookingDetail,
         as: "details",
+        where: Object.keys(detailWhere).length ? detailWhere : undefined,
         include: [{ model: Court, as: "court", attributes: ["courtName"] }],
       },
       { model: Branch, as: "branch", attributes: ["branchName", "address"] },
     ],
   });
 
+  const bookingIds = rows.map((booking) => booking.id);
+  const payments = bookingIds.length
+    ? await Payment.findAll({
+        where: {
+          targetPaymentType: TARGET_PAYMENT_TYPE.BOOKING,
+          targetPaymentId: { [Op.in]: bookingIds },
+        },
+      })
+    : [];
+  const paymentMap = new Map(
+    payments.map((payment) => [payment.targetPaymentId, payment]),
+  );
+
   return {
-    data: rows,
+    items: rows.map((booking) => {
+      const payment = paymentMap.get(booking.id);
+
+      return {
+        bookingId: booking.id,
+        bookingStatus: booking.bookingStatus,
+        totalAmount: booking.totalAmount,
+        note: booking.note,
+        createdDate: booking.createdDate,
+        branch: booking.branch,
+        payment: payment
+          ? {
+              method: payment.paymentMethod,
+              status: payment.paymentStatus,
+            }
+          : null,
+        details: booking.details.map((detail) => ({
+          courtId: detail.courtId,
+          courtName: detail.court?.courtName,
+          playDate: detail.playDate,
+          startTime: detail.startTime,
+          endTime: detail.endTime,
+          price: detail.price,
+        })),
+      };
+    }),
     pagination: {
       page: Number(page),
       limit: Number(limit),
       total: count,
+      totalPages: Math.ceil(count / limit),
     },
   };
 };
 
 export default {
   createBookingService,
+  bookingCallbackService,
   getMyBookingsService,
 };

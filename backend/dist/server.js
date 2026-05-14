@@ -30,6 +30,7 @@ var _discountRoute = _interopRequireDefault(require("./routes/user/discountRoute
 var _orderRoute2 = _interopRequireDefault(require("./routes/employee/orderRoute.js"));
 var _webhookRoute = _interopRequireDefault(require("./routes/user/webhookRoute.js"));
 var _feedbackRoute = _interopRequireDefault(require("./routes/user/feedbackRoute.js"));
+var _notificationRoute = _interopRequireDefault(require("./routes/user/notificationRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -59,6 +60,7 @@ app.use((0, _cookieParser["default"])());
 (0, _discountRoute["default"])(app);
 (0, _webhookRoute["default"])(app);
 (0, _feedbackRoute["default"])(app);
+(0, _notificationRoute["default"])(app);
 
 // Post
 (0, _postRoute["default"])(app);

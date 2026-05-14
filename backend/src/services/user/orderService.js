@@ -55,6 +55,7 @@ import {
   mapGHNStatusToSystem,
 } from "../../utils/shippingMapper.js";
 import { REVIEW_STATUS } from "../../constants/reviewConstant.js";
+import { emitOrderActionRealtime } from "../shared/emitRealtime.js";
 
 const checkoutPreviewService = async (data) => {
   const { cartId, addressId, userId } = data;
@@ -1185,6 +1186,128 @@ const getTrackingProgressService = async (data) => {
   }));
 };
 
+// YÊU CẦU HỦY ĐƠN VÀ HOÀN ĐƠN
+const cancellableStatuses = [
+  ORDER_STATUS.PENDING,
+  ORDER_STATUS.CONFIRMED,
+  ORDER_STATUS.PREPARING,
+  ORDER_STATUS.READY_TO_SHIP,
+  ORDER_STATUS.SHIPPING,
+];
+
+const returnableStatuses = [ORDER_STATUS.COMPLETED];
+
+const getUserOrderForAction = async ({ orderId, userId, transaction }) => {
+  const order = await Order.findByPk(orderId, {
+    include: [
+      {
+        model: OrderGroup,
+        as: "orderGroup",
+      },
+      {
+        model: Branch,
+        as: "branch",
+      },
+    ],
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
+
+  if (!order) {
+    throw new NotFoundError("Đơn hàng không tồn tại");
+  }
+
+  if (order.orderGroup.userId !== userId) {
+    throw new ForbiddenError("Không có quyền thao tác đơn hàng này");
+  }
+
+  return order;
+};
+
+// Khi user bấm hủy đơn, service đổi trạng thái sang CANCEL_REQUESTED, rồi gọi realtime.
+const requestCancelOrderService = async (data) => {
+  const { orderId, userId, reason } = data;
+  const result = await sequelize.transaction(async (t) => {
+    const order = await getUserOrderForAction({
+      orderId,
+      userId,
+      transaction: t,
+    });
+
+    if (order.orderStatus === ORDER_STATUS.CANCEL_REQUESTED) {
+      throw new BadRequestError("Đơn hàng đã được yêu cầu hủy trước đó");
+    }
+
+    if (!cancellableStatuses.includes(order.orderStatus)) {
+      throw new BadRequestError("Đơn hàng hiện không thể yêu cầu hủy");
+    }
+
+    if (order.orderStatus === ORDER_STATUS.COMPLETED) {
+      throw new BadRequestError("Đơn hàng đã hoàn thành, không thể hủy");
+    }
+
+    await order.update(
+      {
+        previousOrderStatus: order.orderStatus,
+        orderStatus: ORDER_STATUS.CANCEL_REQUESTED,
+        cancelReason: reason || null,
+        cancelRequestedAt: new Date(),
+      },
+      { transaction: t },
+    );
+
+    return order;
+  });
+
+  await emitOrderActionRealtime({
+    order: result,
+    log: null,
+    message: "Yêu cầu hủy đơn của bạn đã được gửi đến nhân viên",
+  });
+};
+
+const requestReturnOrderService = async (data) => {
+  const { orderId, userId, reason } = data;
+  let updatedOrder;
+
+  await sequelize.transaction(async (t) => {
+    const order = await getUserOrderForAction({
+      orderId,
+      userId,
+      transaction: t,
+    });
+
+    if (!returnableStatuses.includes(order.orderStatus)) {
+      throw new BadRequestError(
+        "Chỉ có thể yêu cầu trả hàng khi đơn đã giao thành công",
+      );
+    }
+
+    if (order.shippingStatus !== SHIPPING_STATUS.DELIVERED) {
+      throw new BadRequestError(
+        "Chỉ có thể yêu cầu trả hàng khi đơn đã giao thành công",
+      );
+    }
+
+    await order.update(
+      {
+        orderStatus: ORDER_STATUS.RETURN_REQUESTED,
+        returnReason: reason || null,
+        returnRequestedAt: new Date(),
+      },
+      { transaction: t },
+    );
+
+    updatedOrder = order;
+  });
+
+  await emitOrderActionRealtime({
+    order: updatedOrder,
+    log: null,
+    message: "Yêu cầu trả hàng của bạn đã được gửi đến nhân viên",
+  });
+};
+
 const orderService = {
   checkoutPreviewService,
   calculateShippingService,
@@ -1197,6 +1320,8 @@ const orderService = {
   getUserOrdersService,
   getOrderTrackingService,
   getTrackingProgressService,
+  requestCancelOrderService,
+  requestReturnOrderService,
 };
 
 export default orderService;

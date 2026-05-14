@@ -2,7 +2,9 @@ import { useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import {
   ArrowRight,
+  Minus,
   PackageCheck,
+  Plus,
   ShieldCheck,
   ShoppingCart,
   Trash2,
@@ -101,27 +103,52 @@ const CartPage = () => {
 
   if (!cart || cart.cartItems.length === 0) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-16">
-        <div className="w-full max-w-xl rounded-[2rem] border border-slate-100 bg-white p-8 text-center shadow-[0_12px_45px_rgba(15,23,42,0.08)] sm:p-10">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-sky-50 text-sky-600">
-            <ShoppingCart size={42} />
+      <div className="min-h-screen bg-slate-50 px-4 py-12 sm:py-16">
+        <div className="mx-auto grid max-w-6xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="flex flex-col justify-center p-8 sm:p-12">
+            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+              <ShoppingCart size={34} />
+            </div>
+            <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-sky-600">
+              Giỏ hàng B-Hub
+            </p>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+              Giỏ hàng của bạn đang trống
+            </h1>
+            <p className="mt-4 max-w-lg text-base leading-relaxed text-slate-500">
+              Chọn vài sản phẩm cầu lông yêu thích, thêm vào giỏ rồi quay lại đây để kiểm tra trước khi thanh toán.
+            </p>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <button
+                onClick={() => navigate("/products")}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-sky-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-sky-700"
+              >
+                Mua sắm ngay
+                <ArrowRight size={18} />
+              </button>
+              <button
+                onClick={() => navigate("/home")}
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+              >
+                Về trang chủ
+              </button>
+            </div>
           </div>
 
-          <h3 className="mb-3 text-2xl font-semibold text-slate-800 sm:text-3xl">
-            Giỏ hàng trống
-          </h3>
-
-          <p className="mx-auto mb-8 max-w-md text-sm leading-relaxed text-slate-500 sm:text-base">
-            Hãy thêm sản phẩm yêu thích vào giỏ hàng để tiếp tục mua sắm nhé.
-          </p>
-
-          <button
-            onClick={() => navigate("/home")}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-sky-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-100 transition-all hover:-translate-y-0.5 hover:bg-sky-600"
-          >
-            <span>Mua sắm ngay</span>
-            <ArrowRight size={18} />
-          </button>
+          <div className="hidden bg-slate-100 p-8 lg:block">
+            <div className="h-full rounded-[1.5rem] border border-white bg-white/70 p-6">
+              <div className="grid h-full place-items-center rounded-[1.25rem] border border-dashed border-slate-300 bg-slate-50">
+                <div className="text-center">
+                  <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-[2rem] bg-white text-sky-600 shadow-sm">
+                    <ShoppingCart size={48} />
+                  </div>
+                  <p className="font-semibold text-slate-800">Chưa có sản phẩm</p>
+                  <p className="mt-1 text-sm text-slate-500">Giỏ hàng sẽ hiển thị ở đây.</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -209,7 +236,7 @@ const CartPage = () => {
               </button>
             </div>
 
-            <div className="space-y-3 bg-slate-50/70 p-3 sm:p-5">
+            <div className="space-y-4 bg-slate-50/70 p-3 sm:p-5">
               {cart.cartItems.map((item: CartItem) => {
                 const key = normalizeColor(item.color);
                 const colorValue = COLOR_MAP[key] || "#ccc";
@@ -217,33 +244,33 @@ const CartPage = () => {
                 return (
                   <article
                     key={item.id}
-                    className="grid grid-cols-[92px_1fr] gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-slate-300 hover:shadow-md sm:grid-cols-[118px_minmax(0,1fr)_180px] sm:items-start sm:gap-5 sm:p-5"
+                    className="grid grid-cols-[104px_1fr] gap-4 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-slate-300 sm:grid-cols-[150px_minmax(0,1fr)_220px] sm:items-stretch sm:gap-6 sm:p-5"
                   >
-                    <div className="h-28 w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 sm:h-32">
+                    <div className="h-32 w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-2 sm:h-full sm:min-h-40">
                       <img
                         src={item.thumbnailUrl}
                         alt={item.productName}
-                        className="h-full w-full object-cover transition-transform duration-500 hover:scale-[1.03]"
+                        className="h-full w-full object-contain transition-transform duration-500 hover:scale-[1.03]"
                       />
                     </div>
 
-                    <div className="min-w-0">
-                      <h3 className="line-clamp-2 text-base font-semibold leading-snug text-slate-800 sm:text-[17px]">
+                    <div className="min-w-0 py-1">
+                      <h3 className="line-clamp-2 text-base font-semibold leading-snug text-slate-900 sm:text-lg">
                         {item.productName}
                       </h3>
 
-                      <div className="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
-                        <div className="flex items-center gap-2">
-                          <span className="min-w-16 text-slate-400">Size</span>
+                      <div className="mt-4 grid gap-x-8 gap-y-3 text-sm text-slate-600 sm:grid-cols-2">
+                        <div className="flex items-center gap-3">
+                          <span className="min-w-20 text-slate-400">Size</span>
                           <span className="font-medium text-slate-800">
                             {item.size || "—"}
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                          <span className="min-w-16 text-slate-400">Màu</span>
+                        <div className="flex items-center gap-3">
+                          <span className="min-w-20 text-slate-400">Màu</span>
                           <span
-                            className="h-4 w-4 rounded-full ring-1 ring-slate-300"
+                            className="h-5 w-5 rounded-full ring-1 ring-slate-300"
                             style={{
                               backgroundColor: colorValue,
                               border:
@@ -252,19 +279,30 @@ const CartPage = () => {
                           />
                         </div>
 
-                        <div className="flex items-center gap-2 sm:col-span-2">
-                          <span className="min-w-16 text-slate-400">Chất liệu</span>
+                        <div className="flex items-center gap-3 sm:col-span-2">
+                          <span className="min-w-20 text-slate-400">Chất liệu</span>
                           <span className="line-clamp-1 font-medium text-slate-800">
                             {item.material || "—"}
                           </span>
                         </div>
                       </div>
 
-                      <div className="mt-4 flex flex-wrap items-center gap-3">
-                        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                      <div className="mt-5 flex flex-wrap items-center gap-3">
+                        <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
                           <label className="text-xs font-medium text-slate-500">
                             Số lượng
                           </label>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleQuantityChange(item, item.quantity - 1)
+                            }
+                            disabled={item.quantity <= 1}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+                            aria-label="Giảm số lượng"
+                          >
+                            <Minus size={15} />
+                          </button>
                           <input
                             type="number"
                             min={1}
@@ -273,8 +311,19 @@ const CartPage = () => {
                             onChange={(e) =>
                               handleQuantityChange(item, Number(e.target.value))
                             }
-                            className="w-14 rounded-lg border border-slate-200 bg-white px-2 py-1 text-center text-sm font-medium text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                            className="w-14 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-center text-sm font-semibold text-slate-800 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
                           />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleQuantityChange(item, item.quantity + 1)
+                            }
+                            disabled={item.quantity >= item.totalStock}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+                            aria-label="Tăng số lượng"
+                          >
+                            <Plus size={15} />
+                          </button>
                         </div>
 
                         <span className="text-xs text-slate-500">
@@ -283,7 +332,7 @@ const CartPage = () => {
                       </div>
                     </div>
 
-                    <div className="col-span-2 flex items-center justify-between border-t border-slate-100 pt-4 sm:col-span-1 sm:min-h-32 sm:flex-col sm:items-end sm:border-t-0 sm:pt-0">
+                    <div className="col-span-2 flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4 sm:col-span-1 sm:flex-col sm:items-end sm:justify-between sm:p-5">
                       <div className="text-left sm:text-right">
                         <p className="text-xs font-medium text-slate-400">Đơn giá</p>
                         <p className="mt-1 text-base font-semibold text-slate-800">

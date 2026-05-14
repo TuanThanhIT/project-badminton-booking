@@ -8,13 +8,14 @@ import {
   PackageSearch,
   ReceiptText,
   RotateCcw,
-  SearchCheck,
   ShoppingBag,
   Truck,
   WalletCards,
+  X,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import {
+  clearOrderDetail,
   getOrderDetail,
   getOrderTracking,
   getTrackingProgress,
@@ -45,6 +46,7 @@ const OrderPage = () => {
   const { userOrderGroup, userOrderPagination } = useAppSelector(
     (state) => state.order,
   );
+
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const [filters, setFilters] = useState({
     status: "ALL",
@@ -92,17 +94,23 @@ const OrderPage = () => {
     TABS.find((tab) => tab.key === filters.status)?.label || "Tất cả";
 
   const handleSelectOrder = (orderId: number) => {
+    dispatch(clearOrderDetail());
     setSelectedOrderId(orderId);
     dispatch(getOrderDetail({ data: { orderId } }));
     dispatch(getOrderTracking({ data: { orderId } }));
     dispatch(getTrackingProgress({ data: { orderId } }));
   };
 
+  const handleCloseDetail = () => {
+    setSelectedOrderId(null);
+    dispatch(clearOrderDetail());
+  };
+
   const resetFilters = () => {
     setFilters({
       status: "ALL",
       page: 1,
-      limit: 3,
+      limit: 5,
       dateFrom: "",
       dateTo: "",
       sort: "newest",
@@ -157,7 +165,7 @@ const OrderPage = () => {
         </div>
       </section>
 
-      <main className="relative z-10 mx-auto -mt-6 max-w-[1220px] px-4 pb-10 sm:px-6">
+      <main className="relative z-10 mx-auto -mt-6 max-w-7xl px-4 pb-10 sm:px-6">
         <section className="mb-6 overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.08)]">
           <div className="flex flex-col gap-4 border-b border-slate-100 p-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-3">
@@ -286,212 +294,256 @@ const OrderPage = () => {
           </div>
         </section>
 
-        <div className="grid grid-cols-1 justify-center gap-6 xl:grid-cols-[minmax(0,640px)_minmax(420px,500px)]">
-          <section className="min-w-0">
-            <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-slate-800">
-                  Danh sách đơn hàng
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Chọn một đơn nhỏ để xem chi tiết hóa đơn và vận chuyển.
-                </p>
-              </div>
-              <span className="w-fit rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-500">
-                {userOrderPagination?.total || 0} kết quả
-              </span>
+        <section className="min-w-0">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-800">
+                Danh sách đơn hàng
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Bấm vào một đơn nhỏ để mở chi tiết hóa đơn và vận chuyển.
+              </p>
             </div>
+            <span className="w-fit rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-500">
+              {userOrderPagination?.total || 0} kết quả
+            </span>
+          </div>
 
-            {groups.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm">
-                <div className="mb-4 rounded-3xl bg-sky-50 p-4 text-sky-600">
-                  <PackageSearch size={36} />
-                </div>
-                <p className="text-lg font-semibold text-slate-800">
-                  Không có đơn hàng
-                </p>
-                <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-500">
-                  Không tìm thấy đơn hàng phù hợp với bộ lọc hiện tại.
-                </p>
+          {groups.length === 0 ? (
+            <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm">
+              <div className="mb-4 rounded-3xl bg-sky-50 p-4 text-sky-600">
+                <PackageSearch size={36} />
               </div>
-            ) : (
-              <div className="space-y-5">
-                {groups.map((group) => {
-                  const key = group.status?.toUpperCase();
-                  const statusUI =
-                    ORDER_GROUP_STATUS_UI[key] ||
-                    ORDER_GROUP_STATUS_UI.PENDING_PAYMENT;
-                  const Icon = statusUI.icon;
+              <p className="text-lg font-semibold text-slate-800">
+                Không có đơn hàng
+              </p>
+              <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-500">
+                Không tìm thấy đơn hàng phù hợp với bộ lọc hiện tại.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {groups.map((group) => {
+                const key = group.status?.toUpperCase();
+                const statusUI =
+                  ORDER_GROUP_STATUS_UI[key] ||
+                  ORDER_GROUP_STATUS_UI.PENDING_PAYMENT;
+                const Icon = statusUI.icon;
 
-                  return (
-                    <article
-                      key={group.orderGroupId}
-                      className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_10px_28px_rgba(15,23,42,0.05)] transition-all hover:border-sky-200 hover:shadow-[0_14px_34px_rgba(14,165,233,0.1)]"
-                    >
-                      <div className="border-b border-slate-100 bg-white p-5">
-                        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                          <div>
-                            <div className="mb-3 flex items-center gap-3">
-                              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-sky-100 bg-sky-50 text-sky-600">
-                                <ClipboardList size={20} />
-                              </div>
-                              <div>
-                                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                                  Mã nhóm đơn
-                                </p>
-                                <p className="text-lg font-semibold text-slate-800">
-                                  #
-                                  {formatOrderCode(
-                                    group.orderGroupId,
-                                    group.createdDate,
-                                  )}
-                                </p>
-                              </div>
+                return (
+                  <article
+                    key={group.orderGroupId}
+                    className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm transition-colors hover:border-slate-300"
+                  >
+                    <div className="border-b border-slate-100 bg-white p-5">
+                      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                        <div>
+                          <div className="mb-3 flex items-center gap-3">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-sky-100 bg-sky-50 text-sky-600">
+                              <ClipboardList size={20} />
                             </div>
-
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span
-                                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ${statusUI.className}`}
-                              >
-                                <Icon size={14} />
-                                {statusUI.label}
-                              </span>
-                              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500">
-                                {group.orders.length} đơn nhỏ
-                              </span>
+                            <div>
+                              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                                Mã nhóm đơn
+                              </p>
+                              <p className="text-lg font-semibold text-slate-800">
+                                #
+                                {formatOrderCode(
+                                  group.orderGroupId,
+                                  group.createdDate,
+                                )}
+                              </p>
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-3 gap-2 text-center">
-                            <div className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-3">
-                              <p className="text-[11px] font-medium uppercase text-slate-400">
-                                Tiền hàng
-                              </p>
-                              <p className="mt-1 text-sm font-medium text-slate-700">
-                                {Number(group.totalAmount).toLocaleString()}đ
-                              </p>
-                            </div>
-                            <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-3 py-3">
-                              <p className="text-[11px] font-medium uppercase text-emerald-500">
-                                Phí ship
-                              </p>
-                              <p className="mt-1 text-sm font-medium text-emerald-600">
-                                {Number(
-                                  group.totalShippingFee,
-                                ).toLocaleString()}
-                                đ
-                              </p>
-                            </div>
-                            <div className="rounded-2xl border border-sky-100 bg-sky-50 px-3 py-3">
-                              <p className="text-[11px] font-medium uppercase text-sky-500">
-                                Tổng
-                              </p>
-                              <p className="mt-1 text-sm font-semibold text-sky-700">
-                                {Number(group.finalAmount).toLocaleString()}đ
-                              </p>
-                            </div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span
+                              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ${statusUI.className}`}
+                            >
+                              <Icon size={14} />
+                              {statusUI.label}
+                            </span>
+                            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500">
+                              {group.orders.length} đơn nhỏ
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                          <div className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-3">
+                            <p className="text-[11px] font-medium uppercase text-slate-400">
+                              Tiền hàng
+                            </p>
+                            <p className="mt-1 text-sm font-medium text-slate-700">
+                              {Number(group.totalAmount).toLocaleString()}đ
+                            </p>
+                          </div>
+                          <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-3 py-3">
+                            <p className="text-[11px] font-medium uppercase text-emerald-500">
+                              Phí ship
+                            </p>
+                            <p className="mt-1 text-sm font-medium text-emerald-600">
+                              {Number(group.totalShippingFee).toLocaleString()}đ
+                            </p>
+                          </div>
+                          <div className="rounded-2xl border border-sky-100 bg-sky-50 px-3 py-3">
+                            <p className="text-[11px] font-medium uppercase text-sky-500">
+                              Tổng
+                            </p>
+                            <p className="mt-1 text-sm font-semibold text-sky-700">
+                              {Number(group.finalAmount).toLocaleString()}đ
+                            </p>
                           </div>
                         </div>
                       </div>
+                    </div>
 
-                      <div className="space-y-3 bg-slate-50/80 p-3 sm:p-4">
+                    {/* DANH SÁCH ĐƠN NHỎ */}
+                    <div className="bg-slate-50/80 px-5 py-4">
+                      <div
+                        className={`grid gap-4 ${
+                          group.orders.length === 1
+                            ? "mx-auto w-full max-w-[950px] grid-cols-1"
+                            : "grid-cols-1 xl:grid-cols-2"
+                        }`}
+                      >
                         {group.orders.map((order) => (
                           <button
                             key={order.orderId}
                             type="button"
                             onClick={() => handleSelectOrder(order.orderId)}
-                            className={`group w-full cursor-pointer rounded-3xl border p-4 text-left shadow-sm transition-all ${
-                              selectedOrderId === order.orderId
-                                ? "border-sky-300 bg-sky-50 shadow-[0_10px_24px_rgba(14,165,233,0.12)]"
-                                : "border-slate-200 bg-white hover:border-sky-200 hover:bg-sky-50/40"
-                            }`}
+                            className="
+          group w-full cursor-pointer rounded-[1.5rem]
+          border border-slate-200 bg-white p-4 text-left shadow-sm
+          transition-all hover:-translate-y-0.5 hover:border-sky-200
+          hover:bg-sky-50/50 hover:shadow-md
+        "
                           >
-                            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                            {/* HEADER ĐƠN CON */}
+                            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                               <span
-                                className={`rounded-full px-3 py-1.5 text-xs font-medium ${ORDER_STATUS_COLOR[order.orderStatus]}`}
+                                className={`inline-flex rounded-full px-3.5 py-1.5 text-sm font-bold ${ORDER_STATUS_COLOR[order.orderStatus]}`}
                               >
                                 {ORDER_STATUS_LABEL[order.orderStatus]}
                               </span>
-                              <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600">
+
+                              <span className="inline-flex rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-semibold text-slate-700">
                                 {formatOrderItemCode(order.orderId)}
                               </span>
                             </div>
 
-                            <div className="space-y-3">
-                              {order.items.map((item, idx) => (
+                            {/* ITEMS */}
+                            <div className="space-y-2">
+                              {order.items.slice(0, 2).map((item, idx) => (
                                 <div
                                   key={`${order.orderId}-${idx}`}
-                                  className="flex gap-3 rounded-2xl border border-slate-100 bg-white p-2.5"
+                                  className="
+                grid grid-cols-[82px_1fr_130px] items-center gap-4
+                rounded-2xl border border-slate-100 bg-white p-3
+              "
                                 >
                                   <img
                                     src={item.thumbnailUrl}
                                     alt={item.name}
-                                    className="h-16 w-14 rounded-xl border border-slate-100 object-cover"
+                                    className="h-20 w-16 shrink-0 rounded-xl border border-slate-100 object-cover"
                                   />
-                                  <div className="min-w-0 flex-1">
-                                    <p className="line-clamp-2 text-sm font-medium leading-snug text-slate-800">
+
+                                  <div className="min-w-0">
+                                    <p className="line-clamp-2 text-base font-bold leading-snug text-slate-800">
                                       {item.name}
                                     </p>
-                                    <div className="mt-1 flex justify-between gap-3 text-sm">
-                                      <span className="text-slate-500">
+
+                                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                                      <span className="rounded-full bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-600">
                                         x{item.quantity}
                                       </span>
-                                      <span className="font-medium text-sky-700">
-                                        {Number(item.price).toLocaleString()}đ
-                                      </span>
                                     </div>
+                                  </div>
+
+                                  <div className="text-right">
+                                    <p className="text-base font-extrabold text-sky-700">
+                                      {Number(item.price).toLocaleString()}đ
+                                    </p>
                                   </div>
                                 </div>
                               ))}
                             </div>
 
-                            <div className="mt-3 flex items-center gap-1 text-xs font-medium text-sky-600 opacity-0 transition-opacity group-hover:opacity-100">
-                              <span>Bấm để xem chi tiết</span>
-                              <ArrowRight size={14} />
+                            {order.items.length > 2 && (
+                              <p className="mt-3 text-sm font-semibold text-slate-500">
+                                +{order.items.length - 2} sản phẩm khác
+                              </p>
+                            )}
+
+                            {/* FOOTER */}
+                            <div className="mt-3 flex items-center justify-end border-t border-slate-100 pt-3">
+                              <div className="flex items-center gap-1.5 text-sm font-bold text-sky-600">
+                                <span>Xem chi tiết</span>
+                                <ArrowRight
+                                  size={16}
+                                  className="transition-transform group-hover:translate-x-0.5"
+                                />
+                              </div>
                             </div>
                           </button>
                         ))}
                       </div>
-                    </article>
-                  );
-                })}
-              </div>
-            )}
-
-            <div className="mt-5">
-              <PaginatedItems
-                total={userOrderPagination?.total || 0}
-                limit={filters.limit}
-                page={filters.page}
-                onPageChange={(page: number) =>
-                  setFilters((prev) => ({ ...prev, page }))
-                }
-              />
+                    </div>
+                  </article>
+                );
+              })}
             </div>
-          </section>
+          )}
 
-          <aside className="min-w-0 xl:sticky xl:top-6 xl:h-fit">
-            {selectedOrderId ? (
-              <div className="mx-auto max-w-[500px] overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_14px_34px_rgba(15,23,42,0.08)]">
-                <OrderDetail />
-              </div>
-            ) : (
-              <div className="mx-auto max-w-[500px] overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-8 text-center shadow-[0_14px_34px_rgba(15,23,42,0.08)] sm:p-10">
-                <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl border border-sky-100 bg-sky-50 text-sky-600">
-                  <SearchCheck size={38} />
-                </div>
-                <p className="text-lg font-semibold text-slate-800">
-                  Chưa chọn đơn hàng
-                </p>
-                <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                  Chọn một đơn nhỏ ở danh sách để xem hóa đơn, trạng thái xử lý
-                  và lịch sử giao hàng.
-                </p>
-              </div>
-            )}
-          </aside>
-        </div>
+          <div className="mt-5">
+            <PaginatedItems
+              total={userOrderPagination?.total || 0}
+              limit={filters.limit}
+              page={filters.page}
+              onPageChange={(page: number) =>
+                setFilters((prev) => ({ ...prev, page }))
+              }
+            />
+          </div>
+        </section>
       </main>
+
+      {selectedOrderId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm">
+          <button
+            type="button"
+            aria-label="Đóng chi tiết đơn hàng"
+            className="absolute inset-0"
+            onClick={handleCloseDetail}
+          />
+
+          <div className="relative z-10 flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-2xl">
+            <div className="flex shrink-0 items-center justify-between border-b border-slate-100 bg-white px-5 py-4">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-sky-600">
+                  Chi tiết đơn hàng
+                </p>
+                <h2 className="mt-1 text-lg font-semibold text-slate-900">
+                  {formatOrderItemCode(selectedOrderId)}
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleCloseDetail}
+                className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition hover:bg-slate-200 hover:text-slate-700"
+                aria-label="Đóng"
+              >
+                <X size={21} />
+              </button>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50">
+              <OrderDetail />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

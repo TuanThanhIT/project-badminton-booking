@@ -52,13 +52,25 @@ const PostCard = ({
     return () => document.removeEventListener("mousedown", close);
   }, [ownerMenuOpen]);
 
-  const authorName = post.author?.profile?.fullName || post.author?.username || "Ẩn danh";
+  const authorName =
+    post.author?.profile?.fullName || post.author?.username || "Ẩn danh";
   const avatar = post.author?.profile?.avatar;
-  const repostOfPostId = post.repostOfPostId && post.repostOfPostId > 0 ? post.repostOfPostId : null;
+  const repostOfPostId =
+    post.repostOfPostId && post.repostOfPostId > 0 ? post.repostOfPostId : null;
   const isRepost = repostOfPostId != null;
+  const commentPreviewNames =
+    post.comments
+      ?.map(
+        (comment) =>
+          comment.author?.profile?.fullName ||
+          comment.author?.username ||
+          "Ẩn danh",
+      )
+      .filter(Boolean) ?? [];
+  const uniqueCommentPreviewNames = Array.from(new Set(commentPreviewNames)).slice(0, 5);
 
   return (
-    <article className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_10px_28px_rgba(15,23,42,0.05)] transition-all duration-300 hover:border-sky-200 hover:shadow-[0_14px_34px_rgba(14,165,233,0.1)]">
+    <article className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm transition-colors duration-200 hover:border-slate-300 hover:bg-slate-50/40">
       <div className="flex items-start gap-3 p-5">
         <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-sky-100 ring-4 ring-sky-50">
           {avatar ? (
@@ -119,7 +131,10 @@ const PostCard = ({
             </button>
 
             {ownerMenuOpen && (
-              <div className="absolute right-0 top-full z-30 mt-2 w-44 overflow-hidden rounded-2xl border border-slate-100 bg-white py-1 shadow-xl" role="menu">
+              <div
+                className="absolute right-0 top-full z-30 mt-2 w-44 overflow-hidden rounded-2xl border border-slate-100 bg-white py-1 shadow-xl"
+                role="menu"
+              >
                 <button
                   type="button"
                   role="menuitem"
@@ -157,7 +172,11 @@ const PostCard = ({
         title={onOpenDetail ? "Nhấn để xem chi tiết" : undefined}
       >
         {!isRepost ? (
-          <FormDataSummary post={post} branchInfoById={branchInfoById} courtNameById={courtNameById} />
+          <FormDataSummary
+            post={post}
+            branchInfoById={branchInfoById}
+            courtNameById={courtNameById}
+          />
         ) : (
           <>
             {post.content && (
@@ -165,12 +184,16 @@ const PostCard = ({
                 {post.content}
               </p>
             )}
-            <RepostOriginalEmbed originalPostId={repostOfPostId!} branchInfoById={branchInfoById} courtNameById={courtNameById} />
+            <RepostOriginalEmbed
+              originalPostId={repostOfPostId!}
+              branchInfoById={branchInfoById}
+              courtNameById={courtNameById}
+            />
           </>
         )}
 
         {onOpenDetail && (
-          <p className="mt-3 text-xs font-medium text-sky-600 opacity-0 transition-opacity group-hover/content:opacity-100">
+          <p className="mt-3 text-xs font-medium text-slate-500 opacity-0 transition-opacity group-hover/content:opacity-100">
             Nhấn để xem bài viết chi tiết và bình luận
           </p>
         )}
@@ -185,9 +208,25 @@ const PostCard = ({
         <button
           type="button"
           onClick={onOpenDetail}
-          className={`${onOpenDetail ? "cursor-pointer hover:text-sky-600 hover:underline" : "cursor-default"} transition-colors`}
+          className={`${onOpenDetail ? "cursor-pointer hover:text-slate-700 hover:underline" : "cursor-default"} group/comment relative transition-colors`}
         >
           {post.commentsCount ?? 0} bình luận
+          {(post.commentsCount ?? 0) > 0 && (
+            <span className="pointer-events-none absolute right-0 top-full z-30 mt-2 hidden w-56 rounded-xl border border-slate-200 bg-white p-3 text-left text-xs text-slate-600 shadow-lg group-hover/comment:block">
+              <span className="mb-1 block font-semibold text-slate-800">
+                Người đã bình luận
+              </span>
+              {uniqueCommentPreviewNames.length > 0 ? (
+                uniqueCommentPreviewNames.map((name) => (
+                  <span key={name} className="block truncate py-0.5">
+                    {name}
+                  </span>
+                ))
+              ) : (
+                <span>Mở bài viết để xem chi tiết.</span>
+              )}
+            </span>
+          )}
         </button>
       </div>
 

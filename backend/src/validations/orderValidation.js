@@ -241,3 +241,33 @@ export const getUserOrdersSchema = {
     dateTo: dateField,
   }),
 };
+
+export const requestOrderActionSchema = {
+  params: Joi.object({
+    orderId: idParams("orderId"),
+  }),
+  body: Joi.object({
+    reason: Joi.string().trim().max(500).allow("", null).messages({
+      "string.base": "Lý do phải là chuỗi",
+      "string.max": "Lý do không được vượt quá 500 ký tự",
+    }),
+  }),
+};
+
+export const orderActionIdSchema = {
+  params: Joi.object({
+    orderId: idParams("orderId"),
+  }),
+};
+
+export const rejectOrderActionSchema = {
+  params: Joi.object({
+    orderId: idParams("orderId"),
+  }),
+  body: Joi.object({
+    reason: Joi.string().trim().max(500).allow("", null).messages({
+      "string.base": "Lý do từ chối phải là chuỗi",
+      "string.max": "Lý do từ chối không được vượt quá 500 ký tự",
+    }),
+  }),
+};

@@ -20,9 +20,13 @@ export type OrderStatus =
   | "PREPARING"
   | "READY_TO_SHIP"
   | "SHIPPING"
+  | "CANCEL_REQUESTED"
+  | "CANCELLED"
+  | "RETURN_REQUESTED"
+  | "RETURNING"
+  | "RETURNED"
   | "COMPLETED"
-  | "FAILED"
-  | "CANCELLED";
+  | "FAILED";
 
 export type CheckoutPreviewAddress = {
   addressId: number;
@@ -262,3 +266,63 @@ export type TrackingProgressResponse = ApiResponse<OrderTrackingProgressItem[]>;
 export type OrderRequest = {
   orderId: number;
 };
+
+export type OrderShippingRealtimePayload = {
+  orderId: number;
+  orderGroupId?: number;
+  orderStatus: OrderStatus;
+  shippingStatus: ShippingStatus;
+  displayStatus?: string;
+  deliveredAt?: string | null;
+  tracking?: {
+    id: number;
+    status: ShippingStatus;
+    time: string;
+  } | null;
+  message: string;
+};
+
+// Order Action Types (Cancel/Return)
+export type RequestCancelOrderRequest = {
+  reason?: string;
+};
+
+export type RequestCancelOrderResponse = ApiResponse<null>;
+
+// export type ApproveCancelOrderResponse = ApiResponse<{
+//   message: string;
+//   refund?: {
+//     refunded: boolean;
+//     refundAmount: number;
+//   };
+// }>;
+
+// export type RejectCancelOrderRequest = {
+//   reason?: string;
+// };
+
+// export type RejectCancelOrderResponse = ApiResponse<{
+//   message: string;
+// }>;
+
+export type RequestReturnOrderRequest = {
+  reason?: string;
+};
+
+export type RequestReturnOrderResponse = ApiResponse<null>;
+
+// export type ApproveReturnOrderResponse = ApiResponse<{
+//   message: string;
+// }>;
+
+// export type CompleteReturnOrderResponse = ApiResponse<{
+//   message: string;
+//   refund?: {
+//     refunded: boolean;
+//     refundAmount: number;
+//   };
+// }>;
+
+// export type ForceReturnGHNOrderResponse = ApiResponse<{
+//   message: string;
+// }>;

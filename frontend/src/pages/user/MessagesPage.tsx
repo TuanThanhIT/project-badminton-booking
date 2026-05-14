@@ -33,6 +33,7 @@ const MessagesPage = () => {
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
 
   const authUser = useAppSelector((state) => state.auth.user);
+  const accessToken = useAppSelector((state) => state.auth.accessToken);
   const loadingConversations = useAppSelector((state) =>
     Boolean(state.ui.loadingMap["conversation/getConversations"]),
   );
@@ -93,7 +94,10 @@ const MessagesPage = () => {
   }, [conversationId, dispatch]);
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
+    const token =
+      accessToken ||
+      localStorage.getItem("accessToken") ||
+      localStorage.getItem("access_token");
     const uid = authUser?.id;
     if (!token || !uid) return;
 
@@ -129,7 +133,7 @@ const MessagesPage = () => {
       s.off("chat:messages-read");
       s.off("chat:conversation-updated");
     };
-  }, [dispatch, authUser?.id, navigate]);
+  }, [dispatch, authUser?.id, navigate, accessToken]);
 
   const openConversation = (id: number) => {
     dispatch(selectConversation(id));

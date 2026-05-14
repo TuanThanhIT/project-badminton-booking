@@ -132,7 +132,7 @@ const getBranchDetailService = async (data) => {
     description: dataBranch.description,
     longitude: dataBranch.longitude,
     latitude: dataBranch.latitude,
-    fullAddress: `${dataBranch.address}, ${dataBranch.wardName}, ${dataBranch.districtName}, ${dataBranch.provinceName}`,
+    fullAddress: `${dataBranch.address}, ${dataBranch.wardName}, ${dataBranch.districtName}, ${dataBranch.provinceName}, Việt Nam`,
     images: dataBranch.images,
     managers,
   };

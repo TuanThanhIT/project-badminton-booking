@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { MessageSquareText, Repeat2, Send, X } from "lucide-react";
 import { toast } from "react-toastify";
 import { useAppDispatch } from "../../../../redux/hook";
 import { repostPost } from "../../../../redux/slices/user/postSlice";
@@ -15,16 +16,19 @@ const PostRepostModal = ({ open, postId, onClose }: Props) => {
   const [content, setContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const canSubmit = useMemo(() => content.trim().length <= 2000, [content]);
+  const trimmedContent = content.trim();
+  const canSubmit = useMemo(() => trimmedContent.length <= 2000, [trimmedContent]);
 
   const handleRepost = async () => {
     if (!canSubmit) return;
     setSubmitting(true);
     try {
-      await dispatch(repostPost({ postId, content: content.trim() || undefined })).unwrap();
+      await dispatch(
+        repostPost({ postId, content: trimmedContent || undefined }),
+      ).unwrap();
       setContent("");
       onClose();
-      toast.success("Đã đăng lại bài viết.");
+      toast.success("Đã chia sẻ bài viết.");
     } catch (error) {
       const err = error as ApiErrorType | undefined;
       toast.error(err?.message || "Chia sẻ thất bại. Vui lòng thử lại.");
@@ -36,34 +40,64 @@ const PostRepostModal = ({ open, postId, onClose }: Props) => {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-lg rounded-2xl shadow-lg overflow-hidden">
-        <div className="p-4 border-b flex items-center justify-between">
-          <h2 className="font-semibold text-gray-900">Chia sẻ (Re-post)</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
+      <div className="w-full max-w-xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl">
+        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+              <Repeat2 size={20} />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">
+                Chia sẻ bài viết
+              </h2>
+              <p className="text-sm text-slate-500">
+                Thêm cảm nghĩ của bạn trước khi đăng lại.
+              </p>
+            </div>
+          </div>
+
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-1 rounded-lg hover:bg-gray-100 text-sm"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+            aria-label="Đóng"
           >
-            Đóng
+            <X size={18} />
           </button>
         </div>
 
-        <div className="p-4">
-          <p className="text-sm text-gray-600 mb-3">
-            Bạn có thể thêm một nội dung (tuỳ chọn) trước khi đăng lại.
-          </p>
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            className="w-full border rounded-xl px-3 py-2 min-h-[90px] focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm"
-            placeholder="VD: Ai chơi chung CN này không..."
-          />
-          <div className="flex justify-end gap-2 mt-4">
+        <div className="space-y-4 p-5">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-700">
+              <MessageSquareText size={16} className="text-sky-600" />
+              Nội dung chia sẻ
+            </div>
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              className="min-h-[130px] w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-relaxed text-slate-700 outline-none placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+              placeholder="Viết vài dòng giới thiệu hoặc cảm nghĩ của bạn..."
+            />
+            <div className="mt-2 flex items-center justify-between text-xs">
+              <span className={canSubmit ? "text-slate-400" : "text-red-500"}>
+                {content.length}/2000 ký tự
+              </span>
+              <span className="text-slate-400">Có thể để trống</span>
+            </div>
+          </div>
+
+          {!canSubmit && (
+            <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">
+              Nội dung không quá 2000 ký tự.
+            </p>
+          )}
+
+          <div className="flex justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl border border-gray-200 text-sm hover:bg-gray-50"
+              className="rounded-2xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
             >
               Hủy
             </button>
@@ -71,14 +105,12 @@ const PostRepostModal = ({ open, postId, onClose }: Props) => {
               type="button"
               disabled={!canSubmit || submitting}
               onClick={handleRepost}
-              className="px-4 py-2 rounded-xl bg-sky-600 text-white text-sm disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-2xl bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {submitting ? "Đang đăng..." : "Đăng lại"}
+              <Send size={16} />
+              {submitting ? "Đang chia sẻ..." : "Chia sẻ"}
             </button>
           </div>
-          {!canSubmit && (
-            <p className="text-xs text-red-500 mt-2">Nội dung không quá 2000 ký tự.</p>
-          )}
         </div>
       </div>
     </div>
@@ -86,4 +118,3 @@ const PostRepostModal = ({ open, postId, onClose }: Props) => {
 };
 
 export default PostRepostModal;
-

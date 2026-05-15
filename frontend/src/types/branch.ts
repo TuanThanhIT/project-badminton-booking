@@ -50,6 +50,27 @@ export type BranchManager = {
   phoneNumber: string;
 };
 
+export type BranchFeedbackUser = {
+  id: number;
+  email: string;
+  fullName?: string;
+  avatar?: string;
+};
+
+export type BranchFeedback = {
+  id: number;
+  content: string;
+  rating: number;
+  createdDate: string;
+  updatedDate: string;
+  user: BranchFeedbackUser;
+};
+
+export type BranchFeedbackSummary = {
+  totalFeedbacks: number;
+  averageRating: number;
+};
+
 export type BranchDetail = {
   id: number;
   branchName: string;
@@ -60,6 +81,10 @@ export type BranchDetail = {
   fullAddress: string;
   images: BranchImage[];
   managers: BranchManager[];
+  feedbackSummary: BranchFeedbackSummary;
+  feedbacks: BranchFeedback[];
+  myFeedback: BranchFeedback | null;
+  canReview: boolean;
 };
 
 export type BranchDetailResponse = ApiResponse<BranchDetail>;

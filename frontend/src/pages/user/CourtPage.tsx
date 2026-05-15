@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  AlertTriangle,
   CalendarDays,
   CheckCircle2,
   Clock3,
@@ -9,7 +10,7 @@ import {
   Search,
   WalletCards,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { getBranchOptions } from "../../redux/slices/user/branchSlice";
 import { getAvailableCourts } from "../../redux/slices/user/courtSlice";
@@ -27,15 +28,43 @@ const generateTimeOptions = () => {
   return options;
 };
 
+const MIN_BOOKING_LEAD_MINUTES = 60;
 const TIME_OPTIONS = generateTimeOptions();
-const getTodayDate = () => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
+const formatDateInputValue = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
+const getTodayDate = () => formatDateInputValue(new Date());
 const today = getTodayDate();
+
+const timeToMinutes = (time: string) => {
+  const [hour, minute] = time.split(":").map(Number);
+  return hour * 60 + minute;
+};
+
+const minutesToTime = (value: number) => {
+  const hour = Math.floor(value / 60);
+  const minute = value % 60;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+};
+
+const dateTimeFromDateAndTime = (date: string, time: string) => {
+  const [year, month, day] = date.split("-").map(Number);
+  const [hour, minute] = time.split(":").map(Number);
+  return new Date(year, month - 1, day, hour, minute, 0, 0);
+};
+
+const getEarliestBookingDateTime = (now: Date) =>
+  new Date(now.getTime() + MIN_BOOKING_LEAD_MINUTES * 60 * 1000);
+
+const isStartTimeBookable = (date: string, time: string, now: Date) => {
+  const todayDate = getTodayDate();
+  if (date < todayDate) return false;
+  if (date > todayDate) return true;
+  return dateTimeFromDateAndTime(date, time) >= getEarliestBookingDateTime(now);
+};
 
 const WEEK_DAYS = [
   { label: "Thứ 2", value: "Monday" },
@@ -58,6 +87,7 @@ const isCourtBooked = (court: CourtAvailable) =>
 const CourtPage = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const { branchOptions } = useAppSelector((state) => state.branch);
   const { availableCourts, loading } = useAppSelector((state) => state.court);
@@ -77,10 +107,44 @@ const CourtPage = () => {
   const [endTime, setEndTime] = useState("10:00");
   const [monthlyPrice, setMonthlyPrice] = useState(0);
   const [monthlySessions, setMonthlySessions] = useState(0);
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  const branchNameQuery = searchParams.get("branchName") || "";
 
   useEffect(() => {
     dispatch(getBranchOptions());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (!branchNameQuery || branchOptions.length === 0) return;
+
+    const normalize = (value: string) =>
+      value.trim().toLocaleLowerCase("vi-VN");
+
+    const matchedBranch = branchOptions.find(
+      (branch) => normalize(branch.branchName) === normalize(branchNameQuery),
+    );
+
+    if (!matchedBranch || selectedBranch?.id === matchedBranch.id) return;
+
+    setSelectedBranch(matchedBranch);
+  }, [branchNameQuery, branchOptions, selectedBranch?.id]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNowTick(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const now = useMemo(() => new Date(nowTick), [nowTick]);
+  const todayDate = useMemo(() => getTodayDate(), []);
+  const activeDate = mode === "daily" ? bookingDate : monthlyStartDate || todayDate;
+  const earliestBookingDateTime = useMemo(
+    () => getEarliestBookingDateTime(now),
+    [now],
+  );
+  const earliestBookingTimeLabel = minutesToTime(
+    earliestBookingDateTime.getHours() * 60 + earliestBookingDateTime.getMinutes(),
+  );
+  const startTimeBookable = isStartTimeBookable(activeDate, startTime, now);
 
   const duration = useMemo(() => {
     const [startHour, startMinute] = startTime.split(":").map(Number);
@@ -90,13 +154,86 @@ const CourtPage = () => {
     return end > start ? end - start : 0;
   }, [startTime, endTime]);
 
+  const scheduleWarning = useMemo(() => {
+    if (activeDate < todayDate) {
+      return "Không thể đặt sân cho ngày trong quá khứ.";
+    }
+
+    if (activeDate === todayDate && !startTimeBookable) {
+      if (formatDateInputValue(earliestBookingDateTime) !== todayDate) {
+        return "Hôm nay không còn khung giờ đủ điều kiện đặt trước 1 tiếng. Vui lòng chọn ngày mai hoặc ngày khác.";
+      }
+
+      return `Khung giờ bắt đầu phải sau thời điểm hiện tại ít nhất ${MIN_BOOKING_LEAD_MINUTES} phút. Hôm nay chỉ có thể đặt từ khoảng ${earliestBookingTimeLabel} trở đi.`;
+    }
+
+    if (duration <= 0) {
+      return "Giờ kết thúc phải sau giờ bắt đầu.";
+    }
+
+    return "";
+  }, [
+    activeDate,
+    todayDate,
+    startTimeBookable,
+    earliestBookingDateTime,
+    earliestBookingTimeLabel,
+    duration,
+  ]);
+
+  const canSearchCourts = !scheduleWarning && duration > 0;
+
+  const availableStartTimes = useMemo(
+    () => TIME_OPTIONS.filter((time) => isStartTimeBookable(activeDate, time, now)),
+    [activeDate, now],
+  );
+
   useEffect(() => {
-    if (!selectedBranch || duration <= 0) return;
+    if (activeDate < todayDate) {
+      if (mode === "daily") setBookingDate(todayDate);
+      else setMonthlyStartDate(todayDate);
+      return;
+    }
+
+    if (
+      availableStartTimes.length > 0 &&
+      !availableStartTimes.includes(startTime)
+    ) {
+      const nextStartTime = availableStartTimes[0];
+      setStartTime(nextStartTime);
+
+      const nextEndTime = TIME_OPTIONS.find(
+        (time) => timeToMinutes(time) > timeToMinutes(nextStartTime),
+      );
+      if (nextEndTime) setEndTime(nextEndTime);
+    }
+  }, [
+    activeDate,
+    availableStartTimes,
+    mode,
+    startTime,
+    todayDate,
+  ]);
+
+  useEffect(() => {
+    if (timeToMinutes(endTime) <= timeToMinutes(startTime)) {
+      const nextEndTime = TIME_OPTIONS.find(
+        (time) => timeToMinutes(time) > timeToMinutes(startTime),
+      );
+      if (nextEndTime) setEndTime(nextEndTime);
+    }
+  }, [endTime, startTime]);
+
+  useEffect(() => {
+    if (!selectedBranch || !canSearchCourts) {
+      setSelectedCourt(null);
+      return;
+    }
 
     dispatch(
       getAvailableCourts({
         branchId: selectedBranch.id,
-        date: mode === "daily" ? bookingDate : monthlyStartDate || today,
+        date: mode === "daily" ? bookingDate : monthlyStartDate || todayDate,
         startTime,
         endTime,
       }),
@@ -108,9 +245,10 @@ const CourtPage = () => {
     mode,
     bookingDate,
     monthlyStartDate,
+    todayDate,
     startTime,
     endTime,
-    duration,
+    canSearchCourts,
   ]);
 
   useEffect(() => {
@@ -191,9 +329,13 @@ const CourtPage = () => {
       alert("Giờ kết thúc phải lớn hơn giờ bắt đầu");
       return;
     }
-    if (mode === "daily" && bookingDate < today) {
+    if (mode === "daily" && bookingDate < todayDate) {
       alert("Không thể đặt sân cho ngày trong quá khứ");
-      setBookingDate(today);
+      setBookingDate(todayDate);
+      return;
+    }
+    if (scheduleWarning) {
+      alert(scheduleWarning);
       return;
     }
     if (isCourtBooked(selectedCourt)) {
@@ -202,9 +344,9 @@ const CourtPage = () => {
     }
 
     if (mode === "monthly") {
-      if (monthlyStartDate < today) {
+      if (monthlyStartDate < todayDate) {
         alert("Không thể đặt sân cho ngày bắt đầu trong quá khứ");
-        setMonthlyStartDate(today);
+        setMonthlyStartDate(todayDate);
         return;
       }
       if (!monthlyStartDate || !monthlyEndDate) {
@@ -372,10 +514,10 @@ const CourtPage = () => {
                     <input
                       type="date"
                       value={bookingDate}
-                      min={today}
+                      min={todayDate}
                       onChange={(event) => {
                         const value = event.target.value;
-                        setBookingDate(value < today ? today : value);
+                        setBookingDate(value < todayDate ? todayDate : value);
                       }}
                       className={inputClass}
                     />
@@ -387,10 +529,11 @@ const CourtPage = () => {
                       <input
                         type="date"
                         value={monthlyStartDate}
-                        min={today}
+                        min={todayDate}
                         onChange={(event) => {
                           const value = event.target.value;
-                          const nextStart = value < today ? today : value;
+                          const nextStart =
+                            value < todayDate ? todayDate : value;
                           setMonthlyStartDate(nextStart);
                           if (monthlyEndDate && monthlyEndDate < nextStart) {
                             setMonthlyEndDate(nextStart);
@@ -404,9 +547,9 @@ const CourtPage = () => {
                       <input
                         type="date"
                         value={monthlyEndDate}
-                        min={monthlyStartDate || today}
+                        min={monthlyStartDate || todayDate}
                         onChange={(event) => {
-                          const minDate = monthlyStartDate || today;
+                          const minDate = monthlyStartDate || todayDate;
                           const value = event.target.value;
                           setMonthlyEndDate(value < minDate ? minDate : value);
                         }}
@@ -448,7 +591,11 @@ const CourtPage = () => {
                     className={`${inputClass} appearance-none`}
                   >
                     {TIME_OPTIONS.map((time) => (
-                      <option key={time} value={time}>
+                      <option
+                        key={time}
+                        value={time}
+                        disabled={!isStartTimeBookable(activeDate, time, now)}
+                      >
                         {time}
                       </option>
                     ))}
@@ -462,13 +609,27 @@ const CourtPage = () => {
                     className={`${inputClass} appearance-none`}
                   >
                     {TIME_OPTIONS.map((time) => (
-                      <option key={time} value={time}>
+                      <option
+                        key={time}
+                        value={time}
+                        disabled={timeToMinutes(time) <= timeToMinutes(startTime)}
+                      >
                         {time}
                       </option>
                     ))}
                   </select>
                 </label>
               </div>
+
+              {scheduleWarning && (
+                <div className="flex items-start gap-3 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-700">
+                  <AlertTriangle
+                    size={18}
+                    className="mt-0.5 shrink-0 text-amber-500"
+                  />
+                  <span>{scheduleWarning}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -648,7 +809,7 @@ const CourtPage = () => {
               <button
                 type="button"
                 onClick={handleBooking}
-                disabled={!selectedCourt || duration <= 0}
+                disabled={!selectedCourt || !!scheduleWarning || duration <= 0}
                 className="mt-3 w-full rounded-2xl bg-sky-600 px-5 py-4 text-sm font-semibold text-white shadow-sm transition-all hover:bg-sky-500 disabled:cursor-not-allowed disabled:bg-slate-300"
               >
                 Tiếp tục thanh toán

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import {
   Camera,
@@ -12,6 +12,7 @@ import {
   VenusAndMars,
   Trophy,
   Sparkles,
+  Wallet,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import type { PostWithAuthor } from "../../types/post";
@@ -33,6 +34,7 @@ import {
   PLAYER_LEVEL_LABEL,
   PLAYER_LEVELS,
 } from "../../utils/constants/profileConstant";
+import WalletPanel from "../../components/ui/user/wallet/WalletPanel";
 
 type EditTarget = {
   id: number;
@@ -42,7 +44,7 @@ type EditTarget = {
   formData?: any;
 } | null;
 
-type ProfileTab = "profile" | "posts";
+type ProfileTab = "profile" | "posts" | "wallet";
 
 const inputClass =
   "w-full mt-1.5 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition-all placeholder:text-slate-400 hover:border-sky-300 focus:border-sky-500 focus:ring-4 focus:ring-sky-100";
@@ -112,7 +114,7 @@ const ProfilePage = () => {
     [posts],
   );
 
-  const fetchProfileAndPosts = async () => {
+  const fetchProfileAndPosts = useCallback(async () => {
     if (!currentUser?.id) return;
 
     try {
@@ -123,7 +125,7 @@ const ProfilePage = () => {
     } catch {
       // middleware xử lý toast lỗi
     }
-  };
+  }, [currentUser?.id, dispatch]);
 
   useEffect(() => {
     if (!profile) return;
@@ -148,7 +150,7 @@ const ProfilePage = () => {
   useEffect(() => {
     dispatch(getAllBranches());
     fetchProfileAndPosts();
-  }, [currentUser?.id, dispatch]);
+  }, [dispatch, fetchProfileAndPosts]);
 
   useEffect(() => {
     const ids = posts
@@ -379,6 +381,15 @@ const ProfilePage = () => {
                     {posts.length}
                   </span>
                 </button>
+
+                <button
+                  type="button"
+                  className={tabBtnClass(tab === "wallet")}
+                  onClick={() => setTab("wallet")}
+                >
+                  <Wallet className="h-5 w-5 shrink-0" strokeWidth={2} />
+                  <span>Ví thanh toán</span>
+                </button>
               </nav>
             </div>
           </aside>
@@ -590,6 +601,8 @@ const ProfilePage = () => {
                 )}
               </section>
             )}
+
+            {tab === "wallet" && <WalletPanel />}
           </main>
         </div>
       </div>

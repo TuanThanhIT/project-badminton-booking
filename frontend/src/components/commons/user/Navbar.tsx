@@ -11,10 +11,8 @@ import {
   X,
 } from "lucide-react";
 import CategoryMenu from "../../ui/user/category/CategoryMenu";
-import { useAppSelector } from "../../../redux/hook";
 
 const Navbar = () => {
-  const { accessToken, user } = useAppSelector((state) => state.auth);
   const [isOpen, setIsOpen] = useState(false);
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -52,11 +50,7 @@ const Navbar = () => {
           } flex-col gap-2 pb-3 lg:flex lg:min-h-[58px] lg:flex-row lg:items-center lg:justify-center lg:gap-3 lg:pb-0`}
         >
           <li>
-            <NavLink
-              to={!accessToken && !user ? "/" : "/home"}
-              className={linkClass}
-              onClick={closeMenu}
-            >
+            <NavLink to="/home" className={linkClass} onClick={closeMenu}>
               {({ isActive }) => (
                 <>
                   <Home className={iconClass({ isActive })} />

@@ -2,6 +2,12 @@ import SuccessResponse from "../../helpers/SuccessResponse.js";
 import asyncHandler from "../../middlewares/asyncHandler.js";
 import walletService from "../../services/user/walletService.js";
 
+const getWalletOverviewController = asyncHandler(async (req, res) => {
+  const data = { userId: req.user.id };
+  const wallet = await walletService.getWalletOverviewService(data);
+  return res.status(200).json(new SuccessResponse("Lấy dữ liệu ví thành công", wallet));
+});
+
 const walletDepositController = asyncHandler(async (req, res) => {
   const data = { ...req.body, userId: req.user.id, ip: req.ip };
   const paymentUrl = await walletService.walletDepositService(data);
@@ -49,6 +55,7 @@ const walletWithdrawConfirmController = asyncHandler(async (req, res) => {
 });
 
 const walletController = {
+  getWalletOverviewController,
   walletDepositController,
   walletCallbackController,
   walletWithdrawRequestController,

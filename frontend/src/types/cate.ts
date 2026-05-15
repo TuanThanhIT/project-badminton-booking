@@ -17,3 +17,7 @@ export type OtherCategoriesResponse = ApiResponse<Category[]>;
 export type OtherCatesParamsRequest = {
   cateId: number;
 };
+
+export type CategoriesByGroupRequest = {
+  groupName: string;
+};

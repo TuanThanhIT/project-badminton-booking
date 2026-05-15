@@ -51,3 +51,11 @@ export type DeleteFeedbackRequest = {
 };
 
 export type DeleteFeedbackResponse = ApiResponse<null>;
+
+export type UpsertBranchFeedbackRequest = {
+  branchId: number;
+  content: string;
+  rating: FeedbackRating;
+};
+
+export type UpsertBranchFeedbackResponse = ApiResponse<FeedbackDetailData>;

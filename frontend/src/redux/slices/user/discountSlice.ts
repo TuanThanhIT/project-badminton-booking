@@ -1,6 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type {
-  ApplyDiscountRequest,
   DiscountCheckRequest,
   DiscountCheckResponse,
   DiscountCheckResult,

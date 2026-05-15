@@ -25,3 +25,55 @@ body {
 .font-extrabold {
   font-weight: 700;
 }
+
+@keyframes home-reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes home-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes home-fade-slide {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.home-reveal {
+  animation: home-reveal-up 0.7s ease both;
+}
+
+.home-hero-copy {
+  animation: home-fade-slide 0.75s ease both;
+}
+
+.home-float {
+  animation: home-float 5.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-reveal,
+  .home-hero-copy,
+  .home-float {
+    animation: none;
+  }
+}

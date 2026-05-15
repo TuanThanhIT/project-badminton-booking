@@ -1,6 +1,41 @@
 import { Court, BookingDetail, CourtPrice } from "../../models/index.js";
 import { Op } from "sequelize";
 import NotFoundError from "../../errors/NotFoundError.js";
+import BadRequestError from "../../errors/BadRequestError.js";
+
+const MIN_BOOKING_LEAD_MINUTES = 60;
+
+const getTodayDate = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const dateTimeFromDateAndTime = (date, time) => {
+  const [year, month, day] = date.split("-").map(Number);
+  const [hour, minute] = time.split(":").map(Number);
+  return new Date(year, month - 1, day, hour, minute, 0, 0);
+};
+
+const assertBookableStartTime = ({ date, startTime }) => {
+  const today = getTodayDate();
+  if (date < today) {
+    throw new BadRequestError("Khong the dat san cho ngay trong qua khu");
+  }
+
+  const now = new Date();
+  const earliest = new Date(
+    now.getTime() + MIN_BOOKING_LEAD_MINUTES * 60 * 1000,
+  );
+
+  if (date === today && dateTimeFromDateAndTime(date, startTime) < earliest) {
+    throw new BadRequestError(
+      "Gio bat dau phai sau thoi diem hien tai it nhat 1 tieng",
+    );
+  }
+};
 
 const getAvailableCourtsService = async (data) => {
   const { branchId, date, startTime, endTime } = data;
@@ -12,6 +47,12 @@ const getAvailableCourtsService = async (data) => {
 
   const startNum = timeToNum(startTime);
   const endNum = timeToNum(endTime);
+  if (endNum <= startNum) {
+    throw new BadRequestError("Gio ket thuc phai sau gio bat dau");
+  }
+
+  assertBookableStartTime({ date, startTime });
+
   const days = [
     "SUNDAY",
     "MONDAY",

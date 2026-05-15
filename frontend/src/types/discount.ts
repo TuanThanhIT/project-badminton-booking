@@ -32,6 +32,7 @@ export type DiscountData = {
 
 export type DiscountRequest = {
   amount: number;
+  targetType?: "ORDER" | "BOOKING";
 };
 
 export type DiscountResponse = ApiResponse<DiscountData[]>;

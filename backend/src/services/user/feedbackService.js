@@ -1,9 +1,56 @@
 import { redisClient } from "../../config/redis.js";
+import sequelize from "../../config/db.js";
+import { BOOKING_STATUS } from "../../constants/bookingConstant.js";
 import { ORDER_STATUS } from "../../constants/orderConstant.js";
 import BadRequestError from "../../errors/BadRequestError.js";
 import ConflictError from "../../errors/ConflictError.js";
 import NotFoundError from "../../errors/NotFoundError.js";
-import { Feedback, Order } from "../../models/index.js";
+import {
+  Booking,
+  Branch,
+  Feedback,
+  Order,
+  OrderGroup,
+} from "../../models/index.js";
+
+const canReviewBranch = async ({ userId, branchId, transaction }) => {
+  const completedOrder = await Order.findOne({
+    where: {
+      branchId,
+      orderStatus: ORDER_STATUS.COMPLETED,
+    },
+    include: [
+      {
+        model: OrderGroup,
+        as: "orderGroup",
+        attributes: ["id"],
+        where: { userId },
+      },
+    ],
+    transaction,
+  });
+
+  if (completedOrder) return true;
+
+  const completedBooking = await Booking.findOne({
+    where: {
+      userId,
+      branchId,
+      bookingStatus: BOOKING_STATUS.COMPLETED,
+    },
+    transaction,
+  });
+
+  return !!completedBooking;
+};
+
+const formatFeedbackDetail = (feedback) => ({
+  feedbackId: feedback.id,
+  content: feedback.content,
+  rating: feedback.rating,
+  createdDate: feedback.createdDate,
+  updatedDate: feedback.updatedDate,
+});
 
 const createFeedbackOrderService = async (data) => {
   const { userId, orderId, variantId, content, rating } = data;
@@ -116,11 +163,85 @@ const deleteFeedbackOrderService = async (data) => {
   return true;
 };
 
+const upsertFeedbackBranchService = async (data) => {
+  const { userId, branchId, content, rating } = data;
+
+  return sequelize.transaction(async (transaction) => {
+    const branch = await Branch.findOne({
+      where: {
+        id: branchId,
+        isActive: true,
+      },
+      attributes: ["id"],
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+
+    if (!branch) {
+      throw new NotFoundError("Khong tim thay chi nhanh");
+    }
+
+    const allowed = await canReviewBranch({ userId, branchId, transaction });
+
+    if (!allowed) {
+      throw new BadRequestError(
+        "Ban chi co the danh gia chi nhanh sau khi co don hang hoac lich dat san hoan thanh tai chi nhanh nay",
+      );
+    }
+
+    const feedback = await Feedback.findOne({
+      where: {
+        userId,
+        branchId,
+      },
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+
+    if (feedback) {
+      await feedback.update({ content, rating }, { transaction });
+      return formatFeedbackDetail(feedback);
+    }
+
+    const newFeedback = await Feedback.create(
+      {
+        userId,
+        branchId,
+        content,
+        rating,
+      },
+      { transaction },
+    );
+
+    return formatFeedbackDetail(newFeedback);
+  });
+};
+
+const getFeedbackBranchDetailService = async (data) => {
+  const { userId, branchId } = data;
+
+  const feedback = await Feedback.findOne({
+    where: {
+      userId,
+      branchId,
+    },
+    attributes: ["id", "content", "rating", "createdDate", "updatedDate"],
+  });
+
+  if (!feedback) {
+    throw new NotFoundError("Chua co danh gia cho chi nhanh nay");
+  }
+
+  return formatFeedbackDetail(feedback);
+};
+
 const feedbackService = {
   getFeedbackOrderDetailService,
   createFeedbackOrderService,
   updateFeedbackOrderService,
   deleteFeedbackOrderService,
+  upsertFeedbackBranchService,
+  getFeedbackBranchDetailService,
 };
 
 export default feedbackService;

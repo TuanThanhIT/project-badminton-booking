@@ -5,6 +5,7 @@ import {
   endDateField,
   orderAmountField,
   startDateField,
+  targetTypeField,
   typeField,
   valueField,
 } from "./common/discountFields.js";
@@ -21,6 +22,7 @@ export const applyDiscountSchema = {
 export const getDiscountsCheckoutSchema = {
   query: Joi.object({
     amount: orderAmountField,
+    targetType: targetTypeField,
   }),
 };
 

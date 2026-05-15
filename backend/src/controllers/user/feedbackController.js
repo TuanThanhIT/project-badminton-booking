@@ -38,11 +38,29 @@ const deleteFeedbackOrderController = asyncHandler(async (req, res) => {
   return res.status(200).json(new SuccessResponse("Xóa đánh giá thành công"));
 });
 
+const upsertFeedbackBranchController = asyncHandler(async (req, res) => {
+  const data = { ...req.body, ...req.params, userId: req.user.id };
+  const feedback = await feedbackService.upsertFeedbackBranchService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Danh gia chi nhanh thanh cong", feedback));
+});
+
+const getFeedbackBranchDetailController = asyncHandler(async (req, res) => {
+  const data = { ...req.params, userId: req.user.id };
+  const feedback = await feedbackService.getFeedbackBranchDetailService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Lay danh gia chi nhanh thanh cong", feedback));
+});
+
 const feedbackController = {
   createFeedbackOrderController,
   updateFeedbackOrderController,
   getFeedbackOrderDetailController,
   deleteFeedbackOrderController,
+  upsertFeedbackBranchController,
+  getFeedbackBranchDetailController,
 };
 
 export default feedbackController;

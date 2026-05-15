@@ -33,8 +33,8 @@ const Booking = sequelize.define(
           msg: "Total amount must be a number",
         },
         min: {
-          args: [0.01],
-          msg: "Total amount must be greater than 0",
+          args: [0],
+          msg: "Total amount must be >= 0",
         },
       },
     },

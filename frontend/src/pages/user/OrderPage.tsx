@@ -335,89 +335,58 @@ const OrderPage = () => {
                     key={group.orderGroupId}
                     className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm transition-colors hover:border-slate-300"
                   >
+                    {/* HEADER NHÓM ĐƠN */}
                     <div className="border-b border-slate-100 bg-white p-5">
-                      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                        <div>
-                          <div className="mb-3 flex items-center gap-3">
-                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-sky-100 bg-sky-50 text-sky-600">
-                              <ClipboardList size={20} />
-                            </div>
-                            <div>
-                              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                                Mã nhóm đơn
-                              </p>
-                              <p className="text-lg font-semibold text-slate-800">
-                                #
-                                {formatOrderCode(
-                                  group.orderGroupId,
-                                  group.createdDate,
-                                )}
-                              </p>
-                            </div>
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-sky-100 bg-sky-50 text-sky-600">
+                            <ClipboardList size={20} />
                           </div>
 
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span
-                              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ${statusUI.className}`}
-                            >
-                              <Icon size={14} />
-                              {statusUI.label}
-                            </span>
-                            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500">
-                              {group.orders.length} đơn nhỏ
-                            </span>
+                          <div>
+                            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                              Mã nhóm đơn
+                            </p>
+                            <p className="text-lg font-semibold text-slate-800">
+                              #
+                              {formatOrderCode(
+                                group.orderGroupId,
+                                group.createdDate,
+                              )}
+                            </p>
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                          <div className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-3">
-                            <p className="text-[11px] font-medium uppercase text-slate-400">
-                              Tiền hàng
-                            </p>
-                            <p className="mt-1 text-sm font-medium text-slate-700">
-                              {Number(group.totalAmount).toLocaleString()}đ
-                            </p>
-                          </div>
-                          <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-3 py-3">
-                            <p className="text-[11px] font-medium uppercase text-emerald-500">
-                              Phí ship
-                            </p>
-                            <p className="mt-1 text-sm font-medium text-emerald-600">
-                              {Number(group.totalShippingFee).toLocaleString()}đ
-                            </p>
-                          </div>
-                          <div className="rounded-2xl border border-sky-100 bg-sky-50 px-3 py-3">
-                            <p className="text-[11px] font-medium uppercase text-sky-500">
-                              Tổng
-                            </p>
-                            <p className="mt-1 text-sm font-semibold text-sky-700">
-                              {Number(group.finalAmount).toLocaleString()}đ
-                            </p>
-                          </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ${statusUI.className}`}
+                          >
+                            <Icon size={14} />
+                            {statusUI.label}
+                          </span>
+
+                          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500">
+                            {group.orders.length} đơn nhỏ
+                          </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* DANH SÁCH ĐƠN NHỎ */}
-                    <div className="bg-slate-50/80 px-5 py-4">
-                      <div
-                        className={`grid gap-4 ${
-                          group.orders.length === 1
-                            ? "mx-auto w-full max-w-[950px] grid-cols-1"
-                            : "grid-cols-1 xl:grid-cols-2"
-                        }`}
-                      >
+                    {/* BODY: 70% ĐƠN NHỎ - 30% TỔNG TIỀN */}
+                    <div className="grid grid-cols-1 gap-5 bg-slate-50/80 p-5 xl:grid-cols-[7fr_3fr]">
+                      {/* LEFT: DANH SÁCH ĐƠN NHỎ */}
+                      <div className="min-w-0 space-y-4">
                         {group.orders.map((order) => (
                           <button
                             key={order.orderId}
                             type="button"
                             onClick={() => handleSelectOrder(order.orderId)}
                             className="
-          group w-full cursor-pointer rounded-[1.5rem]
-          border border-slate-200 bg-white p-4 text-left shadow-sm
-          transition-all hover:-translate-y-0.5 hover:border-sky-200
-          hover:bg-sky-50/50 hover:shadow-md
-        "
+            group w-full cursor-pointer rounded-[1.5rem]
+            border border-slate-200 bg-white p-4 text-left shadow-sm
+            transition-all hover:-translate-y-0.5 hover:border-sky-200
+            hover:bg-sky-50/50 hover:shadow-md
+          "
                           >
                             {/* HEADER ĐƠN CON */}
                             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
@@ -438,9 +407,9 @@ const OrderPage = () => {
                                 <div
                                   key={`${order.orderId}-${idx}`}
                                   className="
-                grid grid-cols-[82px_1fr_130px] items-center gap-4
-                rounded-2xl border border-slate-100 bg-white p-3
-              "
+                  grid grid-cols-[76px_1fr_auto] items-center gap-4
+                  rounded-2xl border border-slate-100 bg-white p-3
+                "
                                 >
                                   <img
                                     src={item.thumbnailUrl}
@@ -460,7 +429,7 @@ const OrderPage = () => {
                                     </div>
                                   </div>
 
-                                  <div className="text-right">
+                                  <div className="shrink-0 text-right">
                                     <p className="text-base font-extrabold text-sky-700">
                                       {Number(item.price).toLocaleString()}đ
                                     </p>
@@ -488,6 +457,54 @@ const OrderPage = () => {
                           </button>
                         ))}
                       </div>
+
+                      {/* RIGHT: TỔNG TIỀN */}
+                      <aside className="h-fit rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm xl:sticky xl:top-5">
+                        <div className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-4">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+                            <WalletCards size={20} />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-800">
+                              Tổng thanh toán
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              Thông tin nhóm đơn
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+                            <span className="text-sm font-medium text-slate-500">
+                              Tiền hàng
+                            </span>
+                            <span className="text-sm font-bold text-slate-800">
+                              {Number(group.totalAmount).toLocaleString()}đ
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3">
+                            <span className="text-sm font-medium text-emerald-600">
+                              Phí ship
+                            </span>
+                            <span className="text-sm font-bold text-emerald-700">
+                              {Number(group.totalShippingFee).toLocaleString()}đ
+                            </span>
+                          </div>
+
+                          <div className="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-4">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-bold text-sky-700">
+                                Tổng
+                              </span>
+                              <span className="text-lg font-extrabold text-sky-700">
+                                {Number(group.finalAmount).toLocaleString()}đ
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </aside>
                     </div>
                   </article>
                 );

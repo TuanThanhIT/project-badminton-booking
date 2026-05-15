@@ -29,6 +29,22 @@ export const getFeedbackOrderDetailSchema = {
   }),
 };
 
+export const upsertFeedbackBranchSchema = {
+  params: Joi.object({
+    branchId: idParams("branchId"),
+  }),
+  body: Joi.object({
+    content: contentField.required(),
+    rating: ratingField.required(),
+  }),
+};
+
+export const getFeedbackBranchDetailSchema = {
+  params: Joi.object({
+    branchId: idParams("branchId"),
+  }),
+};
+
 export const deleteFeedbackOrderSchema = {
   params: Joi.object({
     feedbackId: idParams("feedbackId"),

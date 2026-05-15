@@ -5,6 +5,8 @@ import type {
   WalletCallbackResponse,
   WalletDepositRequest,
   WalletDepositResponse,
+  WalletOverviewData,
+  WalletOverviewResponse,
   WalletWithdrawConfirmRequest,
   WalletWithdrawRequest,
   WalletWithdrawResponse,
@@ -14,12 +16,27 @@ import walletService from "../../../services/user/walletService";
 interface WalletState {
   paymentUrl?: string;
   withdrawRequestId?: number;
+  overview?: WalletOverviewData;
 }
 
 const initialState: WalletState = {
   paymentUrl: undefined,
   withdrawRequestId: undefined,
+  overview: undefined,
 };
+
+export const getWalletOverview = createAsyncThunk<
+  WalletOverviewResponse,
+  void,
+  { rejectValue: ApiErrorType }
+>("wallet/getWalletOverview", async (_, { rejectWithValue }) => {
+  try {
+    const res = await walletService.getWalletOverviewService();
+    return res.data as WalletOverviewResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
 
 export const walletDeposit = createAsyncThunk<
   WalletDepositResponse,
@@ -82,9 +99,13 @@ const walletSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(walletDeposit.fulfilled, (state, action) => {
-      state.paymentUrl = action.payload.data;
-    });
+    builder
+      .addCase(getWalletOverview.fulfilled, (state, action) => {
+        state.overview = action.payload.data;
+      })
+      .addCase(walletDeposit.fulfilled, (state, action) => {
+        state.paymentUrl = action.payload.data;
+      });
 
     builder.addCase(walletWithdrawRequest.fulfilled, (state, action) => {
       state.withdrawRequestId = action.payload.data.id;

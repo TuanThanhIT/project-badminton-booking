@@ -118,7 +118,7 @@ const ProductCard = ({
               goDetail();
             }}
             className="
-              mt-3 flex w-full items-center justify-center gap-1.5
+              mt-2 flex w-full items-center justify-center gap-1.5
               rounded-xl border border-sky-100
               bg-sky-50 px-3 py-2
               text-xs font-bold text-sky-700
@@ -183,18 +183,18 @@ const ProductCard = ({
 
         <h3
           className="
-      mt-1.5 line-clamp-2 min-h-[50px]
-      text-[16px] font-semibold leading-snug
-      text-slate-900 transition
-      group-hover:text-sky-700
-    "
+    mt-1.5 line-clamp-2 min-h-[58px]
+    text-[18px] font-extrabold leading-snug
+    text-slate-700 transition
+    group-hover:text-sky-700
+  "
           title={product.productName}
         >
           {product.productName}
         </h3>
 
-        <div className="mt-3 flex flex-wrap items-baseline gap-2">
-          <span className="text-[19px] font-bold tracking-tight text-sky-700">
+        <div className="mt-2 flex flex-wrap items-baseline gap-2">
+          <span className="text-[19px] font-extrabold tracking-tight text-sky-700">
             {product.minDiscountedPrice.toLocaleString("vi-VN")}₫
           </span>
 

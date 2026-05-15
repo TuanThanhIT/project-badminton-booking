@@ -1,4 +1,3 @@
-// ReviewForm.tsx
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,17 +14,14 @@ import {
 
 type ReviewFormProps = {
   setOpenReviewForm: (open: boolean) => void;
-
   onSubmit: (data: formRating) => void;
-
   update: boolean;
-
   orderId?: number;
-
   variantId?: number;
-
   loading?: boolean;
 };
+
+const starLabels = ["Tệ", "Khá", "Bình thường", "Tốt", "Tuyệt vời"];
 
 const ReviewForm = ({
   setOpenReviewForm,
@@ -37,9 +33,6 @@ const ReviewForm = ({
 }: ReviewFormProps) => {
   const dispatch = useAppDispatch();
   const { feedback } = useAppSelector((state) => state.feedback);
-
-  console.log("feedback>>", feedback);
-
   const detailLoading = useAppSelector(
     (state) => state.ui.loadingMap["feedback/getFeedbackDetail"],
   );
@@ -53,7 +46,6 @@ const ReviewForm = ({
     formState: { errors },
   } = useForm<formRating>({
     resolver: zodResolver(FormRatingSchema),
-
     defaultValues: {
       rating: 1,
       content: "",
@@ -61,7 +53,6 @@ const ReviewForm = ({
   });
 
   const [selected, setSelected] = useState<formRating["rating"]>(1);
-
   const [hovered, setHovered] = useState<number>(0);
 
   useEffect(() => {
@@ -80,10 +71,7 @@ const ReviewForm = ({
 
   useEffect(() => {
     if (!feedback) {
-      reset({
-        rating: 1,
-        content: "",
-      });
+      reset({ rating: 1, content: "" });
       setSelected(1);
       return;
     }
@@ -96,10 +84,7 @@ const ReviewForm = ({
   const handleClose = () => {
     setOpenReviewForm(false);
     dispatch(clearFeedback());
-    reset({
-      rating: 1,
-      content: "",
-    });
+    reset({ rating: 1, content: "" });
     setSelected(1);
   };
 
@@ -115,30 +100,27 @@ const ReviewForm = ({
     });
   };
 
-  const starLabels = ["Tệ", "Khá", "Bình thường", "Tốt", "Tuyệt vời"];
-
   return (
-    <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl relative overflow-hidden animate-scaleIn flex flex-col">
-      {/* HEADER */}
-      <div className="relative bg-gradient-to-r from-sky-600 to-cyan-600 px-6 py-5 text-white">
+    <div className="relative flex w-full max-w-md flex-col overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-2xl">
+      <div className="relative border-b border-slate-200 bg-white px-6 py-5">
         <button
+          type="button"
           onClick={handleClose}
-          className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-sm flex items-center justify-center transition-all border border-white/20"
+          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
         >
-          <X size={18} className="text-white" />
+          <X size={18} />
         </button>
 
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center shadow-md backdrop-blur-sm border border-white/20">
-            <Star size={26} className="fill-yellow-200 text-yellow-200" />
+        <div className="flex items-center gap-4 pr-10">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+            <Star size={24} className="fill-sky-600" />
           </div>
 
           <div>
-            <h3 className="text-xl font-semibold tracking-wide text-white/95">
+            <h3 className="text-lg font-semibold text-slate-900">
               {update ? "Sửa đánh giá" : "Đánh giá sản phẩm"}
             </h3>
-
-            <p className="text-sm text-white/80 mt-1 font-normal leading-snug">
+            <p className="mt-1 text-sm leading-snug text-slate-500">
               Chia sẻ trải nghiệm thực tế về sản phẩm
             </p>
           </div>
@@ -150,15 +132,14 @@ const ReviewForm = ({
           <Loader2 size={32} className="animate-spin text-sky-500" />
         </div>
       ) : (
-        <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5 space-y-5">
-          {/* STAR RATING */}
-          <div className="bg-sky-50 rounded-2xl p-5 border border-sky-100">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 px-6 py-5">
+          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
             <div className="text-center">
-              <label className="block text-base font-semibold text-gray-800 mb-4">
+              <label className="mb-4 block text-base font-semibold text-slate-800">
                 Mức độ hài lòng
               </label>
 
-              <div className="flex items-center justify-center gap-2 mb-3">
+              <div className="mb-3 flex items-center justify-center gap-2">
                 {[1, 2, 3, 4, 5].map((star) => {
                   const isActive = star <= (hovered || selected);
 
@@ -170,9 +151,7 @@ const ReviewForm = ({
                       onMouseLeave={() => setHovered(0)}
                       onClick={() => {
                         const ratingValue = star as formRating["rating"];
-
                         setSelected(ratingValue);
-
                         setValue("rating", ratingValue, {
                           shouldValidate: true,
                         });
@@ -180,15 +159,15 @@ const ReviewForm = ({
                       className={`transition-all duration-200 ${
                         isActive
                           ? "scale-125"
-                          : "hover:scale-110 opacity-80 hover:opacity-100"
+                          : "opacity-80 hover:scale-110 hover:opacity-100"
                       }`}
                     >
                       <Star
                         size={38}
                         className={`transition-all ${
                           isActive
-                            ? "fill-yellow-400 stroke-yellow-400 drop-shadow-sm"
-                            : "stroke-gray-300"
+                            ? "fill-amber-400 stroke-amber-400 drop-shadow-sm"
+                            : "stroke-slate-300"
                         }`}
                       />
                     </button>
@@ -196,34 +175,30 @@ const ReviewForm = ({
                 })}
               </div>
 
-              <div className="flex items-center justify-center">
-                <span className="text-sm font-medium text-sky-700 bg-white px-4 py-1.5 rounded-full border border-sky-100 shadow-sm">
-                  {hovered
-                    ? starLabels[hovered - 1]
-                    : selected
-                      ? starLabels[selected - 1]
-                      : "Chọn số sao"}
-                </span>
-              </div>
+              <span className="inline-flex rounded-full border border-sky-100 bg-white px-4 py-1.5 text-sm font-medium text-sky-700 shadow-sm">
+                {hovered
+                  ? starLabels[hovered - 1]
+                  : selected
+                    ? starLabels[selected - 1]
+                    : "Chọn số sao"}
+              </span>
 
               <input type="hidden" {...register("rating")} value={selected} />
 
               {errors.rating && (
-                <p className="text-red-500 text-sm mt-3">
+                <p className="mt-3 text-sm text-rose-600">
                   {errors.rating.message}
                 </p>
               )}
             </div>
           </div>
 
-          {/* CONTENT */}
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-base font-semibold text-gray-800">
+            <div className="mb-2 flex items-center justify-between">
+              <label className="text-base font-semibold text-slate-800">
                 Nội dung đánh giá
               </label>
-
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-slate-400">
                 {(watch("content") || "").length}/300
               </span>
             </div>
@@ -232,25 +207,23 @@ const ReviewForm = ({
               rows={4}
               placeholder="Ví dụ: Chất liệu đẹp, giao hàng nhanh, đóng gói cẩn thận..."
               {...register("content")}
-              className="w-full border border-gray-200 rounded-2xl p-4 resize-none outline-none bg-gray-50 focus:bg-white focus:ring-2 focus:ring-sky-400 focus:border-sky-400 transition text-sm leading-relaxed"
+              className="w-full resize-none rounded-2xl border border-slate-300 bg-white p-4 text-sm leading-relaxed text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
             />
 
             {errors.content && (
-              <p className="text-red-500 text-sm mt-2">
+              <p className="mt-2 text-sm text-rose-600">
                 {errors.content.message}
               </p>
             )}
           </div>
 
-          {/* UPDATED DATE */}
           {feedback?.updatedDate && (
             <div className="flex justify-center">
-              <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-100 px-4 py-2 rounded-full border border-gray-200">
+              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-500">
                 <Clock size={14} />
-
                 <span>
                   Cập nhật lần cuối:{" "}
-                  <span className="font-semibold text-gray-700">
+                  <span className="font-semibold text-slate-700">
                     {formatDateTime(feedback.updatedDate)}
                   </span>
                 </span>
@@ -258,18 +231,16 @@ const ReviewForm = ({
             </div>
           )}
 
-          {/* ACTION */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-12 rounded-2xl bg-gradient-to-r from-sky-600 to-cyan-600 text-white font-semibold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:from-sky-700 hover:to-cyan-700 transition-all disabled:opacity-60"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-sky-600 font-semibold text-white shadow-lg shadow-sky-100 transition hover:bg-sky-700 active:scale-[0.98] disabled:opacity-60"
           >
             {loading ? (
               <Loader2 size={18} className="animate-spin" />
             ) : (
               <Star size={18} />
             )}
-
             {update ? "Lưu đánh giá" : "Gửi đánh giá"}
           </button>
         </form>
@@ -279,5 +250,4 @@ const ReviewForm = ({
 };
 
 export default ReviewForm;
-
 export type { formRating };

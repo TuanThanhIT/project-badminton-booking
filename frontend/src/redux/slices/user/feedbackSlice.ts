@@ -10,6 +10,8 @@ import type {
   DeleteFeedbackRequest,
   DeleteFeedbackResponse,
   FeedbackDetailData,
+  UpsertBranchFeedbackRequest,
+  UpsertBranchFeedbackResponse,
 } from "../../../types/feedback";
 
 import type { ApiErrorType } from "../../../types/error";
@@ -73,6 +75,19 @@ export const deleteFeedback = createAsyncThunk<
   try {
     const res = await feedbackService.deleteFeedbackService(data);
     return res.data as DeleteFeedbackResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
+export const upsertBranchFeedback = createAsyncThunk<
+  UpsertBranchFeedbackResponse,
+  UpsertBranchFeedbackRequest,
+  { rejectValue: ApiErrorType }
+>("feedback/upsertBranchFeedback", async (data, { rejectWithValue }) => {
+  try {
+    const res = await feedbackService.upsertBranchFeedbackService(data);
+    return res.data as UpsertBranchFeedbackResponse;
   } catch (error) {
     return rejectWithValue(error as ApiErrorType);
   }

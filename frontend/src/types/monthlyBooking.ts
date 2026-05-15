@@ -12,7 +12,8 @@ export type MonthlyBookingRequest = {
   startTime: string;
   endTime: string;
 
-  totalAmount: number;
+  totalAmount?: number;
+  discountId?: number | null;
 
   note?: string;
 };
@@ -26,6 +27,7 @@ export type MonthlyBookingResult = {
     id: number;
   };
 
+  discountAmount?: number;
   totalSessions: number;
 };
 

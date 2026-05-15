@@ -79,6 +79,7 @@ const Feedback = sequelize.define(
       { fields: ["orderId"] },
       { fields: ["variantId"] },
       { fields: ["branchId"] },
+      { unique: true, fields: ["userId", "branchId"] },
     ],
   },
 );

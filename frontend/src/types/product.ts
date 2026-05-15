@@ -25,7 +25,8 @@ export type ProductFilterData = {
 export type ProductFilterResponse = ApiResponse<ProductFilterData>;
 
 export type ProductQueriesRequest = {
-  cateId: number;
+  cateId?: number;
+  groupName?: string;
   pricesRange?: string;
   sizes?: string;
   colors?: string;

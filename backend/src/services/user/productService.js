@@ -1,4 +1,4 @@
-import {
+﻿import {
   Branch,
   Category,
   Feedback,
@@ -30,6 +30,7 @@ const getProductsByFilterService = async (data) => {
     page,
     limit,
     keyword,
+    groupName,
   } = data;
 
   const p = Number(page) || 1;
@@ -37,16 +38,36 @@ const getProductsByFilterService = async (data) => {
 
   const offset = (p - 1) * l;
 
-  const category = await Category.findByPk(cateId);
-  if (!category) {
-    throw new NotFoundError("Danh mục không tồn tại");
+  let categoryIds = [];
+
+  if (cateId) {
+    const category = await Category.findByPk(cateId);
+    if (!category) {
+      throw new NotFoundError("Danh muc khong ton tai");
+    }
+    categoryIds = [Number(cateId)];
+  } else if (groupName) {
+    const categories = await Category.findAll({
+      where: { menuGroup: groupName },
+      attributes: ["id"],
+      raw: true,
+    });
+
+    categoryIds = categories.map((category) => category.id);
+
+    if (categoryIds.length === 0) {
+      throw new NotFoundError("Nhom danh muc khong ton tai");
+    }
+  } else {
+    throw new NotFoundError("Danh muc khong ton tai");
   }
 
-  // Xử lý keyword
+  // Xá»­ lÃ½ keyword
   const kw = keyword && keyword !== "null" ? keyword : undefined;
 
   const whereCondition = {
-    categoryId: cateId,
+    categoryId:
+      categoryIds.length === 1 ? categoryIds[0] : { [Op.in]: categoryIds },
     ...(excludeProductId && { id: { [Op.ne]: Number(excludeProductId) } }),
     ...(kw && { productName: { [Op.like]: `%${kw}%` } }),
   };
@@ -75,7 +96,7 @@ const getProductsByFilterService = async (data) => {
       "thumbnailUrl",
       "createdDate",
       [fn("MIN", col("variants.price")), "minPrice"],
-      [fn("SUM", col("variants->stocks.stock")), "totalStock"], // 👈 tổng stock
+      [fn("SUM", col("variants->stocks.stock")), "totalStock"], // ðŸ‘ˆ tá»•ng stock
     ],
     include: [
       {
@@ -97,7 +118,7 @@ const getProductsByFilterService = async (data) => {
           {
             model: VariantStock,
             as: "stocks",
-            attributes: [], // 👈 QUAN TRỌNG
+            attributes: [], // ðŸ‘ˆ QUAN TRá»ŒNG
           },
         ],
         required: true,
@@ -201,7 +222,7 @@ const getProductDetailService = async (data) => {
   });
 
   if (!product) {
-    throw new NotFoundError("Sản phẩm không tồn tại");
+    throw new NotFoundError("Sáº£n pháº©m khÃ´ng tá»“n táº¡i");
   }
 
   const variantsFormatted = product.variants.map((v) => {
@@ -210,10 +231,10 @@ const getProductDetailService = async (data) => {
     const discountPrice =
       variant.price - (variant.price * variant.discount) / 100;
 
-    // tổng stock
+    // tá»•ng stock
     const totalStock = variant.stocks.reduce((total, s) => total + s.stock, 0);
 
-    // chuyển stocks -> branches
+    // chuyá»ƒn stocks -> branches
     const branches = variant.stocks.map((s) => ({
       id: s.branch.id,
       branchName: s.branch.branchName,
@@ -277,7 +298,7 @@ const getProductFeedbacksService = async (data) => {
     offset,
   });
 
-  // tính rating trung bình (toàn bộ feedback của product)
+  // tÃ­nh rating trung bÃ¬nh (toÃ n bá»™ feedback cá»§a product)
   const allFeedbacks = await Feedback.findAll({
     include: [
       {
@@ -335,3 +356,4 @@ const productService = {
 };
 
 export default productService;
+

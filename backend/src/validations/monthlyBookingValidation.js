@@ -45,11 +45,12 @@ export const createMonthlyBookingSchema = {
       "any.required": "End time is required",
     }),
 
-    totalAmount: Joi.number().positive().required().messages({
+    totalAmount: Joi.number().positive().optional().messages({
       "number.base": "Total amount must be a number",
       "number.positive": "Total amount must be greater than 0",
-      "any.required": "Total amount is required",
     }),
+
+    discountId: Joi.number().integer().positive().allow(null).optional(),
 
     note: Joi.string().allow(null, "").max(500).messages({
       "string.max": "Note must not exceed 500 characters",

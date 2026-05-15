@@ -1,5 +1,6 @@
 import type {
   CategoriesGroupedResponse,
+  CategoriesByGroupRequest,
   OtherCategoriesResponse,
   OtherCatesParamsRequest,
 } from "../../types/cate";
@@ -17,7 +18,15 @@ const getOtherCategoriesInSameGroupService = (
   );
 };
 
+const getCategoriesByGroupService = (data: CategoriesByGroupRequest) => {
+  const { groupName } = data;
+  return instance.get<OtherCategoriesResponse>(
+    `/user/categories/group/${encodeURIComponent(groupName)}`,
+  );
+};
+
 const cateService = {
+  getCategoriesByGroupService,
   getCategoriesGroupedByMenuGroupService,
   getOtherCategoriesInSameGroupService,
 };

@@ -30,6 +30,7 @@ import initEmployeeOrderRoute from "./routes/employee/orderRoute.js";
 import initWebhookRoute from "./routes/user/webhookRoute.js";
 import initFeedbackRoute from "./routes/user/feedbackRoute.js";
 import initNotificationRoute from "./routes/user/notificationRoute.js";
+import initHomeRoute from "./routes/user/homeRoute.js";
 
 dotenv.config();
 
@@ -48,6 +49,7 @@ app.use(
 app.use(cookieParser());
 
 // User
+initHomeRoute(app);
 initAuthRoute(app);
 initCateRoute(app);
 initProductRoute(app);

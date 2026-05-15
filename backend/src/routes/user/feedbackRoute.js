@@ -7,7 +7,9 @@ import { ROLE_NAME } from "../../constants/userConstant.js";
 import {
   createFeedbackOrderSchema,
   deleteFeedbackOrderSchema,
+  getFeedbackBranchDetailSchema,
   getFeedbackOrderDetailSchema,
+  upsertFeedbackBranchSchema,
   updateFeedbackOrderSchema,
 } from "../../validations/feedbackValidation.js";
 
@@ -26,6 +28,22 @@ const initFeedbackRoute = (app) => {
   );
 
   // lấy chi tiết feedback
+  feedbackRoute.get(
+    "/branches/:branchId/me",
+    auth,
+    authorize(ROLE_NAME.USER),
+    validate(getFeedbackBranchDetailSchema),
+    feedbackController.getFeedbackBranchDetailController,
+  );
+
+  feedbackRoute.put(
+    "/branches/:branchId",
+    auth,
+    authorize(ROLE_NAME.USER),
+    validate(upsertFeedbackBranchSchema),
+    feedbackController.upsertFeedbackBranchController,
+  );
+
   feedbackRoute.get(
     "/orders/:orderId/products/:variantId",
     auth,

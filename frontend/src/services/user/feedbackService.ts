@@ -9,6 +9,8 @@ import type {
   DeleteFeedbackResponse,
   FeedbackDetailRequest,
   DeleteFeedbackRequest,
+  UpsertBranchFeedbackRequest,
+  UpsertBranchFeedbackResponse,
 } from "../../types/feedback";
 
 const createFeedbackService = (data: CreateFeedbackRequest) =>
@@ -37,11 +39,20 @@ const deleteFeedbackService = (data: DeleteFeedbackRequest) => {
   );
 };
 
+const upsertBranchFeedbackService = (data: UpsertBranchFeedbackRequest) => {
+  const { branchId, ...payload } = data;
+  return instance.put<UpsertBranchFeedbackResponse>(
+    `/user/feedbacks/branches/${branchId}`,
+    payload,
+  );
+};
+
 const feedbackService = {
   createFeedbackService,
   getFeedbackDetailService,
   updateFeedbackService,
   deleteFeedbackService,
+  upsertBranchFeedbackService,
 };
 
 export default feedbackService;

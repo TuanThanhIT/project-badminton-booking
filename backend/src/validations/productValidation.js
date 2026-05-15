@@ -10,6 +10,7 @@ import {
   materialField,
   materialsField,
   pricesField,
+  groupNameField,
   productNameField,
   sizeField,
   sizesField,
@@ -23,7 +24,8 @@ import { ratingField } from "./common/feedbackFields.js";
 
 export const getProductsByFilterSchema = {
   query: Joi.object({
-    cateId: idParams("cateId"),
+    cateId: idParams("cateId").optional(),
+    groupName: groupNameField,
     branchId: branchIdField,
     pricesRange: pricesField,
     sizes: sizesField,
@@ -38,7 +40,7 @@ export const getProductsByFilterSchema = {
     page: pageField,
     limit: limitField,
     keyword: keywordField,
-  }),
+  }).or("cateId", "groupName"),
 };
 
 export const getProductDetailSchema = {

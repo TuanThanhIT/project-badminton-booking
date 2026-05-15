@@ -30,6 +30,7 @@ import bookingReducer from "./slices/user/bookingSlice";
 import orderReducer from "./slices/user/orderSlice";
 import feedbackReducer from "./slices/user/feedbackSlice";
 import notificationReducer from "./slices/user/notificationSlice";
+import homeReducer from "./slices/user/homeSlice";
 
 const persistConfig = {
   key: "root",
@@ -56,6 +57,7 @@ const rootReducer = combineReducers({
   order: orderReducer,
   feedback: feedbackReducer,
   notification: notificationReducer,
+  home: homeReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

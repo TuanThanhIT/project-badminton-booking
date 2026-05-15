@@ -24,7 +24,10 @@ import {
 } from "../../redux/slices/user/discountSlice";
 import DiscountsForm from "../../components/ui/user/discount/DiscountsForm";
 import type { FormDiscount } from "../../schemas/FormDiscountSchema";
-import type { DiscountCheckResult, DiscountRequest } from "../../types/discount";
+import type {
+  DiscountCheckResult,
+  DiscountRequest,
+} from "../../types/discount";
 import {
   PAYMENT_METHOD,
   paymentMethodList,
@@ -65,7 +68,9 @@ const CheckoutBookingPage = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const discounts = useAppSelector((store) => store.discount.discounts);
+  const discounts = useAppSelector((state) => state.discount.discounts);
+
+  console.log("discounts>>", discounts);
 
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(
     PAYMENT_METHOD.COD.value,
@@ -96,6 +101,7 @@ const CheckoutBookingPage = () => {
 
     const data: DiscountRequest = {
       amount: totalAmount,
+      targetType: "BOOKING",
     };
 
     dispatch(getDiscountsCheckout({ data }));
@@ -151,13 +157,13 @@ const CheckoutBookingPage = () => {
       .unwrap()
       .then((res) => {
         setAppliedDiscount(res.data);
-        localStorage.setItem("discountCode", data.code);
+        localStorage.setItem("bookingDiscountCode", data.code);
         setOpenDiscount(false);
         toast.success("Áp mã giảm giá đặt sân thành công");
       })
       .catch(() => {
         setAppliedDiscount(null);
-        localStorage.removeItem("discountCode");
+        localStorage.removeItem("bookingDiscountCode");
       });
   };
 
@@ -175,7 +181,7 @@ const CheckoutBookingPage = () => {
             daysOfWeek: state.daysOfWeek || [],
             startTime: state.startTime,
             endTime: state.endTime,
-            totalAmount: finalAmount,
+            discountId: appliedDiscount?.discountId ?? null,
             note: appliedDiscount
               ? `Thanh toán: ${selectedPaymentLabel}. Mã giảm giá: ${appliedDiscount.code}`
               : `Thanh toán: ${selectedPaymentLabel}`,
@@ -321,7 +327,9 @@ const CheckoutBookingPage = () => {
                 {appliedDiscount ? (
                   <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
                     Đã áp dụng mã{" "}
-                    <span className="font-semibold">{appliedDiscount.code}</span>
+                    <span className="font-semibold">
+                      {appliedDiscount.code}
+                    </span>
                     , giảm {formatPrice(discountAmount)}
                   </div>
                 ) : (
@@ -440,6 +448,7 @@ const CheckoutBookingPage = () => {
           setOpenDiscount={setOpenDiscount}
           onSubmit={handleApplyDiscount}
           discounts={discounts}
+          storageKey="bookingDiscountCode"
         />
       )}
     </div>

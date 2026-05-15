@@ -8,6 +8,7 @@ import {
   Branch,
   Court,
   CourtPrice,
+  Discount,
   Payment,
   Wallet,
   WalletTransaction,
@@ -23,6 +24,58 @@ import {
   WALLET_TRANSACTION_TYPE,
 } from "../../constants/paymentConstant.js";
 import { verifyVNPayURL } from "../../utils/handleVNPayURL.js";
+import {
+  DISCOUNT_APPLY_TYPE,
+  DISCOUNT_TYPE,
+} from "../../constants/discountConstant.js";
+import { applyDiscountUsage } from "../shared/applyDiscountUsage.js";
+
+const MIN_BOOKING_LEAD_MINUTES = 60;
+
+const getTodayDate = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const dateTimeFromDateAndTime = (date, time) => {
+  const [year, month, day] = date.split("-").map(Number);
+  const [hour, minute] = time.split(":").map(Number);
+  return new Date(year, month - 1, day, hour, minute, 0, 0);
+};
+
+const normalizeDateInput = (value) => {
+  if (value instanceof Date) {
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, "0");
+    const day = String(value.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  return String(value).split("T")[0];
+};
+
+const assertBookableStartTime = ({ playDate, startTime }) => {
+  const date = normalizeDateInput(playDate);
+  const today = getTodayDate();
+
+  if (date < today) {
+    throw new BadRequestError("Khong the dat san cho ngay trong qua khu");
+  }
+
+  const now = new Date();
+  const earliest = new Date(
+    now.getTime() + MIN_BOOKING_LEAD_MINUTES * 60 * 1000,
+  );
+
+  if (date === today && dateTimeFromDateAndTime(date, startTime) < earliest) {
+    throw new BadRequestError(
+      "Gio bat dau phai sau thoi diem hien tai it nhat 1 tieng",
+    );
+  }
+};
 
 const timeToNumber = (time) => {
   const [hour, minute] = time.split(":").map(Number);
@@ -80,10 +133,85 @@ const getBookingPrice = async ({
   }
 
   if (coveredDuration < end - start - 0.01) {
-    throw new BadRequestError("Sân không hoạt động hoặc chưa có giá trong khung giờ này");
+    throw new BadRequestError(
+      "Sân không hoạt động hoặc chưa có giá trong khung giờ này",
+    );
   }
 
   return Math.round(totalAmount);
+};
+
+const calculateBookingDiscount = async ({
+  discountId,
+  bookingAmount,
+  transaction,
+}) => {
+  if (!discountId) {
+    return {
+      discount: null,
+      discountAmount: 0,
+      finalAmount: bookingAmount,
+    };
+  }
+
+  const discount = await Discount.findByPk(discountId, {
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
+
+  if (!discount) {
+    throw new NotFoundError("Mã giảm giá không tồn tại");
+  }
+
+  if (!discount.isActive) {
+    throw new BadRequestError("Mã giảm giá đã bị vô hiệu hóa");
+  }
+
+  const today = new Date().toISOString().split("T")[0];
+
+  if (discount.startDate > today) {
+    throw new BadRequestError("Mã giảm giá chưa bắt đầu");
+  }
+
+  if (discount.endDate < today) {
+    throw new BadRequestError("Mã giảm giá đã hết hạn");
+  }
+
+  if (
+    discount.applyType !== DISCOUNT_APPLY_TYPE.BOOKING &&
+    discount.applyType !== DISCOUNT_APPLY_TYPE.ALL
+  ) {
+    throw new BadRequestError("Mã không áp dụng cho đặt sân");
+  }
+
+  if (bookingAmount < Number(discount.minAmount || 0)) {
+    throw new BadRequestError(
+      `Đơn hàng tối thiểu ${Number(discount.minAmount).toLocaleString(
+        "vi-VN",
+      )}đ để áp dụng mã này`,
+    );
+  }
+
+  if (discount.usageLimit && discount.usageCount >= discount.usageLimit) {
+    throw new BadRequestError("Mã giảm giá đã hết lượt sử dụng");
+  }
+
+  let discountAmount =
+    discount.type === DISCOUNT_TYPE.PERCENT
+      ? (bookingAmount * Number(discount.value)) / 100
+      : Number(discount.value);
+
+  if (discount.type === DISCOUNT_TYPE.PERCENT && discount.maxDiscount) {
+    discountAmount = Math.min(discountAmount, Number(discount.maxDiscount));
+  }
+
+  discountAmount = Math.min(Math.round(discountAmount), bookingAmount);
+
+  return {
+    discount,
+    discountAmount,
+    finalAmount: Math.max(0, bookingAmount - discountAmount),
+  };
 };
 
 const assertBookingSlotAvailable = async ({
@@ -164,6 +292,8 @@ const createBookingService = async (bookingData) => {
     ip,
   } = bookingData;
 
+  assertBookableStartTime({ playDate, startTime });
+
   return sequelize.transaction(async (transaction) => {
     const branch = await Branch.findByPk(branchId, { transaction });
     if (!branch) throw new NotFoundError("Chi nhánh không tồn tại");
@@ -190,6 +320,12 @@ const createBookingService = async (bookingData) => {
       transaction,
     });
 
+    const { discountAmount, finalAmount } = await calculateBookingDiscount({
+      discountId,
+      bookingAmount: totalAmount,
+      transaction,
+    });
+
     const bookingStatus =
       paymentMethod === PAYMENT_METHOD_STATUS.COD
         ? BOOKING_STATUS.PENDING
@@ -200,12 +336,16 @@ const createBookingService = async (bookingData) => {
         userId,
         branchId,
         discountId: discountId || null,
-        totalAmount,
+        totalAmount: finalAmount,
         bookingStatus,
         note,
       },
       { transaction },
     );
+
+    if (discountId) {
+      await applyDiscountUsage(discountId, transaction);
+    }
 
     await BookingDetail.create(
       {
@@ -224,7 +364,7 @@ const createBookingService = async (bookingData) => {
         {
           targetPaymentType: TARGET_PAYMENT_TYPE.BOOKING,
           targetPaymentId: booking.id,
-          paymentAmount: totalAmount,
+          paymentAmount: finalAmount,
           paymentMethod: PAYMENT_METHOD_STATUS.COD,
           paymentStatus: PAYMENT_STATUS.PENDING,
         },
@@ -233,7 +373,8 @@ const createBookingService = async (bookingData) => {
 
       return {
         bookingId: booking.id,
-        amount: totalAmount,
+        amount: finalAmount,
+        discountAmount,
         paymentMethod,
         status: booking.bookingStatus,
       };
@@ -248,7 +389,7 @@ const createBookingService = async (bookingData) => {
 
       if (!wallet) throw new NotFoundError("Ví không tồn tại");
 
-      if (Number(wallet.balance) < totalAmount) {
+      if (Number(wallet.balance) < finalAmount) {
         throw new BadRequestError("Số dư ví không đủ");
       }
 
@@ -256,7 +397,7 @@ const createBookingService = async (bookingData) => {
         {
           targetPaymentType: TARGET_PAYMENT_TYPE.BOOKING,
           targetPaymentId: booking.id,
-          paymentAmount: totalAmount,
+          paymentAmount: finalAmount,
           paymentMethod: PAYMENT_METHOD_STATUS.WALLET,
           paymentStatus: PAYMENT_STATUS.PAID,
           paidAt: new Date(),
@@ -265,7 +406,7 @@ const createBookingService = async (bookingData) => {
       );
 
       await wallet.update(
-        { balance: sequelize.literal(`balance - ${Number(totalAmount)}`) },
+        { balance: sequelize.literal(`balance - ${Number(finalAmount)}`) },
         { transaction },
       );
 
@@ -273,7 +414,7 @@ const createBookingService = async (bookingData) => {
         {
           walletId: wallet.id,
           paymentId: payment.id,
-          amount: totalAmount,
+          amount: finalAmount,
           type: WALLET_TRANSACTION_TYPE.PAYMENT,
           status: WALLET_TRANSACTION_STATUS.SUCCESS,
           description: `Thanh toán đặt sân #${booking.id}`,
@@ -288,7 +429,8 @@ const createBookingService = async (bookingData) => {
 
       return {
         bookingId: booking.id,
-        amount: totalAmount,
+        amount: finalAmount,
+        discountAmount,
         paymentMethod,
         status: BOOKING_STATUS.PAID,
       };
@@ -297,14 +439,15 @@ const createBookingService = async (bookingData) => {
     if (paymentMethod === PAYMENT_METHOD_STATUS.VNPAY) {
       const paymentUrl = await createVNPayUrl({
         booking,
-        amount: totalAmount,
+        amount: finalAmount,
         ip,
         transaction,
       });
 
       return {
         bookingId: booking.id,
-        amount: totalAmount,
+        amount: finalAmount,
+        discountAmount,
         paymentMethod,
         paymentUrl,
         status: booking.bookingStatus,

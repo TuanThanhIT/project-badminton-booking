@@ -12,14 +12,18 @@ type DiscountsFormProps = {
   setOpenDiscount: (open: boolean) => void;
   onSubmit: (data: FormDiscount) => void;
   discounts: DiscountData[];
+  storageKey?: string;
 };
 
 const DiscountsForm = ({
   setOpenDiscount,
   onSubmit,
   discounts,
+  storageKey = "discountCode",
 }: DiscountsFormProps) => {
-  const codeSaved = localStorage.getItem("discountCode");
+  const codeSaved = localStorage.getItem(storageKey);
+
+  console.log("discounts>>", discounts);
 
   const {
     register,
@@ -95,7 +99,9 @@ const DiscountsForm = ({
                     <div className="flex min-w-[104px] flex-col items-center justify-center rounded-2xl bg-sky-600 px-4 py-3 text-white">
                       <span className="text-xs opacity-90">GIẢM</span>
                       <span className="mt-1 text-lg font-semibold">
-                        {d.type === "AMOUNT" ? formatPrice(d.value) : `${d.value}%`}
+                        {d.type === "AMOUNT"
+                          ? formatPrice(d.value)
+                          : `${d.value}%`}
                       </span>
                     </div>
 
@@ -112,7 +118,9 @@ const DiscountsForm = ({
                               d.maxDiscount,
                             )} cho đơn từ ${formatPrice(d.minAmount)}`}
                       </p>
-                      <p className="mt-1 text-xs text-slate-400">HSD: {d.endDate}</p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        HSD: {d.endDate}
+                      </p>
                     </div>
 
                     <span
@@ -146,7 +154,9 @@ const DiscountsForm = ({
               </div>
               <input type="hidden" {...register("code")} />
               {errors.code && (
-                <p className="mt-1 text-sm text-red-500">{errors.code.message}</p>
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.code.message}
+                </p>
               )}
               {isSameAsSaved && !isEmpty && (
                 <p className="mt-1 text-xs text-slate-400">

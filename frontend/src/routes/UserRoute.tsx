@@ -36,7 +36,7 @@ const UserRoute = () => {
     <Routes>
       {/* Public */}
       <Route element={<UserPublicLayout />}>
-        <Route index element={<GuestHomePage />} />
+        <Route path="home" element={<HomePage />} />
         <Route path="contact" element={<ContactPage />} />
         <Route path="about" element={<AboutPage />} />
         <Route path="login" element={<LoginPage />} />
@@ -49,7 +49,6 @@ const UserRoute = () => {
       {/* Private */}
       <Route element={<UserProtectedRoute />}>
         <Route element={<UserPrivateLayout />}>
-          <Route path="home" element={<HomePage />} />
           <Route path="products" element={<ProductPage />} />
           <Route path="product/:id" element={<ProductDetailPage />} />
           <Route path="history" element={<HistoryPage />} />

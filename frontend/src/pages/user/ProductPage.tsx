@@ -10,7 +10,11 @@ import PaginatedItems from "../../components/ui/user/pagination/PaginatedItems";
 
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 
-import { getOtherCategoriesInSameGroup } from "../../redux/slices/user/cateSlice";
+import {
+  getCategoriesGrouped,
+  getCategoriesByGroup,
+  getOtherCategoriesInSameGroup,
+} from "../../redux/slices/user/cateSlice";
 import { getProductsByFilter } from "../../redux/slices/user/productSlice";
 import { getBranchOptions } from "../../redux/slices/user/branchSlice";
 
@@ -24,6 +28,8 @@ const ProductPage = () => {
 
   const products = useAppSelector((state) => state.product.products);
 
+  const categoriesGroup = useAppSelector((state) => state.cate.categoriesGroup);
+
   const otherCategories = useAppSelector((state) => state.cate.otherCategories);
 
   const branches = useAppSelector((state) => state.branch.branchOptions);
@@ -35,7 +41,8 @@ const ProductPage = () => {
       cateName: searchParams.get("cateName") ?? "",
       cateId: Number(searchParams.get("cateId") ?? 0),
       branchId: searchParams.get("branchId") ?? undefined,
-      groupName: searchParams.get("groupName") ?? "",
+      groupName:
+        searchParams.get("groupName") ?? searchParams.get("group") ?? "",
       pricesRange: searchParams.get("pricesRange") ?? undefined,
       sizes: searchParams.get("sizes") ?? undefined,
       materials: searchParams.get("materials") ?? undefined,
@@ -84,7 +91,8 @@ const ProductPage = () => {
 
   const productQuery: ProductQueriesRequest = useMemo(() => {
     return {
-      cateId,
+      cateId: cateId || undefined,
+      groupName: groupName || undefined,
       branchId,
       pricesRange,
       sizes,
@@ -97,6 +105,7 @@ const ProductPage = () => {
     };
   }, [
     cateId,
+    groupName,
     branchId,
     pricesRange,
     sizes,
@@ -109,6 +118,24 @@ const ProductPage = () => {
   ]);
 
   useEffect(() => {
+    if (!groupName && !cateId) {
+      dispatch(getCategoriesGrouped());
+    }
+  }, [dispatch, groupName, cateId]);
+
+  useEffect(() => {
+    if (groupName || cateId || categoriesGroup.length === 0) return;
+
+    const firstGroup = categoriesGroup[0]?.menuGroup;
+    if (!firstGroup) return;
+
+    const params = new URLSearchParams(searchParams);
+    params.set("groupName", firstGroup);
+    params.delete("group");
+    setSearchParams(params, { replace: true });
+  }, [categoriesGroup, cateId, groupName, searchParams, setSearchParams]);
+
+  useEffect(() => {
     debouncedSearch(keywordSearch);
 
     return () => {
@@ -117,24 +144,37 @@ const ProductPage = () => {
   }, [keywordSearch, debouncedSearch]);
 
   useEffect(() => {
-    const data: OtherCatesParamsRequest = {
-      cateId,
-    };
+    if (groupName) {
+      dispatch(
+        getCategoriesByGroup({
+          data: { groupName },
+        }),
+      );
+      return;
+    }
 
-    dispatch(
-      getOtherCategoriesInSameGroup({
-        data,
-      }),
-    );
-  }, [dispatch, cateId]);
+    if (cateId) {
+      const data: OtherCatesParamsRequest = {
+        cateId,
+      };
+
+      dispatch(
+        getOtherCategoriesInSameGroup({
+          data,
+        }),
+      );
+    }
+  }, [dispatch, cateId, groupName]);
 
   useEffect(() => {
+    if (!groupName && !cateId) return;
+
     dispatch(
       getProductsByFilter({
         data: productQuery,
       }),
     );
-  }, [dispatch, productQuery]);
+  }, [dispatch, productQuery, groupName, cateId]);
 
   useEffect(() => {
     dispatch(getBranchOptions());
@@ -151,16 +191,18 @@ const ProductPage = () => {
   };
 
   useEffect(() => {
-    const params = new URLSearchParams(searchParams);
+    setSearchParams((currentParams) => {
+      const params = new URLSearchParams(currentParams);
 
-    if (selectedBranch.length > 0) {
-      params.set("branchId", selectedBranch.join(","));
-    } else {
-      params.delete("branchId");
-    }
+      if (selectedBranch.length > 0) {
+        params.set("branchId", selectedBranch.join(","));
+      } else {
+        params.delete("branchId");
+      }
 
-    setSearchParams(params);
-  }, [selectedBranch]);
+      return params;
+    });
+  }, [selectedBranch, setSearchParams]);
 
   useEffect(() => {
     localStorage.setItem("branchIds", JSON.stringify(selectedBranch));
@@ -309,7 +351,7 @@ const ProductPage = () => {
                 </div>
 
                 <h2 className="mt-2 text-3xl font-bold text-slate-900">
-                  {cateName || groupName}
+                  {cateName || groupName || "Sản phẩm cầu lông"}
                 </h2>
 
                 <p className="mt-1 text-sm text-slate-500">

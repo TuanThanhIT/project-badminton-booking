@@ -17,6 +17,8 @@ import { getAvailableCourts } from "../../redux/slices/user/courtSlice";
 import { calculateMonthlyBooking } from "../../redux/slices/user/monthlyBookingSlice";
 import type { BranchOptions } from "../../types/branch";
 import type { CourtAvailable } from "../../types/court";
+import { toast } from "react-toastify";
+import { showConfirmDialog } from "../../utils/swalHelper";
 
 const generateTimeOptions = () => {
   const options: string[] = [];
@@ -136,13 +138,15 @@ const CourtPage = () => {
 
   const now = useMemo(() => new Date(nowTick), [nowTick]);
   const todayDate = useMemo(() => getTodayDate(), []);
-  const activeDate = mode === "daily" ? bookingDate : monthlyStartDate || todayDate;
+  const activeDate =
+    mode === "daily" ? bookingDate : monthlyStartDate || todayDate;
   const earliestBookingDateTime = useMemo(
     () => getEarliestBookingDateTime(now),
     [now],
   );
   const earliestBookingTimeLabel = minutesToTime(
-    earliestBookingDateTime.getHours() * 60 + earliestBookingDateTime.getMinutes(),
+    earliestBookingDateTime.getHours() * 60 +
+      earliestBookingDateTime.getMinutes(),
   );
   const startTimeBookable = isStartTimeBookable(activeDate, startTime, now);
 
@@ -184,7 +188,8 @@ const CourtPage = () => {
   const canSearchCourts = !scheduleWarning && duration > 0;
 
   const availableStartTimes = useMemo(
-    () => TIME_OPTIONS.filter((time) => isStartTimeBookable(activeDate, time, now)),
+    () =>
+      TIME_OPTIONS.filter((time) => isStartTimeBookable(activeDate, time, now)),
     [activeDate, now],
   );
 
@@ -207,13 +212,7 @@ const CourtPage = () => {
       );
       if (nextEndTime) setEndTime(nextEndTime);
     }
-  }, [
-    activeDate,
-    availableStartTimes,
-    mode,
-    startTime,
-    todayDate,
-  ]);
+  }, [activeDate, availableStartTimes, mode, startTime, todayDate]);
 
   useEffect(() => {
     if (timeToMinutes(endTime) <= timeToMinutes(startTime)) {
@@ -316,52 +315,69 @@ const CourtPage = () => {
     );
   };
 
-  const handleBooking = () => {
+  const handleBooking = async () => {
     if (!selectedBranch) {
-      alert("Vui lòng chọn chi nhánh");
+      toast.warning("Vui lòng chọn chi nhánh");
       return;
     }
+
     if (!selectedCourt) {
-      alert("Vui lòng chọn sân");
+      toast.warning("Vui lòng chọn sân");
       return;
     }
+
     if (duration <= 0) {
-      alert("Giờ kết thúc phải lớn hơn giờ bắt đầu");
+      toast.warning("Giờ kết thúc phải lớn hơn giờ bắt đầu");
       return;
     }
+
     if (mode === "daily" && bookingDate < todayDate) {
-      alert("Không thể đặt sân cho ngày trong quá khứ");
+      toast.warning("Không thể đặt sân cho ngày trong quá khứ");
       setBookingDate(todayDate);
       return;
     }
+
     if (scheduleWarning) {
-      alert(scheduleWarning);
+      toast.warning(scheduleWarning);
       return;
     }
+
     if (isCourtBooked(selectedCourt)) {
-      alert("Sân này đã có lịch trong khung giờ bạn chọn");
+      toast.warning("Sân này đã có lịch trong khung giờ bạn chọn");
       return;
     }
 
     if (mode === "monthly") {
+      if (!monthlyStartDate || !monthlyEndDate) {
+        toast.warning("Vui lòng chọn ngày bắt đầu và kết thúc");
+        return;
+      }
+
       if (monthlyStartDate < todayDate) {
-        alert("Không thể đặt sân cho ngày bắt đầu trong quá khứ");
+        toast.warning("Không thể đặt sân cho ngày bắt đầu trong quá khứ");
         setMonthlyStartDate(todayDate);
         return;
       }
-      if (!monthlyStartDate || !monthlyEndDate) {
-        alert("Vui lòng chọn ngày bắt đầu và kết thúc");
-        return;
-      }
+
       if (monthlyEndDate < monthlyStartDate) {
-        alert("Ngày kết thúc phải sau ngày bắt đầu");
+        toast.warning("Ngày kết thúc phải sau ngày bắt đầu");
         return;
       }
+
       if (daysOfWeek.length === 0) {
-        alert("Vui lòng chọn ít nhất một thứ trong tuần");
+        toast.warning("Vui lòng chọn ít nhất một thứ trong tuần");
         return;
       }
     }
+
+    const isConfirmed = await showConfirmDialog(
+      "Xác nhận đặt sân",
+      "Bạn có muốn tiếp tục đặt sân không?",
+      "Đặt sân",
+      "Hủy",
+    );
+
+    if (!isConfirmed) return;
 
     navigate("/checkout/booking", {
       state: {
@@ -612,7 +628,9 @@ const CourtPage = () => {
                       <option
                         key={time}
                         value={time}
-                        disabled={timeToMinutes(time) <= timeToMinutes(startTime)}
+                        disabled={
+                          timeToMinutes(time) <= timeToMinutes(startTime)
+                        }
                       >
                         {time}
                       </option>

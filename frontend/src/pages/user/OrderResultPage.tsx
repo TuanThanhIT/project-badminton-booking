@@ -11,16 +11,10 @@ import {
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "../../redux/hook";
-import {
-  clearCheckoutSession,
-  getOrderGroupId,
-} from "../../redux/slices/user/orderSlice";
-import { deleteAllCartItem } from "../../redux/slices/user/cartSlice";
-import type {
-  ClearCheckoutSessionRequest,
-  OrderGroupIdRequest,
-} from "../../types/order";
+import { useAppDispatch } from "../../redux/hook";
+import { getOrderGroupId } from "../../redux/slices/user/orderSlice";
+import { getCart } from "../../redux/slices/user/cartSlice";
+import type { OrderGroupIdRequest } from "../../types/order";
 import { formatOrderCode } from "../../utils/order";
 
 const useCountUp = (end: number, duration = 900) => {
@@ -49,7 +43,6 @@ const useCountUp = (end: number, duration = 900) => {
 const OrderResultPage = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const cart = useAppSelector((state) => state.cart.cart);
   const [searchParams] = useSearchParams();
 
   const orderGroupId = searchParams.get("orderGroupId") || "--";
@@ -67,7 +60,7 @@ const OrderResultPage = () => {
   const animatedAmount = useCountUp(amount);
 
   useEffect(() => {
-    if (!orderGroupId || orderGroupId === "--" || !cart) {
+    if (!orderGroupId || orderGroupId === "--") {
       setVerified(true);
       setIsSuccess(false);
       return;
@@ -86,12 +79,11 @@ const OrderResultPage = () => {
         setIsSuccess(result.isSuccess);
 
         if (result.isSuccess) {
-          const clearData: ClearCheckoutSessionRequest = {
-            cartId: cart.id,
-          };
-          dispatch(clearCheckoutSession({ data: clearData }));
-          dispatch(deleteAllCartItem());
+          dispatch(getCart());
 
+          sessionStorage.removeItem("checkoutCartId");
+          sessionStorage.removeItem("checkoutCartItemIds");
+          sessionStorage.removeItem("checkoutBuyNowItem");
           localStorage.removeItem("addressSelectedId");
           localStorage.removeItem("discountCode");
         }
@@ -103,7 +95,7 @@ const OrderResultPage = () => {
     };
 
     fetchOrder();
-  }, [cart, dispatch, orderGroupId]);
+  }, [dispatch, orderGroupId]);
 
   if (!verified) {
     return (

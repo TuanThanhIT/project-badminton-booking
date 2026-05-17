@@ -79,6 +79,7 @@ export type CheckoutPreviewGroup = {
 
 export type CheckoutPreviewData = {
   cartId: string;
+  cartItemIds: number[];
   address: CheckoutPreviewAddress;
 
   group: CheckoutPreviewGroup;
@@ -89,9 +90,16 @@ export type CheckoutPreviewData = {
 
 export type CheckoutPreviewResponse = ApiResponse<CheckoutPreviewData>;
 
+export type BuyNowItemRequest = {
+  variantId: number;
+  quantity: number;
+};
+
 export type CheckoutPreviewRequest = {
   cartId: number;
   addressId: number;
+  cartItemIds?: number[];
+  buyNowItem?: BuyNowItemRequest;
 };
 
 export type CalculateShippingRequest = {
@@ -101,6 +109,8 @@ export type CalculateShippingRequest = {
 export type CreateOrderRequest = {
   cartId: number;
   addressId: number;
+  cartItemIds?: number[];
+  buyNowItem?: BuyNowItemRequest;
   paymentMethod: string;
   note?: string;
 };
@@ -108,6 +118,9 @@ export type CreateOrderRequest = {
 export type CreateOrderData = {
   orderGroupId: number;
   amount: number;
+  cartId?: number;
+  cartItemIds?: number[];
+  buyNowItem?: BuyNowItemRequest;
   paymentUrl?: string;
 };
 

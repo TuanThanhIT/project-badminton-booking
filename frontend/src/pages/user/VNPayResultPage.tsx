@@ -1,5 +1,4 @@
 import {
-  ArrowLeft,
   CheckCircle2,
   Clock,
   Home,
@@ -12,16 +11,13 @@ import {
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "../../redux/hook";
+import { useAppDispatch } from "../../redux/hook";
 import { walletCallback } from "../../redux/slices/user/walletSlice";
 import { toast } from "react-toastify";
-import {
-  clearCheckoutSession,
-  orderCallback,
-} from "../../redux/slices/user/orderSlice";
+import { orderCallback } from "../../redux/slices/user/orderSlice";
 import { bookingCallback } from "../../redux/slices/user/bookingSlice";
 import type { VNPayCallbackRequest } from "../../types/wallet";
-import { deleteAllCartItem } from "../../redux/slices/user/cartSlice";
+import { getCart } from "../../redux/slices/user/cartSlice";
 
 /* COUNT UP */
 const useCountUp = (end: number, duration = 900) => {
@@ -51,7 +47,6 @@ const useCountUp = (end: number, duration = 900) => {
 
 const VNPayResultPage = () => {
   const dispatch = useAppDispatch();
-  const cart = useAppSelector((state) => state.cart.cart);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -165,12 +160,11 @@ const VNPayResultPage = () => {
       .then(() => {
         toast.success("Hoàn tất giao dịch thanh toán đơn hàng");
 
-        if (cart?.id) {
-          dispatch(clearCheckoutSession({ data: { cartId: cart.id } }));
-        }
+        dispatch(getCart());
 
-        dispatch(deleteAllCartItem());
-
+        sessionStorage.removeItem("checkoutCartId");
+        sessionStorage.removeItem("checkoutCartItemIds");
+        sessionStorage.removeItem("checkoutBuyNowItem");
         localStorage.removeItem("addressSelectedId");
         localStorage.removeItem("discountCode");
 
@@ -181,7 +175,6 @@ const VNPayResultPage = () => {
       })
       .finally(() => setCallbackDone(true));
   }, [
-    cart?.id,
     dispatch,
     hasValidParams,
     isBooking,

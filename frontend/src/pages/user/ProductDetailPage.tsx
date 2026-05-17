@@ -62,6 +62,7 @@ const ProductDetailPage: React.FC = () => {
   const dispatch = useAppDispatch();
 
   const productDetail = useAppSelector((state) => state.product.productDetail);
+  const cart = useAppSelector((state) => state.cart.cart);
 
   const products = useAppSelector((state) => state.product.products?.products);
 
@@ -247,6 +248,24 @@ const ProductDetailPage: React.FC = () => {
 
         toast.success("Sản phẩm được thêm vào giỏ hàng thành công");
       });
+  };
+
+  const handleBuyNow = async () => {
+    if (!selectedVariant) return;
+
+    const cartId = cart?.id || (await dispatch(getCart()).unwrap()).data.id;
+
+    sessionStorage.setItem("checkoutCartId", String(cartId));
+    sessionStorage.removeItem("checkoutCartItemIds");
+    sessionStorage.setItem(
+      "checkoutBuyNowItem",
+      JSON.stringify({
+        variantId: selectedVariant.id,
+        quantity,
+      }),
+    );
+
+    navigate("/checkout");
   };
 
   return (
@@ -704,6 +723,7 @@ const ProductDetailPage: React.FC = () => {
                     </button>
 
                     <button
+                      onClick={handleBuyNow}
                       className="
         h-[52px] rounded-2xl border border-sky-600
         bg-white px-6

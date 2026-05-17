@@ -16,6 +16,7 @@ import { OTP_TYPE } from "../../utils/constants/otpType";
 import { showConfirmDialog } from "../../utils/swalHelper";
 import type { WalletOrderConfirmRequest } from "../../types/order";
 import { walletOrderConfirm } from "../../redux/slices/user/orderSlice";
+import { getCart } from "../../redux/slices/user/cartSlice";
 import AuthShell from "../../components/ui/user/auth/AuthShell";
 
 const OTP_EXPIRE_KEY = "otp_expire_at";
@@ -202,6 +203,10 @@ const OTPPage = () => {
         .unwrap()
         .then((res) => {
           toast.success("Xác nhận thanh toán đơn hàng thành công.");
+          dispatch(getCart());
+          sessionStorage.removeItem("checkoutCartId");
+          sessionStorage.removeItem("checkoutCartItemIds");
+          sessionStorage.removeItem("checkoutBuyNowItem");
           clearOtpSession();
           setTimeout(() => {
             navigate(`/order-result?orderGroupId=${res.data.orderGroupId}`);

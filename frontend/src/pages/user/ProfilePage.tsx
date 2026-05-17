@@ -366,13 +366,14 @@ const ProfilePage = () => {
 
                 <button
                   type="button"
-                  className={tabBtnClass(tab === "posts")}
+                  className={`${tabBtnClass(tab === "posts")} w-full`}
                   onClick={() => setTab("posts")}
                 >
                   <FileText className="h-5 w-5 shrink-0" strokeWidth={2} />
-                  <span className="flex-1">Bài đăng</span>
+                  <span>Bài đăng</span>
+
                   <span
-                    className={`rounded-full px-2 py-0.5 text-xs tabular-nums ${
+                    className={`ml-auto rounded-full px-2 py-0.5 text-xs tabular-nums ${
                       tab === "posts"
                         ? "bg-sky-200 text-sky-900"
                         : "bg-slate-100 text-slate-600"

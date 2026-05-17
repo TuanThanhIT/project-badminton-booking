@@ -51,7 +51,7 @@ import {
   paymentMethodList,
   type PaymentMethod,
 } from "../../utils/constants/paymentMethod";
-import type { CreateOrderRequest } from "../../types/order";
+import type { BuyNowItemRequest, CreateOrderRequest } from "../../types/order";
 import type { OtpFlowData, OtpSendRequest } from "../../types/auth";
 import { OTP_TYPE } from "../../utils/constants/otpType";
 import { formatPrice, mergeCheckoutItems } from "../../utils/checkout";
@@ -73,7 +73,6 @@ const CheckoutPage = () => {
   const selectedAddress = useAppSelector(
     (state) => state.address.selectedAddress,
   );
-  const cart = useAppSelector((state) => state.cart.cart);
   const checkoutPreview = useAppSelector(
     (state) => state.order.checkoutPreview,
   );
@@ -88,20 +87,70 @@ const CheckoutPage = () => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
     PAYMENT_METHOD.COD.value,
   );
+  const [checkoutCartId, setCheckoutCartId] = useState<number | null>(null);
+  const [checkoutCartItemIds, setCheckoutCartItemIds] = useState<number[]>([]);
+  const [checkoutBuyNowItem, setCheckoutBuyNowItem] =
+    useState<BuyNowItemRequest | null>(null);
 
   useEffect(() => {
     dispatch(getUserAddress());
   }, [dispatch]);
 
   useEffect(() => {
-    if (!cart || !selectedAddress) return;
+    const rawCartId = sessionStorage.getItem("checkoutCartId");
+    const rawCartItemIds = sessionStorage.getItem("checkoutCartItemIds");
+    const rawBuyNowItem = sessionStorage.getItem("checkoutBuyNowItem");
+
+    try {
+      const parsedIds = rawCartItemIds ? JSON.parse(rawCartItemIds) : [];
+      const ids = Array.isArray(parsedIds)
+        ? parsedIds.map(Number).filter(Boolean)
+        : [];
+      const parsedBuyNowItem = rawBuyNowItem ? JSON.parse(rawBuyNowItem) : null;
+      const buyNowItem =
+        parsedBuyNowItem?.variantId && parsedBuyNowItem?.quantity
+          ? {
+              variantId: Number(parsedBuyNowItem.variantId),
+              quantity: Number(parsedBuyNowItem.quantity),
+            }
+          : null;
+
+      if (!rawCartId || (!ids.length && !buyNowItem)) {
+        toast.warn("Vui lòng chọn sản phẩm cần thanh toán");
+        navigate("/cart");
+        return;
+      }
+
+      setCheckoutCartId(Number(rawCartId));
+      setCheckoutCartItemIds(ids);
+      setCheckoutBuyNowItem(buyNowItem);
+    } catch {
+      toast.warn("Danh sách sản phẩm thanh toán không hợp lệ");
+      navigate("/cart");
+    }
+  }, [navigate]);
+
+  const checkoutPayload = useMemo(
+    () =>
+      checkoutBuyNowItem
+        ? { buyNowItem: checkoutBuyNowItem }
+        : { cartItemIds: checkoutCartItemIds },
+    [checkoutBuyNowItem, checkoutCartItemIds],
+  );
+
+  const hasCheckoutPayload =
+    !!checkoutBuyNowItem || checkoutCartItemIds.length > 0;
+
+  useEffect(() => {
+    if (!checkoutCartId || !hasCheckoutPayload || !selectedAddress) return;
 
     const fetchData = async () => {
       await dispatch(
         getCheckoutPreview({
           data: {
-            cartId: cart.id,
+            cartId: checkoutCartId,
             addressId: selectedAddress.id,
+            ...checkoutPayload,
           },
         }),
       )
@@ -110,7 +159,7 @@ const CheckoutPage = () => {
           if (!res.data.isShippingCalculated) {
             await dispatch(
               calculateShipping({
-                data: { cartId: cart.id },
+                data: { cartId: checkoutCartId },
               }),
             );
           }
@@ -118,7 +167,13 @@ const CheckoutPage = () => {
     };
 
     fetchData();
-  }, [dispatch, cart, selectedAddress]);
+  }, [
+    dispatch,
+    checkoutCartId,
+    checkoutPayload,
+    hasCheckoutPayload,
+    selectedAddress,
+  ]);
 
   useEffect(() => {
     if (!checkoutPreview) return;
@@ -212,8 +267,8 @@ const CheckoutPage = () => {
   };
 
   const handleApplyDiscount = (dt: FormDiscount) => {
-    if (!cart) return;
-    const data: ApplyDiscountRequest = { code: dt.code, cartId: cart.id };
+    if (!checkoutCartId) return;
+    const data: ApplyDiscountRequest = { code: dt.code, cartId: checkoutCartId };
     dispatch(applyDiscount({ data }))
       .unwrap()
       .then(() => {
@@ -227,7 +282,13 @@ const CheckoutPage = () => {
   };
 
   const handleCreateOrder = async () => {
-    if (!cart || !selectedAddress || !user) return;
+    if (
+      !checkoutCartId ||
+      !hasCheckoutPayload ||
+      !selectedAddress ||
+      !user
+    )
+      return;
 
     const confirmed = await showConfirmDialog(
       "Xác nhận đặt hàng",
@@ -243,8 +304,9 @@ const CheckoutPage = () => {
     if (!confirmed) return;
 
     const data: CreateOrderRequest = {
-      cartId: cart.id,
+      cartId: checkoutCartId,
       addressId: selectedAddress.id,
+      ...checkoutPayload,
       paymentMethod,
       note,
     };
@@ -254,6 +316,9 @@ const CheckoutPage = () => {
       .then((res) => {
         if (paymentMethod === PAYMENT_METHOD.COD.value) {
           toast.success("Đặt hàng thành công");
+          sessionStorage.removeItem("checkoutCartId");
+          sessionStorage.removeItem("checkoutCartItemIds");
+          sessionStorage.removeItem("checkoutBuyNowItem");
           setTimeout(() => {
             navigate(`/order-result?orderGroupId=${res.data.orderGroupId}`);
           }, 2000);
@@ -586,9 +651,9 @@ const CheckoutPage = () => {
 
               <button
                 onClick={handleCreateOrder}
-                disabled={!selectedAddress}
+                disabled={!selectedAddress || !hasCheckoutPayload}
                 className={`flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-3.5 text-sm font-semibold transition-all ${
-                  selectedAddress
+                  selectedAddress && hasCheckoutPayload
                     ? "bg-sky-500 text-white shadow-lg shadow-sky-100 hover:bg-sky-600 active:scale-[0.98]"
                     : "cursor-not-allowed bg-slate-200 text-slate-500"
                 }`}

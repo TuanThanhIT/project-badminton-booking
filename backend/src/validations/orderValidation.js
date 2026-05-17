@@ -18,6 +18,11 @@ import { limitField, pageField } from "./common/paginationFields.js";
 import { emailField, otpCodeField } from "./common/authFields.js";
 import OrderGroup from "../models/orderGroup.js";
 
+const buyNowItemSchema = Joi.object({
+  variantId: idParams("variantId"),
+  quantity: quantityField,
+});
+
 // export const createOrderSchema = {
 //   body: Joi.object({
 //     orderStatus: orderStatusField.required(),
@@ -114,7 +119,9 @@ export const checkoutPreviewSchema = {
   body: Joi.object({
     cartId: idParams("cartId"),
     addressId: idParams("addressId"),
-  }),
+    cartItemIds: Joi.array().items(idParams("cartItemId")).min(1),
+    buyNowItem: buyNowItemSchema,
+  }).xor("cartItemIds", "buyNowItem"),
 };
 
 export const calculateShippingSchema = {
@@ -133,9 +140,11 @@ export const createOrderSchema = {
   body: Joi.object({
     cartId: idParams("cartId"),
     addressId: idParams("addressId"),
+    cartItemIds: Joi.array().items(idParams("cartItemId")).min(1),
+    buyNowItem: buyNowItemSchema,
     paymentMethod: paymentMethodField,
     note: noteField,
-  }),
+  }).xor("cartItemIds", "buyNowItem"),
 };
 
 export const orderCallbackSchema = {

@@ -1,12 +1,14 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import {
   ArrowRight,
+  CheckSquare2,
   Minus,
   PackageCheck,
   Plus,
   ShieldCheck,
   ShoppingCart,
+  Square,
   Trash2,
   Wallet,
 } from "lucide-react";
@@ -32,14 +34,95 @@ import { showConfirmDialog } from "../../utils/swalHelper";
 
 const formatCurrency = (value: number) => `${value.toLocaleString()}₫`;
 
+const getCartSelectionKey = (cartId: number) => `cartSelectedItemIds:${cartId}`;
+
+const readSavedSelectedIds = (cartId: number) => {
+  try {
+    const rawSelectedIds = sessionStorage.getItem(getCartSelectionKey(cartId));
+    const savedSelectedIds = rawSelectedIds ? JSON.parse(rawSelectedIds) : [];
+    return Array.isArray(savedSelectedIds)
+      ? savedSelectedIds.map(Number).filter(Boolean)
+      : [];
+  } catch {
+    return [];
+  }
+};
+
 const CartPage = () => {
   const dispatch = useAppDispatch();
   const cart = useAppSelector((state) => state.cart.cart);
   const navigate = useNavigate();
+  const [selectedItemIds, setSelectedItemIds] = useState<number[]>([]);
+  const hydratedCartIdRef = useRef<number | null>(null);
 
   useEffect(() => {
     dispatch(getCart());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (!cart?.cartItems.length) {
+      setSelectedItemIds([]);
+      hydratedCartIdRef.current = cart?.id || null;
+      if (cart?.id) {
+        sessionStorage.removeItem(getCartSelectionKey(cart.id));
+      }
+      return;
+    }
+
+    setSelectedItemIds((current) => {
+      const availableIds = cart.cartItems.map((item) => item.id);
+      if (hydratedCartIdRef.current !== cart.id) {
+        hydratedCartIdRef.current = cart.id;
+
+        return readSavedSelectedIds(cart.id).filter((id) =>
+          availableIds.includes(id),
+        );
+      }
+
+      return current.filter((id) => availableIds.includes(id));
+    });
+  }, [cart?.cartItems]);
+
+  useEffect(() => {
+    if (!cart?.id || hydratedCartIdRef.current !== cart.id) return;
+
+    sessionStorage.setItem(
+      getCartSelectionKey(cart.id),
+      JSON.stringify(selectedItemIds),
+    );
+  }, [cart?.id, selectedItemIds]);
+
+  const selectedItems = useMemo(
+    () =>
+      cart?.cartItems.filter((item) => selectedItemIds.includes(item.id)) || [],
+    [cart?.cartItems, selectedItemIds],
+  );
+
+  const selectedTotalAmount = useMemo(
+    () => selectedItems.reduce((sum, item) => sum + item.subTotal, 0),
+    [selectedItems],
+  );
+
+  const selectedTotalQuantity = useMemo(
+    () => selectedItems.reduce((sum, item) => sum + item.quantity, 0),
+    [selectedItems],
+  );
+
+  const isAllSelected =
+    !!cart?.cartItems.length && selectedItemIds.length === cart.cartItems.length;
+
+  const toggleSelectAll = () => {
+    if (!cart) return;
+    setSelectedItemIds(isAllSelected ? [] : cart.cartItems.map((item) => item.id));
+  };
+
+  const toggleSelectItem = (cartItemId: number) => {
+    setSelectedItemIds((current) =>
+      current.includes(cartItemId)
+        ? current.filter((id) => id !== cartItemId)
+        : [...current, cartItemId],
+    );
+  };
 
   const handleRemove = async (cartItemId: number) => {
     const data: DeleteCartItemRequest = { cartItemId };
@@ -61,6 +144,11 @@ const CartPage = () => {
   };
 
   const handleCheckout = async () => {
+    if (!cart || selectedItemIds.length === 0) {
+      toast.warn("Vui lòng chọn ít nhất một sản phẩm để thanh toán");
+      return;
+    }
+
     const isConfirmed = await showConfirmDialog(
       "Xác nhận thanh toán",
       "Bạn có muốn tiếp tục không?",
@@ -69,6 +157,10 @@ const CartPage = () => {
     );
 
     if (!isConfirmed) return;
+
+    sessionStorage.setItem("checkoutCartId", String(cart.id));
+    sessionStorage.setItem("checkoutCartItemIds", JSON.stringify(selectedItemIds));
+    sessionStorage.removeItem("checkoutBuyNowItem");
     navigate("/checkout");
   };
 
@@ -190,7 +282,7 @@ const CartPage = () => {
               <div className="mt-6 flex flex-wrap gap-3 text-xs text-sky-100 sm:text-sm">
                 <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-2 sm:px-4">
                   <PackageCheck size={16} />
-                  {cart.cartItems.length} sản phẩm
+                  {selectedItems.length} sản phẩm đã chọn
                 </div>
 
                 <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-2 sm:px-4">
@@ -210,7 +302,7 @@ const CartPage = () => {
                   Tổng tạm tính
                 </p>
                 <p className="mt-2 text-3xl font-semibold text-sky-300">
-                  {formatCurrency(cart.totalAmount)}
+                  {formatCurrency(selectedTotalAmount)}
                 </p>
                 <p className="mt-2 text-sm leading-relaxed text-sky-100">
                   Có thể áp dụng mã giảm giá và phí giao hàng ở bước thanh toán.
@@ -227,13 +319,28 @@ const CartPage = () => {
           <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             {/* HEADER */}
             <div className="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
+              <div className="flex items-start gap-3">
+                <button
+                  type="button"
+                  onClick={toggleSelectAll}
+                  className="mt-1 text-sky-600 transition hover:text-sky-700"
+                  aria-label={isAllSelected ? "Bỏ chọn tất cả" : "Chọn tất cả"}
+                >
+                  {isAllSelected ? (
+                    <CheckSquare2 size={22} />
+                  ) : (
+                    <Square size={22} />
+                  )}
+                </button>
+                <div>
                 <h2 className="text-xl font-bold text-slate-800">
                   Sản phẩm trong giỏ
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  {cart.cartItems.length} dòng sản phẩm • {totalItems} sản phẩm
+                  Đã chọn {selectedItems.length}/{cart.cartItems.length} dòng •{" "}
+                  {selectedTotalQuantity}/{totalItems} sản phẩm
                 </p>
+                </div>
               </div>
 
               <button
@@ -262,7 +369,23 @@ const CartPage = () => {
         `}
                   >
                     {/* LEFT */}
-                    <div className="flex min-w-0 gap-4">
+                    <div className="flex min-w-0 items-center gap-4">
+                      <button
+                        type="button"
+                        onClick={() => toggleSelectItem(item.id)}
+                        className="shrink-0 text-sky-600 transition hover:text-sky-700"
+                        aria-label={
+                          selectedItemIds.includes(item.id)
+                            ? "Bỏ chọn sản phẩm"
+                            : "Chọn sản phẩm"
+                        }
+                      >
+                        {selectedItemIds.includes(item.id) ? (
+                          <CheckSquare2 size={22} />
+                        ) : (
+                          <Square size={22} />
+                        )}
+                      </button>
                       {/* IMAGE */}
                       <div className="flex h-36 w-36 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white p-2">
                         <img
@@ -408,21 +531,21 @@ const CartPage = () => {
               <div className="flex justify-between">
                 <span className="text-slate-500">Tạm tính</span>
                 <span className="font-semibold text-slate-800">
-                  {formatCurrency(cart.totalAmount)}
+                  {formatCurrency(selectedTotalAmount)}
                 </span>
               </div>
 
               <div className="flex justify-between">
                 <span className="text-slate-500">Dòng sản phẩm</span>
                 <span className="font-semibold text-slate-800">
-                  {cart.cartItems.length}
+                  {selectedItems.length}
                 </span>
               </div>
 
               <div className="flex justify-between">
                 <span className="text-slate-500">Tổng số lượng</span>
                 <span className="font-semibold text-slate-800">
-                  {totalItems}
+                  {selectedTotalQuantity}
                 </span>
               </div>
             </div>
@@ -432,7 +555,7 @@ const CartPage = () => {
             <div className="flex items-center justify-between">
               <span className="font-semibold text-slate-700">Tổng cộng</span>
               <span className="text-xl font-bold text-sky-600">
-                {formatCurrency(cart.totalAmount)}
+                {formatCurrency(selectedTotalAmount)}
               </span>
             </div>
 
@@ -442,9 +565,14 @@ const CartPage = () => {
 
             <button
               onClick={handleCheckout}
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-sky-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-700"
+              disabled={!selectedItemIds.length}
+              className={`mt-5 flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition ${
+                selectedItemIds.length
+                  ? "bg-sky-600 text-white hover:bg-sky-700"
+                  : "cursor-not-allowed bg-slate-200 text-slate-500"
+              }`}
             >
-              Thanh toán
+              Thanh toán ({selectedItems.length})
               <ArrowRight size={17} />
             </button>
 

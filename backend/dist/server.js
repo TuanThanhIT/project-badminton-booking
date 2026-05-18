@@ -72,9 +72,7 @@ var httpServer = (0, _http.createServer)(app);
 // init socket
 (0, _index.initSocket)(httpServer);
 app.use(_errorHandler["default"]);
-_db["default"].sync({
-  alter: true
-}).then(function () {
+_db["default"].sync().then(function () {
   console.log("Database synced");
   httpServer.listen(PORT, function () {
     console.log("Server running on http://localhost:".concat(PORT));

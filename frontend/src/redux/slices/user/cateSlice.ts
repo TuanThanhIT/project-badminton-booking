@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { ApiErrorType } from "../../../types/error";
 import type {
   CategoriesGroupedResponse,
+  CategoriesByGroupRequest,
   Category,
   CategoryGroup,
   OtherCategoriesResponse,
@@ -48,6 +49,19 @@ export const getOtherCategoriesInSameGroup = createAsyncThunk<
   },
 );
 
+export const getCategoriesByGroup = createAsyncThunk<
+  OtherCategoriesResponse,
+  { data: CategoriesByGroupRequest },
+  { rejectValue: ApiErrorType }
+>("cate/getCategoriesByGroup", async ({ data }, { rejectWithValue }) => {
+  try {
+    const res = await cateService.getCategoriesByGroupService(data);
+    return res.data as OtherCategoriesResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
 const cateSlice = createSlice({
   name: "cate",
   initialState,
@@ -59,6 +73,10 @@ const cateSlice = createSlice({
       })
 
       .addCase(getOtherCategoriesInSameGroup.fulfilled, (state, action) => {
+        state.otherCategories = action.payload.data;
+      })
+
+      .addCase(getCategoriesByGroup.fulfilled, (state, action) => {
         state.otherCategories = action.payload.data;
       });
   },

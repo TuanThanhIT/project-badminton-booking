@@ -3,6 +3,7 @@ import bookingController from "../../controllers/user/bookingController.js";
 import validate from "../../middlewares/validate.js";
 import auth from "../../middlewares/auth.js";
 import {
+  bookingCallbackSchema,
   createBookingSchema,
   getBookingsSchema,
 } from "../../validations/bookingValidation.js";
@@ -10,18 +11,23 @@ import {
 const bookingRoute = express.Router();
 
 const initBookingRoute = (app) => {
-  // Lấy lịch sử đặt sân của user (cần đăng nhập)
   bookingRoute.get(
     "/my-bookings",
-    //auth,
+    auth,
     validate(getBookingsSchema),
     bookingController.getMyBookingsController,
   );
 
-  // Tạo đơn đặt sân mới
+  bookingRoute.patch(
+    "/vnpay/callback",
+    auth,
+    validate(bookingCallbackSchema),
+    bookingController.bookingCallbackController,
+  );
+
   bookingRoute.post(
     "/",
-    //auth, // Phải đăng nhập mới được đặt
+    auth,
     validate(createBookingSchema),
     bookingController.createBookingController,
   );

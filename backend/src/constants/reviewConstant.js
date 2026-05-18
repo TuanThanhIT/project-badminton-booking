@@ -1,0 +1,5 @@
+export const REVIEW_STATUS = Object.freeze({
+  NOT_ELIGIBLE: "NOT_ELIGIBLE",
+  REVIEWED: "REVIEWED",
+  CAN_REVIEW: "CAN_REVIEW",
+});

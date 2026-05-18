@@ -1,5 +1,8 @@
 import Joi from "joi";
-import { DISCOUNT_TYPE } from "../../constants/discountConstant.js";
+import {
+  DISCOUNT_TARGET_TYPE,
+  DISCOUNT_TYPE,
+} from "../../constants/discountConstant.js";
 
 export const codeField = Joi.string()
   .trim()
@@ -40,6 +43,13 @@ export const typeField = Joi.string()
   .messages({
     "any.required": "Discount type is required",
     "any.only": "Invalid discount type",
+  });
+
+export const targetTypeField = Joi.string()
+  .valid(...Object.values(DISCOUNT_TARGET_TYPE))
+  .optional()
+  .messages({
+    "any.only": "Invalid discount target type",
   });
 
 export const valueField = Joi.number().positive().required().messages({

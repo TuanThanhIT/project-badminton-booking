@@ -82,7 +82,7 @@ const getUserOrdersController = asyncHandler(async (req, res) => {
 
 const getOrderDetailController = asyncHandler(async (req, res) => {
   const orderId = req.params.orderId;
-  const data = { orderId };
+  const data = { orderId, userId: req.user.id };
   const result = await orderService.getOrderDetailService(data);
   return res
     .status(200)
@@ -109,6 +109,30 @@ const getTrackingProgressController = asyncHandler(async (req, res) => {
     .json(new SuccessResponse("Lấy tiến trình vận chuyển thành công", result));
 });
 
+const requestCancelOrderController = asyncHandler(async (req, res) => {
+  const data = {
+    orderId: req.params.orderId,
+    ...req.body,
+    userId: req.user.id,
+  };
+  await orderService.requestCancelOrderService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Gửi yêu cầu hủy đơn thành công"));
+});
+
+const requestReturnOrderController = asyncHandler(async (req, res) => {
+  const data = {
+    orderId: req.params.orderId,
+    ...req.body,
+    userId: req.user.id,
+  };
+  await orderService.requestReturnOrderService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Gửi yêu cầu trả hàng thành công"));
+});
+
 const orderController = {
   checkoutPreviewController,
   calculateShippingController,
@@ -121,6 +145,8 @@ const orderController = {
   getOrderTrackingController,
   getTrackingProgressController,
   getUserOrdersController,
+  requestCancelOrderController,
+  requestReturnOrderController,
 };
 
 export default orderController;

@@ -1,21 +1,26 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ChangeEvent,
+  type KeyboardEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ChevronUp,
   CornerUpLeft,
   CornerUpRight,
+  FileText,
   MessageCircle,
   Paperclip,
   Search,
   Send,
   Trash2,
+  UserPlus,
   Users,
   X,
 } from "lucide-react";
-import type {
-  ChatMessage,
-  Conversation,
-  ReplyToMessage,
-} from "../../../../types/message";
+import type { ChatMessage, Conversation, ReplyToMessage } from "../../../../types/message";
 import type { UserSearchHit } from "../../../../types/userSearch";
 import MemberSearchPicker from "./MemberSearchPicker";
 import { formatRelativeTimeVi } from "../../../../utils/formatRelativeTimeVi";
@@ -51,17 +56,19 @@ const dayKeyVi = (iso: string) => {
 const UserAvatar = ({
   name,
   url,
-  sizeClass = "w-8 h-8",
+  sizeClass = "w-9 h-9",
+  rounded = "rounded-2xl",
 }: {
   name: string;
   url?: string | null;
   sizeClass?: string;
+  rounded?: string;
 }) => {
   const [imgErr, setImgErr] = useState(false);
   const letter = (name || "?").trim().charAt(0).toUpperCase();
   return (
     <div
-      className={`${sizeClass} rounded-full shrink-0 overflow-hidden flex items-center justify-center bg-gradient-to-br from-sky-400 to-emerald-500 text-white text-xs font-bold`}
+      className={`${sizeClass} ${rounded} shrink-0 overflow-hidden flex items-center justify-center bg-gradient-to-br from-sky-400 to-emerald-500 text-white text-xs font-extrabold shadow-sm`}
     >
       {url && !imgErr ? (
         <img
@@ -77,60 +84,20 @@ const UserAvatar = ({
   );
 };
 
-const ReplyQuoteBar = ({
-  replyTarget,
-  isMine,
-  onJump,
-}: {
-  replyTarget: ReplyToMessage;
-  isMine: boolean;
-  onJump?: () => void;
-}) => {
-  const isImage = replyTarget.type === "IMAGE";
-  const isFile = replyTarget.type === "FILE";
-  const hasMedia =
-    (isImage || isFile) && replyTarget.mediaUrl && !replyTarget.isRecalled;
-  const preview = replyTarget.isRecalled
-    ? "Tin nhắn đã thu hồi"
-    : replyTarget.body?.trim() ||
-      (isImage ? "Ảnh" : isFile ? "Tệp đính kèm" : "");
+const messagePreview = (message: Pick<ChatMessage, "body" | "type" | "isRecalled">) => {
+  if (message.isRecalled) return "Tin nhắn đã thu hồi";
+  if (message.body?.trim()) return message.body.trim();
+  if (message.type === "IMAGE") return "Ảnh";
+  if (message.type === "FILE") return "Tệp đính kèm";
+  return "Tin nhắn";
+};
 
-  return (
-    <button
-      type="button"
-      onClick={onJump}
-      className={`mb-1.5 w-full text-left rounded-xl overflow-hidden border-l-[3px] flex items-center gap-2 transition-opacity hover:opacity-75 active:opacity-60 ${
-        isMine ? "border-sky-300 bg-sky-700/30" : "border-sky-400 bg-sky-50/80"
-      } ${onJump ? "cursor-pointer" : "cursor-default"}`}
-    >
-      {/* Image thumbnail */}
-      {isImage && hasMedia && (
-        <img
-          src={replyTarget.mediaUrl!}
-          alt=""
-          className="w-10 h-10 object-cover shrink-0"
-        />
-      )}
-
-      {/* Text content */}
-      <div className="min-w-0 flex-1 px-2.5 py-1.5">
-        <p
-          className={`text-[11px] font-semibold truncate ${isMine ? "text-sky-200" : "text-sky-600"}`}
-        >
-          {replyTarget.senderName}
-        </p>
-        <p
-          className={`text-[11px] truncate flex items-center gap-1 ${isMine ? "text-sky-100/80" : "text-gray-500"}`}
-        >
-          {isImage && !replyTarget.isRecalled && <span>📷</span>}
-          {isFile && !replyTarget.isRecalled && (
-            <Paperclip className="w-3 h-3 shrink-0" />
-          )}
-          {preview}
-        </p>
-      </div>
-    </button>
-  );
+const replyPreview = (replyTarget: ReplyToMessage) => {
+  if (replyTarget.isRecalled) return "Tin nhắn đã thu hồi";
+  if (replyTarget.body?.trim()) return replyTarget.body.trim();
+  if (replyTarget.type === "IMAGE") return "Ảnh";
+  if (replyTarget.type === "FILE") return "Tệp đính kèm";
+  return "Tin nhắn";
 };
 
 const ForwardModal = ({
@@ -150,11 +117,6 @@ const ForwardModal = ({
 }) => {
   const [query, setQuery] = useState("");
   const [sendingId, setSendingId] = useState<number | null>(null);
-
-  const preview = message.isRecalled
-    ? "Tin nhắn đã thu hồi"
-    : message.body?.trim() ||
-      (message.type === "IMAGE" ? "📷 Ảnh" : "📎 Tệp đính kèm");
 
   const getDisplayInfo = (c: Conversation) => {
     if (c.type === "GROUP") {
@@ -182,64 +144,45 @@ const ForwardModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 backdrop-blur-sm p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col max-h-[80vh]">
-        {/* Header */}
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
-          <h3 className="font-semibold text-gray-900 text-sm">
-            Chuyển tiếp tin nhắn
-          </h3>
+      <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[82vh] border border-white/60">
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
+          <div>
+            <h3 className="font-extrabold text-slate-950">Chuyển tiếp tin nhắn</h3>
+            <p className="text-xs text-slate-500 mt-1 line-clamp-1">{messagePreview(message)}</p>
+          </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-full text-gray-400 hover:bg-gray-100 transition-colors"
+            className="w-9 h-9 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors flex items-center justify-center"
+            title="Đóng"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Message preview */}
-        <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100 shrink-0">
-          <p className="text-xs text-gray-500 bg-white rounded-xl px-3 py-2 border border-gray-100 line-clamp-2">
-            {preview}
-          </p>
-        </div>
-
-        {/* Search */}
-        <div className="px-4 py-2.5 border-b border-gray-100 shrink-0">
-          <div className="flex items-center gap-2 bg-gray-100 rounded-xl px-3 py-2">
-            <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+        <div className="px-4 py-3 border-b border-slate-100 shrink-0">
+          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2.5">
+            <Search className="w-4 h-4 text-slate-400 shrink-0" />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Tìm kiếm hội thoại…"
-              className="flex-1 bg-transparent text-sm text-gray-800 placeholder-gray-400 outline-none"
+              placeholder="Tìm hội thoại..."
+              className="flex-1 bg-transparent text-sm text-slate-800 placeholder:text-slate-400 outline-none"
               autoFocus
             />
-            {query && (
-              <button
-                type="button"
-                onClick={() => setQuery("")}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
           </div>
         </div>
 
-        {/* List */}
-        <div className="overflow-y-auto flex-1 py-1">
+        <div className="overflow-y-auto flex-1 p-2 bg-slate-50/70">
           {filtered.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-8">
-              {query
-                ? "Không tìm thấy hội thoại"
-                : "Không có hội thoại nào khác"}
+            <p className="text-sm text-slate-400 text-center py-10">
+              {query ? "Không tìm thấy hội thoại" : "Không có hội thoại nào khác"}
             </p>
           ) : (
             filtered.map((c) => {
@@ -255,25 +198,12 @@ const ForwardModal = ({
                     await onSelect(c.id);
                     setSendingId(null);
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left disabled:opacity-60"
+                  className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-white transition-colors text-left disabled:opacity-60"
                 >
-                  {c.type === "GROUP" ? (
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sky-400 to-emerald-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                      {name.charAt(0).toUpperCase()}
-                    </div>
-                  ) : (
-                    <UserAvatar
-                      key={c.id}
-                      name={name}
-                      url={avatar}
-                      sizeClass="w-9 h-9"
-                    />
-                  )}
+                  <UserAvatar name={name} url={avatar} sizeClass="w-11 h-11" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {name}
-                    </p>
-                    <p className="text-xs text-gray-400">{sub}</p>
+                    <p className="text-sm font-bold text-slate-900 truncate">{name}</p>
+                    <p className="text-xs text-slate-400">{sub}</p>
                   </div>
                   {isSending && (
                     <div className="w-4 h-4 border-2 border-sky-500 border-t-transparent rounded-full animate-spin shrink-0" />
@@ -319,17 +249,12 @@ const ChatPanel = ({
   const scrollToMessage = (messageId: number) => {
     const container = scrollAreaRef.current;
     if (!container) return;
-    const el = container.querySelector(
-      `[data-msg-id="${messageId}"]`,
-    ) as HTMLElement | null;
+    const el = container.querySelector(`[data-msg-id="${messageId}"]`) as HTMLElement | null;
     if (!el) return;
-    container.scrollTo({ top: el.offsetTop - 80, behavior: "smooth" });
+    container.scrollTo({ top: el.offsetTop - 88, behavior: "smooth" });
     if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
     setHighlightedMsgId(messageId);
-    highlightTimerRef.current = setTimeout(
-      () => setHighlightedMsgId(null),
-      1500,
-    );
+    highlightTimerRef.current = setTimeout(() => setHighlightedMsgId(null), 1500);
   };
 
   const participantIds = useMemo(
@@ -348,8 +273,7 @@ const ChatPanel = ({
   const sorted = useMemo(
     () =>
       [...messages].sort(
-        (a, b) =>
-          new Date(a.createdDate).getTime() - new Date(b.createdDate).getTime(),
+        (a, b) => new Date(a.createdDate).getTime() - new Date(b.createdDate).getTime(),
       ),
     [messages],
   );
@@ -359,7 +283,6 @@ const ChatPanel = ({
       | { kind: "day"; label: string }
       | { kind: "msg"; message: ChatMessage; showMeta: boolean }
     )[] = [];
-
     let lastDay = "";
     let prev: ChatMessage | null = null;
 
@@ -371,11 +294,7 @@ const ChatPanel = ({
       }
       const sameSender = prev?.senderId === m.senderId;
       const gapMin =
-        prev &&
-        (new Date(m.createdDate).getTime() -
-          new Date(prev.createdDate).getTime()) /
-          60000 <
-          4;
+        prev && (new Date(m.createdDate).getTime() - new Date(prev.createdDate).getTime()) / 60000 < 4;
       out.push({ kind: "msg", message: m, showMeta: !(sameSender && gapMin) });
       prev = m;
     }
@@ -398,38 +317,32 @@ const ChatPanel = ({
     await onSend(text, replyTarget?.id);
     setBody("");
     setReplyTarget(null);
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "40px";
-    }
+    if (textareaRef.current) textareaRef.current.style.height = "44px";
   };
 
-  const handleTextareaKeyDown = (
-    e: React.KeyboardEvent<HTMLTextAreaElement>,
-  ) => {
+  const handleTextareaKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
 
-  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleTextareaChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setBody(e.target.value);
     e.target.style.height = "auto";
-    e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+    e.target.style.height = `${Math.min(e.target.scrollHeight, 132)}px`;
   };
 
   if (!conversation) {
     return (
-      <div className="flex-1 bg-gray-50 flex flex-col items-center justify-center gap-4 text-gray-400">
-        <div className="w-20 h-20 rounded-full bg-sky-50 flex items-center justify-center">
-          <MessageCircle className="w-10 h-10 text-sky-300" strokeWidth={1.5} />
+      <div className="flex-1 bg-[linear-gradient(180deg,#f8fafc_0%,#eef6ff_100%)] flex flex-col items-center justify-center gap-5 text-slate-400 px-8">
+        <div className="w-24 h-24 rounded-[2rem] bg-white border border-slate-200 shadow-sm flex items-center justify-center">
+          <MessageCircle className="w-12 h-12 text-sky-400" strokeWidth={1.5} />
         </div>
-        <div className="text-center">
-          <p className="text-sm font-semibold text-gray-500">
-            Chào mừng đến B-Hub Chat
-          </p>
-          <p className="text-xs text-gray-400 mt-1">
-            Chọn một hội thoại để bắt đầu nhắn tin
+        <div className="text-center max-w-sm">
+          <p className="text-lg font-extrabold text-slate-800">Chào mừng đến B-Hub Chat</p>
+          <p className="text-sm text-slate-500 mt-2 leading-relaxed">
+            Chọn một hội thoại bên trái để bắt đầu nhắn tin cùng bạn chơi.
           </p>
         </div>
       </div>
@@ -439,81 +352,61 @@ const ChatPanel = ({
   const isGroup = conversation.type === "GROUP";
   const headerDisplayName = isGroup
     ? conversation.conversationName
-    : otherParticipant?.fullName?.trim() ||
-      otherParticipant?.username ||
-      conversation.conversationName;
+    : otherParticipant?.fullName?.trim() || otherParticipant?.username || conversation.conversationName;
 
   return (
-    <section className="flex-1 bg-gray-50 flex flex-col min-w-0 min-h-0">
-      {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-200 bg-white flex items-center justify-between gap-3 shrink-0 shadow-sm">
+    <section className="flex-1 bg-slate-50 flex flex-col min-w-0 min-h-0">
+      <div className="px-5 py-4 border-b border-slate-200 bg-white flex items-center justify-between gap-3 shrink-0">
         <div className="flex items-center gap-3 min-w-0">
-          {isGroup ? (
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-500 to-emerald-500 flex items-center justify-center text-white text-sm font-bold shrink-0">
-              {conversation.conversationName.charAt(0).toUpperCase()}
-            </div>
-          ) : (
-            <UserAvatar
-              key={conversation.id}
-              name={headerDisplayName}
-              url={otherParticipant?.avatar}
-              sizeClass="w-10 h-10"
-            />
-          )}
+          <UserAvatar
+            key={conversation.id}
+            name={headerDisplayName}
+            url={isGroup ? conversation.avatar : otherParticipant?.avatar}
+            sizeClass="w-12 h-12"
+          />
           <div className="min-w-0">
-            <h3 className="font-semibold text-gray-900 truncate text-sm">
-              {headerDisplayName}
-            </h3>
+            <h3 className="font-extrabold text-slate-950 truncate text-base">{headerDisplayName}</h3>
             {isGroup ? (
-              <p className="text-xs text-gray-500">
-                {conversation.participants.length} thành viên
-              </p>
+              <p className="text-xs text-slate-500 mt-0.5">{conversation.participants.length} thành viên</p>
             ) : (
-              <p className="text-xs text-emerald-500 font-medium">Trực tuyến</p>
+              <p className="text-xs text-emerald-600 font-bold mt-0.5">Đang hoạt động</p>
             )}
           </div>
         </div>
+
         {isGroup && (
           <button
             type="button"
             onClick={() => setShowMembers((v) => !v)}
-            className={`p-2 rounded-xl transition-colors shrink-0 ${showMembers ? "bg-sky-100 text-sky-600" : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"}`}
+            className={`h-10 px-3 rounded-2xl transition-colors shrink-0 flex items-center gap-2 text-sm font-bold ${
+              showMembers
+                ? "bg-sky-50 text-sky-700 border border-sky-100"
+                : "text-slate-500 hover:bg-slate-100 border border-transparent"
+            }`}
             title="Thành viên nhóm"
           >
-            {showMembers ? (
-              <ChevronUp className="w-4 h-4" />
-            ) : (
-              <Users className="w-4 h-4" />
-            )}
+            {showMembers ? <ChevronUp className="w-4 h-4" /> : <Users className="w-4 h-4" />}
+            Thành viên
           </button>
         )}
       </div>
 
-      {/* Members panel */}
       {showMembers && isGroup && (
-        <div className="border-b border-gray-100 bg-white px-4 py-3 space-y-3 max-h-64 overflow-y-auto shrink-0">
-          <div className="space-y-2">
+        <div className="border-b border-slate-200 bg-white px-5 py-4 max-h-72 overflow-y-auto shrink-0">
+          <div className="grid md:grid-cols-2 gap-3">
             {conversation.participants.map((p) => {
-              const displayName = p.fullName?.trim()
-                ? `${p.fullName} (${p.username})`
-                : p.username;
+              const displayName = p.fullName?.trim() ? `${p.fullName} (${p.username})` : p.username;
               return (
                 <div
                   key={p.userId}
-                  className="flex items-center justify-between gap-2"
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-2"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <UserAvatar
-                      name={p.fullName || p.username}
-                      url={p.avatar}
-                      sizeClass="w-7 h-7"
-                    />
+                    <UserAvatar name={p.fullName || p.username} url={p.avatar} sizeClass="w-9 h-9" />
                     <div className="min-w-0">
-                      <p className="text-xs font-medium text-gray-800 truncate">
-                        {displayName}
-                      </p>
+                      <p className="text-xs font-bold text-slate-800 truncate">{displayName}</p>
                       {p.role === ROLE_NAME.ADMIN && (
-                        <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-medium">
+                        <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold">
                           Admin
                         </span>
                       )}
@@ -522,7 +415,7 @@ const ChatPanel = ({
                   {isGroupAdmin && p.userId !== currentUserId && (
                     <button
                       type="button"
-                      className="text-xs text-red-500 hover:text-red-600 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors shrink-0"
+                      className="text-xs text-rose-500 hover:text-rose-600 px-2 py-1 rounded-lg hover:bg-rose-50 transition-colors shrink-0"
                       onClick={() => onRemoveMember?.(p.userId)}
                     >
                       Xóa
@@ -532,20 +425,22 @@ const ChatPanel = ({
               );
             })}
           </div>
+
           {isGroupAdmin && (
-            <div className="pt-2 border-t border-gray-100 space-y-2">
-              <p className="text-xs text-gray-500 font-medium">
+            <div className="mt-4 pt-4 border-t border-slate-100 space-y-3">
+              <p className="text-xs text-slate-600 font-extrabold flex items-center gap-2">
+                <UserPlus className="w-4 h-4 text-sky-600" />
                 Thêm thành viên
               </p>
               <MemberSearchPicker
                 excludeUserIds={participantIds}
                 selected={pendingAdds}
                 onSelectedChange={setPendingAdds}
-                placeholder="Tìm người để thêm…"
+                placeholder="Tìm người để thêm..."
               />
               <button
                 type="button"
-                className="text-xs px-3 py-1.5 rounded-lg bg-sky-600 text-white hover:bg-sky-700 disabled:opacity-50 transition-colors"
+                className="text-xs px-4 py-2 rounded-2xl bg-sky-600 text-white hover:bg-sky-500 disabled:opacity-50 transition-colors font-bold"
                 disabled={pendingAdds.length === 0}
                 onClick={async () => {
                   if (pendingAdds.length === 0) return;
@@ -557,10 +452,11 @@ const ChatPanel = ({
               </button>
             </div>
           )}
-          <div className="flex gap-4 pt-2 border-t border-gray-100">
+
+          <div className="flex gap-3 mt-4 pt-4 border-t border-slate-100">
             <button
               type="button"
-              className="text-xs text-gray-500 hover:text-gray-700 underline"
+              className="text-xs font-bold text-slate-500 hover:text-slate-800"
               onClick={() => onLeaveGroup?.()}
             >
               Rời nhóm
@@ -568,7 +464,7 @@ const ChatPanel = ({
             {isGroupAdmin && (
               <button
                 type="button"
-                className="text-xs text-red-500 hover:text-red-600 underline"
+                className="text-xs font-bold text-rose-500 hover:text-rose-600"
                 onClick={() => onDeleteGroup?.()}
               >
                 Xóa nhóm
@@ -578,16 +474,15 @@ const ChatPanel = ({
         </div>
       )}
 
-      {/* Messages area */}
       <div
         ref={scrollAreaRef}
-        className="flex-1 overflow-y-auto px-3 py-4 min-h-0"
+        className="flex-1 overflow-y-auto px-5 py-5 min-h-0 bg-[linear-gradient(180deg,#f8fafc_0%,#eef6ff_100%)]"
       >
         {rows.map((row, idx) => {
           if (row.kind === "day") {
             return (
-              <div key={`d-${idx}`} className="flex justify-center py-3">
-                <span className="text-[10px] text-gray-400 bg-white/90 px-3 py-1 rounded-full shadow-sm border border-gray-100">
+              <div key={`d-${idx}`} className="flex justify-center py-4">
+                <span className="text-[11px] text-slate-500 bg-white/90 px-4 py-1.5 rounded-full shadow-sm border border-slate-200 font-semibold">
                   {row.label}
                 </span>
               </div>
@@ -602,128 +497,78 @@ const ChatPanel = ({
             <div
               key={m.id}
               data-msg-id={m.id}
-              className={`flex items-end gap-1.5 rounded-xl px-1 transition-colors duration-300 ${mine ? "flex-row-reverse" : "flex-row"} ${row.showMeta ? "mt-3" : "mt-0.5"} ${highlightedMsgId === m.id ? "bg-sky-100/70" : ""}`}
+              className={`flex items-end gap-2 rounded-2xl px-1 transition-colors duration-300 ${
+                mine ? "flex-row-reverse" : "flex-row"
+              } ${row.showMeta ? "mt-4" : "mt-1"} ${
+                highlightedMsgId === m.id ? "bg-sky-100/70" : ""
+              }`}
               onMouseEnter={() => !recalled && setHoveredMsgId(m.id)}
               onMouseLeave={() => setHoveredMsgId(null)}
             >
-              {/* Avatar — group, non-mine */}
               {!mine && isGroup ? (
                 row.showMeta ? (
                   <UserAvatar
                     name={m.senderName}
                     url={m.senderAvatar}
-                    sizeClass="w-8 h-8"
+                    sizeClass="w-9 h-9"
+                    rounded="rounded-2xl"
                   />
                 ) : (
-                  <div className="w-8 shrink-0" />
+                  <div className="w-9 shrink-0" />
                 )
               ) : null}
 
-              {/* Message column */}
-              <div
-                className={`max-w-[68%] flex flex-col ${mine ? "items-end" : "items-start"}`}
-              >
-                {/* Sender name (group, non-mine, first in group) */}
+              <div className={`max-w-[70%] flex flex-col ${mine ? "items-end" : "items-start"}`}>
                 {!mine && isGroup && row.showMeta && (
-                  <span className="text-[11px] font-medium text-gray-500 mb-1 ml-1">
-                    {m.senderName}
-                  </span>
+                  <span className="text-[11px] font-bold text-slate-500 mb-1 ml-1">{m.senderName}</span>
                 )}
 
-                {/* Bubble (reply section integrated inside) */}
                 <div
-                  className={`rounded-2xl overflow-hidden shadow-sm max-w-full ${
-                    mine
-                      ? "rounded-br-md"
-                      : "rounded-bl-md border border-gray-100"
-                  } ${recalled ? "opacity-60" : ""}`}
+                  className={`rounded-[1.35rem] overflow-hidden max-w-full shadow-sm ${
+                    mine ? "rounded-br-md" : "rounded-bl-md border border-slate-200"
+                  } ${recalled ? "opacity-65" : ""}`}
                 >
-                  {/* Reply section — fused at top of bubble */}
                   {m.replyTo && !recalled && (
                     <button
                       type="button"
                       onClick={() => scrollToMessage(m.replyTo!.id)}
                       className={`w-full text-left px-3 py-2 flex items-center gap-2.5 border-b transition-opacity hover:opacity-80 ${
-                        mine
-                          ? "bg-sky-600 border-sky-400/30"
-                          : "bg-sky-50/80 border-gray-200"
+                        mine ? "bg-sky-700 border-sky-400/30" : "bg-sky-50 border-slate-200"
                       }`}
                     >
-                      {/* Accent line */}
                       <div
                         className={`w-[3px] self-stretch rounded-full shrink-0 ${
                           mine ? "bg-white/60" : "bg-sky-500"
                         }`}
                       />
-                      {/* Image thumbnail */}
-                      {m.replyTo.type === "IMAGE" &&
-                        m.replyTo.mediaUrl &&
-                        !m.replyTo.isRecalled && (
-                          <img
-                            src={m.replyTo.mediaUrl}
-                            alt=""
-                            className="w-9 h-9 rounded-lg object-cover shrink-0"
-                          />
-                        )}
-                      {/* Text */}
+                      {m.replyTo.type === "IMAGE" && m.replyTo.mediaUrl && !m.replyTo.isRecalled && (
+                        <img src={m.replyTo.mediaUrl} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0" />
+                      )}
                       <div className="min-w-0 flex-1">
-                        <p
-                          className={`text-[11px] font-semibold truncate ${
-                            mine ? "text-sky-100" : "text-sky-600"
-                          }`}
-                        >
+                        <p className={`text-[11px] font-bold truncate ${mine ? "text-sky-100" : "text-sky-700"}`}>
                           {m.replyTo.senderName}
                         </p>
-                        <p
-                          className={`text-[11px] truncate mt-0.5 flex items-center gap-1 ${
-                            mine ? "text-sky-200/80" : "text-gray-500"
-                          }`}
-                        >
-                          {!m.replyTo.isRecalled &&
-                            m.replyTo.type === "IMAGE" && <span>📷</span>}
-                          {!m.replyTo.isRecalled &&
-                            m.replyTo.type === "FILE" && (
-                              <Paperclip className="w-3 h-3 shrink-0" />
-                            )}
-                          {m.replyTo.isRecalled
-                            ? "Tin nhắn đã thu hồi"
-                            : m.replyTo.body?.trim() ||
-                              (m.replyTo.type === "IMAGE"
-                                ? "Ảnh"
-                                : m.replyTo.type === "FILE"
-                                  ? "Tệp đính kèm"
-                                  : "")}
+                        <p className={`text-[11px] truncate mt-0.5 ${mine ? "text-sky-100/80" : "text-slate-500"}`}>
+                          {replyPreview(m.replyTo)}
                         </p>
                       </div>
                     </button>
                   )}
 
-                  {/* Main bubble content */}
                   <div
-                    className={`relative px-3.5 py-2.5 text-sm ${
+                    className={`px-4 py-2.5 text-sm ${
                       mine
-                        ? "bg-gradient-to-br from-sky-500 to-sky-600 text-white"
-                        : "bg-white text-gray-900"
+                        ? "bg-gradient-to-br from-sky-500 to-sky-700 text-white"
+                        : "bg-white text-slate-900"
                     }`}
                   >
                     {recalled ? (
-                      <p className="text-xs italic opacity-80">
-                        Tin nhắn đã thu hồi
-                      </p>
+                      <p className="text-xs italic opacity-80">Tin nhắn đã thu hồi</p>
                     ) : (
                       <>
                         {m.type === "IMAGE" && m.mediaUrl ? (
-                          <a
-                            href={m.mediaUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="block mb-1.5"
-                          >
-                            <img
-                              src={m.mediaUrl}
-                              alt=""
-                              className="max-h-56 max-w-full rounded-xl object-cover"
-                            />
+                          <a href={m.mediaUrl} target="_blank" rel="noreferrer" className="block mb-2">
+                            <img src={m.mediaUrl} alt="" className="max-h-64 max-w-full rounded-2xl object-cover" />
                           </a>
                         ) : null}
                         {m.type === "FILE" && m.mediaUrl ? (
@@ -731,54 +576,48 @@ const ChatPanel = ({
                             href={m.mediaUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className={`flex items-center gap-2 text-sm underline ${mine ? "text-sky-100" : "text-sky-600"}`}
+                            className={`flex items-center gap-2 rounded-2xl px-3 py-2 mb-1 text-sm font-bold ${
+                              mine ? "bg-white/10 text-white" : "bg-slate-50 text-sky-700"
+                            }`}
                           >
-                            <Paperclip className="w-3.5 h-3.5 shrink-0" />
+                            <FileText className="w-4 h-4 shrink-0" />
                             Tải tệp đính kèm
                           </a>
                         ) : null}
                         {m.body?.trim() ? (
-                          <p className="whitespace-pre-wrap break-words leading-relaxed">
-                            {m.body}
-                          </p>
+                          <p className="whitespace-pre-wrap break-words leading-relaxed">{m.body}</p>
                         ) : null}
                       </>
                     )}
                   </div>
                 </div>
 
-                {/* Time */}
-                <span
-                  className={`text-[10px] text-gray-400 mt-0.5 px-1 ${mine ? "text-right" : "text-left"}`}
-                >
+                <span className={`text-[10px] text-slate-400 mt-1 px-1 ${mine ? "text-right" : "text-left"}`}>
                   {formatRelativeTimeVi(m.createdDate)}
                 </span>
               </div>
 
-              {/* Hover action buttons */}
               <div
-                className={`flex items-center gap-0.5 shrink-0 transition-opacity duration-100 ${
-                  hoveredMsgId === m.id
-                    ? "opacity-100"
-                    : "opacity-0 pointer-events-none"
+                className={`flex items-center gap-1 shrink-0 transition-opacity duration-100 ${
+                  hoveredMsgId === m.id ? "opacity-100" : "opacity-0 pointer-events-none"
                 } ${mine ? "flex-row-reverse" : "flex-row"}`}
               >
                 <button
                   type="button"
                   title="Trả lời"
                   onClick={() => setReplyTarget(m)}
-                  className="p-1.5 rounded-full text-gray-400 hover:text-sky-600 hover:bg-sky-50 transition-colors"
+                  className="w-8 h-8 rounded-full text-slate-400 hover:text-sky-600 hover:bg-white transition-colors flex items-center justify-center shadow-sm"
                 >
-                  <CornerUpLeft className="w-3.5 h-3.5" />
+                  <CornerUpLeft className="w-4 h-4" />
                 </button>
                 {onForward && (
                   <button
                     type="button"
                     title="Chuyển tiếp"
                     onClick={() => setForwardTarget(m)}
-                    className="p-1.5 rounded-full text-gray-400 hover:text-sky-600 hover:bg-sky-50 transition-colors"
+                    className="w-8 h-8 rounded-full text-slate-400 hover:text-sky-600 hover:bg-white transition-colors flex items-center justify-center shadow-sm"
                   >
-                    <CornerUpRight className="w-3.5 h-3.5" />
+                    <CornerUpRight className="w-4 h-4" />
                   </button>
                 )}
                 {mine && (
@@ -786,9 +625,9 @@ const ChatPanel = ({
                     type="button"
                     title="Thu hồi tin nhắn"
                     onClick={() => onRecall(m.id)}
-                    className="p-1.5 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                    className="w-8 h-8 rounded-full text-slate-400 hover:text-rose-500 hover:bg-white transition-colors flex items-center justify-center shadow-sm"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 )}
               </div>
@@ -797,34 +636,26 @@ const ChatPanel = ({
         })}
       </div>
 
-      {/* Reply preview bar */}
       {replyTarget && (
-        <div className="px-4 py-2 border-t border-gray-100 bg-sky-50 flex items-center gap-3 shrink-0">
-          <CornerUpLeft className="w-4 h-4 text-sky-500 shrink-0" />
+        <div className="px-5 py-3 border-t border-slate-200 bg-sky-50 flex items-center gap-3 shrink-0">
+          <CornerUpLeft className="w-4 h-4 text-sky-600 shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-[11px] font-semibold text-sky-700">
-              Đang trả lời {replyTarget.senderName}
-            </p>
-            <p className="text-xs text-gray-500 truncate">
-              {replyTarget.isRecalled
-                ? "Tin nhắn đã thu hồi"
-                : replyTarget.body?.trim() ||
-                  (replyTarget.type === "IMAGE" ? "📷 Ảnh" : "📎 Tệp")}
-            </p>
+            <p className="text-xs font-extrabold text-sky-800">Đang trả lời {replyTarget.senderName}</p>
+            <p className="text-xs text-slate-500 truncate">{messagePreview(replyTarget)}</p>
           </div>
           <button
             type="button"
             onClick={() => setReplyTarget(null)}
-            className="p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-white transition-colors shrink-0"
+            className="w-8 h-8 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-white transition-colors flex items-center justify-center shrink-0"
+            title="Bỏ trả lời"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {/* Input bar */}
       <form
-        className="px-3 py-3 border-t border-gray-200 bg-white flex items-end gap-2 shrink-0"
+        className="px-5 py-4 border-t border-slate-200 bg-white flex items-end gap-3 shrink-0"
         onSubmit={async (e) => {
           e.preventDefault();
           await handleSend();
@@ -847,7 +678,7 @@ const ChatPanel = ({
         <button
           type="button"
           title="Đính kèm tệp"
-          className="p-2.5 rounded-xl text-gray-400 hover:bg-gray-100 hover:text-sky-600 transition-colors shrink-0"
+          className="w-11 h-11 rounded-2xl text-slate-500 hover:bg-slate-100 hover:text-sky-600 transition-colors shrink-0 flex items-center justify-center"
           onClick={() => fileRef.current?.click()}
         >
           <Paperclip className="w-5 h-5" />
@@ -858,21 +689,20 @@ const ChatPanel = ({
           rows={1}
           onChange={handleTextareaChange}
           onKeyDown={handleTextareaKeyDown}
-          className="flex-1 min-w-0 border border-gray-200 rounded-2xl px-4 py-2.5 text-sm resize-none overflow-hidden focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400 transition-shadow bg-gray-50 focus:bg-white"
-          placeholder="Nhập tin nhắn… (Enter để gửi)"
-          style={{ height: "40px" }}
+          className="flex-1 min-w-0 border border-slate-200 rounded-2xl px-4 py-3 text-sm resize-none overflow-hidden focus:outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-400 transition-all bg-slate-50 focus:bg-white placeholder:text-slate-400"
+          placeholder="Nhập tin nhắn... Enter để gửi"
+          style={{ height: "44px" }}
         />
         <button
           type="submit"
           disabled={!body.trim()}
-          className="p-2.5 rounded-xl bg-sky-600 text-white hover:bg-sky-700 disabled:opacity-40 disabled:pointer-events-none transition-colors shrink-0"
+          className="w-11 h-11 rounded-2xl bg-sky-600 text-white hover:bg-sky-500 disabled:opacity-40 disabled:pointer-events-none transition-colors shrink-0 flex items-center justify-center shadow-lg shadow-sky-600/20"
           title="Gửi"
         >
           <Send className="w-4 h-4" />
         </button>
       </form>
 
-      {/* Forward modal */}
       {forwardTarget && (
         <ForwardModal
           message={forwardTarget}

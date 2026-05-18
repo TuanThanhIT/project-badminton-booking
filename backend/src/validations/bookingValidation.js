@@ -3,53 +3,45 @@ import { idParams } from "./common/numberField.js";
 import {
   bookingStatusField,
   cancelReasonField,
-  codeField,
   noteField,
-  paymentAmountField,
   paymentMethodField,
-  paymentStatusField,
-  totalAmountField,
 } from "./common/bookingFields.js";
 import { limitField, pageField } from "./common/paginationFields.js";
 import { dateField, keywordField } from "./common/searchFields.js";
+import { BOOKING_STATUS } from "../constants/bookingConstant.js";
 
 export const createBookingSchema = {
   body: Joi.object({
-    bookingStatus: bookingStatusField.required(),
-    totalAmount: totalAmountField,
-    paymentAmount: paymentAmountField,
+    branchId: Joi.number().integer().positive().required(),
+    courtId: Joi.number().integer().positive().required(),
+    playDate: Joi.date().required(),
+    startTime: Joi.string()
+      .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
+      .required(),
+    endTime: Joi.string()
+      .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
+      .required(),
     paymentMethod: paymentMethodField,
-    paymentStatus: paymentStatusField,
-    bookingDetails: Joi.array()
-      .items(
-        Joi.object({
-          courtScheduleId: idParams("courtScheduleId"),
-        }),
-      )
-      .min(1)
-      .max(3)
-      .unique((a, b) => a.courtScheduleId === b.courtScheduleId)
-      .required()
-      .messages({
-        "array.base": "Booking details must be an array",
-        "array.min": "At least one time slot must be selected",
-        "array.max": "You can select up to 3 time slots per court per day",
-        "any.required": "Booking details are required",
-      }),
-
-    code: codeField,
+    discountId: Joi.number().integer().positive().allow(null),
     note: noteField,
-  })
-    // custom rule: paymentAmount === totalAmount
-    .custom((value, helpers) => {
-      if (Math.abs(value.paymentAmount - value.totalAmount) > 0.01) {
-        return helpers.error("any.custom");
-      }
-      return value;
-    })
-    .messages({
-      "any.custom": "Payment amount must be equal to total amount",
-    }),
+  }),
+};
+
+export const bookingCallbackSchema = {
+  body: Joi.object({
+    vnp_Amount: Joi.string().required(),
+    vnp_BankCode: Joi.string().allow("").optional(),
+    vnp_BankTranNo: Joi.string().allow("").optional(),
+    vnp_CardType: Joi.string().allow("").optional(),
+    vnp_OrderInfo: Joi.string().required(),
+    vnp_PayDate: Joi.string().allow("").optional(),
+    vnp_ResponseCode: Joi.string().required(),
+    vnp_TmnCode: Joi.string().required(),
+    vnp_TransactionNo: Joi.string().allow("").optional(),
+    vnp_TransactionStatus: Joi.string().required(),
+    vnp_TxnRef: Joi.string().required(),
+    vnp_SecureHash: Joi.string().required(),
+  }),
 };
 
 export const cancelBookingSchema = {
@@ -63,7 +55,7 @@ export const cancelBookingSchema = {
 
 export const getBookingsSchema = {
   query: Joi.object({
-    status: bookingStatusField.optional(),
+    status: bookingStatusField.valid("ALL", ...Object.values(BOOKING_STATUS)).optional(),
     keyword: keywordField,
     date: dateField,
     page: pageField,

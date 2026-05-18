@@ -4,6 +4,12 @@ import jwt from "jsonwebtoken";
 
 import ApiError from "../errors/ApiError.js";
 
+// File này tạo Socket.IO server. Khi frontend connect lên, backend lấy token, verify JWT, rồi cho socket vào room riêng:
+
+// user:5
+// role:USER
+// Nhờ vậy muốn gửi realtime cho user nào thì emit vào đúng room user đó.
+
 let io = null;
 export const initSocket = (httpServer) => {
   io = new IOServer(httpServer, {
@@ -16,7 +22,7 @@ export const initSocket = (httpServer) => {
     const token = socket.handshake.auth?.token;
 
     if (!token) {
-      return next(new ApiError(StatusCodes.NOT_FOUND, "NO_TOKEN"));
+      return next(new ApiError(StatusCodes.UNAUTHORIZED, "NO_TOKEN"));
     }
 
     try {
@@ -28,7 +34,7 @@ export const initSocket = (httpServer) => {
 
       return next();
     } catch (error) {
-      return next(new ApiError(StatusCodes.BAD_REQUEST, "INVALID_TOKEN"));
+      return next(new ApiError(StatusCodes.UNAUTHORIZED, "INVALID_TOKEN"));
     }
   });
 

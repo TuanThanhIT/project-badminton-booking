@@ -19,6 +19,16 @@ const Order = sequelize.define(
         },
       },
     },
+    previousOrderStatus: {
+      type: DataTypes.ENUM(...Object.values(ORDER_STATUS)),
+      allowNull: true,
+      validate: {
+        isIn: {
+          args: [Object.values(ORDER_STATUS)],
+          msg: "Invalid previous order status",
+        },
+      },
+    },
     subtotal: {
       type: DataTypes.DECIMAL(12, 2),
       allowNull: false,
@@ -248,6 +258,80 @@ const Order = sequelize.define(
         len: {
           args: [5, 255],
           msg: "Cancel reason must be between 5 and 255 characters",
+        },
+      },
+    },
+    cancelRequestedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      validate: {
+        isDate: {
+          msg: "cancelRequestedAt must be a valid date",
+        },
+      },
+    },
+    cancelHandledAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      validate: {
+        isDate: {
+          msg: "cancelHandledAt must be a valid date",
+        },
+      },
+    },
+    cancelRejectReason: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      validate: {
+        len: {
+          args: [0, 255],
+          msg: "Cancel reject reason must be at most 255 characters",
+        },
+      },
+    },
+    returnReason: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      validate: {
+        len: {
+          args: [0, 255],
+          msg: "Return reason must be at most 255 characters",
+        },
+      },
+    },
+    returnRequestedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      validate: {
+        isDate: {
+          msg: "returnRequestedAt must be a valid date",
+        },
+      },
+    },
+    returnHandledAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      validate: {
+        isDate: {
+          msg: "returnHandledAt must be a valid date",
+        },
+      },
+    },
+    cancelledAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      validate: {
+        isDate: {
+          msg: "cancelledAt must be a valid date",
+        },
+      },
+    },
+    returnedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      validate: {
+        isDate: {
+          msg: "returnedAt must be a valid date",
         },
       },
     },

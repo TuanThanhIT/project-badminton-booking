@@ -24,10 +24,14 @@ var _postSocialRoute = _interopRequireDefault(require("./routes/user/postSocialR
 var _profileRoute = _interopRequireDefault(require("./routes/user/profileRoute.js"));
 var _conversationRoute = _interopRequireDefault(require("./routes/user/conversationRoute.js"));
 var _userSearchRoute = _interopRequireDefault(require("./routes/user/userSearchRoute.js"));
+var _monthlyBookingRoute = _interopRequireDefault(require("./routes/user/monthlyBookingRoute.js"));
 var _orderRoute = _interopRequireDefault(require("./routes/user/orderRoute.js"));
 var _discountRoute = _interopRequireDefault(require("./routes/user/discountRoute.js"));
 var _orderRoute2 = _interopRequireDefault(require("./routes/employee/orderRoute.js"));
 var _webhookRoute = _interopRequireDefault(require("./routes/user/webhookRoute.js"));
+var _feedbackRoute = _interopRequireDefault(require("./routes/user/feedbackRoute.js"));
+var _notificationRoute = _interopRequireDefault(require("./routes/user/notificationRoute.js"));
+var _homeRoute = _interopRequireDefault(require("./routes/user/homeRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -43,6 +47,7 @@ app.use((0, _cors["default"])({
 app.use((0, _cookieParser["default"])());
 
 // User
+(0, _homeRoute["default"])(app);
 (0, _authRoute["default"])(app);
 (0, _cateRoute["default"])(app);
 (0, _productRoute["default"])(app);
@@ -52,9 +57,12 @@ app.use((0, _cookieParser["default"])());
 (0, _cartRoute["default"])(app);
 (0, _walletRoute["default"])(app);
 (0, _addressRoute["default"])(app);
+(0, _monthlyBookingRoute["default"])(app);
 (0, _orderRoute["default"])(app);
 (0, _discountRoute["default"])(app);
 (0, _webhookRoute["default"])(app);
+(0, _feedbackRoute["default"])(app);
+(0, _notificationRoute["default"])(app);
 
 // Post
 (0, _postRoute["default"])(app);

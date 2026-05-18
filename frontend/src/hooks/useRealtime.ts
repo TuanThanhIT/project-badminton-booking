@@ -1,65 +1,61 @@
 import { useEffect, useState } from "react";
-import { connectSocket } from "../socket";
 import { toast } from "react-toastify";
+import { connectSocket, disconnectSocket } from "../socket";
 import type { NotificationResponse } from "../types/notification";
+import type { OrderShippingRealtimePayload } from "../types/order";
+
+// Hook này chỉ nghe socket, không dispatch Redux trực tiếp. Nó trả ra 2 loại data:
+
+// notification   -> thông báo chuông
+// shippingUpdate -> cập nhật đơn hàng
+
+const SOCKET_EVENTS = {
+  NOTIFICATION_NEW: "notification:new",
+  ORDER_SHIPPING_UPDATED: "order:shipping-updated",
+} as const;
 
 export const useRealtime = (token: string) => {
   const [notification, setNotification] = useState<NotificationResponse>();
+  const [shippingUpdate, setShippingUpdate] =
+    useState<OrderShippingRealtimePayload>();
 
   useEffect(() => {
     if (!token) return;
 
-    const s = connectSocket(token);
+    const socket = connectSocket(token);
 
-    s.on("connect", () => console.log("🔥 SOCKET CONNECTED"));
-
-    // Danh sách event
-    const events = [
-      "epl-cancel-order",
-      "epl-create-order",
-      "epl-create-booking",
-      "epl-cancel-booking",
-
-      "us-confirm-order",
-      "us-complete-order",
-      "us-cancel-order",
-      "us-confirm-booking",
-      "us-complete-booking",
-      "us-cancel-booking",
-
-      "adm-cancel-order",
-      "adm-create-order",
-      "adm-create-booking",
-      "adm-cancel-booking",
-      "adm-confirm-order",
-      "adm-complete-order",
-      "adm-cancel-order",
-      "adm-confirm-booking",
-      "adm-complete-booking",
-      "adm-cancel-booking",
-      "adm-check-in",
-      "adm-check-out",
-    ] as const;
-
-    // Lắng nghe tất cả event
-    events.forEach((eventName) => {
-      s.on(eventName, (data) => {
-        toast.info(data.message);
-
-        const newNotification = {
-          ...data,
-          type: eventName,
-        };
-
-        setNotification(newNotification);
-      });
+    socket.on("connect", () => {
+      console.log("SOCKET CONNECTED:", socket.id);
     });
 
+    socket.on("disconnect", () => {
+      console.log("SOCKET DISCONNECTED");
+    });
+
+    socket.on(SOCKET_EVENTS.NOTIFICATION_NEW, (data: NotificationResponse) => {
+      toast.info(data.message);
+      setNotification(data);
+    });
+
+    socket.on(
+      SOCKET_EVENTS.ORDER_SHIPPING_UPDATED,
+      (data: OrderShippingRealtimePayload) => {
+        toast.info(data.message || "Trạng thái đơn hàng vừa được cập nhật");
+        setShippingUpdate(data);
+      },
+    );
+
     return () => {
-      events.forEach((eventName) => s.off(eventName));
-      s.disconnect();
+      socket.off(SOCKET_EVENTS.NOTIFICATION_NEW);
+      socket.off(SOCKET_EVENTS.ORDER_SHIPPING_UPDATED);
+      socket.off("connect");
+      socket.off("disconnect");
+      disconnectSocket();
     };
   }, [token]);
 
-  return { notification, setNotification };
+  return {
+    notification,
+    shippingUpdate,
+  };
 };

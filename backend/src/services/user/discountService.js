@@ -26,18 +26,34 @@ const checkDiscountBookingService = async (data) => {
   if (!discount)
     throw new NotFoundError("Mã giảm giá không tồn tại hoặc đã hết hạn");
 
+  if (
+    discount.applyType !== DISCOUNT_APPLY_TYPE.BOOKING &&
+    discount.applyType !== DISCOUNT_APPLY_TYPE.ALL
+  ) {
+    throw new BadRequestError("MÃ£ khÃ´ng Ã¡p dá»¥ng cho Ä‘áº·t sÃ¢n");
+  }
+
   if (bookingAmount < discount.minAmount) {
     throw new BadRequestError(
       `Đơn hàng tối thiểu ${discount.minAmount.toLocaleString()}đ để áp dụng mã này`,
     );
   }
 
+  if (discount.usageLimit && discount.usageCount >= discount.usageLimit) {
+    throw new BadRequestError("MÃ£ giáº£m giÃ¡ Ä‘Ã£ háº¿t lÆ°á»£t sá»­ dá»¥ng");
+  }
+
   let discountValue = 0;
   if (discount.type === DISCOUNT_TYPE.PERCENT) {
     discountValue = (bookingAmount * discount.value) / 100;
+    if (discount.maxDiscount) {
+      discountValue = Math.min(discountValue, discount.maxDiscount);
+    }
   } else {
     discountValue = discount.value;
   }
+
+  discountValue = Math.min(discountValue, bookingAmount);
 
   return {
     discountId: discount.id,
@@ -61,7 +77,7 @@ const applyDiscountService = async ({ code, userId, cartId }) => {
     const discount = await Discount.findOne({
       where: { code: normalizedCode },
       transaction: t,
-      lock: t.UPDATE, //
+      lock: t.LOCK.UPDATE,
     });
 
     if (!discount) {
@@ -129,8 +145,12 @@ const applyDiscountService = async ({ code, userId, cartId }) => {
 };
 
 const getDiscountsCheckoutService = async (data) => {
-  const { amount } = data;
+  const { amount, targetType = DISCOUNT_TARGET_TYPE.ORDER } = data;
   const today = new Date().toISOString().split("T")[0];
+  const applyTypes =
+    targetType === DISCOUNT_TARGET_TYPE.BOOKING
+      ? [DISCOUNT_APPLY_TYPE.BOOKING, DISCOUNT_APPLY_TYPE.ALL]
+      : [DISCOUNT_APPLY_TYPE.ORDER, DISCOUNT_APPLY_TYPE.ALL];
 
   const discounts = await Discount.findAll({
     attributes: [
@@ -154,10 +174,12 @@ const getDiscountsCheckoutService = async (data) => {
       endDate: {
         [Op.gte]: today,
       },
-      applyType: DISCOUNT_APPLY_TYPE.ORDER,
+      applyType: {
+        [Op.in]: applyTypes,
+      },
       [Op.or]: [
         {
-          usageLimit: null, // không giới hạn
+          usageLimit: null,
         },
         {
           usageCount: {

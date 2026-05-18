@@ -23,10 +23,14 @@ import initPostSocialRoute from "./routes/user/postSocialRoute.js";
 import initProfileRoute from "./routes/user/profileRoute.js";
 import initConversationRoute from "./routes/user/conversationRoute.js";
 import initUserSearchRoute from "./routes/user/userSearchRoute.js";
+import initMonthlyBookingRoute from "./routes/user/monthlyBookingRoute.js";
 import initOrderRoute from "./routes/user/orderRoute.js";
 import initDiscountRoute from "./routes/user/discountRoute.js";
 import initEmployeeOrderRoute from "./routes/employee/orderRoute.js";
 import initWebhookRoute from "./routes/user/webhookRoute.js";
+import initFeedbackRoute from "./routes/user/feedbackRoute.js";
+import initNotificationRoute from "./routes/user/notificationRoute.js";
+import initHomeRoute from "./routes/user/homeRoute.js";
 
 dotenv.config();
 
@@ -45,6 +49,7 @@ app.use(
 app.use(cookieParser());
 
 // User
+initHomeRoute(app);
 initAuthRoute(app);
 initCateRoute(app);
 initProductRoute(app);
@@ -54,9 +59,12 @@ initBookingRoute(app);
 initCartRoute(app);
 initWalletRoute(app);
 initAddressRoute(app);
+initMonthlyBookingRoute(app);
 initOrderRoute(app);
 initDiscountRoute(app);
 initWebhookRoute(app);
+initFeedbackRoute(app);
+initNotificationRoute(app);
 
 // Post
 initPostRoute(app);

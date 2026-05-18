@@ -17,6 +17,10 @@ import type {
   UserOrdersResponse,
   WalletOrderConfirmRequest,
   WalletOrderConfirmResponse,
+  RequestCancelOrderRequest,
+  RequestCancelOrderResponse,
+  RequestReturnOrderRequest,
+  RequestReturnOrderResponse,
 } from "../../types/order";
 import type { VNPayCallbackRequest } from "../../types/wallet";
 import instance from "../../utils/axiosCustomize";
@@ -78,6 +82,24 @@ const getTrackingProgressService = (data: OrderRequest) => {
   );
 };
 
+const requestCancelOrderService = (
+  orderId: number,
+  data: RequestCancelOrderRequest,
+) =>
+  instance.post<RequestCancelOrderResponse>(
+    `/user/orders/${orderId}/cancel-request`,
+    data,
+  );
+
+const requestReturnOrderService = (
+  orderId: number,
+  data: RequestReturnOrderRequest,
+) =>
+  instance.post<RequestReturnOrderResponse>(
+    `/user/orders/${orderId}/return-request`,
+    data,
+  );
+
 const orderService = {
   getCheckoutPreviewService,
   calculateShippingService,
@@ -90,6 +112,8 @@ const orderService = {
   getOrderDetailService,
   getOrderTrackingService,
   getTrackingProgressService,
+  requestCancelOrderService,
+  requestReturnOrderService,
 };
 
 export default orderService;

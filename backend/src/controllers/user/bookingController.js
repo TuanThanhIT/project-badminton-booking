@@ -7,6 +7,7 @@ const createBookingController = asyncHandler(async (req, res) => {
   const bookingData = {
     ...req.body,
     userId: req.user.id,
+    ip: req.ip,
   };
 
   const result = await bookingService.createBookingService(bookingData);
@@ -29,9 +30,18 @@ const getMyBookingsController = asyncHandler(async (req, res) => {
     .json(new SuccessResponse("Lấy lịch sử đặt sân thành công", result));
 });
 
+const bookingCallbackController = asyncHandler(async (req, res) => {
+  const result = await bookingService.bookingCallbackService(req.body);
+
+  return res
+    .status(200)
+    .json(new SuccessResponse("Hoàn tất thanh toán đặt sân", result));
+});
+
 const bookingController = {
   createBookingController,
   getMyBookingsController,
+  bookingCallbackController,
 };
 
 export default bookingController;

@@ -18,7 +18,7 @@ const getPagedBranchesController = asyncHandler(async (req, res) => {
 });
 
 const getBranchDetailController = asyncHandler(async (req, res) => {
-  const data = { branchId: req.params.branchId };
+  const data = { branchId: req.params.branchId, userId: req.user.id };
   const branchDetail = await branchService.getBranchDetailService(data);
   return res
     .status(200)

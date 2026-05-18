@@ -291,18 +291,18 @@ const PostCommentsSection = ({ postId, open }: Props) => {
   if (!open) return null;
 
   return (
-    <div className="border-t border-gray-100 bg-[#f0f2f5] px-3 py-3">
-      <div className="rounded-xl bg-white border border-gray-100 shadow-sm overflow-hidden">
-        <div className="px-3 py-2.5 border-b border-gray-100 bg-white">
+    <div className="border-t border-slate-200 bg-[#f0f2f5] px-4 py-4">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div className="px-4 py-3 border-b border-slate-100 bg-white">
           <p className="text-[13px] font-semibold text-gray-700">Bình luận</p>
         </div>
 
-        <div className="p-3 space-y-3">
+        <div className="space-y-3 p-4">
           <div className="flex gap-2 items-end">
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="flex-1 min-h-[44px] max-h-40 rounded-2xl border-0 bg-gray-100 px-4 py-2.5 text-[15px] text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-400 resize-y"
+              className="min-h-[44px] max-h-40 flex-1 resize-y rounded-2xl border-0 bg-slate-100 px-4 py-2.5 text-[15px] text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
               placeholder="Viết bình luận công khai..."
               rows={1}
             />
@@ -310,7 +310,7 @@ const PostCommentsSection = ({ postId, open }: Props) => {
               type="button"
               disabled={!canSubmit || submitting}
               onClick={handleSubmit}
-              className="shrink-0 px-4 py-2 rounded-full bg-sky-600 text-white text-[14px] font-semibold disabled:opacity-50 disabled:pointer-events-none"
+              className="shrink-0 rounded-full bg-sky-600 px-4 py-2 text-[14px] font-semibold text-white disabled:pointer-events-none disabled:opacity-50"
             >
               {submitting ? "…" : "Đăng"}
             </button>

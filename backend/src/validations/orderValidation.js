@@ -18,6 +18,11 @@ import { limitField, pageField } from "./common/paginationFields.js";
 import { emailField, otpCodeField } from "./common/authFields.js";
 import OrderGroup from "../models/orderGroup.js";
 
+const buyNowItemSchema = Joi.object({
+  variantId: idParams("variantId"),
+  quantity: quantityField,
+});
+
 // export const createOrderSchema = {
 //   body: Joi.object({
 //     orderStatus: orderStatusField.required(),
@@ -114,7 +119,9 @@ export const checkoutPreviewSchema = {
   body: Joi.object({
     cartId: idParams("cartId"),
     addressId: idParams("addressId"),
-  }),
+    cartItemIds: Joi.array().items(idParams("cartItemId")).min(1),
+    buyNowItem: buyNowItemSchema,
+  }).xor("cartItemIds", "buyNowItem"),
 };
 
 export const calculateShippingSchema = {
@@ -133,9 +140,11 @@ export const createOrderSchema = {
   body: Joi.object({
     cartId: idParams("cartId"),
     addressId: idParams("addressId"),
+    cartItemIds: Joi.array().items(idParams("cartItemId")).min(1),
+    buyNowItem: buyNowItemSchema,
     paymentMethod: paymentMethodField,
     note: noteField,
-  }),
+  }).xor("cartItemIds", "buyNowItem"),
 };
 
 export const orderCallbackSchema = {
@@ -239,5 +248,35 @@ export const getUserOrdersSchema = {
     limit: limitField,
     dateFrom: dateField,
     dateTo: dateField,
+  }),
+};
+
+export const requestOrderActionSchema = {
+  params: Joi.object({
+    orderId: idParams("orderId"),
+  }),
+  body: Joi.object({
+    reason: Joi.string().trim().max(500).allow("", null).messages({
+      "string.base": "Lý do phải là chuỗi",
+      "string.max": "Lý do không được vượt quá 500 ký tự",
+    }),
+  }),
+};
+
+export const orderActionIdSchema = {
+  params: Joi.object({
+    orderId: idParams("orderId"),
+  }),
+};
+
+export const rejectOrderActionSchema = {
+  params: Joi.object({
+    orderId: idParams("orderId"),
+  }),
+  body: Joi.object({
+    reason: Joi.string().trim().max(500).allow("", null).messages({
+      "string.base": "Lý do từ chối phải là chuỗi",
+      "string.max": "Lý do từ chối không được vượt quá 500 ký tự",
+    }),
   }),
 };

@@ -4,9 +4,13 @@ export const ORDER_STATUS_LABEL: Record<string, string> = {
   PREPARING: "Đang chuẩn bị",
   READY_TO_SHIP: "Chờ bàn giao vận chuyển",
   SHIPPING: "Đang giao hàng",
+  CANCEL_REQUESTED: "Yêu cầu hủy",
+  CANCELLED: "Đã hủy",
+  RETURN_REQUESTED: "Yêu cầu trả hàng",
+  RETURNING: "Đang hoàn hàng",
+  RETURNED: "Đã hoàn hàng",
   COMPLETED: "Hoàn thành",
   FAILED: "Thất bại",
-  CANCELLED: "Đã hủy",
 };
 
 export const SHIPPING_STATUS_LABEL: Record<string, string> = {
@@ -17,4 +21,8 @@ export const SHIPPING_STATUS_LABEL: Record<string, string> = {
   DELIVERING: "Đang giao",
   DELIVERED: "Giao thành công",
   FAILED: "Giao thất bại",
+  RETURNING: "Đang hoàn hàng",
+  RETURNED: "Đã hoàn hàng",
+  CANCELLED: "Đã hủy",
+  PENDING: "Chờ xử lý",
 };

@@ -11,28 +11,23 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { type LatLngExpression } from "leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-
+import { toast } from "react-toastify";
+import { Building2, Home, MapPinHouse, X } from "lucide-react";
 import {
   FormAddAddressSchema,
   type AddOrUpdateAddressPayload,
   type FormAddAddress,
 } from "../../../../schemas/FormAddAddressSchema";
-
 import { useAppSelector } from "../../../../redux/hook";
-import { toast } from "react-toastify";
-import { Building2, Home, MapPinHouse, X } from "lucide-react";
-
 import type {
   Address,
   District,
   Province,
   Ward,
 } from "../../../../types/address";
-
 import locationService from "../../../../services/user/locationService";
 import { showConfirmDialog } from "../../../../utils/swalHelper";
 
-/* FIX LEAFLET ICON */
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 
 L.Icon.Default.mergeOptions({
@@ -43,6 +38,11 @@ L.Icon.Default.mergeOptions({
 });
 
 const defaultCenter: LatLngExpression = [10.7769, 106.7009];
+
+const inputClass =
+  "w-full rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 hover:border-sky-300 focus:border-sky-500 focus:ring-4 focus:ring-sky-100";
+
+const labelClass = "text-sm font-medium text-slate-600";
 
 const ChangeMapView = ({ center }: { center: [number, number] }) => {
   const map = useMap();
@@ -99,20 +99,17 @@ const AddOrUpdateAddressForm = ({
   const provinceId = watch("provinceId");
   const districtId = watch("districtId");
   const isDefaultValue = watch("isDefault");
+  const labelValue = watch("label");
 
   const [marker, setMarker] = useState<[number, number] | null>(null);
-
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [wards, setWards] = useState<Ward[]>([]);
 
   useEffect(() => {
-    if (!hasDefault && !isEdit) {
-      setValue("isDefault", true);
-    }
+    if (!hasDefault && !isEdit) setValue("isDefault", true);
   }, [hasDefault, isEdit, setValue]);
 
-  /* LOAD PROVINCES */
   useEffect(() => {
     const load = async () => {
       try {
@@ -126,16 +123,12 @@ const AddOrUpdateAddressForm = ({
     load();
   }, []);
 
-  /* LOAD DISTRICTS */
   useEffect(() => {
     if (!provinceId) return;
 
     const load = async () => {
       try {
-        const data = await locationService.getDistrictsService(
-          Number(provinceId),
-        );
-
+        const data = await locationService.getDistrictsService(Number(provinceId));
         setDistricts(data);
 
         if (!isEdit) {
@@ -151,19 +144,15 @@ const AddOrUpdateAddressForm = ({
     load();
   }, [provinceId, isEdit, setValue]);
 
-  /* LOAD WARDS */
   useEffect(() => {
     if (!districtId) return;
 
     const load = async () => {
       try {
         const data = await locationService.getWardsService(Number(districtId));
-
         setWards(data);
 
-        if (!isEdit) {
-          setValue("wardCode", "");
-        }
+        if (!isEdit) setValue("wardCode", "");
       } catch {
         toast.error("Không lấy được dữ liệu phường");
       }
@@ -172,7 +161,6 @@ const AddOrUpdateAddressForm = ({
     load();
   }, [districtId, isEdit, setValue]);
 
-  /* LOAD DATA WHEN EDIT */
   useEffect(() => {
     if (!address) return;
 
@@ -181,7 +169,6 @@ const AddOrUpdateAddressForm = ({
         const resDistrict = await locationService.getDistrictsService(
           Number(address.provinceId),
         );
-
         const resWard = await locationService.getWardsService(
           Number(address.districtId),
         );
@@ -213,15 +200,12 @@ const AddOrUpdateAddressForm = ({
     loadEdit();
   }, [address, reset]);
 
-  /* MAP CLICK */
   const MapClick = () => {
     useMapEvents({
       click(e) {
         const lat = e.latlng.lat;
         const lng = e.latlng.lng;
-
         setMarker([lat, lng]);
-
         setValue("latitude", lat);
         setValue("longitude", lng);
       },
@@ -237,15 +221,12 @@ const AddOrUpdateAddressForm = ({
     }
 
     const [lat, lng] = marker;
-
     const provinceName = provinces.find(
       (p) => p.ProvinceID === Number(data.provinceId),
     )?.ProvinceName;
-
     const districtName = districts.find(
       (d) => d.DistrictID === Number(data.districtId),
     )?.DistrictName;
-
     const wardName = wards.find((w) => w.WardCode === data.wardCode)?.WardName;
 
     if (!provinceName || !districtName || !wardName) return;
@@ -260,11 +241,8 @@ const AddOrUpdateAddressForm = ({
       addressId: address?.id,
     };
 
-    if (isEdit && onUpdateAddress) {
-      onUpdateAddress(payload);
-    } else {
-      onSubmitAddress(payload);
-    }
+    if (isEdit && onUpdateAddress) onUpdateAddress(payload);
+    else onSubmitAddress(payload);
 
     setOpenAdd(false);
     setOpen(true);
@@ -288,195 +266,194 @@ const AddOrUpdateAddressForm = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white w-[70vw] h-[70vh] max-w-[900px] rounded-xl shadow-xl flex flex-col">
-        {/* HEADER */}
-        <div className="flex items-center justify-between px-6 py-4 bg-sky-600 text-white rounded-t-xl">
-          <div className="flex items-center gap-2 text-lg font-semibold">
-            <MapPinHouse size={20} />
-            {isEdit ? "Cập nhật địa chỉ" : "Thêm địa chỉ mới"}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4">
+      <div className="flex h-[86vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-5 py-4 sm:px-6">
+          <div>
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-800">
+              <MapPinHouse size={20} className="text-sky-600" />
+              {isEdit ? "Cập nhật địa chỉ" : "Thêm địa chỉ mới"}
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Điền thông tin và chọn vị trí giao hàng trên bản đồ.
+            </p>
           </div>
 
           <button
+            type="button"
             onClick={handleClose}
-            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-800"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
           >
-            <X size={18} />
+            <X size={20} />
           </button>
         </div>
 
-        {/* BODY */}
-        <div className="p-6 grid grid-cols-2 gap-3 overflow-y-auto">
-          {/* FULL NAME */}
-          <div>
-            <div className="flex flex-row items-center justify-between">
-              <label className="block  mb-1">Họ và tên</label>
-              <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
-                {errors.fullName?.message || " "}
-              </p>
-            </div>
-            <input className="input" {...register("fullName")} />
-          </div>
+        <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50 p-4 sm:p-5">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <div className="mb-1.5 flex items-center justify-between gap-3">
+                    <label className={labelClass}>Họ và tên</label>
+                    <p className="text-xs text-red-500">{errors.fullName?.message || " "}</p>
+                  </div>
+                  <input className={inputClass} {...register("fullName")} />
+                </div>
 
-          {/* PHONE */}
-          <div>
-            <div className="flex flex-row items-center justify-between">
-              <label className="block mb-1">Số điện thoại</label>
-              <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
-                {errors.phoneNumber?.message || " "}
-              </p>
-            </div>
-            <input className="input" {...register("phoneNumber")} />
-          </div>
+                <div>
+                  <div className="mb-1.5 flex items-center justify-between gap-3">
+                    <label className={labelClass}>Số điện thoại</label>
+                    <p className="text-xs text-red-500">{errors.phoneNumber?.message || " "}</p>
+                  </div>
+                  <input className={inputClass} {...register("phoneNumber")} />
+                </div>
 
-          {/* PROVINCE */}
-          <div>
-            <div className="flex flex-row items-center justify-between">
-              <label className="block  mb-1">Tỉnh / Thành phố</label>
-              <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
-                {errors.provinceId?.message || " "}
-              </p>
-            </div>
-            <select className="input" {...register("provinceId")}>
-              <option value="">Chọn tỉnh</option>
-              {provinces.map((p) => (
-                <option key={p.ProvinceID} value={p.ProvinceID}>
-                  {p.ProvinceName}
-                </option>
-              ))}
-            </select>
-          </div>
+                <div>
+                  <div className="mb-1.5 flex items-center justify-between gap-3">
+                    <label className={labelClass}>Tỉnh / Thành phố</label>
+                    <p className="text-xs text-red-500">{errors.provinceId?.message || " "}</p>
+                  </div>
+                  <select className={inputClass} {...register("provinceId")}>
+                    <option value="">Chọn tỉnh</option>
+                    {provinces.map((p) => (
+                      <option key={p.ProvinceID} value={p.ProvinceID}>
+                        {p.ProvinceName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-          {/* DISTRICT */}
-          <div>
-            <div className="flex flex-row items-center justify-between">
-              <label className="block mb-1">Quận / Huyện</label>
-              <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
-                {errors.districtId?.message || " "}
-              </p>
-            </div>
-            <select className="input" {...register("districtId")}>
-              <option value="">Chọn quận</option>
-              {districts.map((d) => (
-                <option key={d.DistrictID} value={d.DistrictID}>
-                  {d.DistrictName}
-                </option>
-              ))}
-            </select>
-          </div>
+                <div>
+                  <div className="mb-1.5 flex items-center justify-between gap-3">
+                    <label className={labelClass}>Quận / Huyện</label>
+                    <p className="text-xs text-red-500">{errors.districtId?.message || " "}</p>
+                  </div>
+                  <select className={inputClass} {...register("districtId")}>
+                    <option value="">Chọn quận</option>
+                    {districts.map((d) => (
+                      <option key={d.DistrictID} value={d.DistrictID}>
+                        {d.DistrictName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-          {/* WARD */}
-          <div>
-            <div className="flex flex-row items-center justify-between">
-              <label className="block mb-1">Phường / Xã</label>
-              <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
-                {errors.fullName?.message || " "}
-              </p>
-            </div>
-            <select className="input" {...register("wardCode")}>
-              <option value="">Chọn phường</option>
-              {wards.map((w) => (
-                <option key={w.WardCode} value={w.WardCode}>
-                  {w.WardName}
-                </option>
-              ))}
-            </select>
-          </div>
+                <div>
+                  <div className="mb-1.5 flex items-center justify-between gap-3">
+                    <label className={labelClass}>Phường / Xã</label>
+                    <p className="text-xs text-red-500">{errors.wardCode?.message || " "}</p>
+                  </div>
+                  <select className={inputClass} {...register("wardCode")}>
+                    <option value="">Chọn phường</option>
+                    {wards.map((w) => (
+                      <option key={w.WardCode} value={w.WardCode}>
+                        {w.WardName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-          {/* ADDRESS */}
-          <div>
-            <div className="flex flex-row items-center justify-between">
-              <label className="block  mb-1">Địa chỉ chính xác</label>
-              <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
-                {errors.address?.message || " "}
-              </p>
-            </div>
-            <input className="input" {...register("address")} />
-          </div>
+                <div>
+                  <div className="mb-1.5 flex items-center justify-between gap-3">
+                    <label className={labelClass}>Địa chỉ chính xác</label>
+                    <p className="text-xs text-red-500">{errors.address?.message || " "}</p>
+                  </div>
+                  <input className={inputClass} {...register("address")} />
+                </div>
+              </div>
 
-          {/* LABEL */}
-          <div className="col-span-2">
-            <div className="flex gap-6">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="radio" value="HOME" {...register("label")} />
-                Nhà riêng
-                <Home size={16} className="text-sky-500" />
+              <div>
+                <p className="mb-2 text-sm font-medium text-slate-600">Loại địa chỉ</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { value: "HOME", label: "Nhà riêng", icon: Home },
+                    { value: "OFFICE", label: "Văn phòng", icon: Building2 },
+                  ].map((item) => {
+                    const Icon = item.icon;
+                    const active = labelValue === item.value;
+                    return (
+                      <label
+                        key={item.value}
+                        className={`flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition ${
+                          active
+                            ? "border-sky-300 bg-sky-50 text-sky-700"
+                            : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          value={item.value}
+                          {...register("label")}
+                          className="sr-only"
+                        />
+                        <Icon size={16} />
+                        {item.label}
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-600">
+                <input
+                  type="checkbox"
+                  {...register("isDefault")}
+                  checked={isDefaultValue}
+                  disabled={(!isEdit && !hasDefault) || (isEdit && address?.isDefault)}
+                  onChange={(e) => {
+                    if (!e.target.checked) return;
+                    setValue("isDefault", true);
+                  }}
+                  className="h-4 w-4 accent-sky-600"
+                />
+                <span>Đặt làm mặc định</span>
               </label>
-
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="radio" value="OFFICE" {...register("label")} />
-                Văn phòng
-                <Building2 size={16} className="text-sky-500" />
-              </label>
             </div>
-          </div>
 
-          {/* DEFAULT CHECKBOX */}
-          <div className="col-span-2 flex items-center gap-2">
-            <input
-              type="checkbox"
-              {...register("isDefault")}
-              checked={isDefaultValue}
-              disabled={
-                (!isEdit && !hasDefault) || (isEdit && address?.isDefault)
-              }
-              onChange={(e) => {
-                if (!e.target.checked) return;
-                setValue("isDefault", true);
-              }}
-            />
-            <span>Đặt làm mặc định</span>
-          </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className="font-semibold text-slate-800">Vị trí trên bản đồ</p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Bấm vào bản đồ để đặt ghim giao hàng.
+                  </p>
+                </div>
+                <p className="text-xs text-red-500">{errors.latitude?.message || " "}</p>
+              </div>
 
-          {/* MAP */}
-          <div className="col-span-2">
-            <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200 text-end">
-              {errors.latitude?.message || " "}
-            </p>
-
-            <div className="h-[320px] rounded-xl overflow-hidden border">
-              <MapContainer
-                center={defaultCenter}
-                zoom={15}
-                style={{ height: "100%" }}
-              >
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                {marker && <ChangeMapView center={marker} />}
-                <MapClick />
-              </MapContainer>
+              <div className="h-[420px] overflow-hidden rounded-xl border border-slate-200">
+                <MapContainer
+                  center={defaultCenter}
+                  zoom={15}
+                  style={{ height: "100%" }}
+                >
+                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                  {marker && <ChangeMapView center={marker} />}
+                  <MapClick />
+                </MapContainer>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* FOOTER */}
-        <div className="p-5 flex justify-end gap-3 border-t border-gray-600">
-          <button onClick={handleClose} className="px-4 py-2 rounded border">
+        <div className="flex shrink-0 justify-end gap-3 border-t border-slate-100 px-5 py-4 sm:px-6">
+          <button
+            type="button"
+            onClick={handleClose}
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+          >
             Trở lại
           </button>
 
           <button
+            type="button"
             onClick={handleSubmit(onSubmit)}
-            className="px-6 py-2 bg-sky-500 text-white rounded"
+            className="rounded-xl bg-sky-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-700"
           >
             {isEdit ? "Cập nhật" : "Lưu"}
           </button>
         </div>
       </div>
-
-      <style>{`
-        .input {
-          width: 100%;
-          padding: 8px 10px;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          outline: none;
-        }
-
-        .input:focus {
-          border-color: #38bdf8;
-          box-shadow: 0 0 0 2px rgba(56,189,248,0.2);
-        }
-      `}</style>
     </div>
   );
 };

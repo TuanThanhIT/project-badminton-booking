@@ -25,7 +25,12 @@ import addressReducer from "./slices/user/addressSlice";
 import postReducer from "./slices/user/postSlice";
 import profileReducer from "./slices/user/profileSlice";
 import conversationReducer from "./slices/user/conversationSlice";
+import monthlyBookingReducer from "./slices/user/monthlyBookingSlice";
+import bookingReducer from "./slices/user/bookingSlice";
 import orderReducer from "./slices/user/orderSlice";
+import feedbackReducer from "./slices/user/feedbackSlice";
+import notificationReducer from "./slices/user/notificationSlice";
+import homeReducer from "./slices/user/homeSlice";
 
 const persistConfig = {
   key: "root",
@@ -47,7 +52,12 @@ const rootReducer = combineReducers({
   profile: profileReducer,
   conversation: conversationReducer,
   discount: discountReducer,
+  monthlyBooking: monthlyBookingReducer,
+  booking: bookingReducer,
   order: orderReducer,
+  feedback: feedbackReducer,
+  notification: notificationReducer,
+  home: homeReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

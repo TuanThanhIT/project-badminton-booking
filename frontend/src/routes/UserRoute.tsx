@@ -16,7 +16,6 @@ import CheckoutPage from "../pages/user/CheckoutPage";
 import OrderPage from "../pages/user/OrderPage";
 import UserPublicLayout from "../components/layouts/UserPublicLayout";
 import UserPrivateLayout from "../components/layouts/UserPrivateLayout";
-import BookingCourtPage from "../pages/user/BookingCourtPage";
 import BookingPage from "../pages/user/BookingPage";
 import WalletPage from "../pages/user/WalletPage";
 import ResetPasswordPage from "../pages/user/ResetPasswordPage";
@@ -30,13 +29,14 @@ import CourtPage from "../pages/user/CourtPage";
 import OrderResultPage from "../pages/user/OrderResultPage";
 import VNPayResultPage from "../pages/user/VNPayResultPage";
 import UserProtectedRoute from "./ProtectedRoute/UserProtectedRoute";
+import CheckoutBookingPage from "../pages/user/CheckoutBookingPage";
 
 const UserRoute = () => {
   return (
     <Routes>
       {/* Public */}
       <Route element={<UserPublicLayout />}>
-        <Route index element={<GuestHomePage />} />
+        <Route path="home" element={<HomePage />} />
         <Route path="contact" element={<ContactPage />} />
         <Route path="about" element={<AboutPage />} />
         <Route path="login" element={<LoginPage />} />
@@ -49,10 +49,8 @@ const UserRoute = () => {
       {/* Private */}
       <Route element={<UserProtectedRoute />}>
         <Route element={<UserPrivateLayout />}>
-          <Route path="home" element={<HomePage />} />
           <Route path="products" element={<ProductPage />} />
           <Route path="product/:id" element={<ProductDetailPage />} />
-          <Route path="booking" element={<BookingCourtPage />} />
           <Route path="history" element={<HistoryPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="profile/:userId" element={<PublicProfilePage />} />
@@ -70,6 +68,7 @@ const UserRoute = () => {
           <Route path="branches/:branchId" element={<BranchDetailPage />} />
           <Route path="courts" element={<CourtPage />} />
           <Route path="order-result" element={<OrderResultPage />} />
+          <Route path="/checkout/booking" element={<CheckoutBookingPage />} />
         </Route>
       </Route>
     </Routes>

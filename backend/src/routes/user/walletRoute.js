@@ -14,6 +14,13 @@ import { ROLE_NAME } from "../../constants/userConstant.js";
 const walletRoute = express.Router();
 
 const initWalletRoute = (app) => {
+  walletRoute.get(
+    "/",
+    auth,
+    authorize(ROLE_NAME.USER),
+    walletController.getWalletOverviewController,
+  );
+
   walletRoute.post(
     "/deposit",
     auth,

@@ -1,6 +1,6 @@
 import type { ApiResponse } from "./api";
 
-export type CourtStatus = "available" | "booked" | "maintenance";
+export type CourtStatus = "available" | "booked" | "maintenance" | "ACTIVE";
 
 export type CourtAvailable = {
   id: number;

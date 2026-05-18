@@ -10,6 +10,7 @@ import {
   materialField,
   materialsField,
   pricesField,
+  groupNameField,
   productNameField,
   sizeField,
   sizesField,
@@ -19,10 +20,12 @@ import {
 import { limitField, pageField } from "./common/paginationFields.js";
 import { keywordField } from "./common/searchFields.js";
 import { thumbnailUrlField } from "./common/urlField.js";
+import { ratingField } from "./common/feedbackFields.js";
 
 export const getProductsByFilterSchema = {
   query: Joi.object({
-    cateId: idParams("cateId"),
+    cateId: idParams("cateId").optional(),
+    groupName: groupNameField,
     branchId: branchIdField,
     pricesRange: pricesField,
     sizes: sizesField,
@@ -37,7 +40,7 @@ export const getProductsByFilterSchema = {
     page: pageField,
     limit: limitField,
     keyword: keywordField,
-  }),
+  }).or("cateId", "groupName"),
 };
 
 export const getProductDetailSchema = {
@@ -176,5 +179,16 @@ export const updateProductImageSchema = {
 export const getProductImagesSchema = {
   params: Joi.object({
     productId: idParams("productId"),
+  }),
+};
+
+export const getProductFeedbacksSchema = {
+  params: Joi.object({
+    productId: idParams("productId"),
+  }),
+  query: Joi.object({
+    page: pageField,
+    limit: limitField,
+    rating: ratingField.optional(),
   }),
 };

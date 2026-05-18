@@ -11,6 +11,7 @@ const getProductsByFilterController = asyncHandler(async (req, res) => {
     colors,
     materials,
     productId,
+    groupName,
     sort,
     page,
     limit,
@@ -24,6 +25,7 @@ const getProductsByFilterController = asyncHandler(async (req, res) => {
     materials: materials?.split(",").filter(Boolean) || [],
     branchIds: branchId?.split(",").filter(Boolean) || [],
     excludeProductId: productId ?? null,
+    groupName,
     sort,
     page,
     limit,
@@ -51,8 +53,23 @@ const getProductDetailController = asyncHandler(async (req, res) => {
     );
 });
 
+const getProductFeedbacksController = asyncHandler(async (req, res) => {
+  const data = { ...req.query, ...req.params };
+  const productFeedbacks =
+    await productService.getProductFeedbacksService(data);
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse(
+        "Lấy tất cả đánh giá sản phẩm thành công",
+        productFeedbacks,
+      ),
+    );
+});
+
 const productController = {
   getProductsByFilterController,
   getProductDetailController,
+  getProductFeedbacksController,
 };
 export default productController;

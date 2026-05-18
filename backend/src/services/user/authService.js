@@ -14,6 +14,7 @@ import sequelize from "../../config/db.js";
 import ConflictError from "../../errors/ConflictError.js";
 import { Op } from "sequelize";
 import BadRequestError from "../../errors/BadRequestError.js";
+import NotFoundError from "../../errors/NotFoundError.js";
 import { handleLogin } from "../shared/handleLogin.js";
 import { OTP_TYPE } from "../../constants/userConstant.js";
 import {
@@ -108,10 +109,10 @@ const verifyOtpService = async (data) => {
   const userOtp = await UserOtp.findOne({
     where: {
       userId: user.id,
-      type: OTP_TYPE.WALLET_PAYMENT,
+      type: OTP_TYPE.REGISTER,
       isUsed: false,
     },
-    order: [["createdAt", "DESC"]],
+    order: [["createdDate", "DESC"]],
   });
 
   if (!userOtp) throw new BadRequestError("OTP không tồn tại hoặc ko hợp lệ");
@@ -255,7 +256,7 @@ const verifyResetOtpService = async (data) => {
       type: OTP_TYPE.RESET_PASSWORD,
       isUsed: false,
     },
-    order: [["createdAt", "DESC"]],
+    order: [["createdDate", "DESC"]],
   });
 
   if (!userOtp)

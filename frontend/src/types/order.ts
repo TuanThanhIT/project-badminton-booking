@@ -1,3 +1,4 @@
+import type { ReviewStatus } from "../utils/constants/review";
 import type { ApiResponse } from "./api";
 
 export type ShippingStatus =
@@ -19,9 +20,13 @@ export type OrderStatus =
   | "PREPARING"
   | "READY_TO_SHIP"
   | "SHIPPING"
+  | "CANCEL_REQUESTED"
+  | "CANCELLED"
+  | "RETURN_REQUESTED"
+  | "RETURNING"
+  | "RETURNED"
   | "COMPLETED"
-  | "FAILED"
-  | "CANCELLED";
+  | "FAILED";
 
 export type CheckoutPreviewAddress = {
   addressId: number;
@@ -74,6 +79,7 @@ export type CheckoutPreviewGroup = {
 
 export type CheckoutPreviewData = {
   cartId: string;
+  cartItemIds: number[];
   address: CheckoutPreviewAddress;
 
   group: CheckoutPreviewGroup;
@@ -84,9 +90,16 @@ export type CheckoutPreviewData = {
 
 export type CheckoutPreviewResponse = ApiResponse<CheckoutPreviewData>;
 
+export type BuyNowItemRequest = {
+  variantId: number;
+  quantity: number;
+};
+
 export type CheckoutPreviewRequest = {
   cartId: number;
   addressId: number;
+  cartItemIds?: number[];
+  buyNowItem?: BuyNowItemRequest;
 };
 
 export type CalculateShippingRequest = {
@@ -96,6 +109,8 @@ export type CalculateShippingRequest = {
 export type CreateOrderRequest = {
   cartId: number;
   addressId: number;
+  cartItemIds?: number[];
+  buyNowItem?: BuyNowItemRequest;
   paymentMethod: string;
   note?: string;
 };
@@ -103,6 +118,9 @@ export type CreateOrderRequest = {
 export type CreateOrderData = {
   orderGroupId: number;
   amount: number;
+  cartId?: number;
+  cartItemIds?: number[];
+  buyNowItem?: BuyNowItemRequest;
   paymentUrl?: string;
 };
 
@@ -219,6 +237,7 @@ export type OrderDetailItem = {
   price: number;
   variantInfo: string;
   thumbnailUrl: string;
+  reviewStatus: ReviewStatus;
 };
 
 export type OrderDetailFee = {
@@ -260,3 +279,63 @@ export type TrackingProgressResponse = ApiResponse<OrderTrackingProgressItem[]>;
 export type OrderRequest = {
   orderId: number;
 };
+
+export type OrderShippingRealtimePayload = {
+  orderId: number;
+  orderGroupId?: number;
+  orderStatus: OrderStatus;
+  shippingStatus: ShippingStatus;
+  displayStatus?: string;
+  deliveredAt?: string | null;
+  tracking?: {
+    id: number;
+    status: ShippingStatus;
+    time: string;
+  } | null;
+  message: string;
+};
+
+// Order Action Types (Cancel/Return)
+export type RequestCancelOrderRequest = {
+  reason?: string;
+};
+
+export type RequestCancelOrderResponse = ApiResponse<null>;
+
+// export type ApproveCancelOrderResponse = ApiResponse<{
+//   message: string;
+//   refund?: {
+//     refunded: boolean;
+//     refundAmount: number;
+//   };
+// }>;
+
+// export type RejectCancelOrderRequest = {
+//   reason?: string;
+// };
+
+// export type RejectCancelOrderResponse = ApiResponse<{
+//   message: string;
+// }>;
+
+export type RequestReturnOrderRequest = {
+  reason?: string;
+};
+
+export type RequestReturnOrderResponse = ApiResponse<null>;
+
+// export type ApproveReturnOrderResponse = ApiResponse<{
+//   message: string;
+// }>;
+
+// export type CompleteReturnOrderResponse = ApiResponse<{
+//   message: string;
+//   refund?: {
+//     refunded: boolean;
+//     refundAmount: number;
+//   };
+// }>;
+
+// export type ForceReturnGHNOrderResponse = ApiResponse<{
+//   message: string;
+// }>;

@@ -16,7 +16,8 @@ const initDiscountRoute = (app) => {
   // Kiểm tra mã voucher khi khách nhập trên giao diện
   discountRoute.post(
     "/check-booking-discount",
-    //auth,
+    auth,
+    authorize(ROLE_NAME.USER),
     validate(applyDiscountBookingSchema),
     discountController.checkDiscountController,
   );

@@ -552,7 +552,7 @@ const EmployeeHomePage = () => {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 sm:min-w-[360px]">
+              <div className="grid w-full grid-cols-2 gap-3 sm:w-auto sm:min-w-[360px]">
                 <div className="rounded-2xl bg-slate-50 px-4 py-3">
                   <p className="text-xs font-semibold text-slate-500">
                     Tiền dự kiến
@@ -604,9 +604,9 @@ const EmployeeHomePage = () => {
         </section>
 
         {activeTab === "counter" ? (
-          <section className="grid h-[calc(100vh-220px)] min-h-[760px] items-stretch gap-5 overflow-hidden xl:grid-cols-[0.9fr_1.12fr_1.08fr]">
+          <section className="grid items-stretch gap-5 xl:h-[calc(100vh-220px)] xl:min-h-[760px] xl:overflow-hidden xl:grid-cols-[0.9fr_1.12fr_1.08fr]">
             {/* LEFT - BÁN TẠI QUẦY */}
-            <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex min-h-[520px] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm xl:h-full xl:min-h-0">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <h3 className="text-lg font-semibold text-slate-700">
                   Bán tại quầy
@@ -718,7 +718,7 @@ const EmployeeHomePage = () => {
             </div>
 
             {/* CENTER - ĐƠN TẠM */}
-            <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex min-h-[640px] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm xl:h-full xl:min-h-0">
               <div className="shrink-0 border-b border-slate-100 p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -740,7 +740,7 @@ const EmployeeHomePage = () => {
                   </button>
                 </div>
 
-                <div className="mt-4 grid grid-cols-[1fr_160px_82px] gap-2">
+                <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_160px_82px]">
                   <input
                     value={nameCustomer}
                     onChange={(event) => {
@@ -1045,7 +1045,7 @@ const EmployeeHomePage = () => {
             </div>
 
             {/* RIGHT - THANH TOÁN */}
-            <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex min-h-[560px] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm xl:h-full xl:min-h-0">
               <div className="mb-3 flex shrink-0 items-center justify-between">
                 <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-700">
                   <WalletCards className="h-5 w-5 text-sky-600" />

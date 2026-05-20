@@ -46,18 +46,23 @@ const PAYMENT_LABEL: Record<string, string> = {
   COD: "Thanh toán tại sân",
   VNPAY: "VNPay",
   WALLET: "Ví B-Hub",
+
   UNPAID: "Chưa thanh toán",
   PENDING: "Chờ thanh toán",
   PAID: "Đã thanh toán",
   FAILED: "Thất bại",
+  PARTIALLY_REFUNDED: "Hoàn tiền một phần",
+  REFUNDED: "Đã hoàn tiền",
 };
 
 const PAYMENT_STATUS_CLASS: Record<string, string> = {
   UNPAID: "bg-slate-50 text-slate-600 ring-1 ring-slate-200",
   PENDING: "bg-amber-50 text-amber-700 ring-1 ring-amber-100",
   PAID: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100",
-  REFUNDED: "bg-violet-50 text-violet-700 ring-1 ring-violet-100",
   FAILED: "bg-red-50 text-red-600 ring-1 ring-red-100",
+
+  PARTIALLY_REFUNDED: "bg-orange-50 text-orange-700 ring-1 ring-orange-100",
+  REFUNDED: "bg-violet-50 text-violet-700 ring-1 ring-violet-100",
 };
 
 const TABS = [
@@ -271,7 +276,7 @@ const BookingPage = () => {
 
                 <Calendar
                   size={16}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
                 />
               </div>
             </div>
@@ -325,7 +330,7 @@ const BookingPage = () => {
                           </div>
 
                           <div>
-                            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
                               Mã lịch sân
                             </p>
 
@@ -361,26 +366,16 @@ const BookingPage = () => {
                               booking.payment?.status ||
                               "--"}
                           </span>
-
-                          {booking.cancelReason && (
-                            <span className="inline-flex max-w-[360px] items-center gap-1 rounded-lg bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
-                              <span className="text-slate-500">Lý do hủy:</span>
-                              <span
-                                className="truncate text-slate-700"
-                                title={booking.cancelReason}
-                              >
-                                {booking.cancelReason}
-                              </span>
-                            </span>
-                          )}
-
+                        </div>
+                        <div className="mt-3">
                           {booking.cancelRejectReason && (
-                            <span className="inline-flex max-w-[360px] items-center gap-1 rounded-lg bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
-                              <span className="text-slate-500">
+                            <span className="inline-flex max-w-[360px] items-center gap-1 rounded-lg border border-red-100 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700">
+                              <span className="shrink-0 font-semibold text-red-500">
                                 Từ chối hủy:
                               </span>
+
                               <span
-                                className="truncate text-slate-700"
+                                className="truncate text-red-700"
                                 title={booking.cancelRejectReason}
                               >
                                 {booking.cancelRejectReason}
@@ -393,7 +388,7 @@ const BookingPage = () => {
                       <div className="w-full space-y-2 lg:w-[320px]">
                         <div className="grid grid-cols-2 gap-2 text-center">
                           <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
-                            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
                               Phương thức
                             </p>
 
@@ -418,20 +413,42 @@ const BookingPage = () => {
                         </div>
 
                         {canCancelBooking(booking) && (
-                          <button
-                            type="button"
-                            onClick={() => handleCancelBooking(booking)}
-                            className="
-        inline-flex w-full items-center justify-center gap-1.5
-        rounded-xl border border-red-100 bg-red-50
-        px-3 py-2
-        text-xs font-bold text-red-600
-        transition hover:border-red-200 hover:bg-red-100
-      "
-                          >
-                            <XCircle size={14} />
-                            Hủy lịch sân
-                          </button>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div />
+
+                            <button
+                              type="button"
+                              onClick={() => handleCancelBooking(booking)}
+                              className="
+          inline-flex h-9 w-full items-center justify-center gap-1.5
+          rounded-xl border border-red-100 bg-red-50
+          text-xs font-semibold text-red-600
+          transition hover:border-red-200 hover:bg-red-100
+        "
+                            >
+                              <XCircle size={13} />
+                              Hủy lịch sân
+                            </button>
+                          </div>
+                        )}
+
+                        {booking.cancelReason && (
+                          <div className="grid grid-cols-2 gap-2">
+                            <div />
+
+                            <span className="inline-flex min-w-0 items-center gap-1.5 rounded-lg border border-red-100 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-600">
+                              <span className="shrink-0 font-semibold text-red-600">
+                                Lý do hủy:
+                              </span>
+
+                              <span
+                                className="truncate text-red-600"
+                                title={booking.cancelReason}
+                              >
+                                {booking.cancelReason}
+                              </span>
+                            </span>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -476,7 +493,7 @@ const BookingPage = () => {
                     </div>
 
                     <div className="rounded-2xl border border-sky-100 bg-white p-4">
-                      <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
                         Thanh toán
                       </p>
 

@@ -80,9 +80,9 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="h-full w-full overflow-hidden bg-slate-50 px-4 py-4 text-slate-700 sm:px-6">
-      <div className="mx-auto grid h-full w-full max-w-6xl items-center">
-        <div className="max-h-full overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.08)] lg:grid lg:grid-cols-[1.05fr_0.95fr]">
+    <div className="flex min-h-[calc(100dvh-132px)] w-full items-center justify-center bg-slate-50 px-4 py-4 text-slate-700 sm:px-6">
+      <div className="mx-auto w-full max-w-6xl">
+        <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.08)] lg:grid lg:grid-cols-[1.05fr_0.95fr]">
           <div className="relative hidden h-[min(510px,calc(100vh-180px))] overflow-hidden lg:block">
             <img
               src="/img/employee.webp"

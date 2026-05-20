@@ -358,10 +358,10 @@ const EmployeeBookingsPage = () => {
     booking.bookingStatus === "PENDING";
 
   return (
-    <div className="h-[calc(100vh-84px)] overflow-hidden bg-slate-50 px-3 py-4 sm:px-5 2xl:px-8">
-      <div className="mx-auto grid h-full min-h-0 w-full max-w-[1880px] items-stretch gap-5 xl:grid-cols-[1.15fr_1.25fr]">
+    <div className="min-h-full overflow-y-auto bg-slate-50 px-3 py-4 sm:px-5 xl:h-[calc(100vh-84px)] xl:overflow-hidden 2xl:px-8">
+      <div className="mx-auto grid min-h-0 w-full max-w-[1880px] items-stretch gap-5 xl:h-full xl:grid-cols-[1.15fr_1.25fr]">
         {/* LEFT */}
-        <section className="flex h-full min-h-0 flex-col rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="flex min-h-[620px] flex-col rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 xl:h-full xl:min-h-0">
           {/* HEADER */}
           <div className="mb-3 flex shrink-0 flex-col justify-between gap-2 lg:flex-row lg:items-center">
             <div>
@@ -610,7 +610,7 @@ const EmployeeBookingsPage = () => {
         </section>
 
         {/* RIGHT */}
-        <section className="h-full min-h-0 overflow-hidden rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="min-h-[620px] overflow-hidden rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm sm:p-5 xl:h-full xl:min-h-0">
           {!selectedBooking ? (
             <div className="grid h-full min-h-0 place-items-center rounded-3xl bg-slate-50 text-center">
               <div>

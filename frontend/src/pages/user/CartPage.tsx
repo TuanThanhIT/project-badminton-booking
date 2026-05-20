@@ -109,11 +109,14 @@ const CartPage = () => {
   );
 
   const isAllSelected =
-    !!cart?.cartItems.length && selectedItemIds.length === cart.cartItems.length;
+    !!cart?.cartItems.length &&
+    selectedItemIds.length === cart.cartItems.length;
 
   const toggleSelectAll = () => {
     if (!cart) return;
-    setSelectedItemIds(isAllSelected ? [] : cart.cartItems.map((item) => item.id));
+    setSelectedItemIds(
+      isAllSelected ? [] : cart.cartItems.map((item) => item.id),
+    );
   };
 
   const toggleSelectItem = (cartItemId: number) => {
@@ -159,7 +162,10 @@ const CartPage = () => {
     if (!isConfirmed) return;
 
     sessionStorage.setItem("checkoutCartId", String(cart.id));
-    sessionStorage.setItem("checkoutCartItemIds", JSON.stringify(selectedItemIds));
+    sessionStorage.setItem(
+      "checkoutCartItemIds",
+      JSON.stringify(selectedItemIds),
+    );
     sessionStorage.removeItem("checkoutBuyNowItem");
     navigate("/checkout");
   };
@@ -327,19 +333,19 @@ const CartPage = () => {
                   aria-label={isAllSelected ? "Bỏ chọn tất cả" : "Chọn tất cả"}
                 >
                   {isAllSelected ? (
-                    <CheckSquare2 size={22} />
+                    <CheckSquare2 size={20} />
                   ) : (
-                    <Square size={22} />
+                    <Square size={20} />
                   )}
                 </button>
                 <div>
-                <h2 className="text-xl font-bold text-slate-800">
-                  Sản phẩm trong giỏ
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Đã chọn {selectedItems.length}/{cart.cartItems.length} dòng •{" "}
-                  {selectedTotalQuantity}/{totalItems} sản phẩm
-                </p>
+                  <h2 className="text-xl font-bold text-slate-800">
+                    Sản phẩm trong giỏ
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Đã chọn {selectedItems.length}/{cart.cartItems.length} dòng
+                    • {selectedTotalQuantity}/{totalItems} sản phẩm
+                  </p>
                 </div>
               </div>
 
@@ -381,9 +387,9 @@ const CartPage = () => {
                         }
                       >
                         {selectedItemIds.includes(item.id) ? (
-                          <CheckSquare2 size={22} />
+                          <CheckSquare2 size={18} />
                         ) : (
-                          <Square size={22} />
+                          <Square size={18} />
                         )}
                       </button>
                       {/* IMAGE */}

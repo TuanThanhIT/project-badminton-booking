@@ -8,8 +8,8 @@ import {
 
 const LandingPage = () => {
   return (
-    <section className="h-full overflow-hidden bg-slate-50 text-slate-700">
-      <div className="mx-auto grid h-full w-full max-w-7xl items-center px-4 py-4 sm:px-6 lg:px-10">
+    <section className="min-h-full bg-slate-50 text-slate-700">
+      <div className="mx-auto grid min-h-full w-full max-w-7xl items-center px-4 py-4 sm:px-6 lg:px-10">
         <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-sky-700 shadow-sm sm:text-sm">

@@ -4,10 +4,10 @@ import EmployeePublicHeader from "../commons/employee/EmployeePublicHeader";
 
 const EmployeePublicLayout = () => {
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-slate-50">
+    <div className="flex min-h-screen flex-col bg-slate-50">
       <EmployeePublicHeader />
 
-      <main className="flex-1 min-h-0 overflow-hidden">
+      <main className="min-h-0 flex-1 overflow-y-auto">
         <Outlet />
       </main>
 

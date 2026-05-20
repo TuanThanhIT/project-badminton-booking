@@ -2,6 +2,8 @@ import instance from "../../utils/axiosCustomize";
 import type {
   BookingCallbackRequest,
   BookingCallbackResponse,
+  CancelBookingRequest,
+  CancelBookingResponse,
   CreateBookingRequest,
   CreateBookingResponse,
   MyBookingsRequest,
@@ -19,10 +21,21 @@ const getMyBookingsService = (data: MyBookingsRequest) =>
     params: data,
   });
 
+const requestCancelBookingService = (
+  bookingId: number,
+  data: CancelBookingRequest,
+  mode: "DIRECT" | "REQUEST" = "REQUEST",
+) =>
+  instance.patch<CancelBookingResponse>(
+    `/bookings/${bookingId}/${mode === "DIRECT" ? "cancel" : "cancel-request"}`,
+    data,
+  );
+
 const bookingService = {
   createBookingService,
   bookingCallbackService,
   getMyBookingsService,
+  requestCancelBookingService,
 };
 
 export default bookingService;

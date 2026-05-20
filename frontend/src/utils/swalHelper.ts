@@ -25,3 +25,44 @@ export const showConfirmDialog = async (
 
   return result.isConfirmed;
 };
+
+export const showTextareaDialog = async ({
+  title,
+  text,
+  placeholder,
+  defaultValue = "",
+  confirmText = "Xác nhận",
+  cancelText = "Hủy",
+  requiredMessage = "Vui lòng nhập nội dung",
+  maxLength = 500,
+}: {
+  title: string;
+  text?: string;
+  placeholder?: string;
+  defaultValue?: string;
+  confirmText?: string;
+  cancelText?: string;
+  requiredMessage?: string;
+  maxLength?: number;
+}): Promise<string | null> => {
+  const result = await Swal.fire<string>({
+    title,
+    text,
+    input: "textarea",
+    inputValue: defaultValue,
+    inputPlaceholder: placeholder,
+    inputAttributes: {
+      maxlength: String(maxLength),
+    },
+    inputValidator: (value) => {
+      if (!value?.trim()) return requiredMessage;
+      return undefined;
+    },
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: confirmText,
+    cancelButtonText: cancelText,
+  });
+
+  return result.isConfirmed ? result.value?.trim() || null : null;
+};

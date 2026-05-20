@@ -55,6 +55,21 @@ const DraftBooking = sequelize.define(
         },
       },
     },
+    phoneNumber: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      defaultValue: "",
+      validate: {
+        notNull: { msg: "Phone number is required" },
+        notEmpty: {
+          msg: "Phone number must not be empty",
+        },
+        is: {
+          args: /^(0|\+84)[0-9]{9,10}$/,
+          msg: "Phone number is invalid",
+        },
+      },
+    },
     note: {
       type: DataTypes.STRING(500),
       allowNull: true,

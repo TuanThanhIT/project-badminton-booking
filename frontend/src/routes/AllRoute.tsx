@@ -3,6 +3,7 @@ import UserRoute from "./UserRoute";
 import NotFoundPage from "../pages/NotFoundPage";
 import AdminRoute from "./AdminRoute";
 import ManagerRoute from "./ManagerRoute";
+import EmployeeRoute from "./EmployeeRoute";
 
 const AllRoute = () => {
   return (
@@ -12,6 +13,9 @@ const AllRoute = () => {
 
       {/* Manager */}
       <Route path="/manager/*" element={<ManagerRoute />} />
+
+      {/* Employee */}
+      <Route path="/employee/*" element={<EmployeeRoute />} />
 
       {/* Customer */}
       <Route path="/*" element={<UserRoute />} />

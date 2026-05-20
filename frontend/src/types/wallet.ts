@@ -24,6 +24,7 @@ export type WalletOverviewSummary = {
   totalPayment: number;
   totalRefund: number;
   pendingCount: number;
+  transactionCounts?: Record<WalletTransactionType, number>;
 };
 
 export type WalletChartItem = {

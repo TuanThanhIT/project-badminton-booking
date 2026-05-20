@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import sequelize from "./config/db.js";
+import { syncEnumColumns } from "./config/syncEnumColumns.js";
 import { createServer } from "http";
 import { initSocket } from "./socket/index.js";
 import errorHandler from "./middlewares/errorHandler.js";
@@ -27,6 +28,9 @@ import initMonthlyBookingRoute from "./routes/user/monthlyBookingRoute.js";
 import initOrderRoute from "./routes/user/orderRoute.js";
 import initDiscountRoute from "./routes/user/discountRoute.js";
 import initEmployeeOrderRoute from "./routes/employee/orderRoute.js";
+import initEmployeeWorkShiftRoute from "./routes/employee/workShiftRoute.js";
+import initEmployeeCounterRoute from "./routes/employee/counterRoute.js";
+import initEmployeeBookingRoute from "./routes/employee/bookingRoute.js";
 import initWebhookRoute from "./routes/user/webhookRoute.js";
 import initFeedbackRoute from "./routes/user/feedbackRoute.js";
 import initNotificationRoute from "./routes/user/notificationRoute.js";
@@ -75,6 +79,9 @@ initUserSearchRoute(app);
 
 // Employee
 initEmployeeOrderRoute(app);
+initEmployeeWorkShiftRoute(app);
+initEmployeeCounterRoute(app);
+initEmployeeBookingRoute(app);
 
 // create http server
 const httpServer = createServer(app);
@@ -84,7 +91,8 @@ initSocket(httpServer);
 
 app.use(errorHandler);
 
-sequelize.sync().then(() => {
+sequelize.sync().then(async () => {
+  await syncEnumColumns(sequelize);
   console.log("Database synced");
   httpServer.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

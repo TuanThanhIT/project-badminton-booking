@@ -44,7 +44,10 @@ import type {
   DeleteUserAddressRequest,
   UpdateUserAddressRequest,
 } from "../../types/address";
-import type { ApplyDiscountRequest, DiscountRequest } from "../../types/discount";
+import type {
+  ApplyDiscountRequest,
+  DiscountRequest,
+} from "../../types/discount";
 import type { FormDiscount } from "../../schemas/FormDiscountSchema";
 import {
   PAYMENT_METHOD,
@@ -268,7 +271,10 @@ const CheckoutPage = () => {
 
   const handleApplyDiscount = (dt: FormDiscount) => {
     if (!checkoutCartId) return;
-    const data: ApplyDiscountRequest = { code: dt.code, cartId: checkoutCartId };
+    const data: ApplyDiscountRequest = {
+      code: dt.code,
+      cartId: checkoutCartId,
+    };
     dispatch(applyDiscount({ data }))
       .unwrap()
       .then(() => {
@@ -282,12 +288,7 @@ const CheckoutPage = () => {
   };
 
   const handleCreateOrder = async () => {
-    if (
-      !checkoutCartId ||
-      !hasCheckoutPayload ||
-      !selectedAddress ||
-      !user
-    )
+    if (!checkoutCartId || !hasCheckoutPayload || !selectedAddress || !user)
       return;
 
     const confirmed = await showConfirmDialog(
@@ -442,83 +443,85 @@ const CheckoutPage = () => {
               </div>
 
               <div className="space-y-4 bg-slate-50/70 p-4 sm:p-5">
-                {checkoutPreview.group.orders.map((order: any, index: number) => (
-                  <article
-                    key={order.orderTempId}
-                    className="overflow-hidden rounded-3xl border border-slate-200 bg-white"
-                  >
-                    <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
-                          <Store size={18} />
+                {checkoutPreview.group.orders.map(
+                  (order: any, index: number) => (
+                    <article
+                      key={order.orderTempId}
+                      className="overflow-hidden rounded-3xl border border-slate-200 bg-white"
+                    >
+                      <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+                            <Store size={18} />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-800">
+                              {order.branchName}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              Đơn #{index + 1} • {order.weight} kg
+                            </p>
+                          </div>
                         </div>
+                      </div>
+
+                      <div className="divide-y divide-slate-100 px-4">
+                        {order.items.map((item: any) => (
+                          <div
+                            key={item.variantId}
+                            className="grid grid-cols-[72px_1fr] gap-3 py-4 sm:grid-cols-[80px_1fr_auto]"
+                          >
+                            <img
+                              src={item.thumbnail}
+                              alt={item.productName}
+                              className="h-20 w-18 rounded-xl border border-slate-200 object-cover sm:h-24 sm:w-20"
+                            />
+
+                            <div className="min-w-0">
+                              <p className="line-clamp-2 font-medium leading-snug text-slate-800">
+                                {item.productName}
+                              </p>
+                              <p className="mt-1 text-sm text-slate-500">
+                                Màu: {item.color} • Size: {item.size}
+                              </p>
+                              <p className="mt-2 text-sm text-slate-500">
+                                {item.quantity} × {formatPrice(item.price)}
+                              </p>
+                            </div>
+
+                            <div className="col-span-2 text-right sm:col-span-1">
+                              <p className="font-semibold text-sky-700">
+                                {formatPrice(item.lineTotal)}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex flex-col gap-3 border-t border-slate-100 bg-slate-50/70 p-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
+                          <p className="flex items-center gap-2 font-medium text-slate-800">
+                            <Truck size={16} className="text-sky-600" />
+                            Giao hàng
+                          </p>
+                          <p className="mt-1 text-sm text-slate-500">
+                            Giao nhanh & tiết kiệm
+                          </p>
+                          <div className="mt-1 text-sm text-slate-600">
+                            <ShippingTime group={order} />
+                          </div>
+                        </div>
+
+                        <div className="text-left sm:text-right">
+                          <p className="text-xs text-slate-500">Phí ship</p>
                           <p className="font-semibold text-slate-800">
-                            {order.branchName}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            Đơn #{index + 1} • {order.weight} kg
+                            {formatPrice(order.shippingFee)}
                           </p>
                         </div>
                       </div>
-                    </div>
-
-                    <div className="divide-y divide-slate-100 px-4">
-                      {order.items.map((item: any) => (
-                        <div
-                          key={item.variantId}
-                          className="grid grid-cols-[72px_1fr] gap-3 py-4 sm:grid-cols-[80px_1fr_auto]"
-                        >
-                          <img
-                            src={item.thumbnail}
-                            alt={item.productName}
-                            className="h-20 w-18 rounded-xl border border-slate-200 object-cover sm:h-24 sm:w-20"
-                          />
-
-                          <div className="min-w-0">
-                            <p className="line-clamp-2 font-medium leading-snug text-slate-800">
-                              {item.productName}
-                            </p>
-                            <p className="mt-1 text-sm text-slate-500">
-                              Màu: {item.color} • Size: {item.size}
-                            </p>
-                            <p className="mt-2 text-sm text-slate-500">
-                              {item.quantity} × {formatPrice(item.price)}
-                            </p>
-                          </div>
-
-                          <div className="col-span-2 text-right sm:col-span-1">
-                            <p className="font-semibold text-sky-700">
-                              {formatPrice(item.lineTotal)}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="flex flex-col gap-3 border-t border-slate-100 bg-slate-50/70 p-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <p className="flex items-center gap-2 font-medium text-slate-800">
-                          <Truck size={16} className="text-sky-600" />
-                          Giao hàng
-                        </p>
-                        <p className="mt-1 text-sm text-slate-500">
-                          Giao nhanh & tiết kiệm
-                        </p>
-                        <div className="mt-1 text-sm text-slate-600">
-                          <ShippingTime group={order} />
-                        </div>
-                      </div>
-
-                      <div className="text-left sm:text-right">
-                        <p className="text-xs text-slate-500">Phí ship</p>
-                        <p className="font-semibold text-slate-800">
-                          {formatPrice(order.shippingFee)}
-                        </p>
-                      </div>
-                    </div>
-                  </article>
-                ))}
+                    </article>
+                  ),
+                )}
               </div>
 
               <div className="space-y-4 border-t border-slate-100 p-5 sm:p-6">
@@ -547,7 +550,7 @@ const CheckoutPage = () => {
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                     placeholder="Nhập ghi chú cho đơn hàng nếu cần..."
-                    className="min-h-24 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100"
+                    className="min-h-24 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100"
                   />
                 </div>
               </div>
@@ -620,7 +623,10 @@ const CheckoutPage = () => {
                   <div className="flex items-center justify-between gap-4 text-emerald-600">
                     <span>Giảm giá</span>
                     <span className="font-medium">
-                      -{formatPrice(checkoutPreview?.group?.discount?.amount ?? 0)}
+                      -
+                      {formatPrice(
+                        checkoutPreview?.group?.discount?.amount ?? 0,
+                      )}
                     </span>
                   </div>
                 )}
@@ -635,7 +641,9 @@ const CheckoutPage = () => {
 
               <div className="rounded-2xl border border-sky-100 bg-sky-50/70 p-4">
                 <div className="flex justify-between gap-4">
-                  <span className="font-semibold text-slate-700">Tổng cộng</span>
+                  <span className="font-semibold text-slate-700">
+                    Tổng cộng
+                  </span>
                   <span className="text-xl font-semibold text-sky-700">
                     {formatPrice(checkoutPreview?.group?.total || 0)}
                   </span>

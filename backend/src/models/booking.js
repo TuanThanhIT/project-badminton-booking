@@ -22,6 +22,16 @@ const Booking = sequelize.define(
         },
       },
     },
+    previousBookingStatus: {
+      type: DataTypes.ENUM(...Object.values(BOOKING_STATUS)),
+      allowNull: true,
+      validate: {
+        isIn: {
+          args: [Object.values(BOOKING_STATUS)],
+          msg: "Invalid previous booking status",
+        },
+      },
+    },
     totalAmount: {
       type: DataTypes.DOUBLE,
       allowNull: false,
@@ -116,6 +126,43 @@ const Booking = sequelize.define(
         len: {
           args: [5, 500],
           msg: "Cancel reason must be between 5 and 500 characters",
+        },
+      },
+    },
+    cancelRejectReason: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+      validate: {
+        len: {
+          args: [0, 500],
+          msg: "Cancel reject reason must be at most 500 characters",
+        },
+      },
+    },
+    cancelRequestedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      validate: {
+        isDate: {
+          msg: "Cancel requested at must be a valid date",
+        },
+      },
+    },
+    cancelHandledAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      validate: {
+        isDate: {
+          msg: "Cancel handled at must be a valid date",
+        },
+      },
+    },
+    cancelledAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      validate: {
+        isDate: {
+          msg: "Cancelled at must be a valid date",
         },
       },
     },

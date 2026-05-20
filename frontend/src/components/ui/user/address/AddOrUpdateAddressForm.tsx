@@ -40,7 +40,7 @@ L.Icon.Default.mergeOptions({
 const defaultCenter: LatLngExpression = [10.7769, 106.7009];
 
 const inputClass =
-  "w-full rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 hover:border-sky-300 focus:border-sky-500 focus:ring-4 focus:ring-sky-100";
+  "w-full rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 hover:border-sky-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-100";
 
 const labelClass = "text-sm font-medium text-slate-600";
 
@@ -128,7 +128,9 @@ const AddOrUpdateAddressForm = ({
 
     const load = async () => {
       try {
-        const data = await locationService.getDistrictsService(Number(provinceId));
+        const data = await locationService.getDistrictsService(
+          Number(provinceId),
+        );
         setDistricts(data);
 
         if (!isEdit) {
@@ -295,7 +297,9 @@ const AddOrUpdateAddressForm = ({
                 <div>
                   <div className="mb-1.5 flex items-center justify-between gap-3">
                     <label className={labelClass}>Họ và tên</label>
-                    <p className="text-xs text-red-500">{errors.fullName?.message || " "}</p>
+                    <p className="text-xs text-red-500">
+                      {errors.fullName?.message || " "}
+                    </p>
                   </div>
                   <input className={inputClass} {...register("fullName")} />
                 </div>
@@ -303,7 +307,9 @@ const AddOrUpdateAddressForm = ({
                 <div>
                   <div className="mb-1.5 flex items-center justify-between gap-3">
                     <label className={labelClass}>Số điện thoại</label>
-                    <p className="text-xs text-red-500">{errors.phoneNumber?.message || " "}</p>
+                    <p className="text-xs text-red-500">
+                      {errors.phoneNumber?.message || " "}
+                    </p>
                   </div>
                   <input className={inputClass} {...register("phoneNumber")} />
                 </div>
@@ -311,7 +317,9 @@ const AddOrUpdateAddressForm = ({
                 <div>
                   <div className="mb-1.5 flex items-center justify-between gap-3">
                     <label className={labelClass}>Tỉnh / Thành phố</label>
-                    <p className="text-xs text-red-500">{errors.provinceId?.message || " "}</p>
+                    <p className="text-xs text-red-500">
+                      {errors.provinceId?.message || " "}
+                    </p>
                   </div>
                   <select className={inputClass} {...register("provinceId")}>
                     <option value="">Chọn tỉnh</option>
@@ -326,7 +334,9 @@ const AddOrUpdateAddressForm = ({
                 <div>
                   <div className="mb-1.5 flex items-center justify-between gap-3">
                     <label className={labelClass}>Quận / Huyện</label>
-                    <p className="text-xs text-red-500">{errors.districtId?.message || " "}</p>
+                    <p className="text-xs text-red-500">
+                      {errors.districtId?.message || " "}
+                    </p>
                   </div>
                   <select className={inputClass} {...register("districtId")}>
                     <option value="">Chọn quận</option>
@@ -341,7 +351,9 @@ const AddOrUpdateAddressForm = ({
                 <div>
                   <div className="mb-1.5 flex items-center justify-between gap-3">
                     <label className={labelClass}>Phường / Xã</label>
-                    <p className="text-xs text-red-500">{errors.wardCode?.message || " "}</p>
+                    <p className="text-xs text-red-500">
+                      {errors.wardCode?.message || " "}
+                    </p>
                   </div>
                   <select className={inputClass} {...register("wardCode")}>
                     <option value="">Chọn phường</option>
@@ -356,14 +368,18 @@ const AddOrUpdateAddressForm = ({
                 <div>
                   <div className="mb-1.5 flex items-center justify-between gap-3">
                     <label className={labelClass}>Địa chỉ chính xác</label>
-                    <p className="text-xs text-red-500">{errors.address?.message || " "}</p>
+                    <p className="text-xs text-red-500">
+                      {errors.address?.message || " "}
+                    </p>
                   </div>
                   <input className={inputClass} {...register("address")} />
                 </div>
               </div>
 
               <div>
-                <p className="mb-2 text-sm font-medium text-slate-600">Loại địa chỉ</p>
+                <p className="mb-2 text-sm font-medium text-slate-600">
+                  Loại địa chỉ
+                </p>
                 <div className="grid grid-cols-2 gap-3">
                   {[
                     { value: "HOME", label: "Nhà riêng", icon: Home },
@@ -399,7 +415,9 @@ const AddOrUpdateAddressForm = ({
                   type="checkbox"
                   {...register("isDefault")}
                   checked={isDefaultValue}
-                  disabled={(!isEdit && !hasDefault) || (isEdit && address?.isDefault)}
+                  disabled={
+                    (!isEdit && !hasDefault) || (isEdit && address?.isDefault)
+                  }
                   onChange={(e) => {
                     if (!e.target.checked) return;
                     setValue("isDefault", true);
@@ -413,12 +431,16 @@ const AddOrUpdateAddressForm = ({
             <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
-                  <p className="font-semibold text-slate-800">Vị trí trên bản đồ</p>
+                  <p className="font-semibold text-slate-800">
+                    Vị trí trên bản đồ
+                  </p>
                   <p className="mt-1 text-sm text-slate-500">
                     Bấm vào bản đồ để đặt ghim giao hàng.
                   </p>
                 </div>
-                <p className="text-xs text-red-500">{errors.latitude?.message || " "}</p>
+                <p className="text-xs text-red-500">
+                  {errors.latitude?.message || " "}
+                </p>
               </div>
 
               <div className="h-[420px] overflow-hidden rounded-xl border border-slate-200">

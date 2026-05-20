@@ -31,7 +31,20 @@ dotenv.config();
 
 const toNumber = (value) => Number(value || 0);
 
-const formatDateKey = (date) => new Date(date).toISOString().slice(0, 10);
+const formatDateKey = (date) => {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date(date));
+
+  const partMap = Object.fromEntries(
+    parts.map((part) => [part.type, part.value]),
+  );
+
+  return `${partMap.year}-${partMap.month}-${partMap.day}`;
+};
 
 const getWalletOverviewService = async (data) => {
   const { userId } = data;
@@ -196,8 +209,20 @@ const getWalletOverviewService = async (data) => {
       totalPayment: 0,
       totalRefund: 0,
       pendingCount: 0,
+      transactionCounts: {
+        [WALLET_TRANSACTION_TYPE.DEPOSIT]: 0,
+        [WALLET_TRANSACTION_TYPE.WITHDRAW]: 0,
+        [WALLET_TRANSACTION_TYPE.PAYMENT]: 0,
+        [WALLET_TRANSACTION_TYPE.REFUND]: 0,
+      },
     },
   );
+
+  summaryTransactions.forEach((tx) => {
+    if (summary.transactionCounts[tx.type] !== undefined) {
+      summary.transactionCounts[tx.type] += 1;
+    }
+  });
 
   return {
     wallet: {

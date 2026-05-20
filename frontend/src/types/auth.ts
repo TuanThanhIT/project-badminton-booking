@@ -5,6 +5,7 @@ export type User = {
   email: string;
   username: string;
   role: string;
+  branchIds?: number[];
   profile?: {
     fullName?: string;
     avatar?: string | null;

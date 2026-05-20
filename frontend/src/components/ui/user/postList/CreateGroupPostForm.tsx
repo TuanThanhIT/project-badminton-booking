@@ -35,7 +35,7 @@ type CreateGroupPostFormProps = {
 };
 
 const inputClass =
-  "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-[15px] text-slate-800 outline-none transition-all placeholder:text-slate-400 shadow-sm hover:border-sky-200 hover:bg-sky-50/20 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100/70";
+  "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-[15px] text-slate-800 outline-none transition-all placeholder:text-slate-400 shadow-sm hover:border-sky-200 hover:bg-sky-50/20 focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100/70";
 
 const labelClass = "block text-[13px] font-semibold text-slate-600 mb-1.5";
 

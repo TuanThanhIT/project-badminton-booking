@@ -4,6 +4,7 @@ import validate from "../../middlewares/validate.js";
 import auth from "../../middlewares/auth.js";
 import {
   bookingCallbackSchema,
+  cancelBookingSchema,
   createBookingSchema,
   getBookingsSchema,
 } from "../../validations/bookingValidation.js";
@@ -23,6 +24,20 @@ const initBookingRoute = (app) => {
     auth,
     validate(bookingCallbackSchema),
     bookingController.bookingCallbackController,
+  );
+
+  bookingRoute.patch(
+    "/:bookingId/cancel",
+    auth,
+    validate(cancelBookingSchema),
+    bookingController.cancelBookingController,
+  );
+
+  bookingRoute.patch(
+    "/:bookingId/cancel-request",
+    auth,
+    validate(cancelBookingSchema),
+    bookingController.requestCancelBookingController,
   );
 
   bookingRoute.post(

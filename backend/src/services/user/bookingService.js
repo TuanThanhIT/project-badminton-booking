@@ -12,10 +12,15 @@ import {
   Payment,
   Wallet,
   WalletTransaction,
+  WorkShift,
+  WorkShiftEmployee,
 } from "../../models/index.js";
 import NotFoundError from "../../errors/NotFoundError.js";
 import BadRequestError from "../../errors/BadRequestError.js";
-import { BOOKING_STATUS } from "../../constants/bookingConstant.js";
+import {
+  BOOKING_STATUS,
+  CANCELLED_BY,
+} from "../../constants/bookingConstant.js";
 import {
   PAYMENT_METHOD_STATUS,
   PAYMENT_STATUS,
@@ -29,8 +34,60 @@ import {
   DISCOUNT_TYPE,
 } from "../../constants/discountConstant.js";
 import { applyDiscountUsage } from "../shared/applyDiscountUsage.js";
+import { sendUserNotification } from "../../helpers/notification.js";
+import { ROLE_IN_SHIFT, WORK_SHIFT_STATUS } from "../../constants/workShiftConstant.js";
+
+const DIRECT_USER_CANCEL_STATUSES = [
+  BOOKING_STATUS.PENDING,
+];
+const REQUEST_USER_CANCEL_STATUSES = [BOOKING_STATUS.CONFIRMED];
 
 const MIN_BOOKING_LEAD_MINUTES = 60;
+
+const notifyBranchCashiersNewBooking = async ({
+  booking,
+  branch,
+  playDate,
+  startTime,
+  endTime,
+  transaction,
+}) => {
+  const cashierAssignments = await WorkShiftEmployee.findAll({
+    where: {
+      roleInShift: ROLE_IN_SHIFT.CASHIER,
+      checkIn: { [Op.ne]: null },
+      checkOut: null,
+    },
+    include: [
+      {
+        model: WorkShift,
+        as: "workShift",
+        required: true,
+        where: {
+          branchId: branch.id,
+          workDate: getTodayDate(),
+          shiftStatus: WORK_SHIFT_STATUS.INPROGRESS,
+        },
+      },
+    ],
+    transaction,
+  });
+
+  const cashierIds = [
+    ...new Set(cashierAssignments.map((item) => item.employeeId)),
+  ];
+
+  await Promise.all(
+    cashierIds.map((cashierId) =>
+      sendUserNotification(
+        cashierId,
+        "booking-created",
+        "Có lịch đặt sân mới",
+        `${branch.branchName}: lịch #${booking.id} ngày ${playDate} ${startTime} - ${endTime} đang chờ xác nhận.`,
+      ),
+    ),
+  );
+};
 
 const getTodayDate = () => {
   const now = new Date();
@@ -221,7 +278,7 @@ const assertBookingSlotAvailable = async ({
   endTime,
   transaction,
 }) => {
-  const overlap = await BookingDetail.findOne({
+  const overlaps = await BookingDetail.findAll({
     where: {
       courtId,
       playDate,
@@ -230,11 +287,21 @@ const assertBookingSlotAvailable = async ({
         { endTime: { [Op.gt]: startTime } },
       ],
     },
+    include: [{ model: Booking, as: "booking", required: false }],
     transaction,
     lock: transaction.LOCK.UPDATE,
   });
 
-  if (overlap) {
+  const hasActiveOverlap = overlaps.some((detail) =>
+    [
+      BOOKING_STATUS.PENDING,
+      BOOKING_STATUS.CONFIRMED,
+      BOOKING_STATUS.CANCEL_REQUESTED,
+      BOOKING_STATUS.COMPLETED,
+    ].includes(detail.booking?.bookingStatus),
+  );
+
+  if (hasActiveOverlap) {
     throw new BadRequestError("Khung giờ này đã có người đặt");
   }
 };
@@ -359,6 +426,15 @@ const createBookingService = async (bookingData) => {
       { transaction },
     );
 
+    await notifyBranchCashiersNewBooking({
+      booking,
+      branch,
+      playDate,
+      startTime,
+      endTime,
+      transaction,
+    });
+
     if (paymentMethod === PAYMENT_METHOD_STATUS.COD) {
       await Payment.create(
         {
@@ -366,7 +442,7 @@ const createBookingService = async (bookingData) => {
           targetPaymentId: booking.id,
           paymentAmount: finalAmount,
           paymentMethod: PAYMENT_METHOD_STATUS.COD,
-          paymentStatus: PAYMENT_STATUS.PENDING,
+          paymentStatus: PAYMENT_STATUS.UNPAID,
         },
         { transaction },
       );
@@ -422,17 +498,12 @@ const createBookingService = async (bookingData) => {
         { transaction },
       );
 
-      await booking.update(
-        { bookingStatus: BOOKING_STATUS.PAID },
-        { transaction },
-      );
-
       return {
         bookingId: booking.id,
         amount: finalAmount,
         discountAmount,
         paymentMethod,
-        status: BOOKING_STATUS.PAID,
+        status: booking.bookingStatus,
       };
     }
 
@@ -466,6 +537,31 @@ const bookingCallbackService = async (data) => {
 
   const { vnp_TxnRef, vnp_ResponseCode, vnp_TransactionNo, vnp_Amount } = data;
   if (vnp_ResponseCode !== "00") {
+    const failedPayment = await Payment.findOne({
+      where: { externalId: vnp_TxnRef },
+    });
+
+    if (failedPayment) {
+      await sequelize.transaction(async (transaction) => {
+        const payment = await Payment.findByPk(failedPayment.id, {
+          transaction,
+          lock: transaction.LOCK.UPDATE,
+        });
+
+        await payment.update(
+          { paymentStatus: PAYMENT_STATUS.FAILED },
+          { transaction },
+        );
+
+        if (payment.targetPaymentType === TARGET_PAYMENT_TYPE.BOOKING) {
+          await Booking.update(
+            { bookingStatus: BOOKING_STATUS.FAILED },
+            { where: { id: payment.targetPaymentId }, transaction },
+          );
+        }
+      });
+    }
+
     throw new BadRequestError("Thanh toán thất bại");
   }
 
@@ -508,11 +604,65 @@ const bookingCallbackService = async (data) => {
       { transaction },
     );
 
-    await booking.update(
-      { bookingStatus: BOOKING_STATUS.PAID },
+  });
+};
+
+const refundBookingToWallet = async ({ booking, transaction }) => {
+  const payment = await Payment.findOne({
+    where: {
+      targetPaymentType: TARGET_PAYMENT_TYPE.BOOKING,
+      targetPaymentId: booking.id,
+      paymentStatus: PAYMENT_STATUS.PAID,
+    },
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
+
+  if (!payment) return { refunded: false, refundAmount: 0 };
+
+  let wallet = await Wallet.findOne({
+    where: { userId: booking.userId },
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
+
+  if (!wallet) {
+    wallet = await Wallet.create(
+      { userId: booking.userId, balance: 0 },
       { transaction },
     );
-  });
+  }
+
+  const refundAmount = Number(payment.paymentAmount || booking.totalAmount || 0);
+  const description = `Hoàn tiền lịch sân #${booking.id}`;
+
+  await wallet.update(
+    { balance: sequelize.literal(`balance + ${refundAmount}`) },
+    { transaction },
+  );
+
+  await payment.update(
+    {
+      paymentStatus: PAYMENT_STATUS.REFUNDED,
+      refundAmount,
+      refundAt: new Date(),
+    },
+    { transaction },
+  );
+
+  await WalletTransaction.create(
+    {
+      walletId: wallet.id,
+      paymentId: payment.id,
+      amount: refundAmount,
+      type: WALLET_TRANSACTION_TYPE.REFUND,
+      status: WALLET_TRANSACTION_STATUS.SUCCESS,
+      description,
+    },
+    { transaction },
+  );
+
+  return { refunded: true, refundAmount };
 };
 
 const getMyBookingsService = async (data) => {
@@ -561,8 +711,14 @@ const getMyBookingsService = async (data) => {
       return {
         bookingId: booking.id,
         bookingStatus: booking.bookingStatus,
+        previousBookingStatus: booking.previousBookingStatus,
         totalAmount: booking.totalAmount,
         note: booking.note,
+        cancelReason: booking.cancelReason,
+        cancelRejectReason: booking.cancelRejectReason,
+        cancelRequestedAt: booking.cancelRequestedAt,
+        cancelHandledAt: booking.cancelHandledAt,
+        cancelledAt: booking.cancelledAt,
         createdDate: booking.createdDate,
         branch: booking.branch,
         payment: payment
@@ -590,8 +746,104 @@ const getMyBookingsService = async (data) => {
   };
 };
 
+const requestCancelBookingService = async ({
+  userId,
+  bookingId,
+  reason,
+  mode = "AUTO",
+}) => {
+  return sequelize.transaction(async (transaction) => {
+    const booking = await Booking.findOne({
+      where: { id: bookingId, userId },
+      include: [{ model: BookingDetail, as: "details" }],
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+
+    if (!booking) {
+      throw new NotFoundError("Lịch đặt sân không tồn tại");
+    }
+
+    const currentStatus = booking.bookingStatus;
+
+    if (currentStatus === BOOKING_STATUS.CANCELLED) {
+      throw new BadRequestError("Lịch sân đã được hủy trước đó");
+    }
+
+    if (currentStatus === BOOKING_STATUS.COMPLETED) {
+      throw new BadRequestError("Lịch sân đã hoàn thành nên không thể hủy");
+    }
+
+    if (currentStatus === BOOKING_STATUS.CANCEL_REQUESTED) {
+      throw new BadRequestError(
+        "Yêu cầu hủy lịch sân đang chờ nhân viên xử lý",
+      );
+    }
+
+    // PENDING / FAILED: cancel immediately
+    if (DIRECT_USER_CANCEL_STATUSES.includes(currentStatus)) {
+      if (mode === "REQUEST_ONLY") {
+        throw new BadRequestError("Lịch đang chờ xác nhận có thể hủy trực tiếp");
+      }
+
+      const refund = await refundBookingToWallet({ booking, transaction });
+
+      await booking.update(
+        {
+          previousBookingStatus: currentStatus,
+          bookingStatus: BOOKING_STATUS.CANCELLED,
+          cancelledBy: CANCELLED_BY.USER,
+          cancelReason: reason || null,
+          cancelRequestedAt: new Date(),
+          cancelHandledAt: new Date(),
+          cancelledAt: new Date(),
+          cancelRejectReason: null,
+        },
+        { transaction },
+      );
+
+      return {
+        mode: "CANCELLED",
+        bookingId: booking.id,
+        refund,
+      };
+    }
+
+    // CONFIRMED: create a cancel request for staff to handle
+    if (REQUEST_USER_CANCEL_STATUSES.includes(currentStatus)) {
+      if (mode === "DIRECT_ONLY") {
+        throw new BadRequestError("Lịch đã xác nhận cần gửi yêu cầu hủy");
+      }
+
+      await booking.update(
+        {
+          previousBookingStatus: currentStatus,
+          bookingStatus: BOOKING_STATUS.CANCEL_REQUESTED,
+          cancelledBy: CANCELLED_BY.USER,
+          cancelReason: reason || null,
+          cancelRequestedAt: new Date(),
+          cancelHandledAt: null,
+          cancelledAt: null,
+          cancelRejectReason: null,
+        },
+        { transaction },
+      );
+
+      return {
+        mode: "REQUESTED",
+        bookingId: booking.id,
+      };
+    }
+
+    throw new BadRequestError(
+      "Lịch sân hiện tại không thể hủy. Vui lòng kiểm tra lại trạng thái lịch đặt",
+    );
+  });
+};
+
 export default {
   createBookingService,
   bookingCallbackService,
   getMyBookingsService,
+  requestCancelBookingService,
 };

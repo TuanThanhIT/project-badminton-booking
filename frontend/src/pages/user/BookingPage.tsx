@@ -9,15 +9,18 @@ import {
   RotateCcw,
   SearchCheck,
   WalletCards,
+  XCircle,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { getMyBookings } from "../../redux/slices/user/bookingSlice";
+import type { BookingItem } from "../../types/booking";
+import { formatBookingCode } from "../../utils/booking";
+import CancelBookingModal from "../../components/ui/user/booking/CancelBookingModal";
 
 const STATUS_LABEL: Record<string, string> = {
   ALL: "Tất cả",
   PENDING: "Chờ xử lý",
   CONFIRMED: "Đã xác nhận",
-  PAID: "Đã thanh toán",
   COMPLETED: "Hoàn thành",
   CANCELLED: "Đã hủy",
 };
@@ -25,30 +28,60 @@ const STATUS_LABEL: Record<string, string> = {
 const STATUS_CLASS: Record<string, string> = {
   PENDING: "bg-amber-50 text-amber-700 ring-1 ring-amber-100",
   CONFIRMED: "bg-sky-50 text-sky-700 ring-1 ring-sky-100",
-  PAID: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100",
   COMPLETED: "bg-slate-100 text-slate-700 ring-1 ring-slate-200",
   CANCELLED: "bg-red-50 text-red-600 ring-1 ring-red-100",
 };
+
+Object.assign(STATUS_LABEL, {
+  CANCEL_REQUESTED: "Chờ xác nhận hủy",
+  FAILED: "Thất bại",
+});
+
+Object.assign(STATUS_CLASS, {
+  CANCEL_REQUESTED: "bg-orange-50 text-orange-700 ring-1 ring-orange-100",
+  FAILED: "bg-red-50 text-red-600 ring-1 ring-red-100",
+});
 
 const PAYMENT_LABEL: Record<string, string> = {
   COD: "Thanh toán tại sân",
   VNPAY: "VNPay",
   WALLET: "Ví B-Hub",
+  UNPAID: "Chưa thanh toán",
   PENDING: "Chờ thanh toán",
   PAID: "Đã thanh toán",
   FAILED: "Thất bại",
 };
 
-const TABS = ["ALL", "PENDING", "PAID", "CONFIRMED", "COMPLETED", "CANCELLED"];
+const PAYMENT_STATUS_CLASS: Record<string, string> = {
+  UNPAID: "bg-slate-50 text-slate-600 ring-1 ring-slate-200",
+  PENDING: "bg-amber-50 text-amber-700 ring-1 ring-amber-100",
+  PAID: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100",
+  REFUNDED: "bg-violet-50 text-violet-700 ring-1 ring-violet-100",
+  FAILED: "bg-red-50 text-red-600 ring-1 ring-red-100",
+};
+
+const TABS = [
+  "ALL",
+  "PENDING",
+  "CONFIRMED",
+  "CANCEL_REQUESTED",
+  "COMPLETED",
+  "CANCELLED",
+];
 
 const inputClass =
-  "w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition-all hover:border-sky-200 hover:bg-white focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100";
+  "w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition-all hover:border-sky-200 hover:bg-white focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100";
 
 const BookingPage = () => {
   const dispatch = useAppDispatch();
   const { bookings, pagination } = useAppSelector((state) => state.booking);
+
   const [status, setStatus] = useState("ALL");
   const [date, setDate] = useState("");
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<BookingItem | null>(
+    null,
+  );
 
   useEffect(() => {
     dispatch(
@@ -68,8 +101,11 @@ const BookingPage = () => {
       (sum, item) => sum + Number(item.totalAmount || 0),
       0,
     );
-    const paidCount = bookings.filter((item) =>
-      ["PAID", "CONFIRMED", "COMPLETED"].includes(item.bookingStatus),
+
+    const paidCount = bookings.filter(
+      (item) =>
+        item.payment?.status === "PAID" ||
+        ["CONFIRMED", "COMPLETED"].includes(item.bookingStatus),
     ).length;
 
     return {
@@ -86,10 +122,37 @@ const BookingPage = () => {
     setDate("");
   };
 
+  const canCancelBooking = (booking: BookingItem) =>
+    ["PENDING", "CONFIRMED"].includes(booking.bookingStatus);
+
+  const handleCancelBooking = (booking: BookingItem) => {
+    setSelectedBooking(booking);
+    setIsCancelModalOpen(true);
+  };
+
+  const handleCancelModalClose = () => {
+    setIsCancelModalOpen(false);
+    setSelectedBooking(null);
+  };
+
+  const handleCancelSuccess = () => {
+    dispatch(
+      getMyBookings({
+        data: {
+          page: 1,
+          limit: 20,
+          status: status === "ALL" ? undefined : status,
+          date: date || undefined,
+        },
+      }),
+    );
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-700">
       <section className="relative overflow-hidden bg-sky-950">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.22),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.14),transparent_32%)]" />
+
         <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:py-12">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
             <div>
@@ -103,15 +166,19 @@ const BookingPage = () => {
               </h1>
 
               <p className="mt-4 max-w-2xl text-base leading-relaxed text-sky-100 sm:text-lg">
-                Theo dõi lịch đã đặt, trạng thái xử lý và phương thức thanh
-                toán cho từng buổi chơi tại B-Hub.
+                Theo dõi lịch đã đặt, trạng thái xử lý và phương thức thanh toán
+                cho từng buổi chơi tại B-Hub.
               </p>
             </div>
 
             <div className="grid grid-cols-3 gap-3 lg:min-w-[420px]">
               {[
                 { icon: ReceiptText, label: "Lịch đặt", value: stats.count },
-                { icon: SearchCheck, label: "Đã xử lý", value: stats.paidCount },
+                {
+                  icon: SearchCheck,
+                  label: "Đã xử lý",
+                  value: stats.paidCount,
+                },
                 {
                   icon: WalletCards,
                   label: "Tổng hiển thị",
@@ -123,9 +190,11 @@ const BookingPage = () => {
                   className="rounded-2xl border border-white/10 bg-white/10 px-3 py-4 text-white backdrop-blur-sm sm:px-4"
                 >
                   <item.icon size={18} className="mb-2 text-sky-200" />
+
                   <p className="truncate text-xl font-semibold leading-none sm:text-2xl">
                     {item.value}
                   </p>
+
                   <p className="mt-2 text-xs text-sky-100">{item.label}</p>
                 </div>
               ))}
@@ -141,10 +210,12 @@ const BookingPage = () => {
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-sky-100 bg-sky-50 text-sky-600">
                 <Filter size={21} />
               </div>
+
               <div>
                 <h2 className="text-lg font-semibold text-slate-800">
                   Bộ lọc lịch sân
                 </h2>
+
                 <p className="text-sm text-slate-500">
                   Đang xem:{" "}
                   <span className="font-medium text-sky-700">
@@ -189,6 +260,7 @@ const BookingPage = () => {
               <label className="mb-2 block text-[13px] font-medium text-slate-600">
                 Lọc theo ngày chơi
               </label>
+
               <div className="relative">
                 <input
                   type="date"
@@ -196,6 +268,7 @@ const BookingPage = () => {
                   onChange={(event) => setDate(event.target.value)}
                   className={`${inputClass} pl-11`}
                 />
+
                 <Calendar
                   size={16}
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
@@ -211,10 +284,12 @@ const BookingPage = () => {
               <h2 className="text-xl font-semibold text-slate-800">
                 Danh sách lịch sân
               </h2>
+
               <p className="mt-1 text-sm text-slate-500">
                 Xem chi nhánh, sân, khung giờ và trạng thái thanh toán.
               </p>
             </div>
+
             <span className="w-fit rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-500">
               {pagination?.total || bookings.length} kết quả
             </span>
@@ -225,9 +300,11 @@ const BookingPage = () => {
               <div className="mb-4 rounded-3xl bg-sky-50 p-4 text-sky-600">
                 <CalendarDays size={36} />
               </div>
+
               <p className="text-lg font-semibold text-slate-800">
                 Chưa có lịch đặt sân phù hợp
               </p>
+
               <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-500">
                 Hãy thử đổi bộ lọc hoặc đặt một lịch sân mới.
               </p>
@@ -246,46 +323,116 @@ const BookingPage = () => {
                           <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-sky-100 bg-sky-50 text-sky-600">
                             <CalendarDays size={20} />
                           </div>
+
                           <div>
                             <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
                               Mã lịch sân
                             </p>
-                            <p className="text-lg font-semibold text-slate-800">
-                              BK#{booking.bookingId}
+
+                            <p className="mt-1 font-mono text-lg font-semibold text-sky-700">
+                              {formatBookingCode(
+                                booking.bookingId,
+                                booking.createdDate,
+                              )}
                             </p>
                           </div>
                         </div>
 
-                        <span
-                          className={`inline-flex w-fit items-center rounded-full px-3 py-1.5 text-xs font-medium ${
-                            STATUS_CLASS[booking.bookingStatus] ||
-                            STATUS_CLASS.PENDING
-                          }`}
-                        >
-                          {STATUS_LABEL[booking.bookingStatus] ||
-                            booking.bookingStatus}
-                        </span>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <span
+                            className={`inline-flex w-fit items-center rounded-full px-3 py-1.5 text-xs font-medium ${
+                              STATUS_CLASS[booking.bookingStatus] ||
+                              STATUS_CLASS.PENDING
+                            }`}
+                          >
+                            {STATUS_LABEL[booking.bookingStatus] ||
+                              booking.bookingStatus}
+                          </span>
+                          <span
+                            className={`inline-flex w-fit items-center rounded-full px-3 py-1.5 text-xs font-medium ${
+                              PAYMENT_STATUS_CLASS[
+                                booking.payment?.status || "UNPAID"
+                              ] || PAYMENT_STATUS_CLASS.UNPAID
+                            }`}
+                          >
+                            {PAYMENT_LABEL[
+                              booking.payment?.status || "UNPAID"
+                            ] ||
+                              booking.payment?.status ||
+                              "--"}
+                          </span>
+
+                          {booking.cancelReason && (
+                            <span className="inline-flex max-w-[360px] items-center gap-1 rounded-lg bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
+                              <span className="text-slate-500">Lý do hủy:</span>
+                              <span
+                                className="truncate text-slate-700"
+                                title={booking.cancelReason}
+                              >
+                                {booking.cancelReason}
+                              </span>
+                            </span>
+                          )}
+
+                          {booking.cancelRejectReason && (
+                            <span className="inline-flex max-w-[360px] items-center gap-1 rounded-lg bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
+                              <span className="text-slate-500">
+                                Từ chối hủy:
+                              </span>
+                              <span
+                                className="truncate text-slate-700"
+                                title={booking.cancelRejectReason}
+                              >
+                                {booking.cancelRejectReason}
+                              </span>
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 text-center sm:min-w-[360px]">
-                        <div className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-3">
-                          <p className="text-[11px] font-medium uppercase text-slate-400">
-                            Phương thức
-                          </p>
-                          <p className="mt-1 truncate text-sm font-medium text-slate-700">
-                            {PAYMENT_LABEL[booking.payment?.method || "COD"] ||
-                              booking.payment?.method ||
-                              "Thanh toán tại sân"}
-                          </p>
+                      <div className="w-full space-y-2 lg:w-[320px]">
+                        <div className="grid grid-cols-2 gap-2 text-center">
+                          <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
+                            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                              Phương thức
+                            </p>
+
+                            <p className="mt-1 truncate text-xs font-semibold text-slate-700">
+                              {PAYMENT_LABEL[
+                                booking.payment?.method || "COD"
+                              ] ||
+                                booking.payment?.method ||
+                                "Thanh toán tại sân"}
+                            </p>
+                          </div>
+
+                          <div className="rounded-xl border border-sky-100 bg-sky-50 px-3 py-2.5">
+                            <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-500">
+                              Tổng tiền
+                            </p>
+
+                            <p className="mt-1 text-xs font-bold text-sky-700">
+                              {Number(booking.totalAmount).toLocaleString()}đ
+                            </p>
+                          </div>
                         </div>
-                        <div className="rounded-2xl border border-sky-100 bg-sky-50 px-3 py-3">
-                          <p className="text-[11px] font-medium uppercase text-sky-500">
-                            Tổng tiền
-                          </p>
-                          <p className="mt-1 text-sm font-semibold text-sky-700">
-                            {Number(booking.totalAmount).toLocaleString()}đ
-                          </p>
-                        </div>
+
+                        {canCancelBooking(booking) && (
+                          <button
+                            type="button"
+                            onClick={() => handleCancelBooking(booking)}
+                            className="
+        inline-flex w-full items-center justify-center gap-1.5
+        rounded-xl border border-red-100 bg-red-50
+        px-3 py-2
+        text-xs font-bold text-red-600
+        transition hover:border-red-200 hover:bg-red-100
+      "
+                          >
+                            <XCircle size={14} />
+                            Hủy lịch sân
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -294,10 +441,12 @@ const BookingPage = () => {
                     <div className="space-y-3">
                       <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-white p-4">
                         <MapPin size={18} className="mt-0.5 text-sky-600" />
+
                         <div className="min-w-0">
                           <p className="font-semibold text-slate-800">
                             {booking.branch.branchName}
                           </p>
+
                           <p className="mt-1 text-sm text-slate-500">
                             {booking.branch.address}
                           </p>
@@ -312,10 +461,12 @@ const BookingPage = () => {
                           <p className="font-semibold text-slate-800">
                             {detail.courtName}
                           </p>
+
                           <p className="flex items-center gap-2 text-sm text-slate-600">
                             <CalendarDays size={15} />
                             {detail.playDate}
                           </p>
+
                           <p className="flex items-center gap-2 text-sm text-slate-600">
                             <Clock size={15} />
                             {detail.startTime} - {detail.endTime}
@@ -328,14 +479,17 @@ const BookingPage = () => {
                       <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
                         Thanh toán
                       </p>
+
                       <p className="mt-2 text-2xl font-semibold text-sky-700">
                         {Number(booking.totalAmount).toLocaleString()}đ
                       </p>
+
                       <p className="mt-3 text-sm text-slate-600">
                         {PAYMENT_LABEL[booking.payment?.status || "PENDING"] ||
                           booking.payment?.status ||
                           "Chờ thanh toán"}
                       </p>
+
                       <p className="mt-3 text-xs text-slate-500">
                         Tạo lúc{" "}
                         {new Date(booking.createdDate).toLocaleDateString(
@@ -350,6 +504,13 @@ const BookingPage = () => {
           )}
         </section>
       </main>
+
+      <CancelBookingModal
+        booking={selectedBooking}
+        isOpen={isCancelModalOpen}
+        onClose={handleCancelModalClose}
+        onSuccess={handleCancelSuccess}
+      />
     </div>
   );
 };

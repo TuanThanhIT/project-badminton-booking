@@ -5,7 +5,7 @@ export const ROLE_IN_SHIFT = Object.freeze({
 
 export const WORK_SHIFT_STATUS = Object.freeze({
   SCHEDULED: "SCHEDULED",
-  INPROGESS: "INPROGRESS",
+  INPROGRESS: "INPROGRESS",
   COMPLETED: "COMPLETED",
   CANCELLED: "CANCELLED",
 });

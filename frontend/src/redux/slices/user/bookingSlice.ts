@@ -5,6 +5,8 @@ import type {
   BookingCallbackResponse,
   BookingItem,
   BookingPagination,
+  CancelBookingRequest,
+  CancelBookingResponse,
   CreateBookingRequest,
   CreateBookingResponse,
   MyBookingsRequest,
@@ -65,6 +67,23 @@ export const getMyBookings = createAsyncThunk<
   }
 });
 
+export const requestCancelBooking = createAsyncThunk<
+  CancelBookingResponse,
+  {
+    bookingId: number;
+    data: CancelBookingRequest;
+    mode?: "DIRECT" | "REQUEST";
+  },
+  { rejectValue: ApiErrorType }
+>("booking/requestCancelBooking", async ({ bookingId, data, mode }, { rejectWithValue }) => {
+  try {
+    const res = await bookingService.requestCancelBookingService(bookingId, data, mode);
+    return res.data;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
 const bookingSlice = createSlice({
   name: "booking",
   initialState,
@@ -87,6 +106,19 @@ const bookingSlice = createSlice({
         ) {
           state.totalBookings = action.payload.data.pagination.total;
         }
+      })
+      .addCase(requestCancelBooking.fulfilled, (state, action) => {
+        const { bookingId, mode } = action.payload.data;
+        state.bookings = state.bookings.map((booking) =>
+          booking.bookingId === bookingId
+            ? {
+                ...booking,
+                previousBookingStatus: booking.bookingStatus,
+                bookingStatus:
+                  mode === "CANCELLED" ? "CANCELLED" : "CANCEL_REQUESTED",
+              }
+            : booking,
+        );
       });
   },
 });

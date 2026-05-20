@@ -4,27 +4,13 @@ import ManagerPublicFooter from "../commons/manager/ManagerPublicFooter";
 
 const ManagerPublicLayout = () => {
   return (
-    <div
-      className="
-        h-screen
-        flex flex-col
-        overflow-hidden
-
-        bg-gradient-to-br
-        from-cyan-50
-        via-white
-        to-sky-50
-      "
-    >
-      {/* HEADER */}
+    <div className="h-screen flex flex-col overflow-hidden bg-slate-50">
       <ManagerPublicHeader />
 
-      {/* MAIN */}
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 min-h-0 overflow-hidden">
         <Outlet />
       </main>
 
-      {/* FOOTER */}
       <ManagerPublicFooter />
     </div>
   );

@@ -15,6 +15,7 @@ import {
   ResponsiveContainer,
   Tooltip,
   XAxis,
+  YAxis,
   CartesianGrid,
 } from "recharts";
 import { toast } from "react-toastify";
@@ -211,6 +212,23 @@ const WalletPanel = () => {
     }, {});
   }, [filtered]);
 
+  const transactionCounts = useMemo(() => {
+    const fallback = (overview?.transactions || []).reduce<
+      Record<TabType, number>
+    >(
+      (acc, item) => {
+        acc[item.type] += 1;
+        return acc;
+      },
+      { DEPOSIT: 0, WITHDRAW: 0, PAYMENT: 0, REFUND: 0 },
+    );
+
+    return {
+      ...fallback,
+      ...(overview?.summary.transactionCounts || {}),
+    };
+  }, [overview?.summary.transactionCounts, overview?.transactions]);
+
   const statCards = [
     {
       label: "Đã nạp",
@@ -321,14 +339,49 @@ const WalletPanel = () => {
                     tickLine={false}
                   />
                   <Tooltip
-                    formatter={(value: number) => formatCurrency(value)}
+                    formatter={(value) => formatCurrency(Number(value))}
                     labelFormatter={(label) => `Ngày ${label}`}
                   />
+                  <YAxis
+                    tick={{ fill: "#64748b", fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(value) =>
+                      Number(value) >= 1000000
+                        ? `${Number(value) / 1000000}tr`
+                        : `${Number(value) / 1000}k`
+                    }
+                    width={54}
+                  />
                   <Legend />
-                  <Line type="monotone" dataKey="deposit" name="Nạp" stroke="#059669" strokeWidth={2} />
-                  <Line type="monotone" dataKey="withdraw" name="Rút" stroke="#e11d48" strokeWidth={2} />
-                  <Line type="monotone" dataKey="payment" name="Thanh toán" stroke="#0284c7" strokeWidth={2} />
-                  <Line type="monotone" dataKey="refund" name="Hoàn" stroke="#0891b2" strokeWidth={2} />
+                  <Line
+                    type="monotone"
+                    dataKey="deposit"
+                    name="Nạp"
+                    stroke="#059669"
+                    strokeWidth={2}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="withdraw"
+                    name="Rút"
+                    stroke="#e11d48"
+                    strokeWidth={2}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="payment"
+                    name="Thanh toán"
+                    stroke="#0284c7"
+                    strokeWidth={2}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="refund"
+                    name="Hoàn"
+                    stroke="#0891b2"
+                    strokeWidth={2}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -352,7 +405,7 @@ const WalletPanel = () => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Tìm giao dịch..."
-                className="w-full rounded-2xl border border-slate-300 bg-slate-50 py-3 pl-11 pr-4 text-sm outline-none transition focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-100"
+                className="w-full rounded-2xl border border-slate-300 bg-slate-50 py-3 pl-11 pr-4 text-sm outline-none transition focus:border-sky-500 focus:bg-white focus:ring-1 focus:ring-sky-100"
               />
             </div>
           </div>
@@ -369,7 +422,7 @@ const WalletPanel = () => {
                     : "border-slate-200 bg-white text-slate-600 hover:bg-sky-50 hover:text-sky-700"
                 }`}
               >
-                {tab.label}
+                {tab.label} ({transactionCounts[tab.key] || 0})
               </button>
             ))}
           </div>

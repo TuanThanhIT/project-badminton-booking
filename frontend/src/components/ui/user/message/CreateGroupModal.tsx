@@ -69,7 +69,9 @@ const CreateGroupModal = ({
               </div>
               <div>
                 <h3 className="text-lg font-extrabold">Tạo nhóm mới</h3>
-                <p className="text-sm text-sky-100 mt-1">Mời bạn chơi vào cùng một cuộc trò chuyện.</p>
+                <p className="text-sm text-sky-100 mt-1">
+                  Mời bạn chơi vào cùng một cuộc trò chuyện.
+                </p>
               </div>
             </div>
             <button
@@ -85,11 +87,13 @@ const CreateGroupModal = ({
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-slate-700">Tên nhóm</label>
+            <label className="block text-sm font-bold text-slate-700">
+              Tên nhóm
+            </label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-400 transition-all"
+              className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-sky-100 focus:border-sky-400 transition-all"
               placeholder="Ví dụ: Đánh cầu cuối tuần"
               autoFocus
             />

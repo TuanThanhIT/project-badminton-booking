@@ -6,27 +6,13 @@ import AdminPublicFooter from "../commons/admin/AdminPublicFooter";
 
 const AdminPublicLayout = () => {
   return (
-    <div
-      className="
-        h-screen
-        flex flex-col
-        overflow-hidden
-
-        bg-gradient-to-br
-        from-sky-50
-        via-white
-        to-cyan-50
-      "
-    >
-      {/* HEADER */}
+    <div className="h-screen flex flex-col overflow-hidden bg-slate-50">
       <AdminPublicHeader />
 
-      {/* MAIN */}
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 min-h-0 overflow-hidden">
         <Outlet />
       </main>
 
-      {/* FOOTER */}
       <AdminPublicFooter />
     </div>
   );

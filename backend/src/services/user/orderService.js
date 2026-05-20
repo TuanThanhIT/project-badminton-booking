@@ -56,6 +56,7 @@ import {
 } from "../../utils/shippingMapper.js";
 import { REVIEW_STATUS } from "../../constants/reviewConstant.js";
 import { emitOrderActionRealtime } from "../shared/emitRealtime.js";
+import { CANCELLED_BY } from "../../constants/bookingConstant.js";
 
 const normalizeCartItemIds = (cartItemIds = []) =>
   [...new Set(cartItemIds.map((id) => Number(id)).filter(Boolean))];
@@ -1359,6 +1360,7 @@ const cancellableStatuses = [
   ORDER_STATUS.PREPARING,
   ORDER_STATUS.READY_TO_SHIP,
   ORDER_STATUS.SHIPPING,
+  ORDER_STATUS.FAILED,
 ];
 
 const returnableStatuses = [ORDER_STATUS.COMPLETED];
@@ -1416,8 +1418,11 @@ const requestCancelOrderService = async (data) => {
       {
         previousOrderStatus: order.orderStatus,
         orderStatus: ORDER_STATUS.CANCEL_REQUESTED,
+        cancelledBy: CANCELLED_BY.USER,
         cancelReason: reason || null,
         cancelRequestedAt: new Date(),
+        cancelHandledAt: null,
+        cancelRejectReason: null,
       },
       { transaction: t },
     );

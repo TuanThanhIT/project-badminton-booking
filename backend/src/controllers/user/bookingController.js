@@ -38,10 +38,41 @@ const bookingCallbackController = asyncHandler(async (req, res) => {
     .json(new SuccessResponse("Hoàn tất thanh toán đặt sân", result));
 });
 
+const requestCancelBookingController = asyncHandler(async (req, res) => {
+  const result = await bookingService.requestCancelBookingService({
+    userId: req.user.id,
+    bookingId: req.params.bookingId,
+    reason: req.body.reason || req.body.cancelReason,
+    mode: "REQUEST_ONLY",
+  });
+
+  const message =
+    result.mode === "CANCELLED"
+      ? "Hủy lịch sân thành công"
+      : "Đã gửi yêu cầu hủy lịch sân, vui lòng chờ nhân viên xác nhận";
+
+  return res.status(200).json(new SuccessResponse(message, result));
+});
+
+const cancelBookingController = asyncHandler(async (req, res) => {
+  const result = await bookingService.requestCancelBookingService({
+    userId: req.user.id,
+    bookingId: req.params.bookingId,
+    reason: req.body.reason || req.body.cancelReason,
+    mode: "DIRECT_ONLY",
+  });
+
+  return res
+    .status(200)
+    .json(new SuccessResponse("Hủy lịch sân thành công", result));
+});
+
 const bookingController = {
   createBookingController,
   getMyBookingsController,
   bookingCallbackController,
+  requestCancelBookingController,
+  cancelBookingController,
 };
 
 export default bookingController;

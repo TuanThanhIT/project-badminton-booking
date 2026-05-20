@@ -44,8 +44,8 @@ const WorkShiftEmployee = sequelize.define(
       validate: {
         notNull: { msg: "Role in shift is required" },
         isIn: {
-          args: [["Cashier", "Staff"]],
-          msg: "roleInShift must be either Cashier or Staff",
+          args: [Object.values(ROLE_IN_SHIFT)],
+          msg: "roleInShift must be either CASHIER or STAFF",
         },
       },
     },
@@ -67,20 +67,24 @@ const WorkShiftEmployee = sequelize.define(
         },
       },
     },
-    hourlyRate: {
+    completionRate: {
       type: DataTypes.DOUBLE,
       allowNull: false,
       defaultValue: 0,
       validate: {
         notNull: {
-          msg: "Hourly rate is required",
+          msg: "Completion rate is required",
         },
         isFloat: {
-          msg: "Hourly rate must be a number",
+          msg: "Completion rate must be a number",
         },
         min: {
           args: [0],
-          msg: "Earned wage must be greater than or equal to 0",
+          msg: "Completion rate must be greater than or equal to 0",
+        },
+        max: {
+          args: [1],
+          msg: "Completion rate must be less than or equal to 1",
         },
       },
     },

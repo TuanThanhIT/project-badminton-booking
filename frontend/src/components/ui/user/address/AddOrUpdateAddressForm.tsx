@@ -26,7 +26,7 @@ import type {
   Ward,
 } from "../../../../types/address";
 import locationService from "../../../../services/user/locationService";
-import { showConfirmDialog } from "../../../../utils/swalHelper";
+import { showConfirmDialog } from "../../../../utils/confirmDialog";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 
@@ -257,6 +257,7 @@ const AddOrUpdateAddressForm = ({
         "Bạn có thay đổi chưa lưu. Bạn có chắc muốn thoát không?",
         "Chắc chắn",
         "Hủy",
+        "danger",
       );
 
       if (!confirmedExit) return;

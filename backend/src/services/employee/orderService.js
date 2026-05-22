@@ -25,12 +25,14 @@ import {
 import { syncOrderStatus } from "../../utils/orderMapper.js";
 import { mapGHNStatusToSystem } from "../../utils/shippingMapper.js";
 import { emitOrderActionRealtime } from "../shared/emitRealtime.js";
+import { formatOrderItemCode } from "../../utils/displayCode.js";
 import {
   cancelGHNOrder,
   createGHNOrderService,
   returnGHNOrder,
 } from "../shared/ghnService.js";
 import {
+  PAYMENT_METHOD_STATUS,
   PAYMENT_STATUS,
   TARGET_PAYMENT_TYPE,
   WALLET_TRANSACTION_STATUS,
@@ -57,6 +59,16 @@ const orderInclude = [
     required: false,
   },
 ];
+
+const activeOrderInclude = orderInclude.map((item) =>
+  item.as === "orderGroup"
+    ? {
+        ...item,
+        where: { status: ORDER_GROUP_STATUS.PAID },
+        required: true,
+      }
+    : item,
+);
 
 const mapOrder = (order, payment = null) => {
   const plain = order.get ? order.get({ plain: true }) : order;
@@ -198,7 +210,7 @@ const getOrdersService = async ({
 
   const { rows, count } = await Order.findAndCountAll({
     where,
-    include: orderInclude,
+    include: activeOrderInclude,
     distinct: true,
     order: [["createdDate", "DESC"]],
     limit: Number(limit),
@@ -207,6 +219,7 @@ const getOrdersService = async ({
 
   const allInBranch = await Order.findAll({
     where: { branchId: branchIds },
+    include: activeOrderInclude,
     attributes: ["orderStatus"],
   });
 
@@ -250,9 +263,42 @@ const getOrderDetailService = async ({ orderId, employeeId }) => {
   return mapOrder(order, payment);
 };
 
+const assertOrderCanBeProcessed = async ({ order, transaction }) => {
+  const orderGroup = await OrderGroup.findByPk(order.orderGroupId, {
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
+
+  if (!orderGroup) {
+    throw new NotFoundError("Nhóm đơn hàng không tồn tại");
+  }
+
+  const payment = await Payment.findOne({
+    where: {
+      targetPaymentType: TARGET_PAYMENT_TYPE.ORDER,
+      targetPaymentId: order.orderGroupId,
+    },
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
+
+  if (!payment) {
+    throw new BadRequestError("Đơn hàng chưa có thông tin thanh toán");
+  }
+
+  const isCOD = payment.paymentMethod === PAYMENT_METHOD_STATUS.COD;
+  const isPaid = payment.paymentStatus === PAYMENT_STATUS.PAID;
+
+  if (!isCOD && (!isPaid || orderGroup.status !== ORDER_GROUP_STATUS.PAID)) {
+    throw new BadRequestError(
+      "Đơn hàng chưa thanh toán, chưa thể xử lý",
+    );
+  }
+};
+
 const confirmOrderService = async (data) => {
   const { orderId, employeeId } = data;
-  return sequelize.transaction(async (t) => {
+  const updatedOrder = await sequelize.transaction(async (t) => {
     const order = await Order.findByPk(orderId, {
       transaction: t,
       lock: t.LOCK.UPDATE,
@@ -265,6 +311,8 @@ const confirmOrderService = async (data) => {
       branchId: order.branchId,
       transaction: t,
     });
+
+    await assertOrderCanBeProcessed({ order, transaction: t });
 
     if (order.orderStatus !== ORDER_STATUS.PENDING) {
       throw new BadRequestError("Sai trạng thái");
@@ -277,11 +325,19 @@ const confirmOrderService = async (data) => {
 
     return order;
   });
+
+  await emitOrderActionRealtime({
+    order: updatedOrder,
+    log: null,
+    message: `Đơn hàng ${formatOrderItemCode(updatedOrder.id)} đã được nhân viên xác nhận`,
+  });
+
+  return updatedOrder;
 };
 
 const prepareOrderService = async (data) => {
   const { orderId, employeeId } = data;
-  return sequelize.transaction(async (t) => {
+  const updatedOrder = await sequelize.transaction(async (t) => {
     const order = await Order.findByPk(orderId, {
       transaction: t,
       lock: t.LOCK.UPDATE,
@@ -294,6 +350,8 @@ const prepareOrderService = async (data) => {
       branchId: order.branchId,
       transaction: t,
     });
+
+    await assertOrderCanBeProcessed({ order, transaction: t });
 
     if (order.orderStatus !== ORDER_STATUS.CONFIRMED) {
       throw new BadRequestError("Chưa xác nhận");
@@ -306,11 +364,19 @@ const prepareOrderService = async (data) => {
 
     return order;
   });
+
+  await emitOrderActionRealtime({
+    order: updatedOrder,
+    log: null,
+    message: `Đơn hàng ${formatOrderItemCode(updatedOrder.id)} đang được chuẩn bị`,
+  });
+
+  return updatedOrder;
 };
 
 const readyToShipService = async (data) => {
   const { orderId, employeeId } = data;
-  return sequelize.transaction(async (t) => {
+  const updatedOrder = await sequelize.transaction(async (t) => {
     const order = await Order.findByPk(orderId, {
       transaction: t,
       lock: t.LOCK.UPDATE,
@@ -324,6 +390,8 @@ const readyToShipService = async (data) => {
       transaction: t,
     });
 
+    await assertOrderCanBeProcessed({ order, transaction: t });
+
     if (order.orderStatus !== ORDER_STATUS.PREPARING) {
       throw new BadRequestError("Chưa chuẩn bị xong");
     }
@@ -335,6 +403,14 @@ const readyToShipService = async (data) => {
 
     return order;
   });
+
+  await emitOrderActionRealtime({
+    order: updatedOrder,
+    log: null,
+    message: `Đơn hàng ${formatOrderItemCode(updatedOrder.id)} đã sẵn sàng bàn giao vận chuyển`,
+  });
+
+  return updatedOrder;
 };
 
 const shipOrderService = async ({ orderId, employeeId }) => {
@@ -352,6 +428,8 @@ const shipOrderService = async ({ orderId, employeeId }) => {
       branchId: o.branchId,
       transaction: t,
     });
+
+    await assertOrderCanBeProcessed({ order: o, transaction: t });
 
     if (o.orderStatus !== ORDER_STATUS.READY_TO_SHIP) {
       throw new BadRequestError("Chưa sẵn sàng giao");
@@ -379,6 +457,8 @@ const shipOrderService = async ({ orderId, employeeId }) => {
   }
 
   // 3. update DB atomic
+  let shippingLog;
+
   await sequelize.transaction(async (t) => {
     await order.update(
       {
@@ -391,7 +471,7 @@ const shipOrderService = async ({ orderId, employeeId }) => {
       { transaction: t },
     );
 
-    await OrderShippingLog.create(
+    shippingLog = await OrderShippingLog.create(
       {
         orderId: order.id,
         status: SHIPPING_STATUS.CREATED,
@@ -400,6 +480,12 @@ const shipOrderService = async ({ orderId, employeeId }) => {
       },
       { transaction: t },
     );
+  });
+
+  await emitOrderActionRealtime({
+    order,
+    log: shippingLog,
+    message: `Đơn hàng ${formatOrderItemCode(order.id)} đã được tạo vận đơn và đang chờ đơn vị vận chuyển lấy hàng`,
   });
 
   return order;
@@ -481,7 +567,7 @@ const refundOrderToWallet = async ({ order, orderGroup, transaction }) => {
     throw new NotFoundError("Ví người dùng không tồn tại");
   }
 
-  const refundDescription = `Hoàn tiền đơn #${order.id} thuộc nhóm đơn #${orderGroup.id}`;
+  const refundDescription = `Hoàn tiền đơn ${formatOrderItemCode(order.id)} thuộc nhóm đơn #${orderGroup.id}`;
 
   const existedRefund = await WalletTransaction.findOne({
     where: {

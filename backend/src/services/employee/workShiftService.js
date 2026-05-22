@@ -25,6 +25,19 @@ const normalizeTime = (time) => {
 
 const buildDateTime = (date, time) => new Date(`${date}T${normalizeTime(time)}`);
 
+const markShiftInProgress = async (workShiftId, transaction) => {
+  await WorkShift.update(
+    { shiftStatus: WORK_SHIFT_STATUS.INPROGRESS },
+    {
+      where: {
+        id: workShiftId,
+        shiftStatus: WORK_SHIFT_STATUS.SCHEDULED,
+      },
+      transaction,
+    },
+  );
+};
+
 const getShiftWageByRole = (workShift, roleInShift) =>
   roleInShift === ROLE_IN_SHIFT.CASHIER
     ? Number(workShift.cashierShiftWage || 0)
@@ -375,10 +388,7 @@ const updateCheckInAndCashRegisterService = async ({
 
     await assignment.update({ checkIn: checkInDate }, { transaction: t });
 
-    await workShift.update(
-      { shiftStatus: WORK_SHIFT_STATUS.INPROGRESS },
-      { transaction: t },
-    );
+    await markShiftInProgress(workShift.id, t);
 
     await CashRegister.create(
       {
@@ -680,14 +690,8 @@ const updateShiftAssignmentTimeService = async ({
 
     await assignment.update(updatePayload, { transaction: t });
 
-    if (
-      updatePayload.checkIn &&
-      cashierAssignment.workShift.shiftStatus === WORK_SHIFT_STATUS.SCHEDULED
-    ) {
-      await cashierAssignment.workShift.update(
-        { shiftStatus: WORK_SHIFT_STATUS.INPROGRESS },
-        { transaction: t },
-      );
+    if (updatePayload.checkIn) {
+      await markShiftInProgress(workShiftId, t);
     }
 
     const openAssignments = await WorkShiftEmployee.count({

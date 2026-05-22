@@ -18,7 +18,7 @@ const initPostRoute = (app) => {
   postRoute.post(
     "/",
     auth,
-    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
+    authorize(ROLE_NAME.USER),
     validate(createPostSchema),
     postController.createPostController,
   );
@@ -26,7 +26,7 @@ const initPostRoute = (app) => {
   postRoute.get(
     "/",
     auth,
-    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
+    authorize(ROLE_NAME.USER),
     validate(getPostsSchema),
     postController.getPostsController,
   );
@@ -34,7 +34,7 @@ const initPostRoute = (app) => {
   postRoute.get(
     "/:postId",
     auth,
-    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
+    authorize(ROLE_NAME.USER),
     validate(getPostByIdSchema),
     postController.getPostByIdController,
   );
@@ -42,7 +42,7 @@ const initPostRoute = (app) => {
   postRoute.put(
     "/:postId",
     auth,
-    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
+    authorize(ROLE_NAME.USER),
     validate(updatePostSchema),
     postController.updatePostController,
   );
@@ -50,7 +50,7 @@ const initPostRoute = (app) => {
   postRoute.delete(
     "/:postId",
     auth,
-    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
+    authorize(ROLE_NAME.USER),
     validate(deletePostSchema),
     postController.deletePostController,
   );

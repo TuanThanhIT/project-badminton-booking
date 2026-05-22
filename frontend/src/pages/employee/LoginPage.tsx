@@ -26,7 +26,7 @@ const LoginPage = () => {
 
   const from = location.state?.from
     ? `${location.state.from.pathname}${location.state.from.search || ""}`
-    : "/employee/home";
+    : "/employee/cash-register";
 
   const {
     register,

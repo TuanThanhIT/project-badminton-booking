@@ -45,6 +45,20 @@ export const bookingCallbackSchema = {
   }),
 };
 
+export const walletBookingConfirmSchema = {
+  body: Joi.object({
+    email: Joi.string().email().required().messages({
+      "string.email": "Email không hợp lệ",
+      "any.required": "Email là bắt buộc",
+    }),
+    otpCode: Joi.string().pattern(/^\d{6}$/).required().messages({
+      "string.pattern.base": "Mã OTP phải gồm 6 chữ số",
+      "any.required": "Mã OTP là bắt buộc",
+    }),
+    bookingId: idParams("bookingId"),
+  }),
+};
+
 export const cancelBookingSchema = {
   params: Joi.object({
     bookingId: idParams("bookingId"),

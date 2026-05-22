@@ -38,6 +38,38 @@ const bookingCallbackController = asyncHandler(async (req, res) => {
     .json(new SuccessResponse("Hoàn tất thanh toán đặt sân", result));
 });
 
+const retryBookingVNPayController = asyncHandler(async (req, res) => {
+  const result = await bookingService.retryBookingVNPayService({
+    bookingId: req.params.bookingId,
+    userId: req.user.id,
+    ip: req.ip,
+  });
+
+  return res
+    .status(200)
+    .json(new SuccessResponse("Tạo lại link thanh toán VNPay thành công", result));
+});
+
+const getBookingByIdController = asyncHandler(async (req, res) => {
+  const bookingId = req.params.bookingId;
+  const userId = req.user.id;
+  const data = { bookingId, userId };
+  const result = await bookingService.getBookingByIdService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Kiểm tra lịch đặt sân thành công", result));
+});
+
+const walletBookingConfirmController = asyncHandler(async (req, res) => {
+  const result = await bookingService.walletBookingConfirmService(req.body);
+
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse("Xác nhận thanh toán đặt sân thành công", result),
+    );
+});
+
 const requestCancelBookingController = asyncHandler(async (req, res) => {
   const result = await bookingService.requestCancelBookingService({
     userId: req.user.id,
@@ -70,7 +102,10 @@ const cancelBookingController = asyncHandler(async (req, res) => {
 const bookingController = {
   createBookingController,
   getMyBookingsController,
+  getBookingByIdController,
   bookingCallbackController,
+  retryBookingVNPayController,
+  walletBookingConfirmController,
   requestCancelBookingController,
   cancelBookingController,
 };

@@ -38,7 +38,7 @@ import type {
   OrderStatus,
   ShippingStatus,
 } from "../../types/order";
-import { showConfirmDialog } from "../../utils/swalHelper";
+import { showConfirmDialog } from "../../utils/confirmDialog";
 import { formatOrderCode, formatOrderItemCode } from "../../utils/order";
 
 const ORDER_TABS: { value: OrderStatus | "ALL"; label: string }[] = [
@@ -345,7 +345,8 @@ const EmployeeOrdersPage = () => {
         {
           label: "Duyệt hủy",
           icon: Ban,
-          className: "bg-red-600 hover:bg-red-700 text-white",
+          className:
+            "bg-red-500 text-white shadow-sm shadow-red-100 hover:bg-red-600 hover:shadow-md hover:shadow-red-100 disabled:bg-slate-300 disabled:shadow-none",
           onClick: () =>
             runAction("Duyệt hủy đơn và xử lý hoàn tiền nếu có?", () =>
               dispatch(approveCancelEmployeeOrder({ orderId: id })).unwrap(),
@@ -354,7 +355,8 @@ const EmployeeOrdersPage = () => {
         {
           label: "Từ chối hủy",
           icon: XCircle,
-          className: "bg-slate-800 hover:bg-slate-900 text-white",
+          className:
+            "border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800",
           onClick: () => {
             setRejectingOrder(order);
             setRejectReason("");
@@ -964,49 +966,84 @@ const EmployeeOrdersPage = () => {
       </div>
 
       {rejectingOrder && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 px-4">
-          <div className="w-full max-w-lg rounded-[24px] border border-slate-200 bg-white p-5 shadow-xl">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-bold text-sky-700">
-                  Từ chối yêu cầu hủy
-                </p>
-                <h3 className="mt-1 text-xl font-extrabold text-slate-950">
-                  {formatOrderItemCode(rejectingOrder.id)}
-                </h3>
-                <p className="mt-1 text-sm text-slate-500">
-                  Lý do này sẽ được gửi cho khách hàng.
-                </p>
-              </div>
+        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-2xl shadow-slate-950/10">
+            {/* HEADER */}
+            <div className="border-b border-slate-100 px-5 py-5">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-red-50 text-red-500">
+                    <XCircle className="h-5 w-5" />
+                  </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setRejectingOrder(null);
-                  setRejectReason("");
-                }}
-                className="grid h-9 w-9 place-items-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
-              >
-                <XCircle className="h-5 w-5" />
-              </button>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-red-600">
+                      Từ chối yêu cầu hủy
+                    </p>
+
+                    <h3 className="mt-1 truncate text-xl font-extrabold text-slate-900">
+                      {formatOrderItemCode(rejectingOrder.id)}
+                    </h3>
+
+                    <p className="mt-1 text-sm leading-6 text-slate-500">
+                      Nhập lý do từ chối. Nội dung này sẽ được gửi cho khách
+                      hàng.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRejectingOrder(null);
+                    setRejectReason("");
+                  }}
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                >
+                  <XCircle className="h-5 w-5" />
+                </button>
+              </div>
             </div>
 
-            <textarea
-              value={rejectReason}
-              onChange={(event) => setRejectReason(event.target.value)}
-              rows={5}
-              placeholder="Ví dụ: Đơn đã bàn giao vận chuyển nên không thể hủy trực tiếp..."
-              className="mt-4 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-500 focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100"
-            />
+            {/* BODY */}
+            <div className="px-5 py-5">
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Lý do từ chối
+              </label>
 
-            <div className="mt-4 flex justify-end gap-2">
+              <textarea
+                value={rejectReason}
+                onChange={(event) => setRejectReason(event.target.value)}
+                rows={5}
+                placeholder="Ví dụ: Đơn đã bàn giao vận chuyển nên không thể hủy trực tiếp..."
+                className="
+          w-full resize-none rounded-2xl border border-slate-200 bg-slate-50
+          px-4 py-3 text-sm leading-6 text-slate-700 outline-none transition
+          placeholder:text-slate-400
+          focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100/70
+        "
+              />
+
+              <p className="mt-2 text-xs leading-5 text-slate-500">
+                Nên ghi lý do ngắn gọn, rõ ràng để khách hàng dễ hiểu.
+              </p>
+            </div>
+
+            {/* ACTIONS */}
+            <div className="flex flex-col-reverse gap-2 border-t border-slate-100 bg-slate-50/70 px-5 py-4 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={() => {
                   setRejectingOrder(null);
                   setRejectReason("");
                 }}
-                className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="
+          inline-flex h-11 items-center justify-center rounded-2xl
+          border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600
+          transition-all duration-200
+          hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800
+          active:scale-[0.98]
+        "
               >
                 Đóng
               </button>
@@ -1014,10 +1051,22 @@ const EmployeeOrdersPage = () => {
               <button
                 type="button"
                 onClick={rejectCancel}
-                disabled={actionLoading}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+                disabled={actionLoading || !rejectReason.trim()}
+                className="
+          inline-flex h-11 items-center justify-center gap-2 rounded-2xl
+          bg-red-500 px-4 text-sm font-semibold text-white
+          shadow-sm shadow-red-100
+          transition-all duration-200
+          hover:bg-red-600 hover:shadow-md hover:shadow-red-100
+          active:scale-[0.98]
+          disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none
+        "
               >
-                {actionLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                {actionLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <XCircle className="h-4 w-4" />
+                )}
                 Từ chối yêu cầu
               </button>
             </div>

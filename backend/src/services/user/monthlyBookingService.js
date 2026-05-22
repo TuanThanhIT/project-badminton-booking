@@ -1,5 +1,7 @@
 import sequelize from "../../config/db.js";
 import BadRequestError from "../../errors/BadRequestError.js";
+import { v4 as uuidv4 } from "uuid";
+import { dateFormat, VNPay, VnpLocale } from "vnpay";
 
 import {
   MonthlyBooking,
@@ -8,12 +10,25 @@ import {
   Court,
   CourtPrice,
   Discount,
+  Branch,
+  Payment,
+  Wallet,
+  WalletTransaction,
 } from "../../models/index.js";
 import {
   DISCOUNT_APPLY_TYPE,
   DISCOUNT_TYPE,
 } from "../../constants/discountConstant.js";
 import { applyDiscountUsage } from "../shared/applyDiscountUsage.js";
+import { sendBranchEmployeesNotification } from "../../helpers/notification.js";
+import { formatBookingCode } from "../../utils/displayCode.js";
+import {
+  PAYMENT_METHOD_STATUS,
+  PAYMENT_STATUS,
+  TARGET_PAYMENT_TYPE,
+  WALLET_TRANSACTION_STATUS,
+  WALLET_TRANSACTION_TYPE,
+} from "../../constants/paymentConstant.js";
 
 const DAYS = [
   "Sunday",
@@ -26,6 +41,45 @@ const DAYS = [
 ];
 
 const MIN_BOOKING_LEAD_MINUTES = 60;
+
+const createVNPayUrl = async ({ booking, amount, ip, transaction }) => {
+  const txnRef = uuidv4();
+
+  await Payment.create(
+    {
+      paymentAmount: amount,
+      paymentMethod: PAYMENT_METHOD_STATUS.VNPAY,
+      paymentStatus: PAYMENT_STATUS.PENDING,
+      targetPaymentType: TARGET_PAYMENT_TYPE.BOOKING,
+      targetPaymentId: booking.id,
+      externalId: txnRef,
+    },
+    { transaction },
+  );
+
+  const vnpay = new VNPay({
+    tmnCode: process.env.VNP_TMN_CODE,
+    secureSecret: process.env.VNP_HASH_SECRET,
+    vnpayHost: process.env.VNP_URL,
+    testMode: true,
+    hashAlgorithm: "SHA512",
+  });
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  return vnpay.buildPaymentUrl({
+    vnp_Amount: amount,
+    vnp_IpAddr: ip,
+    vnp_TxnRef: txnRef,
+    vnp_OrderInfo: `booking_${booking.id}`,
+    vnp_OrderType: "booking",
+    vnp_ReturnUrl: process.env.VNP_RETURN_URL,
+    vnp_Locale: VnpLocale.VN,
+    vnp_CreateDate: dateFormat(new Date()),
+    vnp_ExpireDate: dateFormat(tomorrow),
+  });
+};
 
 const timeToNumber = (time) => {
   const [h, m] = time.split(":").map(Number);
@@ -214,8 +268,18 @@ const createMonthlyBookingService = async (data) => {
     startTime,
     endTime,
     discountId,
+    paymentMethod,
     note,
+    ip,
   } = data;
+
+  if (
+    ![PAYMENT_METHOD_STATUS.VNPAY, PAYMENT_METHOD_STATUS.WALLET].includes(
+      paymentMethod,
+    )
+  ) {
+    throw new BadRequestError("Lịch tháng chỉ hỗ trợ thanh toán VNPay hoặc ví");
+  }
 
   const t = await sequelize.transaction();
 
@@ -251,6 +315,11 @@ const createMonthlyBookingService = async (data) => {
     // 2. Tạo MonthlyBooking
     // =====================================================
 
+    const branch = await Branch.findByPk(branchId, {
+      attributes: ["id", "branchName"],
+      transaction: t,
+    });
+
     const { discountAmount, finalAmount } = await calculateBookingDiscount({
       discountId,
       bookingAmount: monthlyPrice.totalAmount,
@@ -268,7 +337,7 @@ const createMonthlyBookingService = async (data) => {
         startTime,
         endTime,
         totalAmount: finalAmount,
-        status: "PAID",
+        status: "PENDING",
         note,
       },
       { transaction: t },
@@ -284,7 +353,7 @@ const createMonthlyBookingService = async (data) => {
         branchId,
         discountId: discountId || null,
         totalAmount: finalAmount,
-        bookingStatus: "CONFIRMED",
+        bookingStatus: "PENDING",
         note: `Monthly booking #${monthlyBooking.id}`,
       },
       { transaction: t },
@@ -358,12 +427,81 @@ const createMonthlyBookingService = async (data) => {
       transaction: t,
     });
 
+    await sendBranchEmployeesNotification(
+      branchId,
+      "monthly-booking-created",
+      "Có lịch đặt sân tháng mới",
+      `${branch?.branchName || "Chi nhánh"}: lịch tháng ${formatBookingCode(booking.id, booking.createdDate)} từ ${startDate} đến ${endDate} đang chờ theo dõi.`,
+      { transaction: t },
+    );
+
+    let paymentUrl;
+
+    if (paymentMethod === PAYMENT_METHOD_STATUS.VNPAY) {
+      paymentUrl = await createVNPayUrl({
+        booking,
+        amount: finalAmount,
+        ip,
+        transaction: t,
+      });
+    }
+
+    if (paymentMethod === PAYMENT_METHOD_STATUS.WALLET) {
+      const wallet = await Wallet.findOne({
+        where: { userId },
+        transaction: t,
+        lock: t.LOCK.UPDATE,
+      });
+
+      if (!wallet) throw new BadRequestError("Ví không tồn tại");
+
+      const pendingAmount = await WalletTransaction.sum("amount", {
+        where: {
+          walletId: wallet.id,
+          status: WALLET_TRANSACTION_STATUS.PENDING,
+        },
+        transaction: t,
+      });
+
+      const available = Number(wallet.balance) - Number(pendingAmount || 0);
+
+      if (available < finalAmount) {
+        throw new BadRequestError("Số dư ví không đủ");
+      }
+
+      const payment = await Payment.create(
+        {
+          targetPaymentType: TARGET_PAYMENT_TYPE.BOOKING,
+          targetPaymentId: booking.id,
+          paymentAmount: finalAmount,
+          paymentMethod: PAYMENT_METHOD_STATUS.WALLET,
+          paymentStatus: PAYMENT_STATUS.PENDING,
+        },
+        { transaction: t },
+      );
+
+      await WalletTransaction.create(
+        {
+          walletId: wallet.id,
+          paymentId: payment.id,
+          amount: finalAmount,
+          type: WALLET_TRANSACTION_TYPE.PAYMENT,
+          status: WALLET_TRANSACTION_STATUS.PENDING,
+          expiredAt: new Date(Date.now() + 10 * 60 * 1000),
+          description: `Thanh toán lịch tháng ${formatBookingCode(booking.id, booking.createdDate)}`,
+        },
+        { transaction: t },
+      );
+    }
+
     await t.commit();
 
     return {
       monthlyBooking,
       booking,
       discountAmount,
+      paymentMethod,
+      paymentUrl,
       totalSessions: details.length,
     };
   } catch (error) {

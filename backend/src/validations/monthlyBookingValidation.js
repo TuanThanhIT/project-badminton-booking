@@ -1,4 +1,5 @@
 import Joi from "joi";
+import { PAYMENT_METHOD_STATUS } from "../constants/paymentConstant.js";
 
 export const createMonthlyBookingSchema = {
   body: Joi.object({
@@ -51,6 +52,14 @@ export const createMonthlyBookingSchema = {
     }),
 
     discountId: Joi.number().integer().positive().allow(null).optional(),
+
+    paymentMethod: Joi.string()
+      .valid(PAYMENT_METHOD_STATUS.VNPAY, PAYMENT_METHOD_STATUS.WALLET)
+      .required()
+      .messages({
+        "any.only": "Lịch tháng chỉ hỗ trợ thanh toán VNPay hoặc ví",
+        "any.required": "Phương thức thanh toán là bắt buộc",
+      }),
 
     note: Joi.string().allow(null, "").max(500).messages({
       "string.max": "Note must not exceed 500 characters",

@@ -11,6 +11,9 @@ import type {
   CreateBookingResponse,
   MyBookingsRequest,
   MyBookingsResponse,
+  RetryBookingPaymentResponse,
+  WalletBookingConfirmRequest,
+  WalletBookingConfirmResponse,
 } from "../../../types/booking";
 import type { ApiErrorType } from "../../../types/error";
 
@@ -54,6 +57,32 @@ export const bookingCallback = createAsyncThunk<
   }
 });
 
+export const retryBookingVNPay = createAsyncThunk<
+  RetryBookingPaymentResponse,
+  { bookingId: number },
+  { rejectValue: ApiErrorType }
+>("booking/retryBookingVNPay", async ({ bookingId }, { rejectWithValue }) => {
+  try {
+    const res = await bookingService.retryBookingVNPayService(bookingId);
+    return res.data;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
+export const walletBookingConfirm = createAsyncThunk<
+  WalletBookingConfirmResponse,
+  { data: WalletBookingConfirmRequest },
+  { rejectValue: ApiErrorType }
+>("booking/walletBookingConfirm", async ({ data }, { rejectWithValue }) => {
+  try {
+    const res = await bookingService.walletBookingConfirmService(data);
+    return res.data;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
 export const getMyBookings = createAsyncThunk<
   MyBookingsResponse,
   { data: MyBookingsRequest },
@@ -61,6 +90,19 @@ export const getMyBookings = createAsyncThunk<
 >("booking/getMyBookings", async ({ data }, { rejectWithValue }) => {
   try {
     const res = await bookingService.getMyBookingsService(data);
+    return res.data;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
+export const getBookingById = createAsyncThunk<
+  any,
+  { bookingId: number },
+  { rejectValue: ApiErrorType }
+>("booking/getBookingById", async ({ bookingId }, { rejectWithValue }) => {
+  try {
+    const res = await bookingService.getBookingByIdService(bookingId);
     return res.data;
   } catch (error) {
     return rejectWithValue(error as ApiErrorType);
@@ -75,14 +117,21 @@ export const requestCancelBooking = createAsyncThunk<
     mode?: "DIRECT" | "REQUEST";
   },
   { rejectValue: ApiErrorType }
->("booking/requestCancelBooking", async ({ bookingId, data, mode }, { rejectWithValue }) => {
-  try {
-    const res = await bookingService.requestCancelBookingService(bookingId, data, mode);
-    return res.data;
-  } catch (error) {
-    return rejectWithValue(error as ApiErrorType);
-  }
-});
+>(
+  "booking/requestCancelBooking",
+  async ({ bookingId, data, mode }, { rejectWithValue }) => {
+    try {
+      const res = await bookingService.requestCancelBookingService(
+        bookingId,
+        data,
+        mode,
+      );
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(error as ApiErrorType);
+    }
+  },
+);
 
 const bookingSlice = createSlice({
   name: "booking",
@@ -101,7 +150,8 @@ const bookingSlice = createSlice({
         state.bookings = action.payload.data.items;
         state.pagination = action.payload.data.pagination;
         if (
-          (!action.meta.arg.data.status || action.meta.arg.data.status === "ALL") &&
+          (!action.meta.arg.data.status ||
+            action.meta.arg.data.status === "ALL") &&
           !action.meta.arg.data.date
         ) {
           state.totalBookings = action.payload.data.pagination.total;

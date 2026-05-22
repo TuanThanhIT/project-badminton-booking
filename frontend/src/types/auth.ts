@@ -81,6 +81,7 @@ export type OtpFlowData = {
   email?: string;
   withdrawRequestId?: number;
   orderGroupId?: number;
+  bookingId?: number;
   type?: string;
 };
 

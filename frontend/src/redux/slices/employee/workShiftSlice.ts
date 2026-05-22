@@ -149,11 +149,35 @@ const workShiftSlice = createSlice({
         state.shiftAssignments = action.payload.data;
       })
       .addCase(updateShiftAssignment.fulfilled, (state, action) => {
+        const updatedAssignment = action.payload.data;
+
         state.shiftAssignments = state.shiftAssignments.map((item) =>
-          item.assignmentId === action.payload.data.assignmentId
-            ? action.payload.data
+          item.assignmentId === updatedAssignment.assignmentId
+            ? updatedAssignment
             : item,
         );
+
+        const updatedShiftStatus = updatedAssignment.workShift?.shiftStatus;
+
+        if (updatedShiftStatus) {
+          if (
+            state.currentWorkShift?.workShiftId === updatedAssignment.workShiftId
+          ) {
+            state.currentWorkShift.workShift.shiftStatus = updatedShiftStatus;
+          }
+
+          state.workShifts = state.workShifts.map((item) =>
+            item.workShiftId === updatedAssignment.workShiftId
+              ? {
+                  ...item,
+                  workShift: {
+                    ...item.workShift,
+                    shiftStatus: updatedShiftStatus,
+                  },
+                }
+              : item,
+          );
+        }
       });
   },
 });

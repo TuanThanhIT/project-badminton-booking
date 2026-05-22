@@ -126,6 +126,12 @@ export type CreateOrderData = {
 
 export type CreateOrderResponse = ApiResponse<CreateOrderData>;
 
+export type RetryOrderPaymentResponse = ApiResponse<{
+  orderGroupId: number;
+  amount: number;
+  paymentUrl: string;
+}>;
+
 export type OrderCallbackRequest = {
   vnp_Amount: string;
   vnp_BankCode: string;
@@ -171,6 +177,9 @@ export type OrderGroupIdData = {
   amount: number;
   status: string;
   paymentMethod: string;
+  paymentStatus?: string | null;
+  canRetryPayment?: boolean;
+  retryExpiresAt?: string;
   isSuccess: boolean;
   createdDate: string;
 };

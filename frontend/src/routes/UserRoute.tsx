@@ -10,7 +10,6 @@ import ForgotPasswordPage from "../pages/user/ForgotPasswordPage";
 import OTPPage from "../pages/user/OTPPage";
 import ProfilePage from "../pages/user/ProfilePage";
 import CartPage from "../pages/user/CartPage";
-import GuestHomePage from "../pages/user/GuestHomePage";
 import ProductDetailPage from "../pages/user/ProductDetailPage";
 import CheckoutPage from "../pages/user/CheckoutPage";
 import OrderPage from "../pages/user/OrderPage";
@@ -28,6 +27,7 @@ import BranchPage from "../pages/user/BranchesPage";
 import CourtPage from "../pages/user/CourtPage";
 import OrderResultPage from "../pages/user/OrderResultPage";
 import VNPayResultPage from "../pages/user/VNPayResultPage";
+import BookingResultPage from "../pages/user/BookingResultPage";
 import UserProtectedRoute from "./ProtectedRoute/UserProtectedRoute";
 import CheckoutBookingPage from "../pages/user/CheckoutBookingPage";
 
@@ -60,6 +60,7 @@ const UserRoute = () => {
           <Route path="bookings" element={<BookingPage />} />
           <Route path="wallet" element={<WalletPage />}></Route>
           <Route path="vnpay/result" element={<VNPayResultPage />}></Route>
+          <Route path="booking-result" element={<BookingResultPage />}></Route>
           <Route path="create-post" element={<CreatePostPage />} />
           <Route path="posts" element={<PostListPage />} />
           <Route path="messages" element={<MessagesPage />} />

@@ -58,7 +58,7 @@ import type { BuyNowItemRequest, CreateOrderRequest } from "../../types/order";
 import type { OtpFlowData, OtpSendRequest } from "../../types/auth";
 import { OTP_TYPE } from "../../utils/constants/otpType";
 import { formatPrice, mergeCheckoutItems } from "../../utils/checkout";
-import { showConfirmDialog } from "../../utils/swalHelper";
+import { showConfirmDialog } from "../../utils/confirmDialog";
 
 const iconMap = {
   cod: <HomeIcon size={18} />,

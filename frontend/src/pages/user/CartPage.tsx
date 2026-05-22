@@ -30,7 +30,7 @@ import type {
 } from "../../types/cart";
 import { normalizeColor } from "../../utils/color";
 import { COLOR_MAP } from "../../utils/constants/color";
-import { showConfirmDialog } from "../../utils/swalHelper";
+import { showConfirmDialog } from "../../utils/confirmDialog";
 
 const formatCurrency = (value: number) => `${value.toLocaleString()}₫`;
 

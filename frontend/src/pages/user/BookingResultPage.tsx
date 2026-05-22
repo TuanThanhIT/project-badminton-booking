@@ -1,11 +1,10 @@
 import {
+  CalendarCheck,
   CheckCircle2,
   ClipboardList,
   Home,
-  PackageCheck,
   ReceiptText,
   RotateCcw,
-  Truck,
   Wallet,
   XCircle,
 } from "lucide-react";
@@ -13,12 +12,10 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAppDispatch } from "../../redux/hook";
 import {
-  getOrderGroupId,
-  retryOrderVNPay,
-} from "../../redux/slices/user/orderSlice";
-import { getCart } from "../../redux/slices/user/cartSlice";
-import type { OrderGroupIdRequest } from "../../types/order";
-import { formatOrderCode } from "../../utils/order";
+  getBookingById,
+  retryBookingVNPay,
+} from "../../redux/slices/user/bookingSlice";
+import { formatBookingCode } from "../../utils/booking";
 
 const useCountUp = (end: number, duration = 900) => {
   const [value, setValue] = useState(0);
@@ -30,10 +27,12 @@ const useCountUp = (end: number, duration = 900) => {
 
     const timer = setInterval(() => {
       start += increment;
+
       if (start >= end) {
         start = end;
         clearInterval(timer);
       }
+
       setValue(Math.floor(start));
     }, stepTime);
 
@@ -43,34 +42,33 @@ const useCountUp = (end: number, duration = 900) => {
   return value;
 };
 
-const OrderResultPage = () => {
-  const dispatch = useAppDispatch();
-  const navigate = useNavigate();
+const BookingResultPage = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
-  const orderGroupId = searchParams.get("orderGroupId") || "--";
-  const [orderData, setOrderData] = useState<any>(null);
-  const [isSuccess, setIsSuccess] = useState(false);
+  const bookingId = searchParams.get("bookingId");
+  const [bookingData, setBookingData] = useState<any>(null);
   const [verified, setVerified] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
 
-  const method = orderData?.paymentMethod;
-  const amount = Number(orderData?.amount || 0);
-  const orderId = orderData?.orderGroupId || "--";
-  const createdDate = orderData?.createdDate ?? null;
-
-  const isWallet = method === "WALLET";
-  const isCOD = method === "COD";
-  const canRetryPayment = Boolean(orderData?.canRetryPayment);
+  const isSuccess = bookingData?.isSuccess;
+  const amount = Number(bookingData?.amount || 0);
   const animatedAmount = useCountUp(amount);
 
+  const method = bookingData?.paymentMethod;
+  const isWallet = method === "WALLET";
+  const isPayAtCourt = method === "COD" || method === "CASH";
+  const canRetryPayment = Boolean(bookingData?.canRetryPayment);
+
+  const dispatch = useAppDispatch();
+
   const handleRetryPayment = async () => {
-    if (!orderData?.orderGroupId) return;
+    if (!bookingData?.bookingId) return;
 
     try {
       setIsRetrying(true);
       const res = await dispatch(
-        retryOrderVNPay({ orderGroupId: Number(orderData.orderGroupId) }),
+        retryBookingVNPay({ bookingId: Number(bookingData.bookingId) }),
       ).unwrap();
       window.location.href = res.data.paymentUrl;
     } finally {
@@ -79,50 +77,37 @@ const OrderResultPage = () => {
   };
 
   useEffect(() => {
-    if (!orderGroupId || orderGroupId === "--") {
+    if (!bookingId) {
       setVerified(true);
-      setIsSuccess(false);
       return;
     }
 
-    const fetchOrder = async () => {
+    const fetchBooking = async () => {
       try {
-        const data: OrderGroupIdRequest = {
-          orderGroupId: Number(orderGroupId),
-        };
+        const res = await dispatch(
+          getBookingById({ bookingId: Number(bookingId) }),
+        ).unwrap();
 
-        const res = await dispatch(getOrderGroupId({ data })).unwrap();
-        const result = res.data;
-
-        setOrderData(result);
-        setIsSuccess(result.isSuccess);
-
-        if (result.isSuccess) {
-          dispatch(getCart());
-
-          sessionStorage.removeItem("checkoutCartId");
-          sessionStorage.removeItem("checkoutCartItemIds");
-          sessionStorage.removeItem("checkoutBuyNowItem");
-          localStorage.removeItem("addressSelectedId");
-          localStorage.removeItem("discountCode");
-        }
+        setBookingData(res.data);
+        localStorage.removeItem("bookingDiscountCode");
       } catch {
-        setIsSuccess(false);
+        setBookingData(null);
       } finally {
         setVerified(true);
       }
     };
 
-    fetchOrder();
-  }, [dispatch, orderGroupId]);
+    fetchBooking();
+  }, [bookingId, dispatch]);
 
   if (!verified) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
         <div className="rounded-2xl border border-slate-200 bg-white px-6 py-5 text-center shadow-sm">
           <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
+
           <p className="text-sm font-medium text-slate-600">
-            Đang kiểm tra đơn hàng...
+            Đang kiểm tra lịch sân...
           </p>
         </div>
       </div>
@@ -130,33 +115,32 @@ const OrderResultPage = () => {
   }
 
   const title = isSuccess
-    ? isWallet
-      ? "Thanh toán thành công"
-      : "Đặt hàng thành công"
+    ? "Thanh toán thành công"
     : canRetryPayment
-      ? "Đơn hàng đang chờ thanh toán"
+      ? "Lịch sân đang chờ thanh toán"
       : "Thanh toán thất bại";
 
   const description = isSuccess
-    ? isWallet
-      ? "Giao dịch đã hoàn tất. Bạn có thể theo dõi trạng thái đơn hàng trong trung tâm đơn hàng."
-      : "Đơn hàng đã được tạo. B-Hub sẽ tiếp nhận và xử lý trong thời gian sớm nhất."
+    ? "Lịch sân đã được thanh toán. Bạn có thể xem lại chi tiết trong mục lịch sân."
     : canRetryPayment
-      ? "Thanh toán chưa hoàn tất. Đơn hàng vẫn được giữ trong thời gian ngắn, bạn có thể thanh toán lại ngay."
-      : "Giao dịch không hợp lệ hoặc đã bị hủy. Bạn có thể quay lại giỏ hàng để thử lại.";
+      ? "Thanh toán chưa hoàn tất. Lịch sân vẫn được giữ trong thời gian ngắn, bạn có thể thanh toán lại ngay."
+      : "Giao dịch không hợp lệ hoặc đã bị hủy. Vui lòng kiểm tra lại giao dịch hoặc thử lại.";
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-700">
       <section className="relative overflow-hidden bg-sky-950 py-12 sm:py-14 lg:py-16">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.24),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.16),transparent_35%)]" />
+
         <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-sky-100">
             <ReceiptText size={16} className="text-sky-300" />
-            Kết quả đơn hàng
+            Kết quả đặt sân
           </div>
+
           <h1 className="mt-5 text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
             {title}
           </h1>
+
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-sky-100 sm:text-base">
             {description}
           </p>
@@ -186,6 +170,7 @@ const OrderResultPage = () => {
 
             <div className="min-w-0">
               <p className="text-xl font-semibold text-slate-900">{title}</p>
+
               <p className="mt-1 text-sm leading-6 text-slate-500">
                 {description}
               </p>
@@ -195,9 +180,12 @@ const OrderResultPage = () => {
           {isSuccess ? (
             <>
               <div className="grid grid-cols-1 gap-4 bg-slate-50/70 p-5 sm:grid-cols-2 sm:p-6">
-                <InfoCard label="Mã đơn hàng">
+                <InfoCard label="Mã lịch sân">
                   <span className="font-mono text-xl font-semibold text-sky-700">
-                    {formatOrderCode(orderId, createdDate)}
+                    {formatBookingCode(
+                      bookingData.bookingId,
+                      bookingData.createdDate,
+                    )}
                   </span>
                 </InfoCard>
 
@@ -209,11 +197,11 @@ const OrderResultPage = () => {
 
                 <InfoCard label="Phương thức">
                   <span className="text-base font-medium text-slate-800">
-                    {isCOD
-                      ? "Thanh toán khi nhận hàng"
+                    {isPayAtCourt
+                      ? "Thanh toán tại sân"
                       : isWallet
                         ? "Ví B-Hub"
-                        : "VNPay"}
+                        : method || "VNPay"}
                   </span>
                 </InfoCard>
 
@@ -227,13 +215,22 @@ const OrderResultPage = () => {
 
               <div className="border-t border-slate-100 p-5 sm:p-6">
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  <Step active icon={<CheckCircle2 size={18} />} label="Đặt hàng" />
                   <Step
-                    active={isWallet}
-                    icon={isWallet ? <Wallet size={18} /> : <PackageCheck size={18} />}
-                    label={isWallet ? "Đã thanh toán" : "Chờ xác nhận"}
+                    active
+                    icon={<CalendarCheck size={18} />}
+                    label="Đặt lịch"
                   />
-                  <Step icon={<Truck size={18} />} label="Vận chuyển" />
+
+                  <Step
+                    active
+                    icon={<Wallet size={18} />}
+                    label="Đã thanh toán"
+                  />
+
+                  <Step
+                    icon={<ClipboardList size={18} />}
+                    label="Xem lịch sân"
+                  />
                 </div>
               </div>
             </>
@@ -242,13 +239,14 @@ const OrderResultPage = () => {
               <div className="rounded-2xl border border-red-100 bg-red-50 p-5 text-center">
                 <p className="font-semibold text-red-600">
                   {canRetryPayment
-                    ? "Đơn hàng vẫn đang được giữ"
-                    : "Không tìm thấy thông tin đơn hàng hợp lệ"}
+                    ? "Lịch sân vẫn đang được giữ"
+                    : "Không tìm thấy giao dịch hợp lệ"}
                 </p>
+
                 <p className="mt-2 text-sm text-slate-600">
                   {canRetryPayment
-                    ? "Bạn có thể thanh toán lại trước khi hết thời gian giữ đơn."
-                    : "Vui lòng kiểm tra lại giao dịch hoặc quay về giỏ hàng để thử lại."}
+                    ? "Bạn có thể thanh toán lại trước khi hết thời gian giữ lịch."
+                    : "Vui lòng kiểm tra lại giao dịch hoặc quay lại để thử thanh toán lần nữa."}
                 </p>
               </div>
             </div>
@@ -261,9 +259,9 @@ const OrderResultPage = () => {
             </ActionButton>
 
             {isSuccess ? (
-              <ActionButton primary onClick={() => navigate("/orders")}>
+              <ActionButton primary onClick={() => navigate("/bookings")}>
                 <ClipboardList size={18} />
-                Xem đơn hàng
+                Xem lịch sân
               </ActionButton>
             ) : canRetryPayment ? (
               <ActionButton
@@ -275,7 +273,7 @@ const OrderResultPage = () => {
                 {isRetrying ? "Đang tạo lại..." : "Thanh toán lại"}
               </ActionButton>
             ) : (
-              <ActionButton primary onClick={() => navigate("/cart")}>
+              <ActionButton primary onClick={() => navigate(-1)}>
                 <RotateCcw size={18} />
                 Thử lại
               </ActionButton>
@@ -323,6 +321,7 @@ const Step = ({
     >
       {icon}
     </div>
+
     <span className="text-sm font-medium">{label}</span>
   </div>
 );
@@ -352,4 +351,4 @@ const ActionButton = ({
   </button>
 );
 
-export default OrderResultPage;
+export default BookingResultPage;

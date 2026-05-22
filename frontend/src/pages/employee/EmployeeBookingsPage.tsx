@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
-  Ban,
   Banknote,
   Building2,
   CalendarClock,
@@ -22,7 +21,6 @@ import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import {
   approveCancelEmployeeBooking,
-  cancelNoShowEmployeeBooking,
   completeEmployeeBooking,
   confirmEmployeeBooking,
   getEmployeeBookingDetail,
@@ -31,7 +29,7 @@ import {
 } from "../../redux/slices/employee/bookingSlice";
 import type { BookingStatus, EmployeeBooking } from "../../types/booking";
 import { formatBookingCode } from "../../utils/booking";
-import { showConfirmDialog, showTextareaDialog } from "../../utils/swalHelper";
+import { showConfirmDialog } from "../../utils/confirmDialog";
 
 const BOOKING_TABS: { value: BookingStatus | "ALL"; label: string }[] = [
   { value: "ALL", label: "Tất cả" },
@@ -123,6 +121,7 @@ const formatCurrency = (value: number) =>
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return "--";
+
   return new Date(value).toLocaleString("vi-VN", {
     hour: "2-digit",
     minute: "2-digit",
@@ -153,6 +152,10 @@ const EmployeeBookingsPage = () => {
   const [completionPaymentMethod, setCompletionPaymentMethod] = useState<
     "CASH" | "BANK" | "VNPAY"
   >("CASH");
+
+  const [rejectingBooking, setRejectingBooking] =
+    useState<EmployeeBooking | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   const listLoading = loadingMap["employeeBooking/getEmployeeBookings"];
   const detailLoading = loadingMap["employeeBooking/getEmployeeBookingDetail"];
@@ -215,6 +218,7 @@ const EmployeeBookingsPage = () => {
       hasPaid ? "Hủy & hoàn tiền" : "Hủy lịch",
       "Đóng",
     );
+
     if (!confirmed) return;
 
     try {
@@ -238,22 +242,30 @@ const EmployeeBookingsPage = () => {
     }
   };
 
-  const rejectCancel = async (bookingId: number) => {
-    const reason = await showTextareaDialog({
-      title: "Từ chối yêu cầu hủy lịch",
-      text: "Nhập lý do để khách hàng biết vì sao yêu cầu hủy chưa được chấp nhận.",
-      placeholder: "Ví dụ: Lịch đã sát giờ chơi, không đủ điều kiện hủy...",
-      confirmText: "Từ chối yêu cầu",
-      requiredMessage: "Vui lòng nhập lý do từ chối",
-    });
-    if (!reason) return;
+  const rejectCancel = async () => {
+    if (!rejectingBooking) return;
+
+    const reason = rejectReason.trim();
+
+    if (!reason) {
+      toast.warning("Vui lòng nhập lý do từ chối");
+      return;
+    }
 
     try {
       const res = await dispatch(
-        rejectCancelEmployeeBooking({ bookingId, data: { reason } }),
+        rejectCancelEmployeeBooking({
+          bookingId: rejectingBooking.id,
+          data: { reason },
+        }),
       ).unwrap();
 
+      const bookingId = rejectingBooking.id;
+
       toast.success(res.message);
+      setRejectingBooking(null);
+      setRejectReason("");
+
       refreshDetail(bookingId);
     } catch {
       // global middleware handles API errors
@@ -267,6 +279,7 @@ const EmployeeBookingsPage = () => {
       "Xác nhận",
       "Đóng",
     );
+
     if (!confirmed) return;
 
     try {
@@ -296,6 +309,7 @@ const EmployeeBookingsPage = () => {
       isPaid ? "Hoàn thành" : "Thu tiền & hoàn thành",
       "Đóng",
     );
+
     if (!confirmed) return;
 
     try {
@@ -312,50 +326,6 @@ const EmployeeBookingsPage = () => {
       // global middleware handles API errors
     }
   };
-
-  const cancelNoShow = async (bookingId: number) => {
-    const reason = await showTextareaDialog({
-      title: "Hủy lịch sân",
-      text: "Lịch đang chờ xác nhận nên sẽ được hủy trực tiếp. Vui lòng nhập lý do hủy.",
-      placeholder: "Nhập lý do hủy lịch sân...",
-      defaultValue: "Khách không đến nhận sân",
-      confirmText: "Tiếp tục hủy",
-      requiredMessage: "Vui lòng nhập lý do hủy lịch sân",
-    });
-
-    if (!reason) return;
-
-    const confirmed = await showConfirmDialog(
-      "Xác nhận hủy lịch",
-      "Bạn chắc chắn muốn hủy lịch sân này?",
-      "Hủy lịch",
-      "Đóng",
-    );
-    if (!confirmed) return;
-
-    try {
-      const res = await dispatch(
-        cancelNoShowEmployeeBooking({ bookingId, data: { reason } }),
-      ).unwrap();
-
-      const refund = res.data?.refund;
-
-      toast.success(
-        refund?.refunded
-          ? `${res.message}. Đã hoàn ${formatCurrency(
-              refund.refundAmount,
-            )} vào ví.`
-          : res.message,
-      );
-
-      refreshDetail(bookingId);
-    } catch {
-      // global middleware handles API errors
-    }
-  };
-
-  const canDirectCancel = (booking: EmployeeBooking) =>
-    booking.bookingStatus === "PENDING";
 
   return (
     <div className="min-h-full overflow-y-auto bg-slate-50 px-3 py-4 sm:px-5 xl:h-[calc(100vh-84px)] xl:overflow-hidden 2xl:px-8">
@@ -690,35 +660,18 @@ const EmployeeBookingsPage = () => {
 
                 <div className="mt-5 flex flex-wrap gap-2">
                   {selectedBooking.bookingStatus === "PENDING" && (
-                    <>
-                      <button
-                        onClick={() => confirmBooking(selectedBooking.id)}
-                        disabled={actionLoading}
-                        className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-sky-600 px-4 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:bg-slate-300"
-                      >
-                        {actionLoading ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <CheckCircle2 className="h-4 w-4" />
-                        )}
-                        Xác nhận
-                      </button>
-
-                      {canDirectCancel(selectedBooking) && (
-                        <button
-                          onClick={() => cancelNoShow(selectedBooking.id)}
-                          disabled={actionLoading}
-                          className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-orange-200 bg-orange-50 px-4 text-sm font-semibold text-orange-700 transition hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {actionLoading ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Ban className="h-4 w-4" />
-                          )}
-                          Hủy lịch
-                        </button>
+                    <button
+                      onClick={() => confirmBooking(selectedBooking.id)}
+                      disabled={actionLoading}
+                      className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-sky-600 px-4 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                    >
+                      {actionLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="h-4 w-4" />
                       )}
-                    </>
+                      Xác nhận
+                    </button>
                   )}
 
                   {selectedBooking.bookingStatus === "CONFIRMED" && (
@@ -739,11 +692,20 @@ const EmployeeBookingsPage = () => {
                   )}
 
                   {selectedBooking.bookingStatus === "CANCEL_REQUESTED" && (
-                    <>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
                       <button
+                        type="button"
                         onClick={() => approveCancel(selectedBooking)}
                         disabled={actionLoading}
-                        className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-red-500 px-4 text-sm font-semibold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:bg-slate-300"
+                        className="
+                          inline-flex h-11 items-center justify-center gap-2 rounded-2xl
+                          bg-red-500 px-4 text-sm font-semibold text-white
+                          shadow-sm shadow-red-100
+                          transition-all duration-200
+                          hover:bg-red-600 hover:shadow-md hover:shadow-red-100
+                          active:scale-[0.98]
+                          disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none
+                        "
                       >
                         {actionLoading ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -754,14 +716,26 @@ const EmployeeBookingsPage = () => {
                       </button>
 
                       <button
-                        onClick={() => rejectCancel(selectedBooking.id)}
+                        type="button"
+                        onClick={() => {
+                          setRejectingBooking(selectedBooking);
+                          setRejectReason("");
+                        }}
                         disabled={actionLoading}
-                        className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="
+                          inline-flex h-11 items-center justify-center gap-2 rounded-2xl
+                          border border-slate-200 bg-white px-4
+                          text-sm font-semibold text-slate-600
+                          transition-all duration-200
+                          hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800
+                          active:scale-[0.98]
+                          disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400
+                        "
                       >
                         <XCircle className="h-4 w-4" />
                         Từ chối
                       </button>
-                    </>
+                    </div>
                   )}
                 </div>
               </div>
@@ -801,7 +775,6 @@ const EmployeeBookingsPage = () => {
                   </h3>
 
                   <div className="space-y-3 text-sm">
-                    {/* USER */}
                     <div className="flex min-w-0 items-start gap-3">
                       <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sky-50 text-sm font-semibold text-sky-700">
                         {(selectedBooking.user?.username || "K")
@@ -820,7 +793,6 @@ const EmployeeBookingsPage = () => {
                       </div>
                     </div>
 
-                    {/* NOTE */}
                     <div className="rounded-2xl bg-slate-50 px-3 py-2.5">
                       <p className="mb-1 text-xs font-medium text-slate-500">
                         Ghi chú
@@ -834,7 +806,7 @@ const EmployeeBookingsPage = () => {
                 </div>
 
                 <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm">
-                  <h3 className="mb-4 flex items-center gap-2 font-bold text-slate-700 text-sm">
+                  <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-slate-700">
                     <span className="grid h-9 w-9 place-items-center rounded-2xl bg-sky-50 text-sky-600">
                       <WalletCards className="h-4 w-4" />
                     </span>
@@ -909,10 +881,8 @@ const EmployeeBookingsPage = () => {
                               >
                                 <div className="flex items-center gap-2">
                                   <span
-                                    className={`grid h-9 w-9 place-items-center rounded-xl ${
-                                      active
-                                        ? "bg-white text-sky-600 shadow-sm"
-                                        : "bg-slate-50 text-slate-500"
+                                    className={`grid h-9 w-9 place-items-center ${
+                                      active ? "text-sky-600" : "text-slate-500"
                                     }`}
                                   >
                                     <Icon className="h-4 w-4" />
@@ -1021,6 +991,7 @@ const EmployeeBookingsPage = () => {
                   <div className="space-y-3 text-sm font-normal text-slate-600">
                     <div className="flex justify-between gap-3">
                       <span>Đã hoàn</span>
+
                       <span className="font-semibold text-slate-800">
                         {formatCurrency(
                           selectedBooking.payment?.refundAmount || 0,
@@ -1030,6 +1001,7 @@ const EmployeeBookingsPage = () => {
 
                     <div className="flex justify-between gap-3">
                       <span>Thời gian</span>
+
                       <span className="text-right font-semibold text-slate-800">
                         {formatDateTime(selectedBooking.payment?.refundAt)}
                       </span>
@@ -1056,6 +1028,116 @@ const EmployeeBookingsPage = () => {
           )}
         </section>
       </div>
+
+      {rejectingBooking && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-2xl shadow-slate-950/10">
+            <div className="border-b border-slate-100 px-5 py-5">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-red-50 text-red-500">
+                    <XCircle className="h-5 w-5" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-red-600">
+                      Từ chối yêu cầu hủy lịch
+                    </p>
+
+                    <h3 className="mt-1 truncate font-mono text-xl font-extrabold text-sky-700">
+                      #
+                      {formatBookingCode(
+                        rejectingBooking.id,
+                        rejectingBooking.createdDate,
+                      )}
+                    </h3>
+
+                    <p className="mt-1 text-sm leading-6 text-slate-500">
+                      Nhập lý do từ chối. Nội dung này sẽ được gửi cho khách
+                      hàng.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRejectingBooking(null);
+                    setRejectReason("");
+                  }}
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                >
+                  <XCircle className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="px-5 py-5">
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Lý do từ chối
+              </label>
+
+              <textarea
+                value={rejectReason}
+                onChange={(event) => setRejectReason(event.target.value)}
+                rows={5}
+                placeholder="Ví dụ: Lịch đã sát giờ chơi, không đủ điều kiện hủy..."
+                className="
+                  w-full resize-none rounded-2xl border border-slate-200 bg-slate-50
+                  px-4 py-3 text-sm leading-6 text-slate-700 outline-none transition
+                  placeholder:text-slate-400
+                  focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100/70
+                "
+              />
+
+              <p className="mt-2 text-xs leading-5 text-slate-500">
+                Nên ghi lý do ngắn gọn, rõ ràng để khách hàng dễ hiểu.
+              </p>
+            </div>
+
+            <div className="flex flex-col-reverse gap-2 border-t border-slate-100 bg-slate-50/70 px-5 py-4 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setRejectingBooking(null);
+                  setRejectReason("");
+                }}
+                className="
+                  inline-flex h-11 items-center justify-center rounded-2xl
+                  border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600
+                  transition-all duration-200
+                  hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800
+                  active:scale-[0.98]
+                "
+              >
+                Đóng
+              </button>
+
+              <button
+                type="button"
+                onClick={rejectCancel}
+                disabled={actionLoading || !rejectReason.trim()}
+                className="
+                  inline-flex h-11 items-center justify-center gap-2 rounded-2xl
+                  bg-red-500 px-4 text-sm font-semibold text-white
+                  shadow-sm shadow-red-100
+                  transition-all duration-200
+                  hover:bg-red-600 hover:shadow-md hover:shadow-red-100
+                  active:scale-[0.98]
+                  disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none
+                "
+              >
+                {actionLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <XCircle className="h-4 w-4" />
+                )}
+                Từ chối yêu cầu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

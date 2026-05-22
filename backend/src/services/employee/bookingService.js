@@ -1,4 +1,4 @@
-import sequelize from "../../config/db.js";
+﻿import sequelize from "../../config/db.js";
 import { Op } from "sequelize";
 import {
   Booking,
@@ -29,6 +29,8 @@ import {
   assertEmployeeCanAccessBranch,
   getEmployeeBranchIds,
 } from "./branchAccessService.js";
+import { sendUserNotification } from "../../helpers/notification.js";
+import { formatBookingCode } from "../../utils/displayCode.js";
 
 const bookingInclude = [
   {
@@ -222,7 +224,7 @@ const getBookingDetailService = async ({ bookingId, employeeId }) => {
 };
 
 const confirmBookingService = async ({ bookingId, employeeId }) => {
-  await sequelize.transaction(async (transaction) => {
+  const booking = await sequelize.transaction(async (transaction) => {
     const booking = await getEmployeeBookingForAction({
       bookingId,
       employeeId,
@@ -242,7 +244,16 @@ const confirmBookingService = async ({ bookingId, employeeId }) => {
       },
       { transaction },
     );
+
+    return booking;
   });
+
+  await sendUserNotification(
+    booking.userId,
+    "booking-confirmed",
+    "Lịch sân đã được xác nhận",
+    `${booking.branch?.branchName || "Chi nhánh"} đã xác nhận lịch sân ${formatBookingCode(booking.id, booking.createdDate)}. Vui lòng đến đúng giờ và xuất trình email xác nhận để nhận sân.`,
+  );
 };
 
 const completeBookingService = async ({
@@ -250,7 +261,7 @@ const completeBookingService = async ({
   employeeId,
   paymentMethod,
 }) => {
-  await sequelize.transaction(async (transaction) => {
+  const booking = await sequelize.transaction(async (transaction) => {
     const booking = await getEmployeeBookingForAction({
       bookingId,
       employeeId,
@@ -307,7 +318,16 @@ const completeBookingService = async ({
       { bookingStatus: BOOKING_STATUS.COMPLETED },
       { transaction },
     );
+
+    return booking;
   });
+
+  await sendUserNotification(
+    booking.userId,
+    "booking-completed",
+    "Lịch sân đã hoàn tất",
+    `Lịch sân ${formatBookingCode(booking.id, booking.createdDate)} tại ${booking.branch?.branchName || "chi nhánh"} đã được hoàn tất. Cảm ơn bạn đã sử dụng dịch vụ B-Hub.`,
+  );
 };
 
 const getEmployeeBookingForAction = async ({
@@ -353,7 +373,7 @@ const refundBookingToWallet = async ({ booking, transaction }) => {
     };
   }
 
-  const refundDescription = `Hoàn tiền lịch sân #${booking.id}`;
+  const refundDescription = `Hoàn tiền lịch sân ${formatBookingCode(booking.id, booking.createdDate)}`;
 
   let wallet = await Wallet.findOne({
     where: { userId: booking.userId },
@@ -429,6 +449,7 @@ const refundBookingToWallet = async ({ booking, transaction }) => {
 
 const approveCancelBookingService = async ({ bookingId, employeeId }) => {
   let refundResult;
+  let handledBooking;
 
   await sequelize.transaction(async (transaction) => {
     const booking = await getEmployeeBookingForAction({
@@ -451,7 +472,20 @@ const approveCancelBookingService = async ({ bookingId, employeeId }) => {
       },
       { transaction },
     );
+
+    handledBooking = booking;
   });
+
+  await sendUserNotification(
+    handledBooking.userId,
+    "booking-cancel-approved",
+    "Yêu cầu hủy lịch sân đã được duyệt",
+    refundResult?.refunded
+      ? `Lịch sân ${formatBookingCode(handledBooking.id, handledBooking.createdDate)} đã được hủy và hoàn ${Number(
+          refundResult.refundAmount,
+        ).toLocaleString("vi-VN")}đ vào ví.`
+      : `Lịch sân ${formatBookingCode(handledBooking.id, handledBooking.createdDate)} đã được hủy thành công.`,
+  );
 
   return {
     refund: refundResult,
@@ -463,7 +497,7 @@ const rejectCancelBookingService = async ({
   employeeId,
   reason,
 }) => {
-  await sequelize.transaction(async (transaction) => {
+  const booking = await sequelize.transaction(async (transaction) => {
     const booking = await getEmployeeBookingForAction({
       bookingId,
       employeeId,
@@ -484,7 +518,18 @@ const rejectCancelBookingService = async ({
       },
       { transaction },
     );
+
+    return booking;
   });
+
+  await sendUserNotification(
+    booking.userId,
+    "booking-cancel-rejected",
+    "Yêu cầu hủy lịch sân bị từ chối",
+    reason
+      ? `Yêu cầu hủy lịch sân ${formatBookingCode(booking.id, booking.createdDate)} bị từ chối. Lý do: ${reason}`
+      : `Yêu cầu hủy lịch sân ${formatBookingCode(booking.id, booking.createdDate)} bị từ chối.`,
+  );
 };
 
 const cancelNoShowBookingService = async ({
@@ -493,6 +538,7 @@ const cancelNoShowBookingService = async ({
   reason,
 }) => {
   let refundResult;
+  let handledBooking;
 
   await sequelize.transaction(async (transaction) => {
     const booking = await getEmployeeBookingForAction({
@@ -530,7 +576,20 @@ const cancelNoShowBookingService = async ({
       },
       { transaction },
     );
+
+    handledBooking = booking;
   });
+
+  await sendUserNotification(
+    handledBooking.userId,
+    "booking-cancelled-by-employee",
+    "Lịch sân đã bị hủy",
+    refundResult?.refunded
+      ? `Lịch sân ${formatBookingCode(handledBooking.id, handledBooking.createdDate)} đã bị hủy và hoàn ${Number(
+          refundResult.refundAmount,
+        ).toLocaleString("vi-VN")}đ vào ví.`
+      : `Lịch sân ${formatBookingCode(handledBooking.id, handledBooking.createdDate)} đã bị hủy. Lý do: ${reason || "Khách không đến nhận sân"}`,
+  );
 
   return {
     refund: refundResult,
@@ -548,3 +607,6 @@ const employeeBookingService = {
 };
 
 export default employeeBookingService;
+
+
+

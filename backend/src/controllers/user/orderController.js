@@ -60,6 +60,18 @@ const orderCallbackController = asyncHandler(async (req, res) => {
     .json(new SuccessResponse("Thanh toán đơn hàng bằng VNPay thành công"));
 });
 
+const retryOrderVNPayController = asyncHandler(async (req, res) => {
+  const data = {
+    orderGroupId: req.params.orderGroupId,
+    userId: req.user.id,
+    ip: req.ip,
+  };
+  const result = await orderService.retryOrderVNPayService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Tạo lại link thanh toán VNPay thành công", result));
+});
+
 const getOrderGroupByIdController = asyncHandler(async (req, res) => {
   const orderGroupId = req.params.orderGroupId;
   const userId = req.user.id;
@@ -139,6 +151,7 @@ const orderController = {
   clearCheckoutSessionController,
   createOrderController,
   orderCallbackController,
+  retryOrderVNPayController,
   walletOrderConfirmController,
   getOrderGroupByIdController,
   getOrderDetailController,

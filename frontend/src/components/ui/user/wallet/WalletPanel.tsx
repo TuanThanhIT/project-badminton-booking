@@ -37,7 +37,7 @@ import type {
 } from "../../../../types/wallet";
 import type { OtpFlowData, OtpSendRequest } from "../../../../types/auth";
 import { OTP_TYPE } from "../../../../utils/constants/otpType";
-import { showConfirmDialog } from "../../../../utils/swalHelper";
+import { showConfirmDialog } from "../../../../utils/confirmDialog";
 import DepositForm from "./DepositForm";
 import WithdrawRequestForm from "./WithdrawRequestForm";
 
@@ -160,6 +160,7 @@ const WalletPanel = () => {
       "Bạn có chắc chắn muốn rút số tiền này khỏi ví?",
       "Chắc chắn",
       "Hủy",
+      "warning",
     );
     if (!confirmed || !user) return;
 

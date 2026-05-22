@@ -30,8 +30,25 @@ export type CreateBookingData = {
 
 export type CreateBookingResponse = ApiResponse<CreateBookingData>;
 
+export type RetryBookingPaymentResponse = ApiResponse<{
+  bookingId: number;
+  amount: number;
+  paymentUrl: string;
+}>;
+
 export type BookingCallbackRequest = VNPayCallbackRequest;
 export type BookingCallbackResponse = ApiResponse<null>;
+
+export type WalletBookingConfirmRequest = {
+  email: string;
+  otpCode: string;
+  bookingId: number;
+};
+
+export type WalletBookingConfirmResponse = ApiResponse<{
+  bookingId: number;
+  amount: number;
+}>;
 
 export type BookingItem = {
   bookingId: number;
@@ -48,6 +65,9 @@ export type BookingItem = {
   branch: {
     branchName: string;
     address: string;
+    wardName: string;
+    districtName: string;
+    provinceName: string;
   };
   payment: {
     method: string;

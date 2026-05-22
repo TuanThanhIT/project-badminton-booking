@@ -18,7 +18,7 @@ import { calculateMonthlyBooking } from "../../redux/slices/user/monthlyBookingS
 import type { BranchOptions } from "../../types/branch";
 import type { CourtAvailable } from "../../types/court";
 import { toast } from "react-toastify";
-import { showConfirmDialog } from "../../utils/swalHelper";
+import { showConfirmDialog } from "../../utils/confirmDialog";
 
 const generateTimeOptions = () => {
   const options: string[] = [];

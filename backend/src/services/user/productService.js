@@ -62,7 +62,7 @@ const getProductsByFilterService = async (data) => {
     throw new NotFoundError("Danh muc khong ton tai");
   }
 
-  // Xá»­ lÃ½ keyword
+  // Xử lý keyword
   const kw = keyword && keyword !== "null" ? keyword : undefined;
 
   const whereCondition = {
@@ -96,7 +96,7 @@ const getProductsByFilterService = async (data) => {
       "thumbnailUrl",
       "createdDate",
       [fn("MIN", col("variants.price")), "minPrice"],
-      [fn("SUM", col("variants->stocks.stock")), "totalStock"], // ðŸ‘ˆ tá»•ng stock
+      [fn("SUM", col("variants->stocks.stock")), "totalStock"], // 👈 tổng stock
     ],
     include: [
       {
@@ -118,7 +118,7 @@ const getProductsByFilterService = async (data) => {
           {
             model: VariantStock,
             as: "stocks",
-            attributes: [], // ðŸ‘ˆ QUAN TRá»ŒNG
+            attributes: [], // 👈 QUAN TRỌNG
           },
         ],
         required: true,
@@ -222,7 +222,7 @@ const getProductDetailService = async (data) => {
   });
 
   if (!product) {
-    throw new NotFoundError("Sáº£n pháº©m khÃ´ng tá»“n táº¡i");
+    throw new NotFoundError("Sản phẩm không tồn tại");
   }
 
   const variantsFormatted = product.variants.map((v) => {
@@ -231,10 +231,10 @@ const getProductDetailService = async (data) => {
     const discountPrice =
       variant.price - (variant.price * variant.discount) / 100;
 
-    // tá»•ng stock
+    // tổng stock
     const totalStock = variant.stocks.reduce((total, s) => total + s.stock, 0);
 
-    // chuyá»ƒn stocks -> branches
+    // chuyển stocks -> branches
     const branches = variant.stocks.map((s) => ({
       id: s.branch.id,
       branchName: s.branch.branchName,
@@ -298,7 +298,7 @@ const getProductFeedbacksService = async (data) => {
     offset,
   });
 
-  // tÃ­nh rating trung bÃ¬nh (toÃ n bá»™ feedback cá»§a product)
+  // tính rating trung bình (toàn bộ feedback của product)
   const allFeedbacks = await Feedback.findAll({
     include: [
       {

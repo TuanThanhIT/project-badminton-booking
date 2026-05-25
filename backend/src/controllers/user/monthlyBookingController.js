@@ -6,6 +6,7 @@ const createMonthlyBookingController = asyncHandler(async (req, res) => {
   const data = {
     ...req.body,
     userId: req.user.id,
+    ip: req.ip,
   };
 
   const result = await monthlyBookingService.createMonthlyBookingService(data);

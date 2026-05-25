@@ -9,6 +9,7 @@ import {
 import { limitField, pageField } from "./common/paginationFields.js";
 import { dateField, keywordField } from "./common/searchFields.js";
 import { BOOKING_STATUS } from "../constants/bookingConstant.js";
+import { PAYMENT_OFFLINE_METHOD_STATUS } from "../constants/paymentConstant.js";
 
 export const createBookingSchema = {
   body: Joi.object({
@@ -44,12 +45,30 @@ export const bookingCallbackSchema = {
   }),
 };
 
+export const walletBookingConfirmSchema = {
+  body: Joi.object({
+    email: Joi.string().email().required().messages({
+      "string.email": "Email không hợp lệ",
+      "any.required": "Email là bắt buộc",
+    }),
+    otpCode: Joi.string().pattern(/^\d{6}$/).required().messages({
+      "string.pattern.base": "Mã OTP phải gồm 6 chữ số",
+      "any.required": "Mã OTP là bắt buộc",
+    }),
+    bookingId: idParams("bookingId"),
+  }),
+};
+
 export const cancelBookingSchema = {
   params: Joi.object({
     bookingId: idParams("bookingId"),
   }),
   body: Joi.object({
-    cancelReason: cancelReasonField,
+    cancelReason: cancelReasonField.optional(),
+    reason: Joi.string().trim().max(500).allow("", null).optional().messages({
+      "string.base": "Lý do phải là chuỗi",
+      "string.max": "Lý do không được vượt quá 500 ký tự",
+    }),
   }),
 };
 
@@ -78,5 +97,37 @@ export const completedBookingSchema = {
 export const countBookingByBookingStatusSchema = {
   query: Joi.object({
     date: dateField,
+  }),
+};
+
+export const bookingActionIdSchema = {
+  params: Joi.object({
+    bookingId: idParams("bookingId"),
+  }),
+};
+
+export const rejectBookingActionSchema = {
+  params: Joi.object({
+    bookingId: idParams("bookingId"),
+  }),
+  body: Joi.object({
+    reason: Joi.string().trim().max(500).allow("", null).messages({
+      "string.base": "Lý do phải là chuỗi",
+      "string.max": "Lý do không được vượt quá 500 ký tự",
+    }),
+  }),
+};
+
+export const completeBookingActionSchema = {
+  params: Joi.object({
+    bookingId: idParams("bookingId"),
+  }),
+  body: Joi.object({
+    paymentMethod: Joi.string()
+      .valid(...Object.values(PAYMENT_OFFLINE_METHOD_STATUS))
+      .optional()
+      .messages({
+        "any.only": "Phương thức thanh toán phải là CASH, VNPAY hoặc BANK",
+      }),
   }),
 };

@@ -2,6 +2,7 @@ import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
 import {
   PAYMENT_METHOD_STATUS,
+  PAYMENT_OFFLINE_METHOD_STATUS,
   PAYMENT_STATUS,
 } from "../constants/paymentConstant.js";
 import DraftBooking from "./draftBooking.js";
@@ -27,12 +28,12 @@ const OfflineBooking = sequelize.define(
       },
     },
     paymentMethod: {
-      type: DataTypes.ENUM(...Object.values(PAYMENT_METHOD_STATUS)),
+      type: DataTypes.ENUM(...Object.values(PAYMENT_OFFLINE_METHOD_STATUS)),
       allowNull: false,
       validate: {
         notNull: { msg: "Payment method is required" },
         isIn: {
-          args: [Object.values(PAYMENT_METHOD_STATUS)],
+          args: [Object.values(PAYMENT_OFFLINE_METHOD_STATUS)],
           msg: "Invalid payment method",
         },
       },

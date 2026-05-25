@@ -31,6 +31,10 @@ import orderReducer from "./slices/user/orderSlice";
 import feedbackReducer from "./slices/user/feedbackSlice";
 import notificationReducer from "./slices/user/notificationSlice";
 import homeReducer from "./slices/user/homeSlice";
+import employeeWorkShiftReducer from "./slices/employee/workShiftSlice";
+import employeeCounterReducer from "./slices/employee/counterSlice";
+import employeeOrderReducer from "./slices/employee/orderSlice";
+import employeeBookingReducer from "./slices/employee/bookingSlice";
 
 const persistConfig = {
   key: "root",
@@ -58,6 +62,10 @@ const rootReducer = combineReducers({
   feedback: feedbackReducer,
   notification: notificationReducer,
   home: homeReducer,
+  employeeWorkShift: employeeWorkShiftReducer,
+  employeeCounter: employeeCounterReducer,
+  employeeOrder: employeeOrderReducer,
+  employeeBooking: employeeBookingReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

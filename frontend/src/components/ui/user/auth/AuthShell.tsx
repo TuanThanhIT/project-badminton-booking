@@ -24,7 +24,7 @@ const AuthShell = ({
       <section className="relative overflow-hidden bg-slate-50">
         <div className="relative mx-auto flex min-h-screen max-w-7xl items-center px-4 py-10 sm:px-6">
           <div className="w-full overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.08)] lg:grid lg:grid-cols-[1.05fr_0.95fr]">
-            <div className="relative hidden min-h-[640px] overflow-hidden lg:block">
+            <div className="relative hidden min-h-[576px] overflow-hidden lg:block">
               <img
                 src={image}
                 alt={imageAlt}
@@ -51,7 +51,7 @@ const AuthShell = ({
               </div>
             </div>
 
-            <div className="flex min-h-[620px] items-center justify-center p-6 sm:p-10">
+            <div className="flex min-h-[558px] items-center justify-center p-6 sm:p-9">
               <div className="w-full max-w-md">{children}</div>
             </div>
           </div>

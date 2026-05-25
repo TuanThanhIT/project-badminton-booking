@@ -10,6 +10,7 @@ import {
 import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
 import validate from "../../middlewares/validate.js";
+import { ROLE_NAME } from "../../constants/userConstant.js";
 
 const monthlyBookingRoute = express.Router();
 
@@ -18,7 +19,7 @@ const initMonthlyBookingRoute = (app) => {
   monthlyBookingRoute.post(
     "/calculate",
     auth,
-    authorize("USER", "COACH", "CUSTOMER"),
+    authorize(ROLE_NAME.USER),
     validate(calculateMonthlyBookingSchema),
     monthlyBookingController.calculateMonthlyBookingController,
   );
@@ -27,7 +28,7 @@ const initMonthlyBookingRoute = (app) => {
   monthlyBookingRoute.post(
     "/",
     auth,
-    authorize("USER", "COACH", "CUSTOMER"),
+    authorize(ROLE_NAME.USER),
     validate(createMonthlyBookingSchema),
     monthlyBookingController.createMonthlyBookingController,
   );

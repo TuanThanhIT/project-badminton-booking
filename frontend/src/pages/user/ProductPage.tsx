@@ -252,7 +252,7 @@ const ProductPage = () => {
                       outline-none transition-all
                       placeholder:text-slate-400
                       focus:border-sky-500
-                      focus:ring-4 focus:ring-sky-100
+                      focus:ring-1 focus:ring-sky-100
                     "
                   />
                 </div>
@@ -383,7 +383,7 @@ const ProductPage = () => {
                       hover:border-slate-400
                       focus:border-sky-500
                       focus:bg-white
-                      focus:ring-4 focus:ring-sky-100
+                      focus:ring-1 focus:ring-sky-100
                     "
                   />
                 </div>

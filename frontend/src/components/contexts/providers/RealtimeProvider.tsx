@@ -1,11 +1,13 @@
 import { useEffect, type ReactNode } from "react";
 import { useRealtime } from "../../../hooks/useRealtime";
 import { useAppDispatch, useAppSelector } from "../../../redux/hook";
+import { getMyBookings } from "../../../redux/slices/user/bookingSlice";
 import { addLocalNotification } from "../../../redux/slices/user/notificationSlice";
 import {
   getOrderDetail,
   getOrderTracking,
   getTrackingProgress,
+  getUserOrders,
   updateOrderShippingRealtime,
 } from "../../../redux/slices/user/orderSlice";
 
@@ -37,6 +39,14 @@ const RealtimeProvider = ({ children }: RealtimeProviderProps) => {
     if (!notification) return;
 
     dispatch(addLocalNotification({ notification }));
+
+    if (notification.type?.startsWith("booking-")) {
+      dispatch(getMyBookings({ data: { page: 1, limit: 1 } }));
+    }
+
+    if (notification.type?.startsWith("order-")) {
+      dispatch(getUserOrders({ data: { page: 1, limit: 1, status: "ALL" } }));
+    }
   }, [dispatch, notification]);
 
   useEffect(() => {

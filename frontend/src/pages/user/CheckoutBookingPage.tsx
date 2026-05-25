@@ -18,6 +18,7 @@ import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { createBooking } from "../../redux/slices/user/bookingSlice";
 import { createMonthlyBooking } from "../../redux/slices/user/monthlyBookingSlice";
+import { otpSend, setOtpFlow } from "../../redux/slices/user/authSlice";
 import {
   checkBookingDiscount,
   getDiscountsCheckout,
@@ -29,37 +30,20 @@ import type {
   DiscountRequest,
 } from "../../types/discount";
 import {
-  PAYMENT_METHOD,
-  paymentMethodList,
-  type PaymentMethod,
-} from "../../utils/constants/paymentMethod";
+  BOOKING_PAYMENT_CONFIRM_MESSAGE,
+  BOOKING_PAYMENT_METHOD,
+  bookingPaymentMethodList,
+  type BookingPaymentMethod,
+} from "../../utils/constants/bookingPaymentMethod";
+import { OTP_TYPE } from "../../utils/constants/otpType";
+import type { OtpFlowData, OtpSendRequest } from "../../types/auth";
+import { showConfirmDialog } from "../../utils/confirmDialog";
 
 const iconMap = {
-  cod: <Banknote size={18} />,
+  cash: <Banknote size={18} />,
   vnpay: <CreditCard size={18} />,
   wallet: <Wallet size={18} />,
 } as const;
-
-const bookingPaymentCopy: Record<
-  PaymentMethod,
-  {
-    label: string;
-    desc: string;
-  }
-> = {
-  COD: {
-    label: "Thanh toán tại sân",
-    desc: "Giữ lịch trước, thanh toán khi đến sân",
-  },
-  VNPAY: {
-    label: "Thanh toán VNPay",
-    desc: "ATM / QR / Visa",
-  },
-  WALLET: {
-    label: "Ví thanh toán BHub",
-    desc: "Trừ trực tiếp từ số dư ví cá nhân",
-  },
-};
 
 const formatPrice = (value: number) =>
   `${Number(value || 0).toLocaleString()}đ`;
@@ -68,12 +52,12 @@ const CheckoutBookingPage = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+
   const discounts = useAppSelector((state) => state.discount.discounts);
+  const user = useAppSelector((state) => state.auth.user);
 
-  console.log("discounts>>", discounts);
-
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(
-    PAYMENT_METHOD.COD.value,
+  const [selectedMethod, setSelectedMethod] = useState<BookingPaymentMethod>(
+    BOOKING_PAYMENT_METHOD.CASH.value,
   );
   const [openDiscount, setOpenDiscount] = useState(false);
   const [appliedDiscount, setAppliedDiscount] =
@@ -86,15 +70,26 @@ const CheckoutBookingPage = () => {
 
   const availablePaymentMethods =
     state?.type === "monthly"
-      ? paymentMethodList.filter(
-          (method) => method.value === PAYMENT_METHOD.COD.value,
+      ? bookingPaymentMethodList.filter(
+          (method) => method.value !== BOOKING_PAYMENT_METHOD.CASH.value,
         )
-      : paymentMethodList;
+      : bookingPaymentMethodList;
 
-  const selectedPaymentLabel = useMemo(
-    () => bookingPaymentCopy[selectedMethod]?.label || selectedMethod,
-    [selectedMethod],
-  );
+  const selectedPaymentLabel = useMemo(() => {
+    return (
+      bookingPaymentMethodList.find((method) => method.value === selectedMethod)
+        ?.label || selectedMethod
+    );
+  }, [selectedMethod]);
+
+  useEffect(() => {
+    if (
+      state?.type === "monthly" &&
+      selectedMethod === BOOKING_PAYMENT_METHOD.CASH.value
+    ) {
+      setSelectedMethod(BOOKING_PAYMENT_METHOD.VNPAY.value);
+    }
+  }, [selectedMethod, state?.type]);
 
   useEffect(() => {
     if (!totalAmount) return;
@@ -111,18 +106,22 @@ const CheckoutBookingPage = () => {
     return (
       <div className="min-h-screen bg-slate-50 text-slate-700">
         <section className="h-36 bg-sky-950" />
+
         <main className="mx-auto -mt-20 flex max-w-7xl justify-center px-4 pb-16 sm:px-6">
           <div className="w-full max-w-xl rounded-[2rem] border border-slate-200 bg-white p-8 text-center shadow-[0_18px_46px_rgba(15,23,42,0.1)]">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
               <AlertTriangle size={30} />
             </div>
+
             <h1 className="mt-5 text-2xl font-bold text-slate-900">
               Không có thông tin thanh toán
             </h1>
+
             <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-500">
               Phiên đặt sân có thể đã hết hạn hoặc bạn truy cập trực tiếp vào
               trang thanh toán. Hãy chọn lại sân và khung giờ để tiếp tục.
             </p>
+
             <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
               <button
                 type="button"
@@ -131,6 +130,7 @@ const CheckoutBookingPage = () => {
               >
                 Quay lại đặt sân
               </button>
+
               <button
                 type="button"
                 onClick={() => navigate("/bookings")}
@@ -168,11 +168,20 @@ const CheckoutBookingPage = () => {
   };
 
   const handlePayNow = async () => {
+    const confirmed = await showConfirmDialog(
+      "Xác nhận đặt sân",
+      BOOKING_PAYMENT_CONFIRM_MESSAGE[selectedMethod],
+      "Xác nhận",
+      "Hủy",
+    );
+
+    if (!confirmed) return;
+
     try {
       setSubmitting(true);
 
       if (state.type === "monthly") {
-        await dispatch(
+        const res = await dispatch(
           createMonthlyBooking({
             branchId: state.branchId,
             courtId: state.courtId,
@@ -181,6 +190,7 @@ const CheckoutBookingPage = () => {
             daysOfWeek: state.daysOfWeek || [],
             startTime: state.startTime,
             endTime: state.endTime,
+            paymentMethod: selectedMethod as "VNPAY" | "WALLET",
             discountId: appliedDiscount?.discountId ?? null,
             note: appliedDiscount
               ? `Thanh toán: ${selectedPaymentLabel}. Mã giảm giá: ${appliedDiscount.code}`
@@ -188,8 +198,38 @@ const CheckoutBookingPage = () => {
           }),
         ).unwrap();
 
-        toast.success("Đặt sân tháng thành công");
-        navigate("/bookings");
+        if (res.data.paymentUrl) {
+          window.location.href = res.data.paymentUrl;
+          return;
+        }
+
+        if (selectedMethod === BOOKING_PAYMENT_METHOD.WALLET.value) {
+          if (!user?.email) {
+            toast.error("Không tìm thấy email tài khoản để gửi OTP.");
+            return;
+          }
+
+          const flowData: OtpFlowData = {
+            bookingId: res.data.booking.id,
+            email: user.email,
+            type: OTP_TYPE.WALLET_PAYMENT,
+          };
+
+          const otpData: OtpSendRequest = {
+            email: user.email,
+            type: OTP_TYPE.WALLET_PAYMENT,
+          };
+
+          dispatch(setOtpFlow({ data: flowData }));
+          dispatch(otpSend({ data: otpData }));
+
+          toast.success("Mã OTP xác nhận thanh toán đã được gửi đến email.");
+          navigate("/verify-otp");
+          return;
+        }
+
+        toast.success("Đã tạo lịch tháng, vui lòng hoàn tất thanh toán.");
+        navigate(`/booking-result?bookingId=${res.data.booking.id}`);
         return;
       }
 
@@ -212,12 +252,33 @@ const CheckoutBookingPage = () => {
         return;
       }
 
-      toast.success(
-        selectedMethod === PAYMENT_METHOD.WALLET.value
-          ? "Đặt sân và thanh toán ví thành công"
-          : "Đặt sân thành công, vui lòng thanh toán khi đến sân",
-      );
-      navigate("/bookings");
+      if (selectedMethod === BOOKING_PAYMENT_METHOD.WALLET.value) {
+        if (!user?.email) {
+          toast.error("Không tìm thấy email tài khoản để gửi OTP.");
+          return;
+        }
+
+        const flowData: OtpFlowData = {
+          bookingId: res.data.bookingId,
+          email: user.email,
+          type: OTP_TYPE.WALLET_PAYMENT,
+        };
+
+        const otpData: OtpSendRequest = {
+          email: user.email,
+          type: OTP_TYPE.WALLET_PAYMENT,
+        };
+
+        dispatch(setOtpFlow({ data: flowData }));
+        dispatch(otpSend({ data: otpData }));
+
+        toast.success("Mã OTP xác nhận thanh toán đã được gửi đến email.");
+        navigate("/verify-otp");
+        return;
+      }
+
+      toast.success("Đặt sân thành công, vui lòng thanh toán khi đến sân");
+      navigate(`/booking-result?bookingId=${res.data.bookingId}`);
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message || error?.message || "Có lỗi xảy ra",
@@ -244,13 +305,16 @@ const CheckoutBookingPage = () => {
               >
                 <ArrowLeft size={21} />
               </button>
+
               <div>
                 <p className="text-sm font-medium text-sky-700">
                   B-Hub Booking
                 </p>
+
                 <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
                   Xác nhận đặt sân
                 </h1>
+
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
                   Kiểm tra thông tin lịch sân, chọn mã giảm giá và phương thức
                   thanh toán trước khi hoàn tất.
@@ -277,10 +341,12 @@ const CheckoutBookingPage = () => {
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-600 text-white">
                       <MapPin size={21} />
                     </div>
+
                     <div>
                       <p className="text-base font-semibold text-slate-950">
                         {state.courtName}
                       </p>
+
                       <p className="mt-1 text-sm text-slate-500">
                         {state.branchName}
                       </p>
@@ -294,6 +360,7 @@ const CheckoutBookingPage = () => {
                         ? state.bookingDate
                         : `${state.startDate} - ${state.endDate}`}
                     </div>
+
                     <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700">
                       <Clock size={17} className="text-sky-600" />
                       {state.startTime} - {state.endTime}
@@ -315,6 +382,7 @@ const CheckoutBookingPage = () => {
                     <Ticket size={20} className="text-sky-600" />
                     Mã giảm giá
                   </h2>
+
                   <button
                     type="button"
                     onClick={() => setOpenDiscount(true)}
@@ -348,7 +416,6 @@ const CheckoutBookingPage = () => {
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   {availablePaymentMethods.map((method) => {
                     const active = selectedMethod === method.value;
-                    const copy = bookingPaymentCopy[method.value];
 
                     return (
                       <button
@@ -365,12 +432,14 @@ const CheckoutBookingPage = () => {
                           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700">
                             {iconMap[method.icon]}
                           </div>
+
                           <div className="min-w-0">
                             <p className="font-semibold leading-6 text-slate-800">
-                              {copy.label}
+                              {method.label}
                             </p>
+
                             <p className="mt-1 text-xs leading-5 text-slate-500">
-                              {copy.desc}
+                              {method.desc}
                             </p>
                           </div>
                         </div>
@@ -391,20 +460,25 @@ const CheckoutBookingPage = () => {
                 <div className="mt-5 space-y-3 text-sm">
                   <div className="flex justify-between gap-4 text-slate-600">
                     <span>Tiền sân</span>
+
                     <span className="font-medium text-slate-900">
                       {formatPrice(totalAmount)}
                     </span>
                   </div>
+
                   {discountAmount > 0 && (
                     <div className="flex justify-between gap-4 text-emerald-600">
                       <span>Giảm giá</span>
+
                       <span className="font-medium">
                         -{formatPrice(discountAmount)}
                       </span>
                     </div>
                   )}
+
                   <div className="flex justify-between gap-4 text-slate-600">
                     <span>Phí dịch vụ</span>
+
                     <span className="font-medium text-slate-900">0đ</span>
                   </div>
                 </div>
@@ -414,6 +488,7 @@ const CheckoutBookingPage = () => {
                     <span className="font-semibold text-slate-700">
                       Tổng cộng
                     </span>
+
                     <span className="text-2xl font-bold text-sky-700">
                       {formatPrice(finalAmount)}
                     </span>

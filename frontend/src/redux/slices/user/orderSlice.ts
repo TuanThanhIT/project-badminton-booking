@@ -34,6 +34,7 @@ import type {
   RequestCancelOrderResponse,
   RequestReturnOrderRequest,
   RequestReturnOrderResponse,
+  RetryOrderPaymentResponse,
 } from "../../../types/order";
 import orderService from "../../../services/user/orderService";
 import discountService from "../../../services/user/discountService";
@@ -118,6 +119,19 @@ export const orderCallback = createAsyncThunk<
   try {
     const res = await orderService.orderCallbackService(data);
     return res.data as OrderCallbackResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
+export const retryOrderVNPay = createAsyncThunk<
+  RetryOrderPaymentResponse,
+  { orderGroupId: number },
+  { rejectValue: ApiErrorType }
+>("order/retryOrderVNPay", async ({ orderGroupId }, { rejectWithValue }) => {
+  try {
+    const res = await orderService.retryOrderVNPayService(orderGroupId);
+    return res.data as RetryOrderPaymentResponse;
   } catch (error) {
     return rejectWithValue(error as ApiErrorType);
   }

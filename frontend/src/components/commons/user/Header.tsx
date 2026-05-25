@@ -37,8 +37,11 @@ const Header = ({ cartRef }: HeaderProps) => {
   const cart = useAppSelector((state) => state.cart.cart);
   const { userOrderPagination } = useAppSelector((state) => state.order);
   const totalBookings = useAppSelector((state) => state.booking.totalBookings);
-  const { notifications, unreadCount, loading: notificationLoading } =
-    useAppSelector((state) => state.notification);
+  const {
+    notifications,
+    unreadCount,
+    loading: notificationLoading,
+  } = useAppSelector((state) => state.notification);
 
   const [countCartItem, setCountCartItem] = useState(0);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -302,10 +305,10 @@ const Header = ({ cartRef }: HeaderProps) => {
                             key={notification.id}
                             type="button"
                             onClick={() => handleMarkRead(notification.id)}
-                            className={`group w-full rounded-3xl p-3 text-left transition ${
+                            className={`group w-full p-3 rounded-lg text-left transition mb-1 ${
                               notification.isRead
                                 ? "hover:bg-slate-50"
-                                : "bg-sky-50/80 hover:bg-sky-50"
+                                : "bg-sky-50/80 hover:bg-sky-100"
                             }`}
                           >
                             <div className="flex gap-3">

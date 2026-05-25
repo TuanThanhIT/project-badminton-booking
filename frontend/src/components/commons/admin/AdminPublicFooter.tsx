@@ -1,153 +1,31 @@
 // components/commons/admin/AdminPublicFooter.tsx
 
-import { ShieldCheck, LockKeyhole, LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, LockKeyhole, ShieldCheck } from "lucide-react";
 
 const AdminPublicFooter = () => {
   return (
-    <footer
-      className="
-        border-t border-sky-100/70
-
-        bg-white/70
-        backdrop-blur-2xl
-      "
-    >
-      <div
-        className="
-          max-w-8xl
-          mx-auto
-
-          px-5
-          sm:px-8
-          lg:px-10
-
-          py-4
-
-          flex
-          flex-col
-          lg:flex-row
-
-          items-center
-          justify-between
-
-          gap-4
-        "
-      >
-        {/* LEFT */}
-        <div className="text-center lg:text-left">
-          <h3
-            className="
-              text-base
-              sm:text-lg
-
-              font-black
-              tracking-tight
-
-              text-sky-950
-            "
-          >
+    <footer className="shrink-0 border-t border-slate-200 bg-white text-slate-700">
+      <div className="flex min-h-16 items-center justify-between gap-4 px-4 py-2 sm:px-6 lg:px-10 2xl:px-14">
+        <div className="min-w-0">
+          <h3 className="truncate text-sm font-semibold tracking-tight text-slate-900 sm:text-base">
             B-Hub Admin System
           </h3>
-
-          <p
-            className="
-              mt-1
-
-              text-xs
-              sm:text-sm
-
-              text-slate-500
-              leading-relaxed
-            "
-          >
+          <p className="mt-1 hidden text-xs leading-relaxed text-slate-500 sm:block">
             Nền tảng quản trị và vận hành hệ thống với bảo mật tập trung.
           </p>
         </div>
 
-        {/* RIGHT */}
-        <div
-          className="
-            flex
-            items-center
-            justify-center
-
-            flex-wrap
-            gap-2
-            sm:gap-3
-          "
-        >
-          <div
-            className="
-              flex items-center gap-2
-
-              px-3 py-2
-              sm:px-4
-
-              rounded-full
-
-              bg-sky-50/80
-              border border-sky-100
-
-              text-sky-700
-              text-xs
-              sm:text-sm
-
-              font-semibold
-
-              shadow-sm
-            "
-          >
-            <ShieldCheck className="w-4 h-4 text-sky-500" />
+        <div className="hidden flex-wrap items-center justify-center gap-2 sm:flex">
+          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 sm:px-4 sm:text-sm">
+            <ShieldCheck className="h-4 w-4 text-sky-600" />
             Security
           </div>
-
-          <div
-            className="
-              flex items-center gap-2
-
-              px-3 py-2
-              sm:px-4
-
-              rounded-full
-
-              bg-white/80
-              border border-slate-200
-
-              text-slate-600
-              text-xs
-              sm:text-sm
-
-              font-semibold
-
-              shadow-sm
-            "
-          >
-            <LockKeyhole className="w-4 h-4 text-sky-500" />
+          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 sm:px-4 sm:text-sm">
+            <LockKeyhole className="h-4 w-4 text-sky-600" />
             Authentication
           </div>
-
-          <div
-            className="
-              flex items-center gap-2
-
-              px-3 py-2
-              sm:px-4
-
-              rounded-full
-
-              bg-white/80
-              border border-slate-200
-
-              text-slate-600
-              text-xs
-              sm:text-sm
-
-              font-semibold
-
-              shadow-sm
-            "
-          >
-            <LayoutDashboard className="w-4 h-4 text-sky-500" />
+          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 sm:px-4 sm:text-sm">
+            <LayoutDashboard className="h-4 w-4 text-sky-600" />
             Management
           </div>
         </div>

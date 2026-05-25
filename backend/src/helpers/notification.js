@@ -1,4 +1,4 @@
-import { Notification } from "../models/index.js";
+import { BranchEmployee, Notification } from "../models/index.js";
 import {
   emitNotificationToRole,
   emitNotificationToUser,
@@ -14,19 +14,75 @@ const buildNotificationPayload = (notify) => ({
   createdDate: notify.createdDate,
 });
 
-export const sendUserNotification = async (userId, type, title, message) => {
-  const notify = await Notification.create({
-    userId,
-    type,
-    title,
-    message,
-  });
+const runAfterCommit = (transaction, callback) => {
+  if (transaction?.afterCommit) {
+    transaction.afterCommit(callback);
+    return;
+  }
+
+  callback();
+};
+
+const emitSafely = (callback) => {
+  try {
+    callback();
+  } catch (error) {
+    console.error("Emit notification failed:", error.message);
+  }
+};
+
+export const sendUserNotification = async (
+  userId,
+  type,
+  title,
+  message,
+  options = {},
+) => {
+  const notify = await Notification.create(
+    {
+      userId,
+      type,
+      title,
+      message,
+    },
+    { transaction: options.transaction },
+  );
 
   const payload = buildNotificationPayload(notify);
 
-  emitNotificationToUser(userId, payload);
+  runAfterCommit(options.transaction, () =>
+    emitSafely(() => emitNotificationToUser(userId, payload)),
+  );
 
   return notify;
+};
+
+export const sendBranchEmployeesNotification = async (
+  branchId,
+  type,
+  title,
+  message,
+  options = {},
+) => {
+  const branchEmployees = await BranchEmployee.findAll({
+    where: { branchId },
+    attributes: ["employeeId"],
+    transaction: options.transaction,
+  });
+
+  const employeeIds = [
+    ...new Set(branchEmployees.map((item) => item.employeeId).filter(Boolean)),
+  ];
+
+  if (!employeeIds.length) {
+    return [];
+  }
+
+  return Promise.all(
+    employeeIds.map((employeeId) =>
+      sendUserNotification(employeeId, type, title, message, options),
+    ),
+  );
 };
 
 export const sendEmployeesNotification = async (type, title, message) => {
@@ -39,7 +95,7 @@ export const sendEmployeesNotification = async (type, title, message) => {
 
   const payload = buildNotificationPayload(notify);
 
-  emitNotificationToRole(ROLE_NAME.EMPLOYEE, payload);
+  emitSafely(() => emitNotificationToRole(ROLE_NAME.EMPLOYEE, payload));
 
   return notify;
 };
@@ -54,7 +110,7 @@ export const sendAdminNotification = async (type, title, message) => {
 
   const payload = buildNotificationPayload(notify);
 
-  emitNotificationToRole(ROLE_NAME.ADMIN, payload);
+  emitSafely(() => emitNotificationToRole(ROLE_NAME.ADMIN, payload));
 
   return notify;
 };

@@ -4,6 +4,7 @@ import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
 import {
   confirmedOrderSchema,
+  getOrdersSchema,
   orderActionIdSchema,
   prepareOrderSchema,
   readyToShipSchema,
@@ -16,6 +17,20 @@ import { ROLE_NAME } from "../../constants/userConstant.js";
 const orderRoute = express.Router();
 
 const initEmployeeOrderRoute = (app) => {
+  orderRoute.get(
+    "/",
+    auth,
+    authorize(ROLE_NAME.EMPLOYEE),
+    validate(getOrdersSchema),
+    orderController.getOrdersController,
+  );
+  orderRoute.get(
+    "/:orderId",
+    auth,
+    authorize(ROLE_NAME.EMPLOYEE),
+    validate(orderActionIdSchema),
+    orderController.getOrderDetailController,
+  );
   orderRoute.patch(
     "/confirm/:orderId",
     auth,

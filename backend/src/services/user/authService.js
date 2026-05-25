@@ -5,6 +5,7 @@ import {
   Wallet,
   UserOtp,
   RefreshToken,
+  Branch,
 } from "../../models/index.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
@@ -24,6 +25,7 @@ import {
 } from "../../utils/jwt.js";
 import UnauthorizedError from "../../errors/UnauthorizedError.js";
 import { WALLET_STATUS } from "../../constants/paymentConstant.js";
+import { getEmployeeBranchIds } from "../employee/branchAccessService.js";
 
 // Bước tiếp theo nâng cấp lên để tránh spam gửi OTP
 
@@ -385,15 +387,28 @@ const refreshTokenService = async (data) => {
           as: "role",
           attributes: ["id", "roleName"],
         },
+        {
+          model: Branch,
+          as: "employeeBranches",
+          attributes: ["id", "branchName"],
+          through: { attributes: [] },
+          required: false,
+        },
       ],
       transaction: t,
     });
+
+    const branchIds =
+      user.role.roleName === "EMPLOYEE"
+        ? await getEmployeeBranchIds(user.id, t)
+        : [];
 
     const payloadAccessToken = {
       id: user.id,
       username: user.username,
       email: user.email,
       role: user.role.roleName,
+      branchIds,
     };
 
     const newAccessToken = generateAccessToken(payloadAccessToken);

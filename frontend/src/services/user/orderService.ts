@@ -21,6 +21,7 @@ import type {
   RequestCancelOrderResponse,
   RequestReturnOrderRequest,
   RequestReturnOrderResponse,
+  RetryOrderPaymentResponse,
 } from "../../types/order";
 import type { VNPayCallbackRequest } from "../../types/wallet";
 import instance from "../../utils/axiosCustomize";
@@ -39,6 +40,11 @@ const createOrderService = (data: CreateOrderRequest) =>
 
 const orderCallbackService = (data: VNPayCallbackRequest) =>
   instance.patch<OrderCallbackResponse>("/user/orders/vnpay/callback", data);
+
+const retryOrderVNPayService = (orderGroupId: number) =>
+  instance.post<RetryOrderPaymentResponse>(
+    `/user/orders/group/${orderGroupId}/vnpay/retry`,
+  );
 
 const walletOrderConfirmService = (data: WalletOrderConfirmRequest) =>
   instance.patch<WalletOrderConfirmResponse>(
@@ -105,6 +111,7 @@ const orderService = {
   calculateShippingService,
   createOrderService,
   orderCallbackService,
+  retryOrderVNPayService,
   walletOrderConfirmService,
   clearCheckoutSessionService,
   getOrderGroupIdService,

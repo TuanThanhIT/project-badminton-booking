@@ -18,15 +18,21 @@ import { calculateMonthlyBooking } from "../../redux/slices/user/monthlyBookingS
 import type { BranchOptions } from "../../types/branch";
 import type { CourtAvailable } from "../../types/court";
 import { toast } from "react-toastify";
-import { showConfirmDialog } from "../../utils/swalHelper";
+import { showConfirmDialog } from "../../utils/confirmDialog";
 
 const generateTimeOptions = () => {
   const options: string[] = [];
-  for (let hour = 5; hour <= 23; hour += 1) {
+
+  for (let hour = 6; hour <= 23; hour += 1) {
     const h = hour.toString().padStart(2, "0");
+
     options.push(`${h}:00`);
-    options.push(`${h}:30`);
+
+    if (hour < 23) {
+      options.push(`${h}:30`);
+    }
   }
+
   return options;
 };
 
@@ -79,7 +85,7 @@ const WEEK_DAYS = [
 ];
 
 const inputClass =
-  "h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition-all hover:border-sky-200 hover:bg-white focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100";
+  "h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition-all hover:border-sky-200 hover:bg-white focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100";
 
 const labelClass = "mb-2 block text-[13px] font-medium text-slate-600";
 

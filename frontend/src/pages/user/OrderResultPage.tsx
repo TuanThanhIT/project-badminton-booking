@@ -12,7 +12,10 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAppDispatch } from "../../redux/hook";
-import { getOrderGroupId } from "../../redux/slices/user/orderSlice";
+import {
+  getOrderGroupId,
+  retryOrderVNPay,
+} from "../../redux/slices/user/orderSlice";
 import { getCart } from "../../redux/slices/user/cartSlice";
 import type { OrderGroupIdRequest } from "../../types/order";
 import { formatOrderCode } from "../../utils/order";
@@ -49,6 +52,7 @@ const OrderResultPage = () => {
   const [orderData, setOrderData] = useState<any>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [verified, setVerified] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   const method = orderData?.paymentMethod;
   const amount = Number(orderData?.amount || 0);
@@ -57,7 +61,22 @@ const OrderResultPage = () => {
 
   const isWallet = method === "WALLET";
   const isCOD = method === "COD";
+  const canRetryPayment = Boolean(orderData?.canRetryPayment);
   const animatedAmount = useCountUp(amount);
+
+  const handleRetryPayment = async () => {
+    if (!orderData?.orderGroupId) return;
+
+    try {
+      setIsRetrying(true);
+      const res = await dispatch(
+        retryOrderVNPay({ orderGroupId: Number(orderData.orderGroupId) }),
+      ).unwrap();
+      window.location.href = res.data.paymentUrl;
+    } finally {
+      setIsRetrying(false);
+    }
+  };
 
   useEffect(() => {
     if (!orderGroupId || orderGroupId === "--") {
@@ -114,13 +133,17 @@ const OrderResultPage = () => {
     ? isWallet
       ? "Thanh toán thành công"
       : "Đặt hàng thành công"
-    : "Thanh toán thất bại";
+    : canRetryPayment
+      ? "Đơn hàng đang chờ thanh toán"
+      : "Thanh toán thất bại";
 
   const description = isSuccess
     ? isWallet
       ? "Giao dịch đã hoàn tất. Bạn có thể theo dõi trạng thái đơn hàng trong trung tâm đơn hàng."
       : "Đơn hàng đã được tạo. B-Hub sẽ tiếp nhận và xử lý trong thời gian sớm nhất."
-    : "Giao dịch không hợp lệ hoặc đã bị hủy. Bạn có thể quay lại giỏ hàng để thử lại.";
+    : canRetryPayment
+      ? "Thanh toán chưa hoàn tất. Đơn hàng vẫn được giữ trong thời gian ngắn, bạn có thể thanh toán lại ngay."
+      : "Giao dịch không hợp lệ hoặc đã bị hủy. Bạn có thể quay lại giỏ hàng để thử lại.";
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-700">
@@ -147,11 +170,15 @@ const OrderResultPage = () => {
               className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl ${
                 isSuccess
                   ? "bg-emerald-50 text-emerald-600"
-                  : "bg-red-50 text-red-500"
+                  : canRetryPayment
+                    ? "bg-amber-50 text-amber-600"
+                    : "bg-red-50 text-red-500"
               }`}
             >
               {isSuccess ? (
                 <CheckCircle2 className="h-9 w-9" />
+              ) : canRetryPayment ? (
+                <RotateCcw className="h-9 w-9" />
               ) : (
                 <XCircle className="h-9 w-9" />
               )}
@@ -214,10 +241,14 @@ const OrderResultPage = () => {
             <div className="bg-slate-50/70 p-5 sm:p-6">
               <div className="rounded-2xl border border-red-100 bg-red-50 p-5 text-center">
                 <p className="font-semibold text-red-600">
-                  Không tìm thấy thông tin đơn hàng hợp lệ
+                  {canRetryPayment
+                    ? "Đơn hàng vẫn đang được giữ"
+                    : "Không tìm thấy thông tin đơn hàng hợp lệ"}
                 </p>
                 <p className="mt-2 text-sm text-slate-600">
-                  Vui lòng kiểm tra lại giao dịch hoặc quay về giỏ hàng để thử lại.
+                  {canRetryPayment
+                    ? "Bạn có thể thanh toán lại trước khi hết thời gian giữ đơn."
+                    : "Vui lòng kiểm tra lại giao dịch hoặc quay về giỏ hàng để thử lại."}
                 </p>
               </div>
             </div>
@@ -233,6 +264,15 @@ const OrderResultPage = () => {
               <ActionButton primary onClick={() => navigate("/orders")}>
                 <ClipboardList size={18} />
                 Xem đơn hàng
+              </ActionButton>
+            ) : canRetryPayment ? (
+              <ActionButton
+                primary
+                onClick={handleRetryPayment}
+                disabled={isRetrying}
+              >
+                <RotateCcw size={18} />
+                {isRetrying ? "Đang tạo lại..." : "Thanh toán lại"}
               </ActionButton>
             ) : (
               <ActionButton primary onClick={() => navigate("/cart")}>
@@ -291,17 +331,20 @@ const ActionButton = ({
   children,
   primary,
   onClick,
+  disabled,
 }: {
   children: ReactNode;
   primary?: boolean;
   onClick?: () => void;
+  disabled?: boolean;
 }) => (
   <button
     type="button"
     onClick={onClick}
+    disabled={disabled}
     className={`inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all ${
       primary
-        ? "bg-sky-600 text-white hover:bg-sky-700"
+        ? "bg-sky-600 text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:bg-slate-300"
         : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
     }`}
   >

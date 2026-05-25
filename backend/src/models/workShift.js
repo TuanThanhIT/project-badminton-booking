@@ -54,6 +54,40 @@ const WorkShift = sequelize.define(
         },
       },
     },
+    cashierShiftWage: {
+      type: DataTypes.DOUBLE,
+      allowNull: false,
+      defaultValue: 0,
+      validate: {
+        notNull: {
+          msg: "Cashier shift wage is required",
+        },
+        isFloat: {
+          msg: "Cashier shift wage must be a number",
+        },
+        min: {
+          args: [0],
+          msg: "Cashier shift wage must be greater than or equal to 0",
+        },
+      },
+    },
+    staffShiftWage: {
+      type: DataTypes.DOUBLE,
+      allowNull: false,
+      defaultValue: 0,
+      validate: {
+        notNull: {
+          msg: "Staff shift wage is required",
+        },
+        isFloat: {
+          msg: "Staff shift wage must be a number",
+        },
+        min: {
+          args: [0],
+          msg: "Staff shift wage must be greater than or equal to 0",
+        },
+      },
+    },
     branchId: {
       type: DataTypes.INTEGER,
       allowNull: false,

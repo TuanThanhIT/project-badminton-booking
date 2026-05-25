@@ -149,7 +149,7 @@ const DiscountsForm = ({
                   placeholder="Nhập mã giảm giá"
                   value={code || ""}
                   onChange={handleInputChange}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100"
                 />
               </div>
               <input type="hidden" {...register("code")} />

@@ -1,5 +1,6 @@
 export {
   sendAdminNotification,
+  sendBranchEmployeesNotification,
   sendEmployeesNotification,
   sendUserNotification,
 } from "../helpers/notification.js";

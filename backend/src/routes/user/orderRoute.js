@@ -62,6 +62,14 @@ const initOrderRoute = (app) => {
     orderController.orderCallbackController,
   );
 
+  orderRoute.post(
+    "/group/:orderGroupId/vnpay/retry",
+    auth,
+    authorize(ROLE_NAME.USER),
+    validate(getOrderGroupByIdSchema),
+    orderController.retryOrderVNPayController,
+  );
+
   orderRoute.patch(
     "/wallet/confirm",
     auth,

@@ -30,7 +30,7 @@ const checkDiscountBookingService = async (data) => {
     discount.applyType !== DISCOUNT_APPLY_TYPE.BOOKING &&
     discount.applyType !== DISCOUNT_APPLY_TYPE.ALL
   ) {
-    throw new BadRequestError("MÃ£ khÃ´ng Ã¡p dá»¥ng cho Ä‘áº·t sÃ¢n");
+    throw new BadRequestError("Mã không áp dụng cho đặt sân");
   }
 
   if (bookingAmount < discount.minAmount) {
@@ -40,7 +40,7 @@ const checkDiscountBookingService = async (data) => {
   }
 
   if (discount.usageLimit && discount.usageCount >= discount.usageLimit) {
-    throw new BadRequestError("MÃ£ giáº£m giÃ¡ Ä‘Ã£ háº¿t lÆ°á»£t sá»­ dá»¥ng");
+    throw new BadRequestError("Mã giảm giá đã hết lượt sử dụng");
   }
 
   let discountValue = 0;

@@ -13,11 +13,13 @@ import {
 import { walletWithdrawConfirm } from "../../redux/slices/user/walletSlice";
 import type { WalletWithdrawConfirmRequest } from "../../types/wallet";
 import { OTP_TYPE } from "../../utils/constants/otpType";
-import { showConfirmDialog } from "../../utils/swalHelper";
+import { showConfirmDialog } from "../../utils/confirmDialog";
 import type { WalletOrderConfirmRequest } from "../../types/order";
 import { walletOrderConfirm } from "../../redux/slices/user/orderSlice";
 import { getCart } from "../../redux/slices/user/cartSlice";
 import AuthShell from "../../components/ui/user/auth/AuthShell";
+import type { WalletBookingConfirmRequest } from "../../types/booking";
+import { walletBookingConfirm } from "../../redux/slices/user/bookingSlice";
 
 const OTP_EXPIRE_KEY = "otp_expire_at";
 const RESEND_EXPIRE_KEY = "otp_resend_at";
@@ -34,7 +36,7 @@ const OTPPage = () => {
     Object.values(state.ui.loadingMap).some(Boolean),
   );
 
-  const { email, withdrawRequestId, type, orderGroupId } = otpFlow;
+  const { email, withdrawRequestId, type, orderGroupId, bookingId } = otpFlow;
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -96,11 +98,22 @@ const OTPPage = () => {
       "Bạn có chắc chắn muốn thoát khỏi bước xác thực OTP?",
       "Chắc chắn",
       "Hủy",
+      "danger",
     );
 
     if (!confirmedExit) return;
     clearOtpSession();
-    navigate(type === OTP_TYPE.WITHDRAW_REQUEST ? "/wallet" : "/login");
+    if (type === OTP_TYPE.WITHDRAW_REQUEST) {
+      navigate("/wallet");
+      return;
+    }
+
+    if (type === OTP_TYPE.WALLET_PAYMENT) {
+      navigate(bookingId ? "/bookings" : "/cart");
+      return;
+    }
+
+    navigate("/login");
   };
 
   const formatTime = (sec: number) => {
@@ -193,12 +206,32 @@ const OTPPage = () => {
     }
 
     if (type === OTP_TYPE.WALLET_PAYMENT) {
-      if (!email || !orderGroupId) {
+      if (!email || (!orderGroupId && !bookingId)) {
         toast.error("Không tìm thấy thông tin thanh toán. Vui lòng thử lại.");
         return;
       }
 
-      const data: WalletOrderConfirmRequest = { email, otpCode, orderGroupId };
+      if (bookingId) {
+        const data: WalletBookingConfirmRequest = { email, otpCode, bookingId };
+        await dispatch(walletBookingConfirm({ data }))
+          .unwrap()
+          .then((res) => {
+            toast.success("Xác nhận thanh toán lịch sân thành công.");
+            clearOtpSession();
+            setTimeout(
+              () => navigate(`/booking-result?bookingId=${res.data.bookingId}`),
+              700,
+            );
+          })
+          .catch(() => setOtp(Array(6).fill("")));
+        return;
+      }
+
+      const data: WalletOrderConfirmRequest = {
+        email,
+        otpCode,
+        orderGroupId: orderGroupId!,
+      };
       await dispatch(walletOrderConfirm({ data }))
         .unwrap()
         .then((res) => {
@@ -285,7 +318,7 @@ const OTPPage = () => {
               value={digit}
               onChange={(event) => handleChange(event.target.value, index)}
               onKeyDown={(event) => handleKeyDown(event, index)}
-              className="h-14 rounded-2xl border border-slate-200 bg-slate-50 text-center text-xl font-bold text-slate-900 outline-none transition-all focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100"
+              className="h-14 rounded-2xl border border-slate-200 bg-slate-50 text-center text-xl font-bold text-slate-900 outline-none transition-all focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100"
             />
           ))}
         </div>

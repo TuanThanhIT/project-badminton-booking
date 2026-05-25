@@ -71,6 +71,10 @@ const VNPayResultPage = () => {
     vnp_OrderInfo?.toLowerCase().includes("wallet") ||
     vnp_OrderInfo?.toLowerCase().includes("topup");
   const isBooking = vnp_OrderInfo?.toLowerCase().includes("booking");
+  const bookingIdFromOrderInfo =
+    vnp_OrderInfo.match(/booking_(\d+)/i)?.[1] || "";
+  const orderGroupIdFromOrderInfo =
+    vnp_OrderInfo.match(/order_(\d+)/i)?.[1] || "";
 
   const vnpSuccess =
     hasValidParams &&
@@ -375,7 +379,15 @@ const VNPayResultPage = () => {
               <ActionButton
                 primary
                 onClick={() =>
-                  navigate(isTopup ? "/wallet" : isBooking ? "/bookings" : "/orders")
+                  navigate(
+                    isTopup
+                      ? "/wallet"
+                      : isBooking && bookingIdFromOrderInfo
+                        ? `/booking-result?bookingId=${bookingIdFromOrderInfo}`
+                        : isBooking
+                          ? "/bookings"
+                          : "/orders",
+                  )
                 }
               >
                 {isTopup ? <Wallet size={18} /> : <PackageCheck size={18} />}
@@ -385,7 +397,17 @@ const VNPayResultPage = () => {
               <ActionButton
                 primary
                 onClick={() =>
-                  navigate(isTopup ? "/wallet" : isBooking ? "/courts" : "/cart")
+                  navigate(
+                    isTopup
+                      ? "/wallet"
+                      : isBooking && bookingIdFromOrderInfo
+                        ? `/booking-result?bookingId=${bookingIdFromOrderInfo}`
+                        : orderGroupIdFromOrderInfo
+                          ? `/order-result?orderGroupId=${orderGroupIdFromOrderInfo}`
+                          : isBooking
+                            ? "/courts"
+                            : "/cart",
+                  )
                 }
               >
                 <RotateCcw size={18} />

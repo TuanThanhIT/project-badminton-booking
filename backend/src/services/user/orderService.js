@@ -1,4 +1,4 @@
-import axios from "axios";
+﻿import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import crypto from "crypto";
 import sequelize from "../../config/db.js";
@@ -1507,6 +1507,150 @@ const cancellableStatuses = [
 
 const returnableStatuses = [ORDER_STATUS.COMPLETED];
 
+const calculateRefundAmount = async (order, orderGroup) => {
+  const groupBeforeDiscount =
+    Number(orderGroup.totalAmount || 0) +
+    Number(orderGroup.totalShippingFee || 0);
+
+  const orderAmount = Number(order.totalAmount || 0);
+  const discountAmount = Number(orderGroup.discountAmount || 0);
+
+  if (!discountAmount || !groupBeforeDiscount) {
+    return orderAmount;
+  }
+
+  const discountShare = Math.round(
+    discountAmount * (orderAmount / groupBeforeDiscount),
+  );
+
+  return Math.max(0, orderAmount - discountShare);
+};
+
+const refundOrderToWallet = async ({ order, orderGroup, transaction }) => {
+  const payment = await Payment.findOne({
+    where: {
+      targetPaymentType: TARGET_PAYMENT_TYPE.ORDER,
+      targetPaymentId: orderGroup.id,
+      paymentStatus: PAYMENT_STATUS.PAID,
+    },
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
+
+  if (!payment) {
+    return {
+      refunded: false,
+      refundAmount: 0,
+    };
+  }
+
+  const refundAmount = await calculateRefundAmount(order, orderGroup);
+
+  const wallet = await Wallet.findOne({
+    where: { userId: orderGroup.userId },
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
+
+  if (!wallet) {
+    throw new NotFoundError("Ví người dùng không tồn tại");
+  }
+
+  const refundDescription = `Hoàn tiền đơn ${formatOrderItemCode(order.id)} thuộc nhóm đơn #${orderGroup.id}`;
+
+  const existedRefund = await WalletTransaction.findOne({
+    where: {
+      walletId: wallet.id,
+      paymentId: payment.id,
+      type: WALLET_TRANSACTION_TYPE.REFUND,
+      description: refundDescription,
+    },
+    transaction,
+  });
+
+  if (existedRefund) {
+    return {
+      refunded: false,
+      refundAmount: 0,
+    };
+  }
+
+  await wallet.update(
+    {
+      balance: sequelize.literal(`balance + ${Number(refundAmount)}`),
+    },
+    { transaction },
+  );
+
+  await WalletTransaction.create(
+    {
+      walletId: wallet.id,
+      paymentId: payment.id,
+      amount: refundAmount,
+      type: WALLET_TRANSACTION_TYPE.REFUND,
+      status: WALLET_TRANSACTION_STATUS.SUCCESS,
+      description: refundDescription,
+    },
+    { transaction },
+  );
+
+  return {
+    refunded: true,
+    refundAmount,
+  };
+};
+
+const updateOrderGroupAfterChildChanged = async ({
+  orderGroupId,
+  transaction,
+}) => {
+  const orderGroup = await OrderGroup.findByPk(orderGroupId, {
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
+
+  const orders = await Order.findAll({
+    where: { orderGroupId },
+    transaction,
+  });
+
+  const allCancelled = orders.every(
+    (o) => o.orderStatus === ORDER_STATUS.CANCELLED,
+  );
+
+  if (
+    allCancelled &&
+    orderGroup.status === ORDER_GROUP_STATUS.PENDING_PAYMENT
+  ) {
+    await orderGroup.update(
+      { status: ORDER_GROUP_STATUS.CANCELLED },
+      { transaction },
+    );
+  }
+
+  return orderGroup;
+};
+
+const restoreOrderStock = async ({ order, transaction }) => {
+  const details = await OrderDetail.findAll({
+    where: { orderId: order.id },
+    transaction,
+  });
+
+  await Promise.all(
+    details.map((detail) =>
+      VariantStock.increment("stock", {
+        by: detail.quantity,
+        where: {
+          branchId: order.branchId,
+          variantId: detail.variantId,
+        },
+        transaction,
+      }),
+    ),
+  );
+};
+
 const getUserOrderForAction = async ({ orderId, userId, transaction }) => {
   const order = await Order.findByPk(orderId, {
     include: [
@@ -1534,7 +1678,7 @@ const getUserOrderForAction = async ({ orderId, userId, transaction }) => {
   return order;
 };
 
-// Khi user bấm hủy đơn, service đổi trạng thái sang CANCEL_REQUESTED, rồi gọi realtime.
+
 const requestCancelOrderService = async (data) => {
   const { orderId, userId, reason } = data;
   const result = await sequelize.transaction(async (t) => {
@@ -1551,15 +1695,60 @@ const requestCancelOrderService = async (data) => {
     }
 
     if (!cancellableStatuses.includes(order.orderStatus)) {
-      throw new BadRequestError(
-        "Đơn hàng hiện không thể yêu cầu hủy",
-      );
+      throw new BadRequestError("Đơn hàng hiện không thể yêu cầu hủy");
     }
 
     if (order.orderStatus === ORDER_STATUS.COMPLETED) {
-      throw new BadRequestError(
-        "Đơn hàng đã hoàn thành, không thể hủy",
+      throw new BadRequestError("Đơn hàng đã hoàn thành, không thể hủy");
+    }
+
+    if (order.orderStatus === ORDER_STATUS.PENDING) {
+      const refund = await refundOrderToWallet({
+        order,
+        orderGroup: order.orderGroup,
+        transaction: t,
+      });
+
+      await order.update(
+        {
+          previousOrderStatus: order.orderStatus,
+          orderStatus: ORDER_STATUS.CANCELLED,
+          shippingStatus: SHIPPING_STATUS.CANCELLED,
+          cancelledBy: CANCELLED_BY.USER,
+          cancelReason: reason || null,
+          cancelRequestedAt: new Date(),
+          cancelHandledAt: new Date(),
+          cancelledAt: new Date(),
+          cancelRejectReason: null,
+        },
+        { transaction: t },
       );
+
+      await OrderShippingLog.create(
+        {
+          orderId: order.id,
+          status: SHIPPING_STATUS.CANCELLED,
+          eventTime: new Date(),
+          rawData: {
+            source: "SYSTEM",
+            action: "USER_CANCEL_ORDER_PENDING",
+          },
+        },
+        { transaction: t },
+      );
+
+      await restoreOrderStock({ order, transaction: t });
+
+      await updateOrderGroupAfterChildChanged({
+        orderGroupId: order.orderGroupId,
+        transaction: t,
+      });
+
+      return {
+        mode: "CANCELLED",
+        order,
+        refund,
+      };
     }
 
     await order.update(
@@ -1575,21 +1764,42 @@ const requestCancelOrderService = async (data) => {
       { transaction: t },
     );
 
-    return order;
+    return {
+      mode: "REQUESTED",
+      order,
+    };
   });
 
   await emitOrderActionRealtime({
-    order: result,
+    order: result.order,
     log: null,
     message:
-      "Yêu cầu hủy đơn của bạn đã được gửi đến nhân viên",
+      result.mode === "CANCELLED"
+        ? "Đơn hàng đã được hủy thành công"
+        : "Yêu cầu hủy đơn của bạn đã được gửi đến nhân viên",
   });
-  await sendBranchEmployeesNotification(
-    result.branchId,
-    "order-cancel-requested",
-    "Khách yêu cầu hủy đơn hàng",
-    `${result.branch?.branchName || "Chi nhánh"}: đơn hàng ${formatOrderItemCode(result.id)} cần nhân viên xử lý yêu cầu hủy.`,
-  );
+
+  if (result.mode === "CANCELLED") {
+    await sendBranchEmployeesNotification(
+      result.order.branchId,
+      "order-cancelled",
+      "Khách đã hủy đơn hàng",
+      `${result.order.branch?.branchName || "Chi nhánh"}: khách đã hủy đơn hàng ${formatOrderItemCode(result.order.id)}.`,
+    );
+  } else {
+    await sendBranchEmployeesNotification(
+      result.order.branchId,
+      "order-cancel-requested",
+      "Khách yêu cầu hủy đơn hàng",
+      `${result.order.branch?.branchName || "Chi nhánh"}: đơn hàng ${formatOrderItemCode(result.order.id)} cần nhân viên xử lý yêu cầu hủy.`,
+    );
+  }
+
+  return {
+    mode: result.mode,
+    orderId: result.order.id,
+    refund: result.refund,
+  };
 };
 
 const requestReturnOrderService = async (data) => {

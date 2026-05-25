@@ -1,6 +1,9 @@
-import { StatusCodes } from "http-status-codes";
-import ApiError from "../../errors/ApiError.js";
-import { BranchEmployee, WorkShift, WorkShiftEmployee } from "../../models/index.js";
+import ForbiddenError from "../../errors/ForbiddenError.js";
+import {
+  BranchEmployee,
+  WorkShift,
+  WorkShiftEmployee,
+} from "../../models/index.js";
 
 export const getEmployeeBranchIds = async (employeeId, transaction) => {
   const branchEmployees = await BranchEmployee.findAll({
@@ -8,10 +11,6 @@ export const getEmployeeBranchIds = async (employeeId, transaction) => {
     attributes: ["branchId"],
     transaction,
   });
-
-  if (branchEmployees.length > 0) {
-    return branchEmployees.map((item) => item.branchId);
-  }
 
   const assignedShiftBranches = await WorkShiftEmployee.findAll({
     where: { employeeId },
@@ -43,10 +42,7 @@ export const assertEmployeeCanAccessBranch = async ({
   const branchIds = await getEmployeeBranchIds(employeeId, transaction);
 
   if (!branchIds.includes(Number(branchId))) {
-    throw new ApiError(
-      StatusCodes.FORBIDDEN,
-      "Nhân viên không thuộc chi nhánh này.",
-    );
+    throw new ForbiddenError("Nhân viên không thuộc chi nhánh này.");
   }
 
   return branchIds;

@@ -44,12 +44,18 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
 _dotenv["default"].config();
 var app = (0, _express["default"])();
 var PORT = process.env.PORT || 8088;
+var allowedOrigins = [process.env.CLIENT_URL, "http://localhost:5173", "http://127.0.0.1:5173"].filter(Boolean);
 app.use(_express["default"].json());
 app.use(_express["default"].urlencoded({
   extended: true
 }));
 app.use((0, _cors["default"])({
-  origin: "http://localhost:5173",
+  origin: function origin(_origin, callback) {
+    if (!_origin || allowedOrigins.includes(_origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error("Not allowed by CORS"));
+  },
   credentials: true
 }));
 app.use((0, _cookieParser["default"])());

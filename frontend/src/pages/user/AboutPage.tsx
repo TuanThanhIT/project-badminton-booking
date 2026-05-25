@@ -14,9 +14,78 @@ import {
   Star,
   Sparkles,
   Trophy,
+  RotateCcw,
+  WalletCards,
+  PackageCheck,
+  ClipboardCheck,
+  Clock3,
+  Truck,
 } from "lucide-react";
 
 const AboutPage = () => {
+  const bookingPolicies = [
+    {
+      icon: <CalendarCheck2 />,
+      title: "Đặt sân tại BHub",
+      points: [
+        "Khách hàng chọn chi nhánh, sân, ngày chơi và khung giờ còn trống theo dữ liệu cập nhật trên hệ thống.",
+        "Sau khi kiểm tra thông tin, khách có thể thanh toán bằng ví BHub, VNPay hoặc các phương thức được hỗ trợ.",
+        "Lịch đặt chỉ được ghi nhận chính thức khi hệ thống xác nhận thanh toán hoặc xác nhận giữ chỗ theo trạng thái của đơn đặt sân.",
+        "Khách có thể theo dõi lịch đã đặt, trạng thái thanh toán và thông tin sân trong khu vực lịch sử đặt sân.",
+      ],
+    },
+    {
+      icon: <RotateCcw />,
+      title: "Hủy lịch đặt sân",
+      points: [
+        "Lịch đang chờ xác nhận có thể được khách hủy trực tiếp trên hệ thống mà không cần nhân viên duyệt.",
+        "Lịch đã được xác nhận sẽ chuyển sang trạng thái yêu cầu hủy để nhân viên chi nhánh kiểm tra và xử lý.",
+        "Nếu yêu cầu hủy được duyệt, lịch chuyển sang đã hủy và khoản tiền đủ điều kiện hoàn sẽ được cộng về ví BHub.",
+        "Nếu yêu cầu hủy bị từ chối, lịch quay lại trạng thái trước đó và khách có thể xem lý do xử lý trên hệ thống.",
+      ],
+    },
+  ];
+
+  const orderPolicies = [
+    {
+      icon: <ShoppingBag />,
+      title: "Đặt hàng sản phẩm",
+      points: [
+        "Khách chọn sản phẩm và đúng biến thể cần mua như màu sắc, kích thước, chất liệu và số lượng trước khi thanh toán.",
+        "Hệ thống tính phí vận chuyển theo địa chỉ nhận hàng và chia đơn theo chi nhánh có tồn kho phù hợp.",
+        "Đơn COD được chuyển cho nhân viên xử lý sau khi tạo đơn; đơn VNPay hoặc ví BHub chỉ được xử lý sau khi thanh toán thành công.",
+        "Khách có thể theo dõi chi tiết từng đơn, sản phẩm, trạng thái vận chuyển và lịch sử giao hàng trong trang đơn hàng.",
+      ],
+    },
+    {
+      icon: <PackageCheck />,
+      title: "Hủy đơn hàng",
+      points: [
+        "Đơn đang chờ xử lý có thể được khách hủy trực tiếp, hệ thống chuyển đơn sang đã hủy và hoàn tiền về ví nếu đơn đã thanh toán.",
+        "Đơn đã xác nhận, đang chuẩn bị, sẵn sàng giao, đang giao hoặc giao thất bại sẽ được gửi thành yêu cầu hủy cho nhân viên.",
+        "Nếu đơn chưa tạo vận đơn hoặc GHN còn ở giai đoạn mới tạo/lấy hàng, nhân viên có thể duyệt hủy và hệ thống hoàn tiền nếu đủ điều kiện.",
+        "Nếu hàng đã rời shop và đang giao, nhân viên sẽ từ chối hủy; khách có thể nhận hàng rồi gửi yêu cầu trả hàng nếu cần.",
+      ],
+    },
+    {
+      icon: <Truck />,
+      title: "Trả hàng và hoàn hàng",
+      points: [
+        "Khách chỉ gửi yêu cầu trả hàng khi đơn đã hoàn thành và trạng thái giao hàng là đã giao thành công.",
+        "Sau khi khách gửi lý do trả hàng, đơn chuyển sang yêu cầu trả hàng để nhân viên chi nhánh xem xét.",
+        "Khi nhân viên duyệt, đơn chuyển sang đang hoàn hàng; khoản tiền chưa được hoàn ngay cho đến khi shop nhận lại hàng.",
+        "Khi shop xác nhận đã nhận hàng hoàn, đơn chuyển sang đã hoàn hàng và hệ thống hoàn khoản tiền đủ điều kiện vào ví BHub.",
+      ],
+    },
+  ];
+
+  const refundNotes = [
+    "BHub hoàn tiền vào ví BHub của khách hàng đối với các giao dịch đã thanh toán thành công và đủ điều kiện hoàn.",
+    "Đơn COD hoặc giao dịch chưa ghi nhận thanh toán thành công sẽ không phát sinh hoàn ví tự động.",
+    "Số tiền hoàn được tính theo giá trị đơn liên quan, có phân bổ phần giảm giá nếu đơn thuộc một nhóm đơn có mã khuyến mãi.",
+    "Các yêu cầu hủy/trả hàng cần có lý do rõ ràng để nhân viên chi nhánh kiểm tra và phản hồi minh bạch.",
+  ];
+
   return (
     <div className="bg-white text-slate-800 font-sans overflow-hidden">
       {/* HERO */}
@@ -328,6 +397,134 @@ const AboutPage = () => {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* POLICY */}
+      <section className="bg-slate-50 py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-14">
+            <div>
+              <p className="text-sm font-bold text-sky-600 uppercase tracking-widest mb-3">
+                Chính sách dịch vụ BHub
+              </p>
+              <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 leading-tight">
+                Đặt sân, đặt hàng, hủy đơn và hoàn tiền minh bạch
+              </h2>
+            </div>
+
+            <p className="text-slate-500 max-w-2xl leading-relaxed">
+              BHub công khai quy trình xử lý để khách hàng chủ động theo dõi
+              từng trạng thái. Mỗi thao tác hủy, trả hàng hoặc hoàn tiền đều
+              được ghi nhận trên hệ thống và chuyển đến đúng chi nhánh phụ
+              trách.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-6 mb-6">
+            {bookingPolicies.map((policy) => (
+              <div
+                key={policy.title}
+                className="rounded-[2rem] border border-sky-100 bg-white p-7 shadow-[0_10px_30px_rgba(15,23,42,0.04)]"
+              >
+                <div className="mb-5 flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+                    {React.cloneElement(policy.icon, { size: 26 })}
+                  </div>
+                  <h3 className="text-xl font-extrabold text-slate-900">
+                    {policy.title}
+                  </h3>
+                </div>
+
+                <div className="space-y-3">
+                  {policy.points.map((point) => (
+                    <div key={point} className="flex items-start gap-3">
+                      <CheckCircle2
+                        size={18}
+                        className="mt-0.5 shrink-0 text-sky-500"
+                      />
+                      <p className="text-sm leading-relaxed text-slate-600">
+                        {point}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-6">
+            {orderPolicies.map((policy) => (
+              <div
+                key={policy.title}
+                className="rounded-[2rem] border border-slate-100 bg-white p-7 shadow-[0_10px_30px_rgba(15,23,42,0.04)]"
+              >
+                <div className="mb-5 flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                    {React.cloneElement(policy.icon, { size: 26 })}
+                  </div>
+                  <h3 className="text-xl font-extrabold text-slate-900">
+                    {policy.title}
+                  </h3>
+                </div>
+
+                <div className="space-y-3">
+                  {policy.points.map((point) => (
+                    <div key={point} className="flex items-start gap-3">
+                      <CheckCircle2
+                        size={18}
+                        className="mt-0.5 shrink-0 text-indigo-500"
+                      />
+                      <p className="text-sm leading-relaxed text-slate-600">
+                        {point}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 overflow-hidden rounded-[2rem] border border-amber-100 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+            <div className="grid lg:grid-cols-[0.85fr_1.15fr]">
+              <div className="bg-sky-950 p-8 text-white">
+                <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-sky-200">
+                  <WalletCards size={28} />
+                </div>
+                <p className="text-sm font-bold uppercase tracking-widest text-sky-200">
+                  Chính sách hoàn tiền
+                </p>
+                <h3 className="mt-3 text-2xl font-extrabold leading-tight">
+                  Tiền hoàn được cộng về ví BHub khi đủ điều kiện
+                </h3>
+                <p className="mt-4 text-sm leading-relaxed text-sky-100">
+                  Ví BHub giúp khách nhận lại khoản hoàn minh bạch, dễ kiểm
+                  tra và có thể sử dụng cho những lần đặt sân hoặc mua hàng
+                  tiếp theo.
+                </p>
+              </div>
+
+              <div className="grid gap-4 p-6 sm:grid-cols-2">
+                {refundNotes.map((note, index) => (
+                  <div
+                    key={note}
+                    className="rounded-2xl border border-slate-100 bg-slate-50 p-4"
+                  >
+                    <div className="mb-3 flex items-center gap-2 text-sm font-bold text-slate-800">
+                      {index === 0 && <WalletCards size={18} />}
+                      {index === 1 && <ClipboardCheck size={18} />}
+                      {index === 2 && <Clock3 size={18} />}
+                      {index === 3 && <ShieldCheck size={18} />}
+                      Lưu ý {index + 1}
+                    </div>
+                    <p className="text-sm leading-relaxed text-slate-600">
+                      {note}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

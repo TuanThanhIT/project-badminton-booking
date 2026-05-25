@@ -349,17 +349,24 @@ const orderSlice = createSlice({
       })
       .addCase(requestCancelOrder.fulfilled, (state, action) => {
         const { orderId } = action.meta.arg;
+        const mode = action.payload.data?.mode;
+        const nextStatus = mode === "CANCELLED" ? "CANCELLED" : "CANCEL_REQUESTED";
+        const nextDisplayStatus =
+          mode === "CANCELLED" ? "Đã hủy" : "Yêu cầu hủy";
 
         for (const group of state.userOrderGroup) {
           const order = group.orders.find((item) => item.orderId === orderId);
           if (order) {
-            order.orderStatus = "CANCEL_REQUESTED";
-            order.displayStatus = "Yêu cầu hủy";
+            order.orderStatus = nextStatus;
+            order.displayStatus = nextDisplayStatus;
           }
         }
 
         if (state.orderDetailData?.orderId === orderId) {
-          state.orderDetailData.status = "CANCEL_REQUESTED";
+          state.orderDetailData.status = nextStatus;
+          if (mode === "CANCELLED") {
+            state.orderDetailData.shippingStatus = "CANCELLED";
+          }
         }
       })
       .addCase(requestReturnOrder.fulfilled, (state, action) => {

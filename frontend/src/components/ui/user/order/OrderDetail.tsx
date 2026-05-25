@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { createPortal } from "react-dom";
 import {
   CheckCircle,
@@ -51,7 +51,8 @@ import ReviewForm from "./ReviewForm";
 const sectionClass =
   "rounded-3xl border border-slate-200/80 bg-white p-4 shadow-[0_8px_22px_rgba(15,23,42,0.035)] sm:p-5";
 
-const titleClass = "mb-3 flex items-center gap-2 text-base font-semibold text-slate-800";
+const titleClass =
+  "mb-3 flex items-center gap-2 text-base font-semibold text-slate-800";
 const labelClass = "text-xs font-medium text-slate-400";
 const valueClass = "mt-1 text-sm font-medium text-slate-700";
 
@@ -80,6 +81,7 @@ const OrderDetail = () => {
     ORDER_STATUS.PREPARING,
     ORDER_STATUS.READY_TO_SHIP,
     ORDER_STATUS.SHIPPING,
+    ORDER_STATUS.FAILED,
   ];
 
   const canRequestCancel = cancellableStatuses.some(
@@ -114,8 +116,12 @@ const OrderDetail = () => {
   const refreshCurrentOrder = async () => {
     await Promise.all([
       dispatch(getOrderDetail({ data: { orderId: orderDetailData.orderId } })),
-      dispatch(getOrderTracking({ data: { orderId: orderDetailData.orderId } })),
-      dispatch(getTrackingProgress({ data: { orderId: orderDetailData.orderId } })),
+      dispatch(
+        getOrderTracking({ data: { orderId: orderDetailData.orderId } }),
+      ),
+      dispatch(
+        getTrackingProgress({ data: { orderId: orderDetailData.orderId } }),
+      ),
     ]);
   };
 
@@ -143,7 +149,9 @@ const OrderDetail = () => {
         toast.success("Đánh giá sản phẩm thành công");
       }
 
-      await dispatch(getOrderDetail({ data: { orderId: orderDetailData.orderId } }));
+      await dispatch(
+        getOrderDetail({ data: { orderId: orderDetailData.orderId } }),
+      );
       setOpenReviewForm(false);
       setSelectedItem(null);
       setUpdate(false);
@@ -159,32 +167,38 @@ const OrderDetail = () => {
           <div className="absolute left-0 top-0 h-[3px] w-full bg-gradient-to-r from-sky-300 via-sky-400 to-sky-500" />
 
           <div className="flex flex-col gap-4">
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-sky-100 bg-sky-50 text-sky-600">
                   <ReceiptText size={22} />
                 </div>
 
                 <div>
-                  <p className="text-xs font-medium text-slate-400">Chi tiết đơn</p>
+                  <p className="text-xs font-medium text-slate-400">
+                    Chi tiết đơn
+                  </p>
                   <h2 className="mt-0.5 text-lg font-semibold text-slate-800">
                     {formatOrderItemCode(orderDetailData.orderId)}
                   </h2>
                 </div>
               </div>
 
-              <span
-                className={`inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium shadow-sm ${ORDER_STATUS_COLOR[orderDetailData.status]}`}
-              >
-                <ListOrdered size={14} />
-                {ORDER_STATUS_LABEL[orderDetailData.status]}
-              </span>
+              <div className="flex shrink-0 flex-col justify-end gap-2">
+                <span
+                  className={`mt-2 inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium shadow-sm ${ORDER_STATUS_COLOR[orderDetailData.status]}`}
+                >
+                  <ListOrdered size={14} />
+                  {ORDER_STATUS_LABEL[orderDetailData.status]}
+                </span>
+              </div>
             </div>
 
             <div className="rounded-3xl border border-sky-100 bg-sky-50/70 p-4">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs font-medium text-sky-600">Tổng thanh toán</p>
+                  <p className="text-xs font-medium text-sky-600">
+                    Tổng thanh toán
+                  </p>
                   <p className="mt-1 text-2xl font-semibold text-sky-700">
                     {Number(orderDetailData.fee.total).toLocaleString()}đ
                   </p>
@@ -194,33 +208,35 @@ const OrderDetail = () => {
                   <CreditCard size={22} />
                 </div>
               </div>
+
+              {(canRequestCancel || canRequestReturn) && (
+                <div className="mt-4 flex flex-wrap gap-2 border-t border-sky-100 pt-4">
+                  {canRequestCancel && (
+                    <button
+                      type="button"
+                      onClick={() => setOpenCancelModal(true)}
+                      className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl border border-red-100 bg-white px-4 text-sm font-medium text-red-600 shadow-sm transition-all hover:border-red-200 hover:bg-red-50"
+                    >
+                      <Ban size={15} />
+                      {orderDetailData.status === ORDER_STATUS.PENDING
+                        ? "Hủy đơn"
+                        : "Yêu cầu hủy"}
+                    </button>
+                  )}
+
+                  {canRequestReturn && (
+                    <button
+                      type="button"
+                      onClick={() => setOpenReturnModal(true)}
+                      className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl border border-orange-100 bg-white px-4 text-sm font-medium text-orange-600 shadow-sm transition-all hover:border-orange-200 hover:bg-orange-50"
+                    >
+                      <RotateCcw size={15} />
+                      Yêu cầu trả
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
-
-            {(canRequestCancel || canRequestReturn) && (
-              <div className="flex flex-col gap-2 rounded-3xl border border-slate-200 bg-slate-50 p-3 sm:flex-row">
-                {canRequestCancel && (
-                  <button
-                    type="button"
-                    onClick={() => setOpenCancelModal(true)}
-                    className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-2xl border border-red-100 bg-white px-4 text-sm font-medium text-red-600 transition-all hover:bg-red-50"
-                  >
-                    <Ban size={16} />
-                    Yêu cầu hủy đơn
-                  </button>
-                )}
-
-                {canRequestReturn && (
-                  <button
-                    type="button"
-                    onClick={() => setOpenReturnModal(true)}
-                    className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-2xl border border-orange-100 bg-white px-4 text-sm font-medium text-orange-600 transition-all hover:bg-orange-50"
-                  >
-                    <RotateCcw size={16} />
-                    Yêu cầu trả hàng
-                  </button>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
@@ -268,8 +284,12 @@ const OrderDetail = () => {
             {showShippingProgress ? (
               <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-sm">
                 <div className="border-b border-slate-100 bg-slate-50 px-4 py-4">
-                  <p className="text-sm font-semibold text-slate-800">Tiến trình đơn hàng</p>
-                  <p className="text-xs text-slate-500">Cập nhật theo trạng thái mới nhất</p>
+                  <p className="text-sm font-semibold text-slate-800">
+                    Tiến trình đơn hàng
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    Cập nhật theo trạng thái mới nhất
+                  </p>
                 </div>
 
                 <div className="relative overflow-x-auto p-5">
@@ -277,12 +297,17 @@ const OrderDetail = () => {
                     <div className="absolute left-10 right-10 top-6 h-[3px] rounded-full bg-slate-200" />
                     <div
                       className="absolute left-10 top-6 h-[3px] rounded-full bg-sky-400 transition-all duration-500"
-                      style={{ width: `calc((100% - 5rem) * ${progressPercent / 100})` }}
+                      style={{
+                        width: `calc((100% - 5rem) * ${progressPercent / 100})`,
+                      }}
                     />
 
                     <div className="relative flex justify-between">
                       {orderTrackingProgressItem?.map((step, idx) => (
-                        <div key={`${step.step}-${idx}`} className="flex flex-1 flex-col items-center">
+                        <div
+                          key={`${step.step}-${idx}`}
+                          className="flex flex-1 flex-col items-center"
+                        >
                           <div
                             className={`flex h-12 w-12 items-center justify-center rounded-full border-2 transition-all duration-300 ${
                               step.current
@@ -330,22 +355,34 @@ const OrderDetail = () => {
             ) : (
               <div className="flex items-start gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4">
                 <div className="mt-0.5 text-sky-600">
-                  {orderDetailData.status === ORDER_STATUS.PENDING && <Clock size={19} />}
-                  {orderDetailData.status === ORDER_STATUS.CONFIRMED && <CheckCircle2 size={19} />}
-                  {orderDetailData.status === ORDER_STATUS.PREPARING && <Package size={19} />}
-                  {orderDetailData.status === ORDER_STATUS.READY_TO_SHIP && <Truck size={19} />}
+                  {orderDetailData.status === ORDER_STATUS.PENDING && (
+                    <Clock size={19} />
+                  )}
+                  {orderDetailData.status === ORDER_STATUS.CONFIRMED && (
+                    <CheckCircle2 size={19} />
+                  )}
+                  {orderDetailData.status === ORDER_STATUS.PREPARING && (
+                    <Package size={19} />
+                  )}
+                  {orderDetailData.status === ORDER_STATUS.READY_TO_SHIP && (
+                    <Truck size={19} />
+                  )}
                 </div>
 
                 <div>
                   <p className="text-sm font-medium text-slate-700">
-                    {orderDetailData.status === ORDER_STATUS.PENDING && "Đơn hàng đang chờ xử lý"}
-                    {orderDetailData.status === ORDER_STATUS.CONFIRMED && "Đơn hàng đã được xác nhận"}
-                    {orderDetailData.status === ORDER_STATUS.PREPARING && "Shop đang chuẩn bị hàng"}
+                    {orderDetailData.status === ORDER_STATUS.PENDING &&
+                      "Đơn hàng đang chờ xử lý"}
+                    {orderDetailData.status === ORDER_STATUS.CONFIRMED &&
+                      "Đơn hàng đã được xác nhận"}
+                    {orderDetailData.status === ORDER_STATUS.PREPARING &&
+                      "Shop đang chuẩn bị hàng"}
                     {orderDetailData.status === ORDER_STATUS.READY_TO_SHIP &&
                       "Đơn hàng đang chờ bàn giao cho đơn vị vận chuyển"}
                   </p>
                   <p className="mt-1 text-xs leading-relaxed text-slate-500">
-                    Tiến trình chi tiết sẽ hiển thị khi đơn hàng bắt đầu vận chuyển.
+                    Tiến trình chi tiết sẽ hiển thị khi đơn hàng bắt đầu vận
+                    chuyển.
                   </p>
                 </div>
               </div>
@@ -441,7 +478,10 @@ const OrderDetail = () => {
                 <div className="absolute bottom-2 left-3 top-2 w-[2px] rounded-full bg-slate-200" />
                 <div className="space-y-4">
                   {orderTrackingItem.map((item, idx) => (
-                    <div key={`${item.status}-${item.time}-${idx}`} className="relative">
+                    <div
+                      key={`${item.status}-${item.time}-${idx}`}
+                      className="relative"
+                    >
                       <div className="absolute -left-[27px] top-4">
                         <div className="flex h-5 w-5 items-center justify-center rounded-full border-4 border-white bg-sky-500 shadow-sm" />
                       </div>
@@ -511,6 +551,7 @@ const OrderDetail = () => {
 
       <CancelOrderModal
         orderId={orderDetailData.orderId}
+        isPending={orderDetailData.status === ORDER_STATUS.PENDING}
         isOpen={openCancelModal}
         onClose={() => setOpenCancelModal(false)}
         onSuccess={refreshCurrentOrder}

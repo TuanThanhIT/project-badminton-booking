@@ -126,6 +126,8 @@ export type CounterDraft = {
     thumbnailUrl?: string;
     size?: string;
     color?: string;
+    material?: string;
+    sku?: string;
     price: number;
     quantity: number;
     subTotal: number;

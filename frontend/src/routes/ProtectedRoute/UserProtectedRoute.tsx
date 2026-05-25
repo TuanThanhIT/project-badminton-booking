@@ -2,6 +2,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAppSelector } from "../../redux/hook";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { ROLE_NAME } from "../../utils/constants/role";
 
 const UserProtectedRoute = () => {
   const navigate = useNavigate();
@@ -16,25 +17,27 @@ const UserProtectedRoute = () => {
   );
 
   const isLoading = !authInitialized || isGetAccountLoading;
+  const isNotLoggedIn = !accessToken || !user;
+  const isWrongRole = user && user.role !== ROLE_NAME.USER;
 
   const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
     if (isLoading) return;
 
-    if (!accessToken || !user) {
+    if (isNotLoggedIn || isWrongRole) {
       setRedirecting(true);
 
       const timer = setTimeout(() => {
         navigate("/login", {
           replace: true,
-          state: { from: location },
+          state: isNotLoggedIn ? { from: location } : undefined,
         });
       }, 1200);
 
       return () => clearTimeout(timer);
     }
-  }, [isLoading, accessToken, user, navigate, location]);
+  }, [isLoading, isNotLoggedIn, isWrongRole, navigate, location]);
 
   // LOADING
   if (isLoading) {

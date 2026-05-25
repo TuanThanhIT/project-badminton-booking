@@ -59,6 +59,45 @@ export const login = createAsyncThunk<
   }
 });
 
+export const adminLogin = createAsyncThunk<
+  LoginResponse,
+  { data: LoginRequest },
+  { rejectValue: ApiErrorType }
+>("auth/adminLogin", async ({ data }, { rejectWithValue }) => {
+  try {
+    const res = await authService.adminLoginService(data);
+    return res.data as LoginResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
+export const managerLogin = createAsyncThunk<
+  LoginResponse,
+  { data: LoginRequest },
+  { rejectValue: ApiErrorType }
+>("auth/managerLogin", async ({ data }, { rejectWithValue }) => {
+  try {
+    const res = await authService.managerLoginService(data);
+    return res.data as LoginResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
+export const employeeLogin = createAsyncThunk<
+  LoginResponse,
+  { data: LoginRequest },
+  { rejectValue: ApiErrorType }
+>("auth/employeeLogin", async ({ data }, { rejectWithValue }) => {
+  try {
+    const res = await authService.employeeLoginService(data);
+    return res.data as LoginResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
 export const getAccount = createAsyncThunk<
   AccountResponse,
   void,
@@ -211,6 +250,21 @@ const authSlice = createSlice({
     builder
       // login
       .addCase(login.fulfilled, (state, action) => {
+        state.user = action.payload.data.user;
+        state.accessToken = action.payload.data.accessToken;
+        localStorage.setItem("accessToken", action.payload.data.accessToken);
+      })
+      .addCase(adminLogin.fulfilled, (state, action) => {
+        state.user = action.payload.data.user;
+        state.accessToken = action.payload.data.accessToken;
+        localStorage.setItem("accessToken", action.payload.data.accessToken);
+      })
+      .addCase(managerLogin.fulfilled, (state, action) => {
+        state.user = action.payload.data.user;
+        state.accessToken = action.payload.data.accessToken;
+        localStorage.setItem("accessToken", action.payload.data.accessToken);
+      })
+      .addCase(employeeLogin.fulfilled, (state, action) => {
         state.user = action.payload.data.user;
         state.accessToken = action.payload.data.accessToken;
         localStorage.setItem("accessToken", action.payload.data.accessToken);

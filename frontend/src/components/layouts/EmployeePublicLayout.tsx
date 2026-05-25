@@ -7,7 +7,7 @@ const EmployeePublicLayout = () => {
     <div className="flex min-h-screen flex-col bg-slate-50">
       <EmployeePublicHeader />
 
-      <main className="min-h-0 flex-1 overflow-y-auto">
+      <main className="flex min-h-0 flex-1 overflow-y-auto">
         <Outlet />
       </main>
 

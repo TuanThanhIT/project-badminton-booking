@@ -121,14 +121,9 @@ const attachBookingPayments = async (bookings) => {
   );
 };
 
-const getBookingsService = async ({
-  employeeId,
-  status,
-  keyword,
-  date,
-  page = 1,
-  limit = 12,
-}) => {
+const getBookingsService = async (data) => {
+  const { employeeId, status, keyword, date, page = 1, limit = 12 } = data;
+
   const branchIds = await getEmployeeBranchIds(employeeId);
   if (!branchIds.length) {
     return {
@@ -201,7 +196,8 @@ const getBookingsService = async ({
   };
 };
 
-const getBookingDetailService = async ({ bookingId, employeeId }) => {
+const getBookingDetailService = async (data) => {
+  const { bookingId, employeeId } = data;
   const booking = await Booking.findByPk(bookingId, {
     include: bookingInclude,
   });
@@ -223,7 +219,8 @@ const getBookingDetailService = async ({ bookingId, employeeId }) => {
   return mapBooking(booking, payment);
 };
 
-const confirmBookingService = async ({ bookingId, employeeId }) => {
+const confirmBookingService = async (data) => {
+  const { bookingId, employeeId } = data;
   const booking = await sequelize.transaction(async (transaction) => {
     const booking = await getEmployeeBookingForAction({
       bookingId,
@@ -256,11 +253,8 @@ const confirmBookingService = async ({ bookingId, employeeId }) => {
   );
 };
 
-const completeBookingService = async ({
-  bookingId,
-  employeeId,
-  paymentMethod,
-}) => {
+const completeBookingService = async (data) => {
+  const { bookingId, employeeId, paymentMethod } = data;
   const booking = await sequelize.transaction(async (transaction) => {
     const booking = await getEmployeeBookingForAction({
       bookingId,
@@ -447,7 +441,8 @@ const refundBookingToWallet = async ({ booking, transaction }) => {
   };
 };
 
-const approveCancelBookingService = async ({ bookingId, employeeId }) => {
+const approveCancelBookingService = async (data) => {
+  const { bookingId, employeeId } = data;
   let refundResult;
   let handledBooking;
 
@@ -492,11 +487,8 @@ const approveCancelBookingService = async ({ bookingId, employeeId }) => {
   };
 };
 
-const rejectCancelBookingService = async ({
-  bookingId,
-  employeeId,
-  reason,
-}) => {
+const rejectCancelBookingService = async (data) => {
+  const { bookingId, employeeId, reason } = data;
   const booking = await sequelize.transaction(async (transaction) => {
     const booking = await getEmployeeBookingForAction({
       bookingId,
@@ -532,11 +524,8 @@ const rejectCancelBookingService = async ({
   );
 };
 
-const cancelNoShowBookingService = async ({
-  bookingId,
-  employeeId,
-  reason,
-}) => {
+const cancelNoShowBookingService = async (data) => {
+  const { bookingId, employeeId, reason } = data;
   let refundResult;
   let handledBooking;
 
@@ -607,6 +596,3 @@ const employeeBookingService = {
 };
 
 export default employeeBookingService;
-
-
-

@@ -26,6 +26,7 @@ import {
 import UnauthorizedError from "../../errors/UnauthorizedError.js";
 import { WALLET_STATUS } from "../../constants/paymentConstant.js";
 import { getEmployeeBranchIds } from "../employee/branchAccessService.js";
+import { ROLE_NAME } from "../../constants/userConstant.js";
 
 // Bước tiếp theo nâng cấp lên để tránh spam gửi OTP
 
@@ -434,12 +435,30 @@ const refreshTokenService = async (data) => {
 
 const handleLoginService = async (data) => {
   const { username, password } = data;
-  return handleLogin(username, password);
+  return handleLogin(username, password, ROLE_NAME.USER);
+};
+
+const handleAdminLoginService = async (data) => {
+  const { username, password } = data;
+  return handleLogin(username, password, ROLE_NAME.ADMIN);
+};
+
+const handleManagerLoginService = async (data) => {
+  const { username, password } = data;
+  return handleLogin(username, password, ROLE_NAME.MANAGER);
+};
+
+const handleEmployeeLoginService = async (data) => {
+  const { username, password } = data;
+  return handleLogin(username, password, ROLE_NAME.EMPLOYEE);
 };
 
 const authService = {
   handleRegisterService,
   handleLoginService,
+  handleAdminLoginService,
+  handleManagerLoginService,
+  handleEmployeeLoginService,
   verifyOtpService,
   sendOtpService,
   verifyResetOtpService,

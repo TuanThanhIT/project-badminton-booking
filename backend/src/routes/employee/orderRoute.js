@@ -31,6 +31,39 @@ const initEmployeeOrderRoute = (app) => {
     validate(orderActionIdSchema),
     orderController.getOrderDetailController,
   );
+
+  orderRoute.patch(
+    "/:orderId/confirm",
+    auth,
+    authorize(ROLE_NAME.EMPLOYEE),
+    validate(confirmedOrderSchema),
+    orderController.confirmOrderController,
+  );
+
+  orderRoute.patch(
+    "/:orderId/prepare",
+    auth,
+    authorize(ROLE_NAME.EMPLOYEE),
+    validate(prepareOrderSchema),
+    orderController.prepareOrderController,
+  );
+
+  orderRoute.patch(
+    "/:orderId/ready-to-ship",
+    auth,
+    authorize(ROLE_NAME.EMPLOYEE),
+    validate(readyToShipSchema),
+    orderController.readyToShipController,
+  );
+
+  orderRoute.patch(
+    "/:orderId/ship",
+    auth,
+    authorize(ROLE_NAME.EMPLOYEE),
+    validate(shipOrderSchema),
+    orderController.shipOrderController,
+  );
+
   orderRoute.patch(
     "/confirm/:orderId",
     auth,

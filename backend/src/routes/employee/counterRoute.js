@@ -18,57 +18,65 @@ const counterRoute = express.Router();
 const employeeOnly = [auth, authorize(ROLE_NAME.EMPLOYEE)];
 
 const initEmployeeCounterRoute = (app) => {
-  counterRoute.get("/session", employeeOnly, counterController.getSession);
+  counterRoute.get(
+    "/session",
+    employeeOnly,
+    counterController.getSessionController,
+  );
 
   counterRoute.get(
     "/products",
     employeeOnly,
     validate(getEmployeeInventorySchema),
-    counterController.getProducts,
+    counterController.getProductsController,
   );
 
   counterRoute.get(
     "/beverages",
     employeeOnly,
     validate(getEmployeeInventorySchema),
-    counterController.getBeverages,
+    counterController.getBeveragesController,
   );
 
   counterRoute.get(
     "/court-board",
     employeeOnly,
     validate(getEmployeeCourtBoardSchema),
-    counterController.getCourtBoard,
+    counterController.getCourtBoardController,
   );
 
-  counterRoute.get("/drafts", employeeOnly, counterController.getDrafts);
+  counterRoute.get(
+    "/drafts",
+    employeeOnly,
+    counterController.getDraftsController,
+  );
 
   counterRoute.post(
     "/drafts",
     employeeOnly,
     validate(createEmployeeDraftSchema),
-    counterController.createDraft,
+    counterController.createDraftController,
   );
 
   counterRoute.put(
     "/drafts/:draftId",
     employeeOnly,
     validate(updateEmployeeDraftSchema),
-    counterController.updateDraft,
+    counterController.updateDraftController,
   );
 
   counterRoute.delete(
     "/drafts/:draftId",
     employeeOnly,
     validate(draftIdParamSchema),
-    counterController.deleteDraft,
+    counterController.deleteDraftController,
   );
 
   counterRoute.post(
     "/drafts/:draftId/checkout",
     employeeOnly,
     validate(checkoutEmployeeDraftSchema),
-    counterController.checkoutDraft,
+    counterController.checkoutDraftController,
   );
 
   app.use("/employee/counter", counterRoute);

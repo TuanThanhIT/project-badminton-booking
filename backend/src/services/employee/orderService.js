@@ -159,17 +159,13 @@ const attachPayments = async (orders) => {
     payments.map((payment) => [payment.targetPaymentId, payment]),
   );
 
-  return orders.map((order) => mapOrder(order, paymentMap.get(order.orderGroupId)));
+  return orders.map((order) =>
+    mapOrder(order, paymentMap.get(order.orderGroupId)),
+  );
 };
 
-const getOrdersService = async ({
-  employeeId,
-  status,
-  keyword,
-  date,
-  page = 1,
-  limit = 12,
-}) => {
+const getOrdersService = async (data) => {
+  const { employeeId, status, keyword, date, page = 1, limit = 12 } = data;
   const branchIds = await getEmployeeBranchIds(employeeId);
   if (!branchIds.length) {
     return {
@@ -240,10 +236,13 @@ const getOrdersService = async ({
   };
 };
 
-const getOrderDetailService = async ({ orderId, employeeId }) => {
+const getOrderDetailService = async (data) => {
+  const { orderId, employeeId } = data;
   const order = await Order.findByPk(orderId, {
     include: orderInclude,
-    order: [[{ model: OrderShippingLog, as: "shippingLogs" }, "eventTime", "DESC"]],
+    order: [
+      [{ model: OrderShippingLog, as: "shippingLogs" }, "eventTime", "DESC"],
+    ],
   });
 
   if (!order) throw new NotFoundError("Đơn hàng không tồn tại");
@@ -290,9 +289,7 @@ const assertOrderCanBeProcessed = async ({ order, transaction }) => {
   const isPaid = payment.paymentStatus === PAYMENT_STATUS.PAID;
 
   if (!isCOD && (!isPaid || orderGroup.status !== ORDER_GROUP_STATUS.PAID)) {
-    throw new BadRequestError(
-      "Đơn hàng chưa thanh toán, chưa thể xử lý",
-    );
+    throw new BadRequestError("Đơn hàng chưa thanh toán, chưa thể xử lý");
   }
 };
 
@@ -332,7 +329,7 @@ const confirmOrderService = async (data) => {
     message: `Đơn hàng ${formatOrderItemCode(updatedOrder.id)} đã được nhân viên xác nhận`,
   });
 
-  return updatedOrder;
+  return getOrderDetailService({ orderId, employeeId });
 };
 
 const prepareOrderService = async (data) => {
@@ -371,7 +368,7 @@ const prepareOrderService = async (data) => {
     message: `Đơn hàng ${formatOrderItemCode(updatedOrder.id)} đang được chuẩn bị`,
   });
 
-  return updatedOrder;
+  return getOrderDetailService({ orderId, employeeId });
 };
 
 const readyToShipService = async (data) => {
@@ -410,7 +407,7 @@ const readyToShipService = async (data) => {
     message: `Đơn hàng ${formatOrderItemCode(updatedOrder.id)} đã sẵn sàng bàn giao vận chuyển`,
   });
 
-  return updatedOrder;
+  return getOrderDetailService({ orderId, employeeId });
 };
 
 const shipOrderService = async ({ orderId, employeeId }) => {
@@ -488,15 +485,14 @@ const shipOrderService = async ({ orderId, employeeId }) => {
     message: `Đơn hàng ${formatOrderItemCode(order.id)} đã được tạo vận đơn và đang chờ đơn vị vận chuyển lấy hàng`,
   });
 
-  return order;
+  return getOrderDetailService({ orderId, employeeId });
 };
 
 // XỬ LÝ HỦY ĐƠN, HOÀN ĐƠN
 const canCallGHNCancel = (shippingStatus) => {
-  return [
-    SHIPPING_STATUS.CREATED,
-    SHIPPING_STATUS.PICKING,
-  ].includes(shippingStatus);
+  return [SHIPPING_STATUS.CREATED, SHIPPING_STATUS.PICKING].includes(
+    shippingStatus,
+  );
 };
 
 const canMoveToReturnFlow = (shippingStatus) => {
@@ -642,7 +638,11 @@ const updateOrderGroupAfterChildChanged = async ({
   return orderGroup;
 };
 
-const getEmployeeOrderForAction = async ({ orderId, employeeId, transaction }) => {
+const getEmployeeOrderForAction = async ({
+  orderId,
+  employeeId,
+  transaction,
+}) => {
   const order = await Order.findByPk(orderId, {
     include: [
       {
@@ -815,7 +815,6 @@ const approveCancelOrderService = async (data) => {
     }
 
     throw new BadRequestError("Trạng thái hiện tại không thể hủy đơn");
-
   });
 
   await emitOrderActionRealtime({
@@ -824,10 +823,10 @@ const approveCancelOrderService = async (data) => {
     message: movedToReturnFlow
       ? "Đơn đã chuyển sang luồng hoàn hàng về shop. Tiền sẽ được hoàn sau khi shop nhận lại hàng."
       : refundResult?.refunded
-      ? `Đơn hàng đã được hủy và hoàn ${Number(
-          refundResult.refundAmount,
-        ).toLocaleString()}đ vào ví`
-      : "Đơn hàng đã được hủy thành công",
+        ? `Đơn hàng đã được hủy và hoàn ${Number(
+            refundResult.refundAmount,
+          ).toLocaleString()}đ vào ví`
+        : "Đơn hàng đã được hủy thành công",
   });
 
   return {
@@ -874,6 +873,8 @@ const rejectCancelOrderService = async (data) => {
     log: null,
     message: "Yêu cầu hủy đơn của bạn đã bị từ chối",
   });
+
+  return getOrderDetailService({ orderId, employeeId });
 };
 
 const approveReturnOrderService = async (data) => {
@@ -932,6 +933,8 @@ const approveReturnOrderService = async (data) => {
     message:
       "Yêu cầu trả hàng đã được duyệt, đơn hàng đang trong quá trình hoàn về",
   });
+
+  return getOrderDetailService({ orderId, employeeId });
 };
 
 const completeReturnOrderService = async (data) => {
@@ -1062,6 +1065,8 @@ const forceReturnGHNOrderService = async (data) => {
     log: shippingLog,
     message: "Đơn đã chuyển sang luồng hoàn hàng về shop",
   });
+
+  return getOrderDetailService({ orderId, employeeId });
 };
 
 const orderService = {

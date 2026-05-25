@@ -1,7 +1,7 @@
 import { Op } from "sequelize";
-import { StatusCodes } from "http-status-codes";
 import sequelize from "../../config/db.js";
-import ApiError from "../../errors/ApiError.js";
+import BadRequestError from "../../errors/BadRequestError.js";
+import NotFoundError from "../../errors/NotFoundError.js";
 import {
   Beverage,
   Booking,
@@ -138,14 +138,11 @@ const getCustomerInfo = (user) => {
 
 const assertEndAfterStart = (startTime, endTime) => {
   if (!normalizeTime(startTime) || !normalizeTime(endTime)) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "Khung giờ không hợp lệ.");
+    throw new BadRequestError("Khung giờ không hợp lệ.");
   }
 
   if (timeToNumber(endTime) <= timeToNumber(startTime)) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      "Giờ kết thúc phải lớn hơn giờ bắt đầu.",
-    );
+    throw new BadRequestError("Giờ kết thúc phải lớn hơn giờ bắt đầu.");
   }
 };
 
@@ -179,17 +176,13 @@ const getActiveSession = async (employeeId, transaction) => {
   });
 
   if (!assignment) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
+    throw new BadRequestError(
       "Nhân viên cần check-in và đăng ký tiền mặt đầu ca trước khi vào màn hình chính.",
     );
   }
 
   if (!assignment.cashRegister) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      "Ca làm chưa có phiên tiền mặt tại quầy.",
-    );
+    throw new BadRequestError("Ca làm chưa có phiên tiền mặt tại quầy.");
   }
 
   await assertEmployeeCanAccessBranch({
@@ -203,8 +196,7 @@ const getActiveSession = async (employeeId, transaction) => {
 
 const assertCashier = (session) => {
   if (session.roleInShift !== ROLE_IN_SHIFT.CASHIER) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
+    throw new BadRequestError(
       "Chỉ nhân viên đứng quầy mới được thao tác đơn trực tiếp.",
     );
   }
@@ -231,91 +223,84 @@ const mapSession = (session) => ({
 });
 
 const getSessionService = async (employeeId) => {
-  try {
-    const session = await getActiveSession(employeeId);
-    return mapSession(session);
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error.message);
-  }
+  const session = await getActiveSession(employeeId);
+  return mapSession(session);
 };
 
 const getProductsService = async (employeeId, keyword = "") => {
-  try {
-    const session = await getActiveSession(employeeId);
-    const productWhere = {};
+  const session = await getActiveSession(employeeId);
+  const productWhere = {};
 
-    if (keyword) {
-      productWhere.productName = { [Op.like]: `%${keyword}%` };
-    }
-
-    const stocks = await VariantStock.findAll({
-      where: { branchId: session.workShift.branchId },
-      include: [
-        {
-          model: ProductVariant,
-          as: "variant",
-          attributes: ["id", "sku", "price", "discount", "size", "color", "material"],
-          include: [
-            {
-              model: Product,
-              as: "product",
-              where: productWhere,
-              attributes: ["id", "productName", "thumbnailUrl", "brand"],
-            },
-          ],
-        },
-      ],
-      order: [[{ model: ProductVariant, as: "variant" }, "id", "ASC"]],
-    });
-
-    return stocks.map((stock) => ({
-      id: stock.variant.id,
-      variantId: stock.variant.id,
-      productId: stock.variant.product.id,
-      productName: stock.variant.product.productName,
-      brand: stock.variant.product.brand,
-      thumbnailUrl: stock.variant.product.thumbnailUrl,
-      sku: stock.variant.sku,
-      price: Number(stock.variant.price || 0),
-      discount: Number(stock.variant.discount || 0),
-      size: stock.variant.size,
-      color: stock.variant.color,
-      material: stock.variant.material,
-      stock: Number(stock.stock || 0),
-    }));
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error.message);
+  if (keyword) {
+    productWhere.productName = { [Op.like]: `%${keyword}%` };
   }
+
+  const stocks = await VariantStock.findAll({
+    where: { branchId: session.workShift.branchId },
+    include: [
+      {
+        model: ProductVariant,
+        as: "variant",
+        attributes: [
+          "id",
+          "sku",
+          "price",
+          "discount",
+          "size",
+          "color",
+          "material",
+        ],
+        include: [
+          {
+            model: Product,
+            as: "product",
+            where: productWhere,
+            attributes: ["id", "productName", "thumbnailUrl", "brand"],
+          },
+        ],
+      },
+    ],
+    order: [[{ model: ProductVariant, as: "variant" }, "id", "ASC"]],
+  });
+
+  return stocks.map((stock) => ({
+    id: stock.variant.id,
+    variantId: stock.variant.id,
+    productId: stock.variant.product.id,
+    productName: stock.variant.product.productName,
+    brand: stock.variant.product.brand,
+    thumbnailUrl: stock.variant.product.thumbnailUrl,
+    sku: stock.variant.sku,
+    price: Number(stock.variant.price || 0),
+    discount: Number(stock.variant.discount || 0),
+    size: stock.variant.size,
+    color: stock.variant.color,
+    material: stock.variant.material,
+    stock: Number(stock.stock || 0),
+  }));
 };
 
 const getBeveragesService = async (employeeId, keyword = "") => {
-  try {
-    await getActiveSession(employeeId);
+  await getActiveSession(employeeId);
 
-    const where = {};
-    if (keyword) {
-      where.beverageName = { [Op.like]: `%${keyword}%` };
-    }
-
-    const beverages = await Beverage.findAll({
-      where,
-      attributes: ["id", "beverageName", "thumbnailUrl", "price", "stock"],
-      order: [["beverageName", "ASC"]],
-    });
-
-    return beverages.map((beverage) => ({
-      id: beverage.id,
-      beverageName: beverage.beverageName,
-      thumbnailUrl: beverage.thumbnailUrl,
-      price: Number(beverage.price || 0),
-      stock: Number(beverage.stock || 0),
-    }));
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error.message);
+  const where = {};
+  if (keyword) {
+    where.beverageName = { [Op.like]: `%${keyword}%` };
   }
+
+  const beverages = await Beverage.findAll({
+    where,
+    attributes: ["id", "beverageName", "thumbnailUrl", "price", "stock"],
+    order: [["beverageName", "ASC"]],
+  });
+
+  return beverages.map((beverage) => ({
+    id: beverage.id,
+    beverageName: beverage.beverageName,
+    thumbnailUrl: beverage.thumbnailUrl,
+    price: Number(beverage.price || 0),
+    stock: Number(beverage.stock || 0),
+  }));
 };
 
 const getCourtPrice = async ({
@@ -353,10 +338,7 @@ const getCourtPrice = async ({
   }
 
   if (coveredDuration < end - start - 0.01) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      "Chi nhánh chưa cấu hình giá cho khung giờ này.",
-    );
+    throw new BadRequestError("Chi nhánh chưa cấu hình giá cho khung giờ này.");
   }
 
   return toMoney(total);
@@ -536,89 +518,90 @@ const getBlockedSlots = async ({ branchId, playDate, transaction }) => {
 };
 
 const getCourtBoardService = async (employeeId, date) => {
-  try {
-    const session = await getActiveSession(employeeId);
-    const branchId = session.workShift.branchId;
+  const session = await getActiveSession(employeeId);
+  const branchId = session.workShift.branchId;
 
-    const fixedTimeSlots = buildHalfHourBoardSlots();
+  const fixedTimeSlots = buildHalfHourBoardSlots();
 
-    const [courts, priceConfigs, blockedSlots] = await Promise.all([
-      Court.findAll({
-        where: { branchId, courtStatus: "ACTIVE" },
-        attributes: ["id", "courtName", "location", "thumbnailUrl"],
-        order: [["id", "ASC"]],
-      }),
-      CourtPrice.findAll({
-        where: {
-          branchId,
-          dayOfWeek: dayNames[new Date(`${date}T00:00:00`).getDay()],
-        },
-        order: [["startTime", "ASC"]],
-      }),
-      getBlockedSlots({ branchId, playDate: date }),
-    ]);
+  const [courts, priceConfigs, blockedSlots] = await Promise.all([
+    Court.findAll({
+      where: { branchId, courtStatus: "ACTIVE" },
+      attributes: ["id", "courtName", "location", "thumbnailUrl"],
+      order: [["id", "ASC"]],
+    }),
+    CourtPrice.findAll({
+      where: {
+        branchId,
+        dayOfWeek: dayNames[new Date(`${date}T00:00:00`).getDay()],
+      },
+      order: [["startTime", "ASC"]],
+    }),
+    getBlockedSlots({ branchId, playDate: date }),
+  ]);
 
-    const slots = [];
-    const today = getVietnamDateString();
-    const nowNumber = getVietnamTimeNumber();
+  const slots = [];
+  const today = getVietnamDateString();
+  const nowNumber = getVietnamTimeNumber();
 
-    for (const court of courts) {
-      for (const timeSlot of fixedTimeSlots) {
-        const blocked = blockedSlots.find(
-          (item) =>
-            item.courtId === court.id &&
-            overlaps(
-              timeSlot.startTime,
-              timeSlot.endTime,
-              item.startTime,
-              item.endTime,
-            ),
-        );
-        const price = calculateSlotPriceFromConfigs(
-          priceConfigs,
-          timeSlot.startTime,
-          timeSlot.endTime,
-        );
-        const isPast =
-          date < today ||
-          (date === today && timeToNumber(timeSlot.endTime) <= nowNumber);
-        const hasNoPrice = price === null;
+  for (const court of courts) {
+    for (const timeSlot of fixedTimeSlots) {
+      const blocked = blockedSlots.find(
+        (item) =>
+          item.courtId === court.id &&
+          overlaps(
+            timeSlot.startTime,
+            timeSlot.endTime,
+            item.startTime,
+            item.endTime,
+          ),
+      );
+      const price = calculateSlotPriceFromConfigs(
+        priceConfigs,
+        timeSlot.startTime,
+        timeSlot.endTime,
+      );
+      const isPast =
+        date < today ||
+        (date === today && timeToNumber(timeSlot.endTime) <= nowNumber);
+      const hasNoPrice = price === null;
 
-        slots.push({
-          key: `${court.id}-${timeSlot.startTime}-${timeSlot.endTime}`,
-          courtId: court.id,
-          courtName: court.courtName,
-          location: court.location,
-          playDate: date,
-          startTime: timeSlot.startTime,
-          endTime: timeSlot.endTime,
-          price: price || 0,
-          status: blocked || isPast || hasNoPrice ? "LOCKED" : "AVAILABLE",
-          lockReason: blocked ? "BOOKED" : isPast ? "PAST" : hasNoPrice ? "NO_PRICE" : null,
-          booking: blocked || null,
-        });
-      }
-    }
-
-    return {
-      branch: session.workShift.branch,
-      courts: courts.map((court) => ({
-        id: court.id,
+      slots.push({
+        key: `${court.id}-${timeSlot.startTime}-${timeSlot.endTime}`,
+        courtId: court.id,
         courtName: court.courtName,
         location: court.location,
-        thumbnailUrl: court.thumbnailUrl,
-      })),
-      timeSlots: fixedTimeSlots.map((slot) => ({
-        startTime: slot.startTime,
-        endTime: slot.endTime,
-        price: 0,
-      })),
-      slots,
-    };
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error.message);
+        playDate: date,
+        startTime: timeSlot.startTime,
+        endTime: timeSlot.endTime,
+        price: price || 0,
+        status: blocked || isPast || hasNoPrice ? "LOCKED" : "AVAILABLE",
+        lockReason: blocked
+          ? "BOOKED"
+          : isPast
+            ? "PAST"
+            : hasNoPrice
+              ? "NO_PRICE"
+              : null,
+        booking: blocked || null,
+      });
+    }
   }
+
+  return {
+    branch: session.workShift.branch,
+    courts: courts.map((court) => ({
+      id: court.id,
+      courtName: court.courtName,
+      location: court.location,
+      thumbnailUrl: court.thumbnailUrl,
+    })),
+    timeSlots: fixedTimeSlots.map((slot) => ({
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+      price: 0,
+    })),
+    slots,
+  };
 };
 
 const mapDraft = (draft) => ({
@@ -650,6 +633,8 @@ const mapDraft = (draft) => ({
       thumbnailUrl: item.variant?.product?.thumbnailUrl || "",
       size: item.variant?.size,
       color: item.variant?.color,
+      material: item.variant?.material,
+      sku: item.variant?.sku,
       price: Number(item.variant?.price || 0),
       quantity: Number(item.quantity || 0),
       subTotal: Number(item.subTotal || 0),
@@ -722,35 +707,28 @@ const findDraftForEmployee = async ({ draftId, session, transaction }) => {
   });
 
   if (!draft) {
-    throw new ApiError(StatusCodes.NOT_FOUND, "Đơn tạm không tồn tại.");
+    throw new NotFoundError("Đơn tạm không tồn tại.");
   }
 
   return draft;
 };
 
 const getDraftsService = async (employeeId) => {
-  try {
-    const session = await getActiveSession(employeeId);
-    const drafts = await DraftBooking.findAll({
-      where: {
-        branchId: session.workShift.branchId,
-        draftBookingStatus: DRAFT_BOOKING_STATUS.DRAFT,
-      },
-      include: draftInclude,
-      order: [["updatedDate", "DESC"]],
-    });
+  const session = await getActiveSession(employeeId);
+  const drafts = await DraftBooking.findAll({
+    where: {
+      branchId: session.workShift.branchId,
+      draftBookingStatus: DRAFT_BOOKING_STATUS.DRAFT,
+    },
+    include: draftInclude,
+    order: [["updatedDate", "DESC"]],
+  });
 
-    return drafts.map(mapDraft);
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error.message);
-  }
+  return drafts.map(mapDraft);
 };
 
 const createDraftService = async (employeeId, nameCustomer, phoneNumber) => {
-  const t = await sequelize.transaction();
-
-  try {
+  const draftId = await sequelize.transaction(async (t) => {
     const session = await getActiveSession(employeeId, t);
     assertCashier(session);
 
@@ -765,8 +743,7 @@ const createDraftService = async (employeeId, nameCustomer, phoneNumber) => {
     });
 
     if (existed) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
+      throw new BadRequestError(
         "Khách hàng đang có đơn tạm tại chi nhánh này.",
       );
     }
@@ -781,18 +758,14 @@ const createDraftService = async (employeeId, nameCustomer, phoneNumber) => {
       { transaction: t },
     );
 
-    await t.commit();
+    return draft.id;
+  });
 
-    return mapDraft(
-      await DraftBooking.findByPk(draft.id, {
-        include: draftInclude,
-      }),
-    );
-  } catch (error) {
-    await t.rollback();
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error.message);
-  }
+  const draft = await DraftBooking.findByPk(draftId, {
+    include: draftInclude,
+  });
+
+  return mapDraft(draft);
 };
 
 const assertCourtItemsAvailable = async ({
@@ -813,15 +786,19 @@ const assertCourtItemsAvailable = async ({
     });
 
     if (!court) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
+      throw new BadRequestError(
         "Sân không thuộc chi nhánh hiện tại hoặc đã ngừng hoạt động.",
       );
     }
 
-    const key = `${item.courtId}-${item.playDate}-${normalizeTime(item.startTime)}-${normalizeTime(item.endTime)}`;
+    const key = [
+      item.courtId,
+      item.playDate,
+      normalizeTime(item.startTime),
+      normalizeTime(item.endTime),
+    ].join("-");
     if (uniqueKeys.has(key)) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Danh sách sân có khung giờ bị trùng.");
+      throw new BadRequestError("Danh sách sân có khung giờ bị trùng.");
     }
     uniqueKeys.add(key);
 
@@ -852,15 +829,15 @@ const assertCourtItemsAvailable = async ({
       const booking = detail.booking;
       const monthlyBooking = detail.monthlyBooking;
       return (
-        (booking?.branchId === branchId &&
+        (Number(booking?.branchId) === Number(branchId) &&
           ACTIVE_BOOKING_BOARD_STATUSES.includes(booking.bookingStatus)) ||
-        (monthlyBooking?.branchId === branchId &&
+        (Number(monthlyBooking?.branchId) === Number(branchId) &&
           ACTIVE_MONTHLY_BOARD_STATUSES.includes(monthlyBooking.status))
       );
     });
 
     if (hasBookingOverlap) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Khung giờ sân đã có khách đặt.");
+      throw new BadRequestError("Khung giờ sân đã có khách đặt.");
     }
 
     const draftOverlap = await DraftBookingItem.findOne({
@@ -889,7 +866,7 @@ const assertCourtItemsAvailable = async ({
     });
 
     if (draftOverlap) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Khung giờ sân đang nằm trong đơn tạm khác.");
+      throw new BadRequestError("Khung giờ sân đang nằm trong đơn tạm khác.");
     }
 
     const price = await getCourtPrice({
@@ -930,11 +907,11 @@ const buildProductItems = async ({
     });
 
     if (!stock) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Sản phẩm không có tại chi nhánh này.");
+      throw new BadRequestError("Sản phẩm không có tại chi nhánh này.");
     }
 
     if (Number(stock.stock) < Number(item.quantity)) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Số lượng sản phẩm vượt quá tồn kho.");
+      throw new BadRequestError("Số lượng sản phẩm vượt quá tồn kho.");
     }
 
     result.push({
@@ -958,11 +935,11 @@ const buildBeverageItems = async ({ draftId, beverageItems, transaction }) => {
     });
 
     if (!beverage) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Đồ uống không tồn tại.");
+      throw new BadRequestError("Đồ uống không tồn tại.");
     }
 
     if (Number(beverage.stock) < Number(item.quantity)) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Số lượng đồ uống vượt quá tồn kho.");
+      throw new BadRequestError("Số lượng đồ uống vượt quá tồn kho.");
     }
 
     result.push({
@@ -986,15 +963,13 @@ const updateDraftService = async ({
   productItems = [],
   beverageItems = [],
 }) => {
-  const t = await sequelize.transaction();
-
-  try {
+  const draftIdToReload = await sequelize.transaction(async (t) => {
     const session = await getActiveSession(employeeId, t);
     assertCashier(session);
     const draft = await findDraftForEmployee({ draftId, session, transaction: t });
 
     if (draft.draftBookingStatus !== DRAFT_BOOKING_STATUS.DRAFT) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Chỉ được cập nhật đơn tạm đang mở.");
+      throw new BadRequestError("Chỉ được cập nhật đơn tạm đang mở.");
     }
 
     const branchId = session.workShift.branchId;
@@ -1027,9 +1002,15 @@ const updateDraftService = async ({
       DraftBeverageItem.destroy({ where: { draftId: draft.id }, transaction: t }),
     ]);
 
-    if (courts.length) await DraftBookingItem.bulkCreate(courts, { transaction: t });
-    if (products.length) await DraftProductItem.bulkCreate(products, { transaction: t });
-    if (beverages.length) await DraftBeverageItem.bulkCreate(beverages, { transaction: t });
+    if (courts.length) {
+      await DraftBookingItem.bulkCreate(courts, { transaction: t });
+    }
+    if (products.length) {
+      await DraftProductItem.bulkCreate(products, { transaction: t });
+    }
+    if (beverages.length) {
+      await DraftBeverageItem.bulkCreate(beverages, { transaction: t });
+    }
 
     await draft.update(
       {
@@ -1041,71 +1022,84 @@ const updateDraftService = async ({
       { transaction: t },
     );
 
-    await t.commit();
+    return draft.id;
+  });
 
-    const updated = await DraftBooking.findByPk(draft.id, { include: draftInclude });
-    return mapDraft(updated);
-  } catch (error) {
-    await t.rollback();
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error.message);
-  }
+  const updated = await DraftBooking.findByPk(draftIdToReload, {
+    include: draftInclude,
+  });
+  return mapDraft(updated);
 };
 
 const deleteDraftService = async (employeeId, draftId) => {
-  const t = await sequelize.transaction();
-
-  try {
+  await sequelize.transaction(async (t) => {
     const session = await getActiveSession(employeeId, t);
     assertCashier(session);
     const draft = await findDraftForEmployee({ draftId, session, transaction: t });
 
     if (draft.draftBookingStatus !== DRAFT_BOOKING_STATUS.DRAFT) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Không thể xoá đơn đã hoàn tất.");
+      throw new BadRequestError("Không thể xoá đơn đã hoàn tất.");
     }
 
     await draft.destroy({ transaction: t });
-    await t.commit();
-  } catch (error) {
-    await t.rollback();
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error.message);
-  }
+  });
 };
 
 const checkoutDraftService = async ({ employeeId, draftId, paymentMethod }) => {
-  const t = await sequelize.transaction();
-
-  try {
+  const draftIdToReload = await sequelize.transaction(async (t) => {
     const session = await getActiveSession(employeeId, t);
     assertCashier(session);
-    const draft = await findDraftForEmployee({ draftId, session, transaction: t });
+    const draft = await findDraftForEmployee({
+      draftId,
+      session,
+      transaction: t,
+    });
 
     if (draft.draftBookingStatus !== DRAFT_BOOKING_STATUS.DRAFT) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Đơn tạm không còn ở trạng thái mở.");
+      throw new BadRequestError("Đơn tạm không còn ở trạng thái mở.");
     }
 
-    if (!draft.courtItems.length && !draft.productItems.length && !draft.beverageItems.length) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Đơn tạm chưa có mặt hàng hoặc sân.");
+    if (
+      !draft.courtItems.length &&
+      !draft.productItems.length &&
+      !draft.beverageItems.length
+    ) {
+      throw new BadRequestError("Đơn tạm chưa có mặt hàng hoặc sân.");
     }
 
     for (const item of draft.productItems) {
-      await VariantStock.decrement(
-        { stock: Number(item.quantity) },
-        {
-          where: {
-            branchId: session.workShift.branchId,
-            variantId: item.productVariantId,
-          },
-          transaction: t,
+      const stock = await VariantStock.findOne({
+        where: {
+          branchId: session.workShift.branchId,
+          variantId: item.productVariantId,
         },
+        transaction: t,
+        lock: t.LOCK.UPDATE,
+      });
+
+      if (!stock || Number(stock.stock) < Number(item.quantity)) {
+        throw new BadRequestError("Số lượng sản phẩm vượt quá tồn kho.");
+      }
+
+      await stock.decrement(
+        { stock: Number(item.quantity) },
+        { transaction: t },
       );
     }
 
     for (const item of draft.beverageItems) {
-      await Beverage.decrement(
+      const beverage = await Beverage.findByPk(item.beverageId, {
+        transaction: t,
+        lock: t.LOCK.UPDATE,
+      });
+
+      if (!beverage || Number(beverage.stock) < Number(item.quantity)) {
+        throw new BadRequestError("Số lượng đồ uống vượt quá tồn kho.");
+      }
+
+      await beverage.decrement(
         { stock: Number(item.quantity) },
-        { where: { id: item.beverageId }, transaction: t },
+        { transaction: t },
       );
     }
 
@@ -1144,15 +1138,13 @@ const checkoutDraftService = async ({ employeeId, draftId, paymentMethod }) => {
       );
     }
 
-    await t.commit();
+    return draft.id;
+  });
 
-    const updated = await DraftBooking.findByPk(draft.id, { include: draftInclude });
-    return mapDraft(updated);
-  } catch (error) {
-    await t.rollback();
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error.message);
-  }
+  const updated = await DraftBooking.findByPk(draftIdToReload, {
+    include: draftInclude,
+  });
+  return mapDraft(updated);
 };
 
 const counterService = {

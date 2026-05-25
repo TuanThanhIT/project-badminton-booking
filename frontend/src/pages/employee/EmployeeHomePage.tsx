@@ -105,6 +105,19 @@ const isProduct = (item: CounterItem): item is CounterProduct & CounterItem =>
 
 const emptyImage = "/img/logo_badminton.jpg";
 
+const getProductVariantText = (
+  item: Pick<CounterProduct, "size" | "color" | "material" | "sku">,
+) => {
+  const details = [
+    item.sku ? `SKU: ${item.sku}` : "",
+    item.size ? `Size: ${item.size}` : "",
+    item.color ? `Màu: ${item.color}` : "",
+    item.material ? `Chất liệu: ${item.material}` : "",
+  ].filter(Boolean);
+
+  return details.join(", ");
+};
+
 const EmployeeHomePage = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -230,6 +243,10 @@ const EmployeeHomePage = () => {
         productName: item.productName,
         thumbnailUrl: item.thumbnailUrl,
         price: item.price,
+        size: item.size,
+        color: item.color,
+        material: item.material,
+        sku: item.sku,
         stock: item.quantity,
         quantity: item.quantity,
       })),
@@ -671,6 +688,10 @@ const EmployeeHomePage = () => {
                       itemTab === "product"
                         ? (item as CounterProduct).productName
                         : (item as CounterBeverage).beverageName;
+                    const variantText =
+                      itemTab === "product"
+                        ? getProductVariantText(item as CounterProduct)
+                        : "";
 
                     return (
                       <div
@@ -686,10 +707,18 @@ const EmployeeHomePage = () => {
                         <div className="min-w-0 flex-1">
                           <p
                             className="truncate text-sm font-medium text-slate-700"
-                            title={title}
+                            title={
+                              variantText ? `${title} - ${variantText}` : title
+                            }
                           >
                             {title}
                           </p>
+
+                          {variantText && (
+                            <p className="mt-1 line-clamp-2 text-xs font-medium leading-snug text-slate-500">
+                              {variantText}
+                            </p>
+                          )}
 
                           <p className="mt-1 text-sm font-semibold text-sky-700">
                             {formatCurrency(item.price)}
@@ -984,6 +1013,9 @@ const EmployeeHomePage = () => {
                                   const itemName = isProduct(item)
                                     ? item.productName
                                     : item.beverageName;
+                                  const variantText = isProduct(item)
+                                    ? getProductVariantText(item)
+                                    : "";
 
                                   return (
                                     <div
@@ -999,10 +1031,20 @@ const EmployeeHomePage = () => {
                                       <div className="min-w-0">
                                         <p
                                           className="truncate text-sm font-semibold text-slate-700"
-                                          title={itemName}
+                                          title={
+                                            variantText
+                                              ? `${itemName} - ${variantText}`
+                                              : itemName
+                                          }
                                         >
                                           {itemName}
                                         </p>
+
+                                        {variantText && (
+                                          <p className="mt-0.5 line-clamp-2 text-xs font-medium leading-snug text-slate-500">
+                                            {variantText}
+                                          </p>
+                                        )}
 
                                         <p className="mt-0.5 text-xs font-medium text-slate-500">
                                           {formatCurrency(item.price)}

@@ -167,6 +167,19 @@ const CheckoutBookingPage = () => {
       });
   };
 
+  const handleBackFromCheckout = async () => {
+    const confirmed = await showConfirmDialog(
+      "Xác nhận thoát",
+      "Bạn chưa hoàn tất thanh toán. Quay lại có thể làm gián đoạn lịch đặt hiện tại.",
+      "Xác nhận",
+      "Hủy",
+      "danger",
+    );
+
+    if (!confirmed) return;
+    navigate("/courts");
+  };
+
   const handlePayNow = async () => {
     const confirmed = await showConfirmDialog(
       "Xác nhận đặt sân",
@@ -300,8 +313,9 @@ const CheckoutBookingPage = () => {
             <div className="flex items-start gap-4">
               <button
                 type="button"
-                onClick={() => navigate(-1)}
+                onClick={handleBackFromCheckout}
                 className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 transition hover:bg-slate-50"
+                aria-label="Quay lại"
               >
                 <ArrowLeft size={21} />
               </button>

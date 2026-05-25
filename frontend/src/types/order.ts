@@ -309,7 +309,16 @@ export type RequestCancelOrderRequest = {
   reason?: string;
 };
 
-export type RequestCancelOrderResponse = ApiResponse<null>;
+export type RequestCancelOrderData = {
+  mode: "CANCELLED" | "REQUESTED";
+  orderId: number;
+  refund?: {
+    refunded: boolean;
+    refundAmount: number;
+  };
+};
+
+export type RequestCancelOrderResponse = ApiResponse<RequestCancelOrderData>;
 
 // export type ApproveCancelOrderResponse = ApiResponse<{
 //   message: string;
@@ -429,12 +438,16 @@ export type EmployeeOrdersData = {
 
 export type EmployeeOrdersResponse = ApiResponse<EmployeeOrdersData>;
 export type EmployeeOrderDetailResponse = ApiResponse<EmployeeOrder>;
-export type EmployeeOrderActionResponse = ApiResponse<EmployeeOrder | {
-  refund?: {
-    refunded: boolean;
-    refundAmount: number;
-  };
-} | null>;
+export type EmployeeOrderActionResponse = ApiResponse<
+  | EmployeeOrder
+  | {
+      refund?: {
+        refunded: boolean;
+        refundAmount: number;
+      };
+    }
+  | null
+>;
 
 export type RejectEmployeeOrderActionRequest = {
   reason?: string;

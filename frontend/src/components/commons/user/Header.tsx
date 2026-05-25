@@ -102,6 +102,8 @@ const Header = ({ cartRef }: HeaderProps) => {
     myProfile?.profile?.fullName?.trim() || user?.username || "Tài khoản";
   const avatarUrl = myProfile?.profile?.avatar || user?.profile?.avatar || "";
   const avatarLetter = displayName.charAt(0).toUpperCase();
+  const [avatarError, setAvatarError] = useState(false);
+  useEffect(() => { setAvatarError(false); }, [avatarUrl]);
 
   const actionLinkClass = ({ isActive }: { isActive: boolean }) =>
     `relative flex h-11 items-center gap-2 rounded-full border px-3.5 text-sm font-medium transition-all ${
@@ -217,11 +219,12 @@ const Header = ({ cartRef }: HeaderProps) => {
                 title="Hồ sơ"
               >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-sky-100 text-sm font-semibold text-sky-800">
-                  {avatarUrl ? (
+                  {avatarUrl && !avatarError ? (
                     <img
                       src={avatarUrl}
                       alt=""
                       className="h-full w-full object-cover"
+                      onError={() => setAvatarError(true)}
                     />
                   ) : (
                     avatarLetter

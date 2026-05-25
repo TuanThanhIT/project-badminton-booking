@@ -18,7 +18,7 @@ const AdminLayout = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
         <AdminHeader collapsed={collapsed} />
 
-        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-sky-50 via-white to-cyan-50 p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto bg-gray-50 p-6 lg:p-8">
           <Outlet />
         </main>
 

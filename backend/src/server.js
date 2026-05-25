@@ -31,6 +31,18 @@ import initWebhookRoute from "./routes/user/webhookRoute.js";
 import initFeedbackRoute from "./routes/user/feedbackRoute.js";
 import initNotificationRoute from "./routes/user/notificationRoute.js";
 import initHomeRoute from "./routes/user/homeRoute.js";
+import initAdminUserRoute from "./routes/admin/userRoute.js";
+import initAdminBranchRoute from "./routes/admin/branchRoute.js";
+import initAdminManagerRoute from "./routes/admin/managerRoute.js";
+import initAdminProductRoute from "./routes/admin/productRoute.js";
+import initAdminBeverageRoute from "./routes/admin/beverageRoute.js";
+import initAdminPostRoute from "./routes/admin/postRoute.js";
+import initAdminDiscountRoute from "./routes/admin/discountRoute.js";
+import initAdminFeedbackRoute from "./routes/admin/feedbackRoute.js";
+import initAdminFinanceRoute from "./routes/admin/financeRoute.js";
+import initAdminRevenueRoute from "./routes/admin/revenueRoute.js";
+import initAdminCategoryRoute from "./routes/admin/categoryRoute.js";
+import initAdminUploadRoute from "./routes/admin/uploadRoute.js";
 
 dotenv.config();
 
@@ -75,6 +87,20 @@ initUserSearchRoute(app);
 
 // Employee
 initEmployeeOrderRoute(app);
+
+// Admin
+initAdminUserRoute(app);
+initAdminBranchRoute(app);
+initAdminManagerRoute(app);
+initAdminProductRoute(app);
+initAdminBeverageRoute(app);
+initAdminPostRoute(app);
+initAdminDiscountRoute(app);
+initAdminFeedbackRoute(app);
+initAdminFinanceRoute(app);
+initAdminRevenueRoute(app);
+initAdminCategoryRoute(app);
+initAdminUploadRoute(app);
 
 // create http server
 const httpServer = createServer(app);

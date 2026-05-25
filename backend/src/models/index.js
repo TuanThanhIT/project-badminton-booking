@@ -36,6 +36,7 @@ import DraftBeverageItem from "./draftBeverageItem.js";
 import OfflineBooking from "./offlineBooking.js";
 
 import Beverage from "./beverage.js";
+import BeverageStock from "./beverageStock.js";
 
 import Wallet from "./wallet.js";
 import WalletTransaction from "./walletTransaction.js";
@@ -455,6 +456,11 @@ DraftBeverageItem.belongsTo(Beverage, {
   as: "beverage",
 });
 
+Beverage.hasMany(BeverageStock, { foreignKey: "beverageId", as: "stocks" });
+BeverageStock.belongsTo(Beverage, { foreignKey: "beverageId", as: "beverage" });
+Branch.hasMany(BeverageStock, { foreignKey: "branchId", as: "beverageStocks" });
+BeverageStock.belongsTo(Branch, { foreignKey: "branchId", as: "branch" });
+
 //////////////////////////////////////////////////////
 //////////////// OFFLINE BOOKING /////////////////////
 //////////////////////////////////////////////////////
@@ -472,7 +478,7 @@ OfflineBooking.belongsTo(DraftBooking, {
 //////////////////////////////////////////////////////
 //////////////// MONTHLY BOOKING /////////////////////
 //////////////////////////////////////////////////////
-// Quan h? cho Ð?t sân tháng
+// Quan h? cho ï¿½?t sï¿½n thï¿½ng
 User.hasMany(MonthlyBooking, { foreignKey: "userId", as: "monthlyBookings" });
 MonthlyBooking.belongsTo(User, { foreignKey: "userId", as: "user" });
 
@@ -485,7 +491,7 @@ MonthlyBooking.belongsTo(Branch, { foreignKey: "branchId", as: "branch" });
 Court.hasMany(MonthlyBooking, { foreignKey: "courtId", as: "monthlyBookings" });
 MonthlyBooking.belongsTo(Court, { foreignKey: "courtId", as: "court" });
 
-// Quan h? k?t n?i Gói tháng v?i các Bu?i t?p chi ti?t
+// Quan h? k?t n?i Gï¿½i thï¿½ng v?i cï¿½c Bu?i t?p chi ti?t
 MonthlyBooking.hasMany(BookingDetail, {
   foreignKey: "monthlyBookingId",
   as: "details",
@@ -771,6 +777,7 @@ export {
   CashRegister,
   CoachProfile,
   VariantStock,
+  BeverageStock,
   MonthlyBooking,
   RefreshToken,
 };

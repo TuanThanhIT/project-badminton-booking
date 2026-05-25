@@ -32,6 +32,18 @@ var _webhookRoute = _interopRequireDefault(require("./routes/user/webhookRoute.j
 var _feedbackRoute = _interopRequireDefault(require("./routes/user/feedbackRoute.js"));
 var _notificationRoute = _interopRequireDefault(require("./routes/user/notificationRoute.js"));
 var _homeRoute = _interopRequireDefault(require("./routes/user/homeRoute.js"));
+var _userRoute = _interopRequireDefault(require("./routes/admin/userRoute.js"));
+var _branchRoute2 = _interopRequireDefault(require("./routes/admin/branchRoute.js"));
+var _managerRoute = _interopRequireDefault(require("./routes/admin/managerRoute.js"));
+var _productRoute2 = _interopRequireDefault(require("./routes/admin/productRoute.js"));
+var _beverageRoute = _interopRequireDefault(require("./routes/admin/beverageRoute.js"));
+var _postRoute2 = _interopRequireDefault(require("./routes/admin/postRoute.js"));
+var _discountRoute2 = _interopRequireDefault(require("./routes/admin/discountRoute.js"));
+var _feedbackRoute2 = _interopRequireDefault(require("./routes/admin/feedbackRoute.js"));
+var _financeRoute = _interopRequireDefault(require("./routes/admin/financeRoute.js"));
+var _revenueRoute = _interopRequireDefault(require("./routes/admin/revenueRoute.js"));
+var _categoryRoute = _interopRequireDefault(require("./routes/admin/categoryRoute.js"));
+var _uploadRoute = _interopRequireDefault(require("./routes/admin/uploadRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -73,6 +85,20 @@ app.use((0, _cookieParser["default"])());
 
 // Employee
 (0, _orderRoute2["default"])(app);
+
+// Admin
+(0, _userRoute["default"])(app);
+(0, _branchRoute2["default"])(app);
+(0, _managerRoute["default"])(app);
+(0, _productRoute2["default"])(app);
+(0, _beverageRoute["default"])(app);
+(0, _postRoute2["default"])(app);
+(0, _discountRoute2["default"])(app);
+(0, _feedbackRoute2["default"])(app);
+(0, _financeRoute["default"])(app);
+(0, _revenueRoute["default"])(app);
+(0, _categoryRoute["default"])(app);
+(0, _uploadRoute["default"])(app);
 
 // create http server
 var httpServer = (0, _http.createServer)(app);

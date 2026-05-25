@@ -12,9 +12,10 @@ import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { resetPassword } from "../../redux/slices/user/authSlice";
 import LoadingButton from "../../components/ui/common/LoadingButton";
 import AuthShell from "../../components/ui/user/auth/AuthShell";
+import PasswordInput from "../../components/ui/common/PasswordInput";
 
 const inputClass =
-  "h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 pl-11 text-sm outline-none transition-all hover:border-sky-200 hover:bg-white focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100";
+  "h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 pl-11 text-sm outline-none transition-all hover:border-sky-200 hover:bg-white focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100";
 
 const ResetPasswordPage = () => {
   const dispatch = useAppDispatch();
@@ -65,9 +66,7 @@ const ResetPasswordPage = () => {
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div>
-          <p className="text-sm font-semibold text-sky-700">
-            Đặt lại mật khẩu
-          </p>
+          <p className="text-sm font-semibold text-sky-700">Đặt lại mật khẩu</p>
           <h2 className="mt-2 text-3xl font-extrabold text-slate-900">
             Mật khẩu mới
           </h2>
@@ -98,14 +97,10 @@ const ResetPasswordPage = () => {
               <span className="text-xs text-rose-500">{item.error || ""}</span>
             </div>
             <div className="relative">
-              <Lock
-                size={17}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-              />
-              <input
-                type="password"
-                {...register(item.field)}
+              <PasswordInput
+                registration={register(item.field)}
                 placeholder={item.placeholder}
+                leftIcon={<Lock size={17} />}
                 className={inputClass}
               />
             </div>

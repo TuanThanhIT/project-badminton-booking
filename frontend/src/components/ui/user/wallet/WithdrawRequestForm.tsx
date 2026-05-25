@@ -34,7 +34,7 @@ const allBanks = [
 ];
 
 const inputClass =
-  "w-full rounded-2xl border border-slate-300 bg-white py-3 pl-12 pr-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-100";
+  "w-full rounded-2xl border border-slate-300 bg-white py-3 pl-12 pr-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-1 focus:ring-sky-100";
 
 const WithdrawRequestForm = ({
   setOpenWithdraw,
@@ -98,7 +98,10 @@ const WithdrawRequestForm = ({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="grid gap-5 p-5 md:grid-cols-2">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="grid gap-5 p-5 md:grid-cols-2"
+        >
           <div className="space-y-5">
             <div>
               <p className="mb-3 text-sm font-medium text-slate-700">

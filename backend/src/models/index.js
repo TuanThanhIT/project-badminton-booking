@@ -1,4 +1,4 @@
-import User from "./user.js";
+Ôªøimport User from "./user.js";
 import Role from "./role.js";
 import Profile from "./profile.js";
 import UserOtp from "./userOtp.js";
@@ -6,6 +6,7 @@ import UserAddress from "./userAddress.js";
 
 import Branch from "./branch.js";
 import BranchManager from "./branchManager.js";
+import BranchEmployee from "./branchEmployee.js";
 import BranchImage from "./branchImage.js";
 
 import Court from "./court.js";
@@ -183,6 +184,35 @@ BranchManager.belongsTo(Branch, { foreignKey: "branchId", as: "branch" });
 
 User.hasMany(BranchManager, { foreignKey: "managerId", as: "branchManagers" });
 BranchManager.belongsTo(User, { foreignKey: "managerId", as: "manager" });
+
+//////////////////////////////////////////////////////
+/////////////// BRANCH EMPLOYEE //////////////////////
+//////////////////////////////////////////////////////
+
+User.belongsToMany(Branch, {
+  through: BranchEmployee,
+  foreignKey: "employeeId",
+  otherKey: "branchId",
+  as: "employeeBranches",
+});
+Branch.belongsToMany(User, {
+  through: BranchEmployee,
+  foreignKey: "branchId",
+  otherKey: "employeeId",
+  as: "employees",
+});
+
+Branch.hasMany(BranchEmployee, {
+  foreignKey: "branchId",
+  as: "branchEmployees",
+});
+BranchEmployee.belongsTo(Branch, { foreignKey: "branchId", as: "branch" });
+
+User.hasMany(BranchEmployee, {
+  foreignKey: "employeeId",
+  as: "branchEmployees",
+});
+BranchEmployee.belongsTo(User, { foreignKey: "employeeId", as: "employee" });
 
 //////////////////////////////////////////////////////
 //////////////// BOOKING /////////////////////////////
@@ -472,7 +502,7 @@ OfflineBooking.belongsTo(DraftBooking, {
 //////////////////////////////////////////////////////
 //////////////// MONTHLY BOOKING /////////////////////
 //////////////////////////////////////////////////////
-// Quan h? cho –?t s‚n th·ng
+// Quan h? cho √ê?t s√¢n th√°ng
 User.hasMany(MonthlyBooking, { foreignKey: "userId", as: "monthlyBookings" });
 MonthlyBooking.belongsTo(User, { foreignKey: "userId", as: "user" });
 
@@ -485,7 +515,7 @@ MonthlyBooking.belongsTo(Branch, { foreignKey: "branchId", as: "branch" });
 Court.hasMany(MonthlyBooking, { foreignKey: "courtId", as: "monthlyBookings" });
 MonthlyBooking.belongsTo(Court, { foreignKey: "courtId", as: "court" });
 
-// Quan h? k?t n?i GÛi th·ng v?i c·c Bu?i t?p chi ti?t
+// Quan h? k?t n?i G√≥i th√°ng v?i c√°c Bu?i t?p chi ti?t
 MonthlyBooking.hasMany(BookingDetail, {
   foreignKey: "monthlyBookingId",
   as: "details",
@@ -731,6 +761,7 @@ export {
   UserAddress,
   Branch,
   BranchManager,
+  BranchEmployee,
   BranchImage,
   Court,
   CourtPrice,
@@ -774,3 +805,5 @@ export {
   MonthlyBooking,
   RefreshToken,
 };
+
+

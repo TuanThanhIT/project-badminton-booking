@@ -17,7 +17,10 @@ const PostRepostModal = ({ open, postId, onClose }: Props) => {
   const [submitting, setSubmitting] = useState(false);
 
   const trimmedContent = content.trim();
-  const canSubmit = useMemo(() => trimmedContent.length <= 2000, [trimmedContent]);
+  const canSubmit = useMemo(
+    () => trimmedContent.length <= 2000,
+    [trimmedContent],
+  );
 
   const handleRepost = async () => {
     if (!canSubmit) return;
@@ -76,7 +79,7 @@ const PostRepostModal = ({ open, postId, onClose }: Props) => {
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="min-h-[130px] w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-relaxed text-slate-700 outline-none placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+              className="min-h-[130px] w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-relaxed text-slate-700 outline-none placeholder:text-slate-400 focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               placeholder="Viết vài dòng giới thiệu hoặc cảm nghĩ của bạn..."
             />
             <div className="mt-2 flex items-center justify-between text-xs">

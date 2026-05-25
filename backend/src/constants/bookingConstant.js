@@ -2,9 +2,10 @@
 export const BOOKING_STATUS = Object.freeze({
   PENDING: "PENDING",
   CONFIRMED: "CONFIRMED",
-  PAID: "PAID",
+  CANCEL_REQUESTED: "CANCEL_REQUESTED",
   COMPLETED: "COMPLETED",
   CANCELLED: "CANCELLED",
+  FAILED: "FAILED",
 });
 
 export const CANCELLED_BY = Object.freeze({

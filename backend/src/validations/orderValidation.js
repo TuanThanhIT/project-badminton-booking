@@ -9,6 +9,7 @@ import {
   totalAmountField,
 } from "./common/bookingFields.js";
 import {
+  orderFilterStatusField,
   orderGroupStatusField,
   orderStatusField,
 } from "./common/orderFields.js";
@@ -71,7 +72,7 @@ export const cancelOrderSchema = {
 
 export const getOrdersSchema = {
   query: Joi.object({
-    status: orderStatusField.optional(),
+    status: orderFilterStatusField.optional(),
     keyword: keywordField,
     date: dateField,
     page: pageField,

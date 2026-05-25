@@ -5,6 +5,7 @@ export type User = {
   email: string;
   username: string;
   role: string;
+  branchIds?: number[];
   profile?: {
     fullName?: string;
     avatar?: string | null;
@@ -80,6 +81,7 @@ export type OtpFlowData = {
   email?: string;
   withdrawRequestId?: number;
   orderGroupId?: number;
+  bookingId?: number;
   type?: string;
 };
 

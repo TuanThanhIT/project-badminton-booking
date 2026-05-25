@@ -87,7 +87,7 @@ const MemberSearchPicker = ({
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-400 transition-all placeholder:text-slate-400"
+        className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-sky-100 focus:border-sky-400 transition-all placeholder:text-slate-400"
         placeholder={placeholder}
         autoComplete="off"
       />

@@ -458,7 +458,7 @@ const BranchDetailPage = () => {
                     maxLength={1000}
                     disabled={!branchDetail.canReview}
                     placeholder="Chia sẻ cảm nhận của bạn về chi nhánh..."
-                    className="mt-4 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-relaxed text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:border-sky-300 focus:bg-white focus:ring-4 focus:ring-sky-50 disabled:cursor-not-allowed disabled:text-slate-400"
+                    className="mt-4 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-relaxed text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:border-sky-300 focus:bg-white focus:ring-1 focus:ring-sky-50 disabled:cursor-not-allowed disabled:text-slate-400"
                   />
 
                   <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

@@ -78,14 +78,17 @@ const ConversationSidebar = ({
         .map((p) => `${p.fullName || ""} ${p.username}`)
         .join(" ")
         .toLowerCase();
-      return name.includes(q) || preview.includes(q) || participantName.includes(q);
+      return (
+        name.includes(q) || preview.includes(q) || participantName.includes(q)
+      );
     });
   }, [conversations, query, tab]);
 
   const sorted = useMemo(
     () =>
       [...filtered].sort(
-        (a, b) => new Date(b.updatedDate).getTime() - new Date(a.updatedDate).getTime(),
+        (a, b) =>
+          new Date(b.updatedDate).getTime() - new Date(a.updatedDate).getTime(),
       ),
     [filtered],
   );
@@ -101,7 +104,9 @@ const ConversationSidebar = ({
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-extrabold text-xl text-slate-950">Tin nhắn</h2>
+              <h2 className="font-extrabold text-xl text-slate-950">
+                Tin nhắn
+              </h2>
               {totalUnread > 0 && (
                 <span className="min-w-5 h-5 px-1.5 flex items-center justify-center rounded-full bg-rose-500 text-white text-[10px] font-bold">
                   {totalUnread > 99 ? "99+" : totalUnread}
@@ -129,7 +134,7 @@ const ConversationSidebar = ({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Tìm hội thoại, thành viên..."
-            className="w-full h-11 pl-10 pr-10 border border-slate-200 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-400 transition-all placeholder:text-slate-400"
+            className="w-full h-11 pl-10 pr-10 border border-slate-200 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-sky-100 focus:border-sky-400 transition-all placeholder:text-slate-400"
           />
           {query ? (
             <button
@@ -186,14 +191,18 @@ const ConversationSidebar = ({
               const unread = conversation.unreadCount || 0;
               const isGroup = conversation.type === "GROUP";
               const otherParticipant = !isGroup
-                ? conversation.participants.find((p) => p.userId !== currentUserId)
+                ? conversation.participants.find(
+                    (p) => p.userId !== currentUserId,
+                  )
                 : undefined;
               const displayName = isGroup
                 ? conversation.conversationName
                 : otherParticipant?.fullName?.trim() ||
                   otherParticipant?.username ||
                   conversation.conversationName;
-              const avatarUrl = !isGroup ? otherParticipant?.avatar : conversation.avatar;
+              const avatarUrl = !isGroup
+                ? otherParticipant?.avatar
+                : conversation.avatar;
               const isSelected = selectedConversationId === conversation.id;
               const preview = lastPreview(conversation);
               const lastMsgSender =
@@ -215,7 +224,11 @@ const ConversationSidebar = ({
                   }`}
                 >
                   <div className="relative shrink-0">
-                    <ConvAvatar name={displayName} url={avatarUrl} isGroup={isGroup} />
+                    <ConvAvatar
+                      name={displayName}
+                      url={avatarUrl}
+                      isGroup={isGroup}
+                    />
                     {isGroup ? (
                       <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-sky-600 flex items-center justify-center border-2 border-white">
                         <Users className="w-2.5 h-2.5 text-white" />
@@ -229,14 +242,18 @@ const ConversationSidebar = ({
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <p
                         className={`text-sm truncate ${
-                          unread > 0 ? "font-extrabold text-slate-950" : "font-bold text-slate-800"
+                          unread > 0
+                            ? "font-extrabold text-slate-950"
+                            : "font-bold text-slate-800"
                         }`}
                       >
                         {displayName}
                       </p>
                       <span className="text-[10px] text-slate-400 tabular-nums whitespace-nowrap pt-0.5">
                         {conversation.lastMessage
-                          ? formatRelativeTimeVi(conversation.lastMessage.createdDate)
+                          ? formatRelativeTimeVi(
+                              conversation.lastMessage.createdDate,
+                            )
                           : ""}
                       </span>
                     </div>
@@ -244,7 +261,9 @@ const ConversationSidebar = ({
                     <div className="flex items-center gap-2">
                       <p
                         className={`flex-1 min-w-0 text-xs truncate leading-snug ${
-                          unread > 0 ? "text-slate-700 font-semibold" : "text-slate-400"
+                          unread > 0
+                            ? "text-slate-700 font-semibold"
+                            : "text-slate-400"
                         }`}
                       >
                         {lastMsgSender}

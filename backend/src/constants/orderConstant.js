@@ -53,5 +53,5 @@ export const SHIPPING_TRACKING_LABEL = Object.freeze({
   FAILED: "Giao thất bại",
   RETURNING: "Đang hoàn hàng",
   RETURNED: "Đã hoàn về shop",
-  CANCELLED: "Đã hủy vận đơn",
+  CANCELLED: "Đã hủy giao hàng",
 });

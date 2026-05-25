@@ -12,6 +12,13 @@ export const orderStatusField = Joi.string()
     "string.base": "Order status must be a string",
   });
 
+export const orderFilterStatusField = Joi.string()
+  .valid("ALL", ...Object.values(ORDER_STATUS))
+  .messages({
+    "any.only": "Invalid order status",
+    "string.base": "Order status must be a string",
+  });
+
 export const orderGroupStatusField = Joi.string()
   .valid("ALL", ...Object.values(ORDER_GROUP_STATUS))
   .default("ALL")

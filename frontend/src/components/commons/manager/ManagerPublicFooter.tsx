@@ -1,100 +1,29 @@
-import { ShieldCheck, BriefcaseBusiness, ClipboardList } from "lucide-react";
+import { BriefcaseBusiness, ClipboardList, ShieldCheck } from "lucide-react";
 
 const ManagerPublicFooter = () => {
   return (
-    <footer
-      className="
-        border-t border-cyan-100
-
-        bg-white/80
-        backdrop-blur-xl
-      "
-    >
-      <div
-        className="
-          max-w-8xl
-          mx-auto
-
-          px-10
-          py-5
-
-          flex
-          flex-col
-          lg:flex-row
-
-          items-center
-          justify-between
-
-          gap-5
-        "
-      >
-        {/* LEFT */}
-        <div>
-          <h3 className="text-lg font-black text-cyan-950">
+    <footer className="shrink-0 border-t border-slate-200 bg-white text-slate-700">
+      <div className="flex min-h-16 items-center justify-between gap-4 px-4 py-2 sm:px-6 lg:px-10 2xl:px-14">
+        <div className="min-w-0">
+          <h3 className="truncate text-sm font-semibold tracking-tight text-slate-900 sm:text-base">
             B-Hub Manager System
           </h3>
-
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="mt-1 hidden text-xs leading-relaxed text-slate-500 sm:block">
             Hệ thống quản lý dành cho Manager vận hành và theo dõi hoạt động.
           </p>
         </div>
 
-        {/* RIGHT */}
-        <div className="flex items-center gap-3 flex-wrap justify-center">
-          <div
-            className="
-              flex items-center gap-2
-
-              px-4 py-2
-              rounded-full
-
-              bg-cyan-50
-              border border-cyan-100
-
-              text-cyan-800
-              text-sm
-              font-semibold
-            "
-          >
-            <ShieldCheck className="w-4 h-4" />
+        <div className="hidden flex-wrap items-center justify-center gap-2 sm:flex">
+          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 sm:px-4 sm:text-sm">
+            <ShieldCheck className="h-4 w-4 text-sky-600" />
             Security
           </div>
-
-          <div
-            className="
-              flex items-center gap-2
-
-              px-4 py-2
-              rounded-full
-
-              bg-white
-              border border-slate-200
-
-              text-slate-700
-              text-sm
-              font-semibold
-            "
-          >
-            <BriefcaseBusiness className="w-4 h-4 text-cyan-600" />
+          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 sm:px-4 sm:text-sm">
+            <BriefcaseBusiness className="h-4 w-4 text-sky-600" />
             Management
           </div>
-
-          <div
-            className="
-              flex items-center gap-2
-
-              px-4 py-2
-              rounded-full
-
-              bg-white
-              border border-slate-200
-
-              text-slate-700
-              text-sm
-              font-semibold
-            "
-          >
-            <ClipboardList className="w-4 h-4 text-cyan-600" />
+          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 sm:px-4 sm:text-sm">
+            <ClipboardList className="h-4 w-4 text-sky-600" />
             Monitoring
           </div>
         </div>

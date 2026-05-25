@@ -13,9 +13,10 @@ import type { OtpFlowData, RegisterRequest } from "../../types/auth";
 import LoadingButton from "../../components/ui/common/LoadingButton";
 import AuthShell from "../../components/ui/user/auth/AuthShell";
 import { OTP_TYPE } from "../../utils/constants/otpType";
+import PasswordInput from "../../components/ui/common/PasswordInput";
 
 const inputClass =
-  "h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 pl-11 text-sm outline-none transition-all hover:border-sky-200 hover:bg-white focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100";
+  "h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 pl-11 text-sm outline-none transition-all hover:border-sky-200 hover:bg-white focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -114,16 +115,27 @@ const RegisterPage = () => {
               <span className="text-xs text-rose-500">{item.error || ""}</span>
             </div>
             <div className="relative">
-              <item.icon
-                size={17}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-              />
-              <input
-                type={item.type}
-                {...register(item.field)}
-                placeholder={item.placeholder}
-                className={inputClass}
-              />
+              {item.type === "password" ? (
+                <PasswordInput
+                  registration={register(item.field)}
+                  placeholder={item.placeholder}
+                  leftIcon={<item.icon size={17} />}
+                  className={inputClass}
+                />
+              ) : (
+                <>
+                  <item.icon
+                    size={17}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                  />
+                  <input
+                    type={item.type}
+                    {...register(item.field)}
+                    placeholder={item.placeholder}
+                    className={inputClass}
+                  />
+                </>
+              )}
             </div>
           </label>
         ))}

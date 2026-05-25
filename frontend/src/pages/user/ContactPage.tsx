@@ -20,7 +20,7 @@ import { getPagedBranches } from "../../redux/slices/user/branchSlice";
 import type { Branch } from "../../types/branch";
 
 const inputClass =
-  "w-full rounded-2xl border border-slate-200 bg-white py-4 pl-12 pr-5 text-slate-800 shadow-sm outline-none transition-all duration-300 placeholder:text-slate-400 hover:border-sky-200 focus:border-sky-400 focus:ring-4 focus:ring-sky-100";
+  "w-full rounded-2xl border border-slate-200 bg-white py-4 pl-12 pr-5 text-slate-800 shadow-sm outline-none transition-all duration-300 placeholder:text-slate-400 hover:border-sky-200 focus:border-sky-400 focus:ring-1 focus:ring-sky-100";
 
 const labelClass = "text-sm font-semibold text-slate-700";
 
@@ -71,7 +71,9 @@ const getBranchAddress = (branch?: Branch | null) => {
 
 const ContactPage = () => {
   const dispatch = useAppDispatch();
-  const branches = useAppSelector((state) => state.branch.pagedBranch?.branches);
+  const branches = useAppSelector(
+    (state) => state.branch.pagedBranch?.branches,
+  );
   const [selectedBranchId, setSelectedBranchId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -139,7 +141,7 @@ const ContactPage = () => {
                 <div className="absolute inset-0 scale-105 rounded-[2rem] bg-sky-400/20 blur-2xl" />
                 <div className="relative rounded-[2rem] border border-white/20 bg-white/10 p-4 shadow-2xl backdrop-blur-md">
                   <img
-                    src="./img/contact.avif"
+                    src="./img/contact.jpg"
                     alt="B-Hub support"
                     className="h-80 w-full rounded-[1.5rem] object-cover"
                   />
@@ -178,9 +180,7 @@ const ContactPage = () => {
                 <p className="text-sm font-medium leading-relaxed text-slate-700">
                   {item.content}
                 </p>
-                <p className="mt-1 text-xs text-slate-500">
-                  {item.subContent}
-                </p>
+                <p className="mt-1 text-xs text-slate-500">{item.subContent}</p>
               </div>
             );
           })}
@@ -205,8 +205,8 @@ const ContactPage = () => {
                           Gửi tin nhắn cho chúng tôi
                         </h2>
                         <p className="leading-relaxed text-slate-600">
-                          Chọn vấn đề cần hỗ trợ, B-Hub sẽ điều phối đến bộ
-                          phận hoặc chi nhánh phù hợp.
+                          Chọn vấn đề cần hỗ trợ, B-Hub sẽ điều phối đến bộ phận
+                          hoặc chi nhánh phù hợp.
                         </p>
                       </div>
 
@@ -321,9 +321,7 @@ const ContactPage = () => {
                   <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-sky-400/20 blur-2xl" />
                   <div className="relative z-10 flex flex-col justify-between">
                     <div>
-                      <h3 className="text-2xl font-semibold">
-                        Theo dõi B-Hub
-                      </h3>
+                      <h3 className="text-2xl font-semibold">Theo dõi B-Hub</h3>
                       <p className="mt-4 text-sm leading-relaxed text-sky-100">
                         Cập nhật tin tức về chi nhánh, giải đấu, ưu đãi sân và
                         sản phẩm cầu lông mới. B-Hub gom mọi thông báo quan
@@ -383,9 +381,7 @@ const ContactPage = () => {
                                 : "border-slate-200 bg-white text-slate-800 hover:border-sky-200 hover:bg-sky-50/70"
                             }`}
                           >
-                            <p className="font-semibold">
-                              {branch.branchName}
-                            </p>
+                            <p className="font-semibold">{branch.branchName}</p>
                             <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-slate-500">
                               {getBranchAddress(branch)}
                             </p>

@@ -7,15 +7,15 @@ import {
 } from "../../validations/courtValidation.js";
 import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
+import { ROLE_NAME } from "../../constants/userConstant.js";
 
 const courtRoute = express.Router();
 
 const initCourtRoute = (app) => {
-  // API quan tr?ng nh?t: L?y s�n tr?ng theo gi? d? hi?n th? l�n giao di?n
   courtRoute.get(
     "/available",
     auth,
-    authorize("USER", "COACH", "EMPLOYEE", "CUSTOMER"),
+    authorize(ROLE_NAME.USER),
     validate(getAvailableCourtsSchema),
     courtController.getAvailableCourtsController,
   );
@@ -23,14 +23,14 @@ const initCourtRoute = (app) => {
   courtRoute.get(
     "/:courtId",
     auth,
-    authorize("USER", "COACH", "EMPLOYEE", "CUSTOMER"),
+    authorize(ROLE_NAME.USER),
     validate(getCourtByIdSchema),
     courtController.getCourtByIdController,
   );
   courtRoute.get(
     "/",
     auth,
-    authorize("USER", "COACH", "EMPLOYEE", "CUSTOMER"),
+    authorize(ROLE_NAME.USER),
     courtController.getCourtsController,
   );
   app.use("/user/courts", courtRoute);

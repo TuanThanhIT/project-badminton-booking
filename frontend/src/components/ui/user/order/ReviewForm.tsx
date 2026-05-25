@@ -207,7 +207,7 @@ const ReviewForm = ({
               rows={4}
               placeholder="Ví dụ: Chất liệu đẹp, giao hàng nhanh, đóng gói cẩn thận..."
               {...register("content")}
-              className="w-full resize-none rounded-2xl border border-slate-300 bg-white p-4 text-sm leading-relaxed text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
+              className="w-full resize-none rounded-2xl border border-slate-300 bg-white p-4 text-sm leading-relaxed text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
             />
 
             {errors.content && (

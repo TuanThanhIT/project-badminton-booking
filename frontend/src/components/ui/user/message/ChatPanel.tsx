@@ -20,7 +20,11 @@ import {
   Users,
   X,
 } from "lucide-react";
-import type { ChatMessage, Conversation, ReplyToMessage } from "../../../../types/message";
+import type {
+  ChatMessage,
+  Conversation,
+  ReplyToMessage,
+} from "../../../../types/message";
 import type { UserSearchHit } from "../../../../types/userSearch";
 import MemberSearchPicker from "./MemberSearchPicker";
 import { formatRelativeTimeVi } from "../../../../utils/formatRelativeTimeVi";
@@ -84,7 +88,9 @@ const UserAvatar = ({
   );
 };
 
-const messagePreview = (message: Pick<ChatMessage, "body" | "type" | "isRecalled">) => {
+const messagePreview = (
+  message: Pick<ChatMessage, "body" | "type" | "isRecalled">,
+) => {
   if (message.isRecalled) return "Tin nhắn đã thu hồi";
   if (message.body?.trim()) return message.body.trim();
   if (message.type === "IMAGE") return "Ảnh";
@@ -152,8 +158,12 @@ const ForwardModal = ({
       <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[82vh] border border-white/60">
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
           <div>
-            <h3 className="font-extrabold text-slate-950">Chuyển tiếp tin nhắn</h3>
-            <p className="text-xs text-slate-500 mt-1 line-clamp-1">{messagePreview(message)}</p>
+            <h3 className="font-extrabold text-slate-950">
+              Chuyển tiếp tin nhắn
+            </h3>
+            <p className="text-xs text-slate-500 mt-1 line-clamp-1">
+              {messagePreview(message)}
+            </p>
           </div>
           <button
             type="button"
@@ -182,7 +192,9 @@ const ForwardModal = ({
         <div className="overflow-y-auto flex-1 p-2 bg-slate-50/70">
           {filtered.length === 0 ? (
             <p className="text-sm text-slate-400 text-center py-10">
-              {query ? "Không tìm thấy hội thoại" : "Không có hội thoại nào khác"}
+              {query
+                ? "Không tìm thấy hội thoại"
+                : "Không có hội thoại nào khác"}
             </p>
           ) : (
             filtered.map((c) => {
@@ -202,7 +214,9 @@ const ForwardModal = ({
                 >
                   <UserAvatar name={name} url={avatar} sizeClass="w-11 h-11" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold text-slate-900 truncate">{name}</p>
+                    <p className="text-sm font-bold text-slate-900 truncate">
+                      {name}
+                    </p>
                     <p className="text-xs text-slate-400">{sub}</p>
                   </div>
                   {isSending && (
@@ -249,12 +263,17 @@ const ChatPanel = ({
   const scrollToMessage = (messageId: number) => {
     const container = scrollAreaRef.current;
     if (!container) return;
-    const el = container.querySelector(`[data-msg-id="${messageId}"]`) as HTMLElement | null;
+    const el = container.querySelector(
+      `[data-msg-id="${messageId}"]`,
+    ) as HTMLElement | null;
     if (!el) return;
     container.scrollTo({ top: el.offsetTop - 88, behavior: "smooth" });
     if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
     setHighlightedMsgId(messageId);
-    highlightTimerRef.current = setTimeout(() => setHighlightedMsgId(null), 1500);
+    highlightTimerRef.current = setTimeout(
+      () => setHighlightedMsgId(null),
+      1500,
+    );
   };
 
   const participantIds = useMemo(
@@ -273,7 +292,8 @@ const ChatPanel = ({
   const sorted = useMemo(
     () =>
       [...messages].sort(
-        (a, b) => new Date(a.createdDate).getTime() - new Date(b.createdDate).getTime(),
+        (a, b) =>
+          new Date(a.createdDate).getTime() - new Date(b.createdDate).getTime(),
       ),
     [messages],
   );
@@ -294,7 +314,11 @@ const ChatPanel = ({
       }
       const sameSender = prev?.senderId === m.senderId;
       const gapMin =
-        prev && (new Date(m.createdDate).getTime() - new Date(prev.createdDate).getTime()) / 60000 < 4;
+        prev &&
+        (new Date(m.createdDate).getTime() -
+          new Date(prev.createdDate).getTime()) /
+          60000 <
+          4;
       out.push({ kind: "msg", message: m, showMeta: !(sameSender && gapMin) });
       prev = m;
     }
@@ -340,7 +364,9 @@ const ChatPanel = ({
           <MessageCircle className="w-12 h-12 text-sky-400" strokeWidth={1.5} />
         </div>
         <div className="text-center max-w-sm">
-          <p className="text-lg font-extrabold text-slate-800">Chào mừng đến B-Hub Chat</p>
+          <p className="text-lg font-extrabold text-slate-800">
+            Chào mừng đến B-Hub Chat
+          </p>
           <p className="text-sm text-slate-500 mt-2 leading-relaxed">
             Chọn một hội thoại bên trái để bắt đầu nhắn tin cùng bạn chơi.
           </p>
@@ -352,7 +378,9 @@ const ChatPanel = ({
   const isGroup = conversation.type === "GROUP";
   const headerDisplayName = isGroup
     ? conversation.conversationName
-    : otherParticipant?.fullName?.trim() || otherParticipant?.username || conversation.conversationName;
+    : otherParticipant?.fullName?.trim() ||
+      otherParticipant?.username ||
+      conversation.conversationName;
 
   return (
     <section className="flex-1 bg-slate-50 flex flex-col min-w-0 min-h-0">
@@ -365,11 +393,17 @@ const ChatPanel = ({
             sizeClass="w-12 h-12"
           />
           <div className="min-w-0">
-            <h3 className="font-extrabold text-slate-950 truncate text-base">{headerDisplayName}</h3>
+            <h3 className="font-extrabold text-slate-950 truncate text-base">
+              {headerDisplayName}
+            </h3>
             {isGroup ? (
-              <p className="text-xs text-slate-500 mt-0.5">{conversation.participants.length} thành viên</p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {conversation.participants.length} thành viên
+              </p>
             ) : (
-              <p className="text-xs text-emerald-600 font-bold mt-0.5">Đang hoạt động</p>
+              <p className="text-xs text-emerald-600 font-bold mt-0.5">
+                Đang hoạt động
+              </p>
             )}
           </div>
         </div>
@@ -385,7 +419,11 @@ const ChatPanel = ({
             }`}
             title="Thành viên nhóm"
           >
-            {showMembers ? <ChevronUp className="w-4 h-4" /> : <Users className="w-4 h-4" />}
+            {showMembers ? (
+              <ChevronUp className="w-4 h-4" />
+            ) : (
+              <Users className="w-4 h-4" />
+            )}
             Thành viên
           </button>
         )}
@@ -395,16 +433,24 @@ const ChatPanel = ({
         <div className="border-b border-slate-200 bg-white px-5 py-4 max-h-72 overflow-y-auto shrink-0">
           <div className="grid md:grid-cols-2 gap-3">
             {conversation.participants.map((p) => {
-              const displayName = p.fullName?.trim() ? `${p.fullName} (${p.username})` : p.username;
+              const displayName = p.fullName?.trim()
+                ? `${p.fullName} (${p.username})`
+                : p.username;
               return (
                 <div
                   key={p.userId}
                   className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-2"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <UserAvatar name={p.fullName || p.username} url={p.avatar} sizeClass="w-9 h-9" />
+                    <UserAvatar
+                      name={p.fullName || p.username}
+                      url={p.avatar}
+                      sizeClass="w-9 h-9"
+                    />
                     <div className="min-w-0">
-                      <p className="text-xs font-bold text-slate-800 truncate">{displayName}</p>
+                      <p className="text-xs font-bold text-slate-800 truncate">
+                        {displayName}
+                      </p>
                       {p.role === ROLE_NAME.ADMIN && (
                         <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold">
                           Admin
@@ -518,14 +564,20 @@ const ChatPanel = ({
                 )
               ) : null}
 
-              <div className={`max-w-[70%] flex flex-col ${mine ? "items-end" : "items-start"}`}>
+              <div
+                className={`max-w-[70%] flex flex-col ${mine ? "items-end" : "items-start"}`}
+              >
                 {!mine && isGroup && row.showMeta && (
-                  <span className="text-[11px] font-bold text-slate-500 mb-1 ml-1">{m.senderName}</span>
+                  <span className="text-[11px] font-bold text-slate-500 mb-1 ml-1">
+                    {m.senderName}
+                  </span>
                 )}
 
                 <div
                   className={`rounded-[1.35rem] overflow-hidden max-w-full shadow-sm ${
-                    mine ? "rounded-br-md" : "rounded-bl-md border border-slate-200"
+                    mine
+                      ? "rounded-br-md"
+                      : "rounded-bl-md border border-slate-200"
                   } ${recalled ? "opacity-65" : ""}`}
                 >
                   {m.replyTo && !recalled && (
@@ -533,7 +585,9 @@ const ChatPanel = ({
                       type="button"
                       onClick={() => scrollToMessage(m.replyTo!.id)}
                       className={`w-full text-left px-3 py-2 flex items-center gap-2.5 border-b transition-opacity hover:opacity-80 ${
-                        mine ? "bg-sky-700 border-sky-400/30" : "bg-sky-50 border-slate-200"
+                        mine
+                          ? "bg-sky-700 border-sky-400/30"
+                          : "bg-sky-50 border-slate-200"
                       }`}
                     >
                       <div
@@ -541,14 +595,24 @@ const ChatPanel = ({
                           mine ? "bg-white/60" : "bg-sky-500"
                         }`}
                       />
-                      {m.replyTo.type === "IMAGE" && m.replyTo.mediaUrl && !m.replyTo.isRecalled && (
-                        <img src={m.replyTo.mediaUrl} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0" />
-                      )}
+                      {m.replyTo.type === "IMAGE" &&
+                        m.replyTo.mediaUrl &&
+                        !m.replyTo.isRecalled && (
+                          <img
+                            src={m.replyTo.mediaUrl}
+                            alt=""
+                            className="w-10 h-10 rounded-xl object-cover shrink-0"
+                          />
+                        )}
                       <div className="min-w-0 flex-1">
-                        <p className={`text-[11px] font-bold truncate ${mine ? "text-sky-100" : "text-sky-700"}`}>
+                        <p
+                          className={`text-[11px] font-bold truncate ${mine ? "text-sky-100" : "text-sky-700"}`}
+                        >
                           {m.replyTo.senderName}
                         </p>
-                        <p className={`text-[11px] truncate mt-0.5 ${mine ? "text-sky-100/80" : "text-slate-500"}`}>
+                        <p
+                          className={`text-[11px] truncate mt-0.5 ${mine ? "text-sky-100/80" : "text-slate-500"}`}
+                        >
                           {replyPreview(m.replyTo)}
                         </p>
                       </div>
@@ -563,12 +627,23 @@ const ChatPanel = ({
                     }`}
                   >
                     {recalled ? (
-                      <p className="text-xs italic opacity-80">Tin nhắn đã thu hồi</p>
+                      <p className="text-xs italic opacity-80">
+                        Tin nhắn đã thu hồi
+                      </p>
                     ) : (
                       <>
                         {m.type === "IMAGE" && m.mediaUrl ? (
-                          <a href={m.mediaUrl} target="_blank" rel="noreferrer" className="block mb-2">
-                            <img src={m.mediaUrl} alt="" className="max-h-64 max-w-full rounded-2xl object-cover" />
+                          <a
+                            href={m.mediaUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block mb-2"
+                          >
+                            <img
+                              src={m.mediaUrl}
+                              alt=""
+                              className="max-h-64 max-w-full rounded-2xl object-cover"
+                            />
                           </a>
                         ) : null}
                         {m.type === "FILE" && m.mediaUrl ? (
@@ -577,7 +652,9 @@ const ChatPanel = ({
                             target="_blank"
                             rel="noreferrer"
                             className={`flex items-center gap-2 rounded-2xl px-3 py-2 mb-1 text-sm font-bold ${
-                              mine ? "bg-white/10 text-white" : "bg-slate-50 text-sky-700"
+                              mine
+                                ? "bg-white/10 text-white"
+                                : "bg-slate-50 text-sky-700"
                             }`}
                           >
                             <FileText className="w-4 h-4 shrink-0" />
@@ -585,21 +662,27 @@ const ChatPanel = ({
                           </a>
                         ) : null}
                         {m.body?.trim() ? (
-                          <p className="whitespace-pre-wrap break-words leading-relaxed">{m.body}</p>
+                          <p className="whitespace-pre-wrap break-words leading-relaxed">
+                            {m.body}
+                          </p>
                         ) : null}
                       </>
                     )}
                   </div>
                 </div>
 
-                <span className={`text-[10px] text-slate-400 mt-1 px-1 ${mine ? "text-right" : "text-left"}`}>
+                <span
+                  className={`text-[10px] text-slate-400 mt-1 px-1 ${mine ? "text-right" : "text-left"}`}
+                >
                   {formatRelativeTimeVi(m.createdDate)}
                 </span>
               </div>
 
               <div
                 className={`flex items-center gap-1 shrink-0 transition-opacity duration-100 ${
-                  hoveredMsgId === m.id ? "opacity-100" : "opacity-0 pointer-events-none"
+                  hoveredMsgId === m.id
+                    ? "opacity-100"
+                    : "opacity-0 pointer-events-none"
                 } ${mine ? "flex-row-reverse" : "flex-row"}`}
               >
                 <button
@@ -640,8 +723,12 @@ const ChatPanel = ({
         <div className="px-5 py-3 border-t border-slate-200 bg-sky-50 flex items-center gap-3 shrink-0">
           <CornerUpLeft className="w-4 h-4 text-sky-600 shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-extrabold text-sky-800">Đang trả lời {replyTarget.senderName}</p>
-            <p className="text-xs text-slate-500 truncate">{messagePreview(replyTarget)}</p>
+            <p className="text-xs font-extrabold text-sky-800">
+              Đang trả lời {replyTarget.senderName}
+            </p>
+            <p className="text-xs text-slate-500 truncate">
+              {messagePreview(replyTarget)}
+            </p>
           </div>
           <button
             type="button"
@@ -689,7 +776,7 @@ const ChatPanel = ({
           rows={1}
           onChange={handleTextareaChange}
           onKeyDown={handleTextareaKeyDown}
-          className="flex-1 min-w-0 border border-slate-200 rounded-2xl px-4 py-3 text-sm resize-none overflow-hidden focus:outline-none focus:ring-4 focus:ring-sky-100 focus:border-sky-400 transition-all bg-slate-50 focus:bg-white placeholder:text-slate-400"
+          className="flex-1 min-w-0 border border-slate-200 rounded-2xl px-4 py-3 text-sm resize-none overflow-hidden focus:outline-none focus:ring-1 focus:ring-sky-100 focus:border-sky-400 transition-all bg-slate-50 focus:bg-white placeholder:text-slate-400"
           placeholder="Nhập tin nhắn... Enter để gửi"
           style={{ height: "44px" }}
         />

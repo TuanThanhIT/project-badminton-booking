@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ThumbsUp, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { PostWithAuthor } from "../../../../types/post";
@@ -87,6 +87,8 @@ const PostDetailModal = ({
     "Ẩn danh";
   const avatar = currentPost.author?.profile?.avatar;
   const letter = authorName.charAt(0).toUpperCase();
+  const [avatarError, setAvatarError] = useState(false);
+  useEffect(() => { setAvatarError(false); }, [avatar]);
   const isRepost = Boolean(
     currentPost.repostOfPostId && currentPost.repostOfPostId > 0,
   );
@@ -180,11 +182,12 @@ const PostDetailModal = ({
               className="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-sky-100 transition-opacity hover:opacity-90"
               title={authorName}
             >
-              {avatar ? (
+              {avatar && !avatarError ? (
                 <img
                   src={avatar}
                   alt={authorName}
                   className="h-full w-full object-cover"
+                  onError={() => setAvatarError(true)}
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-sky-600">

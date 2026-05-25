@@ -93,17 +93,20 @@ function CommentItem({
     node.author?.profile?.fullName || node.author?.username || "Ẩn danh";
   const avatarUrl = node.author?.profile?.avatar;
   const initial = name.charAt(0).toUpperCase();
+  const [avatarError, setAvatarError] = useState(false);
+  useEffect(() => { setAvatarError(false); }, [avatarUrl]);
   const indentClass = depth > 0 ? "ml-10 mt-2" : "mt-3";
 
   return (
     <div className={indentClass}>
       <div className="flex gap-2 items-start">
         <div className="shrink-0 w-8 h-8 rounded-full bg-gray-200 overflow-hidden">
-          {avatarUrl ? (
+          {avatarUrl && !avatarError ? (
             <img
               src={avatarUrl}
               alt=""
               className="w-full h-full object-cover"
+              onError={() => setAvatarError(true)}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs font-semibold">

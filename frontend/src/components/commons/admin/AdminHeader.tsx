@@ -4,6 +4,7 @@
 
 import { Bell, Search, Mail } from "lucide-react";
 import { useAppSelector } from "../../../redux/hook";
+import UserAvatar from "../../ui/admin/UserAvatar";
 
 interface Props {
   collapsed: boolean;
@@ -132,21 +133,11 @@ const AdminHeader = ({ collapsed }: Props) => {
             cursor-pointer
           "
         >
-          <div
-            className="
-              w-12 h-12
-              rounded-2xl
-              bg-gradient-to-br
-              from-sky-500
-              to-sky-700
-              flex items-center justify-center
-              text-white
-              font-bold
-              shadow-md
-            "
-          >
-            {user?.username?.charAt(0).toUpperCase()}
-          </div>
+          <UserAvatar
+            src={user?.profile?.avatar}
+            name={user?.username || "?"}
+            className="w-12 h-12 rounded-2xl shadow-md border border-sky-100"
+          />
 
           <div>
             <p className="text-sm font-bold text-slate-800">{user?.username}</p>

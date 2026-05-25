@@ -55,6 +55,8 @@ const PostCard = ({
   const authorName =
     post.author?.profile?.fullName || post.author?.username || "Ẩn danh";
   const avatar = post.author?.profile?.avatar;
+  const [avatarError, setAvatarError] = useState(false);
+  useEffect(() => { setAvatarError(false); }, [avatar]);
   const repostOfPostId =
     post.repostOfPostId && post.repostOfPostId > 0 ? post.repostOfPostId : null;
   const isRepost = repostOfPostId != null;
@@ -73,8 +75,8 @@ const PostCard = ({
     <article className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm transition-colors duration-200 hover:border-slate-300 hover:bg-slate-50/40">
       <div className="flex items-start gap-3 p-5">
         <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-sky-100 ring-4 ring-sky-50">
-          {avatar ? (
-            <img src={avatar} alt={authorName} className="h-full w-full object-cover" />
+          {avatar && !avatarError ? (
+            <img src={avatar} alt={authorName} className="h-full w-full object-cover" onError={() => setAvatarError(true)} />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-sky-700">
               {authorName.charAt(0).toUpperCase()}

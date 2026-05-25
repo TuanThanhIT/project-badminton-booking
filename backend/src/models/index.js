@@ -37,6 +37,7 @@ import DraftBeverageItem from "./draftBeverageItem.js";
 import OfflineBooking from "./offlineBooking.js";
 
 import Beverage from "./beverage.js";
+import BeverageStock from "./beverageStock.js";
 
 import Wallet from "./wallet.js";
 import WalletTransaction from "./walletTransaction.js";
@@ -485,6 +486,11 @@ DraftBeverageItem.belongsTo(Beverage, {
   as: "beverage",
 });
 
+Beverage.hasMany(BeverageStock, { foreignKey: "beverageId", as: "stocks" });
+BeverageStock.belongsTo(Beverage, { foreignKey: "beverageId", as: "beverage" });
+Branch.hasMany(BeverageStock, { foreignKey: "branchId", as: "beverageStocks" });
+BeverageStock.belongsTo(Branch, { foreignKey: "branchId", as: "branch" });
+
 //////////////////////////////////////////////////////
 //////////////// OFFLINE BOOKING /////////////////////
 //////////////////////////////////////////////////////
@@ -802,6 +808,7 @@ export {
   CashRegister,
   CoachProfile,
   VariantStock,
+  BeverageStock,
   MonthlyBooking,
   RefreshToken,
 };

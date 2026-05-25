@@ -158,6 +158,16 @@ BranchImage.belongsTo(Branch, {
   as: "branch",
 });
 
+Branch.hasMany(User, {
+  foreignKey: "branchId",
+  as: "employees",
+});
+
+User.belongsTo(Branch, {
+  foreignKey: "branchId",
+  as: "branch",
+});
+
 //////////////////////////////////////////////////////
 /////////////// BRANCH MANAGER ///////////////////////
 //////////////////////////////////////////////////////
@@ -429,11 +439,11 @@ DraftProductItem.belongsTo(DraftBooking, {
 });
 
 ProductVariant.hasMany(DraftProductItem, {
-  foreignKey: "productVariantId",
+  foreignKey: "variantId",
   as: "draftItems",
 });
 DraftProductItem.belongsTo(ProductVariant, {
-  foreignKey: "productVariantId",
+  foreignKey: "variantId",
   as: "variant",
 });
 
@@ -472,7 +482,7 @@ OfflineBooking.belongsTo(DraftBooking, {
 //////////////////////////////////////////////////////
 //////////////// MONTHLY BOOKING /////////////////////
 //////////////////////////////////////////////////////
-// Quan h? cho Ð?t sân tháng
+// Quan h? cho ï¿½?t sï¿½n thï¿½ng
 User.hasMany(MonthlyBooking, { foreignKey: "userId", as: "monthlyBookings" });
 MonthlyBooking.belongsTo(User, { foreignKey: "userId", as: "user" });
 
@@ -485,7 +495,7 @@ MonthlyBooking.belongsTo(Branch, { foreignKey: "branchId", as: "branch" });
 Court.hasMany(MonthlyBooking, { foreignKey: "courtId", as: "monthlyBookings" });
 MonthlyBooking.belongsTo(Court, { foreignKey: "courtId", as: "court" });
 
-// Quan h? k?t n?i Gói tháng v?i các Bu?i t?p chi ti?t
+// Quan h? k?t n?i Gï¿½i thï¿½ng v?i cï¿½c Bu?i t?p chi ti?t
 MonthlyBooking.hasMany(BookingDetail, {
   foreignKey: "monthlyBookingId",
   as: "details",
@@ -710,11 +720,11 @@ Order.hasMany(Feedback, { foreignKey: "orderId", as: "feedbacks" });
 Feedback.belongsTo(Order, { foreignKey: "orderId", as: "order" });
 
 ProductVariant.hasMany(Feedback, {
-  foreignKey: "productVariantId",
+  foreignKey: "variantId",
   as: "feedbacks",
 });
 Feedback.belongsTo(ProductVariant, {
-  foreignKey: "productVariantId",
+  foreignKey: "variantId",
   as: "variant",
 });
 

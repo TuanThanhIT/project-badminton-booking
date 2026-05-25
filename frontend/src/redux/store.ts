@@ -28,6 +28,9 @@ import conversationReducer from "./slices/user/conversationSlice";
 import monthlyBookingReducer from "./slices/user/monthlyBookingSlice";
 import orderReducer from "./slices/user/orderSlice";
 
+import managerCourtReducer from "./slices/manager/courtSlice";
+import managerBranchReducer from "./slices/manager/branchSlice";
+
 const persistConfig = {
   key: "root",
   storage,
@@ -50,6 +53,9 @@ const rootReducer = combineReducers({
   discount: discountReducer,
   monthlyBooking: monthlyBookingReducer,
   order: orderReducer,
+
+  managerCourt: managerCourtReducer,
+  managerBranch: managerBranchReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

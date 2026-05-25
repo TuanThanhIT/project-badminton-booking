@@ -10,6 +10,7 @@ import ManagerPublicLayout from "../components/layouts/ManagerPublicLayout";
 import DashboardPage from "../pages/manager/DashboardPage";
 import LoginPage from "../pages/manager/LoginPage";
 import LandingPage from "../pages/manager/LandingPage";
+import BranchPage from "../pages/manager/BranchPage";
 
 const ManagerRoute = () => {
   return (
@@ -24,6 +25,7 @@ const ManagerRoute = () => {
       <Route element={<ManagerProtectedRoute />}>
         <Route element={<ManagerLayout />}>
           <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="branches" element={<BranchPage />} />
         </Route>
       </Route>
     </Routes>

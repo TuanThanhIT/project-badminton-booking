@@ -23,7 +23,7 @@ const DraftProductItem = sequelize.define(
         },
       },
     },
-    productVariantId: {
+    variantId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: { model: ProductVariant, key: "id" },

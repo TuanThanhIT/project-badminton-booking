@@ -28,6 +28,9 @@ import initOrderRoute from "./routes/user/orderRoute.js";
 import initDiscountRoute from "./routes/user/discountRoute.js";
 import initEmployeeOrderRoute from "./routes/employee/orderRoute.js";
 import initWebhookRoute from "./routes/user/webhookRoute.js";
+import initCourtRouteManager from "./routes/manager/courtRoute.js";
+import initBranchRouteManager from "./routes/manager/branchRoute.js";
+import initEmployeeRouteManager from "./routes/manager/employeeRoute.js";
 
 dotenv.config();
 
@@ -70,6 +73,10 @@ initUserSearchRoute(app);
 // Employee
 initEmployeeOrderRoute(app);
 
+// Manager
+initCourtRouteManager(app);
+initBranchRouteManager(app);
+initEmployeeRouteManager(app);
 // create http server
 const httpServer = createServer(app);
 

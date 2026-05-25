@@ -27,7 +27,7 @@ const Feedback = sequelize.define(
         min: { args: [1], msg: "Order ID must be positive" },
       },
     },
-    productVariantId: {
+    variantId: {
       type: DataTypes.INTEGER,
       allowNull: true,
       references: { model: ProductVariant, key: "id" },
@@ -77,7 +77,7 @@ const Feedback = sequelize.define(
     indexes: [
       { fields: ["userId"] },
       { fields: ["orderId"] },
-      { fields: ["productVariantId"] },
+      { fields: ["variantId"] },
       { fields: ["branchId"] },
     ],
   },

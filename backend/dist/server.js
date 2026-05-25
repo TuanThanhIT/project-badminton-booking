@@ -29,6 +29,9 @@ var _orderRoute = _interopRequireDefault(require("./routes/user/orderRoute.js"))
 var _discountRoute = _interopRequireDefault(require("./routes/user/discountRoute.js"));
 var _orderRoute2 = _interopRequireDefault(require("./routes/employee/orderRoute.js"));
 var _webhookRoute = _interopRequireDefault(require("./routes/user/webhookRoute.js"));
+var _courtRoute2 = _interopRequireDefault(require("./routes/manager/courtRoute.js"));
+var _branchRoute2 = _interopRequireDefault(require("./routes/manager/branchRoute.js"));
+var _employeeRoute = _interopRequireDefault(require("./routes/manager/employeeRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
@@ -68,6 +71,10 @@ app.use((0, _cookieParser["default"])());
 // Employee
 (0, _orderRoute2["default"])(app);
 
+// Manager
+(0, _courtRoute2["default"])(app);
+(0, _branchRoute2["default"])(app);
+(0, _employeeRoute["default"])(app);
 // create http server
 var httpServer = (0, _http.createServer)(app);
 

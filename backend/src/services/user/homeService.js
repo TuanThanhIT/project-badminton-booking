@@ -119,7 +119,11 @@ const getSuccessOrderStatuses = () => {
 };
 
 const getSuccessBookingStatuses = () => {
-  return [BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.COMPLETED];
+  return [
+    BOOKING_STATUS.CONFIRMED,
+    BOOKING_STATUS.CHECKED_IN,
+    BOOKING_STATUS.COMPLETED,
+  ];
 };
 
 const getCategoryGroups = async () => {

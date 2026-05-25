@@ -52,6 +52,19 @@ const completeBookingController = asyncHandler(async (req, res) => {
     .json(new SuccessResponse("Hoàn thành lịch sân thành công"));
 });
 
+const receiveBookingController = asyncHandler(async (req, res) => {
+  const data = {
+    bookingId: req.params.bookingId,
+    employeeId: req.user.id,
+  };
+
+  await employeeBookingService.receiveBookingService(data);
+
+  return res
+    .status(200)
+    .json(new SuccessResponse("Xác nhận khách đã nhận sân thành công"));
+});
+
 const approveCancelBookingController = asyncHandler(async (req, res) => {
   const data = {
     bookingId: req.params.bookingId,
@@ -98,6 +111,7 @@ const employeeBookingController = {
   getBookingsController,
   getBookingDetailController,
   confirmBookingController,
+  receiveBookingController,
   completeBookingController,
   approveCancelBookingController,
   rejectCancelBookingController,

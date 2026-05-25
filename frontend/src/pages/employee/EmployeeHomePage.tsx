@@ -53,6 +53,7 @@ const timeShort = (value: string) => value?.slice(0, 5);
 const SLOT_BOOKING_LABEL: Record<string, string> = {
   PENDING: "Chờ xử lý",
   CONFIRMED: "Đã xác nhận",
+  CHECKED_IN: "Đã nhận sân",
   CANCEL_REQUESTED: "Yêu cầu hủy",
   COMPLETED: "Hoàn thành",
   CANCELLED: "Đã hủy",
@@ -117,6 +118,16 @@ const getProductVariantText = (
 
   return details.join(", ");
 };
+
+const getProductVariantBadges = (
+  item: Pick<CounterProduct, "size" | "color" | "material" | "sku">,
+) =>
+  [
+    item.sku ? { label: "SKU", value: item.sku } : null,
+    item.size ? { label: "Size", value: item.size } : null,
+    item.color ? { label: "Màu", value: item.color } : null,
+    item.material ? { label: "Chất liệu", value: item.material } : null,
+  ].filter(Boolean) as { label: string; value: string }[];
 
 const EmployeeHomePage = () => {
   const dispatch = useAppDispatch();
@@ -692,54 +703,110 @@ const EmployeeHomePage = () => {
                       itemTab === "product"
                         ? getProductVariantText(item as CounterProduct)
                         : "";
+                    const variantBadges =
+                      itemTab === "product"
+                        ? getProductVariantBadges(item as CounterProduct)
+                        : [];
 
                     return (
                       <div
                         key={`${itemTab}-${item.id}`}
-                        className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 transition hover:border-slate-300 hover:bg-slate-50"
+                        className="
+      flex items-center gap-3 rounded-[1.35rem]
+      border border-slate-200 bg-white p-3 shadow-sm
+    "
                       >
-                        <img
-                          src={item.thumbnailUrl || emptyImage}
-                          alt={title}
-                          className="h-14 w-14 rounded-2xl object-cover"
-                        />
-
-                        <div className="min-w-0 flex-1">
-                          <p
-                            className="truncate text-sm font-medium text-slate-700"
-                            title={
-                              variantText ? `${title} - ${variantText}` : title
-                            }
-                          >
-                            {title}
-                          </p>
-
-                          {variantText && (
-                            <p className="mt-1 line-clamp-2 text-xs font-medium leading-snug text-slate-500">
-                              {variantText}
-                            </p>
-                          )}
-
-                          <p className="mt-1 text-sm font-semibold text-sky-700">
-                            {formatCurrency(item.price)}
-                          </p>
-
-                          <p className="text-xs font-medium text-slate-500">
-                            Tồn: {item.stock}
-                          </p>
+                        {/* IMAGE */}
+                        <div
+                          className="
+        grid h-[76px] w-[76px] shrink-0 place-items-center overflow-hidden
+        rounded-2xl border border-slate-100 bg-slate-50
+      "
+                        >
+                          <img
+                            src={item.thumbnailUrl || emptyImage}
+                            alt={title}
+                            className="h-full w-full object-contain p-2"
+                          />
                         </div>
 
-                        <button
-                          onClick={() =>
-                            itemTab === "product"
-                              ? addProduct(item as CounterProduct)
-                              : addBeverage(item as CounterBeverage)
-                          }
-                          disabled={!canOperate || item.stock <= 0}
-                          className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-sky-600 text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:bg-slate-300"
-                        >
-                          <Plus className="h-5 w-5" />
-                        </button>
+                        {/* CONTENT */}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-2">
+                            <p
+                              className="line-clamp-2 text-[14px] font-semibold leading-5 text-slate-700"
+                              title={
+                                variantText
+                                  ? `${title} - ${variantText}`
+                                  : title
+                              }
+                            >
+                              {title}
+                            </p>
+
+                            <span
+                              className={`
+            shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold
+            ${
+              item.stock > 0
+                ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                : "bg-slate-100 text-slate-500 ring-1 ring-slate-200"
+            }
+          `}
+                            >
+                              {item.stock > 0
+                                ? `Tồn ${item.stock}`
+                                : "Hết hàng"}
+                            </span>
+                          </div>
+
+                          {variantBadges.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                              {variantBadges.map((badge) => (
+                                <span
+                                  key={`${badge.label}-${badge.value}`}
+                                  title={`${badge.label}: ${badge.value}`}
+                                  className="
+          inline-flex max-w-full items-center overflow-hidden rounded-xl
+          border border-slate-200 bg-white text-[11px] leading-4
+        "
+                                >
+                                  <span className="shrink-0 bg-slate-50 px-2 py-1 font-medium text-slate-500">
+                                    {badge.label}
+                                  </span>
+
+                                  <span className="min-w-0 truncate px-2 py-1 font-semibold text-slate-700">
+                                    {badge.value}
+                                  </span>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="mt-3 flex items-center justify-between gap-3">
+                            <p className="text-[15px] font-semibold text-sky-700">
+                              {formatCurrency(item.price)}
+                            </p>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                itemTab === "product"
+                                  ? addProduct(item as CounterProduct)
+                                  : addBeverage(item as CounterBeverage)
+                              }
+                              disabled={!canOperate || item.stock <= 0}
+                              className="
+            inline-flex h-9 items-center justify-center gap-1.5 rounded-xl
+            bg-sky-600 hover:bg-sky-700 px-3 text-xs font-semibold text-white shadow-sm
+            disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none
+          "
+                            >
+                              <Plus className="h-4 w-4" />
+                              Thêm
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     );
                   })}

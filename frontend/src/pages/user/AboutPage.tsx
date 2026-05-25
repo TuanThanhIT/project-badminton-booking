@@ -80,6 +80,8 @@ const AboutPage = () => {
   ];
 
   const refundNotes = [
+    "Với lịch đặt sân chọn thanh toán tại sân, ví BHub phải còn số dư khả dụng tối thiểu 50% giá trị lịch để giữ cọc; nếu khách không đến nhận sân quá 30 phút, khoản cọc này có thể bị trừ.",
+    "Sau khi nhân viên xác nhận lịch, khách cần đến nhận sân đúng giờ và cung cấp họ tên, số điện thoại đặt lịch để kiểm tra nhanh tại quầy.",
     "BHub hoàn tiền vào ví BHub của khách hàng đối với các giao dịch đã thanh toán thành công và đủ điều kiện hoàn.",
     "Đơn COD hoặc giao dịch chưa ghi nhận thanh toán thành công sẽ không phát sinh hoàn ví tự động.",
     "Số tiền hoàn được tính theo giá trị đơn liên quan, có phân bổ phần giảm giá nếu đơn thuộc một nhóm đơn có mã khuyến mãi.",

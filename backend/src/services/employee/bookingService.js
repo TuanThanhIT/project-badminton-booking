@@ -6,6 +6,7 @@ import {
   Branch,
   Court,
   Payment,
+  Profile,
   User,
   Wallet,
   WalletTransaction,
@@ -26,11 +27,12 @@ import {
   WALLET_TRANSACTION_TYPE,
 } from "../../constants/paymentConstant.js";
 import {
-  assertEmployeeCanAccessBranch,
-  getEmployeeBranchIds,
+  assertEmployeeActiveCashierForBranch,
+  getActiveCashierBranchIds,
 } from "./branchAccessService.js";
 import { sendUserNotification } from "../../helpers/notification.js";
 import { formatBookingCode } from "../../utils/displayCode.js";
+import { handleSendBookingMail } from "../shared/sendBookingMail.js";
 
 const bookingInclude = [
   {
@@ -50,6 +52,13 @@ const bookingInclude = [
     model: User,
     as: "user",
     attributes: ["id", "username", "email"],
+    include: [
+      {
+        model: Profile,
+        as: "profile",
+        attributes: ["fullName", "phoneNumber"],
+      },
+    ],
   },
   {
     model: BookingDetail,
@@ -77,6 +86,13 @@ const mapBooking = (booking, payment = null) => {
     updatedDate: plain.updatedDate,
     branch: plain.branch || null,
     user: plain.user || null,
+    customer: plain.user
+      ? {
+          fullName:
+            plain.user.profile?.fullName || plain.user.username || "Khách",
+          phoneNumber: plain.user.profile?.phoneNumber || "",
+        }
+      : null,
     payment: payment
       ? {
           id: payment.id,
@@ -121,10 +137,174 @@ const attachBookingPayments = async (bookings) => {
   );
 };
 
+const getPrimaryDetail = (booking) => {
+  const details = booking.details || [];
+  return [...details].sort((a, b) =>
+    `${a.playDate} ${a.startTime}`.localeCompare(`${b.playDate} ${b.startTime}`),
+  )[0];
+};
+
+const getLastDetail = (booking) => {
+  const details = booking.details || [];
+  return [...details].sort((a, b) =>
+    `${b.playDate} ${b.endTime}`.localeCompare(`${a.playDate} ${a.endTime}`),
+  )[0];
+};
+
+const toLocalDateTime = (date, time) => {
+  const [year, month, day] = String(date).split("-").map(Number);
+  const [hour, minute] = String(time).split(":").map(Number);
+  return new Date(year, month - 1, day, hour, minute, 0, 0);
+};
+
+const assertNoShowWindowReached = (booking) => {
+  const firstDetail = getPrimaryDetail(booking);
+  if (!firstDetail) return;
+
+  const noShowAt = new Date(
+    toLocalDateTime(firstDetail.playDate, firstDetail.startTime).getTime() +
+      30 * 60 * 1000,
+  );
+
+  if (Date.now() < noShowAt.getTime()) {
+    throw new BadRequestError(
+      "Chỉ được hủy vắng mặt sau khi khách trễ nhận sân quá 30 phút.",
+    );
+  }
+};
+
+const assertBookingPlayTimeEnded = (booking) => {
+  const lastDetail = getLastDetail(booking);
+  if (!lastDetail) return;
+
+  const endAt = toLocalDateTime(lastDetail.playDate, lastDetail.endTime);
+  if (Date.now() < endAt.getTime()) {
+    throw new BadRequestError(
+      "Chỉ được hoàn thành sau khi khách đã đánh hết thời gian đặt sân.",
+    );
+  }
+};
+
+const getBookingPayment = async ({ booking, transaction, lock = false }) =>
+  Payment.findOne({
+    where: {
+      targetPaymentType: TARGET_PAYMENT_TYPE.BOOKING,
+      targetPaymentId: booking.id,
+    },
+    transaction,
+    lock: lock ? transaction?.LOCK?.UPDATE : undefined,
+  });
+
+const getDepositDescription = (booking) =>
+  `Cọc giữ sân ${formatBookingCode(booking.id, booking.createdDate)}`;
+
+const getBookingMailPayload = async ({ bookingId, transaction }) => {
+  const booking = await Booking.findByPk(bookingId, {
+    include: [
+      { model: Branch, as: "branch" },
+      {
+        model: User,
+        as: "user",
+        attributes: ["id", "username", "email"],
+        include: [
+          {
+            model: Profile,
+            as: "profile",
+            attributes: ["fullName", "phoneNumber"],
+          },
+        ],
+      },
+      {
+        model: BookingDetail,
+        as: "details",
+        include: [{ model: Court, as: "court", attributes: ["id", "courtName"] }],
+      },
+    ],
+    transaction,
+  });
+
+  if (!booking) return null;
+
+  const payment = await getBookingPayment({ booking, transaction });
+  const plain = booking.get({ plain: true });
+  plain.payment = payment?.get ? payment.get({ plain: true }) : payment;
+  plain.bookingCode = formatBookingCode(booking.id, booking.createdDate);
+  plain.depositAmount =
+    plain.payment?.paymentMethod === PAYMENT_METHOD_STATUS.COD
+      ? Math.round(Number(booking.totalAmount || 0) * 0.5)
+      : 0;
+
+  return plain;
+};
+
+const sendBookingMailSafely = async ({ bookingId, type, penaltyAmount = 0 }) => {
+  try {
+    const booking = await getBookingMailPayload({ bookingId });
+    if (!booking) return;
+
+    booking.penaltyAmount = penaltyAmount;
+    await handleSendBookingMail(booking, type);
+  } catch (error) {
+    console.error("Send booking email failed", error.message);
+  }
+};
+
+const releaseBookingDeposit = async ({ booking, payment, transaction }) => {
+  if (payment?.paymentMethod !== PAYMENT_METHOD_STATUS.COD) return;
+
+  await WalletTransaction.update(
+    { status: WALLET_TRANSACTION_STATUS.CANCELLED },
+    {
+      where: {
+        paymentId: payment.id,
+        status: WALLET_TRANSACTION_STATUS.PENDING,
+        description: getDepositDescription(booking),
+      },
+      transaction,
+    },
+  );
+};
+
+const chargeNoShowDeposit = async ({ booking, payment, transaction }) => {
+  if (payment?.paymentMethod !== PAYMENT_METHOD_STATUS.COD) {
+    return { charged: false, amount: 0 };
+  }
+
+  const tx = await WalletTransaction.findOne({
+    where: {
+      paymentId: payment.id,
+      status: WALLET_TRANSACTION_STATUS.PENDING,
+      description: getDepositDescription(booking),
+    },
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
+
+  if (!tx) return { charged: false, amount: 0 };
+
+  const wallet = await Wallet.findByPk(tx.walletId, {
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
+
+  if (!wallet || Number(wallet.balance) < Number(tx.amount)) {
+    throw new BadRequestError("Ví khách không đủ số dư để trừ cọc giữ sân.");
+  }
+
+  await wallet.update(
+    { balance: sequelize.literal(`balance - ${Number(tx.amount)}`) },
+    { transaction },
+  );
+
+  await tx.update({ status: WALLET_TRANSACTION_STATUS.SUCCESS }, { transaction });
+
+  return { charged: true, amount: Number(tx.amount) };
+};
+
 const getBookingsService = async (data) => {
   const { employeeId, status, keyword, date, page = 1, limit = 12 } = data;
 
-  const branchIds = await getEmployeeBranchIds(employeeId);
+  const branchIds = await getActiveCashierBranchIds(employeeId);
   if (!branchIds.length) {
     return {
       items: [],
@@ -204,7 +384,7 @@ const getBookingDetailService = async (data) => {
 
   if (!booking) throw new NotFoundError("Lịch đặt sân không tồn tại");
 
-  await assertEmployeeCanAccessBranch({
+  await assertEmployeeActiveCashierForBranch({
     employeeId,
     branchId: booking.branchId,
   });
@@ -251,6 +431,8 @@ const confirmBookingService = async (data) => {
     "Lịch sân đã được xác nhận",
     `${booking.branch?.branchName || "Chi nhánh"} đã xác nhận lịch sân ${formatBookingCode(booking.id, booking.createdDate)}. Vui lòng đến đúng giờ và xuất trình email xác nhận để nhận sân.`,
   );
+
+  await sendBookingMailSafely({ bookingId: booking.id, type: "confirm" });
 };
 
 const completeBookingService = async (data) => {
@@ -262,17 +444,16 @@ const completeBookingService = async (data) => {
       transaction,
     });
 
-    if (booking.bookingStatus !== BOOKING_STATUS.CONFIRMED) {
-      throw new BadRequestError("Chỉ có thể hoàn thành lịch sân đã xác nhận");
+    if (booking.bookingStatus !== BOOKING_STATUS.CHECKED_IN) {
+      throw new BadRequestError("Chỉ có thể hoàn thành lịch sân đã nhận sân");
     }
 
-    let payment = await Payment.findOne({
-      where: {
-        targetPaymentType: TARGET_PAYMENT_TYPE.BOOKING,
-        targetPaymentId: booking.id,
-      },
+    assertBookingPlayTimeEnded(booking);
+
+    let payment = await getBookingPayment({
+      booking,
       transaction,
-      lock: transaction.LOCK.UPDATE,
+      lock: true,
     });
 
     if (!payment) {
@@ -287,6 +468,8 @@ const completeBookingService = async (data) => {
         { transaction },
       );
     }
+
+    await releaseBookingDeposit({ booking, payment, transaction });
 
     if (payment.paymentStatus !== PAYMENT_STATUS.PAID) {
       if (
@@ -322,6 +505,42 @@ const completeBookingService = async (data) => {
     "Lịch sân đã hoàn tất",
     `Lịch sân ${formatBookingCode(booking.id, booking.createdDate)} tại ${booking.branch?.branchName || "chi nhánh"} đã được hoàn tất. Cảm ơn bạn đã sử dụng dịch vụ B-Hub.`,
   );
+
+  await sendBookingMailSafely({ bookingId: booking.id, type: "complete" });
+};
+
+const receiveBookingService = async (data) => {
+  const { bookingId, employeeId } = data;
+  const booking = await sequelize.transaction(async (transaction) => {
+    const booking = await getEmployeeBookingForAction({
+      bookingId,
+      employeeId,
+      transaction,
+    });
+
+    if (booking.bookingStatus !== BOOKING_STATUS.CONFIRMED) {
+      throw new BadRequestError("Chỉ có thể nhận sân cho lịch đã xác nhận");
+    }
+
+    await booking.update(
+      {
+        bookingStatus: BOOKING_STATUS.CHECKED_IN,
+        previousBookingStatus: BOOKING_STATUS.CONFIRMED,
+      },
+      { transaction },
+    );
+
+    return booking;
+  });
+
+  await sendUserNotification(
+    booking.userId,
+    "booking-checked-in",
+    "Bạn đã nhận sân",
+    `Lịch sân ${formatBookingCode(booking.id, booking.createdDate)} tại ${booking.branch?.branchName || "chi nhánh"} đã được xác nhận nhận sân. Chúc bạn có buổi chơi vui vẻ.`,
+  );
+
+  await sendBookingMailSafely({ bookingId: booking.id, type: "checkedIn" });
 };
 
 const getEmployeeBookingForAction = async ({
@@ -332,7 +551,23 @@ const getEmployeeBookingForAction = async ({
   const booking = await Booking.findByPk(bookingId, {
     include: [
       { model: Branch, as: "branch" },
-      { model: BookingDetail, as: "details" },
+      {
+        model: User,
+        as: "user",
+        attributes: ["id", "username", "email"],
+        include: [
+          {
+            model: Profile,
+            as: "profile",
+            attributes: ["fullName", "phoneNumber"],
+          },
+        ],
+      },
+      {
+        model: BookingDetail,
+        as: "details",
+        include: [{ model: Court, as: "court", attributes: ["id", "courtName"] }],
+      },
     ],
     transaction,
     lock: transaction.LOCK.UPDATE,
@@ -340,7 +575,7 @@ const getEmployeeBookingForAction = async ({
 
   if (!booking) throw new NotFoundError("Lịch đặt sân không tồn tại");
 
-  await assertEmployeeCanAccessBranch({
+  await assertEmployeeActiveCashierForBranch({
     employeeId,
     branchId: booking.branchId,
     transaction,
@@ -457,6 +692,13 @@ const approveCancelBookingService = async (data) => {
       throw new BadRequestError("Lịch sân chưa có yêu cầu hủy");
     }
 
+    const payment = await getBookingPayment({
+      booking,
+      transaction,
+      lock: true,
+    });
+    await releaseBookingDeposit({ booking, payment, transaction });
+
     refundResult = await refundBookingToWallet({ booking, transaction });
 
     await booking.update(
@@ -536,11 +778,13 @@ const cancelNoShowBookingService = async (data) => {
       transaction,
     });
 
-    if (booking.bookingStatus !== BOOKING_STATUS.PENDING) {
+    if (booking.bookingStatus !== BOOKING_STATUS.CONFIRMED) {
       throw new BadRequestError(
-        "Chi co the huy truc tiep lich san dang cho xac nhan",
+        "Chỉ có thể hủy vắng mặt lịch sân đã xác nhận",
       );
     }
+
+    assertNoShowWindowReached(booking);
 
     if (
       [
@@ -552,7 +796,20 @@ const cancelNoShowBookingService = async (data) => {
       throw new BadRequestError("Trạng thái lịch sân hiện tại không thể hủy");
     }
 
-    refundResult = await refundBookingToWallet({ booking, transaction });
+    const payment = await getBookingPayment({
+      booking,
+      transaction,
+      lock: true,
+    });
+    const penalty = await chargeNoShowDeposit({
+      booking,
+      payment,
+      transaction,
+    });
+
+    refundResult = penalty.charged
+      ? { refunded: false, refundAmount: 0, penaltyAmount: penalty.amount }
+      : await refundBookingToWallet({ booking, transaction });
 
     await booking.update(
       {
@@ -580,6 +837,12 @@ const cancelNoShowBookingService = async (data) => {
       : `Lịch sân ${formatBookingCode(handledBooking.id, handledBooking.createdDate)} đã bị hủy. Lý do: ${reason || "Khách không đến nhận sân"}`,
   );
 
+  await sendBookingMailSafely({
+    bookingId: handledBooking.id,
+    type: "cancel",
+    penaltyAmount: refundResult?.penaltyAmount || 0,
+  });
+
   return {
     refund: refundResult,
   };
@@ -589,6 +852,7 @@ const employeeBookingService = {
   getBookingsService,
   getBookingDetailService,
   confirmBookingService,
+  receiveBookingService,
   completeBookingService,
   approveCancelBookingService,
   rejectCancelBookingService,

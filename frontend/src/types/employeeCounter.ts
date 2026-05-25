@@ -45,6 +45,7 @@ export type CounterProduct = {
 
 export type CounterBeverage = {
   id: number;
+  beverageId?: number;
   beverageName: string;
   thumbnailUrl?: string;
   price: number;

@@ -4,6 +4,7 @@ import BadRequestError from "../../errors/BadRequestError.js";
 import NotFoundError from "../../errors/NotFoundError.js";
 import {
   Beverage,
+  BeverageStock,
   Booking,
   BookingDetail,
   Branch,
@@ -119,6 +120,7 @@ const overlaps = (aStart, aEnd, bStart, bEnd) =>
 const ACTIVE_BOOKING_BOARD_STATUSES = [
   BOOKING_STATUS.PENDING,
   BOOKING_STATUS.CONFIRMED,
+  BOOKING_STATUS.CHECKED_IN,
   BOOKING_STATUS.CANCEL_REQUESTED,
   BOOKING_STATUS.COMPLETED,
 ];
@@ -184,6 +186,8 @@ const getActiveSession = async (employeeId, transaction) => {
   if (!assignment.cashRegister) {
     throw new BadRequestError("Ca làm chưa có phiên tiền mặt tại quầy.");
   }
+
+  assertCashier(assignment);
 
   await assertEmployeeCanAccessBranch({
     employeeId,
@@ -281,25 +285,33 @@ const getProductsService = async (employeeId, keyword = "") => {
 };
 
 const getBeveragesService = async (employeeId, keyword = "") => {
-  await getActiveSession(employeeId);
+  const session = await getActiveSession(employeeId);
 
-  const where = {};
+  const beverageWhere = {};
   if (keyword) {
-    where.beverageName = { [Op.like]: `%${keyword}%` };
+    beverageWhere.beverageName = { [Op.like]: `%${keyword}%` };
   }
 
-  const beverages = await Beverage.findAll({
-    where,
-    attributes: ["id", "beverageName", "thumbnailUrl", "price", "stock"],
-    order: [["beverageName", "ASC"]],
+  const stocks = await BeverageStock.findAll({
+    where: { branchId: session.workShift.branchId },
+    include: [
+      {
+        model: Beverage,
+        as: "beverage",
+        where: beverageWhere,
+        attributes: ["id", "beverageName", "thumbnailUrl", "price"],
+      },
+    ],
+    order: [[{ model: Beverage, as: "beverage" }, "beverageName", "ASC"]],
   });
 
-  return beverages.map((beverage) => ({
-    id: beverage.id,
-    beverageName: beverage.beverageName,
-    thumbnailUrl: beverage.thumbnailUrl,
-    price: Number(beverage.price || 0),
-    stock: Number(beverage.stock || 0),
+  return stocks.map((stock) => ({
+    id: stock.beverage.id,
+    beverageId: stock.beverage.id,
+    beverageName: stock.beverage.beverageName,
+    thumbnailUrl: stock.beverage.thumbnailUrl,
+    price: Number(stock.beverage.price || 0),
+    stock: Number(stock.stock || 0),
   }));
 };
 
@@ -925,20 +937,27 @@ const buildProductItems = async ({
   return result;
 };
 
-const buildBeverageItems = async ({ draftId, beverageItems, transaction }) => {
+const buildBeverageItems = async ({
+  branchId,
+  draftId,
+  beverageItems,
+  transaction,
+}) => {
   const result = [];
 
   for (const item of beverageItems) {
-    const beverage = await Beverage.findByPk(item.beverageId, {
+    const stock = await BeverageStock.findOne({
+      where: { branchId, beverageId: item.beverageId },
+      include: [{ model: Beverage, as: "beverage" }],
       transaction,
       lock: transaction.LOCK.UPDATE,
     });
 
-    if (!beverage) {
-      throw new BadRequestError("Đồ uống không tồn tại.");
+    if (!stock) {
+      throw new BadRequestError("Đồ uống không có tại chi nhánh này.");
     }
 
-    if (Number(beverage.stock) < Number(item.quantity)) {
+    if (Number(stock.stock) < Number(item.quantity)) {
       throw new BadRequestError("Số lượng đồ uống vượt quá tồn kho.");
     }
 
@@ -946,7 +965,7 @@ const buildBeverageItems = async ({ draftId, beverageItems, transaction }) => {
       draftId,
       beverageId: item.beverageId,
       quantity: Number(item.quantity),
-      subTotal: toMoney(Number(beverage.price) * Number(item.quantity)),
+      subTotal: toMoney(Number(stock.beverage.price) * Number(item.quantity)),
     });
   }
 
@@ -986,6 +1005,7 @@ const updateDraftService = async ({
       transaction: t,
     });
     const beverages = await buildBeverageItems({
+      branchId,
       draftId: draft.id,
       beverageItems,
       transaction: t,
@@ -1088,16 +1108,20 @@ const checkoutDraftService = async ({ employeeId, draftId, paymentMethod }) => {
     }
 
     for (const item of draft.beverageItems) {
-      const beverage = await Beverage.findByPk(item.beverageId, {
+      const stock = await BeverageStock.findOne({
+        where: {
+          branchId: session.workShift.branchId,
+          beverageId: item.beverageId,
+        },
         transaction: t,
         lock: t.LOCK.UPDATE,
       });
 
-      if (!beverage || Number(beverage.stock) < Number(item.quantity)) {
+      if (!stock || Number(stock.stock) < Number(item.quantity)) {
         throw new BadRequestError("Số lượng đồ uống vượt quá tồn kho.");
       }
 
-      await beverage.decrement(
+      await stock.decrement(
         { stock: Number(item.quantity) },
         { transaction: t },
       );

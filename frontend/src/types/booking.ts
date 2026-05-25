@@ -4,6 +4,7 @@ import type { VNPayCallbackRequest } from "./wallet";
 export type BookingStatus =
   | "PENDING"
   | "CONFIRMED"
+  | "CHECKED_IN"
   | "CANCEL_REQUESTED"
   | "COMPLETED"
   | "CANCELLED"
@@ -153,6 +154,14 @@ export type EmployeeBooking = {
     id: number;
     username: string;
     email: string;
+    profile?: {
+      fullName?: string | null;
+      phoneNumber?: string | null;
+    } | null;
+  } | null;
+  customer?: {
+    fullName: string;
+    phoneNumber: string;
   } | null;
   payment: EmployeeBookingPayment;
   details: {
@@ -193,6 +202,7 @@ export type EmployeeBookingActionResponse = ApiResponse<{
   refund?: {
     refunded: boolean;
     refundAmount: number;
+    penaltyAmount?: number;
   };
 } | null>;
 

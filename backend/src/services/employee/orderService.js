@@ -19,8 +19,8 @@ import {
   WalletTransaction,
 } from "../../models/index.js";
 import {
-  assertEmployeeCanAccessBranch,
-  getEmployeeBranchIds,
+  assertEmployeeActiveCashierForBranch,
+  getActiveCashierBranchIds,
 } from "./branchAccessService.js";
 import { syncOrderStatus } from "../../utils/orderMapper.js";
 import { mapGHNStatusToSystem } from "../../utils/shippingMapper.js";
@@ -166,7 +166,7 @@ const attachPayments = async (orders) => {
 
 const getOrdersService = async (data) => {
   const { employeeId, status, keyword, date, page = 1, limit = 12 } = data;
-  const branchIds = await getEmployeeBranchIds(employeeId);
+  const branchIds = await getActiveCashierBranchIds(employeeId);
   if (!branchIds.length) {
     return {
       items: [],
@@ -247,7 +247,7 @@ const getOrderDetailService = async (data) => {
 
   if (!order) throw new NotFoundError("Đơn hàng không tồn tại");
 
-  await assertEmployeeCanAccessBranch({
+  await assertEmployeeActiveCashierForBranch({
     employeeId,
     branchId: order.branchId,
   });
@@ -303,7 +303,7 @@ const confirmOrderService = async (data) => {
 
     if (!order) throw new NotFoundError("Đơn hàng không tồn tại");
 
-    await assertEmployeeCanAccessBranch({
+    await assertEmployeeActiveCashierForBranch({
       employeeId,
       branchId: order.branchId,
       transaction: t,
@@ -342,7 +342,7 @@ const prepareOrderService = async (data) => {
 
     if (!order) throw new NotFoundError("Đơn hàng không tồn tại");
 
-    await assertEmployeeCanAccessBranch({
+    await assertEmployeeActiveCashierForBranch({
       employeeId,
       branchId: order.branchId,
       transaction: t,
@@ -381,7 +381,7 @@ const readyToShipService = async (data) => {
 
     if (!order) throw new NotFoundError("Đơn hàng không tồn tại");
 
-    await assertEmployeeCanAccessBranch({
+    await assertEmployeeActiveCashierForBranch({
       employeeId,
       branchId: order.branchId,
       transaction: t,
@@ -420,7 +420,7 @@ const shipOrderService = async ({ orderId, employeeId }) => {
 
     if (!o) throw new NotFoundError("Đơn hàng không tồn tại");
 
-    await assertEmployeeCanAccessBranch({
+    await assertEmployeeActiveCashierForBranch({
       employeeId,
       branchId: o.branchId,
       transaction: t,
@@ -662,7 +662,7 @@ const getEmployeeOrderForAction = async ({
     throw new NotFoundError("Đơn hàng không tồn tại");
   }
 
-  await assertEmployeeCanAccessBranch({
+  await assertEmployeeActiveCashierForBranch({
     employeeId,
     branchId: order.branchId,
     transaction,

@@ -9,6 +9,7 @@ import EmployeeOrdersPage from "../pages/employee/EmployeeOrdersPage";
 import EmployeeBookingsPage from "../pages/employee/EmployeeBookingsPage";
 import EmployeeShiftsPage from "../pages/employee/EmployeeShiftsPage";
 import EmployeeProtectedRoute from "./ProtectedRoute/EmployeeProtectedRoute";
+import EmployeeCashierShiftRoute from "./ProtectedRoute/EmployeeCashierShiftRoute";
 
 const EmployeeRoute = () => {
   return (
@@ -21,10 +22,12 @@ const EmployeeRoute = () => {
       <Route element={<EmployeeProtectedRoute />}>
         <Route element={<EmployeeLayout />}>
           <Route path="cash-register" element={<CashRegisterPage />} />
-          <Route path="home" element={<EmployeeHomePage />} />
           <Route path="shifts" element={<EmployeeShiftsPage />} />
-          <Route path="orders" element={<EmployeeOrdersPage />} />
-          <Route path="bookings" element={<EmployeeBookingsPage />} />
+          <Route element={<EmployeeCashierShiftRoute />}>
+            <Route path="home" element={<EmployeeHomePage />} />
+            <Route path="orders" element={<EmployeeOrdersPage />} />
+            <Route path="bookings" element={<EmployeeBookingsPage />} />
+          </Route>
         </Route>
       </Route>
     </Routes>

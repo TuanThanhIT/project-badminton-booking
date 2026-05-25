@@ -517,6 +517,16 @@ const CheckoutBookingPage = () => {
                   Lịch đặt sẽ được ghi nhận ngay sau khi xác nhận thành công.
                 </div>
 
+                {selectedMethod === BOOKING_PAYMENT_METHOD.CASH.value && (
+                  <div className="mt-3 rounded-2xl border border-amber-100 bg-amber-50 p-4 text-xs leading-5 text-amber-800">
+                    Thanh toán tại sân yêu cầu ví B-Hub còn khả dụng tối thiểu{" "}
+                    <strong>{formatPrice(Math.round(finalAmount * 0.5))}</strong>{" "}
+                    để giữ cọc 50%. Nếu bạn không đến nhận sân quá 30 phút so
+                    với giờ bắt đầu và không có yêu cầu hủy hợp lệ, khoản cọc
+                    này có thể bị trừ.
+                  </div>
+                )}
+
                 <button
                   type="button"
                   onClick={handlePayNow}

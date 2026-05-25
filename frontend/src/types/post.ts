@@ -214,6 +214,7 @@ export type GetPostsData = {
 };
 
 export type CreateCommentRequest = {
+  postId: number;
   content: string;
   parentId?: number | null;
 };

@@ -8,7 +8,6 @@ import {
   HeadphonesIcon,
   Instagram,
   Mail,
-  MapPin,
   MessageSquare,
   Phone,
   Send,

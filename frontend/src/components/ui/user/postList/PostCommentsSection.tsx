@@ -214,11 +214,6 @@ const PostCommentsSection = ({ postId, open }: Props) => {
     [comments],
   );
 
-  const reloadComments = useCallback(async () => {
-    const res = await postSocialService.getCommentsService(postId);
-    setComments((res.data as { data?: { comments?: PostComment[] } }).data?.comments ?? []);
-  }, [postId]);
-
   useEffect(() => {
     if (!open) return;
 

@@ -45,10 +45,10 @@ const getUsersService = async (data) => {
         where: Object.keys(roleWhere).length ? roleWhere : undefined,
       },
     ],
-    attributes: ["id", "username", "email", "isVerified", "isActive", "createdDate"],
+    attributes: ["id", "username", "email", "isVerified", "isActive", "createdAt"],
     limit: Number(limit),
     offset: Number(offset),
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
     distinct: true,
   });
 
@@ -60,7 +60,7 @@ const getUsersService = async (data) => {
       email: user.email,
       isVerified: user.isVerified,
       isActive: user.isActive,
-      createdDate: user.createdDate,
+      createdAt: user.createdAt,
       role: user.role?.roleName,
       fullName: user.profile?.fullName,
       phoneNumber: user.profile?.phoneNumber,
@@ -81,7 +81,7 @@ const getUsersService = async (data) => {
 
 const getUserDetailService = async (userId) => {
   const user = await User.findByPk(userId, {
-    attributes: ["id", "username", "email", "isVerified", "isActive", "createdDate"],
+    attributes: ["id", "username", "email", "isVerified", "isActive", "createdAt"],
     include: [
       {
         model: Profile,
@@ -105,7 +105,7 @@ const getUserDetailService = async (userId) => {
             attributes: ["id", "branchName", "address"],
           },
         ],
-        attributes: ["id", "branchId", "isActive", "assignedDate"],
+        attributes: ["id", "branchId", "isActive", "createdAt"],
       },
     ],
   });
@@ -119,7 +119,7 @@ const getUserDetailService = async (userId) => {
     email: data.email,
     isVerified: data.isVerified,
     isActive: data.isActive,
-    createdDate: data.createdDate,
+    createdAt: data.createdAt,
     role: data.role?.roleName,
     profile: data.profile,
     managedBranches: data.branchManagers?.map((bm) => ({
@@ -127,7 +127,7 @@ const getUserDetailService = async (userId) => {
       branchId: bm.branchId,
       branchName: bm.branch?.branchName,
       address: bm.branch?.address,
-      assignedDate: bm.assignedDate,
+      createdAt: bm.createdAt,
     })) || [],
   };
 };

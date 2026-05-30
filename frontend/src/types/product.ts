@@ -7,7 +7,7 @@ export type Product = {
   productName: string;
   brand: string;
   thumbnailUrl: string;
-  createdDate: string;
+  createdAt: string;
   minPrice: number;
   category: Category;
   discount: number;
@@ -91,7 +91,7 @@ export type ProductFeedback = {
   id: number;
   content: string;
   rating: number;
-  updatedDate: string;
+  updatedAt: string;
   variant: ProductFeedbackVariant;
   user: ProductFeedbackUser;
 };

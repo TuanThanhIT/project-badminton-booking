@@ -14,8 +14,8 @@ export type WalletOverviewWallet = {
   availableBalance: number;
   pendingWithdrawAmount: number;
   status: string;
-  createdDate: string;
-  updatedDate: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type WalletOverviewSummary = {
@@ -42,8 +42,8 @@ export type WalletTransaction = {
   type: WalletTransactionType;
   status: WalletTransactionStatus;
   description?: string | null;
-  createdDate: string;
-  updatedDate: string;
+  createdAt: string;
+  updatedAt: string;
   expiredAt?: string | null;
   payment?: {
     id: number;
@@ -61,7 +61,7 @@ export type WalletTransaction = {
     accountHolder: string;
     status: string;
     processedAt?: string | null;
-    createdDate: string;
+    createdAt: string;
   } | null;
 };
 
@@ -117,7 +117,7 @@ export type WalletWithdrawData = {
   bankAccount: string;
   accountHolder: string;
   status: string;
-  createdDate: string;
+  createdAt: string;
 };
 
 export type WalletWithdrawResponse = ApiResponse<WalletWithdrawData>;

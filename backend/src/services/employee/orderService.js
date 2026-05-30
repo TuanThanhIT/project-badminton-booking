@@ -100,8 +100,8 @@ const mapOrder = (order, payment = null) => {
     returnHandledAt: plain.returnHandledAt,
     cancelledAt: plain.cancelledAt,
     returnedAt: plain.returnedAt,
-    createdDate: plain.createdDate,
-    updatedDate: plain.updatedDate,
+    createdAt: plain.createdAt,
+    updatedAt: plain.updatedAt,
     branch: plain.branch || null,
     orderGroup: plain.orderGroup
       ? {
@@ -187,7 +187,7 @@ const getOrdersService = async (data) => {
   if (status && status !== "ALL") where.orderStatus = status;
 
   if (date) {
-    where.createdDate = {
+    where.createdAt = {
       [Op.gte]: new Date(`${date}T00:00:00`),
       [Op.lt]: new Date(`${date}T23:59:59.999`),
     };
@@ -208,7 +208,7 @@ const getOrdersService = async (data) => {
     where,
     include: activeOrderInclude,
     distinct: true,
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
     limit: Number(limit),
     offset,
   });

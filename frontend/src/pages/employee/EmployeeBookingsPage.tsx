@@ -566,7 +566,7 @@ const EmployeeBookingsPage = () => {
                         <div className="flex min-w-0 flex-wrap items-center gap-2">
                           <p className="font-mono text-[14px] font-semibold leading-none text-sky-700">
                             #
-                            {formatBookingCode(booking.id, booking.createdDate)}
+                            {formatBookingCode(booking.id, booking.createdAt)}
                           </p>
 
                           <span
@@ -639,7 +639,7 @@ const EmployeeBookingsPage = () => {
                         </p>
 
                         <p className="whitespace-nowrap text-[11px] font-normal text-slate-500">
-                          {formatDateTime(booking.createdDate)}
+                          {formatDateTime(booking.createdAt)}
                         </p>
                       </div>
                     </div>
@@ -719,7 +719,7 @@ const EmployeeBookingsPage = () => {
                         #
                         {formatBookingCode(
                           selectedBooking.id,
-                          selectedBooking.createdDate,
+                          selectedBooking.createdAt,
                         )}
                       </h2>
 
@@ -761,7 +761,7 @@ const EmployeeBookingsPage = () => {
 
                       <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-500">
                         <CalendarClock className="h-3.5 w-3.5 text-sky-500" />
-                        {formatDateTime(selectedBooking.createdDate)}
+                        {formatDateTime(selectedBooking.createdAt)}
                       </span>
                     </div>
                   </div>
@@ -1187,7 +1187,7 @@ const EmployeeBookingsPage = () => {
                       #
                       {formatBookingCode(
                         rejectingBooking.id,
-                        rejectingBooking.createdDate,
+                        rejectingBooking.createdAt,
                       )}
                     </h3>
 

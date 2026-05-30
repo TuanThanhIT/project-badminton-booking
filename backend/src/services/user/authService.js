@@ -96,7 +96,7 @@ const handleRegisterService = async (data) => {
       roleId: user.roleId,
       isVerified: user.isVerified,
       isActive: user.isActive,
-      createdDate: user.createdDate,
+      createdAt: user.createdAt,
     };
   });
 };
@@ -115,7 +115,7 @@ const verifyOtpService = async (data) => {
       type: OTP_TYPE.REGISTER,
       isUsed: false,
     },
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
   });
 
   if (!userOtp) throw new BadRequestError("OTP không tồn tại hoặc ko hợp lệ");
@@ -190,12 +190,12 @@ const sendOtpService = async (data) => {
     // chống spam + trả remainingTime
     const lastOtp = await UserOtp.findOne({
       where: { userId: user.id, type },
-      order: [["createdDate", "DESC"]],
+      order: [["createdAt", "DESC"]],
       transaction: t,
     });
 
     if (lastOtp) {
-      const diff = Date.now() - new Date(lastOtp.createdDate).getTime();
+      const diff = Date.now() - new Date(lastOtp.createdAt).getTime();
       const cooldown = 60 * 1000;
 
       if (diff < cooldown) {
@@ -259,7 +259,7 @@ const verifyResetOtpService = async (data) => {
       type: OTP_TYPE.RESET_PASSWORD,
       isUsed: false,
     },
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
   });
 
   if (!userOtp)

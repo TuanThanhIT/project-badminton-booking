@@ -12,8 +12,8 @@ export type CashRegister = {
   closingCash: number;
   expectedCash: number;
   difference: number | null;
-  createdDate: string;
-  updatedDate: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type EmployeeWorkShift = {

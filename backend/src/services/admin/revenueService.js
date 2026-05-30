@@ -18,12 +18,12 @@ const PAID_ORDER_STATUSES = [
 const buildDateRange = (startDate, endDate) => {
   const where = {};
   if (startDate || endDate) {
-    where.createdDate = {};
-    if (startDate) where.createdDate[Op.gte] = new Date(startDate);
+    where.createdAt = {};
+    if (startDate) where.createdAt[Op.gte] = new Date(startDate);
     if (endDate) {
       const end = new Date(endDate);
       end.setHours(23, 59, 59, 999);
-      where.createdDate[Op.lte] = end;
+      where.createdAt[Op.lte] = end;
     }
   }
   return where;
@@ -107,21 +107,21 @@ const getRevenueByBranchService = async (startDate, endDate) => {
 const getRevenueByDateService = async (startDate, endDate) => {
   const dateFilter = buildDateRange(startDate, endDate);
 
-  const dateExpr = fn("DATE", col("createdDate"));
+  const dateExpr = fn("DATE", col("createdAt"));
 
   const [bookingsByDate, ordersByDate] = await Promise.all([
     Booking.findAll({
       attributes: [[dateExpr, "date"], [fn("SUM", col("totalAmount")), "revenue"], [fn("COUNT", col("Booking.id")), "count"]],
       where: { bookingStatus: { [Op.in]: PAID_BOOKING_STATUSES }, ...dateFilter },
-      group: [fn("DATE", col("createdDate"))],
-      order: [[fn("DATE", col("createdDate")), "ASC"]],
+      group: [fn("DATE", col("createdAt"))],
+      order: [[fn("DATE", col("createdAt")), "ASC"]],
       raw: true,
     }),
     Order.findAll({
       attributes: [[dateExpr, "date"], [fn("SUM", col("totalAmount")), "revenue"], [fn("COUNT", col("Order.id")), "count"]],
       where: { orderStatus: { [Op.in]: PAID_ORDER_STATUSES }, ...dateFilter },
-      group: [fn("DATE", col("createdDate"))],
-      order: [[fn("DATE", col("createdDate")), "ASC"]],
+      group: [fn("DATE", col("createdAt"))],
+      order: [[fn("DATE", col("createdAt")), "ASC"]],
       raw: true,
     }),
   ]);
@@ -153,21 +153,21 @@ const getRevenueByDateService = async (startDate, endDate) => {
 
 const getRevenueByMonthService = async (startDate, endDate) => {
   const dateFilter = buildDateRange(startDate, endDate);
-  const monthExpr = fn("DATE_FORMAT", col("createdDate"), "%Y-%m");
+  const monthExpr = fn("DATE_FORMAT", col("createdAt"), "%Y-%m");
 
   const [bookingsByMonth, ordersByMonth] = await Promise.all([
     Booking.findAll({
       attributes: [[monthExpr, "month"], [fn("SUM", col("totalAmount")), "revenue"], [fn("COUNT", col("Booking.id")), "count"]],
       where: { bookingStatus: { [Op.in]: PAID_BOOKING_STATUSES }, ...dateFilter },
-      group: [fn("DATE_FORMAT", col("createdDate"), "%Y-%m")],
-      order: [[fn("DATE_FORMAT", col("createdDate"), "%Y-%m"), "ASC"]],
+      group: [fn("DATE_FORMAT", col("createdAt"), "%Y-%m")],
+      order: [[fn("DATE_FORMAT", col("createdAt"), "%Y-%m"), "ASC"]],
       raw: true,
     }),
     Order.findAll({
       attributes: [[monthExpr, "month"], [fn("SUM", col("totalAmount")), "revenue"], [fn("COUNT", col("Order.id")), "count"]],
       where: { orderStatus: { [Op.in]: PAID_ORDER_STATUSES }, ...dateFilter },
-      group: [fn("DATE_FORMAT", col("createdDate"), "%Y-%m")],
-      order: [[fn("DATE_FORMAT", col("createdDate"), "%Y-%m"), "ASC"]],
+      group: [fn("DATE_FORMAT", col("createdAt"), "%Y-%m")],
+      order: [[fn("DATE_FORMAT", col("createdAt"), "%Y-%m"), "ASC"]],
       raw: true,
     }),
   ]);
@@ -198,21 +198,21 @@ const getRevenueByMonthService = async (startDate, endDate) => {
 
 const getRevenueByBranchDetailService = async (branchId, startDate, endDate) => {
   const dateFilter = buildDateRange(startDate, endDate);
-  const dateExpr = fn("DATE", col("createdDate"));
+  const dateExpr = fn("DATE", col("createdAt"));
 
   const [bookingsByDate, ordersByDate] = await Promise.all([
     Booking.findAll({
       attributes: [[dateExpr, "date"], [fn("SUM", col("totalAmount")), "revenue"], [fn("COUNT", col("Booking.id")), "count"]],
       where: { branchId, bookingStatus: { [Op.in]: PAID_BOOKING_STATUSES }, ...dateFilter },
-      group: [fn("DATE", col("createdDate"))],
-      order: [[fn("DATE", col("createdDate")), "ASC"]],
+      group: [fn("DATE", col("createdAt"))],
+      order: [[fn("DATE", col("createdAt")), "ASC"]],
       raw: true,
     }),
     Order.findAll({
       attributes: [[dateExpr, "date"], [fn("SUM", col("totalAmount")), "revenue"], [fn("COUNT", col("Order.id")), "count"]],
       where: { branchId, orderStatus: { [Op.in]: PAID_ORDER_STATUSES }, ...dateFilter },
-      group: [fn("DATE", col("createdDate"))],
-      order: [[fn("DATE", col("createdDate")), "ASC"]],
+      group: [fn("DATE", col("createdAt"))],
+      order: [[fn("DATE", col("createdAt")), "ASC"]],
       raw: true,
     }),
   ]);
@@ -264,57 +264,57 @@ const getDashboardService = async () => {
   ] = await Promise.all([
     Booking.findOne({
       attributes: [[fn("SUM", col("totalAmount")), "revenue"], [fn("COUNT", col("id")), "count"]],
-      where: { bookingStatus: { [Op.in]: PAID_BOOKING_STATUSES }, createdDate: { [Op.gte]: thisMonthStart } },
+      where: { bookingStatus: { [Op.in]: PAID_BOOKING_STATUSES }, createdAt: { [Op.gte]: thisMonthStart } },
       raw: true,
     }),
     Order.findOne({
       attributes: [[fn("SUM", col("totalAmount")), "revenue"], [fn("COUNT", col("id")), "count"]],
-      where: { orderStatus: { [Op.in]: PAID_ORDER_STATUSES }, createdDate: { [Op.gte]: thisMonthStart } },
+      where: { orderStatus: { [Op.in]: PAID_ORDER_STATUSES }, createdAt: { [Op.gte]: thisMonthStart } },
       raw: true,
     }),
     Booking.findOne({
       attributes: [[fn("SUM", col("totalAmount")), "revenue"], [fn("COUNT", col("id")), "count"]],
-      where: { bookingStatus: { [Op.in]: PAID_BOOKING_STATUSES }, createdDate: { [Op.gte]: lastMonthStart, [Op.lte]: lastMonthEnd } },
+      where: { bookingStatus: { [Op.in]: PAID_BOOKING_STATUSES }, createdAt: { [Op.gte]: lastMonthStart, [Op.lte]: lastMonthEnd } },
       raw: true,
     }),
     Order.findOne({
       attributes: [[fn("SUM", col("totalAmount")), "revenue"], [fn("COUNT", col("id")), "count"]],
-      where: { orderStatus: { [Op.in]: PAID_ORDER_STATUSES }, createdDate: { [Op.gte]: lastMonthStart, [Op.lte]: lastMonthEnd } },
+      where: { orderStatus: { [Op.in]: PAID_ORDER_STATUSES }, createdAt: { [Op.gte]: lastMonthStart, [Op.lte]: lastMonthEnd } },
       raw: true,
     }),
     User.count({
       include: [{ model: Role, as: "role", where: { roleName: ROLE_NAME.USER }, required: true }],
     }),
     Booking.findAll({
-      attributes: [[fn("DATE", col("createdDate")), "date"], [fn("SUM", col("totalAmount")), "revenue"]],
-      where: { bookingStatus: { [Op.in]: PAID_BOOKING_STATUSES }, createdDate: { [Op.gte]: thirtyDaysAgo } },
-      group: [fn("DATE", col("createdDate"))],
-      order: [[fn("DATE", col("createdDate")), "ASC"]],
+      attributes: [[fn("DATE", col("createdAt")), "date"], [fn("SUM", col("totalAmount")), "revenue"]],
+      where: { bookingStatus: { [Op.in]: PAID_BOOKING_STATUSES }, createdAt: { [Op.gte]: thirtyDaysAgo } },
+      group: [fn("DATE", col("createdAt"))],
+      order: [[fn("DATE", col("createdAt")), "ASC"]],
       raw: true,
     }),
     Order.findAll({
-      attributes: [[fn("DATE", col("createdDate")), "date"], [fn("SUM", col("totalAmount")), "revenue"]],
-      where: { orderStatus: { [Op.in]: PAID_ORDER_STATUSES }, createdDate: { [Op.gte]: thirtyDaysAgo } },
-      group: [fn("DATE", col("createdDate"))],
-      order: [[fn("DATE", col("createdDate")), "ASC"]],
+      attributes: [[fn("DATE", col("createdAt")), "date"], [fn("SUM", col("totalAmount")), "revenue"]],
+      where: { orderStatus: { [Op.in]: PAID_ORDER_STATUSES }, createdAt: { [Op.gte]: thirtyDaysAgo } },
+      group: [fn("DATE", col("createdAt"))],
+      order: [[fn("DATE", col("createdAt")), "ASC"]],
       raw: true,
     }),
     Booking.findAll({
-      attributes: ["id", "bookingStatus", "totalAmount", "createdDate"],
+      attributes: ["id", "bookingStatus", "totalAmount", "createdAt"],
       include: [
         { model: User, as: "user", attributes: ["id", "username", "email"], include: [{ model: Profile, as: "profile", attributes: ["fullName", "avatar"] }] },
         { model: Branch, as: "branch", attributes: ["id", "branchName"] },
       ],
-      order: [["createdDate", "DESC"]],
+      order: [["createdAt", "DESC"]],
       limit: 5,
     }),
     Order.findAll({
-      attributes: ["id", "orderStatus", "totalAmount", "createdDate"],
+      attributes: ["id", "orderStatus", "totalAmount", "createdAt"],
       include: [
         { model: Branch, as: "branch", attributes: ["id", "branchName"] },
         { model: OrderGroup, as: "orderGroup", attributes: ["id", "userId"], include: [{ model: User, as: "user", attributes: ["id", "username", "email"], include: [{ model: Profile, as: "profile", attributes: ["fullName", "avatar"] }] }] },
       ],
-      order: [["createdDate", "DESC"]],
+      order: [["createdAt", "DESC"]],
       limit: 5,
     }),
   ]);
@@ -358,11 +358,11 @@ const getDashboardService = async () => {
     chart,
     recentBookings: recentBookings.map((b) => {
       const bj = b.toJSON();
-      return { id: bj.id, status: bj.bookingStatus, amount: Number(bj.totalAmount), createdDate: bj.createdDate, branchName: bj.branch?.branchName, fullName: bj.user?.profile?.fullName, username: bj.user?.username, avatar: bj.user?.profile?.avatar, email: bj.user?.email };
+      return { id: bj.id, status: bj.bookingStatus, amount: Number(bj.totalAmount), createdAt: bj.createdAt, branchName: bj.branch?.branchName, fullName: bj.user?.profile?.fullName, username: bj.user?.username, avatar: bj.user?.profile?.avatar, email: bj.user?.email };
     }),
     recentOrders: recentOrders.map((o) => {
       const oj = o.toJSON();
-      return { id: oj.id, status: oj.orderStatus, amount: Number(oj.totalAmount), createdDate: oj.createdDate, branchName: oj.branch?.branchName, fullName: oj.orderGroup?.user?.profile?.fullName, username: oj.orderGroup?.user?.username, avatar: oj.orderGroup?.user?.profile?.avatar, email: oj.orderGroup?.user?.email };
+      return { id: oj.id, status: oj.orderStatus, amount: Number(oj.totalAmount), createdAt: oj.createdAt, branchName: oj.branch?.branchName, fullName: oj.orderGroup?.user?.profile?.fullName, username: oj.orderGroup?.user?.username, avatar: oj.orderGroup?.user?.profile?.avatar, email: oj.orderGroup?.user?.email };
     }),
   };
 };

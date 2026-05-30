@@ -38,7 +38,7 @@ const getAdminBranchesService = async (data) => {
       "provinceName",
       "phoneNumber",
       "isActive",
-      "createdDate",
+      "createdAt",
     ],
     include: [
       {
@@ -58,7 +58,7 @@ const getAdminBranchesService = async (data) => {
     ],
     limit: Number(limit),
     offset: Number(offset),
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
     distinct: true,
   });
 

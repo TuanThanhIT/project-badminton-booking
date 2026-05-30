@@ -71,8 +71,8 @@ const Feedback = sequelize.define(
   {
     tableName: "Feedbacks",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
 
     indexes: [
       { fields: ["userId"] },

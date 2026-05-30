@@ -4,8 +4,7 @@ var _express = _interopRequireDefault(require("express"));
 var _dotenv = _interopRequireDefault(require("dotenv"));
 var _cors = _interopRequireDefault(require("cors"));
 var _cookieParser = _interopRequireDefault(require("cookie-parser"));
-var _db = _interopRequireDefault(require("./config/db.js"));
-var _syncEnumColumns = require("./config/syncEnumColumns.js");
+var _db = require("./config/db.js");
 var _http = require("http");
 var _index = require("./socket/index.js");
 var _errorHandler = _interopRequireDefault(require("./middlewares/errorHandler.js"));
@@ -123,19 +122,27 @@ var httpServer = (0, _http.createServer)(app);
 // init socket
 (0, _index.initSocket)(httpServer);
 app.use(_errorHandler["default"]);
-_db["default"].sync().then(/*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
-  return _regenerator().w(function (_context) {
-    while (1) switch (_context.n) {
-      case 0:
-        _context.n = 1;
-        return (0, _syncEnumColumns.syncEnumColumns)(_db["default"]);
-      case 1:
-        console.log("Database synced");
-        httpServer.listen(PORT, function () {
-          console.log("Server running on http://localhost:".concat(PORT));
-        });
-      case 2:
-        return _context.a(2);
-    }
-  }, _callee);
-})));
+var startServer = /*#__PURE__*/function () {
+  var _ref = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
+    return _regenerator().w(function (_context) {
+      while (1) switch (_context.n) {
+        case 0:
+          _context.n = 1;
+          return (0, _db.testConnection)();
+        case 1:
+          httpServer.listen(PORT, function () {
+            console.log("Server running on http://localhost:".concat(PORT));
+          });
+        case 2:
+          return _context.a(2);
+      }
+    }, _callee);
+  }));
+  return function startServer() {
+    return _ref.apply(this, arguments);
+  };
+}();
+startServer()["catch"](function (error) {
+  console.error("Unable to start server:", error);
+  process.exit(1);
+});

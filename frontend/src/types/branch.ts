@@ -61,8 +61,8 @@ export type BranchFeedback = {
   id: number;
   content: string;
   rating: number;
-  createdDate: string;
-  updatedDate: string;
+  createdAt: string;
+  updatedAt: string;
   user: BranchFeedbackUser;
 };
 

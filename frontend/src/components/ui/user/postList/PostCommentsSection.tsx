@@ -38,7 +38,7 @@ function buildCommentTree(comments: PostComment[]): CommentNode[] {
 
   const visited = new Set<number>();
   const sortRecursive = (arr: CommentNode[]) => {
-    arr.sort((a, b) => +new Date(b.createdDate) - +new Date(a.createdDate));
+    arr.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
     arr.forEach((n) => {
       if (visited.has(n.id)) return;
       visited.add(n.id);
@@ -127,7 +127,7 @@ function CommentItem({
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 pl-1">
             <span className="text-[12px] text-gray-500">
-              {formatRelativeTimeVi(node.createdDate)}
+              {formatRelativeTimeVi(node.createdAt)}
             </span>
             <button
               type="button"

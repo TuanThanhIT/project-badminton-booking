@@ -2,8 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import sequelize from "./config/db.js";
-import { syncEnumColumns } from "./config/syncEnumColumns.js";
+import { testConnection } from "./config/db.js";
 import { createServer } from "http";
 import { initSocket } from "./socket/index.js";
 import errorHandler from "./middlewares/errorHandler.js";
@@ -128,10 +127,15 @@ initSocket(httpServer);
 
 app.use(errorHandler);
 
-sequelize.sync().then(async () => {
-  await syncEnumColumns(sequelize);
-  console.log("Database synced");
+const startServer = async () => {
+  await testConnection();
+
   httpServer.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
+};
+
+startServer().catch((error) => {
+  console.error("Unable to start server:", error);
+  process.exit(1);
 });

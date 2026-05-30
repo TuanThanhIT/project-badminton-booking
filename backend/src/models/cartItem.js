@@ -24,7 +24,7 @@ const CartItem = sequelize.define(
       },
     },
     subTotal: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       validate: {
         notNull: {

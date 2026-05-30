@@ -4,7 +4,7 @@ export type UserProfileData = {
   id: number;
   username: string;
   email: string;
-  createdDate: string;
+  createdAt: string;
   postCount: number;
   profile: {
     fullName: string;

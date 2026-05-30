@@ -20,11 +20,11 @@ const getAdminDiscountsService = async (data) => {
     where,
     attributes: [
       "id", "code", "type", "applyType", "value", "maxDiscount", "minAmount",
-      "usageLimit", "usageCount", "isActive", "startDate", "endDate", "createdDate",
+      "usageLimit", "usageCount", "isActive", "startDate", "endDate", "createdAt",
     ],
     limit: Number(limit),
     offset: Number(offset),
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
   });
 
   return {

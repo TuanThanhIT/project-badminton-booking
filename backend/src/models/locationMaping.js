@@ -81,8 +81,8 @@ const LocationMapping = sequelize.define(
   {
     tableName: "LocationMappings",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
 
     indexes: [
       {

@@ -563,7 +563,7 @@ const EmployeeOrdersPage = () => {
                           Nhóm #
                           {formatOrderCode(
                             order.orderGroupId,
-                            order.createdDate,
+                            order.createdAt,
                           )}
                         </span>
 
@@ -598,7 +598,7 @@ const EmployeeOrdersPage = () => {
                         </p>
 
                         <p className="whitespace-nowrap text-[11px] font-normal text-slate-500">
-                          {formatDateTime(order.createdDate)}
+                          {formatDateTime(order.createdAt)}
                         </p>
                       </div>
                     </div>
@@ -714,7 +714,7 @@ const EmployeeOrdersPage = () => {
 
                       <div className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-500">
                         <CalendarClock className="h-3.5 w-3.5 text-sky-500" />
-                        <span>{formatDateTime(selectedOrder.createdDate)}</span>
+                        <span>{formatDateTime(selectedOrder.createdAt)}</span>
                       </div>
                     </div>
                   </div>

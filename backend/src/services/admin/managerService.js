@@ -22,7 +22,7 @@ const getAllManagersService = async (data = {}) => {
 
   const users = await User.findAll({
     where,
-    attributes: ["id", "username", "email", "isActive", "createdDate"],
+    attributes: ["id", "username", "email", "isActive", "createdAt"],
     include: [
       {
         model: Profile,
@@ -41,10 +41,10 @@ const getAllManagersService = async (data = {}) => {
             attributes: ["id", "branchName"],
           },
         ],
-        attributes: ["id", "branchId", "assignedDate"],
+        attributes: ["id", "branchId", "createdAt"],
       },
     ],
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
   });
 
   return users.map((u) => {
@@ -54,7 +54,7 @@ const getAllManagersService = async (data = {}) => {
       username: user.username,
       email: user.email,
       isActive: user.isActive,
-      createdDate: user.createdDate,
+      createdAt: user.createdAt,
       fullName: user.profile?.fullName,
       phoneNumber: user.profile?.phoneNumber,
       avatar: user.profile?.avatar,
@@ -62,7 +62,7 @@ const getAllManagersService = async (data = {}) => {
         branchManagerId: bm.id,
         branchId: bm.branchId,
         branchName: bm.branch?.branchName,
-        assignedDate: bm.assignedDate,
+        createdAt: bm.createdAt,
       })) || [],
     };
   });
@@ -88,8 +88,8 @@ const getBranchManagersService = async (branchId) => {
         ],
       },
     ],
-    attributes: ["id", "managerId", "isActive", "assignedDate", "note"],
-    order: [["assignedDate", "DESC"]],
+    attributes: ["id", "managerId", "isActive", "createdAt", "note"],
+    order: [["createdAt", "DESC"]],
   });
 
   return records.map((r) => {
@@ -103,7 +103,7 @@ const getBranchManagersService = async (branchId) => {
       fullName: record.manager?.profile?.fullName,
       phoneNumber: record.manager?.profile?.phoneNumber,
       avatar: record.manager?.profile?.avatar,
-      assignedDate: record.assignedDate,
+      createdAt: record.createdAt,
       note: record.note,
     };
   });
@@ -131,8 +131,8 @@ const getBranchManagerHistoryService = async (branchId) => {
         ],
       },
     ],
-    attributes: ["id", "managerId", "isActive", "assignedDate", "revokedDate", "note"],
-    order: [["assignedDate", "DESC"]],
+    attributes: ["id", "managerId", "isActive", "createdAt", "revokedDate", "note"],
+    order: [["createdAt", "DESC"]],
   });
 
   return {
@@ -148,7 +148,7 @@ const getBranchManagerHistoryService = async (branchId) => {
         fullName: record.manager?.profile?.fullName,
         avatar: record.manager?.profile?.avatar,
         isActive: record.isActive,
-        assignedDate: record.assignedDate,
+        createdAt: record.createdAt,
         revokedDate: record.revokedDate,
         note: record.note,
       };
@@ -191,7 +191,7 @@ const assignManagerToBranchService = async (data) => {
     branchManagerId: record.id,
     branchId: record.branchId,
     managerId: record.managerId,
-    assignedDate: record.assignedDate,
+    createdAt: record.createdAt,
   };
 };
 

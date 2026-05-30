@@ -119,7 +119,7 @@ const BranchManageModal = ({ manager, branches, onClose, onSuccess }: BranchMana
                       <div>
                         <p className="text-xs text-gray-400">Ngày gán</p>
                         <p className="text-xs font-medium text-gray-700">
-                          {r.assignedDate ? new Date(r.assignedDate).toLocaleDateString("vi-VN") : "—"}
+                          {r.createdAt ? new Date(r.createdAt).toLocaleDateString("vi-VN") : "—"}
                         </p>
                       </div>
                       {r.revokedDate && (
@@ -181,7 +181,7 @@ const BranchManageModal = ({ manager, branches, onClose, onSuccess }: BranchMana
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-blue-800 truncate">{b.branchName}</p>
                       <p className="text-xs text-blue-500">
-                        Từ {new Date(b.assignedDate).toLocaleDateString("vi-VN")}
+                        Từ {new Date(b.createdAt).toLocaleDateString("vi-VN")}
                       </p>
                     </div>
                     <div className="flex gap-1.5 shrink-0">

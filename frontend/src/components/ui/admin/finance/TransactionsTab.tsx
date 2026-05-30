@@ -116,7 +116,7 @@ const TransactionsTab = () => {
                     <td className="px-3 py-3 text-center">
                       <span className={`px-2 py-0.5 rounded border text-xs font-semibold ${statusConf.color}`}>{statusConf.label}</span>
                     </td>
-                    <td className="px-3 py-3 text-center text-xs text-gray-500">{fmtDate(t.createdDate)}</td>
+                    <td className="px-3 py-3 text-center text-xs text-gray-500">{fmtDate(t.createdAt)}</td>
                   </tr>
                 );
               })}

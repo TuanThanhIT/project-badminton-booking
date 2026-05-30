@@ -625,8 +625,8 @@ const mapDraft = (draft) => ({
   note: draft.note || "",
   draftBookingStatus: draft.draftBookingStatus,
   totalAmount: Number(draft.totalAmount || 0),
-  createdDate: draft.createdDate,
-  updatedDate: draft.updatedDate,
+  createdAt: draft.createdAt,
+  updatedAt: draft.updatedAt,
   courtItems:
     draft.courtItems?.map((item) => ({
       id: item.id,
@@ -733,7 +733,7 @@ const getDraftsService = async (employeeId) => {
       draftBookingStatus: DRAFT_BOOKING_STATUS.DRAFT,
     },
     include: draftInclude,
-    order: [["updatedDate", "DESC"]],
+    order: [["updatedAt", "DESC"]],
   });
 
   return drafts.map(mapDraft);

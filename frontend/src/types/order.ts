@@ -181,7 +181,7 @@ export type OrderGroupIdData = {
   canRetryPayment?: boolean;
   retryExpiresAt?: string;
   isSuccess: boolean;
-  createdDate: string;
+  createdAt: string;
 };
 
 export type OrderGroupIdResponse = ApiResponse<OrderGroupIdData>;
@@ -207,7 +207,7 @@ export type UserOrderGroup = {
   totalShippingFee: string;
   finalAmount: string;
   status: string;
-  createdDate: string;
+  createdAt: string;
   orders: UserOrder[];
 };
 
@@ -387,8 +387,8 @@ export type EmployeeOrder = {
   returnHandledAt?: string | null;
   cancelledAt?: string | null;
   returnedAt?: string | null;
-  createdDate: string;
-  updatedDate: string;
+  createdAt: string;
+  updatedAt: string;
   branch: {
     id: number;
     branchName: string;

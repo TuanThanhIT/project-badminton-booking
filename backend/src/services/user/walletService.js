@@ -62,8 +62,8 @@ const getWalletOverviewService = async (data) => {
       "type",
       "status",
       "description",
-      "createdDate",
-      "updatedDate",
+      "createdAt",
+      "updatedAt",
       "expiredAt",
     ],
     include: [
@@ -91,12 +91,12 @@ const getWalletOverviewService = async (data) => {
           "accountHolder",
           "status",
           "processedAt",
-          "createdDate",
+          "createdAt",
         ],
         required: false,
       },
     ],
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
     limit: 120,
   });
 
@@ -145,15 +145,15 @@ const getWalletOverviewService = async (data) => {
   const chartTransactions = await WalletTransaction.findAll({
     where: {
       walletId: wallet.id,
-      createdDate: { [Op.gte]: start },
+      createdAt: { [Op.gte]: start },
       status: WALLET_TRANSACTION_STATUS.SUCCESS,
     },
-    attributes: ["amount", "type", "createdDate"],
+    attributes: ["amount", "type", "createdAt"],
     raw: true,
   });
 
   chartTransactions.forEach((tx) => {
-    const key = formatDateKey(tx.createdDate);
+    const key = formatDateKey(tx.createdAt);
     const row = chartMap[key];
     if (!row) return;
 
@@ -172,8 +172,8 @@ const getWalletOverviewService = async (data) => {
       type: tx.type,
       status: tx.status,
       description: tx.description,
-      createdDate: tx.createdDate,
-      updatedDate: tx.updatedDate,
+      createdAt: tx.createdAt,
+      updatedAt: tx.updatedAt,
       expiredAt: tx.expiredAt,
       payment: tx.payment || null,
       withdrawRequest: tx.withdrawRequest || null,
@@ -231,8 +231,8 @@ const getWalletOverviewService = async (data) => {
       availableBalance: Math.max(toNumber(wallet.balance) - pendingWithdrawAmount, 0),
       pendingWithdrawAmount,
       status: wallet.status,
-      createdDate: wallet.createdDate,
-      updatedDate: wallet.updatedDate,
+      createdAt: wallet.createdAt,
+      updatedAt: wallet.updatedAt,
     },
     summary,
     chart: Object.values(chartMap),
@@ -488,7 +488,7 @@ const walletWithdrawRequestService = async (data) => {
       bankAccount: withdrawRequest.bankAccount,
       accountHolder: withdrawRequest.accountHolder,
       status: withdrawRequest.status,
-      createdDate: withdrawRequest.createdDate,
+      createdAt: withdrawRequest.createdAt,
     };
 
     return withdrawRequestReturn;
@@ -510,7 +510,7 @@ const walletWithdrawConfirmService = async (data) => {
       type: OTP_TYPE.WITHDRAW_REQUEST,
       isUsed: false,
     },
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
   });
 
   if (!userOtp) {

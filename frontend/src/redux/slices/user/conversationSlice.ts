@@ -33,7 +33,7 @@ const applyLastMessageFromSend = (state: ConversationState, cid: number, msg: Ch
   const idx = state.conversations.findIndex((c) => c.id === cid);
   if (idx >= 0) {
     state.conversations[idx].lastMessage = msg;
-    state.conversations[idx].updatedDate = msg.createdDate;
+    state.conversations[idx].updatedAt = msg.createdAt;
   }
 };
 
@@ -216,7 +216,7 @@ const conversationSlice = createSlice({
       const idx = state.conversations.findIndex((c) => c.id === msg.conversationId);
       if (idx >= 0) {
         state.conversations[idx].lastMessage = msg;
-        state.conversations[idx].updatedDate = msg.createdDate;
+        state.conversations[idx].updatedAt = msg.createdAt;
         const isOther = msg.senderId !== currentUserId;
         const notOpen = state.selectedConversationId !== msg.conversationId;
         if (isOther && notOpen) {

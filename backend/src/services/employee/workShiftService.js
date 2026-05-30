@@ -139,8 +139,8 @@ const workShiftInclude = [
       "closingCash",
       "expectedCash",
       "difference",
-      "createdDate",
-      "updatedDate",
+      "createdAt",
+      "updatedAt",
     ],
   },
 ];

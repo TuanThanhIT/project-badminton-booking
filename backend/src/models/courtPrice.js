@@ -66,7 +66,7 @@ const CourtPrice = sequelize.define(
       },
     },
     price: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       validate: {
         notNull: { msg: "Price is required" },

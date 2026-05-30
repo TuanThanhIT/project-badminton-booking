@@ -392,7 +392,7 @@ const BookingPage = () => {
                                 <p className="mt-1 font-mono text-lg font-semibold text-sky-700">
                                   {formatBookingCode(
                                     booking.bookingId,
-                                    booking.createdDate,
+                                    booking.createdAt,
                                   )}
                                 </p>
                               </div>
@@ -614,7 +614,7 @@ const BookingPage = () => {
 
                             <p className="mt-3 text-xs text-slate-500">
                               Tạo lúc{" "}
-                              {new Date(booking.createdDate).toLocaleDateString(
+                              {new Date(booking.createdAt).toLocaleDateString(
                                 "vi-VN",
                               )}
                             </p>

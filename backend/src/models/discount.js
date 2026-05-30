@@ -47,7 +47,7 @@ const Discount = sequelize.define(
       },
     },
     value: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       validate: {
         isFloat: { msg: "Discount value must be a number" },
@@ -55,7 +55,7 @@ const Discount = sequelize.define(
       },
     },
     maxDiscount: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
       validate: {
         isFloat: { msg: "Max discount must be a number" },
@@ -63,7 +63,7 @@ const Discount = sequelize.define(
       },
     },
     minAmount: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       defaultValue: 0,
       validate: {
@@ -107,8 +107,8 @@ const Discount = sequelize.define(
   {
     tableName: "Discounts",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   },
 );
 

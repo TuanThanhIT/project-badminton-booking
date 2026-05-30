@@ -335,7 +335,7 @@ const Header = ({ cartRef }: HeaderProps) => {
                                 </p>
                                 <p className="mt-2 text-xs text-slate-400">
                                   {new Date(
-                                    notification.createdDate,
+                                    notification.createdAt,
                                   ).toLocaleString("vi-VN")}
                                 </p>
                               </div>

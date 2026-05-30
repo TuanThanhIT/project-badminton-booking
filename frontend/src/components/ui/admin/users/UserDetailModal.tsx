@@ -71,8 +71,8 @@ const UserDetailModal = ({ userId, onClose }: UserDetailModalProps) => {
               { label: "Trạng thái", value: user.isActive ? "🟢 Hoạt động" : "🔴 Đã khóa" },
               {
                 label: "Ngày tạo",
-                value: user.createdDate
-                  ? new Date(user.createdDate).toLocaleDateString("vi-VN")
+                value: user.createdAt
+                  ? new Date(user.createdAt).toLocaleDateString("vi-VN")
                   : "—",
               },
             ].map(({ label, value }) => (
@@ -95,7 +95,7 @@ const UserDetailModal = ({ userId, onClose }: UserDetailModalProps) => {
                 >
                   <span className="text-sm font-medium text-blue-800">{b.branchName}</span>
                   <span className="text-xs text-blue-500">
-                    {new Date(b.assignedDate).toLocaleDateString("vi-VN")}
+                    {new Date(b.createdAt).toLocaleDateString("vi-VN")}
                   </span>
                 </div>
               ))}

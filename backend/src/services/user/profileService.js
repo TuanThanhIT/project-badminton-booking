@@ -10,7 +10,7 @@ const getMyProfileService = async (data) => {
     const user = await User.findOne({
       where: { id: userId },
       transaction: t,
-      attributes: ["id", "username", "email", "createdDate"],
+      attributes: ["id", "username", "email", "createdAt"],
       include: [
         {
           model: Profile,
@@ -39,7 +39,7 @@ const getMyProfileService = async (data) => {
       id: user.id,
       username: user.username,
       email: user.email,
-      createdDate: user.createdDate,
+      createdAt: user.createdAt,
       postCount,
       profile: user.profile,
     };
@@ -87,7 +87,7 @@ const getPublicProfileService = async (data) => {
     const user = await User.findOne({
       where: { id: userId, isActive: true },
       transaction: t,
-      attributes: ["id", "username", "email", "createdDate"],
+      attributes: ["id", "username", "email", "createdAt"],
       include: [
         {
           model: Profile,
@@ -108,7 +108,7 @@ const getPublicProfileService = async (data) => {
       id: user.id,
       username: user.username,
       email: user.email,
-      createdDate: user.createdDate,
+      createdAt: user.createdAt,
       postCount,
       profile: user.profile,
     };

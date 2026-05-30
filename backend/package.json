@@ -15,8 +15,14 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/server.js",
     "build": "babel src/server.js -d dist",
-    "dev": "npm run build && nodemon src/server.js"
+    "dev": "npm run build && nodemon src/server.js",
+    "migrate": "sequelize-cli db:migrate",
+    "migrate:undo": "sequelize-cli db:migrate:undo",
+    "migrate:undo:all": "sequelize-cli db:migrate:undo:all",
+    "seed": "sequelize-cli db:seed:all",
+    "seed:undo": "sequelize-cli db:seed:undo:all"
   },
   "devDependencies": {
     "@babel/cli": "^7.28.3",
@@ -44,6 +50,7 @@
     "nodemailer": "^7.0.6",
     "redis": "^5.12.1",
     "sequelize": "^6.37.7",
+    "sequelize-cli": "^6.6.5",
     "socket.io": "^4.8.1",
     "uuid": "^13.0.0",
     "vnpay": "^2.4.4"

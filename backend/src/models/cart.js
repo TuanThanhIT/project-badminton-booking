@@ -6,7 +6,7 @@ const Cart = sequelize.define(
   "Cart",
   {
     totalAmount: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       defaultValue: 0,
       validate: {
@@ -43,8 +43,8 @@ const Cart = sequelize.define(
   {
     tableName: "Carts",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   },
 );
 

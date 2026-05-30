@@ -57,7 +57,7 @@ const OrderResultPage = () => {
   const method = orderData?.paymentMethod;
   const amount = Number(orderData?.amount || 0);
   const orderId = orderData?.orderGroupId || "--";
-  const createdDate = orderData?.createdDate ?? null;
+  const createdAt = orderData?.createdAt ?? null;
 
   const isWallet = method === "WALLET";
   const isCOD = method === "COD";
@@ -197,7 +197,7 @@ const OrderResultPage = () => {
               <div className="grid grid-cols-1 gap-4 bg-slate-50/70 p-5 sm:grid-cols-2 sm:p-6">
                 <InfoCard label="Mã đơn hàng">
                   <span className="font-mono text-xl font-semibold text-sky-700">
-                    {formatOrderCode(orderId, createdDate)}
+                    {formatOrderCode(orderId, createdAt)}
                   </span>
                 </InfoCard>
 

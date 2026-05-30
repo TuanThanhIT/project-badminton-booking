@@ -63,8 +63,8 @@ const PostShare = sequelize.define(
   {
     tableName: "PostShares",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   },
 );
 

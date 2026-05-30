@@ -205,7 +205,7 @@ const PostDetailModal = ({
                 {authorName}
               </button>
               <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
-                <span>{formatRelativeTimeVi(currentPost.createdDate)}</span>
+                <span>{formatRelativeTimeVi(currentPost.createdAt)}</span>
                 <span>·</span>
                 <span>Công khai</span>
               </p>

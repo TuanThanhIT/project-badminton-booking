@@ -62,7 +62,7 @@ export type BookingItem = {
   cancelRequestedAt?: string | null;
   cancelHandledAt?: string | null;
   cancelledAt?: string | null;
-  createdDate: string;
+  createdAt: string;
   branch: {
     branchName: string;
     address: string;
@@ -139,8 +139,8 @@ export type EmployeeBooking = {
   cancelRequestedAt?: string | null;
   cancelHandledAt?: string | null;
   cancelledAt?: string | null;
-  createdDate: string;
-  updatedDate: string;
+  createdAt: string;
+  updatedAt: string;
   branch: {
     id: number;
     branchName: string;

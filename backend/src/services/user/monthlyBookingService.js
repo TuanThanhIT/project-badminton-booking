@@ -431,7 +431,7 @@ const createMonthlyBookingService = async (data) => {
       branchId,
       "monthly-booking-created",
       "Có lịch đặt sân tháng mới",
-      `${branch?.branchName || "Chi nhánh"}: lịch tháng ${formatBookingCode(booking.id, booking.createdDate)} từ ${startDate} đến ${endDate} đang chờ theo dõi.`,
+      `${branch?.branchName || "Chi nhánh"}: lịch tháng ${formatBookingCode(booking.id, booking.createdAt)} từ ${startDate} đến ${endDate} đang chờ theo dõi.`,
       { transaction: t },
     );
 
@@ -488,7 +488,7 @@ const createMonthlyBookingService = async (data) => {
           type: WALLET_TRANSACTION_TYPE.PAYMENT,
           status: WALLET_TRANSACTION_STATUS.PENDING,
           expiredAt: new Date(Date.now() + 10 * 60 * 1000),
-          description: `Thanh toán lịch tháng ${formatBookingCode(booking.id, booking.createdDate)}`,
+          description: `Thanh toán lịch tháng ${formatBookingCode(booking.id, booking.createdAt)}`,
         },
         { transaction: t },
       );

@@ -18,18 +18,18 @@ const getAdminWalletTransactionsService = async (data) => {
   if (type) where.type = type;
   if (status) where.status = status;
   if (dateFrom || dateTo) {
-    where.createdDate = {};
-    if (dateFrom) where.createdDate[Op.gte] = new Date(dateFrom);
+    where.createdAt = {};
+    if (dateFrom) where.createdAt[Op.gte] = new Date(dateFrom);
     if (dateTo) {
       const end = new Date(dateTo);
       end.setHours(23, 59, 59, 999);
-      where.createdDate[Op.lte] = end;
+      where.createdAt[Op.lte] = end;
     }
   }
 
   const { rows, count } = await WalletTransaction.findAndCountAll({
     where,
-    attributes: ["id", "walletId", "amount", "type", "status", "description", "createdDate"],
+    attributes: ["id", "walletId", "amount", "type", "status", "description", "createdAt"],
     include: [
       {
         model: Wallet,
@@ -47,7 +47,7 @@ const getAdminWalletTransactionsService = async (data) => {
     ],
     limit: Number(limit),
     offset: Number(offset),
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
     distinct: true,
   });
 
@@ -59,7 +59,7 @@ const getAdminWalletTransactionsService = async (data) => {
       type: tx.type,
       status: tx.status,
       description: tx.description,
-      createdDate: tx.createdDate,
+      createdAt: tx.createdAt,
       walletId: tx.walletId,
       walletBalance: Number(tx.wallet?.balance || 0),
       userId: tx.wallet?.userId,
@@ -82,7 +82,7 @@ const getAdminWithdrawRequestsService = async (data) => {
 
   const { rows, count } = await WithdrawRequest.findAndCountAll({
     where,
-    attributes: ["id", "walletId", "amount", "bankName", "bankAccount", "accountHolder", "status", "processedAt", "createdDate"],
+    attributes: ["id", "walletId", "amount", "bankName", "bankAccount", "accountHolder", "status", "processedAt", "createdAt"],
     include: [
       {
         model: Wallet,
@@ -100,7 +100,7 @@ const getAdminWithdrawRequestsService = async (data) => {
     ],
     limit: Number(limit),
     offset: Number(offset),
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
     distinct: true,
   });
 
@@ -114,7 +114,7 @@ const getAdminWithdrawRequestsService = async (data) => {
       accountHolder: req.accountHolder,
       status: req.status,
       processedAt: req.processedAt,
-      createdDate: req.createdDate,
+      createdAt: req.createdAt,
       walletId: req.walletId,
       walletBalance: Number(req.wallet?.balance || 0),
       userId: req.wallet?.userId,
@@ -141,7 +141,7 @@ const getAdminUserWalletsService = async (data) => {
   }
 
   const { rows, count } = await Wallet.findAndCountAll({
-    attributes: ["id", "userId", "balance", "status", "createdDate"],
+    attributes: ["id", "userId", "balance", "status", "createdAt"],
     include: [
       {
         model: User,
@@ -163,7 +163,7 @@ const getAdminUserWalletsService = async (data) => {
       id: wallet.id,
       balance: Number(wallet.balance),
       status: wallet.status,
-      createdDate: wallet.createdDate,
+      createdAt: wallet.createdAt,
       userId: wallet.userId,
       username: wallet.user?.username,
       email: wallet.user?.email,
@@ -288,7 +288,7 @@ const getAdminFinanceStatsService = async () => {
         where: {
           type: WALLET_TRANSACTION_TYPE.DEPOSIT,
           status: WALLET_TRANSACTION_STATUS.SUCCESS,
-          createdDate: { [Op.gte]: today },
+          createdAt: { [Op.gte]: today },
         },
       }),
       Wallet.sum("balance"),

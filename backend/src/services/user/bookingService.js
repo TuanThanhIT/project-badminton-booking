@@ -103,7 +103,7 @@ const notifyBranchCashiersNewBooking = async ({
         cashierId,
         "booking-created",
         "Có lịch đặt sân mới",
-        `${branch.branchName}: lịch ${formatBookingCode(booking.id, booking.createdDate)} ngày ${playDate} ${startTime} - ${endTime} đang chờ xác nhận.`,
+        `${branch.branchName}: lịch ${formatBookingCode(booking.id, booking.createdAt)} ngày ${playDate} ${startTime} - ${endTime} đang chờ xác nhận.`,
       ),
     ),
   );
@@ -125,7 +125,7 @@ const notifyBranchEmployees = async ({
     type,
     title,
     message ||
-      `${branch.branchName}: lịch ${formatBookingCode(booking.id, booking.createdDate)} ngày ${playDate} ${startTime} - ${endTime} đang chờ xác nhận.`,
+      `${branch.branchName}: lịch ${formatBookingCode(booking.id, booking.createdAt)} ngày ${playDate} ${startTime} - ${endTime} đang chờ xác nhận.`,
     { transaction },
   );
 };
@@ -472,7 +472,7 @@ const releaseBookingDeposit = async ({ booking, transaction }) => {
       where: {
         paymentId: payment.id,
         status: WALLET_TRANSACTION_STATUS.PENDING,
-        description: `Cọc giữ sân ${formatBookingCode(booking.id, booking.createdDate)}`,
+        description: `Cọc giữ sân ${formatBookingCode(booking.id, booking.createdAt)}`,
       },
       transaction,
     },
@@ -568,7 +568,7 @@ const createBookingService = async (bookingData) => {
       endTime,
       message: `${branch.branchName}: lịch ${formatBookingCode(
         booking.id,
-        booking.createdDate,
+        booking.createdAt,
       )} ngày ${playDate} ${startTime} - ${endTime} đang chờ xác nhận.`,
       transaction,
     });
@@ -599,7 +599,7 @@ const createBookingService = async (bookingData) => {
           amount: depositAmount,
           type: WALLET_TRANSACTION_TYPE.PAYMENT,
           status: WALLET_TRANSACTION_STATUS.PENDING,
-          description: `Cọc giữ sân ${formatBookingCode(booking.id, booking.createdDate)}`,
+          description: `Cọc giữ sân ${formatBookingCode(booking.id, booking.createdAt)}`,
         },
         { transaction },
       );
@@ -656,7 +656,7 @@ const createBookingService = async (bookingData) => {
           type: WALLET_TRANSACTION_TYPE.PAYMENT,
           status: WALLET_TRANSACTION_STATUS.PENDING,
           expiredAt: new Date(Date.now() + 10 * 60 * 1000),
-          description: `Thanh toán đặt sân ${formatBookingCode(booking.id, booking.createdDate)}`,
+          description: `Thanh toán đặt sân ${formatBookingCode(booking.id, booking.createdAt)}`,
         },
         { transaction },
       );
@@ -708,7 +708,7 @@ const walletBookingConfirmService = async (data) => {
       type: OTP_TYPE.WALLET_PAYMENT,
       isUsed: false,
     },
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
   });
 
   if (!userOtp) throw new BadRequestError("OTP không tồn tại");
@@ -892,13 +892,13 @@ const getBookingByIdService = async (data) => {
       [BOOKING_STATUS.PENDING, BOOKING_STATUS.FAILED].includes(
         booking.bookingStatus,
       ) &&
-      Date.now() - new Date(booking.createdDate).getTime() <=
+      Date.now() - new Date(booking.createdAt).getTime() <=
         PAYMENT_RETRY_WINDOW_MS,
     retryExpiresAt: new Date(
-      new Date(booking.createdDate).getTime() + PAYMENT_RETRY_WINDOW_MS,
+      new Date(booking.createdAt).getTime() + PAYMENT_RETRY_WINDOW_MS,
     ).toISOString(),
     isSuccess,
-    createdDate: booking.createdDate || booking.createdAt,
+    createdAt: booking.createdAt || booking.createdAt,
   };
 };
 
@@ -910,7 +910,7 @@ const retryBookingVNPayService = async ({ bookingId, userId, ip }) => {
     throw new ForbiddenError("Không có quyền truy cập lịch đặt sân");
   }
 
-  assertRetryWindowOpen(booking.createdDate || booking.createdAt);
+  assertRetryWindowOpen(booking.createdAt || booking.createdAt);
 
   if (
     ![BOOKING_STATUS.PENDING, BOOKING_STATUS.FAILED].includes(
@@ -1055,7 +1055,7 @@ const refundBookingToWallet = async ({ booking, transaction }) => {
   const refundAmount = Number(
     payment.paymentAmount || booking.totalAmount || 0,
   );
-  const description = `Hoàn tiền lịch sân ${formatBookingCode(booking.id, booking.createdDate)}`;
+  const description = `Hoàn tiền lịch sân ${formatBookingCode(booking.id, booking.createdAt)}`;
 
   await wallet.update(
     { balance: sequelize.literal(`balance + ${refundAmount}`) },
@@ -1099,7 +1099,7 @@ const getMyBookingsService = async (data) => {
     where,
     limit: Number(limit),
     offset: Number(offset),
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
     distinct: true,
     include: [
       {
@@ -1150,7 +1150,7 @@ const getMyBookingsService = async (data) => {
         cancelRequestedAt: booking.cancelRequestedAt,
         cancelHandledAt: booking.cancelHandledAt,
         cancelledAt: booking.cancelledAt,
-        createdDate: booking.createdDate,
+        createdAt: booking.createdAt,
         branch: booking.branch,
         payment: payment
           ? {
@@ -1248,7 +1248,7 @@ const requestCancelBookingService = async ({
         endTime: firstDetail?.endTime || "",
         type: "booking-cancelled",
         title: "Khách đã hủy lịch sân",
-        message: `${booking.branch.branchName}: khách đã hủy lịch ${formatBookingCode(booking.id, booking.createdDate)}.`,
+        message: `${booking.branch.branchName}: khách đã hủy lịch ${formatBookingCode(booking.id, booking.createdAt)}.`,
         transaction,
       });
 
@@ -1288,7 +1288,7 @@ const requestCancelBookingService = async ({
         endTime: firstDetail?.endTime || "",
         type: "booking-cancel-requested",
         title: "Khách yêu cầu hủy lịch sân",
-        message: `${booking.branch.branchName}: lịch ${formatBookingCode(booking.id, booking.createdDate)} cần nhân viên xử lý yêu cầu hủy.`,
+        message: `${booking.branch.branchName}: lịch ${formatBookingCode(booking.id, booking.createdAt)} cần nhân viên xử lý yêu cầu hủy.`,
         transaction,
       });
 

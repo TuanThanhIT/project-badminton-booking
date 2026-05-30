@@ -88,7 +88,7 @@ const ConversationSidebar = ({
     () =>
       [...filtered].sort(
         (a, b) =>
-          new Date(b.updatedDate).getTime() - new Date(a.updatedDate).getTime(),
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
       ),
     [filtered],
   );
@@ -252,7 +252,7 @@ const ConversationSidebar = ({
                       <span className="text-[10px] text-slate-400 tabular-nums whitespace-nowrap pt-0.5">
                         {conversation.lastMessage
                           ? formatRelativeTimeVi(
-                              conversation.lastMessage.createdDate,
+                              conversation.lastMessage.createdAt,
                             )
                           : ""}
                       </span>

@@ -109,8 +109,8 @@ export type CounterDraft = {
   note: string;
   draftBookingStatus: string;
   totalAmount: number;
-  createdDate: string;
-  updatedDate: string;
+  createdAt: string;
+  updatedAt: string;
   courtItems: {
     id: number;
     courtId: number;

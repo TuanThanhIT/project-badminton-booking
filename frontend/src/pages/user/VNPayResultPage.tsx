@@ -122,25 +122,31 @@ const VNPayResultPage = () => {
       vnp_SecureHash,
     };
 
-    if (!vnpSuccess) {
-      toast.error("Thanh toán thất bại hoặc bị hủy");
-      setCallbackSuccess(false);
-      setCallbackDone(true);
-      return;
-    }
-
     if (isTopup) {
       dispatch(walletCallback({ data: payload }))
         .unwrap()
         .then(() => {
-          toast.success("Hoàn tất giao dịch nạp ví");
-          setCallbackSuccess(true);
+          if (vnpSuccess) {
+            toast.success("Hoàn tất giao dịch nạp ví");
+            setCallbackSuccess(true);
+            return;
+          }
+
+          toast.error("Thanh toán thất bại hoặc bị hủy");
+          setCallbackSuccess(false);
         })
         .catch(() => {
           setCallbackSuccess(false);
         })
         .finally(() => setCallbackDone(true));
 
+      return;
+    }
+
+    if (!vnpSuccess) {
+      toast.error("Thanh toán thất bại hoặc bị hủy");
+      setCallbackSuccess(false);
+      setCallbackDone(true);
       return;
     }
 

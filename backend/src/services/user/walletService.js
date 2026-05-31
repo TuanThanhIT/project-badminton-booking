@@ -31,6 +31,11 @@ dotenv.config();
 
 const toNumber = (value) => Number(value || 0);
 
+const normalizeVNPayCallbackData = (data) =>
+  Object.fromEntries(
+    Object.entries(data).filter(([, value]) => value !== "" && value != null),
+  );
+
 const formatDateKey = (date) => {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: "Asia/Ho_Chi_Minh",
@@ -309,12 +314,14 @@ const walletDepositService = async (data) => {
 
 const walletCallbackService = async (data) => {
   // 1. verify chữ ký (ngoài transaction để giảm thời gian lock)
-  const isValid = verifyVNPayURL(data);
+  const callbackData = normalizeVNPayCallbackData(data);
+  const isValid = verifyVNPayURL(callbackData);
   if (!isValid) {
     throw new BadRequestError("Chữ ký không hợp lệ");
   }
 
-  const { vnp_TxnRef, vnp_ResponseCode, vnp_TransactionNo, vnp_Amount } = data;
+  const { vnp_TxnRef, vnp_ResponseCode, vnp_TransactionNo, vnp_Amount } =
+    callbackData;
 
   // 2. lấy payment trước (KHÔNG lock)
   const paymentRaw = await Payment.findOne({
@@ -326,7 +333,11 @@ const walletCallbackService = async (data) => {
   }
 
   // idempotent sớm (giảm load DB + tránh lock)
-  if (paymentRaw.paymentStatus === PAYMENT_STATUS.PAID) {
+  if (
+    [PAYMENT_STATUS.PAID, PAYMENT_STATUS.FAILED].includes(
+      paymentRaw.paymentStatus,
+    )
+  ) {
     return;
   }
 
@@ -358,7 +369,11 @@ const walletCallbackService = async (data) => {
     });
 
     // idempotent lần 2 (rất quan trọng khi concurrent)
-    if (payment.paymentStatus === PAYMENT_STATUS.PAID) {
+    if (
+      [PAYMENT_STATUS.PAID, PAYMENT_STATUS.FAILED].includes(
+        payment.paymentStatus,
+      )
+    ) {
       return;
     }
 
@@ -378,20 +393,31 @@ const walletCallbackService = async (data) => {
 
     // check hết hạn
     if (tx.expiredAt && tx.expiredAt < new Date()) {
+      await payment.update(
+        { paymentStatus: PAYMENT_STATUS.FAILED },
+        { transaction: t },
+      );
       await tx.update(
         { status: WALLET_TRANSACTION_STATUS.FAILED },
         { transaction: t },
       );
-      throw new BadRequestError("Phiên thanh toán đã hết hạn");
+      return;
     }
 
     // VNPay fail
     if (vnp_ResponseCode !== "00") {
+      await payment.update(
+        {
+          paymentStatus: PAYMENT_STATUS.FAILED,
+          transId: vnp_TransactionNo || null,
+        },
+        { transaction: t },
+      );
       await tx.update(
         { status: WALLET_TRANSACTION_STATUS.FAILED },
         { transaction: t },
       );
-      throw new BadRequestError("Thanh toán thất bại");
+      return;
     }
 
     // 4. update payment

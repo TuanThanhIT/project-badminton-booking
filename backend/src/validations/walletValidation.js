@@ -55,29 +55,19 @@ export const walletCallbackSchema = {
       "string.pattern.base": "Amount must be a number string",
       "any.required": "Amount is required",
     }),
-    vnp_BankCode: Joi.string().trim().required().messages({
-      "string.empty": "Bank code is required",
-      "any.required": "Bank code is required",
-    }),
-    vnp_BankTranNo: Joi.string().trim().required().messages({
-      "string.empty": "Bank transaction number is required",
-      "any.required": "Bank transaction number is required",
-    }),
-    vnp_CardType: Joi.string().trim().required().messages({
-      "string.empty": "Card type is required",
-      "any.required": "Card type is required",
-    }),
+    vnp_BankCode: Joi.string().trim().allow("").optional(),
+    vnp_BankTranNo: Joi.string().trim().allow("").optional(),
+    vnp_CardType: Joi.string().trim().allow("").optional(),
     vnp_OrderInfo: Joi.string().trim().required().messages({
       "string.empty": "Order info is required",
       "any.required": "Order info is required",
     }),
     vnp_PayDate: Joi.string()
       .pattern(/^\d{14}$/)
-      .required()
+      .allow("")
+      .optional()
       .messages({
-        "string.empty": "Pay date is required",
         "string.pattern.base": "Pay date must be format yyyyMMddHHmmss",
-        "any.required": "Pay date is required",
       }),
     vnp_ResponseCode: Joi.string().length(2).required().messages({
       "string.length": "Response code must be 2 characters",
@@ -87,9 +77,8 @@ export const walletCallbackSchema = {
       "string.empty": "Terminal code is required",
       "any.required": "Terminal code is required",
     }),
-    vnp_TransactionNo: Joi.string().pattern(/^\d+$/).required().messages({
+    vnp_TransactionNo: Joi.string().pattern(/^\d+$/).allow("").optional().messages({
       "string.pattern.base": "Transaction number must be digits",
-      "any.required": "Transaction number is required",
     }),
     vnp_TransactionStatus: Joi.string().length(2).required().messages({
       "string.length": "Transaction status must be 2 characters",
@@ -103,6 +92,7 @@ export const walletCallbackSchema = {
       "string.empty": "Secure hash is required",
       "any.required": "Secure hash is required",
     }),
+    vnp_SecureHashType: Joi.string().allow("").optional(),
   }),
 };
 

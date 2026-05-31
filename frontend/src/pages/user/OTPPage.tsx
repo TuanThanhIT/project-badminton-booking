@@ -279,7 +279,7 @@ const OTPPage = () => {
 
   return (
     <AuthShell
-      image="/img/verify-otp.jpg"
+      image="/img/otp.png"
       imageAlt="Xác thực OTP"
       eyebrow="Xác thực bảo mật"
       title="Kiểm tra email của bạn"

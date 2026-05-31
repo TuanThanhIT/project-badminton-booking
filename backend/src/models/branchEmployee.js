@@ -8,6 +8,7 @@ const BranchEmployee = sequelize.define(
   {
     branchId: {
       type: DataTypes.INTEGER,
+      primaryKey: true,
       allowNull: false,
       references: {
         model: Branch,
@@ -28,6 +29,7 @@ const BranchEmployee = sequelize.define(
     },
     employeeId: {
       type: DataTypes.INTEGER,
+      primaryKey: true,
       allowNull: false,
       references: {
         model: User,

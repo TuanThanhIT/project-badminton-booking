@@ -7,9 +7,15 @@ const timestamp = new Date("2025-11-25T10:00:00");
 const roles = [
   { id: 1, roleName: "ADMIN" },
   { id: 2, roleName: "USER" },
+<<<<<<< HEAD
   { id: 3, roleName: "EMPLOYEE" },
   { id: 4, roleName: "COACH" },
   { id: 5, roleName: "MANAGER" },
+=======
+  { id: 5, roleName: "MANAGER" },
+  { id: 3, roleName: "EMPLOYEE" },
+  { id: 4, roleName: "COACH" },
+>>>>>>> dev_Toan_Manager
 ];
 
 const buildAdminUser = async () => {

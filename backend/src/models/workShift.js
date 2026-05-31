@@ -38,8 +38,8 @@ const WorkShift = sequelize.define(
       validate: {
         notNull: { msg: "Start time is required" },
         is: {
-          args: /^([01]\d|2[0-3]):([0-5]\d)$/,
-          msg: "Start time must be in format HH:mm",
+          args: /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/,
+          msg: "Start time must be in format HH:mm or HH:mm:ss",
         },
       },
     },
@@ -49,8 +49,8 @@ const WorkShift = sequelize.define(
       validate: {
         notNull: { msg: "End time is required" },
         is: {
-          args: /^([01]\d|2[0-3]):([0-5]\d)$/,
-          msg: "End time must be in format HH:mm",
+          args: /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/,
+          msg: "End time must be in format HH:mm or HH:mm:ss",
         },
       },
     },

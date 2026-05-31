@@ -28,3 +28,44 @@ export type CourtInfo = {
 };
 
 export type CourtInfoResponse = ApiResponse<CourtInfo[]>;
+// Dành cho Manager
+export type CreateCourtRequest = {
+  courtName: string;
+  location: string;
+  thumbnailUrl: string;
+};
+export type CourtImageUploadResponse = ApiResponse<{
+  url: string;
+}>;
+export type CreateCourtPriceRequest = {
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+  price: number;
+  periodType: string;
+};
+export type ManagerCourt = {
+  id: number;
+  branchId: number;
+  courtName: string;
+  location: string;
+  thumbnailUrl: string;
+  courtStatus: string;
+  createdAt: string;
+  updatedAt: string;
+};
+export type CourtPrice = {
+  id: number;
+
+  branchId: number;
+
+  dayOfWeek: string;
+
+  startTime: string;
+
+  endTime: string;
+
+  price: number;
+
+  periodType: string;
+};

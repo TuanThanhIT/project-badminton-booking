@@ -44,6 +44,7 @@ type ChatPanelProps = {
   onDeleteGroup?: () => Promise<void>;
   onAddMembers?: (userIds: number[]) => Promise<void>;
   onRemoveMember?: (userId: number) => Promise<void>;
+  searchUsers?: (q: string, limit?: number) => Promise<UserSearchHit[]>;
 };
 
 const dayKeyVi = (iso: string) => {
@@ -246,6 +247,7 @@ const ChatPanel = ({
   onDeleteGroup,
   onAddMembers,
   onRemoveMember,
+  searchUsers,
 }: ChatPanelProps) => {
   const [body, setBody] = useState("");
   const [showMembers, setShowMembers] = useState(false);
@@ -482,6 +484,7 @@ const ChatPanel = ({
                 excludeUserIds={participantIds}
                 selected={pendingAdds}
                 onSelectedChange={setPendingAdds}
+                searchUsers={searchUsers}
                 placeholder="Tìm người để thêm..."
               />
               <button

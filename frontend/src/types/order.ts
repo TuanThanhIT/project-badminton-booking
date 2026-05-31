@@ -453,6 +453,68 @@ export type RejectEmployeeOrderActionRequest = {
   reason?: string;
 };
 
+export type ManagerOrder = EmployeeOrder;
+export type ManagerOrderSummary = EmployeeOrderSummary & {
+  totalOrders?: number;
+  totalAmount?: number;
+};
+
+export type ManagerOrdersRequest = EmployeeOrdersRequest;
+
+export type ManagerOrdersData = {
+  branchId: number;
+  items: ManagerOrder[];
+  summary: ManagerOrderSummary;
+  pagination: EmployeeOrdersData["pagination"];
+};
+
+export type ManagerOrdersResponse = ApiResponse<ManagerOrdersData>;
+export type ManagerOrderDetailResponse = ApiResponse<ManagerOrder>;
+
+export type ManagerMonthlyHighlightsRequest = {
+  month?: number;
+  year?: number;
+};
+
+export type ManagerTopProduct = {
+  productName: string;
+  variantInfo?: string | null;
+  quantity: number;
+  revenue: number;
+};
+
+export type ManagerTopBooker = {
+  userId: number;
+  username: string;
+  fullName?: string | null;
+  avatar?: string | null;
+  bookingCount: number;
+  totalAmount: number;
+};
+
+export type ManagerTopEmployee = {
+  employeeId: number;
+  username: string;
+  fullName?: string | null;
+  avatar?: string | null;
+  shiftCount: number;
+  earnedWage: number;
+};
+
+export type ManagerMonthlyHighlightsData = {
+  branchId: number;
+  month: number;
+  year: number;
+  startDate: string;
+  endDate: string;
+  topProducts: ManagerTopProduct[];
+  topBookers: ManagerTopBooker[];
+  topEmployees: ManagerTopEmployee[];
+};
+
+export type ManagerMonthlyHighlightsResponse =
+  ApiResponse<ManagerMonthlyHighlightsData>;
+
 // export type ApproveReturnOrderResponse = ApiResponse<{
 //   message: string;
 // }>;

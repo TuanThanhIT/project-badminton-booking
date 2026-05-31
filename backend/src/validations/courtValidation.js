@@ -27,13 +27,22 @@ export const getCourtScheduleByDateSchema = {
   }),
 };
 
-export const createCourtSchema = {
-  body: Joi.object({
-    name: nameCourtField.required(),
-    location: locationField.required(),
-    thumbnailUrl: thumbnailUrlField,
+export const createCourtSchema = Joi.object({
+  courtName: Joi.string().trim().required().messages({
+    "any.required": "Tên sân là bắt buộc",
+    "string.empty": "Tên sân không được để trống",
   }),
-};
+
+  location: Joi.string().trim().required().messages({
+    "any.required": "Vị trí là bắt buộc",
+    "string.empty": "Vị trí không được để trống",
+  }),
+
+  thumbnailUrl: Joi.string().uri().required().messages({
+    "any.required": "Ảnh sân là bắt buộc",
+    "string.uri": "Thumbnail phải là URL hợp lệ",
+  }),
+});
 
 export const updateCourtSchema = {
   params: Joi.object({
@@ -104,7 +113,7 @@ export const createWeeklySlotsSchema = {
       }),
   }),
 };
-// Thêm vào file validations/courtValidation.js
+
 export const getAvailableCourtsSchema = {
   query: Joi.object({
     branchId: idParams("branchId").required(),

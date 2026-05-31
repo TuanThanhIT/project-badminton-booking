@@ -32,19 +32,30 @@ var _workShiftRoute = _interopRequireDefault(require("./routes/employee/workShif
 var _counterRoute = _interopRequireDefault(require("./routes/employee/counterRoute.js"));
 var _bookingRoute2 = _interopRequireDefault(require("./routes/employee/bookingRoute.js"));
 var _webhookRoute = _interopRequireDefault(require("./routes/user/webhookRoute.js"));
+var _courtRoute2 = _interopRequireDefault(require("./routes/manager/courtRoute.js"));
+var _branchRoute2 = _interopRequireDefault(require("./routes/manager/branchRoute.js"));
+var _employeeRoute = _interopRequireDefault(require("./routes/manager/employeeRoute.js"));
+var _beverageRoute = _interopRequireDefault(require("./routes/manager/beverageRoute.js"));
+var _productRoute2 = _interopRequireDefault(require("./routes/manager/productRoute.js"));
+var _workShiftRoute2 = _interopRequireDefault(require("./routes/manager/workShiftRoute.js"));
+var _salaryRoute = _interopRequireDefault(require("./routes/manager/salaryRoute.js"));
+var _revenueRoute = _interopRequireDefault(require("./routes/manager/revenueRoute.js"));
+var _orderRoute3 = _interopRequireDefault(require("./routes/manager/orderRoute.js"));
+var _conversationRoute2 = _interopRequireDefault(require("./routes/manager/conversationRoute.js"));
+var _inventoryReceiptRoute = _interopRequireDefault(require("./routes/manager/inventoryReceiptRoute.js"));
 var _feedbackRoute = _interopRequireDefault(require("./routes/user/feedbackRoute.js"));
 var _notificationRoute = _interopRequireDefault(require("./routes/user/notificationRoute.js"));
 var _homeRoute = _interopRequireDefault(require("./routes/user/homeRoute.js"));
 var _userRoute = _interopRequireDefault(require("./routes/admin/userRoute.js"));
-var _branchRoute2 = _interopRequireDefault(require("./routes/admin/branchRoute.js"));
+var _branchRoute3 = _interopRequireDefault(require("./routes/admin/branchRoute.js"));
 var _managerRoute = _interopRequireDefault(require("./routes/admin/managerRoute.js"));
-var _productRoute2 = _interopRequireDefault(require("./routes/admin/productRoute.js"));
-var _beverageRoute = _interopRequireDefault(require("./routes/admin/beverageRoute.js"));
+var _productRoute3 = _interopRequireDefault(require("./routes/admin/productRoute.js"));
+var _beverageRoute2 = _interopRequireDefault(require("./routes/admin/beverageRoute.js"));
 var _postRoute2 = _interopRequireDefault(require("./routes/admin/postRoute.js"));
 var _discountRoute2 = _interopRequireDefault(require("./routes/admin/discountRoute.js"));
 var _feedbackRoute2 = _interopRequireDefault(require("./routes/admin/feedbackRoute.js"));
 var _financeRoute = _interopRequireDefault(require("./routes/admin/financeRoute.js"));
-var _revenueRoute = _interopRequireDefault(require("./routes/admin/revenueRoute.js"));
+var _revenueRoute2 = _interopRequireDefault(require("./routes/admin/revenueRoute.js"));
 var _categoryRoute = _interopRequireDefault(require("./routes/admin/categoryRoute.js"));
 var _uploadRoute = _interopRequireDefault(require("./routes/admin/uploadRoute.js"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
@@ -104,18 +115,30 @@ app.use((0, _cookieParser["default"])());
 
 // Admin
 (0, _userRoute["default"])(app);
-(0, _branchRoute2["default"])(app);
+(0, _branchRoute3["default"])(app);
 (0, _managerRoute["default"])(app);
-(0, _productRoute2["default"])(app);
-(0, _beverageRoute["default"])(app);
+(0, _productRoute3["default"])(app);
+(0, _beverageRoute2["default"])(app);
 (0, _postRoute2["default"])(app);
 (0, _discountRoute2["default"])(app);
 (0, _feedbackRoute2["default"])(app);
 (0, _financeRoute["default"])(app);
-(0, _revenueRoute["default"])(app);
+(0, _revenueRoute2["default"])(app);
 (0, _categoryRoute["default"])(app);
 (0, _uploadRoute["default"])(app);
 
+// Manager
+(0, _courtRoute2["default"])(app);
+(0, _branchRoute2["default"])(app);
+(0, _employeeRoute["default"])(app);
+(0, _beverageRoute["default"])(app);
+(0, _productRoute2["default"])(app);
+(0, _workShiftRoute2["default"])(app);
+(0, _salaryRoute["default"])(app);
+(0, _revenueRoute["default"])(app);
+(0, _orderRoute3["default"])(app);
+(0, _conversationRoute2["default"])(app);
+(0, _inventoryReceiptRoute["default"])(app);
 // create http server
 var httpServer = (0, _http.createServer)(app);
 

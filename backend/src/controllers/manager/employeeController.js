@@ -1,6 +1,7 @@
 import SuccessResponse from "../../helpers/SuccessResponse.js";
 import asyncHandler from "../../middlewares/asyncHandler.js";
 import addressService from "../../services/user/addressService.js";
+import employeeService from "../../services/manager/employeeService.js";
 
 const getUserAddressController = asyncHandler(async (req, res) => {
   const data = { userId: req.user.id };
@@ -37,11 +38,35 @@ const deleteUserAddressController = asyncHandler(async (req, res) => {
   return res.status(200).json(new SuccessResponse("Xóa địa chỉ thành công"));
 });
 
+const createEmployee = asyncHandler(async (req, res) => {
+  const managerId = req.user.id;
+
+  const employee = await employeeService.createEmployeeService({
+    managerId,
+    ...req.body,
+  });
+
+  return res
+    .status(201)
+    .json(new SuccessResponse("Create employee successfully", employee));
+});
+
+const getEmployees = asyncHandler(async (req, res) => {
+  const managerId = req.user.id;
+  const employees = await employeeService.getEmployeesService(managerId);
+
+  return res
+    .status(200)
+    .json(new SuccessResponse("Get employees successfully", employees));
+});
+
 const addressController = {
   getUserAddressController,
   addUserAddressController,
   updateUserAddressController,
   deleteUserAddressController,
+  getEmployees,
+  createEmployee,
 };
 
 export default addressController;

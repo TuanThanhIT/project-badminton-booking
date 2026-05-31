@@ -69,9 +69,19 @@ const ManagerSidebar = ({ collapsed, setCollapsed }: Props) => {
       path: "/manager/staffs",
     },
     {
+      title: "Phân ca",
+      icon: Calendar,
+      path: "/manager/work-shifts",
+    },
+    {
       title: "Doanh thu",
       icon: BadgeDollarSign,
       path: "/manager/revenue",
+    },
+    {
+      title: "Lương",
+      icon: BadgeDollarSign,
+      path: "/manager/salaries",
     },
     {
       title: "Tin nhắn",

@@ -108,15 +108,6 @@ const UserOtp = sequelize.define(
     timestamps: true,
     createdAt: "createdAt",
     updatedAt: "updatedAt",
-
-    indexes: [
-      {
-        fields: ["userId"],
-      },
-      {
-        fields: ["resetToken"],
-      },
-    ],
   },
 );
 

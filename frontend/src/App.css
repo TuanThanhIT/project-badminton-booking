@@ -4,3 +4,16 @@ input[type="button"],
 input[type="submit"] {
   @apply cursor-pointer;
 }
+.sidebar {
+  overflow-y: auto;
+
+  /* Firefox */
+  scrollbar-width: none;
+
+  /* IE, Edge cũ */
+  -ms-overflow-style: none;
+}
+
+.sidebar::-webkit-scrollbar {
+  display: none;
+}

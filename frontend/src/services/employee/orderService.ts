@@ -14,18 +14,24 @@ const getOrderDetailService = (orderId: number) =>
   instance.get<EmployeeOrderDetailResponse>(`/employee/orders/${orderId}`);
 
 const confirmOrderService = (orderId: number) =>
-  instance.patch<EmployeeOrderActionResponse>(`/employee/orders/confirm/${orderId}`);
+  instance.patch<EmployeeOrderActionResponse>(
+    `/employee/orders/${orderId}/confirm`,
+  );
 
 const prepareOrderService = (orderId: number) =>
-  instance.patch<EmployeeOrderActionResponse>(`/employee/orders/prepare/${orderId}`);
+  instance.patch<EmployeeOrderActionResponse>(
+    `/employee/orders/${orderId}/prepare`,
+  );
 
 const readyToShipService = (orderId: number) =>
   instance.patch<EmployeeOrderActionResponse>(
-    `/employee/orders/ready-to-ship/${orderId}`,
+    `/employee/orders/${orderId}/ready-to-ship`,
   );
 
 const shipOrderService = (orderId: number) =>
-  instance.patch<EmployeeOrderActionResponse>(`/employee/orders/ship/${orderId}`);
+  instance.patch<EmployeeOrderActionResponse>(
+    `/employee/orders/${orderId}/ship`,
+  );
 
 const approveCancelService = (orderId: number) =>
   instance.post<EmployeeOrderActionResponse>(

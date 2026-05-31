@@ -19,7 +19,9 @@ import {
   CircleDollarSign,
   Coffee,
   Package,
+  TrendingUp,
   Trophy,
+  Users,
   WalletCards,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
@@ -58,6 +60,10 @@ const revenueKeyLabel: Record<string, string> = {
   productRevenue: "Sản phẩm",
   beverageRevenue: "Đồ uống",
   totalRevenue: "Tổng",
+  profit: "Lợi nhuận",
+  salaryCost: "Lương",
+  inventoryCost: "Nhập hàng",
+  totalCost: "Chi phí",
 };
 
 const tooltipFormatter = (value: number, name: string) => [
@@ -77,8 +83,10 @@ const RevenuePage = () => {
   }, [dispatch, startDate, endDate]);
 
   const overview = data?.overview;
+  const monthlyEstimate = data?.monthlyEstimate;
   const breakdown = data?.breakdown || [];
   const chart = data?.chart || [];
+  const monthlyChart = data?.monthlyChart || [];
   const bestSource = useMemo(
     () =>
       [...breakdown].sort((a, b) => b.revenue - a.revenue)[0] || {
@@ -95,6 +103,27 @@ const RevenuePage = () => {
       icon: CircleDollarSign,
       color: "text-sky-600",
       bg: "bg-sky-50",
+    },
+    {
+      label: "Lợi nhuận",
+      value: overview?.profit || 0,
+      icon: TrendingUp,
+      color: (overview?.profit || 0) >= 0 ? "text-emerald-600" : "text-rose-600",
+      bg: (overview?.profit || 0) >= 0 ? "bg-emerald-50" : "bg-rose-50",
+    },
+    {
+      label: "Lương nhân viên",
+      value: overview?.salaryCost || 0,
+      icon: Users,
+      color: "text-violet-600",
+      bg: "bg-violet-50",
+    },
+    {
+      label: "Tiền nhập hàng",
+      value: overview?.inventoryCost || 0,
+      icon: Package,
+      color: "text-rose-600",
+      bg: "bg-rose-50",
     },
     {
       label: "Doanh thu sân",
@@ -154,7 +183,7 @@ const RevenuePage = () => {
         </div>
       </div>
 
-      <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {cards.map((card) => {
           const Icon = card.icon;
           return (
@@ -182,6 +211,40 @@ const RevenuePage = () => {
         })}
       </div>
 
+      <div className="mb-6 grid gap-4 lg:grid-cols-2">
+        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-xs font-bold uppercase text-slate-500">
+            Ước tính doanh thu tháng {monthlyEstimate?.month || "--"}/
+            {monthlyEstimate?.year || "----"}
+          </p>
+          <p className="mt-2 text-3xl font-black text-slate-900">
+            {formatCurrency(monthlyEstimate?.estimatedRevenue || 0)}
+          </p>
+          <p className="mt-1 text-sm text-slate-500">
+            Dựa trên {monthlyEstimate?.basedOnDays || 0} ngày đã chọn, trung bình{" "}
+            {formatCurrency(monthlyEstimate?.averageDailyRevenue || 0)}/ngày.
+          </p>
+        </section>
+        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-xs font-bold uppercase text-slate-500">
+            Ước tính lợi nhuận tháng {monthlyEstimate?.month || "--"}/
+            {monthlyEstimate?.year || "----"}
+          </p>
+          <p
+            className={`mt-2 text-3xl font-black ${
+              (monthlyEstimate?.estimatedProfit || 0) >= 0
+                ? "text-emerald-700"
+                : "text-rose-700"
+            }`}
+          >
+            {formatCurrency(monthlyEstimate?.estimatedProfit || 0)}
+          </p>
+          <p className="mt-1 text-sm text-slate-500">
+            Lợi nhuận = doanh thu - lương nhân viên - tiền nhập hàng.
+          </p>
+        </section>
+      </div>
+
       <div className="mb-6 grid gap-4 lg:grid-cols-[1.7fr_1fr]">
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
@@ -207,6 +270,10 @@ const RevenuePage = () => {
                     <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.35} />
                     <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
                   </linearGradient>
+                  <linearGradient id="profit" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.28} />
+                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                  </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis dataKey="label" tick={{ fontSize: 12 }} />
@@ -221,6 +288,13 @@ const RevenuePage = () => {
                   stroke="#0ea5e9"
                   strokeWidth={3}
                   fill="url(#totalRevenue)"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="profit"
+                  stroke="#22c55e"
+                  strokeWidth={3}
+                  fill="url(#profit)"
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -258,6 +332,45 @@ const RevenuePage = () => {
       </div>
 
       <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">
+              Doanh thu theo tháng
+            </h2>
+            <p className="text-sm text-slate-500">
+              Tổng doanh thu và lợi nhuận gom theo từng tháng trong khoảng đã chọn.
+            </p>
+          </div>
+        </div>
+        <div className="h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={monthlyChart}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="label" tick={{ fontSize: 12 }} />
+              <YAxis
+                tick={{ fontSize: 12 }}
+                tickFormatter={(value) => compactCurrency(Number(value))}
+              />
+              <Tooltip formatter={tooltipFormatter} />
+              <Legend />
+              <Bar
+                dataKey="totalRevenue"
+                name="Doanh thu"
+                fill="#0ea5e9"
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar
+                dataKey="profit"
+                name="Lợi nhuận"
+                fill="#22c55e"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </section>
+
+      <section className="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-lg font-bold text-slate-900">

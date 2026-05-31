@@ -51,8 +51,8 @@ export type ManagerCourt = {
   location: string;
   thumbnailUrl: string;
   courtStatus: string;
-  createdDate: string;
-  updatedDate: string;
+  createdAt: string;
+  updatedAt: string;
 };
 export type CourtPrice = {
   id: number;

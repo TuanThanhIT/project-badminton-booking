@@ -44,7 +44,7 @@ const getBeveragesService = async (managerId, data = {}) => {
 
   const { rows, count } = await Beverage.findAndCountAll({
     where,
-    attributes: ["id", "beverageName", "thumbnailUrl", "price", "createdDate"],
+    attributes: ["id", "beverageName", "thumbnailUrl", "price", "createdAt"],
     include: [
       {
         model: BeverageStock,
@@ -74,7 +74,7 @@ const getBeveragesService = async (managerId, data = {}) => {
         stockId: branchStock?.id || null,
         branchId,
         stock: Number(branchStock?.stock || 0),
-        createdDate: item.createdDate,
+        createdAt: item.createdAt,
       };
     }),
     pagination: {

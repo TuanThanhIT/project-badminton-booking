@@ -16,7 +16,7 @@ const AdminLayout = () => {
       <AdminSidebar collapsed={collapsed} setCollapsed={setCollapsed} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <AdminHeader collapsed={collapsed} />
+        <AdminHeader />
 
         <main className="flex-1 overflow-y-auto bg-gray-50 p-6 lg:p-8">
           <Outlet />

@@ -60,7 +60,7 @@ import WorkShiftEmployee from "./workShiftEmployee.js";
 import CashRegister from "./cashRegister.js";
 
 import CoachProfile from "./coachProfile.js";
-import WithdrawRequest from "./withDrawRequest.js";
+import WithdrawRequest from "./withdrawRequest.js";
 import RefreshToken from "./refreshToken.js";
 
 import OrderGroup from "./orderGroup.js";

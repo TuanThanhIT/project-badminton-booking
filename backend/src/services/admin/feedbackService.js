@@ -19,7 +19,7 @@ const getAdminFeedbacksService = async (data) => {
 
   const { rows, count } = await Feedback.findAndCountAll({
     where,
-    attributes: ["id", "content", "rating", "branchId", "variantId", "orderId", "createdDate"],
+    attributes: ["id", "content", "rating", "branchId", "variantId", "orderId", "createdAt"],
     include: [
       {
         model: User,
@@ -45,7 +45,7 @@ const getAdminFeedbacksService = async (data) => {
     ],
     limit: Number(limit),
     offset: Number(offset),
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
     distinct: true,
   });
 
@@ -55,7 +55,7 @@ const getAdminFeedbacksService = async (data) => {
       id: fb.id,
       content: fb.content,
       rating: fb.rating,
-      createdDate: fb.createdDate,
+      createdAt: fb.createdAt,
       feedbackType: fb.branchId ? "BRANCH" : "PRODUCT",
       userId: fb.user?.id,
       userName: fb.user?.profile?.fullName || fb.user?.username,

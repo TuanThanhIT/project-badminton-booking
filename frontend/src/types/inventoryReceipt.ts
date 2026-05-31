@@ -13,7 +13,7 @@ export type InventoryReceipt = {
   previousStock: number;
   newStock: number;
   note?: string | null;
-  createdDate: string;
+  createdAt: string;
   product: {
     id: number;
     productName: string;

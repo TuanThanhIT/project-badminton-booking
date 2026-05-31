@@ -139,7 +139,7 @@ const ProductManagementPage = () => {
                           onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_THUMB; }} />
                         <div>
                           <p className="font-semibold text-gray-800 truncate max-w-[160px]">{p.productName}</p>
-                          <p className="text-xs text-gray-400">{new Date(p.createdDate).toLocaleDateString("vi-VN")}</p>
+                          <p className="text-xs text-gray-400">{new Date(p.createdAt).toLocaleDateString("vi-VN")}</p>
                         </div>
                       </div>
                     </td>

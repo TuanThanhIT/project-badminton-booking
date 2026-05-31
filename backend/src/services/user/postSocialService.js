@@ -113,7 +113,7 @@ const getCommentsService = async (data) => {
   return sequelize.transaction(async (t) => {
     const comments = await Comment.findAll({
       where: { postId },
-      order: [["createdDate", "DESC"]],
+      order: [["createdAt", "DESC"]],
       transaction: t,
       include: [
         {

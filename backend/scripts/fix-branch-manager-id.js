@@ -48,8 +48,8 @@ try {
       "ALTER TABLE BranchManagers ADD COLUMN assignedDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER note",
     ],
     [
-      "updatedDate",
-      "ALTER TABLE BranchManagers ADD COLUMN updatedDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER assignedDate",
+      "updatedAt",
+      "ALTER TABLE BranchManagers ADD COLUMN updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER assignedDate",
     ],
   ];
 

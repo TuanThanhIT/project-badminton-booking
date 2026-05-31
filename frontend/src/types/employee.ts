@@ -8,7 +8,7 @@ export type ManagerEmployee = {
   username: string;
   email: string;
   isActive: boolean;
-  createdDate: string;
+  createdAt: string;
   fullName?: string | null;
   phoneNumber?: string | null;
   address?: string | null;
@@ -34,7 +34,7 @@ export type CreateEmployeeData = {
     username: string;
     email: string;
     isActive: boolean;
-    createdDate: string;
+    createdAt: string;
   };
   profile: {
     fullName?: string | null;

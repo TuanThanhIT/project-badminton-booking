@@ -16,8 +16,8 @@ export type FeedbackData = {
   variantId: string;
   content: string;
   rating: string;
-  createdDate: string;
-  updatedDate: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type CreateFeedbackResponse = ApiResponse<FeedbackData>;
@@ -26,8 +26,8 @@ export type FeedbackDetailData = {
   feedbackId: number;
   content: string;
   rating: number;
-  createdDate: string;
-  updatedDate: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type FeedbackDetailResponse = ApiResponse<FeedbackDetailData>;

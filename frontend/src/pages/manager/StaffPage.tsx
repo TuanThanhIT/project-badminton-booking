@@ -234,7 +234,7 @@ const StaffPage = () => {
                     </span>
                   </td>
                   <td className="px-5 py-4 text-sm text-slate-600">
-                    {formatDate(employee.createdDate)}
+                    {formatDate(employee.createdAt)}
                   </td>
                 </tr>
               ))}

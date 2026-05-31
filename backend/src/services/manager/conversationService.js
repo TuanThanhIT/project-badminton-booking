@@ -109,7 +109,7 @@ const mapConversation = async (conversation, currentUserId, transaction) => {
 
   const lastMessage = await Message.findOne({
     where: { conversationId: conversation.id },
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
     include: [
       {
         model: User,
@@ -141,7 +141,7 @@ const mapConversation = async (conversation, currentUserId, transaction) => {
       ? otherParticipant?.user?.profile?.fullName || otherParticipant?.user?.username || conversation.conversationName
       : conversation.conversationName,
     avatar: isPrivate ? otherParticipant?.user?.profile?.avatar || null : conversation.avatar,
-    updatedDate: conversation.updatedDate,
+    updatedAt: conversation.updatedAt,
     participants: participants.map((p) => ({
       userId: p.userId,
       username: p.user?.username,
@@ -161,7 +161,7 @@ const mapConversation = async (conversation, currentUserId, transaction) => {
           body: lastMessage.isRecalled ? "" : lastMessage.body || "",
           type: lastMessage.type,
           isRead: lastMessage.isRead,
-          createdDate: lastMessage.createdDate,
+          createdAt: lastMessage.createdAt,
           mediaUrl: lastMessage.isRecalled ? null : lastMessage.mediaUrl || null,
           isRecalled: Boolean(lastMessage.isRecalled),
         }
@@ -212,7 +212,7 @@ const getConversationsService = async ({ managerId }) => {
     const rows = await ConversationParticipant.findAll({
       where: { userId: managerId },
       include: [{ model: Conversation, as: "conversation" }],
-      order: [[{ model: Conversation, as: "conversation" }, "updatedDate", "DESC"]],
+      order: [[{ model: Conversation, as: "conversation" }, "updatedAt", "DESC"]],
       transaction: t,
     });
 
@@ -345,7 +345,7 @@ const addMembersToGroupService = async ({ managerId, conversationId, userIds }) 
       toAdd.map((userId) => ({ conversationId, userId, role: ROLE_CONVERSATION.MEMBER })),
       { transaction: t },
     );
-    await conversation.update({ updatedDate: new Date() }, { transaction: t });
+    await conversation.update({ updatedAt: new Date() }, { transaction: t });
 
     const participants = await ConversationParticipant.findAll({
       where: { conversationId },
@@ -375,7 +375,7 @@ const removeMemberFromGroupService = async ({ managerId, conversationId, targetU
     });
     if (!target) throw new NotFoundError("Thanh vien khong thuoc nhom.");
     await target.destroy({ transaction: t });
-    await conversation.update({ updatedDate: new Date() }, { transaction: t });
+    await conversation.update({ updatedAt: new Date() }, { transaction: t });
 
     const participants = await ConversationParticipant.findAll({
       where: { conversationId },

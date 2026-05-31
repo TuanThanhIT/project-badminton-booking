@@ -79,8 +79,8 @@ const Notification = sequelize.define(
   {
     tableName: "Notifications",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   },
 );
 

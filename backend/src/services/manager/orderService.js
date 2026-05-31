@@ -82,8 +82,8 @@ const mapOrder = (order, payment = null) => {
     returnHandledAt: plain.returnHandledAt,
     cancelledAt: plain.cancelledAt,
     returnedAt: plain.returnedAt,
-    createdDate: plain.createdDate,
-    updatedDate: plain.updatedDate,
+    createdAt: plain.createdAt,
+    updatedAt: plain.updatedAt,
     branch: plain.branch || null,
     orderGroup: plain.orderGroup
       ? {
@@ -153,7 +153,7 @@ const buildWhere = (branchId, query = {}) => {
   }
 
   if (date) {
-    where.createdDate = {
+    where.createdAt = {
       [Op.gte]: new Date(`${date}T00:00:00`),
       [Op.lt]: new Date(`${date}T23:59:59.999`),
     };
@@ -182,7 +182,7 @@ const getOrdersService = async (managerId, query = {}) => {
     where,
     include: orderInclude,
     distinct: true,
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
     limit,
     offset,
   });
@@ -271,7 +271,7 @@ const getMonthlyHighlightsService = async (managerId, query = {}) => {
       INNER JOIN OrderGroups og ON og.id = o.orderGroupId
       WHERE o.branchId = :branchId
         AND og.status = :paidStatus
-        AND DATE(o.createdDate) BETWEEN :startDate AND :endDate
+        AND DATE(o.createdAt) BETWEEN :startDate AND :endDate
       GROUP BY od.productName, od.variantInfo
       ORDER BY quantity DESC, revenue DESC
       LIMIT 5
@@ -292,7 +292,7 @@ const getMonthlyHighlightsService = async (managerId, query = {}) => {
       LEFT JOIN Profiles p ON p.userId = u.id
       WHERE b.branchId = :branchId
         AND b.bookingStatus NOT IN ('CANCELLED', 'FAILED')
-        AND DATE(b.createdDate) BETWEEN :startDate AND :endDate
+        AND DATE(b.createdAt) BETWEEN :startDate AND :endDate
       GROUP BY b.userId, u.username, p.fullName, p.avatar
       ORDER BY bookingCount DESC, totalAmount DESC
       LIMIT 5

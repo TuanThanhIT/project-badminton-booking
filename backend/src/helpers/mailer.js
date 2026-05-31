@@ -126,6 +126,138 @@ const sendBookingMail = async (email, time, date, type = "confirm") => {
   });
 };
 
+const formatMoney = (value) =>
+  `${Number(value || 0).toLocaleString("vi-VN")}đ`;
+
+const sendBookingMailDetailed = async (
+  email,
+  time,
+  date,
+  type = "confirm",
+  meta = {},
+) => {
+  const subjects = {
+    confirm: "Xác nhận đặt sân - B-Hub",
+    checkedIn: "Xác nhận đã nhận sân - B-Hub",
+    cancel: "Thông báo hủy đặt sân - B-Hub",
+    complete: "Hoàn tất đặt sân - B-Hub",
+  };
+
+  const customerName = meta.fullName || meta.username || "Quý khách";
+  const phoneNumber = meta.phoneNumber || "Chưa cập nhật";
+  const totalAmount = formatMoney(meta.totalAmount);
+  const depositAmount = formatMoney(meta.depositAmount || 0);
+  const isPayAtCourt = meta.paymentMethod === "COD";
+  const branchName = meta.branchName || "B-Hub";
+  const courtName = meta.courtName || "Theo lịch đã đặt";
+
+  const commonText = `
+Mã lịch: ${meta.bookingCode || "N/A"}
+Khách nhận sân: ${customerName}
+Số điện thoại: ${phoneNumber}
+Chi nhánh: ${branchName}
+Sân: ${courtName}
+Ngày: ${date}
+Thời gian: ${time}
+Tổng tiền: ${totalAmount}
+`;
+
+  const commonHtml = `
+    <ul>
+      ${meta.bookingCode ? `<li><strong>Mã lịch:</strong> ${meta.bookingCode}</li>` : ""}
+      <li><strong>Khách nhận sân:</strong> ${customerName}</li>
+      <li><strong>Số điện thoại:</strong> ${phoneNumber}</li>
+      <li><strong>Chi nhánh:</strong> ${branchName}</li>
+      <li><strong>Sân:</strong> ${courtName}</li>
+      <li><strong>Ngày:</strong> ${date}</li>
+      <li><strong>Thời gian:</strong> ${time}</li>
+      <li><strong>Tổng tiền:</strong> ${totalAmount}</li>
+    </ul>
+  `;
+
+  const latePolicyText = isPayAtCourt
+    ? `
+Lưu ý: Bạn đã chọn thanh toán khi tới sân. Ví B-Hub cần duy trì số dư khả dụng tối thiểu 50% giá trị lịch (${depositAmount}) để bảo đảm giữ sân.
+Nếu bạn không đến nhận sân quá 30 phút so với giờ bắt đầu và không có yêu cầu hủy hợp lệ, B-Hub có thể hủy lịch và trừ khoản cọc 50% này từ ví.
+`
+    : `
+Lưu ý: Vui lòng đến nhận sân đúng giờ. Nếu bạn không đến nhận sân quá 30 phút so với giờ bắt đầu và không có yêu cầu hủy hợp lệ, B-Hub có thể hủy lịch theo chính sách vận hành tại sân.
+`;
+
+  const latePolicyHtml = isPayAtCourt
+    ? `
+      <div style="margin-top:16px;padding:12px;border:1px solid #f59e0b;background:#fffbeb;border-radius:12px;color:#92400e;">
+        <strong>Lưu ý nhận sân và cọc giữ sân:</strong>
+        <p style="margin:8px 0 0;">Bạn đã chọn thanh toán khi tới sân. Ví B-Hub cần duy trì số dư khả dụng tối thiểu <strong>50% giá trị lịch (${depositAmount})</strong> để bảo đảm giữ sân.</p>
+        <p style="margin:8px 0 0;">Nếu bạn không đến nhận sân quá <strong>30 phút</strong> so với giờ bắt đầu và không có yêu cầu hủy hợp lệ, B-Hub có thể hủy lịch và trừ khoản cọc 50% này từ ví.</p>
+      </div>
+    `
+    : `
+      <div style="margin-top:16px;padding:12px;border:1px solid #bae6fd;background:#f0f9ff;border-radius:12px;color:#075985;">
+        <strong>Lưu ý nhận sân:</strong>
+        <p style="margin:8px 0 0;">Vui lòng đến nhận sân đúng giờ. Nếu bạn không đến nhận sân quá <strong>30 phút</strong> so với giờ bắt đầu và không có yêu cầu hủy hợp lệ, B-Hub có thể hủy lịch theo chính sách vận hành tại sân.</p>
+      </div>
+    `;
+
+  const messages = {
+    confirm: `B-Hub xin xác nhận lịch đặt sân của bạn:\n${commonText}\nKhi đến sân, vui lòng cung cấp họ tên và số điện thoại trong email này để nhân viên kiểm tra nhanh.\n${latePolicyText}`,
+    checkedIn: `B-Hub xác nhận bạn đã nhận sân:\n${commonText}\nChúc bạn có buổi chơi vui vẻ. Sau khi hết thời gian đặt sân, nhân viên sẽ hoàn tất lịch trên hệ thống.`,
+    cancel: `B-Hub xin thông báo lịch đặt sân của bạn đã được hủy:\n${commonText}\n${
+      meta.penaltyAmount
+        ? `Khoản cọc bị trừ do không đến nhận sân: ${formatMoney(
+            meta.penaltyAmount,
+          )}`
+        : ""
+    }\nNếu cần hỗ trợ thêm, vui lòng liên hệ B-Hub.`,
+    complete: `B-Hub xin thông báo lịch đặt sân của bạn đã được hoàn tất:\n${commonText}\nCảm ơn bạn đã tin tưởng và sử dụng dịch vụ của B-Hub.`,
+  };
+
+  const htmlMessages = {
+    confirm: `
+      <p>Chào <strong>${customerName}</strong>,</p>
+      <p>B-Hub xin xác nhận lịch đặt sân của bạn như sau:</p>
+      ${commonHtml}
+      <p>Khi đến sân, vui lòng cung cấp <strong>họ tên</strong> và <strong>số điện thoại</strong> trong email này để nhân viên kiểm tra nhanh.</p>
+      ${latePolicyHtml}
+      <p>Trân trọng,<br>B-Hub Support</p>
+    `,
+    checkedIn: `
+      <p>Chào <strong>${customerName}</strong>,</p>
+      <p>B-Hub xác nhận bạn đã nhận sân với thông tin:</p>
+      ${commonHtml}
+      <p>Chúc bạn có buổi chơi vui vẻ. Sau khi hết thời gian đặt sân, nhân viên sẽ hoàn tất lịch trên hệ thống.</p>
+      <p>Trân trọng,<br>B-Hub Support</p>
+    `,
+    cancel: `
+      <p>Chào <strong>${customerName}</strong>,</p>
+      <p>B-Hub xin thông báo lịch đặt sân của bạn đã được <strong>hủy</strong> với thông tin:</p>
+      ${commonHtml}
+      ${
+        meta.penaltyAmount
+          ? `<p style="color:#b91c1c;"><strong>Khoản cọc bị trừ do không đến nhận sân:</strong> ${formatMoney(meta.penaltyAmount)}</p>`
+          : ""
+      }
+      <p>Nếu cần hỗ trợ thêm, vui lòng liên hệ B-Hub.</p>
+      <p>Trân trọng,<br>B-Hub Support</p>
+    `,
+    complete: `
+      <p>Chào <strong>${customerName}</strong>,</p>
+      <p>B-Hub xin thông báo lịch đặt sân của bạn đã được <strong>hoàn tất</strong> với thông tin sau:</p>
+      ${commonHtml}
+      <p>Cảm ơn bạn đã tin tưởng lựa chọn B-Hub. Hẹn gặp lại bạn trong những lần tiếp theo.</p>
+      <p>Trân trọng,<br>B-Hub Support</p>
+    `,
+  };
+
+  await transporter.sendMail({
+    from: `"Hỗ trợ B-Hub" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: subjects[type] || subjects.confirm,
+    text: messages[type] || messages.confirm,
+    html: htmlMessages[type] || htmlMessages.confirm,
+  });
+};
+
 const formatProductInfo = (products) => {
   return `
     <table style="width:100%; border-collapse:collapse; font-size:14px;">
@@ -404,7 +536,7 @@ B-Hub Support
 const mailer = {
   sendContactMail,
   sendOtpMail,
-  sendBookingMail,
+  sendBookingMail: sendBookingMailDetailed,
   sendOrderMail,
   sendWorkShiftMail,
   sendLockAccountMail,

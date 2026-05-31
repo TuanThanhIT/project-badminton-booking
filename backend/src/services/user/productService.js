@@ -1,4 +1,4 @@
-﻿import {
+import {
   Branch,
   Category,
   Feedback,
@@ -62,7 +62,7 @@ const getProductsByFilterService = async (data) => {
     throw new NotFoundError("Danh muc khong ton tai");
   }
 
-  // Xử lý keyword
+  // X? l� keyword
   const kw = keyword && keyword !== "null" ? keyword : undefined;
 
   const whereCondition = {
@@ -94,9 +94,9 @@ const getProductsByFilterService = async (data) => {
       "productName",
       "brand",
       "thumbnailUrl",
-      "createdDate",
+      "createdAt",
       [fn("MIN", col("variants.price")), "minPrice"],
-      [fn("SUM", col("variants->stocks.stock")), "totalStock"], // 👈 tổng stock
+      [fn("SUM", col("variants->stocks.stock")), "totalStock"], // ?? t?ng stock
     ],
     include: [
       {
@@ -118,7 +118,7 @@ const getProductsByFilterService = async (data) => {
           {
             model: VariantStock,
             as: "stocks",
-            attributes: [], // 👈 QUAN TRỌNG
+            attributes: [], // ?? QUAN TR?NG
           },
         ],
         required: true,
@@ -161,7 +161,7 @@ const getProductsByFilterService = async (data) => {
         totalStock = variant.stocks.reduce((sum, s) => sum + s.stock, 0);
       }
 
-      const created = new Date(p.get("createdDate"));
+      const created = new Date(p.get("createdAt"));
       const now = new Date();
       const diffDays =
         (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
@@ -222,7 +222,7 @@ const getProductDetailService = async (data) => {
   });
 
   if (!product) {
-    throw new NotFoundError("Sản phẩm không tồn tại");
+    throw new NotFoundError("S?n ph?m kh�ng t?n t?i");
   }
 
   const variantsFormatted = product.variants.map((v) => {
@@ -231,10 +231,10 @@ const getProductDetailService = async (data) => {
     const discountPrice =
       variant.price - (variant.price * variant.discount) / 100;
 
-    // tổng stock
+    // t?ng stock
     const totalStock = variant.stocks.reduce((total, s) => total + s.stock, 0);
 
-    // chuyển stocks -> branches
+    // chuy?n stocks -> branches
     const branches = variant.stocks.map((s) => ({
       id: s.branch.id,
       branchName: s.branch.branchName,
@@ -293,12 +293,12 @@ const getProductFeedbacksService = async (data) => {
         ],
       },
     ],
-    order: [["updatedDate", "DESC"]],
+    order: [["updatedAt", "DESC"]],
     limit: safeLimit,
     offset,
   });
 
-  // tính rating trung bình (toàn bộ feedback của product)
+  // t�nh rating trung b�nh (to�n b? feedback c?a product)
   const allFeedbacks = await Feedback.findAll({
     include: [
       {
@@ -330,7 +330,7 @@ const getProductFeedbacksService = async (data) => {
       id: fb.id,
       content: fb.content,
       rating: fb.rating,
-      updatedDate: fb.updatedDate,
+      updatedAt: fb.updatedAt,
 
       variant: {
         id: fb.variant?.id,

@@ -133,6 +133,12 @@ const paymentDotClass: Record<string, string> = {
   FAILED: "bg-red-500",
 };
 
+const primaryActionClass =
+  "inline-flex h-10 items-center justify-center gap-2 rounded-xl px-3.5 text-xs font-bold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none";
+
+const subtleActionClass =
+  "inline-flex h-10 items-center justify-center gap-2 rounded-xl border bg-white px-3.5 text-xs font-bold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400";
+
 const ACTIVE_DELIVERY_STATUSES: ShippingStatus[] = [
   "PICKED",
   "IN_TRANSIT",
@@ -275,7 +281,8 @@ const EmployeeOrdersPage = () => {
         {
           label: "Xác nhận",
           icon: CheckCircle2,
-          className: "bg-sky-600 hover:bg-sky-700 text-white",
+          className:
+            "bg-sky-600 text-white shadow-sm shadow-sky-100 hover:bg-sky-700",
           onClick: () =>
             runAction("Xác nhận đơn hàng này?", () =>
               dispatch(confirmEmployeeOrder({ orderId: id })).unwrap(),
@@ -289,7 +296,8 @@ const EmployeeOrdersPage = () => {
         {
           label: "Bắt đầu soạn",
           icon: Box,
-          className: "bg-indigo-600 hover:bg-indigo-700 text-white",
+          className:
+            "bg-indigo-600 text-white shadow-sm shadow-indigo-100 hover:bg-indigo-700",
           onClick: () =>
             runAction("Chuyển đơn sang trạng thái đang chuẩn bị?", () =>
               dispatch(prepareEmployeeOrder({ orderId: id })).unwrap(),
@@ -303,7 +311,8 @@ const EmployeeOrdersPage = () => {
         {
           label: "Đóng gói xong",
           icon: PackageCheck,
-          className: "bg-cyan-600 hover:bg-cyan-700 text-white",
+          className:
+            "bg-cyan-600 text-white shadow-sm shadow-cyan-100 hover:bg-cyan-700",
           onClick: () =>
             runAction("Đánh dấu đơn đã sẵn sàng giao?", () =>
               dispatch(readyToShipEmployeeOrder({ orderId: id })).unwrap(),
@@ -317,7 +326,8 @@ const EmployeeOrdersPage = () => {
         {
           label: "Tạo GHN",
           icon: Truck,
-          className: "bg-blue-600 hover:bg-blue-700 text-white",
+          className:
+            "bg-blue-600 text-white shadow-sm shadow-blue-100 hover:bg-blue-700",
           onClick: () =>
             runAction("Tạo vận đơn GHN cho đơn này?", () =>
               dispatch(shipEmployeeOrder({ orderId: id })).unwrap(),
@@ -332,7 +342,9 @@ const EmployeeOrdersPage = () => {
           {
             label: "Từ chối hủy",
             icon: XCircle,
-            className: "bg-slate-800 hover:bg-slate-900 text-white",
+            subtle: true,
+            className:
+              "border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800",
             onClick: () => {
               setRejectingOrder(order);
               setRejectReason("");
@@ -346,7 +358,7 @@ const EmployeeOrdersPage = () => {
           label: "Duyệt hủy",
           icon: Ban,
           className:
-            "bg-red-500 text-white shadow-sm shadow-red-100 hover:bg-red-600 hover:shadow-md hover:shadow-red-100 disabled:bg-slate-300 disabled:shadow-none",
+            "bg-red-500 text-white shadow-sm shadow-red-100 hover:bg-red-600",
           onClick: () =>
             runAction("Duyệt hủy đơn và xử lý hoàn tiền nếu có?", () =>
               dispatch(approveCancelEmployeeOrder({ orderId: id })).unwrap(),
@@ -356,7 +368,7 @@ const EmployeeOrdersPage = () => {
           label: "Từ chối hủy",
           icon: XCircle,
           className:
-            "border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800",
+            "border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800",
           onClick: () => {
             setRejectingOrder(order);
             setRejectReason("");
@@ -370,7 +382,8 @@ const EmployeeOrdersPage = () => {
         {
           label: "Duyệt trả hàng",
           icon: RotateCcw,
-          className: "bg-purple-600 hover:bg-purple-700 text-white",
+          className:
+            "bg-purple-600 text-white shadow-sm shadow-purple-100 hover:bg-purple-700",
           onClick: () =>
             runAction("Duyệt yêu cầu trả hàng?", () =>
               dispatch(approveReturnEmployeeOrder({ orderId: id })).unwrap(),
@@ -384,7 +397,8 @@ const EmployeeOrdersPage = () => {
         {
           label: "Đã nhận hàng hoàn",
           icon: PackageCheck,
-          className: "bg-emerald-600 hover:bg-emerald-700 text-white",
+          className:
+            "bg-emerald-600 text-white shadow-sm shadow-emerald-100 hover:bg-emerald-700",
           onClick: () =>
             runAction("Xác nhận shop đã nhận hàng hoàn?", () =>
               dispatch(completeReturnEmployeeOrder({ orderId: id })).unwrap(),
@@ -398,7 +412,8 @@ const EmployeeOrdersPage = () => {
         {
           label: "Chuyển hoàn hàng",
           icon: RotateCcw,
-          className: "bg-orange-600 hover:bg-orange-700 text-white",
+          className:
+            "bg-orange-600 text-white shadow-sm shadow-orange-100 hover:bg-orange-700",
           onClick: () =>
             runAction("Chuyển đơn sang luồng hoàn hàng về shop?", () =>
               dispatch(forceReturnGHNEmployeeOrder({ orderId: id })).unwrap(),
@@ -548,7 +563,7 @@ const EmployeeOrdersPage = () => {
                           Nhóm #
                           {formatOrderCode(
                             order.orderGroupId,
-                            order.createdDate,
+                            order.createdAt,
                           )}
                         </span>
 
@@ -583,7 +598,7 @@ const EmployeeOrdersPage = () => {
                         </p>
 
                         <p className="whitespace-nowrap text-[11px] font-normal text-slate-500">
-                          {formatDateTime(order.createdDate)}
+                          {formatDateTime(order.createdAt)}
                         </p>
                       </div>
                     </div>
@@ -699,7 +714,7 @@ const EmployeeOrdersPage = () => {
 
                       <div className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-500">
                         <CalendarClock className="h-3.5 w-3.5 text-sky-500" />
-                        <span>{formatDateTime(selectedOrder.createdDate)}</span>
+                        <span>{formatDateTime(selectedOrder.createdAt)}</span>
                       </div>
                     </div>
                   </div>
@@ -719,13 +734,20 @@ const EmployeeOrdersPage = () => {
                   <div className="mt-5 flex flex-wrap gap-2">
                     {selectedActions.map((action) => {
                       const Icon = action.icon;
+                      const isSubtleAction =
+                        ("subtle" in action && action.subtle) ||
+                        action.className.includes("border-slate-200");
 
                       return (
                         <button
                           key={action.label}
                           onClick={action.onClick}
                           disabled={actionLoading}
-                          className={`inline-flex h-11 items-center justify-center gap-2 rounded-2xl px-4 text-sm font-semibold transition disabled:cursor-not-allowed disabled:bg-slate-300 ${action.className}`}
+                          className={`${
+                            isSubtleAction
+                              ? subtleActionClass
+                              : primaryActionClass
+                          } ${action.className}`}
                         >
                           {actionLoading ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -1037,13 +1059,7 @@ const EmployeeOrdersPage = () => {
                   setRejectingOrder(null);
                   setRejectReason("");
                 }}
-                className="
-          inline-flex h-11 items-center justify-center rounded-2xl
-          border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600
-          transition-all duration-200
-          hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800
-          active:scale-[0.98]
-        "
+                className={`${subtleActionClass} border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800`}
               >
                 Đóng
               </button>
@@ -1052,15 +1068,7 @@ const EmployeeOrdersPage = () => {
                 type="button"
                 onClick={rejectCancel}
                 disabled={actionLoading || !rejectReason.trim()}
-                className="
-          inline-flex h-11 items-center justify-center gap-2 rounded-2xl
-          bg-red-500 px-4 text-sm font-semibold text-white
-          shadow-sm shadow-red-100
-          transition-all duration-200
-          hover:bg-red-600 hover:shadow-md hover:shadow-red-100
-          active:scale-[0.98]
-          disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none
-        "
+                className={`${primaryActionClass} bg-red-500 text-white shadow-sm shadow-red-100 hover:bg-red-600`}
               >
                 {actionLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

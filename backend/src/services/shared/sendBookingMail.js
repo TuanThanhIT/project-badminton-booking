@@ -19,5 +19,21 @@ export const handleSendBookingMail = (booking, type) => {
 
   if (!email || !date || !time) return Promise.resolve();
 
-  return mailer.sendBookingMail(email, time, date, type);
+  const meta = {
+    bookingCode: booking.bookingCode,
+    fullName: booking.user?.profile?.fullName,
+    username: booking.user?.username,
+    phoneNumber: booking.user?.profile?.phoneNumber,
+    branchName: booking.branch?.branchName,
+    courtName: details
+      .map((detail) => detail.court?.courtName)
+      .filter(Boolean)
+      .join(", "),
+    totalAmount: Number(booking.totalAmount || 0),
+    depositAmount: Number(booking.depositAmount || 0),
+    paymentMethod: booking.payment?.paymentMethod,
+    penaltyAmount: Number(booking.penaltyAmount || 0),
+  };
+
+  return mailer.sendBookingMail(email, time, date, type, meta);
 };

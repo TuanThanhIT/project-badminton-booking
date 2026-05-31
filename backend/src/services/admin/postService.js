@@ -25,7 +25,7 @@ const getAdminPostsService = async (data) => {
   const { rows, count } = await Post.findAndCountAll({
     where,
     attributes: [
-      "id", "title", "type", "content", "isActive", "isDeleted", "isRepost", "deletedAt", "createdDate",
+      "id", "title", "type", "content", "isActive", "isDeleted", "isRepost", "deletedAt", "createdAt",
       [literal("(SELECT COUNT(*) FROM `Comments` WHERE `Comments`.`postId` = `Post`.`id`)"), "commentCount"],
     ],
     include: [
@@ -38,7 +38,7 @@ const getAdminPostsService = async (data) => {
     ],
     limit: Number(limit),
     offset: Number(offset),
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
     distinct: true,
   });
 
@@ -53,7 +53,7 @@ const getAdminPostsService = async (data) => {
       isDeleted: post.isDeleted,
       isRepost: post.isRepost,
       deletedAt: post.deletedAt,
-      createdDate: post.createdDate,
+      createdAt: post.createdAt,
       commentCount: Number(post.commentCount || 0),
       authorId: post.author?.id,
       authorUsername: post.author?.username,
@@ -91,7 +91,7 @@ const getAdminCommentsService = async (data) => {
 
   const { rows, count } = await Comment.findAndCountAll({
     where,
-    attributes: ["id", "content", "type", "postId", "parentId", "createdDate"],
+    attributes: ["id", "content", "type", "postId", "parentId", "createdAt"],
     include: [
       {
         model: User,
@@ -107,7 +107,7 @@ const getAdminCommentsService = async (data) => {
     ],
     limit: Number(limit),
     offset: Number(offset),
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
   });
 
   const comments = rows.map((c) => {
@@ -118,7 +118,7 @@ const getAdminCommentsService = async (data) => {
       type: comment.type,
       postId: comment.postId,
       parentId: comment.parentId,
-      createdDate: comment.createdDate,
+      createdAt: comment.createdAt,
       authorId: comment.author?.id,
       authorUsername: comment.author?.username,
       authorName: comment.author?.profile?.fullName,

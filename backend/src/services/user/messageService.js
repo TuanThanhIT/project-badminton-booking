@@ -51,7 +51,7 @@ const rowToMessageDto = (m, senderName, senderAvatar) => {
     body: recalled ? "" : m.body || "",
     type: m.type,
     isRead: m.isRead,
-    createdDate: m.createdDate,
+    createdAt: m.createdAt,
     mediaUrl: recalled ? null : m.mediaUrl || null,
     isRecalled: recalled,
     replyTo,
@@ -89,7 +89,7 @@ const getMessagesService = async (data) => {
           ],
         },
       ],
-      order: [["createdDate", "ASC"]],
+      order: [["createdAt", "ASC"]],
       offset,
       limit,
       transaction: t,
@@ -188,7 +188,7 @@ const sendMessageService = async (data) => {
       { transaction: t },
     );
 
-    await conversation.update({ updatedDate: new Date() }, { transaction: t });
+    await conversation.update({ updatedAt: new Date() }, { transaction: t });
 
     const payload = await buildSendPayload(message, userId, t);
 
@@ -242,7 +242,7 @@ const recallMessageService = async (data) => {
     await message.update({ isRecalled: true, body: "", mediaUrl: null }, { transaction: t });
 
     const conv = await Conversation.findByPk(conversationId, { transaction: t });
-    if (conv) await conv.update({ updatedDate: new Date() }, { transaction: t });
+    if (conv) await conv.update({ updatedAt: new Date() }, { transaction: t });
 
     const participants = await ConversationParticipant.findAll({
       where: { conversationId },

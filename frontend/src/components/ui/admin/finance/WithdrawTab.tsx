@@ -114,7 +114,7 @@ const WithdrawTab = () => {
                       <span className={`px-2 py-0.5 rounded border text-xs font-semibold ${statusConf.color}`}>{statusConf.label}</span>
                     </td>
                     <td className="px-3 py-3 text-center text-xs text-gray-500">
-                      {fmtDate(r.createdDate)}
+                      {fmtDate(r.createdAt)}
                       {r.processedAt && <p className="text-gray-400">Xử lý: {fmtDate(r.processedAt)}</p>}
                     </td>
                     <td className="px-3 py-3 text-center">

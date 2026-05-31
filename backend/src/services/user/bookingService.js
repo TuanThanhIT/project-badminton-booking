@@ -30,6 +30,7 @@ import {
   PAYMENT_METHOD_STATUS,
   PAYMENT_STATUS,
   TARGET_PAYMENT_TYPE,
+  WALLET_STATUS,
   WALLET_TRANSACTION_STATUS,
   WALLET_TRANSACTION_TYPE,
 } from "../../constants/paymentConstant.js";
@@ -44,7 +45,6 @@ import {
   sendBranchEmployeesNotification,
   sendUserNotification,
 } from "../../helpers/notification.js";
-import { handleSendBookingMail } from "../shared/sendBookingMail.js";
 import {
   ROLE_IN_SHIFT,
   WORK_SHIFT_STATUS,
@@ -103,7 +103,7 @@ const notifyBranchCashiersNewBooking = async ({
         cashierId,
         "booking-created",
         "Có lịch đặt sân mới",
-        `${branch.branchName}: lịch ${formatBookingCode(booking.id, booking.createdDate)} ngày ${playDate} ${startTime} - ${endTime} đang chờ xác nhận.`,
+        `${branch.branchName}: lịch ${formatBookingCode(booking.id, booking.createdAt)} ngày ${playDate} ${startTime} - ${endTime} đang chờ xác nhận.`,
       ),
     ),
   );
@@ -125,22 +125,9 @@ const notifyBranchEmployees = async ({
     type,
     title,
     message ||
-      `${branch.branchName}: lịch ${formatBookingCode(booking.id, booking.createdDate)} ngày ${playDate} ${startTime} - ${endTime} đang chờ xác nhận.`,
+      `${branch.branchName}: lịch ${formatBookingCode(booking.id, booking.createdAt)} ngày ${playDate} ${startTime} - ${endTime} đang chờ xác nhận.`,
     { transaction },
   );
-};
-
-const sendBookingMailById = async (bookingId, type = "confirm") => {
-  const booking = await Booking.findByPk(bookingId, {
-    include: [
-      { model: User, as: "user", attributes: ["id", "email"] },
-      { model: BookingDetail, as: "details" },
-    ],
-  });
-
-  if (!booking) return;
-
-  await handleSendBookingMail(booking, type);
 };
 
 const markMonthlyBookingPaidByBookingId = async ({
@@ -374,6 +361,7 @@ const assertBookingSlotAvailable = async ({
     [
       BOOKING_STATUS.PENDING,
       BOOKING_STATUS.CONFIRMED,
+      BOOKING_STATUS.CHECKED_IN,
       BOOKING_STATUS.CANCEL_REQUESTED,
       BOOKING_STATUS.COMPLETED,
     ].includes(detail.booking?.bookingStatus),
@@ -424,6 +412,71 @@ const buildBookingVNPayUrl = ({ booking, payment, ip }) => {
     vnp_CreateDate: dateFormat(new Date()),
     vnp_ExpireDate: dateFormat(expireDate),
   });
+};
+
+const getAvailableWalletBalance = async ({ wallet, transaction }) => {
+  const pendingAmount = await WalletTransaction.sum("amount", {
+    where: {
+      walletId: wallet.id,
+      status: WALLET_TRANSACTION_STATUS.PENDING,
+    },
+    transaction,
+  });
+
+  return Number(wallet.balance) - Number(pendingAmount || 0);
+};
+
+const assertBookingDepositAvailable = async ({
+  userId,
+  amount,
+  transaction,
+}) => {
+  const wallet = await Wallet.findOne({
+    where: { userId, status: WALLET_STATUS.ACTIVE },
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
+
+  if (!wallet) {
+    throw new NotFoundError("Ví B-Hub không tồn tại hoặc đang bị khóa");
+  }
+
+  const available = await getAvailableWalletBalance({ wallet, transaction });
+
+  if (available < amount) {
+    throw new BadRequestError(
+      `Thanh toán khi tới sân yêu cầu ví còn tối thiểu ${amount.toLocaleString(
+        "vi-VN",
+      )}đ để giữ cọc 50% giá trị lịch.`,
+    );
+  }
+
+  return wallet;
+};
+
+const releaseBookingDeposit = async ({ booking, transaction }) => {
+  const payment = await Payment.findOne({
+    where: {
+      targetPaymentType: TARGET_PAYMENT_TYPE.BOOKING,
+      targetPaymentId: booking.id,
+      paymentMethod: PAYMENT_METHOD_STATUS.COD,
+    },
+    transaction,
+  });
+
+  if (!payment) return;
+
+  await WalletTransaction.update(
+    { status: WALLET_TRANSACTION_STATUS.CANCELLED },
+    {
+      where: {
+        paymentId: payment.id,
+        status: WALLET_TRANSACTION_STATUS.PENDING,
+        description: `Cọc giữ sân ${formatBookingCode(booking.id, booking.createdAt)}`,
+      },
+      transaction,
+    },
+  );
 };
 
 const createBookingService = async (bookingData) => {
@@ -515,13 +568,20 @@ const createBookingService = async (bookingData) => {
       endTime,
       message: `${branch.branchName}: lịch ${formatBookingCode(
         booking.id,
-        booking.createdDate,
+        booking.createdAt,
       )} ngày ${playDate} ${startTime} - ${endTime} đang chờ xác nhận.`,
       transaction,
     });
 
     if (paymentMethod === PAYMENT_METHOD_STATUS.COD) {
-      await Payment.create(
+      const depositAmount = Math.round(Number(finalAmount || 0) * 0.5);
+      const wallet = await assertBookingDepositAvailable({
+        userId,
+        amount: depositAmount,
+        transaction,
+      });
+
+      const payment = await Payment.create(
         {
           targetPaymentType: TARGET_PAYMENT_TYPE.BOOKING,
           targetPaymentId: booking.id,
@@ -532,9 +592,22 @@ const createBookingService = async (bookingData) => {
         { transaction },
       );
 
+      await WalletTransaction.create(
+        {
+          walletId: wallet.id,
+          paymentId: payment.id,
+          amount: depositAmount,
+          type: WALLET_TRANSACTION_TYPE.PAYMENT,
+          status: WALLET_TRANSACTION_STATUS.PENDING,
+          description: `Cọc giữ sân ${formatBookingCode(booking.id, booking.createdAt)}`,
+        },
+        { transaction },
+      );
+
       return {
         bookingId: booking.id,
         amount: finalAmount,
+        depositAmount,
         discountAmount,
         paymentMethod,
         status: booking.bookingStatus,
@@ -583,7 +656,7 @@ const createBookingService = async (bookingData) => {
           type: WALLET_TRANSACTION_TYPE.PAYMENT,
           status: WALLET_TRANSACTION_STATUS.PENDING,
           expiredAt: new Date(Date.now() + 10 * 60 * 1000),
-          description: `Thanh toán đặt sân ${formatBookingCode(booking.id, booking.createdDate)}`,
+          description: `Thanh toán đặt sân ${formatBookingCode(booking.id, booking.createdAt)}`,
         },
         { transaction },
       );
@@ -618,17 +691,6 @@ const createBookingService = async (bookingData) => {
     throw new BadRequestError("Phương thức thanh toán không hợp lệ");
   });
 
-  if (
-    result?.bookingId &&
-    ![PAYMENT_METHOD_STATUS.VNPAY, PAYMENT_METHOD_STATUS.WALLET].includes(
-      result.paymentMethod,
-    )
-  ) {
-    sendBookingMailById(result.bookingId, "confirm").catch((err) =>
-      console.error("Send booking confirmation email failed", err),
-    );
-  }
-
   return result;
 };
 
@@ -646,7 +708,7 @@ const walletBookingConfirmService = async (data) => {
       type: OTP_TYPE.WALLET_PAYMENT,
       isUsed: false,
     },
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
   });
 
   if (!userOtp) throw new BadRequestError("OTP không tồn tại");
@@ -783,10 +845,6 @@ const walletBookingConfirmService = async (data) => {
     };
   });
 
-  sendBookingMailById(result.bookingId, "confirm").catch((err) =>
-    console.error("Send booking confirmation email failed", err),
-  );
-
   return result;
 };
 
@@ -834,13 +892,13 @@ const getBookingByIdService = async (data) => {
       [BOOKING_STATUS.PENDING, BOOKING_STATUS.FAILED].includes(
         booking.bookingStatus,
       ) &&
-      Date.now() - new Date(booking.createdDate).getTime() <=
+      Date.now() - new Date(booking.createdAt).getTime() <=
         PAYMENT_RETRY_WINDOW_MS,
     retryExpiresAt: new Date(
-      new Date(booking.createdDate).getTime() + PAYMENT_RETRY_WINDOW_MS,
+      new Date(booking.createdAt).getTime() + PAYMENT_RETRY_WINDOW_MS,
     ).toISOString(),
     isSuccess,
-    createdDate: booking.createdDate || booking.createdAt,
+    createdAt: booking.createdAt || booking.createdAt,
   };
 };
 
@@ -852,7 +910,7 @@ const retryBookingVNPayService = async ({ bookingId, userId, ip }) => {
     throw new ForbiddenError("Không có quyền truy cập lịch đặt sân");
   }
 
-  assertRetryWindowOpen(booking.createdDate || booking.createdAt);
+  assertRetryWindowOpen(booking.createdAt || booking.createdAt);
 
   if (
     ![BOOKING_STATUS.PENDING, BOOKING_STATUS.FAILED].includes(
@@ -965,11 +1023,7 @@ const bookingCallbackService = async (data) => {
     return booking.id;
   });
 
-  if (paidBookingId) {
-    sendBookingMailById(paidBookingId, "confirm").catch((err) =>
-      console.error("Send booking confirmation email failed", err),
-    );
-  }
+  return paidBookingId;
 };
 
 const refundBookingToWallet = async ({ booking, transaction }) => {
@@ -1001,7 +1055,7 @@ const refundBookingToWallet = async ({ booking, transaction }) => {
   const refundAmount = Number(
     payment.paymentAmount || booking.totalAmount || 0,
   );
-  const description = `Hoàn tiền lịch sân ${formatBookingCode(booking.id, booking.createdDate)}`;
+  const description = `Hoàn tiền lịch sân ${formatBookingCode(booking.id, booking.createdAt)}`;
 
   await wallet.update(
     { balance: sequelize.literal(`balance + ${refundAmount}`) },
@@ -1045,7 +1099,7 @@ const getMyBookingsService = async (data) => {
     where,
     limit: Number(limit),
     offset: Number(offset),
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
     distinct: true,
     include: [
       {
@@ -1096,7 +1150,7 @@ const getMyBookingsService = async (data) => {
         cancelRequestedAt: booking.cancelRequestedAt,
         cancelHandledAt: booking.cancelHandledAt,
         cancelledAt: booking.cancelledAt,
-        createdDate: booking.createdDate,
+        createdAt: booking.createdAt,
         branch: booking.branch,
         payment: payment
           ? {
@@ -1169,6 +1223,7 @@ const requestCancelBookingService = async ({
       }
 
       const refund = await refundBookingToWallet({ booking, transaction });
+      await releaseBookingDeposit({ booking, transaction });
 
       await booking.update(
         {
@@ -1193,7 +1248,7 @@ const requestCancelBookingService = async ({
         endTime: firstDetail?.endTime || "",
         type: "booking-cancelled",
         title: "Khách đã hủy lịch sân",
-        message: `${booking.branch.branchName}: khách đã hủy lịch ${formatBookingCode(booking.id, booking.createdDate)}.`,
+        message: `${booking.branch.branchName}: khách đã hủy lịch ${formatBookingCode(booking.id, booking.createdAt)}.`,
         transaction,
       });
 
@@ -1233,7 +1288,7 @@ const requestCancelBookingService = async ({
         endTime: firstDetail?.endTime || "",
         type: "booking-cancel-requested",
         title: "Khách yêu cầu hủy lịch sân",
-        message: `${booking.branch.branchName}: lịch ${formatBookingCode(booking.id, booking.createdDate)} cần nhân viên xử lý yêu cầu hủy.`,
+        message: `${booking.branch.branchName}: lịch ${formatBookingCode(booking.id, booking.createdAt)} cần nhân viên xử lý yêu cầu hủy.`,
         transaction,
       });
 

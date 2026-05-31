@@ -93,7 +93,7 @@ const DraftBooking = sequelize.define(
       },
     },
     totalAmount: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       defaultValue: 0,
       validate: {
@@ -111,8 +111,8 @@ const DraftBooking = sequelize.define(
   {
     tableName: "DraftBookings",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   },
 );
 

@@ -69,8 +69,8 @@ const InventoryReceipt = sequelize.define(
   {
     tableName: "InventoryReceipts",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   },
 );
 

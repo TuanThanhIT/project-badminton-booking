@@ -85,7 +85,7 @@ const DiscountFormModal = ({ discount, onClose, onSaved }: DiscountFormModalProp
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Loại giảm giá</label>
-              <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}
+              <select value={form.type} title={DISCOUNT_TYPE_LABEL[form.type]} onChange={(e) => setForm({ ...form, type: e.target.value })}
                 className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-sky-400 bg-white">
                 <option value="AMOUNT">Số tiền cố định (₫)</option>
                 <option value="PERCENT">Phần trăm (%)</option>

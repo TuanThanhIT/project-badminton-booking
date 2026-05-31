@@ -1,6 +1,10 @@
-import { StatusCodes } from "http-status-codes";
-import ApiError from "../../errors/ApiError.js";
-import { BranchEmployee, WorkShift, WorkShiftEmployee } from "../../models/index.js";
+import ForbiddenError from "../../errors/ForbiddenError.js";
+import { ROLE_IN_SHIFT } from "../../constants/workShiftConstant.js";
+import {
+  BranchEmployee,
+  WorkShift,
+  WorkShiftEmployee,
+} from "../../models/index.js";
 
 export const getEmployeeBranchIds = async (employeeId, transaction) => {
   const branchEmployees = await BranchEmployee.findAll({
@@ -8,10 +12,6 @@ export const getEmployeeBranchIds = async (employeeId, transaction) => {
     attributes: ["branchId"],
     transaction,
   });
-
-  if (branchEmployees.length > 0) {
-    return branchEmployees.map((item) => item.branchId);
-  }
 
   const assignedShiftBranches = await WorkShiftEmployee.findAll({
     where: { employeeId },
@@ -43,9 +43,50 @@ export const assertEmployeeCanAccessBranch = async ({
   const branchIds = await getEmployeeBranchIds(employeeId, transaction);
 
   if (!branchIds.includes(Number(branchId))) {
-    throw new ApiError(
-      StatusCodes.FORBIDDEN,
-      "Nhân viên không thuộc chi nhánh này.",
+    throw new ForbiddenError("Nhân viên không thuộc chi nhánh này.");
+  }
+
+  return branchIds;
+};
+
+export const getActiveCashierBranchIds = async (employeeId, transaction) => {
+  const activeAssignments = await WorkShiftEmployee.findAll({
+    where: {
+      employeeId,
+      roleInShift: ROLE_IN_SHIFT.CASHIER,
+      checkOut: null,
+    },
+    attributes: ["checkIn"],
+    include: [
+      {
+        model: WorkShift,
+        as: "workShift",
+        attributes: ["branchId"],
+        required: true,
+      },
+    ],
+    transaction,
+  });
+
+  return [
+    ...new Set(
+      activeAssignments
+        .filter((item) => item.checkIn)
+        .map((item) => Number(item.workShift.branchId)),
+    ),
+  ];
+};
+
+export const assertEmployeeActiveCashierForBranch = async ({
+  employeeId,
+  branchId,
+  transaction,
+}) => {
+  const branchIds = await getActiveCashierBranchIds(employeeId, transaction);
+
+  if (!branchIds.includes(Number(branchId))) {
+    throw new ForbiddenError(
+      "Nhân viên cần check-in đúng ca thu ngân của chi nhánh này trước khi thao tác.",
     );
   }
 

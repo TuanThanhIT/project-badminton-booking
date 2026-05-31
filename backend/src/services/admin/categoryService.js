@@ -11,7 +11,7 @@ const getAdminCategoriesService = async (data) => {
 
   const { rows, count } = await Category.findAndCountAll({
     where,
-    attributes: ["id", "cateName", "menuGroup", "createdDate"],
+    attributes: ["id", "cateName", "menuGroup", "createdAt"],
     limit: Number(limit),
     offset: Number(offset),
     order: [

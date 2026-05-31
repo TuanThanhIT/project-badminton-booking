@@ -68,7 +68,7 @@ const WorkShiftEmployee = sequelize.define(
       },
     },
     completionRate: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       defaultValue: 0,
       validate: {
@@ -89,7 +89,7 @@ const WorkShiftEmployee = sequelize.define(
       },
     },
     earnedWage: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
       defaultValue: 0,
       validate: {
@@ -106,8 +106,8 @@ const WorkShiftEmployee = sequelize.define(
   {
     tableName: "WorkShiftEmployees",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   },
 );
 

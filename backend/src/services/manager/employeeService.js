@@ -38,7 +38,7 @@ const getEmployeesService = async (managerId) => {
       {
         model: User,
         as: "employee",
-        attributes: ["id", "username", "email", "isActive", "createdDate"],
+        attributes: ["id", "username", "email", "isActive", "createdAt"],
         include: [
           {
             model: Profile,
@@ -55,7 +55,7 @@ const getEmployeesService = async (managerId) => {
         ],
       },
     ],
-    order: [[{ model: User, as: "employee" }, "createdDate", "DESC"]],
+    order: [[{ model: User, as: "employee" }, "createdAt", "DESC"]],
   });
 
   return branchEmployees
@@ -70,7 +70,7 @@ const getEmployeesService = async (managerId) => {
         username: employee.username,
         email: employee.email,
         isActive: employee.isActive,
-        createdDate: employee.createdDate,
+        createdAt: employee.createdAt,
         fullName: employee.profile?.fullName,
         phoneNumber: employee.profile?.phoneNumber,
         address: employee.profile?.address,

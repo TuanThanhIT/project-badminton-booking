@@ -2,8 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import sequelize from "./config/db.js";
-import { syncEnumColumns } from "./config/syncEnumColumns.js";
+import { testConnection } from "./config/db.js";
 import { createServer } from "http";
 import { initSocket } from "./socket/index.js";
 import errorHandler from "./middlewares/errorHandler.js";
@@ -63,13 +62,24 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 8088;
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+].filter(Boolean);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   }),
 );
@@ -140,10 +150,15 @@ initSocket(httpServer);
 
 app.use(errorHandler);
 
-sequelize.sync().then(async () => {
-  await syncEnumColumns(sequelize);
-  console.log("Database synced");
+const startServer = async () => {
+  await testConnection();
+
   httpServer.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
+};
+
+startServer().catch((error) => {
+  console.error("Unable to start server:", error);
+  process.exit(1);
 });

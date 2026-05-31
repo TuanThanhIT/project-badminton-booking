@@ -9,8 +9,15 @@ const getInventoryReceiptsService = (params?: InventoryReceiptQueries) =>
     params,
   });
 
+const exportInventoryReceiptsService = (date: string) =>
+  instance.get<Blob>("/manager/inventory-receipts/export", {
+    params: { date },
+    responseType: "blob",
+  });
+
 const inventoryReceiptService = {
   getInventoryReceiptsService,
+  exportInventoryReceiptsService,
 };
 
 export default inventoryReceiptService;

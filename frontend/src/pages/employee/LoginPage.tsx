@@ -6,19 +6,23 @@ import { toast } from "react-toastify";
 import { Lock, UserRound, UserRoundCheck } from "lucide-react";
 import { FormLoginSchema, type formLogin } from "../../schemas/FormLoginSchema";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
-import { login, logout, logoutLocal } from "../../redux/slices/user/authSlice";
+import {
+  employeeLogin,
+  logout,
+  logoutLocal,
+} from "../../redux/slices/user/authSlice";
 import type { LoginRequest } from "../../types/auth";
 import LoadingButton from "../../components/ui/common/LoadingButton";
 import { ROLE_NAME } from "../../utils/constants/role";
 
 const inputClass =
-  "h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 pl-11 text-sm text-slate-800 outline-none transition-all placeholder:text-slate-400 hover:border-sky-200 hover:bg-white focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100";
+  "h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 pl-11 text-sm text-slate-800 outline-none transition-all placeholder:text-slate-400 hover:border-sky-200 hover:bg-white focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100";
 
 const LoginPage = () => {
   const dispatch = useAppDispatch();
 
   const loginLoading = useAppSelector(
-    (state) => state.ui.loadingMap["user/login"] || false,
+    (state) => state.ui.loadingMap["auth/employeeLogin"] || false,
   );
 
   const navigate = useNavigate();
@@ -59,7 +63,7 @@ const LoginPage = () => {
       localStorage.removeItem("rememberMe");
     }
 
-    dispatch(login({ data }))
+    dispatch(employeeLogin({ data }))
       .unwrap()
       .then((res) => {
         const user = res.data.user;
@@ -80,20 +84,20 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex min-h-[calc(100dvh-132px)] w-full items-center justify-center bg-slate-50 px-4 py-4 text-slate-700 sm:px-6">
-      <div className="mx-auto w-full max-w-6xl">
-        <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.08)] lg:grid lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="relative hidden h-[min(510px,calc(100vh-180px))] overflow-hidden lg:block">
+    <div className="flex min-h-full w-full items-center justify-center bg-slate-50 px-4 py-3 text-slate-700 sm:px-6">
+      <div className="mx-auto w-full max-w-5xl">
+        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.08)] lg:grid lg:grid-cols-[1.02fr_0.98fr]">
+          <div className="relative hidden h-[clamp(390px,calc(100dvh-170px),460px)] overflow-hidden lg:block">
             <img
               src="/img/employee.webp"
               alt="Employee B-Hub"
               className="h-full w-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-br from-slate-950/75 via-sky-950/40 to-slate-900/10" />
-            <div className="absolute inset-x-0 bottom-0 p-8 text-white">
+            <div className="absolute inset-x-0 bottom-0 p-6 text-white">
               <Link
                 to="/home"
-                className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-sky-100 backdrop-blur-sm transition hover:bg-white/15"
+                className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-sky-100 backdrop-blur-sm transition hover:bg-white/15"
               >
                 Về B-Hub
               </Link>
@@ -101,29 +105,29 @@ const LoginPage = () => {
                 <UserRoundCheck size={16} />
                 Employee Portal
               </div>
-              <h1 className="mt-4 max-w-lg text-3xl font-extrabold leading-tight tracking-tight">
+              <h1 className="mt-4 max-w-lg text-2xl font-extrabold leading-tight tracking-tight">
                 Không gian nhân viên B-Hub
               </h1>
-              <p className="mt-3 max-w-lg text-sm leading-relaxed text-sky-100">
+              <p className="mt-2 max-w-lg text-sm leading-relaxed text-sky-100">
                 Đăng nhập để xử lý ca trực, hỗ trợ đặt sân và theo dõi công việc
                 hằng ngày.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center justify-center p-5 sm:p-8 lg:h-[min(510px,calc(100vh-180px))]">
+          <div className="flex items-center justify-center p-5 sm:p-7 lg:h-[clamp(390px,calc(100dvh-170px),460px)]">
             <form
               onSubmit={handleSubmit(onSubmit)}
-              className="w-full max-w-md space-y-4"
+              className="w-full max-w-md space-y-3"
             >
               <div>
                 <p className="text-sm font-semibold text-sky-700">
                   Secure Employee Access
                 </p>
-                <h2 className="mt-2 text-2xl font-extrabold text-slate-900 sm:text-3xl">
+                <h2 className="mt-1.5 text-2xl font-extrabold text-slate-900">
                   Đăng nhập Employee
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-slate-500">
+                <p className="mt-1.5 text-sm leading-6 text-slate-500">
                   Khu vực dành cho nhân viên B-Hub.
                 </p>
               </div>
@@ -185,7 +189,7 @@ const LoginPage = () => {
               <LoadingButton
                 loading={loginLoading}
                 type="submit"
-                className="h-12 w-full rounded-2xl text-sm font-semibold"
+                className="h-11 w-full rounded-xl text-sm font-semibold"
               >
                 Đăng nhập
               </LoadingButton>

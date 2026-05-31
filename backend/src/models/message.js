@@ -94,8 +94,8 @@ const Message = sequelize.define(
   {
     tableName: "Messages",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   },
 );
 

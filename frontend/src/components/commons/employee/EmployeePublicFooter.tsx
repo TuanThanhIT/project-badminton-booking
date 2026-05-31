@@ -3,12 +3,12 @@ import { CalendarCheck, ClipboardList, ShieldCheck } from "lucide-react";
 const EmployeePublicFooter = () => {
   return (
     <footer className="shrink-0 border-t border-slate-200 bg-white text-slate-700">
-      <div className="flex min-h-16 items-center justify-between gap-4 px-4 py-2 sm:px-6 lg:px-10 2xl:px-14">
+      <div className="flex min-h-14 items-center justify-between gap-4 px-4 py-2 sm:px-6 lg:px-10 2xl:px-14">
         <div className="min-w-0">
           <h3 className="truncate text-sm font-semibold tracking-tight text-slate-900 sm:text-base">
             B-Hub Employee System
           </h3>
-          <p className="mt-1 hidden text-xs leading-relaxed text-slate-500 sm:block">
+          <p className="mt-0.5 hidden text-xs leading-snug text-slate-500 lg:block">
             Không gian làm việc dành cho nhân viên xử lý ca trực, đặt sân và
             hoạt động hằng ngày.
           </p>

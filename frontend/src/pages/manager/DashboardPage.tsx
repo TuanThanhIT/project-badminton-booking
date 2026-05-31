@@ -328,7 +328,7 @@ const DashboardPage = () => {
                   {order.shippingName}
                 </p>
                 <p className="mt-1 text-xs font-semibold text-slate-500">
-                  {dateTimeShort(order.createdDate)}
+                  {dateTimeShort(order.createdAt)}
                 </p>
                 <p className="mt-3 text-base font-black text-slate-900">
                   {formatCurrency(order.totalAmount)}

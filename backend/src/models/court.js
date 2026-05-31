@@ -86,8 +86,8 @@ const Court = sequelize.define(
   {
     tableName: "Courts",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   },
 );
 

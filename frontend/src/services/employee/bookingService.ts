@@ -28,6 +28,11 @@ const completeBookingService = (
     data,
   );
 
+const receiveBookingService = (bookingId: number) =>
+  instance.patch<EmployeeBookingActionResponse>(
+    `/employee/bookings/${bookingId}/receive`,
+  );
+
 const approveCancelBookingService = (bookingId: number) =>
   instance.patch<EmployeeBookingActionResponse>(
     `/employee/bookings/${bookingId}/cancel-request/approve`,
@@ -55,6 +60,7 @@ const employeeBookingService = {
   getBookingsService,
   getBookingDetailService,
   confirmBookingService,
+  receiveBookingService,
   completeBookingService,
   approveCancelBookingService,
   rejectCancelBookingService,

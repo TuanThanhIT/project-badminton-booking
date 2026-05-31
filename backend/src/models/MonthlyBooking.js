@@ -66,7 +66,7 @@ const MonthlyBooking = sequelize.define(
       },
     },
     totalAmount: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       validate: {
         min: { args: [0], msg: "Total amount cannot be negative" },
@@ -84,8 +84,8 @@ const MonthlyBooking = sequelize.define(
   {
     tableName: "MonthlyBookings",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   },
 );
 

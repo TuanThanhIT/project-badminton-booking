@@ -132,7 +132,7 @@ const Order = sequelize.define(
       },
     },
     shippingWeight: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       validate: {
         notNull: { msg: "Shipping weight is required" },
@@ -339,8 +339,8 @@ const Order = sequelize.define(
   {
     tableName: "Orders",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
 
     indexes: [
       { fields: ["orderGroupId"] },

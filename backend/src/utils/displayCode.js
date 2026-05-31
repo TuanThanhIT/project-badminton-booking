@@ -1,7 +1,7 @@
-const formatDatePart = (createdDate) => {
-  if (!createdDate) return null;
+const formatDatePart = (createdAt) => {
+  if (!createdAt) return null;
 
-  const date = new Date(createdDate);
+  const date = new Date(createdAt);
   if (Number.isNaN(date.getTime())) return null;
 
   return `${date.getFullYear().toString().slice(-2)}${String(
@@ -9,8 +9,8 @@ const formatDatePart = (createdDate) => {
   ).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}`;
 };
 
-export const formatBookingCode = (id, createdDate) => {
-  const datePart = formatDatePart(createdDate);
+export const formatBookingCode = (id, createdAt) => {
+  const datePart = formatDatePart(createdAt);
 
   if (!datePart) {
     return `BK-${String(id).padStart(6, "0")}`;
@@ -19,8 +19,8 @@ export const formatBookingCode = (id, createdDate) => {
   return `BK-${datePart}-${String(id).padStart(4, "0")}`;
 };
 
-export const formatOrderCode = (id, createdDate) => {
-  const datePart = formatDatePart(createdDate);
+export const formatOrderCode = (id, createdAt) => {
+  const datePart = formatDatePart(createdAt);
 
   if (!datePart) {
     return `BH-${String(id).padStart(6, "0")}`;

@@ -46,6 +46,14 @@ const initEmployeeBookingRoute = (app) => {
     employeeBookingController.completeBookingController,
   );
 
+  bookingRoute.patch(
+    "/:bookingId/receive",
+    auth,
+    authorize(ROLE_NAME.EMPLOYEE),
+    validate(bookingActionIdSchema),
+    employeeBookingController.receiveBookingController,
+  );
+
   bookingRoute.post(
     "/:bookingId/cancel/approve",
     auth,

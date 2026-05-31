@@ -17,7 +17,7 @@ const OrderDetail = sequelize.define(
       },
     },
     unitPrice: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       validate: {
         notNull: { msg: "Unit price is required" },
@@ -26,7 +26,7 @@ const OrderDetail = sequelize.define(
       },
     },
     subTotal: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       defaultValue: 0,
       validate: {

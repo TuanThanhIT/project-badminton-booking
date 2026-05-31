@@ -112,7 +112,7 @@ const PostCard = ({
           )}
 
           <p className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-400">
-            {formatRelativeTimeVi(post.createdDate)}
+            {formatRelativeTimeVi(post.createdAt)}
             <span>-</span>
             <Globe2 size={13} />
             <span>Công khai</span>

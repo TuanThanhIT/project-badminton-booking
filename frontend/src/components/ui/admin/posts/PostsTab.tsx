@@ -155,7 +155,7 @@ const PostsTab = () => {
                         ? <span className="px-2 py-0.5 rounded border text-xs font-semibold bg-green-50 text-green-700 border-green-200">Hoạt động</span>
                         : <span className="px-2 py-0.5 rounded border text-xs font-semibold bg-red-50 text-red-600 border-red-200">Đã khóa</span>}
                   </td>
-                  <td className="px-3 py-3 text-center text-xs text-gray-500">{new Date(p.createdDate).toLocaleDateString("vi-VN")}</td>
+                  <td className="px-3 py-3 text-center text-xs text-gray-500">{new Date(p.createdAt).toLocaleDateString("vi-VN")}</td>
                   <td className="px-3 py-3 text-center">
                     {!p.isDeleted && (
                       <div className="flex items-center justify-center gap-1">

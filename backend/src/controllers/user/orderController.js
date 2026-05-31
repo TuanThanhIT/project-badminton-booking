@@ -1,4 +1,4 @@
-import SuccessResponse from "../../helpers/SuccessResponse.js";
+﻿import SuccessResponse from "../../helpers/SuccessResponse.js";
 import asyncHandler from "../../middlewares/asyncHandler.js";
 import orderService from "../../services/user/orderService.js";
 
@@ -121,16 +121,23 @@ const getTrackingProgressController = asyncHandler(async (req, res) => {
     .json(new SuccessResponse("Lấy tiến trình vận chuyển thành công", result));
 });
 
+
 const requestCancelOrderController = asyncHandler(async (req, res) => {
   const data = {
     orderId: req.params.orderId,
     ...req.body,
     userId: req.user.id,
   };
-  await orderService.requestCancelOrderService(data);
-  return res
-    .status(200)
-    .json(new SuccessResponse("Gửi yêu cầu hủy đơn thành công"));
+  const result = await orderService.requestCancelOrderService(data);
+
+  return res.status(200).json(
+    new SuccessResponse(
+      result.mode === "CANCELLED"
+        ? "Hủy đơn hàng thành công"
+        : "Gửi yêu cầu hủy đơn thành công",
+      result,
+    ),
+  );
 });
 
 const requestReturnOrderController = asyncHandler(async (req, res) => {

@@ -3,9 +3,11 @@ import {
   AlertTriangle,
   Beef,
   Boxes,
+  CalendarDays,
   ChevronLeft,
   ChevronRight,
   CupSoda,
+  Download,
   PackageSearch,
   Save,
   Search,
@@ -22,6 +24,7 @@ import {
   getManagerBeverages,
   updateManagerBeverageStock,
 } from "../../redux/slices/manager/beverageSlice";
+import inventoryReceiptService from "../../services/manager/inventoryReceiptService";
 import type { ManagerProduct } from "../../types/product";
 import type { ManagerBeverage } from "../../types/beverage";
 
@@ -37,6 +40,12 @@ const formatCurrency = (value: number) =>
 
 const getDiscountPrice = (price: number, discount: number) =>
   Math.max(price - (price * discount) / 100, 0);
+
+const getTodayInputValue = () => {
+  const now = new Date();
+  const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  return localDate.toISOString().slice(0, 10);
+};
 
 const getStockWarning = (stock: number) => {
   if (stock <= 0) {
@@ -377,6 +386,8 @@ const ProductPagae = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [savingStockKey, setSavingStockKey] = useState<string | null>(null);
+  const [exportDate, setExportDate] = useState(getTodayInputValue);
+  const [isExporting, setIsExporting] = useState(false);
   const limit = 9;
 
   const managerProduct = useAppSelector((state) => state.managerProduct);
@@ -442,6 +453,32 @@ const ProductPagae = () => {
     }
   };
 
+  const handleExportInventoryReceipts = async () => {
+    if (!exportDate) {
+      toast.error("Chọn ngày cần export");
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      const response =
+        await inventoryReceiptService.exportInventoryReceiptsService(exportDate);
+      const url = window.URL.createObjectURL(response.data);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `inventory-receipts-${exportDate}.xls`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Đã export hóa đơn nhập kho");
+    } catch (error: any) {
+      toast.error(error?.message || "Export hóa đơn thất bại");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const stats = useMemo(() => {
     const productStock = managerProduct.products.reduce(
       (sum, product) => sum + product.totalStock,
@@ -490,6 +527,27 @@ const ProductPagae = () => {
             Theo dõi sản phẩm chung và tồn kho riêng tại chi nhánh của bạn.
           </p>
         </div>
+
+        {activeTab === "products" ? (
+          <div className="flex h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 shadow-sm">
+            <CalendarDays className="h-4 w-4 text-slate-400" />
+            <input
+              type="date"
+              value={exportDate}
+              onChange={(event) => setExportDate(event.target.value)}
+              className="h-full bg-transparent text-sm font-semibold text-slate-700 outline-none"
+            />
+            <button
+              type="button"
+              onClick={handleExportInventoryReceipts}
+              disabled={isExporting}
+              className="inline-flex h-8 items-center gap-2 rounded-md bg-emerald-600 px-3 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+            >
+              <Download className="h-4 w-4" />
+              {isExporting ? "Đang export" : "Export Excel"}
+            </button>
+          </div>
+        ) : null}
 
         <label className="flex h-11 w-full items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 shadow-sm lg:w-96">
           <Search className="h-4 w-4 text-slate-400" />

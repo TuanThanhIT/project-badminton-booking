@@ -12,6 +12,10 @@ export type ManagerRevenueOverview = {
   courtRevenue: number;
   productRevenue: number;
   beverageRevenue: number;
+  salaryCost: number;
+  inventoryCost: number;
+  totalCost: number;
+  profit: number;
   bookingCount: number;
   orderCount: number;
 };
@@ -24,6 +28,23 @@ export type ManagerRevenueChartItem = {
   productRevenue: number;
   beverageRevenue: number;
   totalRevenue: number;
+  salaryCost: number;
+  inventoryCost: number;
+  totalCost: number;
+  profit: number;
+};
+
+export type ManagerRevenueMonthlyChartItem = {
+  month: string;
+  label: string;
+  courtRevenue: number;
+  productRevenue: number;
+  beverageRevenue: number;
+  totalRevenue: number;
+  salaryCost: number;
+  inventoryCost: number;
+  totalCost: number;
+  profit: number;
 };
 
 ///MANAGER
@@ -39,7 +60,18 @@ export type ManagerRevenueData = {
   startDate: string;
   endDate: string;
   overview: ManagerRevenueOverview;
+  monthlyEstimate: {
+    month: number;
+    year: number;
+    basedOnDays: number;
+    daysInMonth: number;
+    estimatedRevenue: number;
+    estimatedProfit: number;
+    averageDailyRevenue: number;
+    averageDailyProfit: number;
+  };
   chart: ManagerRevenueChartItem[];
+  monthlyChart: ManagerRevenueMonthlyChartItem[];
   breakdown: ManagerRevenueBreakdownItem[];
 };
 

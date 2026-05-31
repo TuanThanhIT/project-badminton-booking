@@ -184,7 +184,7 @@ const BookingResultPage = () => {
                   <span className="font-mono text-xl font-semibold text-sky-700">
                     {formatBookingCode(
                       bookingData.bookingId,
-                      bookingData.createdDate,
+                      bookingData.createdAt,
                     )}
                   </span>
                 </InfoCard>

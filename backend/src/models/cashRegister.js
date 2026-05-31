@@ -26,7 +26,7 @@ const CashRegister = sequelize.define(
       },
     },
     openingCash: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       defaultValue: 0,
       validate: {
@@ -43,7 +43,7 @@ const CashRegister = sequelize.define(
       },
     },
     closingCash: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       defaultValue: 0,
       validate: {
@@ -60,7 +60,7 @@ const CashRegister = sequelize.define(
       },
     },
     expectedCash: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       defaultValue: 0,
       validate: {
@@ -77,7 +77,7 @@ const CashRegister = sequelize.define(
       },
     },
     difference: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
       validate: {
         isFloat: {
@@ -89,8 +89,8 @@ const CashRegister = sequelize.define(
   {
     tableName: "CashRegisters",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   },
 );
 

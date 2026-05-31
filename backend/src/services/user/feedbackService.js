@@ -48,8 +48,8 @@ const formatFeedbackDetail = (feedback) => ({
   feedbackId: feedback.id,
   content: feedback.content,
   rating: feedback.rating,
-  createdDate: feedback.createdDate,
-  updatedDate: feedback.updatedDate,
+  createdAt: feedback.createdAt,
+  updatedAt: feedback.updatedAt,
 });
 
 const createFeedbackOrderService = async (data) => {
@@ -119,7 +119,7 @@ const getFeedbackOrderDetailService = async (data) => {
       orderId,
       variantId,
     },
-    attributes: ["id", "content", "rating", "createdDate", "updatedDate"],
+    attributes: ["id", "content", "rating", "createdAt", "updatedAt"],
   });
 
   if (!feedback) {
@@ -130,8 +130,8 @@ const getFeedbackOrderDetailService = async (data) => {
     feedbackId: feedback.id,
     content: feedback.content,
     rating: feedback.rating,
-    createdDate: feedback.createdDate,
-    updatedDate: feedback.updatedDate,
+    createdAt: feedback.createdAt,
+    updatedAt: feedback.updatedAt,
   };
 };
 
@@ -225,7 +225,7 @@ const getFeedbackBranchDetailService = async (data) => {
       userId,
       branchId,
     },
-    attributes: ["id", "content", "rating", "createdDate", "updatedDate"],
+    attributes: ["id", "content", "rating", "createdAt", "updatedAt"],
   });
 
   if (!feedback) {

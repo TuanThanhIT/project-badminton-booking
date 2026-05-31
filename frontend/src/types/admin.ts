@@ -11,7 +11,7 @@ export interface AdminUser {
   role?: string;
   isVerified: boolean;
   isActive: boolean;
-  createdDate: string;
+  createdAt: string;
 }
 
 export interface AdminUserProfile {
@@ -35,7 +35,7 @@ export interface AdminManagedBranch {
   branchManagerId: number;
   branchId: number;
   branchName: string;
-  assignedDate: string;
+  createdAt: string;
 }
 
 export interface AdminManager {
@@ -46,7 +46,7 @@ export interface AdminManager {
   phoneNumber?: string;
   avatar?: string;
   isActive: boolean;
-  createdDate: string;
+  createdAt: string;
   managedBranches: AdminManagedBranch[];
 }
 
@@ -74,7 +74,7 @@ export interface AdminBranch {
   fullAddress?: string;
   phoneNumber: string;
   isActive: boolean;
-  createdDate: string;
+  createdAt: string;
   managers?: AdminBranchManager[];
 }
 
@@ -86,7 +86,7 @@ export interface AdminBeverage {
   thumbnailUrl?: string;
   price: number;
   totalStock: number;
-  createdDate: string;
+  createdAt: string;
 }
 
 // ─── Category Management ──────────────────────────────────────────────────────
@@ -95,7 +95,7 @@ export interface AdminCategory {
   id: number;
   cateName: string;
   menuGroup: string;
-  createdDate?: string;
+  createdAt?: string;
 }
 
 // ─── Product Management ───────────────────────────────────────────────────────
@@ -111,7 +111,7 @@ export interface AdminProduct {
   menuGroup?: string;
   variantCount: number;
   totalStock: number;
-  createdDate: string;
+  createdAt: string;
 }
 
 // ─── Discount Management ──────────────────────────────────────────────────────
@@ -129,7 +129,7 @@ export interface AdminDiscount {
   isActive: boolean;
   startDate: string;
   endDate: string;
-  createdDate: string;
+  createdAt: string;
 }
 
 // ─── Feedback Management ──────────────────────────────────────────────────────
@@ -138,7 +138,7 @@ export interface AdminFeedback {
   id: number;
   content: string;
   rating: number;
-  createdDate: string;
+  createdAt: string;
   feedbackType: string;
   userId?: number;
   userName?: string;
@@ -174,7 +174,7 @@ export interface AdminWalletTransaction extends AdminWalletUser {
   type: string;
   status: string;
   description?: string;
-  createdDate: string;
+  createdAt: string;
   walletId: number;
   walletBalance: number;
 }
@@ -187,7 +187,7 @@ export interface AdminWithdrawRequest extends AdminWalletUser {
   accountHolder: string;
   status: string;
   processedAt?: string;
-  createdDate: string;
+  createdAt: string;
   walletId: number;
   walletBalance: number;
 }
@@ -196,7 +196,7 @@ export interface AdminUserWallet extends AdminWalletUser {
   id: number;
   balance: number;
   status: string;
-  createdDate: string;
+  createdAt: string;
 }
 
 // ─── Post Management ──────────────────────────────────────────────────────────
@@ -210,7 +210,7 @@ export interface AdminPost {
   isDeleted: boolean;
   isRepost: boolean;
   commentCount: number;
-  createdDate: string;
+  createdAt: string;
   authorId?: number;
   authorUsername?: string;
   authorName?: string;
@@ -223,7 +223,7 @@ export interface AdminComment {
   type: string;
   postId: number;
   parentId?: number;
-  createdDate: string;
+  createdAt: string;
   authorId?: number;
   authorUsername?: string;
   authorName?: string;
@@ -294,7 +294,7 @@ export interface AdminDashboardRecentItem {
   id: number;
   status: string;
   amount: number;
-  createdDate: string;
+  createdAt: string;
   branchName?: string;
   fullName?: string;
   username?: string;

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import type { BranchDetailRequest } from "../../types/branch";
@@ -81,7 +81,7 @@ const BranchDetailPage = () => {
     const content = reviewContent.trim();
 
     if (!content) {
-      toast.warning("Vui lòng nhập nội dung đánh giá");
+      toast.warning("Vui l�ng nh?p n?i dung d�nh gi�");
       return;
     }
 
@@ -98,8 +98,8 @@ const BranchDetailPage = () => {
 
       toast.success(
         branchDetail.myFeedback
-          ? "Cập nhật đánh giá chi nhánh thành công"
-          : "Đánh giá chi nhánh thành công",
+          ? "C?p nh?t d�nh gi� chi nh�nh th�nh c�ng"
+          : "��nh gi� chi nh�nh th�nh c�ng",
       );
 
       dispatch(getBranchDetail({ data: { branchId: Number(branchId) } }));
@@ -107,7 +107,7 @@ const BranchDetailPage = () => {
       toast.error(
         error?.response?.data?.message ||
           error?.message ||
-          "Không thể lưu đánh giá chi nhánh",
+          "Kh�ng th? luu d�nh gi� chi nh�nh",
       );
     } finally {
       setReviewSubmitting(false);
@@ -126,7 +126,7 @@ const BranchDetailPage = () => {
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
 
-        <p className="text-sm font-medium">Đang tải thông tin chi nhánh...</p>
+        <p className="text-sm font-medium">�ang t?i th�ng tin chi nh�nh...</p>
       </div>
     );
   }
@@ -144,12 +144,12 @@ const BranchDetailPage = () => {
             className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
           >
             <ArrowLeft size={17} />
-            Quay lại
+            Quay l?i
           </button>
 
           <div className="hidden items-center gap-2 rounded-full border border-sky-100 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700 sm:inline-flex">
             <Building2 size={16} />
-            Chi tiết chi nhánh
+            Chi ti?t chi nh�nh
           </div>
         </div>
 
@@ -174,7 +174,7 @@ const BranchDetailPage = () => {
               <div className="max-w-3xl">
                 <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/15 px-4 py-2 text-xs font-medium text-white backdrop-blur-sm">
                   <MapPin size={15} className="text-sky-200" />
-                  Chi nhánh B-Hub
+                  Chi nh�nh B-Hub
                 </div>
 
                 <h1 className="text-2xl font-semibold leading-tight text-white sm:text-4xl">
@@ -233,7 +233,7 @@ const BranchDetailPage = () => {
 
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-slate-500">
-                      Địa chỉ
+                      �?a ch?
                     </p>
                     <p className="mt-1 text-sm font-medium leading-relaxed text-slate-800">
                       {branchDetail.fullAddress}
@@ -250,7 +250,7 @@ const BranchDetailPage = () => {
 
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-slate-500">
-                      Điện thoại
+                      �i?n tho?i
                     </p>
                     <p className="mt-1 text-sm font-medium text-slate-800">
                       {branchDetail.phoneNumber}
@@ -271,10 +271,10 @@ const BranchDetailPage = () => {
 
                     <div>
                       <h2 className="text-lg font-semibold text-slate-900">
-                        Quản lý chi nhánh
+                        Qu?n l� chi nh�nh
                       </h2>
                       <p className="mt-1 text-sm text-slate-600">
-                        Thông tin người phụ trách tại chi nhánh.
+                        Th�ng tin ngu?i ph? tr�ch t?i chi nh�nh.
                       </p>
                     </div>
                   </div>
@@ -293,7 +293,7 @@ const BranchDetailPage = () => {
 
                         <div className="min-w-0 flex-1">
                           <p className="text-base font-semibold text-slate-900">
-                            {manager.fullName || "Chưa cập nhật tên"}
+                            {manager.fullName || "Chua c?p nh?t t�n"}
                           </p>
 
                           <div className="mt-3 space-y-2 text-sm">
@@ -303,7 +303,7 @@ const BranchDetailPage = () => {
                                 className="shrink-0 text-sky-600"
                               />
                               <span className="truncate">
-                                {manager.email || "Chưa cập nhật email"}
+                                {manager.email || "Chua c?p nh?t email"}
                               </span>
                             </p>
 
@@ -314,7 +314,7 @@ const BranchDetailPage = () => {
                               />
                               <span>
                                 {manager.phoneNumber ||
-                                  "Chưa cập nhật số điện thoại"}
+                                  "Chua c?p nh?t s? di?n tho?i"}
                               </span>
                             </p>
                           </div>
@@ -336,10 +336,10 @@ const BranchDetailPage = () => {
 
                   <div>
                     <h2 className="text-lg font-semibold text-slate-900">
-                      Giới thiệu chi nhánh
+                      Gi?i thi?u chi nh�nh
                     </h2>
                     <p className="mt-1 text-sm text-slate-600">
-                      Thông tin tổng quan và tiện ích tại chi nhánh.
+                      Th�ng tin t?ng quan v� ti?n �ch t?i chi nh�nh.
                     </p>
                   </div>
                 </div>
@@ -372,10 +372,10 @@ const BranchDetailPage = () => {
 
                     <div>
                       <h2 className="text-lg font-semibold text-slate-900">
-                        Đánh giá chi nhánh
+                        ��nh gi� chi nh�nh
                       </h2>
                       <p className="mt-1 text-sm text-slate-600">
-                        Chọn sao và chia sẻ trải nghiệm của bạn tại chi nhánh.
+                        Ch?n sao v� chia s? tr?i nghi?m c?a b?n t?i chi nh�nh.
                       </p>
                     </div>
                   </div>
@@ -395,7 +395,7 @@ const BranchDetailPage = () => {
                         </div>
                         <p className="mt-0.5 text-xs font-medium text-amber-700">
                           {branchDetail.feedbackSummary?.totalFeedbacks || 0}{" "}
-                          đánh giá
+                          d�nh gi�
                         </p>
                       </div>
                     </div>
@@ -409,11 +409,11 @@ const BranchDetailPage = () => {
                     <div>
                       <p className="text-base font-semibold text-slate-900">
                         {branchDetail.myFeedback
-                          ? "Cập nhật đánh giá của bạn"
-                          : "Viết đánh giá của bạn"}
+                          ? "C?p nh?t d�nh gi� c?a b?n"
+                          : "Vi?t d�nh gi� c?a b?n"}
                       </p>
                       <p className="mt-1 text-sm text-slate-600">
-                        Mỗi tài khoản có một đánh giá cho mỗi chi nhánh.
+                        M?i t�i kho?n c� m?t d�nh gi� cho m?i chi nh�nh.
                       </p>
                     </div>
 
@@ -429,7 +429,7 @@ const BranchDetailPage = () => {
                           }}
                           disabled={!branchDetail.canReview}
                           className="rounded-xl p-1.5 transition-all hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
-                          aria-label={`Chọn ${rating} sao`}
+                          aria-label={`Ch?n ${rating} sao`}
                         >
                           <Star
                             size={26}
@@ -446,8 +446,8 @@ const BranchDetailPage = () => {
 
                   {!branchDetail.canReview && (
                     <div className="mt-4 rounded-2xl border border-sky-100 bg-sky-50 p-3 text-sm leading-relaxed text-sky-800">
-                      Bạn chỉ có thể gửi đánh giá sau khi có đơn hàng hoàn thành
-                      hoặc lịch đặt sân hoàn thành tại chi nhánh này.
+                      B?n ch? c� th? g?i d�nh gi� sau khi c� don h�ng ho�n th�nh
+                      ho?c l?ch d?t s�n ho�n th�nh t?i chi nh�nh n�y.
                     </div>
                   )}
 
@@ -457,13 +457,13 @@ const BranchDetailPage = () => {
                     rows={4}
                     maxLength={1000}
                     disabled={!branchDetail.canReview}
-                    placeholder="Chia sẻ cảm nhận của bạn về chi nhánh..."
+                    placeholder="Chia s? c?m nh?n c?a b?n v? chi nh�nh..."
                     className="mt-4 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-relaxed text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:border-sky-300 focus:bg-white focus:ring-1 focus:ring-sky-50 disabled:cursor-not-allowed disabled:text-slate-400"
                   />
 
                   <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <span className="text-xs text-slate-500">
-                      {reviewContent.length}/1000 ký tự
+                      {reviewContent.length}/1000 k� t?
                     </span>
 
                     <button
@@ -478,7 +478,7 @@ const BranchDetailPage = () => {
                         <Send size={18} />
                       )}
 
-                      {branchDetail.myFeedback ? "Cập nhật" : "Gửi đánh giá"}
+                      {branchDetail.myFeedback ? "C?p nh?t" : "G?i d�nh gi�"}
                     </button>
                   </div>
                 </div>
@@ -511,7 +511,7 @@ const BranchDetailPage = () => {
                               </div>
 
                               <span className="text-xs font-medium text-slate-500">
-                                {formatReviewDate(feedback.updatedDate)}
+                                {formatReviewDate(feedback.updatedAt)}
                               </span>
                             </div>
 
@@ -524,7 +524,7 @@ const BranchDetailPage = () => {
                     ))
                   ) : (
                     <div className="rounded-3xl border border-slate-200 bg-white p-5 text-center text-sm text-slate-500 shadow-sm">
-                      Chưa có đánh giá nào cho chi nhánh này.
+                      Chua c� d�nh gi� n�o cho chi nh�nh n�y.
                     </div>
                   )}
                 </div>
@@ -541,10 +541,10 @@ const BranchDetailPage = () => {
 
                   <div>
                     <h2 className="text-lg font-semibold text-slate-900">
-                      Vị trí chi nhánh
+                      V? tr� chi nh�nh
                     </h2>
                     <p className="mt-1 text-sm text-slate-600">
-                      Xem vị trí chi nhánh trên bản đồ.
+                      Xem v? tr� chi nh�nh tr�n b?n d?.
                     </p>
                   </div>
                 </div>
@@ -574,11 +574,11 @@ const BranchDetailPage = () => {
 
                   <div>
                     <h3 className="text-lg font-semibold text-slate-900">
-                      Đặt sân tại chi nhánh
+                      �?t s�n t?i chi nh�nh
                     </h3>
 
                     <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                      Chọn lịch và giữ sân nhanh chóng tại{" "}
+                      Ch?n l?ch v� gi? s�n nhanh ch�ng t?i{" "}
                       <span className="font-medium text-slate-800">
                         {branchDetail.branchName}
                       </span>
@@ -594,7 +594,7 @@ const BranchDetailPage = () => {
                     <div className="flex items-center justify-between gap-4">
                       <span className="flex items-center gap-2 text-slate-600">
                         <Clock size={16} className="text-sky-600" />
-                        Giờ mở cửa
+                        Gi? m? c?a
                       </span>
                       <span className="font-semibold text-slate-800">
                         06:00 - 23:00
@@ -602,17 +602,17 @@ const BranchDetailPage = () => {
                     </div>
 
                     <div className="flex items-center justify-between gap-4">
-                      <span className="text-slate-600">Số lượng sân</span>
+                      <span className="text-slate-600">S? lu?ng s�n</span>
                       <span className="font-semibold text-slate-800">
-                        10 sân
+                        10 s�n
                       </span>
                     </div>
 
                     <div className="flex items-center justify-between gap-4">
-                      <span className="text-slate-600">Đặt sân online</span>
+                      <span className="text-slate-600">�?t s�n online</span>
                       <span className="inline-flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
                         <CheckCircle2 size={13} />
-                        Có hỗ trợ
+                        C� h? tr?
                       </span>
                     </div>
                   </div>
@@ -626,9 +626,9 @@ const BranchDetailPage = () => {
                     />
 
                     <p className="text-sm leading-relaxed text-sky-800">
-                      Hệ thống sẽ giữ sân trong{" "}
-                      <span className="font-semibold">5 phút</span> sau khi đặt.
-                      Vui lòng hoàn tất thanh toán để xác nhận lịch.
+                      H? th?ng s? gi? s�n trong{" "}
+                      <span className="font-semibold">5 ph�t</span> sau khi d?t.
+                      Vui l�ng ho�n t?t thanh to�n d? x�c nh?n l?ch.
                     </p>
                   </div>
                 </div>
@@ -643,7 +643,7 @@ const BranchDetailPage = () => {
                   className="flex w-full items-center justify-center gap-2 rounded-2xl bg-sky-500 px-5 py-4 text-sm font-semibold text-white shadow-lg shadow-sky-100 transition-all hover:bg-sky-600 active:scale-[0.98]"
                 >
                   <CalendarCheck2 size={20} />
-                  Đặt sân ngay
+                  �?t s�n ngay
                 </button>
 
                 <button
@@ -651,7 +651,7 @@ const BranchDetailPage = () => {
                   className="flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-medium text-slate-700 transition-all hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
                 >
                   <Phone size={18} />
-                  Liên hệ chi nhánh
+                  Li�n h? chi nh�nh
                 </button>
               </div>
             </div>

@@ -57,7 +57,7 @@ const DraftBeverageItem = sequelize.define(
       },
     },
     subTotal: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       validate: {
         notNull: { msg: "Sub total is required" },
@@ -74,8 +74,8 @@ const DraftBeverageItem = sequelize.define(
   {
     tableName: "DraftBeverageItems",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   },
 );
 

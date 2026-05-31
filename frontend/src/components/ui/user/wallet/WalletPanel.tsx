@@ -206,7 +206,7 @@ const WalletPanel = () => {
 
   const grouped = useMemo(() => {
     return filtered.reduce<Record<string, WalletTransaction[]>>((acc, item) => {
-      const key = new Date(item.createdDate).toLocaleDateString("vi-VN");
+      const key = new Date(item.createdAt).toLocaleDateString("vi-VN");
       if (!acc[key]) acc[key] = [];
       acc[key].push(item);
       return acc;
@@ -455,7 +455,7 @@ const WalletPanel = () => {
                                 {tx.description || meta.label}
                               </p>
                               <p className="mt-1 text-xs text-slate-500">
-                                {formatDateTime(tx.createdDate)}
+                                {formatDateTime(tx.createdAt)}
                               </p>
                             </div>
                           </div>

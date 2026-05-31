@@ -79,7 +79,7 @@ const DraftBookingItem = sequelize.define(
       },
     },
     price: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       validate: {
         notNull: { msg: "Price is required" },
@@ -96,8 +96,8 @@ const DraftBookingItem = sequelize.define(
   {
     tableName: "DraftBookingItems",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   },
 );
 

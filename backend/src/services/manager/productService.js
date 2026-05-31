@@ -83,8 +83,8 @@ const normalizeProduct = (product, branchId, includeDetail = false) => {
     variantCount: variants.length,
     totalStock,
     variants,
-    createdDate: item.createdDate,
-    updatedDate: item.updatedDate,
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
   };
 
   if (includeDetail) {
@@ -123,8 +123,8 @@ const getProductsService = async (managerId, data = {}) => {
       "description",
       "thumbnailUrl",
       "categoryId",
-      "createdDate",
-      "updatedDate",
+      "createdAt",
+      "updatedAt",
     ],
     include: [
       {
@@ -158,7 +158,7 @@ const getProductsService = async (managerId, data = {}) => {
     ],
     limit: limitNumber,
     offset,
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
     distinct: true,
   });
 

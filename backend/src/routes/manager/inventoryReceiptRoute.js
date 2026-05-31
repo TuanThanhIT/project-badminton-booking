@@ -9,6 +9,26 @@ const inventoryReceiptRoute = express.Router();
 
 const initInventoryReceiptRoute = (app) => {
   inventoryReceiptRoute.get(
+    "/export",
+    auth,
+    authorize("MANAGER"),
+    asyncHandler(async (req, res) => {
+      const result = await inventoryReceiptService.exportInventoryReceiptsService(
+        req.user.id,
+        req.query,
+      );
+
+      res.setHeader("Content-Type", "application/vnd.ms-excel; charset=utf-8");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${result.filename}"`,
+      );
+
+      return res.status(200).send(result.content);
+    }),
+  );
+
+  inventoryReceiptRoute.get(
     "/",
     auth,
     authorize("MANAGER"),

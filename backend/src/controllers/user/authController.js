@@ -4,7 +4,19 @@ import asyncHandler from "../../middlewares/asyncHandler.js";
 import authService from "../../services/user/authService.js";
 dotenv.config();
 
-const isProduction = process.env.NODE_ENV === "production";
+const clientUrl = process.env.CLIENT_URL || "";
+const isHttpsClient = clientUrl.startsWith("https://");
+
+const refreshTokenCookieBaseOptions = {
+  httpOnly: true,
+  secure: isHttpsClient,
+  sameSite: isHttpsClient ? "none" : "lax",
+};
+
+const refreshTokenCookieOptions = {
+  ...refreshTokenCookieBaseOptions,
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
 
 const handleRegisterController = asyncHandler(async (req, res) => {
   const data = { ...req.body };
@@ -62,12 +74,7 @@ const refreshTokenController = asyncHandler(async (req, res) => {
   const { accessToken, refreshToken } = result;
   return res
     .status(200)
-    .cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? "strict" : "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    })
+    .cookie("refreshToken", refreshToken, refreshTokenCookieOptions)
     .json(
       new SuccessResponse("Lấy access token mới thành công", { accessToken }),
     );
@@ -79,14 +86,54 @@ const handleLoginController = asyncHandler(async (req, res) => {
   const { accessToken, refreshToken, user } = result;
   return res
     .status(200)
-    .cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? "strict" : "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    })
+    .cookie("refreshToken", refreshToken, refreshTokenCookieOptions)
     .json(
       new SuccessResponse("Đăng nhập thành công", {
+        accessToken,
+        user,
+      }),
+    );
+});
+
+const handleAdminLoginController = asyncHandler(async (req, res) => {
+  const data = { ...req.body };
+  const result = await authService.handleAdminLoginService(data);
+  const { accessToken, refreshToken, user } = result;
+  return res
+    .status(200)
+    .cookie("refreshToken", refreshToken, refreshTokenCookieOptions)
+    .json(
+      new SuccessResponse("ÄÄƒng nháº­p Admin thÃ nh cÃ´ng", {
+        accessToken,
+        user,
+      }),
+    );
+});
+
+const handleManagerLoginController = asyncHandler(async (req, res) => {
+  const data = { ...req.body };
+  const result = await authService.handleManagerLoginService(data);
+  const { accessToken, refreshToken, user } = result;
+  return res
+    .status(200)
+    .cookie("refreshToken", refreshToken, refreshTokenCookieOptions)
+    .json(
+      new SuccessResponse("ÄÄƒng nháº­p Quáº£n lÃ½ thÃ nh cÃ´ng", {
+        accessToken,
+        user,
+      }),
+    );
+});
+
+const handleEmployeeLoginController = asyncHandler(async (req, res) => {
+  const data = { ...req.body };
+  const result = await authService.handleEmployeeLoginService(data);
+  const { accessToken, refreshToken, user } = result;
+  return res
+    .status(200)
+    .cookie("refreshToken", refreshToken, refreshTokenCookieOptions)
+    .json(
+      new SuccessResponse("ÄÄƒng nháº­p NhÃ¢n viÃªn thÃ nh cÃ´ng", {
         accessToken,
         user,
       }),
@@ -100,13 +147,16 @@ const getAccountController = async (req, res) => {
 };
 
 const logoutController = async (req, res) => {
-  res.clearCookie("refreshToken");
+  res.clearCookie("refreshToken", refreshTokenCookieBaseOptions);
   return res.status(200).json(new SuccessResponse("Đăng xuất thành công"));
 };
 
 const authController = {
   handleRegisterController,
   handleLoginController,
+  handleAdminLoginController,
+  handleManagerLoginController,
+  handleEmployeeLoginController,
   verifyOtpController,
   sendOtpController,
   resetPasswordController,

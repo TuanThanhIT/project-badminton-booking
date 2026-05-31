@@ -24,7 +24,7 @@ const mapCreatedEmployee = (data: CreateEmployeeData): ManagerEmployee => ({
   username: data.employee.username,
   email: data.employee.email,
   isActive: data.employee.isActive,
-  createdDate: data.employee.createdDate,
+  createdAt: data.employee.createdAt,
   fullName: data.profile?.fullName,
   phoneNumber: data.profile?.phoneNumber,
   address: data.profile?.address,

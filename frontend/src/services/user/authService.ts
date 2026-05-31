@@ -22,6 +22,15 @@ const registerService = (data: RegisterRequest) =>
 const loginService = (data: LoginRequest) =>
   instance.post<LoginResponse>("/user/auth/login", data);
 
+const adminLoginService = (data: LoginRequest) =>
+  instance.post<LoginResponse>("/admin/auth/login", data);
+
+const managerLoginService = (data: LoginRequest) =>
+  instance.post<LoginResponse>("/manager/auth/login", data);
+
+const employeeLoginService = (data: LoginRequest) =>
+  instance.post<LoginResponse>("/employee/auth/login", data);
+
 const verifyOtpService = (data: OtpVerifyRequest) =>
   instance.post<OtpVerifyResponse>("/user/auth/verify-account", data);
 
@@ -47,6 +56,9 @@ const logoutService = () => instance.post<LogoutResponse>("/user/auth/logout");
 const authService = {
   registerService,
   loginService,
+  adminLoginService,
+  managerLoginService,
+  employeeLoginService,
   verifyOtpService,
   sendOtpService,
   getAccountService,

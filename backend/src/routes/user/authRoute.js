@@ -47,6 +47,21 @@ const initAuthRoute = (app) => {
     validate(handleLoginSchema),
     authController.handleLoginController,
   );
+  app.post(
+    "/admin/auth/login",
+    validate(handleLoginSchema),
+    authController.handleAdminLoginController,
+  );
+  app.post(
+    "/manager/auth/login",
+    validate(handleLoginSchema),
+    authController.handleManagerLoginController,
+  );
+  app.post(
+    "/employee/auth/login",
+    validate(handleLoginSchema),
+    authController.handleEmployeeLoginController,
+  );
   authRoute.get(
     "/me",
     auth,

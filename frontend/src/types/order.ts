@@ -181,7 +181,7 @@ export type OrderGroupIdData = {
   canRetryPayment?: boolean;
   retryExpiresAt?: string;
   isSuccess: boolean;
-  createdDate: string;
+  createdAt: string;
 };
 
 export type OrderGroupIdResponse = ApiResponse<OrderGroupIdData>;
@@ -207,7 +207,7 @@ export type UserOrderGroup = {
   totalShippingFee: string;
   finalAmount: string;
   status: string;
-  createdDate: string;
+  createdAt: string;
   orders: UserOrder[];
 };
 
@@ -309,7 +309,16 @@ export type RequestCancelOrderRequest = {
   reason?: string;
 };
 
-export type RequestCancelOrderResponse = ApiResponse<null>;
+export type RequestCancelOrderData = {
+  mode: "CANCELLED" | "REQUESTED";
+  orderId: number;
+  refund?: {
+    refunded: boolean;
+    refundAmount: number;
+  };
+};
+
+export type RequestCancelOrderResponse = ApiResponse<RequestCancelOrderData>;
 
 // export type ApproveCancelOrderResponse = ApiResponse<{
 //   message: string;
@@ -378,8 +387,8 @@ export type EmployeeOrder = {
   returnHandledAt?: string | null;
   cancelledAt?: string | null;
   returnedAt?: string | null;
-  createdDate: string;
-  updatedDate: string;
+  createdAt: string;
+  updatedAt: string;
   branch: {
     id: number;
     branchName: string;
@@ -429,12 +438,16 @@ export type EmployeeOrdersData = {
 
 export type EmployeeOrdersResponse = ApiResponse<EmployeeOrdersData>;
 export type EmployeeOrderDetailResponse = ApiResponse<EmployeeOrder>;
-export type EmployeeOrderActionResponse = ApiResponse<EmployeeOrder | {
-  refund?: {
-    refunded: boolean;
-    refundAmount: number;
-  };
-} | null>;
+export type EmployeeOrderActionResponse = ApiResponse<
+  | EmployeeOrder
+  | {
+      refund?: {
+        refunded: boolean;
+        refundAmount: number;
+      };
+    }
+  | null
+>;
 
 export type RejectEmployeeOrderActionRequest = {
   reason?: string;

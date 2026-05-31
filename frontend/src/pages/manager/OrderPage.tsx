@@ -274,7 +274,7 @@ const OrderPage = () => {
                     <p className="font-semibold text-slate-800">
                       {order.shippingName} - {order.shippingPhone}
                     </p>
-                    <p>{formatDateTime(order.createdDate)}</p>
+                    <p>{formatDateTime(order.createdAt)}</p>
                     <p className="font-black text-slate-900">
                       {formatCurrency(order.totalAmount)}
                     </p>
@@ -327,7 +327,7 @@ const OrderPage = () => {
                     </span>
                   </div>
                   <p className="mt-2 text-sm font-semibold text-slate-500">
-                    Tao luc {formatDateTime(selectedOrder.createdDate)}
+                    Tao luc {formatDateTime(selectedOrder.createdAt)}
                   </p>
                 </div>
                 <div className="text-left lg:text-right">

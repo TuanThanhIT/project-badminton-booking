@@ -189,8 +189,8 @@ const Branch = sequelize.define(
   {
     tableName: "Branches",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
     indexes: [
       { fields: ["provinceId"] },
       { fields: ["districtId"] },

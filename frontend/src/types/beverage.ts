@@ -9,7 +9,7 @@ export type ManagerBeverage = {
   stockId: number | null;
   branchId: number;
   stock: number;
-  createdDate: string;
+  createdAt: string;
 };
 
 ///MANAGER

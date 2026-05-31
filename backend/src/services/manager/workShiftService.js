@@ -113,8 +113,8 @@ const toWorkShift = (shift) => {
     branchId: item.branchId,
     shiftStatus: item.shiftStatus,
     assignments: assignments.map(toAssignment),
-    createdDate: item.createdDate,
-    updatedDate: item.updatedDate,
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
   };
 };
 

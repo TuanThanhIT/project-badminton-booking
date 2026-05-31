@@ -10,7 +10,7 @@ import type { CheckoutPreviewResponse } from "../../types/order";
 
 const checkBookingDiscountService = (data: DiscountCheckRequest) =>
   instance.post<DiscountCheckResponse>(
-    "/discounts/check-booking-discount",
+    "/user/discounts/check-booking-discount",
     data,
   );
 

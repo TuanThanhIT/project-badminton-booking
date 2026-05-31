@@ -2,9 +2,31 @@ import SuccessResponse from "../../helpers/SuccessResponse.js";
 import asyncHandler from "../../middlewares/asyncHandler.js";
 import orderService from "../../services/employee/orderService.js";
 
+const getOrdersController = asyncHandler(async (req, res) => {
+  const result = await orderService.getOrdersService({
+    employeeId: req.user.id,
+    ...req.query,
+  });
+
+  return res
+    .status(200)
+    .json(new SuccessResponse("Lấy danh sách đơn hàng thành công", result));
+});
+
+const getOrderDetailController = asyncHandler(async (req, res) => {
+  const result = await orderService.getOrderDetailService({
+    orderId: req.params.orderId,
+    employeeId: req.user.id,
+  });
+
+  return res
+    .status(200)
+    .json(new SuccessResponse("Lấy chi tiết đơn hàng thành công", result));
+});
+
 const confirmOrderController = asyncHandler(async (req, res) => {
   const orderId = req.params.orderId;
-  const data = { orderId };
+  const data = { orderId, employeeId: req.user.id };
   const result = await orderService.confirmOrderService(data);
   return res
     .status(200)
@@ -13,7 +35,7 @@ const confirmOrderController = asyncHandler(async (req, res) => {
 
 const prepareOrderController = asyncHandler(async (req, res) => {
   const orderId = req.params.orderId;
-  const data = { orderId };
+  const data = { orderId, employeeId: req.user.id };
   const result = await orderService.prepareOrderService(data);
   return res
     .status(200)
@@ -22,7 +44,7 @@ const prepareOrderController = asyncHandler(async (req, res) => {
 
 const readyToShipController = asyncHandler(async (req, res) => {
   const orderId = req.params.orderId;
-  const data = { orderId };
+  const data = { orderId, employeeId: req.user.id };
   const result = await orderService.readyToShipService(data);
   return res
     .status(200)
@@ -31,7 +53,7 @@ const readyToShipController = asyncHandler(async (req, res) => {
 
 const shipOrderController = asyncHandler(async (req, res) => {
   const orderId = req.params.orderId;
-  const data = { orderId };
+  const data = { orderId, employeeId: req.user.id };
   const result = await orderService.shipOrderService(data);
   return res
     .status(200)
@@ -40,11 +62,59 @@ const shipOrderController = asyncHandler(async (req, res) => {
     );
 });
 
+const approveCancelOrderController = asyncHandler(async (req, res) => {
+  const data = { orderId: req.params.orderId, employeeId: req.user.id };
+  const result = await orderService.approveCancelOrderService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Xác nhận hủy đơn thành công", result));
+});
+
+const rejectCancelOrderController = asyncHandler(async (req, res) => {
+  const data = { orderId: req.params.orderId, employeeId: req.user.id, ...req.body };
+  await orderService.rejectCancelOrderService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Từ chối yêu cầu hủy đơn thành công"));
+});
+
+const approveReturnOrderController = asyncHandler(async (req, res) => {
+  const data = { orderId: req.params.orderId, employeeId: req.user.id };
+  await orderService.approveReturnOrderService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Duyệt yêu cầu trả hàng thành công"));
+});
+
+const completeReturnOrderController = asyncHandler(async (req, res) => {
+  const data = { orderId: req.params.orderId, employeeId: req.user.id };
+  const result = await orderService.completeReturnOrderService(data);
+
+  return res
+    .status(200)
+    .json(new SuccessResponse("Xác nhận hoàn hàng thành công", result));
+});
+
+const forceReturnGHNOrderController = asyncHandler(async (req, res) => {
+  const data = { orderId: req.params.orderId, employeeId: req.user.id };
+  await orderService.forceReturnGHNOrderService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Chuyển đơn sang luồng hoàn hàng thành công"));
+});
+
 const orderController = {
+  getOrdersController,
+  getOrderDetailController,
   confirmOrderController,
   prepareOrderController,
   readyToShipController,
   shipOrderController,
+  approveCancelOrderController,
+  rejectCancelOrderController,
+  approveReturnOrderController,
+  completeReturnOrderController,
+  forceReturnGHNOrderController,
 };
 
 export default orderController;

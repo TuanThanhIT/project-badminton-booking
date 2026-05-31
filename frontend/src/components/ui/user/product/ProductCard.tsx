@@ -1,82 +1,232 @@
-import { Eye } from "lucide-react";
+import { Eye, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { Product } from "../../../../types/product";
 
 type ProductCardProps = {
   product: Product;
   groupName: string;
+  variant?: "default" | "related";
 };
 
-const ProductCard = ({ product, groupName }: ProductCardProps) => {
+const ProductCard = ({
+  product,
+  groupName,
+  variant = "default",
+}: ProductCardProps) => {
   const navigate = useNavigate();
+
+  const isRelated = variant === "related";
+
+  const goDetail = () =>
+    navigate(
+      `/product/${product.id}?cateId=${
+        product.category.id
+      }&cateName=${encodeURIComponent(
+        product.category.cateName,
+      )}&groupName=${encodeURIComponent(groupName)}`,
+    );
+
+  if (isRelated) {
+    return (
+      <article
+        onClick={goDetail}
+        className="
+          group h-full cursor-pointer overflow-hidden
+          rounded-2xl border border-slate-200
+          bg-white shadow-sm
+          transition-all duration-300
+          hover:-translate-y-1 hover:border-sky-300 hover:shadow-lg
+        "
+      >
+        {/* IMAGE */}
+        <div className="relative aspect-[4/3.8] overflow-hidden bg-slate-100">
+          <img
+            src={product.thumbnailUrl}
+            alt={product.productName}
+            className="
+              h-full w-full object-cover
+              transition-transform duration-500
+              group-hover:scale-110
+            "
+          />
+
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-950/45 to-transparent" />
+
+          <div className="absolute left-2.5 top-2.5 flex flex-col gap-1.5">
+            {product.discount > 0 && (
+              <span
+                className="
+                  w-fit rounded-full bg-red-500
+                  px-2 py-0.5
+                  text-[10px] font-bold text-white shadow
+                "
+              >
+                -{product.discount}%
+              </span>
+            )}
+
+            {product.isNew && (
+              <span
+                className="
+                  inline-flex w-fit items-center gap-1
+                  rounded-full bg-emerald-500
+                  px-2 py-0.5
+                  text-[10px] font-bold text-white shadow
+                "
+              >
+                <Zap size={10} />
+                Mới
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* CONTENT */}
+        <div className="p-3">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-sky-600">
+            {product.brand}
+          </p>
+
+          <h3
+            className="
+              mt-1 line-clamp-2 min-h-[38px]
+              text-[13px] font-semibold leading-snug
+              text-slate-900 transition
+              group-hover:text-sky-700
+            "
+            title={product.productName}
+          >
+            {product.productName}
+          </h3>
+
+          <div className="mt-2 flex flex-col gap-0.5">
+            <span className="text-base font-extrabold text-sky-700">
+              {product.minDiscountedPrice.toLocaleString("vi-VN")}₫
+            </span>
+
+            {product.discount > 0 && (
+              <span className="text-xs text-slate-400 line-through">
+                {product.minPrice.toLocaleString("vi-VN")}₫
+              </span>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              goDetail();
+            }}
+            className="
+              mt-2 flex w-full items-center justify-center gap-1.5
+              rounded-xl border border-sky-100
+              bg-sky-50 px-3 py-2
+              text-xs font-bold text-sky-700
+              transition-all
+              hover:border-sky-600 hover:bg-sky-600 hover:text-white
+              active:scale-[0.98]
+            "
+          >
+            <Eye size={13} />
+            Xem ngay
+          </button>
+        </div>
+      </article>
+    );
+  }
+
   return (
-    <div
-      key={product.id}
-      className="bg-white p-2 rounded-2xl transition-all duration-300 overflow-hidden group cursor-pointer border border-gray-200 flex flex-col transform hover:scale-105"
+    <article
+      onClick={goDetail}
+      className="
+      group h-full cursor-pointer overflow-hidden
+      rounded-2xl border border-slate-200 bg-white
+      shadow-sm transition-all duration-300
+      hover:-translate-y-1 hover:border-sky-300 hover:shadow-lg
+    "
     >
-      {/* Ảnh sản phẩm */}
-      <div className="relative w-full h-50s bg-white overflow-hidden">
+      {/* IMAGE */}
+      <div className="relative aspect-[4/3.85] overflow-hidden bg-slate-100">
         <img
           src={product.thumbnailUrl}
           alt={product.productName}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="
+          h-full w-full object-cover
+          transition-transform duration-500
+          group-hover:scale-105
+        "
         />
 
-        {/* Dấu giảm giá */}
-        {product.discount > 0 && (
-          <span className="absolute top-3 left-3 bg-gradient-to-br from-pink-500 to-orange-400 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-md">
-            -{product.discount}%
-          </span>
-        )}
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-slate-950/40 to-transparent" />
 
-        {/* Dấu "Mới" */}
-        {product.isNew && (
-          <span className="absolute top-3 right-3 bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-md">
-            Mới
-          </span>
-        )}
+        <div className="absolute left-3 top-3 flex flex-col gap-2">
+          {product.discount > 0 && (
+            <span className="rounded-full bg-red-500 px-2.5 py-1 text-xs font-semibold text-white shadow">
+              -{product.discount}%
+            </span>
+          )}
+
+          {product.isNew && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2.5 py-1 text-xs font-semibold text-white shadow">
+              <Zap size={12} />
+              Mới
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Nội dung sản phẩm */}
-      <div className="p-3 flex flex-col flex-grow">
+      {/* CONTENT */}
+      <div className="p-[18px]">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-sky-600">
+          {product.brand}
+        </p>
+
         <h3
-          className="text-base font-semibold text-gray-900 line-clamp-2 group-hover:text-sky-600 transition-colors duration-200 leading-tight"
+          className="
+    mt-1.5 line-clamp-2 min-h-[58px]
+    text-[18px] font-extrabold leading-snug
+    text-slate-700 transition
+    group-hover:text-sky-700
+  "
           title={product.productName}
         >
           {product.productName}
         </h3>
-        <p className="text-xs text-gray-500 mt-0.5">{product.brand}</p>
 
-        <div className="mt-1 flex items-center gap-1.5">
-          <span className="text-base font-bold text-sky-600">
+        <div className="mt-2 flex flex-wrap items-baseline gap-2">
+          <span className="text-[19px] font-extrabold tracking-tight text-sky-700">
             {product.minDiscountedPrice.toLocaleString("vi-VN")}₫
           </span>
+
           {product.discount > 0 && (
-            <span className="text-xs line-through text-gray-400">
+            <span className="text-[13px] text-slate-400 line-through">
               {product.minPrice.toLocaleString("vi-VN")}₫
             </span>
           )}
         </div>
 
-        <div className="mt-3 flex">
-          <button
-            onClick={() =>
-              navigate(
-                `/product/${product.id}?cateId=${
-                  product.category.id
-                }&cateName=${encodeURIComponent(
-                  product.category.cateName,
-                )}&groupName=${encodeURIComponent(groupName)}`,
-              )
-            }
-            className="w-full bg-sky-100 text-sky-700 hover:bg-sky-200 hover:text-sky-800 text-sm font-semibold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all"
-          >
-            <Eye size={16} />
-            Xem chi tiết
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            goDetail();
+          }}
+          className="
+      mt-4 flex w-full items-center justify-center gap-2
+      rounded-xl border border-sky-100
+      bg-sky-50 px-4 py-2.5
+      text-sm font-semibold text-sky-700
+      transition-all
+      hover:border-sky-600 hover:bg-sky-600 hover:text-white
+      hover:shadow-md
+      active:scale-[0.98]
+    "
+        >
+          <Eye size={16} />
+          Xem chi tiết
+        </button>
       </div>
-    </div>
+    </article>
   );
 };
 

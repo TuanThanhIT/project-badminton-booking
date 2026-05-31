@@ -13,105 +13,141 @@ import {
 } from "lucide-react";
 import type { PostWithAuthor } from "../../../../types/post";
 
+type BranchInfo = {
+  branchName: string;
+  address?: string;
+  district?: string;
+  province?: string;
+  city?: string;
+};
+
 type Props = {
   post: PostWithAuthor;
   formData: Record<string, unknown>;
-  branchInfo: (branchId?: number) => { branchName: string; address?: string; district?: string; city?: string } | null;
+  branchInfo: (branchId?: number) => BranchInfo | null;
   courtNameById: Record<number, string>;
   formatLevel: (level?: string, customLevel?: string | null) => string;
 };
 
-const FindPlayerPost = ({ post, formData, branchInfo, courtNameById, formatLevel }: Props) => {
-  const location = formData.location as { branchId?: number; courtId?: number } | undefined;
-  const schedule = formData.schedule as { date?: string; startTime?: string; endTime?: string } | undefined;
-  const playerRequirement = formData.playerRequirement as { level?: string; customLevel?: string | null; slotsNeeded?: number } | undefined;
-  const contact = formData.contact as { inApp?: boolean; phone?: string | null; zalo?: string | null } | undefined;
+const infoCard =
+  "flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/85 p-3.5";
+
+const FindPlayerPost = ({
+  post,
+  formData,
+  branchInfo,
+  courtNameById,
+  formatLevel,
+}: Props) => {
+  const location = formData.location as
+    | { branchId?: number; courtId?: number }
+    | undefined;
+  const schedule = formData.schedule as
+    | { date?: string; startTime?: string; endTime?: string }
+    | undefined;
+  const playerRequirement = formData.playerRequirement as
+    | { level?: string; customLevel?: string | null; slotsNeeded?: number }
+    | undefined;
+  const contact = formData.contact as
+    | { inApp?: boolean; phone?: string | null; zalo?: string | null }
+    | undefined;
   const notes = formData.notes as string | null | undefined;
 
   const branch = location?.branchId ? branchInfo(location.branchId) : null;
-  const courtName = location?.courtId ? courtNameById[location.courtId] || `Sân ${location.courtId}` : "";
-  const levelDisplay = formatLevel(playerRequirement?.level, playerRequirement?.customLevel);
+  const courtName = location?.courtId
+    ? courtNameById[location.courtId] || `Sân ${location.courtId}`
+    : "";
+  const levelDisplay = formatLevel(
+    playerRequirement?.level,
+    playerRequirement?.customLevel,
+  );
 
   const playDate = schedule?.date
-    ? new Date(schedule.date).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })
+    ? new Date(schedule.date).toLocaleDateString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
     : "Chưa xác định";
-  const timeDisplay = schedule?.startTime || schedule?.endTime
-    ? `${schedule.startTime || "?"} - ${schedule.endTime || "?"}`
-    : "Chưa xác định";
+  const timeDisplay =
+    schedule?.startTime || schedule?.endTime
+      ? `${schedule.startTime || "?"} - ${schedule.endTime || "?"}`
+      : "Chưa xác định";
 
   return (
-    <div className="mt-0 rounded-xl border border-sky-100 bg-gradient-to-r from-sky-50 to-indigo-50 p-3 sm:p-4 font-sans">
-      <div className="mb-3">
-        <h2 className="text-[#1a365d] font-bold text-xl flex items-center gap-2 mb-1.5">
-          <User className="w-5 h-5 text-[#3b82f6]" strokeWidth={2.5} />
+    <div className="rounded-[1.75rem] border border-sky-100 bg-sky-50/70 p-4 text-slate-700">
+      <div className="mb-4">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+          <User className="h-5 w-5 text-sky-600" />
           {post.title}
         </h2>
         {post.content && (
-          <p className="text-[#476082] text-sm font-medium">
+          <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">
             {post.content}
           </p>
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3 bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
-        <div className="flex items-center gap-3 p-2.5 bg-[#f8fbff] rounded-xl border border-blue-50">
-          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-            <CalendarDays className="w-5 h-5 text-blue-500" />
-          </div>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div className={infoCard}>
+          <CalendarDays className="h-5 w-5 shrink-0 text-sky-600" />
           <div>
-            <p className="text-xs text-gray-500 mb-0.5">Ngày chơi</p>
-            <p className="font-semibold text-gray-900">{playDate}</p>
+            <p className="text-xs text-slate-500">Ngày chơi</p>
+            <p className="font-medium text-slate-800">{playDate}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 p-2.5 bg-[#faf5ff] rounded-xl border border-purple-50">
-          <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
-            <Clock className="w-5 h-5 text-purple-500" />
-          </div>
+        <div className={infoCard}>
+          <Clock className="h-5 w-5 shrink-0 text-indigo-500" />
           <div>
-            <p className="text-xs text-gray-500 mb-0.5">Thời gian</p>
-            <p className="font-semibold text-gray-900">{timeDisplay}</p>
+            <p className="text-xs text-slate-500">Thời gian</p>
+            <p className="font-medium text-slate-800">{timeDisplay}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 p-2.5 bg-[#fff8f3] rounded-xl border border-orange-50">
-          <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
-            <Target className="w-5 h-5 text-orange-500" />
-          </div>
+        <div className={infoCard}>
+          <Target className="h-5 w-5 shrink-0 text-emerald-600" />
           <div>
-            <p className="text-xs text-gray-500 mb-0.5">Trình độ cần tìm</p>
-            <p className="font-semibold text-gray-900">{levelDisplay || "Không yêu cầu"}</p>
+            <p className="text-xs text-slate-500">Trình độ cần tìm</p>
+            <p className="font-medium text-slate-800">
+              {levelDisplay || "Không yêu cầu"}
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 p-2.5 bg-[#fff5f5] rounded-xl border border-rose-50">
-          <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
-            <Users className="w-5 h-5 text-rose-500" />
-          </div>
+        <div className={infoCard}>
+          <Users className="h-5 w-5 shrink-0 text-rose-500" />
           <div>
-            <p className="text-xs text-gray-500 mb-0.5">Cần tìm</p>
-            <p className="font-semibold text-gray-900">
-              {playerRequirement?.slotsNeeded ? `${playerRequirement.slotsNeeded} người chơi` : "Đang cập nhật"}
+            <p className="text-xs text-slate-500">Cần tìm</p>
+            <p className="font-medium text-slate-800">
+              {playerRequirement?.slotsNeeded
+                ? `${playerRequirement.slotsNeeded} người chơi`
+                : "Đang cập nhật"}
             </p>
           </div>
         </div>
       </div>
 
       {(branch || courtName) && (
-        <div className="border-t border-[#d6e4f0] pt-3 mb-3">
-          <h3 className="font-bold text-[#1e3a8a] mb-2 flex items-center gap-2">
-            <MapPin className="w-4 h-4" /> Thông tin sân
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-white/80 p-4">
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800">
+            <MapPin className="h-4 w-4 text-sky-600" />
+            Thông tin sân
           </h3>
-          <div className="flex flex-col md:flex-row md:items-center gap-3 text-sm text-[#334155] font-medium ml-3">
+          <div className="space-y-2 text-sm text-slate-600">
             {branch && (
               <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-gray-400 shrink-0" />
-                <span>{branch.branchName}</span>
+                <MapPin className="h-4 w-4 shrink-0 text-slate-400" />
+                <span>
+                  {[branch.branchName, branch.address, branch.district, branch.province ?? branch.city]
+                    .filter(Boolean)
+                    .join(", ")}
+                </span>
               </div>
             )}
             {courtName && (
               <div className="flex items-center gap-2">
-                <Disc className="w-4 h-4 text-gray-400 shrink-0" />
+                <Disc className="h-4 w-4 shrink-0 text-slate-400" />
                 <span>{courtName}</span>
               </div>
             )}
@@ -119,43 +155,44 @@ const FindPlayerPost = ({ post, formData, branchInfo, courtNameById, formatLevel
         </div>
       )}
 
-      <div className="border-t border-[#d6e4f0] pt-3 mb-3">
-        <h3 className="font-bold text-[#1e3a8a] mb-2 flex items-center gap-2">
-          <MessageSquare className="w-4 h-4" /> Thông tin liên hệ
+      <div className="mt-4 rounded-2xl border border-slate-200 bg-white/80 p-4">
+        <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800">
+          <MessageSquare className="h-4 w-4 text-sky-600" />
+          Thông tin liên hệ
         </h3>
-        <div className="flex flex-wrap items-center gap-3 text-sm ml-3">
+        <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
           {contact?.inApp && (
-            <div className="flex items-center gap-1.5 text-[#059669] font-semibold">
-              <MessageSquare className="w-4 h-4" /> Chat trong app
-            </div>
+            <span className="inline-flex items-center gap-1.5 font-medium text-emerald-600">
+              <MessageSquare className="h-4 w-4" /> Chat trong app
+            </span>
           )}
           {contact?.phone && (
-            <div className="flex items-center gap-1.5 text-[#2563eb] font-semibold">
-              <Phone className="w-4 h-4" /> {contact.phone}
-            </div>
+            <span className="inline-flex items-center gap-1.5 font-medium text-sky-700">
+              <Phone className="h-4 w-4" /> {contact.phone}
+            </span>
           )}
           {contact?.zalo && (
-            <div className="flex items-center gap-1.5 text-[#0ea5e9] font-semibold">
-              <MessageCircle className="w-4 h-4" /> Zalo: {contact.zalo}
-            </div>
+            <span className="inline-flex items-center gap-1.5 font-medium text-sky-600">
+              <MessageCircle className="h-4 w-4" /> Zalo: {contact.zalo}
+            </span>
           )}
           {!contact?.inApp && !contact?.phone && !contact?.zalo && (
-            <span className="text-gray-500 italic font-medium">Chưa cung cấp thông tin liên hệ</span>
+            <span className="text-slate-500">Chưa cung cấp thông tin liên hệ</span>
           )}
         </div>
       </div>
 
       {notes && (
-        <div className="border-t border-[#d6e4f0] pt-3">
-          <h3 className="font-bold text-[#1e3a8a] mb-2 flex items-center gap-2">
-            <FileText className="w-4 h-4" /> Ghi chú
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-white/80 p-4">
+          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800">
+            <FileText className="h-4 w-4 text-sky-600" />
+            Ghi chú
           </h3>
-          <div className="bg-white rounded-xl p-3 text-sm text-gray-700 font-medium shadow-sm border border-gray-100">
+          <p className="whitespace-pre-wrap text-sm leading-6 text-slate-600">
             {notes}
-          </div>
+          </p>
         </div>
       )}
-
     </div>
   );
 };

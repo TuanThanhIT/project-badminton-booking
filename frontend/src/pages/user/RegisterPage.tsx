@@ -1,6 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "react-toastify";
+import { AtSign, Lock, UserRound } from "lucide-react";
 import {
   FormRegisterSchema,
   type formRegister,
@@ -8,11 +10,13 @@ import {
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { registerAccount, setOtpFlow } from "../../redux/slices/user/authSlice";
 import type { OtpFlowData, RegisterRequest } from "../../types/auth";
-import { toast } from "react-toastify";
 import LoadingButton from "../../components/ui/common/LoadingButton";
-import InputForm from "../../components/ui/common/InputForm";
-import PasswordInput from "../../components/ui/common/PasswordInput";
+import AuthShell from "../../components/ui/user/auth/AuthShell";
 import { OTP_TYPE } from "../../utils/constants/otpType";
+import PasswordInput from "../../components/ui/common/PasswordInput";
+
+const inputClass =
+  "h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 pl-11 text-sm outline-none transition-all hover:border-sky-200 hover:bg-white focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -24,149 +28,135 @@ const RegisterPage = () => {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm<formRegister>({
     resolver: zodResolver(FormRegisterSchema),
     mode: "onChange",
   });
 
-  const passwordValue = watch("password");
-
   const onSubmit = async (dt: formRegister) => {
-    const { email, username, password } = dt;
     const data: RegisterRequest = {
-      username,
-      password,
-      email,
+      username: dt.username,
+      password: dt.password,
+      email: dt.email,
     };
-    const dta: OtpFlowData = {
-      email,
+    const otpData: OtpFlowData = {
+      email: dt.email,
       type: OTP_TYPE.REGISTER,
     };
+
     await dispatch(registerAccount({ data }))
       .unwrap()
       .then(() => {
-        toast.success("Đăng kí tài khoản người dùng thành công");
-        dispatch(setOtpFlow({ data: dta }));
-        setTimeout(() => {
-          navigate("/verify-otp");
-        }, 2000);
+        toast.success("Đăng ký tài khoản thành công. Vui lòng xác thực OTP.");
+        dispatch(setOtpFlow({ data: otpData }));
+        setTimeout(() => navigate("/verify-otp"), 700);
       });
   };
 
   return (
-    <div className="p-20 w-3/4 mx-auto">
-      <div className="grid grid-cols-2 rounded-2xl gap-5 border border-gray-200">
-        <div className="relative hidden md:block">
-          <img
-            src="/img/register.jpg"
-            alt="Đăng ký"
-            className="w-full h-full object-cover rounded-l-2xl"
-          />
-
-          <div className="absolute inset-0 bg-black/30 flex items-center justify-center p-10 rounded-l-2xl">
-            <div className="text-white text-center">
-              <h2 className="text-3xl font-bold mb-3">Tạo tài khoản mới</h2>
-              <p className="text-sm">
-                Đăng ký để bắt đầu sử dụng hệ thống và khám phá đầy đủ các tính
-                năng dành cho bạn.
-              </p>
-            </div>
-          </div>
+    <AuthShell
+      image="img/register.jpg"
+      imageAlt="Đăng ký B-Hub"
+      eyebrow="Thành viên mới"
+      title="Tạo tài khoản B-Hub"
+      description="Tạo tài khoản để đặt sân nhanh, mua sắm dụng cụ và lưu lại toàn bộ lịch sử chơi của bạn."
+    >
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div>
+          <p className="text-sm font-semibold text-sky-700">Đăng ký</p>
+          <h2 className="mt-2 text-3xl font-extrabold text-slate-900">
+            Bắt đầu với B-Hub
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-slate-500">
+            Điền thông tin bên dưới để tạo tài khoản mới.
+          </p>
         </div>
 
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-col justify-between gap-3 p-10"
+        {[
+          {
+            field: "username" as const,
+            label: "Tên đăng nhập",
+            placeholder: "Nhập tên đăng nhập",
+            icon: UserRound,
+            error: errors.username?.message,
+            type: "text",
+          },
+          {
+            field: "email" as const,
+            label: "Email",
+            placeholder: "Nhập email",
+            icon: AtSign,
+            error: errors.email?.message,
+            type: "email",
+          },
+          {
+            field: "password" as const,
+            label: "Mật khẩu",
+            placeholder: "Nhập mật khẩu",
+            icon: Lock,
+            error: errors.password?.message,
+            type: "password",
+          },
+          {
+            field: "confirmPassword" as const,
+            label: "Xác nhận mật khẩu",
+            placeholder: "Nhập lại mật khẩu",
+            icon: Lock,
+            error: errors.confirmPassword?.message,
+            type: "password",
+          },
+        ].map((item) => (
+          <label key={item.field} className="block">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <span className="text-sm font-medium text-slate-700">
+                {item.label}
+              </span>
+              <span className="text-xs text-rose-500">{item.error || ""}</span>
+            </div>
+            <div className="relative">
+              {item.type === "password" ? (
+                <PasswordInput
+                  registration={register(item.field)}
+                  placeholder={item.placeholder}
+                  leftIcon={<item.icon size={17} />}
+                  className={inputClass}
+                />
+              ) : (
+                <>
+                  <item.icon
+                    size={17}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                  />
+                  <input
+                    type={item.type}
+                    {...register(item.field)}
+                    placeholder={item.placeholder}
+                    className={inputClass}
+                  />
+                </>
+              )}
+            </div>
+          </label>
+        ))}
+
+        <LoadingButton
+          loading={registerLoading}
+          type="submit"
+          className="h-12 w-full rounded-2xl text-sm font-semibold"
         >
-          <div>
-            <h1 className="font-bold text-2xl mb-1">Đăng ký tài khoản</h1>
-            <p className="text-sm text-gray-500">
-              Điền thông tin bên dưới để tạo tài khoản mới.
-            </p>
-          </div>
+          Tạo tài khoản
+        </LoadingButton>
 
-          <div className="flex flex-col gap-2">
-            <div>
-              <div className="flex flex-row items-center justify-between">
-                <label className="block text-gray-700 font-medium mb-1">
-                  Tên đăng nhập
-                </label>
-                <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
-                  {errors.username?.message || " "}
-                </p>
-              </div>
-              <InputForm
-                register={register}
-                field={"username"}
-                textHolder={"Nhập tên đăng nhập"}
-              />
-            </div>
-
-            <div>
-              <div className="flex flex-row items-center justify-between">
-                <label className="block text-gray-700 font-medium mb-1">
-                  Email
-                </label>
-                <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
-                  {errors.email?.message || " "}
-                </p>
-              </div>
-              <InputForm
-                register={register}
-                field={"email"}
-                textHolder={"Nhập email"}
-              />
-            </div>
-
-            <div>
-              <div className="flex flex-row items-center justify-between">
-                <label className="block text-gray-700 font-medium mb-1">
-                  Mật khẩu
-                </label>
-                <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
-                  {errors.password?.message || " "}
-                </p>
-              </div>
-              <PasswordInput
-                register={register}
-                field={"password"}
-                value={passwordValue}
-              />
-            </div>
-
-            <div>
-              <div className="flex flex-row items-center justify-between">
-                <label className="block text-gray-700 font-medium mb-1">
-                  Xác nhận mật khẩu
-                </label>
-                <p className="text-red-500 text-xs min-h-[1.5rem] transition-all duration-200">
-                  {errors.confirmPassword?.message || " "}
-                </p>
-              </div>
-              <PasswordInput register={register} field={"confirmPassword"} />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2 mt-2">
-            <LoadingButton loading={registerLoading} type="submit">
-              Tạo tài khoản
-            </LoadingButton>
-
-            <p className="text-center">
-              Đã có tài khoản?{" "}
-              <Link
-                to="/login"
-                className="text-blue-700 hover:text-red-500 text-sm font-medium"
-              >
-                Đăng nhập
-              </Link>
-            </p>
-          </div>
-        </form>
-      </div>
-    </div>
+        <p className="text-center text-sm text-slate-500">
+          Đã có tài khoản?{" "}
+          <Link to="/login" className="font-semibold text-sky-700">
+            Đăng nhập
+          </Link>
+        </p>
+      </form>
+    </AuthShell>
   );
 };
+
 export default RegisterPage;

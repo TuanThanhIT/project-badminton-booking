@@ -4,6 +4,9 @@ import type {
   ProductDetail,
   ProductDetailRequest,
   ProductDetailResponse,
+  ProductFeedbackData,
+  ProductFeedbackRequest,
+  ProductFeedbackResponse,
   ProductFilterData,
   ProductFilterResponse,
   ProductQueriesRequest,
@@ -13,11 +16,13 @@ import productService from "../../../services/user/productService";
 interface ProductState {
   products?: ProductFilterData;
   productDetail?: ProductDetail;
+  productFeedback?: ProductFeedbackData;
 }
 
 const initialState: ProductState = {
   products: undefined,
   productDetail: undefined,
+  productFeedback: undefined,
 };
 
 export const getProductsByFilter = createAsyncThunk<
@@ -46,6 +51,19 @@ export const getProductDetail = createAsyncThunk<
   }
 });
 
+export const getProductFeedback = createAsyncThunk<
+  ProductFeedbackResponse,
+  { data: ProductFeedbackRequest },
+  { rejectValue: ApiErrorType }
+>("product/getProductFeedback", async ({ data }, { rejectWithValue }) => {
+  try {
+    const res = await productService.getProductFeedbackService(data);
+    return res.data as ProductFeedbackResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
 const productSlice = createSlice({
   name: "product",
   initialState,
@@ -58,6 +76,10 @@ const productSlice = createSlice({
 
       .addCase(getProductDetail.fulfilled, (state, action) => {
         state.productDetail = action.payload.data;
+      })
+
+      .addCase(getProductFeedback.fulfilled, (state, action) => {
+        state.productFeedback = action.payload.data;
       });
   },
 });

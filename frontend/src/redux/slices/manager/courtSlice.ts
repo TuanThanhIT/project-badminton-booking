@@ -5,6 +5,7 @@ import type { ApiErrorType } from "../../../types/error";
 import type {
   CreateCourtRequest,
   CreateCourtPriceRequest,
+  CourtImageUploadResponse,
   ManagerCourt,
   CourtPrice,
 } from "../../../types/court";
@@ -92,6 +93,20 @@ export const updateCourt = createAsyncThunk<
     const res = await managerCourtService.updateCourtService(courtId, data);
 
     return res.data;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
+export const uploadCourtImage = createAsyncThunk<
+  CourtImageUploadResponse["data"],
+  File,
+  { rejectValue: ApiErrorType }
+>("manager/uploadCourtImage", async (file, { rejectWithValue }) => {
+  try {
+    const res = await managerCourtService.uploadCourtImageService(file);
+
+    return res.data.data;
   } catch (error) {
     return rejectWithValue(error as ApiErrorType);
   }
@@ -191,6 +206,15 @@ const courtSlice = createSlice({
       })
 
       .addCase(updateCourt.rejected, (state) => {
+        state.loading = false;
+      })
+      .addCase(uploadCourtImage.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(uploadCourtImage.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(uploadCourtImage.rejected, (state) => {
         state.loading = false;
       })
 

@@ -1,4 +1,4 @@
-import User from "./user.js";
+﻿import User from "./user.js";
 import Role from "./role.js";
 import Profile from "./profile.js";
 import UserOtp from "./userOtp.js";
@@ -6,6 +6,7 @@ import UserAddress from "./userAddress.js";
 
 import Branch from "./branch.js";
 import BranchManager from "./branchManager.js";
+import BranchEmployee from "./branchEmployee.js";
 import BranchImage from "./branchImage.js";
 
 import Court from "./court.js";
@@ -36,6 +37,7 @@ import DraftBeverageItem from "./draftBeverageItem.js";
 import OfflineBooking from "./offlineBooking.js";
 
 import Beverage from "./beverage.js";
+import BeverageStock from "./beverageStock.js";
 
 import Wallet from "./wallet.js";
 import WalletTransaction from "./walletTransaction.js";
@@ -63,6 +65,7 @@ import RefreshToken from "./refreshToken.js";
 
 import OrderGroup from "./orderGroup.js";
 import VariantStock from "./variantStock.js";
+import InventoryReceipt from "./inventoryReceipt.js";
 import OrderShippingLog from "./orderShippingLog.js";
 
 //////////////////////////////////////////////////////
@@ -158,15 +161,15 @@ BranchImage.belongsTo(Branch, {
   as: "branch",
 });
 
-Branch.hasMany(User, {
-  foreignKey: "branchId",
-  as: "employees",
-});
+// Branch.hasMany(User, {
+//   foreignKey: "branchId",
+//   as: "employees",
+// });
 
-User.belongsTo(Branch, {
-  foreignKey: "branchId",
-  as: "branch",
-});
+// User.belongsTo(Branch, {
+//   foreignKey: "branchId",
+//   as: "branch",
+// });
 
 //////////////////////////////////////////////////////
 /////////////// BRANCH MANAGER ///////////////////////
@@ -193,6 +196,35 @@ BranchManager.belongsTo(Branch, { foreignKey: "branchId", as: "branch" });
 
 User.hasMany(BranchManager, { foreignKey: "managerId", as: "branchManagers" });
 BranchManager.belongsTo(User, { foreignKey: "managerId", as: "manager" });
+
+//////////////////////////////////////////////////////
+/////////////// BRANCH EMPLOYEE //////////////////////
+//////////////////////////////////////////////////////
+
+User.belongsToMany(Branch, {
+  through: BranchEmployee,
+  foreignKey: "employeeId",
+  otherKey: "branchId",
+  as: "employeeBranches",
+});
+Branch.belongsToMany(User, {
+  through: BranchEmployee,
+  foreignKey: "branchId",
+  otherKey: "employeeId",
+  as: "employees",
+});
+
+Branch.hasMany(BranchEmployee, {
+  foreignKey: "branchId",
+  as: "branchEmployees",
+});
+BranchEmployee.belongsTo(Branch, { foreignKey: "branchId", as: "branch" });
+
+User.hasMany(BranchEmployee, {
+  foreignKey: "employeeId",
+  as: "branchEmployees",
+});
+BranchEmployee.belongsTo(User, { foreignKey: "employeeId", as: "employee" });
 
 //////////////////////////////////////////////////////
 //////////////// BOOKING /////////////////////////////
@@ -289,6 +321,39 @@ Branch.hasMany(VariantStock, {
 VariantStock.belongsTo(Branch, {
   foreignKey: "branchId",
   as: "branch",
+});
+
+Branch.hasMany(InventoryReceipt, {
+  foreignKey: "branchId",
+  as: "inventoryReceipts",
+});
+InventoryReceipt.belongsTo(Branch, {
+  foreignKey: "branchId",
+  as: "branch",
+});
+User.hasMany(InventoryReceipt, {
+  foreignKey: "managerId",
+  as: "createdInventoryReceipts",
+});
+InventoryReceipt.belongsTo(User, {
+  foreignKey: "managerId",
+  as: "manager",
+});
+Product.hasMany(InventoryReceipt, {
+  foreignKey: "productId",
+  as: "inventoryReceipts",
+});
+InventoryReceipt.belongsTo(Product, {
+  foreignKey: "productId",
+  as: "product",
+});
+ProductVariant.hasMany(InventoryReceipt, {
+  foreignKey: "variantId",
+  as: "inventoryReceipts",
+});
+InventoryReceipt.belongsTo(ProductVariant, {
+  foreignKey: "variantId",
+  as: "variant",
 });
 
 //////////////////////////////////////////////////////
@@ -464,6 +529,11 @@ DraftBeverageItem.belongsTo(Beverage, {
   foreignKey: "beverageId",
   as: "beverage",
 });
+
+Beverage.hasMany(BeverageStock, { foreignKey: "beverageId", as: "stocks" });
+BeverageStock.belongsTo(Beverage, { foreignKey: "beverageId", as: "beverage" });
+Branch.hasMany(BeverageStock, { foreignKey: "branchId", as: "beverageStocks" });
+BeverageStock.belongsTo(Branch, { foreignKey: "branchId", as: "branch" });
 
 //////////////////////////////////////////////////////
 //////////////// OFFLINE BOOKING /////////////////////
@@ -741,6 +811,7 @@ export {
   UserAddress,
   Branch,
   BranchManager,
+  BranchEmployee,
   BranchImage,
   Court,
   CourtPrice,
@@ -781,6 +852,8 @@ export {
   CashRegister,
   CoachProfile,
   VariantStock,
+  InventoryReceipt,
+  BeverageStock,
   MonthlyBooking,
   RefreshToken,
 };

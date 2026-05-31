@@ -1,175 +1,274 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  Calendar,
+  AlertTriangle,
+  CalendarDays,
   CheckCircle2,
-  Clock,
+  Clock3,
+  Filter,
   MapPin,
   Navigation,
+  Search,
+  WalletCards,
 } from "lucide-react";
-
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
-
 import { getBranchOptions } from "../../redux/slices/user/branchSlice";
-
 import { getAvailableCourts } from "../../redux/slices/user/courtSlice";
-
+import { calculateMonthlyBooking } from "../../redux/slices/user/monthlyBookingSlice";
 import type { BranchOptions } from "../../types/branch";
 import type { CourtAvailable } from "../../types/court";
-import { createMonthlyBooking } from "../../redux/slices/user/monthlyBookingSlice";
-import { calculateMonthlyBooking } from "../../redux/slices/user/monthlyBookingSlice";
-import { useNavigate } from "react-router-dom";
-
-// ======================================================
-// HELPERS
-// ======================================================
+import { toast } from "react-toastify";
+import { showConfirmDialog } from "../../utils/confirmDialog";
 
 const generateTimeOptions = () => {
-  const options = [];
+  const options: string[] = [];
 
-  for (let hour = 5; hour <= 23; hour++) {
+  for (let hour = 6; hour <= 23; hour += 1) {
     const h = hour.toString().padStart(2, "0");
 
     options.push(`${h}:00`);
-    options.push(`${h}:30`);
+
+    if (hour < 23) {
+      options.push(`${h}:30`);
+    }
   }
 
   return options;
 };
 
+const MIN_BOOKING_LEAD_MINUTES = 60;
 const TIME_OPTIONS = generateTimeOptions();
+const formatDateInputValue = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+const getTodayDate = () => formatDateInputValue(new Date());
+const today = getTodayDate();
+
+const timeToMinutes = (time: string) => {
+  const [hour, minute] = time.split(":").map(Number);
+  return hour * 60 + minute;
+};
+
+const minutesToTime = (value: number) => {
+  const hour = Math.floor(value / 60);
+  const minute = value % 60;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+};
+
+const dateTimeFromDateAndTime = (date: string, time: string) => {
+  const [year, month, day] = date.split("-").map(Number);
+  const [hour, minute] = time.split(":").map(Number);
+  return new Date(year, month - 1, day, hour, minute, 0, 0);
+};
+
+const getEarliestBookingDateTime = (now: Date) =>
+  new Date(now.getTime() + MIN_BOOKING_LEAD_MINUTES * 60 * 1000);
+
+const isStartTimeBookable = (date: string, time: string, now: Date) => {
+  const todayDate = getTodayDate();
+  if (date < todayDate) return false;
+  if (date > todayDate) return true;
+  return dateTimeFromDateAndTime(date, time) >= getEarliestBookingDateTime(now);
+};
 
 const WEEK_DAYS = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
+  { label: "Thứ 2", value: "Monday" },
+  { label: "Thứ 3", value: "Tuesday" },
+  { label: "Thứ 4", value: "Wednesday" },
+  { label: "Thứ 5", value: "Thursday" },
+  { label: "Thứ 6", value: "Friday" },
+  { label: "Thứ 7", value: "Saturday" },
+  { label: "Chủ nhật", value: "Sunday" },
 ];
 
-// ======================================================
-// COMPONENT
-// ======================================================
+const inputClass =
+  "h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition-all hover:border-sky-200 hover:bg-white focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100";
 
-const CourtPage: React.FC = () => {
+const labelClass = "mb-2 block text-[13px] font-medium text-slate-600";
+
+const isCourtBooked = (court: CourtAvailable) =>
+  court.status?.toLowerCase() === "booked";
+
+const CourtPage = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const { branchOptions } = useAppSelector((state) => state.branch);
-
-  const { availableCourts } = useAppSelector((state) => state.court);
-
-  // ======================================================
-  // MODE
-  // ======================================================
+  const { availableCourts, loading } = useAppSelector((state) => state.court);
 
   const [mode, setMode] = useState<"daily" | "monthly">("daily");
-
-  // ======================================================
-  // COMMON STATES
-  // ======================================================
-
   const [selectedBranch, setSelectedBranch] = useState<BranchOptions | null>(
     null,
   );
-
   const [selectedCourt, setSelectedCourt] = useState<CourtAvailable | null>(
     null,
   );
-
-  const [startTime, setStartTime] = useState("08:00");
-
-  const [endTime, setEndTime] = useState("10:00");
-
-  // ======================================================
-  // DAILY STATES
-  // ======================================================
-
-  const [bookingDate, setBookingDate] = useState(
-    new Date().toISOString().split("T")[0],
-  );
-
-  // ======================================================
-  // MONTHLY STATES
-  // ======================================================
-
-  const [monthlyStartDate, setMonthlyStartDate] = useState("");
-
+  const [bookingDate, setBookingDate] = useState(today);
+  const [monthlyStartDate, setMonthlyStartDate] = useState(today);
   const [monthlyEndDate, setMonthlyEndDate] = useState("");
-
   const [daysOfWeek, setDaysOfWeek] = useState<string[]>([]);
-
+  const [startTime, setStartTime] = useState("08:00");
+  const [endTime, setEndTime] = useState("10:00");
   const [monthlyPrice, setMonthlyPrice] = useState(0);
-
   const [monthlySessions, setMonthlySessions] = useState(0);
-
-  // ======================================================
-  // LOAD BRANCHES
-  // ======================================================
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  const branchNameQuery = searchParams.get("branchName") || "";
 
   useEffect(() => {
     dispatch(getBranchOptions());
   }, [dispatch]);
 
-  // ======================================================
-  // DURATION
-  // ======================================================
+  useEffect(() => {
+    if (!branchNameQuery || branchOptions.length === 0) return;
 
-  const durationNum = useMemo(() => {
-    const [sH, sM] = startTime.split(":").map(Number);
+    const normalize = (value: string) =>
+      value.trim().toLocaleLowerCase("vi-VN");
 
-    const [eH, eM] = endTime.split(":").map(Number);
+    const matchedBranch = branchOptions.find(
+      (branch) => normalize(branch.branchName) === normalize(branchNameQuery),
+    );
 
-    const start = sH + sM / 60;
+    if (!matchedBranch || selectedBranch?.id === matchedBranch.id) return;
 
-    const end = eH + eM / 60;
+    setSelectedBranch(matchedBranch);
+  }, [branchNameQuery, branchOptions, selectedBranch?.id]);
 
+  useEffect(() => {
+    const timer = window.setInterval(() => setNowTick(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const now = useMemo(() => new Date(nowTick), [nowTick]);
+  const todayDate = useMemo(() => getTodayDate(), []);
+  const activeDate =
+    mode === "daily" ? bookingDate : monthlyStartDate || todayDate;
+  const earliestBookingDateTime = useMemo(
+    () => getEarliestBookingDateTime(now),
+    [now],
+  );
+  const earliestBookingTimeLabel = minutesToTime(
+    earliestBookingDateTime.getHours() * 60 +
+      earliestBookingDateTime.getMinutes(),
+  );
+  const startTimeBookable = isStartTimeBookable(activeDate, startTime, now);
+
+  const duration = useMemo(() => {
+    const [startHour, startMinute] = startTime.split(":").map(Number);
+    const [endHour, endMinute] = endTime.split(":").map(Number);
+    const start = startHour + startMinute / 60;
+    const end = endHour + endMinute / 60;
     return end > start ? end - start : 0;
   }, [startTime, endTime]);
 
-  // ======================================================
-  // LOAD AVAILABLE COURTS (ONLY DAILY)
-  // ======================================================
+  const scheduleWarning = useMemo(() => {
+    if (activeDate < todayDate) {
+      return "Không thể đặt sân cho ngày trong quá khứ.";
+    }
+
+    if (activeDate === todayDate && !startTimeBookable) {
+      if (formatDateInputValue(earliestBookingDateTime) !== todayDate) {
+        return "Hôm nay không còn khung giờ đủ điều kiện đặt trước 1 tiếng. Vui lòng chọn ngày mai hoặc ngày khác.";
+      }
+
+      return `Khung giờ bắt đầu phải sau thời điểm hiện tại ít nhất ${MIN_BOOKING_LEAD_MINUTES} phút. Hôm nay chỉ có thể đặt từ khoảng ${earliestBookingTimeLabel} trở đi.`;
+    }
+
+    if (duration <= 0) {
+      return "Giờ kết thúc phải sau giờ bắt đầu.";
+    }
+
+    return "";
+  }, [
+    activeDate,
+    todayDate,
+    startTimeBookable,
+    earliestBookingDateTime,
+    earliestBookingTimeLabel,
+    duration,
+  ]);
+
+  const canSearchCourts = !scheduleWarning && duration > 0;
+
+  const availableStartTimes = useMemo(
+    () =>
+      TIME_OPTIONS.filter((time) => isStartTimeBookable(activeDate, time, now)),
+    [activeDate, now],
+  );
 
   useEffect(() => {
-    if (!selectedBranch || durationNum <= 0) return;
+    if (activeDate < todayDate) {
+      if (mode === "daily") setBookingDate(todayDate);
+      else setMonthlyStartDate(todayDate);
+      return;
+    }
+
+    if (
+      availableStartTimes.length > 0 &&
+      !availableStartTimes.includes(startTime)
+    ) {
+      const nextStartTime = availableStartTimes[0];
+      setStartTime(nextStartTime);
+
+      const nextEndTime = TIME_OPTIONS.find(
+        (time) => timeToMinutes(time) > timeToMinutes(nextStartTime),
+      );
+      if (nextEndTime) setEndTime(nextEndTime);
+    }
+  }, [activeDate, availableStartTimes, mode, startTime, todayDate]);
+
+  useEffect(() => {
+    if (timeToMinutes(endTime) <= timeToMinutes(startTime)) {
+      const nextEndTime = TIME_OPTIONS.find(
+        (time) => timeToMinutes(time) > timeToMinutes(startTime),
+      );
+      if (nextEndTime) setEndTime(nextEndTime);
+    }
+  }, [endTime, startTime]);
+
+  useEffect(() => {
+    if (!selectedBranch || !canSearchCourts) {
+      setSelectedCourt(null);
+      return;
+    }
 
     dispatch(
       getAvailableCourts({
         branchId: selectedBranch.id,
-        date:
-          mode === "daily"
-            ? bookingDate
-            : monthlyStartDate || new Date().toISOString().split("T")[0],
-
+        date: mode === "daily" ? bookingDate : monthlyStartDate || todayDate,
         startTime,
         endTime,
       }),
     );
-
     setSelectedCourt(null);
   }, [
-    mode,
+    dispatch,
     selectedBranch,
+    mode,
     bookingDate,
     monthlyStartDate,
+    todayDate,
     startTime,
     endTime,
-    durationNum,
-    dispatch,
+    canSearchCourts,
   ]);
 
   useEffect(() => {
-    const calculate = async () => {
+    const calculateMonthly = async () => {
       if (
         mode !== "monthly" ||
         !selectedBranch ||
         !selectedCourt ||
         !monthlyStartDate ||
         !monthlyEndDate ||
-        daysOfWeek.length === 0
+        daysOfWeek.length === 0 ||
+        duration <= 0
       ) {
+        setMonthlyPrice(0);
+        setMonthlySessions(0);
         return;
       }
 
@@ -178,27 +277,26 @@ const CourtPage: React.FC = () => {
           calculateMonthlyBooking({
             branchId: selectedBranch.id,
             courtId: selectedCourt.id,
-
             startDate: monthlyStartDate,
             endDate: monthlyEndDate,
-
             daysOfWeek,
-
             startTime,
             endTime,
           }),
         ).unwrap();
 
         setMonthlyPrice(res.data.totalAmount);
-
         setMonthlySessions(res.data.totalSessions);
       } catch (error) {
         console.log(error);
+        setMonthlyPrice(0);
+        setMonthlySessions(0);
       }
     };
 
-    calculate();
+    calculateMonthly();
   }, [
+    dispatch,
     mode,
     selectedBranch,
     selectedCourt,
@@ -207,493 +305,543 @@ const CourtPage: React.FC = () => {
     daysOfWeek,
     startTime,
     endTime,
-    dispatch,
+    duration,
   ]);
-
-  // ======================================================
-  // MONTHLY SESSIONS COUNT
-  // ======================================================
-
-  const totalSessions = useMemo(() => {
-    if (
-      mode !== "monthly" ||
-      !monthlyStartDate ||
-      !monthlyEndDate ||
-      daysOfWeek.length === 0
-    ) {
-      return 0;
-    }
-
-    let count = 0;
-
-    const start = new Date(monthlyStartDate);
-
-    const end = new Date(monthlyEndDate);
-
-    const mapDays = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ];
-
-    while (start <= end) {
-      const dayName = mapDays[start.getDay()];
-
-      if (daysOfWeek.includes(dayName)) {
-        count++;
-      }
-
-      start.setDate(start.getDate() + 1);
-    }
-
-    return count;
-  }, [mode, monthlyStartDate, monthlyEndDate, daysOfWeek]);
-
-  // ======================================================
-  // PRICE
-  // ======================================================
 
   const totalPrice = useMemo(() => {
     if (!selectedCourt) return 0;
-
-    if (mode === "daily") {
-      return selectedCourt.totalPrice * durationNum;
-    }
-
-    return monthlyPrice;
-  }, [selectedCourt, mode, durationNum, monthlyPrice]);
-
-  // ======================================================
-  // TOGGLE WEEK DAY
-  // ======================================================
+    return mode === "daily"
+      ? Number(selectedCourt.totalPrice || 0)
+      : monthlyPrice;
+  }, [selectedCourt, mode, monthlyPrice]);
 
   const toggleDay = (day: string) => {
-    setDaysOfWeek((prev) => {
-      if (prev.includes(day)) {
-        return prev.filter((d) => d !== day);
-      }
-
-      return [...prev, day];
-    });
+    setDaysOfWeek((prev) =>
+      prev.includes(day) ? prev.filter((item) => item !== day) : [...prev, day],
+    );
   };
 
-  // ======================================================
-// BOOKING
-// ======================================================
+  const handleBooking = async () => {
+    if (!selectedBranch) {
+      toast.warning("Vui lòng chọn chi nhánh");
+      return;
+    }
 
-const handleBooking = async () => {
-  if (!selectedCourt || !selectedBranch) {
-    alert("Vui lòng chọn sân");
-    return;
-  }
+    if (!selectedCourt) {
+      toast.warning("Vui lòng chọn sân");
+      return;
+    }
 
-  try {
-    // ==================================================
-    // VALIDATE MONTHLY
-    // ==================================================
+    if (duration <= 0) {
+      toast.warning("Giờ kết thúc phải lớn hơn giờ bắt đầu");
+      return;
+    }
+
+    if (mode === "daily" && bookingDate < todayDate) {
+      toast.warning("Không thể đặt sân cho ngày trong quá khứ");
+      setBookingDate(todayDate);
+      return;
+    }
+
+    if (scheduleWarning) {
+      toast.warning(scheduleWarning);
+      return;
+    }
+
+    if (isCourtBooked(selectedCourt)) {
+      toast.warning("Sân này đã có lịch trong khung giờ bạn chọn");
+      return;
+    }
 
     if (mode === "monthly") {
       if (!monthlyStartDate || !monthlyEndDate) {
-        alert("Vui lòng chọn ngày bắt đầu và kết thúc");
+        toast.warning("Vui lòng chọn ngày bắt đầu và kết thúc");
+        return;
+      }
+
+      if (monthlyStartDate < todayDate) {
+        toast.warning("Không thể đặt sân cho ngày bắt đầu trong quá khứ");
+        setMonthlyStartDate(todayDate);
+        return;
+      }
+
+      if (monthlyEndDate < monthlyStartDate) {
+        toast.warning("Ngày kết thúc phải sau ngày bắt đầu");
         return;
       }
 
       if (daysOfWeek.length === 0) {
-        alert("Vui lòng chọn ít nhất 1 thứ trong tuần");
+        toast.warning("Vui lòng chọn ít nhất một thứ trong tuần");
         return;
       }
     }
 
-    // ==================================================
-    // CHUYỂN TỚI PAYMENT PAGE CHO CẢ 2 MODE
-    // ==================================================
+    const isConfirmed = await showConfirmDialog(
+      "Xác nhận đặt sân",
+      "Bạn có muốn tiếp tục đặt sân không?",
+      "Đặt sân",
+      "Hủy",
+    );
 
-    navigate("/payment", {
+    if (!isConfirmed) return;
+
+    navigate("/checkout/booking", {
       state: {
         type: mode,
-
         branchId: selectedBranch.id,
         branchName: selectedBranch.branchName,
-
         courtId: selectedCourt.id,
         courtName: selectedCourt.courtName,
-
-        // DAILY
         bookingDate: mode === "daily" ? bookingDate : null,
-
-        // MONTHLY
         startDate: mode === "monthly" ? monthlyStartDate : null,
         endDate: mode === "monthly" ? monthlyEndDate : null,
         daysOfWeek: mode === "monthly" ? daysOfWeek : [],
         totalSessions: mode === "monthly" ? monthlySessions : 0,
-
-        // COMMON
         startTime,
         endTime,
-
         totalAmount: totalPrice,
       },
     });
-  } catch (error: any) {
-    console.log(error);
-
-    alert(error?.response?.data?.message || "Có lỗi xảy ra");
-  }
-};
-
-  // ======================================================
-  // UI
-  // ======================================================
+  };
 
   return (
-    <div className="bg-slate-100 min-h-screen pb-20">
-      {/* ================================================= */}
-      {/* HEADER */}
-      {/* ================================================= */}
+    <div className="min-h-screen bg-slate-50 text-slate-700">
+      <section className="relative overflow-hidden bg-sky-950">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.22),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.14),transparent_32%)]" />
+        <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:py-12">
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-sky-100">
+                <Navigation size={16} className="text-sky-300" />
+                Trung tâm đặt sân
+              </div>
 
-      <section className="bg-slate-900 text-white pt-16 pb-28 px-6">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-5xl font-black">ĐẶT SÂN ONLINE</h1>
+              <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
+                Đặt sân cầu lông
+              </h1>
 
-          <p className="text-slate-400 mt-3">
-            Đặt sân theo ngày hoặc theo tháng
-          </p>
+              <p className="mt-4 max-w-2xl text-base leading-relaxed text-sky-100 sm:text-lg">
+                Chọn chi nhánh, khung giờ và sân còn trống. Sau khi đặt, bạn có
+                thể theo dõi toàn bộ lịch sân trong tài khoản.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 lg:min-w-[420px]">
+              {[
+                {
+                  icon: MapPin,
+                  label: "Chi nhánh",
+                  value: selectedBranch ? "Đã chọn" : branchOptions.length,
+                },
+                {
+                  icon: Search,
+                  label: "Sân phù hợp",
+                  value: availableCourts.length,
+                },
+                {
+                  icon: WalletCards,
+                  label: "Tạm tính",
+                  value: `${totalPrice.toLocaleString()}đ`,
+                },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-2xl border border-white/10 bg-white/10 px-3 py-4 text-white backdrop-blur-sm sm:px-4"
+                >
+                  <item.icon size={18} className="mb-2 text-sky-200" />
+                  <p className="truncate text-xl font-semibold leading-none sm:text-2xl">
+                    {item.value}
+                  </p>
+                  <p className="mt-2 text-xs text-sky-100">{item.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ================================================= */}
-      {/* CONTENT */}
-      {/* ================================================= */}
+      <main className="relative z-10 mx-auto -mt-6 grid max-w-[1220px] gap-6 px-4 pb-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+        <section className="space-y-6">
+          <div className="overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.08)]">
+            <div className="flex items-center gap-3 border-b border-slate-100 p-5">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-sky-100 bg-sky-50 text-sky-600">
+                <Filter size={21} />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-slate-800">
+                  Thông tin tìm sân
+                </h2>
+                <p className="text-sm text-slate-500">
+                  Đang đặt:{" "}
+                  <span className="font-medium text-sky-700">
+                    {mode === "daily" ? "Theo ngày" : "Theo tháng"}
+                  </span>
+                </p>
+              </div>
+            </div>
 
-      <div className="max-w-7xl mx-auto px-6 -mt-12">
-        <div className="grid lg:grid-cols-12 gap-8">
-          {/* ================================================= */}
-          {/* LEFT */}
-          {/* ================================================= */}
-
-          <div className="lg:col-span-8 space-y-6">
-            {/* ================================================= */}
-            {/* FILTER */}
-            {/* ================================================= */}
-
-            <div className="bg-white rounded-3xl p-8 shadow-xl space-y-6">
-              {/* MODE */}
-
-              <div className="flex gap-4">
-                <button
-                  onClick={() => setMode("daily")}
-                  className={`px-5 py-3 rounded-2xl font-bold transition ${
-                    mode === "daily" ? "bg-sky-500 text-white" : "bg-slate-200"
-                  }`}
-                >
-                  Đặt theo ngày
-                </button>
-
-                <button
-                  onClick={() => setMode("monthly")}
-                  className={`px-5 py-3 rounded-2xl font-bold transition ${
-                    mode === "monthly"
-                      ? "bg-sky-500 text-white"
-                      : "bg-slate-200"
-                  }`}
-                >
-                  Đặt theo tháng
-                </button>
+            <div className="space-y-5 p-5">
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {[
+                  { key: "daily", label: "Đặt theo ngày" },
+                  { key: "monthly", label: "Đặt theo tháng" },
+                ].map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => setMode(item.key as "daily" | "monthly")}
+                    className={`shrink-0 rounded-2xl border px-4 py-2.5 text-sm font-medium transition-all ${
+                      mode === item.key
+                        ? "border-sky-300 bg-sky-50 text-sky-800 shadow-sm"
+                        : "border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
               </div>
 
-              {/* BRANCH */}
-
-              <div>
-                <label className="font-bold text-sm mb-2 block">
-                  Chi nhánh
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="block">
+                  <span className={labelClass}>Chi nhánh</span>
+                  <div className="relative">
+                    <select
+                      value={selectedBranch?.id || ""}
+                      onChange={(event) => {
+                        const branch = branchOptions.find(
+                          (item: BranchOptions) =>
+                            item.id === Number(event.target.value),
+                        );
+                        setSelectedBranch(branch || null);
+                      }}
+                      className={`${inputClass} appearance-none pr-10`}
+                    >
+                      <option value="">Chọn chi nhánh</option>
+                      {branchOptions.map((branch: BranchOptions) => (
+                        <option key={branch.id} value={branch.id}>
+                          {branch.branchName}
+                        </option>
+                      ))}
+                    </select>
+                    <MapPin
+                      size={18}
+                      className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+                  </div>
                 </label>
 
-                <div className="relative">
-                  <select
-                    className="w-full bg-slate-100 p-4 rounded-2xl outline-none"
-                    onChange={(e) => {
-                      const branch = branchOptions.find(
-                        (b: BranchOptions) => b.id === Number(e.target.value),
-                      );
-
-                      setSelectedBranch(branch || null);
-                    }}
-                  >
-                    <option value="">-- Chọn chi nhánh --</option>
-
-                    {branchOptions.map((branch: BranchOptions) => (
-                      <option key={branch.id} value={branch.id}>
-                        {branch.branchName}
-                      </option>
-                    ))}
-                  </select>
-
-                  <MapPin
-                    size={18}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-sky-500"
-                  />
-                </div>
-              </div>
-
-              {/* DAILY */}
-
-              {mode === "daily" && (
-                <div>
-                  <label className="font-bold text-sm mb-2 block">
-                    Ngày thi đấu
+                {mode === "daily" ? (
+                  <label className="block">
+                    <span className={labelClass}>Ngày chơi</span>
+                    <input
+                      type="date"
+                      value={bookingDate}
+                      min={todayDate}
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        setBookingDate(value < todayDate ? todayDate : value);
+                      }}
+                      className={inputClass}
+                    />
                   </label>
-
-                  <input
-                    type="date"
-                    value={bookingDate}
-                    min={new Date().toISOString().split("T")[0]}
-                    onChange={(e) => setBookingDate(e.target.value)}
-                    className="w-full bg-slate-100 p-4 rounded-2xl"
-                  />
-                </div>
-              )}
-
-              {/* MONTHLY */}
-
-              {mode === "monthly" && (
-                <div className="space-y-5">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="font-bold text-sm mb-2 block">
-                        Ngày bắt đầu
-                      </label>
-
+                ) : (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="block">
+                      <span className={labelClass}>Bắt đầu</span>
                       <input
                         type="date"
                         value={monthlyStartDate}
-                        onChange={(e) => setMonthlyStartDate(e.target.value)}
-                        className="w-full bg-slate-100 p-4 rounded-2xl"
+                        min={todayDate}
+                        onChange={(event) => {
+                          const value = event.target.value;
+                          const nextStart =
+                            value < todayDate ? todayDate : value;
+                          setMonthlyStartDate(nextStart);
+                          if (monthlyEndDate && monthlyEndDate < nextStart) {
+                            setMonthlyEndDate(nextStart);
+                          }
+                        }}
+                        className={inputClass}
                       />
-                    </div>
-
-                    <div>
-                      <label className="font-bold text-sm mb-2 block">
-                        Ngày kết thúc
-                      </label>
-
+                    </label>
+                    <label className="block">
+                      <span className={labelClass}>Kết thúc</span>
                       <input
                         type="date"
                         value={monthlyEndDate}
-                        onChange={(e) => setMonthlyEndDate(e.target.value)}
-                        className="w-full bg-slate-100 p-4 rounded-2xl"
+                        min={monthlyStartDate || todayDate}
+                        onChange={(event) => {
+                          const minDate = monthlyStartDate || todayDate;
+                          const value = event.target.value;
+                          setMonthlyEndDate(value < minDate ? minDate : value);
+                        }}
+                        className={inputClass}
                       />
-                    </div>
-                  </div>
-
-                  {/* DAYS */}
-
-                  <div>
-                    <label className="font-bold text-sm mb-3 block">
-                      Chọn thứ trong tuần
                     </label>
+                  </div>
+                )}
+              </div>
 
-                    <div className="flex flex-wrap gap-3">
-                      {WEEK_DAYS.map((day) => (
-                        <button
-                          key={day}
-                          onClick={() => toggleDay(day)}
-                          className={`px-4 py-2 rounded-xl font-bold transition ${
-                            daysOfWeek.includes(day)
-                              ? "bg-sky-500 text-white"
-                              : "bg-slate-200"
-                          }`}
-                        >
-                          {day}
-                        </button>
-                      ))}
-                    </div>
+              {mode === "monthly" && (
+                <div>
+                  <p className={labelClass}>Chọn thứ trong tuần</p>
+                  <div className="flex flex-wrap gap-2">
+                    {WEEK_DAYS.map((day) => (
+                      <button
+                        key={day.value}
+                        type="button"
+                        onClick={() => toggleDay(day.value)}
+                        className={`rounded-2xl border px-4 py-2.5 text-sm font-medium transition-all ${
+                          daysOfWeek.includes(day.value)
+                            ? "border-sky-300 bg-sky-50 text-sky-800 shadow-sm"
+                            : "border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
+                        }`}
+                      >
+                        {day.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
 
-              {/* TIME */}
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="font-bold text-sm mb-2 block">
-                    Giờ bắt đầu
-                  </label>
-
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="block">
+                  <span className={labelClass}>Giờ bắt đầu</span>
                   <select
                     value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    className="w-full bg-slate-100 p-4 rounded-2xl"
+                    onChange={(event) => setStartTime(event.target.value)}
+                    className={`${inputClass} appearance-none`}
                   >
-                    {TIME_OPTIONS.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
+                    {TIME_OPTIONS.map((time) => (
+                      <option
+                        key={time}
+                        value={time}
+                        disabled={!isStartTimeBookable(activeDate, time, now)}
+                      >
+                        {time}
                       </option>
                     ))}
                   </select>
-                </div>
-
-                <div>
-                  <label className="font-bold text-sm mb-2 block">
-                    Giờ kết thúc
-                  </label>
-
+                </label>
+                <label className="block">
+                  <span className={labelClass}>Giờ kết thúc</span>
                   <select
                     value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                    className="w-full bg-slate-100 p-4 rounded-2xl"
+                    onChange={(event) => setEndTime(event.target.value)}
+                    className={`${inputClass} appearance-none`}
                   >
-                    {TIME_OPTIONS.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
+                    {TIME_OPTIONS.map((time) => (
+                      <option
+                        key={time}
+                        value={time}
+                        disabled={
+                          timeToMinutes(time) <= timeToMinutes(startTime)
+                        }
+                      >
+                        {time}
                       </option>
                     ))}
                   </select>
+                </label>
+              </div>
+
+              {scheduleWarning && (
+                <div className="flex items-start gap-3 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-700">
+                  <AlertTriangle
+                    size={18}
+                    className="mt-0.5 shrink-0 text-amber-500"
+                  />
+                  <span>{scheduleWarning}</span>
                 </div>
-              </div>
-            </div>
-
-            {/* ================================================= */}
-            {/* COURTS */}
-            {/* ================================================= */}
-
-            <div className="space-y-5">
-              <h2 className="text-2xl font-black flex items-center gap-3">
-                <Navigation className="text-sky-500" />
-                Danh sách sân
-              </h2>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                {availableCourts.map((court: CourtAvailable) => (
-                  <div
-                    key={court.id}
-                    // onClick={() =>
-                    //   court.status === "available" && setSelectedCourt(court)
-                    // }
-                    onClick={() => {
-                      console.log("SELECT COURT: ", court);
-
-                      setSelectedCourt(court);
-                    }}
-                    className={`bg-white rounded-3xl p-5 shadow-lg border-2 transition cursor-pointer ${
-                      selectedCourt?.id === court.id
-                        ? "border-sky-500"
-                        : "border-transparent"
-                    } ${
-                      court.status?.toLowerCase() === "booked"
-                        ? "opacity-60 cursor-not-allowed"
-                        : ""
-                    }`}
-                  >
-                    <img
-                      src={court.thumbnailUrl}
-                      className="w-full h-48 object-cover rounded-2xl mb-4"
-                    />
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-black">{court.courtName}</h3>
-                        <p className="text-sm font-bold text-sky-500 mt-2">
-                          {court.totalPrice.toLocaleString()}đ / giờ
-                        </p>
-
-                        <p className="text-sm text-slate-400">
-                          {court.location}
-                        </p>
-                      </div>
-
-                      {selectedCourt?.id === court.id && (
-                        <CheckCircle2 className="text-sky-500" />
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              )}
             </div>
           </div>
 
-          {/* ================================================= */}
-          {/* RIGHT */}
-          {/* ================================================= */}
-
-          <div className="lg:col-span-4">
-            <div className="bg-slate-900 text-white rounded-3xl p-8 sticky top-10 shadow-2xl space-y-6">
-              <h2 className="text-2xl font-black">Thông tin đặt sân</h2>
-
-              <div className="space-y-3 text-sm">
-                <p>
-                  Hình thức:
-                  <b className="ml-2">
-                    {mode === "daily" ? "Theo ngày" : "Theo tháng"}
-                  </b>
+          <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
+            <div className="flex flex-col gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-slate-800">
+                  Danh sách sân
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Chọn một sân còn trống để tiếp tục thanh toán.
                 </p>
-
-                <p>
-                  Chi nhánh:
-                  <b className="ml-2">{selectedBranch?.branchName || "---"}</b>
-                </p>
-
-                {mode === "daily" ? (
-                  <p>
-                    Ngày:
-                    <b className="ml-2">{bookingDate}</b>
-                  </p>
-                ) : (
-                  <>
-                    <p>
-                      Từ:
-                      <b className="ml-2">{monthlyStartDate || "---"}</b>
-                    </p>
-
-                    <p>
-                      Đến:
-                      <b className="ml-2">{monthlyEndDate || "---"}</b>
-                    </p>
-
-                    <p>
-                      Số buổi:
-                      <b className="ml-2">{monthlySessions}</b>
-                    </p>
-                  </>
-                )}
-
-                <p>
-                  Giờ:
-                  <b className="ml-2">
-                    {startTime} - {endTime}
-                  </b>
-                </p>
-
-                {selectedCourt && (
-                  <p className="text-sky-400">
-                    Sân:
-                    <b className="ml-2">{selectedCourt.courtName}</b>
-                  </p>
-                )}
               </div>
+              <span className="inline-flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-500">
+                <Search size={15} />
+                {availableCourts.length} sân
+              </span>
+            </div>
 
-              <div className="border-t border-slate-700 pt-5 flex items-end justify-between">
-                <span className="text-slate-400">Tổng tiền</span>
+            <div className="bg-slate-50/80 p-4 sm:p-5">
+              {!selectedBranch ? (
+                <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-slate-300 bg-white px-6 py-14 text-center shadow-sm">
+                  <div className="mb-4 rounded-3xl bg-sky-50 p-4 text-sky-600">
+                    <MapPin size={34} />
+                  </div>
+                  <p className="text-lg font-semibold text-slate-800">
+                    Chọn chi nhánh để xem sân trống
+                  </p>
+                </div>
+              ) : loading ? (
+                <div className="rounded-[2rem] border border-slate-200 bg-white p-12 text-center text-sm text-slate-500">
+                  Đang tải danh sách sân...
+                </div>
+              ) : availableCourts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-slate-300 bg-white px-6 py-14 text-center shadow-sm">
+                  <div className="mb-4 rounded-3xl bg-sky-50 p-4 text-sky-600">
+                    <CalendarDays size={34} />
+                  </div>
+                  <p className="text-lg font-semibold text-slate-800">
+                    Chưa có sân phù hợp
+                  </p>
+                  <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-500">
+                    Hãy thử đổi ngày hoặc khung giờ khác.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {availableCourts.map((court: CourtAvailable) => {
+                    const booked = isCourtBooked(court);
+                    const selected = selectedCourt?.id === court.id;
 
-                <span className="text-3xl font-black text-sky-400">
-                  {totalPrice.toLocaleString()}đ
-                </span>
+                    return (
+                      <button
+                        key={court.id}
+                        type="button"
+                        onClick={() => {
+                          if (booked) return;
+                          setSelectedCourt(court);
+                        }}
+                        disabled={booked}
+                        className={`group overflow-hidden rounded-[1.75rem] border bg-white text-left shadow-sm transition-all ${
+                          selected
+                            ? "border-sky-300 bg-sky-50 shadow-[0_10px_24px_rgba(14,165,233,0.12)]"
+                            : "border-slate-200 hover:border-sky-200 hover:shadow-[0_14px_34px_rgba(14,165,233,0.1)]"
+                        } ${booked ? "cursor-not-allowed opacity-60" : ""}`}
+                      >
+                        <div className="relative aspect-[16/9] overflow-hidden bg-slate-100">
+                          <img
+                            src={
+                              court.thumbnailUrl || "/img/logo_badminton.jpg"
+                            }
+                            alt={court.courtName}
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                          <span
+                            className={`absolute left-4 top-4 rounded-full px-3 py-1.5 text-xs font-medium ${
+                              booked
+                                ? "bg-rose-50 text-rose-600"
+                                : "bg-emerald-50 text-emerald-700"
+                            }`}
+                          >
+                            {booked ? "Đã đặt" : "Còn trống"}
+                          </span>
+                        </div>
+
+                        <div className="p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <h3 className="truncate font-semibold text-slate-900">
+                                {court.courtName}
+                              </h3>
+                              <p className="mt-1 truncate text-sm text-slate-500">
+                                {court.location || selectedBranch.branchName}
+                              </p>
+                            </div>
+                            {selected && (
+                              <CheckCircle2
+                                size={22}
+                                className="shrink-0 text-sky-600"
+                              />
+                            )}
+                          </div>
+                          <p className="mt-4 text-lg font-semibold text-sky-700">
+                            {Number(court.totalPrice || 0).toLocaleString()}đ
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <aside className="lg:sticky lg:top-6 lg:h-fit">
+          <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_14px_34px_rgba(15,23,42,0.08)]">
+            <div className="border-b border-slate-100 p-6">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-sky-100 bg-sky-50 text-sky-600">
+                  <WalletCards size={22} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-sky-700">
+                    Tóm tắt lịch sân
+                  </p>
+                  <h2 className="text-xl font-semibold text-slate-900">
+                    Thông tin đặt sân
+                  </h2>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3 p-6 text-sm">
+              {[
+                ["Hình thức", mode === "daily" ? "Theo ngày" : "Theo tháng"],
+                ["Chi nhánh", selectedBranch?.branchName || "Chưa chọn"],
+                ["Sân", selectedCourt?.courtName || "Chưa chọn"],
+                ["Thời gian", `${startTime} - ${endTime}`],
+                [
+                  mode === "daily" ? "Ngày chơi" : "Khoảng ngày",
+                  mode === "daily"
+                    ? bookingDate
+                    : `${monthlyStartDate || "--"} - ${monthlyEndDate || "--"}`,
+                ],
+              ].map(([label, value]) => (
+                <div key={label} className="flex justify-between gap-4">
+                  <span className="text-slate-500">{label}</span>
+                  <span className="text-right font-medium text-slate-900">
+                    {value}
+                  </span>
+                </div>
+              ))}
+
+              {mode === "monthly" && (
+                <div className="flex justify-between gap-4">
+                  <span className="text-slate-500">Số buổi</span>
+                  <span className="font-medium text-slate-900">
+                    {monthlySessions}
+                  </span>
+                </div>
+              )}
+
+              <div className="mt-6 rounded-3xl border border-slate-100 bg-slate-50 p-4">
+                <div className="flex items-center gap-2 text-sm text-slate-500">
+                  <Clock3 size={16} />
+                  Thời lượng: {duration || 0} giờ
+                </div>
+                <div className="mt-4 flex items-end justify-between gap-4">
+                  <span className="text-sm text-slate-500">Tổng tiền</span>
+                  <span className="text-3xl font-semibold text-sky-700">
+                    {totalPrice.toLocaleString()}đ
+                  </span>
+                </div>
               </div>
 
               <button
+                type="button"
                 onClick={handleBooking}
-                disabled={!selectedCourt}
-                className="w-full py-5 rounded-2xl font-black bg-sky-500 disabled:bg-slate-700 transition"
+                disabled={!selectedCourt || !!scheduleWarning || duration <= 0}
+                className="mt-3 w-full rounded-2xl bg-sky-600 px-5 py-4 text-sm font-semibold text-white shadow-sm transition-all hover:bg-sky-500 disabled:cursor-not-allowed disabled:bg-slate-300"
               >
-                THANH TOÁN NGAY
+                Tiếp tục thanh toán
               </button>
             </div>
           </div>
-        </div>
-      </div>
+        </aside>
+      </main>
     </div>
   );
 };

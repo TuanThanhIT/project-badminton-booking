@@ -13,7 +13,7 @@ const UserPrivateLayout = () => {
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
-        <main className="min-h-0 bg-gradient-to-br from-sky-50 via-white to-sky-100 ">
+        <main className="min-h-0 bg-white">
           <Outlet context={{ cartRef }} />
         </main>
 

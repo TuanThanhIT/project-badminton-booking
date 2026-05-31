@@ -51,11 +51,21 @@ const createEmployee = asyncHandler(async (req, res) => {
     .json(new SuccessResponse("Create employee successfully", employee));
 });
 
+const getEmployees = asyncHandler(async (req, res) => {
+  const managerId = req.user.id;
+  const employees = await employeeService.getEmployeesService(managerId);
+
+  return res
+    .status(200)
+    .json(new SuccessResponse("Get employees successfully", employees));
+});
+
 const addressController = {
   getUserAddressController,
   addUserAddressController,
   updateUserAddressController,
   deleteUserAddressController,
+  getEmployees,
   createEmployee,
 };
 

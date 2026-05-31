@@ -6,13 +6,16 @@ import { Provider } from "react-redux";
 import { persistor, store } from "./redux/store";
 import { PersistGate } from "redux-persist/integration/react";
 import { AuthProvider } from "./components/contexts/auth/authProvider";
+import ConfirmDialogProvider from "./components/contexts/providers/ConfirmDialogProvider";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <AuthProvider>
-          <App />
+          <ConfirmDialogProvider>
+            <App />
+          </ConfirmDialogProvider>
         </AuthProvider>
       </PersistGate>
     </Provider>

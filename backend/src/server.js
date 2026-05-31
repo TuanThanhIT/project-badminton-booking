@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import sequelize from "./config/db.js";
+import { syncEnumColumns } from "./config/syncEnumColumns.js";
 import { createServer } from "http";
 import { initSocket } from "./socket/index.js";
 import errorHandler from "./middlewares/errorHandler.js";
@@ -27,10 +28,36 @@ import initMonthlyBookingRoute from "./routes/user/monthlyBookingRoute.js";
 import initOrderRoute from "./routes/user/orderRoute.js";
 import initDiscountRoute from "./routes/user/discountRoute.js";
 import initEmployeeOrderRoute from "./routes/employee/orderRoute.js";
+import initEmployeeWorkShiftRoute from "./routes/employee/workShiftRoute.js";
+import initEmployeeCounterRoute from "./routes/employee/counterRoute.js";
+import initEmployeeBookingRoute from "./routes/employee/bookingRoute.js";
 import initWebhookRoute from "./routes/user/webhookRoute.js";
 import initCourtRouteManager from "./routes/manager/courtRoute.js";
 import initBranchRouteManager from "./routes/manager/branchRoute.js";
 import initEmployeeRouteManager from "./routes/manager/employeeRoute.js";
+import initBeverageRouteManager from "./routes/manager/beverageRoute.js";
+import initProductRouteManager from "./routes/manager/productRoute.js";
+import initWorkShiftRouteManager from "./routes/manager/workShiftRoute.js";
+import initSalaryRouteManager from "./routes/manager/salaryRoute.js";
+import initRevenueRouteManager from "./routes/manager/revenueRoute.js";
+import initOrderRouteManager from "./routes/manager/orderRoute.js";
+import initConversationRouteManager from "./routes/manager/conversationRoute.js";
+import initInventoryReceiptRouteManager from "./routes/manager/inventoryReceiptRoute.js";
+import initFeedbackRoute from "./routes/user/feedbackRoute.js";
+import initNotificationRoute from "./routes/user/notificationRoute.js";
+import initHomeRoute from "./routes/user/homeRoute.js";
+import initAdminUserRoute from "./routes/admin/userRoute.js";
+import initAdminBranchRoute from "./routes/admin/branchRoute.js";
+import initAdminManagerRoute from "./routes/admin/managerRoute.js";
+import initAdminProductRoute from "./routes/admin/productRoute.js";
+import initAdminBeverageRoute from "./routes/admin/beverageRoute.js";
+import initAdminPostRoute from "./routes/admin/postRoute.js";
+import initAdminDiscountRoute from "./routes/admin/discountRoute.js";
+import initAdminFeedbackRoute from "./routes/admin/feedbackRoute.js";
+import initAdminFinanceRoute from "./routes/admin/financeRoute.js";
+import initAdminRevenueRoute from "./routes/admin/revenueRoute.js";
+import initAdminCategoryRoute from "./routes/admin/categoryRoute.js";
+import initAdminUploadRoute from "./routes/admin/uploadRoute.js";
 
 dotenv.config();
 
@@ -49,6 +76,7 @@ app.use(
 app.use(cookieParser());
 
 // User
+initHomeRoute(app);
 initAuthRoute(app);
 initCateRoute(app);
 initProductRoute(app);
@@ -62,6 +90,8 @@ initMonthlyBookingRoute(app);
 initOrderRoute(app);
 initDiscountRoute(app);
 initWebhookRoute(app);
+initFeedbackRoute(app);
+initNotificationRoute(app);
 
 // Post
 initPostRoute(app);
@@ -72,11 +102,36 @@ initUserSearchRoute(app);
 
 // Employee
 initEmployeeOrderRoute(app);
+initEmployeeWorkShiftRoute(app);
+initEmployeeCounterRoute(app);
+initEmployeeBookingRoute(app);
+
+// Admin
+initAdminUserRoute(app);
+initAdminBranchRoute(app);
+initAdminManagerRoute(app);
+initAdminProductRoute(app);
+initAdminBeverageRoute(app);
+initAdminPostRoute(app);
+initAdminDiscountRoute(app);
+initAdminFeedbackRoute(app);
+initAdminFinanceRoute(app);
+initAdminRevenueRoute(app);
+initAdminCategoryRoute(app);
+initAdminUploadRoute(app);
 
 // Manager
 initCourtRouteManager(app);
 initBranchRouteManager(app);
 initEmployeeRouteManager(app);
+initBeverageRouteManager(app);
+initProductRouteManager(app);
+initWorkShiftRouteManager(app);
+initSalaryRouteManager(app);
+initRevenueRouteManager(app);
+initOrderRouteManager(app);
+initConversationRouteManager(app);
+initInventoryReceiptRouteManager(app);
 // create http server
 const httpServer = createServer(app);
 
@@ -85,7 +140,8 @@ initSocket(httpServer);
 
 app.use(errorHandler);
 
-sequelize.sync().then(() => {
+sequelize.sync().then(async () => {
+  await syncEnumColumns(sequelize);
   console.log("Database synced");
   httpServer.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

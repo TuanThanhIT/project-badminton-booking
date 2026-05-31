@@ -10,13 +10,11 @@ import ForgotPasswordPage from "../pages/user/ForgotPasswordPage";
 import OTPPage from "../pages/user/OTPPage";
 import ProfilePage from "../pages/user/ProfilePage";
 import CartPage from "../pages/user/CartPage";
-import GuestHomePage from "../pages/user/GuestHomePage";
 import ProductDetailPage from "../pages/user/ProductDetailPage";
 import CheckoutPage from "../pages/user/CheckoutPage";
 import OrderPage from "../pages/user/OrderPage";
 import UserPublicLayout from "../components/layouts/UserPublicLayout";
 import UserPrivateLayout from "../components/layouts/UserPrivateLayout";
-import BookingCourtPage from "../pages/user/BookingCourtPage";
 import BookingPage from "../pages/user/BookingPage";
 import WalletPage from "../pages/user/WalletPage";
 import ResetPasswordPage from "../pages/user/ResetPasswordPage";
@@ -29,15 +27,16 @@ import BranchPage from "../pages/user/BranchesPage";
 import CourtPage from "../pages/user/CourtPage";
 import OrderResultPage from "../pages/user/OrderResultPage";
 import VNPayResultPage from "../pages/user/VNPayResultPage";
+import BookingResultPage from "../pages/user/BookingResultPage";
 import UserProtectedRoute from "./ProtectedRoute/UserProtectedRoute";
-import PaymentPage from "../pages/user/PaymentPage";
+import CheckoutBookingPage from "../pages/user/CheckoutBookingPage";
 
 const UserRoute = () => {
   return (
     <Routes>
       {/* Public */}
       <Route element={<UserPublicLayout />}>
-        <Route index element={<GuestHomePage />} />
+        <Route path="home" element={<HomePage />} />
         <Route path="contact" element={<ContactPage />} />
         <Route path="about" element={<AboutPage />} />
         <Route path="login" element={<LoginPage />} />
@@ -50,10 +49,8 @@ const UserRoute = () => {
       {/* Private */}
       <Route element={<UserProtectedRoute />}>
         <Route element={<UserPrivateLayout />}>
-          <Route path="home" element={<HomePage />} />
           <Route path="products" element={<ProductPage />} />
           <Route path="product/:id" element={<ProductDetailPage />} />
-          <Route path="booking" element={<BookingCourtPage />} />
           <Route path="history" element={<HistoryPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="profile/:userId" element={<PublicProfilePage />} />
@@ -63,6 +60,7 @@ const UserRoute = () => {
           <Route path="bookings" element={<BookingPage />} />
           <Route path="wallet" element={<WalletPage />}></Route>
           <Route path="vnpay/result" element={<VNPayResultPage />}></Route>
+          <Route path="booking-result" element={<BookingResultPage />}></Route>
           <Route path="create-post" element={<CreatePostPage />} />
           <Route path="posts" element={<PostListPage />} />
           <Route path="messages" element={<MessagesPage />} />
@@ -71,8 +69,8 @@ const UserRoute = () => {
           <Route path="branches/:branchId" element={<BranchDetailPage />} />
           <Route path="courts" element={<CourtPage />} />
           <Route path="order-result" element={<OrderResultPage />} />
+          <Route path="/checkout/booking" element={<CheckoutBookingPage />} />
         </Route>
-        <Route path="/payment" element={<PaymentPage />} />
       </Route>
     </Routes>
   );

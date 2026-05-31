@@ -10,6 +10,7 @@ import {
   User,
   UserOtp,
 } from "../../models/index.js";
+import { Op } from "sequelize";
 import {
   PAYMENT_METHOD_STATUS,
   PAYMENT_STATUS,
@@ -27,6 +28,217 @@ import { OTP_TYPE } from "../../constants/userConstant.js";
 import ForbiddenError from "../../errors/ForbiddenError.js";
 
 dotenv.config();
+
+const toNumber = (value) => Number(value || 0);
+
+const formatDateKey = (date) => {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date(date));
+
+  const partMap = Object.fromEntries(
+    parts.map((part) => [part.type, part.value]),
+  );
+
+  return `${partMap.year}-${partMap.month}-${partMap.day}`;
+};
+
+const getWalletOverviewService = async (data) => {
+  const { userId } = data;
+
+  const [wallet] = await Wallet.findOrCreate({
+    where: { userId },
+    defaults: { userId },
+  });
+
+  const transactions = await WalletTransaction.findAll({
+    where: { walletId: wallet.id },
+    attributes: [
+      "id",
+      "amount",
+      "type",
+      "status",
+      "description",
+      "createdDate",
+      "updatedDate",
+      "expiredAt",
+    ],
+    include: [
+      {
+        model: Payment,
+        as: "payment",
+        attributes: [
+          "id",
+          "paymentMethod",
+          "paymentStatus",
+          "targetPaymentType",
+          "targetPaymentId",
+          "transId",
+          "paidAt",
+        ],
+        required: false,
+      },
+      {
+        model: WithdrawRequest,
+        as: "withdrawRequest",
+        attributes: [
+          "id",
+          "bankName",
+          "bankAccount",
+          "accountHolder",
+          "status",
+          "processedAt",
+          "createdDate",
+        ],
+        required: false,
+      },
+    ],
+    order: [["createdDate", "DESC"]],
+    limit: 120,
+  });
+
+  const summaryTransactions = await WalletTransaction.findAll({
+    where: { walletId: wallet.id },
+    attributes: ["amount", "type", "status"],
+    raw: true,
+  });
+
+  const pendingWithdrawAmount = summaryTransactions
+    .filter(
+      (tx) =>
+        tx.type === WALLET_TRANSACTION_TYPE.WITHDRAW &&
+        tx.status === WALLET_TRANSACTION_STATUS.PENDING,
+    )
+    .reduce((sum, tx) => sum + toNumber(tx.amount), 0);
+
+  const now = new Date();
+  const start = new Date(now);
+  start.setDate(start.getDate() - 6);
+  start.setHours(0, 0, 0, 0);
+
+  const chartSeed = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(start);
+    date.setDate(start.getDate() + index);
+    const key = formatDateKey(date);
+
+    return {
+      date: key,
+      label: date.toLocaleDateString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+      }),
+      deposit: 0,
+      withdraw: 0,
+      payment: 0,
+      refund: 0,
+    };
+  });
+
+  const chartMap = chartSeed.reduce((acc, item) => {
+    acc[item.date] = item;
+    return acc;
+  }, {});
+
+  const chartTransactions = await WalletTransaction.findAll({
+    where: {
+      walletId: wallet.id,
+      createdDate: { [Op.gte]: start },
+      status: WALLET_TRANSACTION_STATUS.SUCCESS,
+    },
+    attributes: ["amount", "type", "createdDate"],
+    raw: true,
+  });
+
+  chartTransactions.forEach((tx) => {
+    const key = formatDateKey(tx.createdDate);
+    const row = chartMap[key];
+    if (!row) return;
+
+    const amount = toNumber(tx.amount);
+    if (tx.type === WALLET_TRANSACTION_TYPE.DEPOSIT) row.deposit += amount;
+    if (tx.type === WALLET_TRANSACTION_TYPE.WITHDRAW) row.withdraw += amount;
+    if (tx.type === WALLET_TRANSACTION_TYPE.PAYMENT) row.payment += amount;
+    if (tx.type === WALLET_TRANSACTION_TYPE.REFUND) row.refund += amount;
+  });
+
+  const formattedTransactions = transactions.map((item) => {
+    const tx = item.toJSON();
+    return {
+      id: tx.id,
+      amount: toNumber(tx.amount),
+      type: tx.type,
+      status: tx.status,
+      description: tx.description,
+      createdDate: tx.createdDate,
+      updatedDate: tx.updatedDate,
+      expiredAt: tx.expiredAt,
+      payment: tx.payment || null,
+      withdrawRequest: tx.withdrawRequest || null,
+    };
+  });
+
+  const summary = summaryTransactions.reduce(
+    (acc, tx) => {
+      if (tx.status === WALLET_TRANSACTION_STATUS.SUCCESS) {
+        if (tx.type === WALLET_TRANSACTION_TYPE.DEPOSIT) {
+          acc.totalDeposit += toNumber(tx.amount);
+        }
+        if (tx.type === WALLET_TRANSACTION_TYPE.WITHDRAW) {
+          acc.totalWithdraw += toNumber(tx.amount);
+        }
+        if (tx.type === WALLET_TRANSACTION_TYPE.PAYMENT) {
+          acc.totalPayment += toNumber(tx.amount);
+        }
+        if (tx.type === WALLET_TRANSACTION_TYPE.REFUND) {
+          acc.totalRefund += toNumber(tx.amount);
+        }
+      }
+
+      if (tx.status === WALLET_TRANSACTION_STATUS.PENDING) {
+        acc.pendingCount += 1;
+      }
+
+      return acc;
+    },
+    {
+      totalDeposit: 0,
+      totalWithdraw: 0,
+      totalPayment: 0,
+      totalRefund: 0,
+      pendingCount: 0,
+      transactionCounts: {
+        [WALLET_TRANSACTION_TYPE.DEPOSIT]: 0,
+        [WALLET_TRANSACTION_TYPE.WITHDRAW]: 0,
+        [WALLET_TRANSACTION_TYPE.PAYMENT]: 0,
+        [WALLET_TRANSACTION_TYPE.REFUND]: 0,
+      },
+    },
+  );
+
+  summaryTransactions.forEach((tx) => {
+    if (summary.transactionCounts[tx.type] !== undefined) {
+      summary.transactionCounts[tx.type] += 1;
+    }
+  });
+
+  return {
+    wallet: {
+      id: wallet.id,
+      balance: toNumber(wallet.balance),
+      availableBalance: Math.max(toNumber(wallet.balance) - pendingWithdrawAmount, 0),
+      pendingWithdrawAmount,
+      status: wallet.status,
+      createdDate: wallet.createdDate,
+      updatedDate: wallet.updatedDate,
+    },
+    summary,
+    chart: Object.values(chartMap),
+    transactions: formattedTransactions,
+  };
+};
 
 const walletDepositService = async (data) => {
   const { amount, userId, ip } = data;
@@ -436,6 +648,7 @@ const walletWithdrawConfirmService = async (data) => {
 };
 
 const walletService = {
+  getWalletOverviewService,
   walletDepositService,
   walletCallbackService,
   walletWithdrawRequestService,

@@ -9,9 +9,24 @@ import {
 } from "./common/shiftFields.js";
 import { pageField, limitField } from "./common/paginationFields.js";
 
+const optionalTimeField = Joi.string()
+  .pattern(/^\d{1,2}:\d{2}(:\d{2})?$/)
+  .optional()
+  .messages({
+    "string.base": "Time must be a string",
+    "string.pattern.base": "Invalid time format (HH:MM or HH:MM:SS)",
+  });
+
 export const getWorkShiftByDateSchema = {
   query: Joi.object({
-    date: dateField,
+    date: dateField.required(),
+  }),
+};
+
+export const getCurrentWorkShiftSchema = {
+  query: Joi.object({
+    date: dateField.required(),
+    time: timeField,
   }),
 };
 
@@ -33,6 +48,23 @@ export const updateCheckOutAndCashRegisterSchema = {
     checkOutTime: timeField,
     closingCash: cashField,
   }),
+};
+
+export const getShiftAssignmentsSchema = {
+  params: Joi.object({
+    workShiftId: idParams("workShiftId"),
+  }),
+};
+
+export const updateShiftAssignmentTimeSchema = {
+  params: Joi.object({
+    workShiftId: idParams("workShiftId"),
+    assignmentId: idParams("assignmentId"),
+  }),
+  body: Joi.object({
+    checkInTime: optionalTimeField,
+    checkOutTime: optionalTimeField,
+  }).or("checkInTime", "checkOutTime"),
 };
 
 export const createWorkShiftSchema = {

@@ -79,6 +79,7 @@ const Feedback = sequelize.define(
       { fields: ["orderId"] },
       { fields: ["variantId"] },
       { fields: ["branchId"] },
+      { unique: true, fields: ["userId", "branchId"] },
     ],
   },
 );
@@ -86,7 +87,7 @@ const Feedback = sequelize.define(
 export default Feedback;
 
 Feedback.beforeValidate((fb) => {
-  const hasProduct = !!fb.productVariantId;
+  const hasProduct = !!fb.variantId;
   const hasBranch = !!fb.branchId;
 
   if (!hasProduct && !hasBranch) {

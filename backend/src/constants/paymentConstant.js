@@ -1,4 +1,5 @@
 export const PAYMENT_STATUS = Object.freeze({
+  UNPAID: "UNPAID",
   PENDING: "PENDING",
   PAID: "PAID",
   FAILED: "FAILED",
@@ -8,14 +9,16 @@ export const PAYMENT_STATUS = Object.freeze({
 
 export const PAYMENT_METHOD_STATUS = Object.freeze({
   COD: "COD",
+  CASH: "CASH",
   VNPAY: "VNPAY",
+  BANK: "BANK",
   WALLET: "WALLET",
 });
 
 export const WALLET_TRANSACTION_TYPE = Object.freeze({
   DEPOSIT: "DEPOSIT",
   PAYMENT: "PAYMENT",
-  REFUNDED: "REFUNDED",
+  REFUND: "REFUND",
   WITHDRAW: "WITHDRAW",
 });
 
@@ -43,4 +46,10 @@ export const WITHDRAW_REQUEST_STATUS = Object.freeze({
   SUCCESS: "SUCCESS",
   FAILED: "FAILED",
   CANCELLED: "CANCELLED",
+});
+
+export const PAYMENT_OFFLINE_METHOD_STATUS = Object.freeze({
+  CASH: "CASH",
+  VNPAY: "VNPAY",
+  BANK: "BANK",
 });

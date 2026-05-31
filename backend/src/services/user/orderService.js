@@ -41,6 +41,7 @@ import {
   WALLET_TRANSACTION_TYPE,
 } from "../../constants/paymentConstant.js";
 import { verifyVNPayURL } from "../../utils/handleVNPayURL.js";
+import { formatOrderItemCode } from "../../utils/displayCode.js";
 import { VnpLocale, dateFormat, VNPay } from "vnpay";
 import { OTP_TYPE } from "../../constants/userConstant.js";
 import {
@@ -54,9 +55,58 @@ import {
   getDisplayStatus,
   mapGHNStatusToSystem,
 } from "../../utils/shippingMapper.js";
+import { REVIEW_STATUS } from "../../constants/reviewConstant.js";
+import { emitOrderActionRealtime } from "../shared/emitRealtime.js";
+import { CANCELLED_BY } from "../../constants/bookingConstant.js";
+import { sendBranchEmployeesNotification } from "../../helpers/notification.js";
+
+const normalizeCartItemIds = (cartItemIds = []) => [
+  ...new Set(cartItemIds.map((id) => Number(id)).filter(Boolean)),
+];
+
+const normalizeBuyNowItem = (item) => {
+  if (!item) return null;
+  const variantId = Number(item.variantId);
+  const quantity = Number(item.quantity);
+  if (!variantId || !quantity) return null;
+  return { variantId, quantity };
+};
+
+const deleteSelectedCartItems = async ({
+  cartId,
+  cartItemIds,
+  transaction,
+}) => {
+  const selectedIds = normalizeCartItemIds(cartItemIds);
+  if (!selectedIds.length) return;
+
+  await CartItem.destroy({
+    where: {
+      id: { [Op.in]: selectedIds },
+      cartId,
+    },
+    transaction,
+  });
+
+  const remainingItems = await CartItem.findAll({
+    where: { cartId },
+    attributes: ["subTotal"],
+    transaction,
+  });
+
+  const totalAmount = remainingItems.reduce(
+    (sum, item) => sum + Number(item.subTotal || 0),
+    0,
+  );
+
+  await Cart.update({ totalAmount }, { where: { id: cartId }, transaction });
+};
 
 const checkoutPreviewService = async (data) => {
   const { cartId, addressId, userId } = data;
+  const selectedCartItemIds = normalizeCartItemIds(data.cartItemIds);
+  const buyNowItem = normalizeBuyNowItem(data.buyNowItem);
+  const checkoutMode = buyNowItem ? "BUY_NOW" : "CART";
 
   return sequelize.transaction(async (t) => {
     const redisKey = getCheckoutKey({ userId, cartId });
@@ -65,32 +115,72 @@ const checkoutPreviewService = async (data) => {
     let oldSession = existing ? JSON.parse(existing) : null;
 
     // ================= 1. LOAD CART =================
-    const cart = await Cart.findByPk(cartId, {
-      include: [
-        {
-          model: CartItem,
-          as: "items",
-          include: [
+    const cart = await Cart.findOne({
+      where: { id: cartId, userId },
+      include: buyNowItem
+        ? []
+        : [
             {
-              model: ProductVariant,
-              as: "variant",
+              model: CartItem,
+              as: "items",
+              where: { id: { [Op.in]: selectedCartItemIds } },
               include: [
                 {
-                  model: Product,
-                  as: "product",
-                  attributes: ["productName", "thumbnailUrl"],
+                  model: ProductVariant,
+                  as: "variant",
+                  include: [
+                    {
+                      model: Product,
+                      as: "product",
+                      attributes: ["productName", "thumbnailUrl"],
+                    },
+                  ],
                 },
               ],
             },
           ],
-        },
-      ],
       transaction: t,
     });
 
     if (!cart) throw new NotFoundError("Giỏ hàng không tồn tại");
-    if (!cart.items.length)
-      throw new BadRequestError("Không có sản phẩm trong giỏ hàng");
+
+    let checkoutItems = [];
+
+    if (buyNowItem) {
+      const variant = await ProductVariant.findByPk(buyNowItem.variantId, {
+        include: [
+          {
+            model: Product,
+            as: "product",
+            attributes: ["productName", "thumbnailUrl"],
+          },
+        ],
+        transaction: t,
+      });
+
+      if (!variant) throw new NotFoundError("Sản phẩm không tồn tại");
+
+      checkoutItems = [
+        {
+          variantId: variant.id,
+          quantity: buyNowItem.quantity,
+          variant,
+        },
+      ];
+    } else {
+      if (!cart.items.length)
+        throw new BadRequestError(
+          "Vui lòng chọn sản phẩm để thanh toán",
+        );
+
+      if (cart.items.length !== selectedCartItemIds.length) {
+        throw new BadRequestError(
+          "Một số sản phẩm đã chọn không còn trong giỏ hàng",
+        );
+      }
+
+      checkoutItems = cart.items;
+    }
 
     // ================= 2. ADDRESS =================
     const address = await UserAddress.findByPk(addressId, {
@@ -102,13 +192,24 @@ const checkoutPreviewService = async (data) => {
       throw new BadRequestError("Địa chỉ chưa có tọa độ");
     }
 
+    const oldCartItemIds = normalizeCartItemIds(oldSession?.cartItemIds || []);
+    const oldBuyNowItem = normalizeBuyNowItem(oldSession?.buyNowItem);
+    const isSameSelection =
+      oldSession?.checkoutMode === checkoutMode &&
+      (buyNowItem
+        ? oldBuyNowItem?.variantId === buyNowItem.variantId &&
+          oldBuyNowItem?.quantity === buyNowItem.quantity
+        : oldCartItemIds.length === selectedCartItemIds.length &&
+          oldCartItemIds.every((id) => selectedCartItemIds.includes(id)));
+
     const isSameAddress =
       oldSession &&
+      isSameSelection &&
       oldSession.address?.districtId === address.districtId &&
       oldSession.address?.wardCode === address.wardCode;
 
     // ================= 3. SUBTOTAL =================
-    const subTotal = cart.items.reduce(
+    const subTotal = checkoutItems.reduce(
       (sum, item) =>
         sum +
         item.quantity *
@@ -139,7 +240,7 @@ const checkoutPreviewService = async (data) => {
       .sort((a, b) => a.distance - b.distance);
 
     // ================= 5. STOCK =================
-    const variantIds = cart.items.map((i) => i.variantId);
+    const variantIds = checkoutItems.map((i) => i.variantId);
 
     const stocks = await VariantStock.findAll({
       where: { variantId: { [Op.in]: variantIds } },
@@ -159,7 +260,7 @@ const checkoutPreviewService = async (data) => {
       const branchStock = stockMap[branch.id];
       if (!branchStock) continue;
 
-      const canFulfill = cart.items.every(
+      const canFulfill = checkoutItems.every(
         (item) => (branchStock[item.variantId] || 0) >= item.quantity,
       );
 
@@ -173,7 +274,7 @@ const checkoutPreviewService = async (data) => {
 
     // ================= FULL =================
     if (bestBranch) {
-      const weight = cart.items.reduce(
+      const weight = checkoutItems.reduce(
         (sum, item) => sum + item.quantity * (item.variant.weight || 0),
         0,
       );
@@ -183,7 +284,7 @@ const checkoutPreviewService = async (data) => {
           branchId: bestBranch.id,
           branchName: bestBranch.branchName,
           weight,
-          items: cart.items.map((i) => ({
+          items: checkoutItems.map((i) => ({
             variantId: i.variantId,
             productName: i.variant.product.productName,
             thumbnail: i.variant.product.thumbnailUrl,
@@ -202,7 +303,7 @@ const checkoutPreviewService = async (data) => {
 
     // ================= SPLIT =================
     if (!bestBranch) {
-      const remaining = cart.items.map((i) => ({
+      const remaining = checkoutItems.map((i) => ({
         variantId: i.variantId,
         productName: i.variant.product.productName,
         thumbnail: i.variant.product.thumbnailUrl,
@@ -302,21 +403,30 @@ const checkoutPreviewService = async (data) => {
 
       serviceId: isSameAddress ? oldSession?.group?.serviceId || null : null,
 
-      discount: oldSession?.group?.discount || {
-        id: null,
-        code: null,
-        amount: 0,
-      },
+      discount: isSameSelection
+        ? oldSession?.group?.discount || {
+            id: null,
+            code: null,
+            amount: 0,
+          }
+        : {
+            id: null,
+            code: null,
+            amount: 0,
+          },
 
       total:
         subTotal +
         (isSameAddress ? oldSession?.group?.shippingFeeTotal || 0 : 0) -
-        (oldSession?.group?.discount?.amount || 0),
+        (isSameSelection ? oldSession?.group?.discount?.amount || 0 : 0),
     };
 
     // ================= 9. SAVE =================
     const session = {
       cartId,
+      cartItemIds: selectedCartItemIds,
+      buyNowItem,
+      checkoutMode,
       address: {
         addressId: address.id,
         districtId: address.districtId,
@@ -485,11 +595,138 @@ const getCheckoutPreviewService = async (userId, cartId) => {
   return session;
 };
 
+const activateOrderGroupForFulfillment = async ({
+  orderGroupId,
+  transaction,
+}) => {
+  const orderGroup = await OrderGroup.findByPk(orderGroupId, {
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
+
+  if (!orderGroup) {
+    throw new NotFoundError("Đơn hàng không tồn tại");
+  }
+
+  if (orderGroup.status === ORDER_GROUP_STATUS.PAID) {
+    return orderGroup;
+  }
+
+  const orders = await Order.findAll({
+    where: { orderGroupId },
+    include: [
+      {
+        model: OrderDetail,
+        as: "details",
+      },
+      {
+        model: Branch,
+        as: "branch",
+      },
+    ],
+    transaction,
+  });
+
+  for (const order of orders) {
+    for (const item of order.details || []) {
+      const stock = await VariantStock.findOne({
+        where: {
+          branchId: order.branchId,
+          variantId: item.variantId,
+        },
+        transaction,
+        lock: transaction.LOCK.UPDATE,
+      });
+
+      if (!stock || stock.stock < item.quantity) {
+        throw new BadRequestError("Cửa hàng không đủ số lượng");
+      }
+
+      stock.stock -= item.quantity;
+      await stock.save({ transaction });
+    }
+  }
+
+  if (!orderGroup.isDiscountApplied && orderGroup.discountId) {
+    await applyDiscountUsage(orderGroup.discountId, transaction);
+    await orderGroup.update({ isDiscountApplied: true }, { transaction });
+  }
+
+  await orderGroup.update(
+    { status: ORDER_GROUP_STATUS.PAID },
+    { transaction },
+  );
+
+  for (const order of orders) {
+    await sendBranchEmployeesNotification(
+      order.branchId,
+      "order-created",
+      "Có đơn hàng mới",
+      `${order.branch?.branchName || "Chi nhánh"}: đơn hàng ${formatOrderItemCode(order.id)} vừa được khách đặt và đang chờ xử lý.`,
+      { transaction },
+    );
+  }
+
+  return orderGroup;
+};
+
+const PAYMENT_RETRY_WINDOW_MS = 15 * 60 * 1000;
+
+const assertRetryWindowOpen = (createdAt) => {
+  const createdTime = new Date(createdAt).getTime();
+  if (!createdTime || Date.now() - createdTime > PAYMENT_RETRY_WINDOW_MS) {
+    throw new BadRequestError("Đã hết thời gian thanh toán lại");
+  }
+};
+
+const buildOrderVNPayUrl = ({ orderGroup, payment, ip }) => {
+  const vnpay = new VNPay({
+    tmnCode: process.env.VNP_TMN_CODE,
+    secureSecret: process.env.VNP_HASH_SECRET,
+    vnpayHost: process.env.VNP_URL,
+    testMode: true,
+    hashAlgorithm: "SHA512",
+  });
+
+  const expireDate = new Date(Date.now() + PAYMENT_RETRY_WINDOW_MS);
+
+  return vnpay.buildPaymentUrl({
+    vnp_Amount: payment.paymentAmount,
+    vnp_IpAddr: ip,
+    vnp_TxnRef: payment.externalId,
+    vnp_OrderInfo: `order_${orderGroup.id}`,
+    vnp_OrderType: "order",
+    vnp_ReturnUrl: process.env.VNP_RETURN_URL,
+    vnp_Locale: VnpLocale.VN,
+    vnp_CreateDate: dateFormat(new Date()),
+    vnp_ExpireDate: dateFormat(expireDate),
+  });
+};
+
 const createOrderService = async (data) => {
   const { cartId, addressId, paymentMethod, note, userId, ip } = data;
+  const selectedCartItemIds = normalizeCartItemIds(data.cartItemIds);
+  const buyNowItem = normalizeBuyNowItem(data.buyNowItem);
+  const checkoutMode = buyNowItem ? "BUY_NOW" : "CART";
 
   return sequelize.transaction(async (t) => {
     const preview = await getCheckoutPreviewService(userId, cartId);
+
+    const previewCartItemIds = normalizeCartItemIds(preview.cartItemIds);
+    const previewBuyNowItem = normalizeBuyNowItem(preview.buyNowItem);
+    const isSameSelection =
+      preview.checkoutMode === checkoutMode &&
+      (buyNowItem
+        ? previewBuyNowItem?.variantId === buyNowItem.variantId &&
+          previewBuyNowItem?.quantity === buyNowItem.quantity
+        : selectedCartItemIds.length === previewCartItemIds.length &&
+          selectedCartItemIds.every((id) => previewCartItemIds.includes(id)));
+
+    if (!isSameSelection) {
+      throw new BadRequestError(
+        "Danh sách sản phẩm checkout đã thay đổi",
+      );
+    }
 
     const address = await UserAddress.findByPk(addressId, { transaction: t });
     if (!address) throw new NotFoundError("Địa chỉ không tồn tại");
@@ -508,8 +745,6 @@ const createOrderService = async (data) => {
       },
       { transaction: t },
     );
-
-    let createdOrders = [];
 
     // ================= CREATE ORDERS =================
     for (const o of preview.group.orders) {
@@ -537,22 +772,6 @@ const createOrderService = async (data) => {
       );
 
       for (const item of o.items) {
-        const stock = await VariantStock.findOne({
-          where: {
-            branchId: o.branchId,
-            variantId: item.variantId,
-          },
-          transaction: t,
-          lock: t.LOCK.UPDATE,
-        });
-
-        if (!stock || stock.stock < item.quantity) {
-          throw new BadRequestError("Cửa hàng không đủ số lượng");
-        }
-
-        stock.stock -= item.quantity;
-        await stock.save({ transaction: t });
-
         await OrderDetail.create(
           {
             orderId: order.id,
@@ -566,7 +785,6 @@ const createOrderService = async (data) => {
         );
       }
 
-      createdOrders.push(order);
     }
 
     // ================= PAYMENT =================
@@ -574,6 +792,9 @@ const createOrderService = async (data) => {
     let result = {
       orderGroupId: orderGroup.id,
       amount: orderGroup.finalAmount,
+      cartId,
+      cartItemIds: selectedCartItemIds,
+      buyNowItem,
     };
 
     // COD
@@ -588,6 +809,19 @@ const createOrderService = async (data) => {
         },
         { transaction: t },
       );
+
+      await activateOrderGroupForFulfillment({
+        orderGroupId: orderGroup.id,
+        transaction: t,
+      });
+
+      if (checkoutMode === "CART") {
+        await deleteSelectedCartItems({
+          cartId,
+          cartItemIds: selectedCartItemIds,
+          transaction: t,
+        });
+      }
     }
 
     // WALLET
@@ -604,7 +838,7 @@ const createOrderService = async (data) => {
       const pendingAmount = await WalletTransaction.sum("amount", {
         where: {
           walletId: wallet.id,
-          status: "PENDING",
+          status: WALLET_TRANSACTION_STATUS.PENDING,
         },
         transaction: t,
       });
@@ -639,6 +873,15 @@ const createOrderService = async (data) => {
         },
         { transaction: t },
       );
+
+      if (checkoutMode === "CART") {
+        await redisClient.set(
+          `order_cart_cleanup:${orderGroup.id}`,
+          JSON.stringify({ cartId, cartItemIds: selectedCartItemIds }),
+          "EX",
+          24 * 60 * 60,
+        );
+      }
     }
 
     // VNPay (return URL)
@@ -657,27 +900,19 @@ const createOrderService = async (data) => {
         { transaction: t },
       );
 
-      const vnpay = new VNPay({
-        tmnCode: process.env.VNP_TMN_CODE,
-        secureSecret: process.env.VNP_HASH_SECRET,
-        vnpayHost: process.env.VNP_URL,
-        testMode: true,
-        hashAlgorithm: "SHA512",
-      });
+      if (checkoutMode === "CART") {
+        await redisClient.set(
+          `order_cart_cleanup:${txnRef}`,
+          JSON.stringify({ cartId, cartItemIds: selectedCartItemIds }),
+          "EX",
+          24 * 60 * 60,
+        );
+      }
 
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-
-      result.paymentUrl = await vnpay.buildPaymentUrl({
-        vnp_Amount: orderGroup.finalAmount,
-        vnp_IpAddr: ip,
-        vnp_TxnRef: txnRef,
-        vnp_OrderInfo: `order_${orderGroup.id}`,
-        vnp_OrderType: "order",
-        vnp_ReturnUrl: process.env.VNP_RETURN_URL,
-        vnp_Locale: VnpLocale.VN,
-        vnp_CreateDate: dateFormat(new Date()),
-        vnp_ExpireDate: dateFormat(tomorrow),
+      result.paymentUrl = await buildOrderVNPayUrl({
+        orderGroup,
+        payment,
+        ip,
       });
     }
 
@@ -744,7 +979,11 @@ const orderCallbackService = async (data) => {
       throw new NotFoundError("Đơn hàng không tồn tại");
     }
 
-    // update
+    await activateOrderGroupForFulfillment({
+      orderGroupId: orderGroup.id,
+      transaction: t,
+    });
+
     await payment.update(
       {
         paymentStatus: PAYMENT_STATUS.PAID,
@@ -754,16 +993,18 @@ const orderCallbackService = async (data) => {
       { transaction: t },
     );
 
-    if (!orderGroup.isDiscountApplied && orderGroup.discountId) {
-      await applyDiscountUsage(orderGroup.discountId, t);
-
-      await orderGroup.update({ isDiscountApplied: true }, { transaction: t });
-    }
-
-    await orderGroup.update(
-      { status: ORDER_GROUP_STATUS.PAID },
-      { transaction: t },
+    const cleanupRaw = await redisClient.get(
+      `order_cart_cleanup:${vnp_TxnRef}`,
     );
+    if (cleanupRaw) {
+      const cleanup = JSON.parse(cleanupRaw);
+      await deleteSelectedCartItems({
+        cartId: cleanup.cartId,
+        cartItemIds: cleanup.cartItemIds,
+        transaction: t,
+      });
+      await redisClient.del(`order_cart_cleanup:${vnp_TxnRef}`);
+    }
   });
 };
 
@@ -823,6 +1064,8 @@ const walletOrderConfirmService = async (data) => {
         targetPaymentId: orderGroupId,
         paymentStatus: PAYMENT_STATUS.PENDING,
       },
+      transaction: t,
+      lock: t.LOCK.UPDATE,
     });
 
     if (!payment) throw new NotFoundError("Thanh toán không tồn tại");
@@ -873,6 +1116,11 @@ const walletOrderConfirmService = async (data) => {
       throw new BadRequestError("OTP đã được sử dụng");
     }
 
+    await activateOrderGroupForFulfillment({
+      orderGroupId: orderGroup.id,
+      transaction: t,
+    });
+
     // TRỪ TIỀN (atomic)
     await wallet.update(
       {
@@ -891,16 +1139,18 @@ const walletOrderConfirmService = async (data) => {
       { transaction: t },
     );
 
-    if (!orderGroup.isDiscountApplied && orderGroup.discountId) {
-      await applyDiscountUsage(orderGroup.discountId, t);
-
-      await orderGroup.update({ isDiscountApplied: true }, { transaction: t });
-    }
-
-    await orderGroup.update(
-      { status: ORDER_GROUP_STATUS.PAID },
-      { transaction: t },
+    const cleanupRaw = await redisClient.get(
+      `order_cart_cleanup:${orderGroupId}`,
     );
+    if (cleanupRaw) {
+      const cleanup = JSON.parse(cleanupRaw);
+      await deleteSelectedCartItems({
+        cartId: cleanup.cartId,
+        cartItemIds: cleanup.cartItemIds,
+        transaction: t,
+      });
+      await redisClient.del(`order_cart_cleanup:${orderGroupId}`);
+    }
 
     await otp.update({ isUsed: true, isVerified: true }, { transaction: t });
 
@@ -958,8 +1208,69 @@ const getOrderGroupByIdService = async (data) => {
     amount: Number(orderGroup.finalAmount),
     status: orderGroup.status,
     paymentMethod,
+    paymentStatus: payment?.paymentStatus || null,
+    canRetryPayment:
+      paymentMethod === PAYMENT_METHOD_STATUS.VNPAY &&
+      payment?.paymentStatus !== PAYMENT_STATUS.PAID &&
+      orderGroup.status === ORDER_GROUP_STATUS.PENDING_PAYMENT &&
+      Date.now() - new Date(orderGroup.createdAt).getTime() <=
+        PAYMENT_RETRY_WINDOW_MS,
+    retryExpiresAt: new Date(
+      new Date(orderGroup.createdAt).getTime() + PAYMENT_RETRY_WINDOW_MS,
+    ).toISOString(),
     isSuccess,
     createdDate: orderGroup.createdAt,
+  };
+};
+
+const retryOrderVNPayService = async ({ orderGroupId, userId, ip }) => {
+  const orderGroup = await OrderGroup.findByPk(orderGroupId);
+  if (!orderGroup) throw new NotFoundError("Đơn hàng không tồn tại");
+
+  if (orderGroup.userId !== userId) {
+    throw new ForbiddenError("Không có quyền truy cập đơn hàng");
+  }
+
+  assertRetryWindowOpen(orderGroup.createdAt);
+
+  if (orderGroup.status !== ORDER_GROUP_STATUS.PENDING_PAYMENT) {
+    throw new BadRequestError("Đơn hàng không còn ở trạng thái chờ thanh toán");
+  }
+
+  const payment = await Payment.findOne({
+    where: {
+      targetPaymentType: TARGET_PAYMENT_TYPE.ORDER,
+      targetPaymentId: orderGroup.id,
+      paymentMethod: PAYMENT_METHOD_STATUS.VNPAY,
+    },
+  });
+
+  if (!payment) {
+    throw new NotFoundError("Thanh toán VNPay không tồn tại");
+  }
+
+  if (payment.paymentStatus === PAYMENT_STATUS.PAID) {
+    throw new BadRequestError("Đơn hàng đã thanh toán");
+  }
+
+  const txnRef = uuidv4();
+  await payment.update({
+    externalId: txnRef,
+    paymentStatus: PAYMENT_STATUS.PENDING,
+    transId: null,
+    paidAt: null,
+  });
+
+  const paymentUrl = await buildOrderVNPayUrl({
+    orderGroup,
+    payment,
+    ip,
+  });
+
+  return {
+    orderGroupId: orderGroup.id,
+    amount: Number(orderGroup.finalAmount),
+    paymentUrl,
   };
 };
 
@@ -1056,7 +1367,8 @@ const getUserOrdersService = async (data) => {
 };
 
 const getOrderDetailService = async (data) => {
-  const { orderId } = data;
+  const { orderId, userId } = data;
+
   const order = await Order.findByPk(orderId, {
     include: [
       {
@@ -1075,16 +1387,58 @@ const getOrderDetailService = async (data) => {
           },
         ],
       },
-      { model: OrderShippingLog, as: "shippingLogs" },
+      {
+        model: OrderShippingLog,
+        as: "shippingLogs",
+      },
     ],
   });
 
-  if (!order) throw new NotFoundError("Đơn hàng không tồn tại");
+  if (!order) {
+    throw new NotFoundError("Đơn hàng không tồn tại");
+  }
+
+  // redis key review
+  const reviewKey = `review:order:${orderId}:user:${userId}`;
+
+  const items = await Promise.all(
+    order.details.map(async (i) => {
+      const variantId = i.variantId;
+
+      // check đã review chưa
+      const isReviewed = await redisClient.sismember(reviewKey, variantId);
+
+      const canReview = order.orderStatus === ORDER_STATUS.COMPLETED;
+
+      return {
+        name: i.productName,
+
+        quantity: i.quantity,
+
+        price: i.unitPrice,
+
+        variantInfo: i.variantInfo,
+
+        thumbnailUrl: i.variant.product.thumbnailUrl,
+
+        variantId,
+
+        reviewStatus: !canReview
+          ? REVIEW_STATUS.NOT_ELIGIBLE
+          : isReviewed
+            ? REVIEW_STATUS.REVIEWED
+            : REVIEW_STATUS.CAN_REVIEW,
+      };
+    }),
+  );
 
   return {
     orderId: order.id,
+
     status: order.orderStatus,
+
     shippingStatus: order.shippingStatus,
+
     trackingCode: order.shippingOrderCode,
 
     address: {
@@ -1093,13 +1447,7 @@ const getOrderDetailService = async (data) => {
       address: order.shippingAddress,
     },
 
-    items: order.details.map((i) => ({
-      name: i.productName,
-      quantity: i.quantity,
-      price: i.unitPrice,
-      variantInfo: i.variantInfo,
-      thumbnailUrl: i.variant.product.thumbnailUrl,
-    })),
+    items,
 
     fee: {
       subtotal: order.subtotal,
@@ -1147,6 +1495,146 @@ const getTrackingProgressService = async (data) => {
   }));
 };
 
+// YÊU CẦU HỦY ĐƠN VÀ HOÀN ĐƠN
+const cancellableStatuses = [
+  ORDER_STATUS.PENDING,
+  ORDER_STATUS.CONFIRMED,
+  ORDER_STATUS.PREPARING,
+  ORDER_STATUS.READY_TO_SHIP,
+  ORDER_STATUS.SHIPPING,
+  ORDER_STATUS.FAILED,
+];
+
+const returnableStatuses = [ORDER_STATUS.COMPLETED];
+
+const getUserOrderForAction = async ({ orderId, userId, transaction }) => {
+  const order = await Order.findByPk(orderId, {
+    include: [
+      {
+        model: OrderGroup,
+        as: "orderGroup",
+      },
+      {
+        model: Branch,
+        as: "branch",
+      },
+    ],
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
+
+  if (!order) {
+    throw new NotFoundError("Đơn hàng không tồn tại");
+  }
+
+  if (order.orderGroup.userId !== userId) {
+    throw new ForbiddenError("Không có quyền thao tác đơn hàng này");
+  }
+
+  return order;
+};
+
+// Khi user bấm hủy đơn, service đổi trạng thái sang CANCEL_REQUESTED, rồi gọi realtime.
+const requestCancelOrderService = async (data) => {
+  const { orderId, userId, reason } = data;
+  const result = await sequelize.transaction(async (t) => {
+    const order = await getUserOrderForAction({
+      orderId,
+      userId,
+      transaction: t,
+    });
+
+    if (order.orderStatus === ORDER_STATUS.CANCEL_REQUESTED) {
+      throw new BadRequestError(
+        "Đơn hàng đã được yêu cầu hủy trước đó",
+      );
+    }
+
+    if (!cancellableStatuses.includes(order.orderStatus)) {
+      throw new BadRequestError(
+        "Đơn hàng hiện không thể yêu cầu hủy",
+      );
+    }
+
+    if (order.orderStatus === ORDER_STATUS.COMPLETED) {
+      throw new BadRequestError(
+        "Đơn hàng đã hoàn thành, không thể hủy",
+      );
+    }
+
+    await order.update(
+      {
+        previousOrderStatus: order.orderStatus,
+        orderStatus: ORDER_STATUS.CANCEL_REQUESTED,
+        cancelledBy: CANCELLED_BY.USER,
+        cancelReason: reason || null,
+        cancelRequestedAt: new Date(),
+        cancelHandledAt: null,
+        cancelRejectReason: null,
+      },
+      { transaction: t },
+    );
+
+    return order;
+  });
+
+  await emitOrderActionRealtime({
+    order: result,
+    log: null,
+    message:
+      "Yêu cầu hủy đơn của bạn đã được gửi đến nhân viên",
+  });
+  await sendBranchEmployeesNotification(
+    result.branchId,
+    "order-cancel-requested",
+    "Khách yêu cầu hủy đơn hàng",
+    `${result.branch?.branchName || "Chi nhánh"}: đơn hàng ${formatOrderItemCode(result.id)} cần nhân viên xử lý yêu cầu hủy.`,
+  );
+};
+
+const requestReturnOrderService = async (data) => {
+  const { orderId, userId, reason } = data;
+  let updatedOrder;
+
+  await sequelize.transaction(async (t) => {
+    const order = await getUserOrderForAction({
+      orderId,
+      userId,
+      transaction: t,
+    });
+
+    if (!returnableStatuses.includes(order.orderStatus)) {
+      throw new BadRequestError(
+        "Chỉ có thể yêu cầu trả hàng khi đơn đã giao thành công",
+      );
+    }
+
+    if (order.shippingStatus !== SHIPPING_STATUS.DELIVERED) {
+      throw new BadRequestError(
+        "Chỉ có thể yêu cầu trả hàng khi đơn đã giao thành công",
+      );
+    }
+
+    await order.update(
+      {
+        orderStatus: ORDER_STATUS.RETURN_REQUESTED,
+        returnReason: reason || null,
+        returnRequestedAt: new Date(),
+      },
+      { transaction: t },
+    );
+
+    updatedOrder = order;
+  });
+
+  await emitOrderActionRealtime({
+    order: updatedOrder,
+    log: null,
+    message:
+      "Yêu cầu trả hàng của bạn đã được gửi đến nhân viên",
+  });
+};
+
 const orderService = {
   checkoutPreviewService,
   calculateShippingService,
@@ -1154,11 +1642,14 @@ const orderService = {
   createOrderService,
   orderCallbackService,
   walletOrderConfirmService,
+  retryOrderVNPayService,
   getOrderGroupByIdService,
   getOrderDetailService,
   getUserOrdersService,
   getOrderTrackingService,
   getTrackingProgressService,
+  requestCancelOrderService,
+  requestReturnOrderService,
 };
 
 export default orderService;

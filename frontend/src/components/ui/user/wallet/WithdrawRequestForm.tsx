@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { CreditCard, Hash, Landmark, User, Wallet, X } from "lucide-react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
-import { CreditCard, X, Landmark, User, Hash, Wallet } from "lucide-react";
-import { useState, useEffect } from "react";
 import {
   FormWithdrawRequestSchema,
   type formWithdrawRequest,
@@ -33,6 +33,9 @@ const allBanks = [
   "OCB",
 ];
 
+const inputClass =
+  "w-full rounded-2xl border border-slate-300 bg-white py-3 pl-12 pr-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-1 focus:ring-sky-100";
+
 const WithdrawRequestForm = ({
   setOpenWithdraw,
   onSubmit,
@@ -51,7 +54,6 @@ const WithdrawRequestForm = ({
     mode: "onChange",
   });
 
-  // register amount thủ công (vì dùng custom input)
   useEffect(() => {
     register("amount");
   }, [register]);
@@ -64,115 +66,93 @@ const WithdrawRequestForm = ({
     setValue("amount", value, { shouldValidate: true });
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSelectedAmount(null);
-    setValue("amount", Number(e.target.value), {
-      shouldValidate: true,
-    });
+    setValue("amount", Number(e.target.value), { shouldValidate: true });
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-      <div className="bg-gradient-to-br from-white to-sky-50 rounded-3xl w-full max-w-2xl shadow-2xl p-5 relative border border-gray-200">
-        {/* CLOSE */}
-        <button
-          onClick={() => setOpenWithdraw(false)}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"
-        >
-          <X size={22} />
-        </button>
-
-        {/* HEADER */}
-        <div className="flex items-center gap-2 mb-4">
-          <CreditCard className="w-6 h-6 text-sky-500" />
-          <div>
-            <h3 className="text-xl font-bold text-gray-800">
-              Yêu cầu rút tiền
-            </h3>
-            <p className="text-sm text-gray-500">
-              Nhập thông tin tài khoản để nhận tiền
-            </p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4">
+      <div className="relative max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-slate-200 bg-white shadow-2xl">
+        <div className="flex items-start justify-between gap-4 border-b border-slate-200 p-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+              <CreditCard size={21} />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900">
+                Yêu cầu rút tiền
+              </h3>
+              <p className="mt-1 text-sm text-slate-500">
+                Nhập tài khoản ngân hàng để nhận tiền sau khi xác thực OTP.
+              </p>
+            </div>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setOpenWithdraw(false)}
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
+          >
+            <X size={18} />
+          </button>
         </div>
 
-        {/* FORM */}
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+          className="grid gap-5 p-5 md:grid-cols-2"
         >
-          {/* LEFT */}
-          <div className="space-y-4">
-            {/* QUICK AMOUNT */}
+          <div className="space-y-5">
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-2">
-                Chọn số tiền
+              <p className="mb-3 text-sm font-medium text-slate-700">
+                Chọn nhanh số tiền
               </p>
-
-              <div className="grid grid-cols-3 gap-2">
-                {quickAmounts.map((value, idx) => {
-                  const gradients = [
-                    "from-green-400 to-green-500",
-                    "from-yellow-400 to-yellow-500",
-                    "from-pink-400 to-pink-500",
-                    "from-purple-400 to-purple-500",
-                    "from-indigo-400 to-indigo-500",
-                  ];
-
-                  const gradient = gradients[idx % gradients.length];
-
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => handleSelectAmount(value)}
-                      className={`py-2 rounded-xl text-sm font-medium transition-all duration-150 shadow-sm ${
-                        selectedAmount === value
-                          ? `bg-gradient-to-r ${gradient} text-white shadow-md scale-105`
-                          : "bg-white hover:bg-gray-100 text-gray-700 border border-gray-200"
-                      }`}
-                    >
-                      {value.toLocaleString()}đ
-                    </button>
-                  );
-                })}
+              <div className="grid grid-cols-2 gap-3">
+                {quickAmounts.map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => handleSelectAmount(value)}
+                    className={`rounded-2xl border px-3 py-2.5 text-sm font-medium transition-all ${
+                      selectedAmount === value
+                        ? "border-sky-500 bg-sky-600 text-white shadow-lg shadow-sky-100"
+                        : "border-slate-200 bg-slate-50 text-slate-700 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
+                    }`}
+                  >
+                    {value.toLocaleString("vi-VN")}đ
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* INPUT AMOUNT */}
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-2">
-                Hoặc nhập số tiền
-              </p>
-
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Số tiền cần rút
+              </label>
               <div className="relative">
-                <Wallet className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Wallet className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                 <input
                   type="number"
                   placeholder="Nhập số tiền"
                   value={amount || ""}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-3 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white"
+                  className={inputClass}
                 />
               </div>
-
               {errors.amount && (
-                <p className="text-red-500 text-sm mt-1">
+                <p className="mt-2 text-sm font-medium text-rose-600">
                   {errors.amount.message}
                 </p>
               )}
             </div>
           </div>
 
-          {/* RIGHT */}
-          <div className="space-y-4">
-            {/* BANK */}
+          <div className="space-y-5">
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-2 block text-sm font-medium text-slate-700">
                 Ngân hàng
-              </p>
-
-              {/* QUICK BANK */}
-              <div className="flex flex-wrap gap-2 mb-2">
+              </label>
+              <div className="mb-3 flex flex-wrap gap-2">
                 {popularBanks.map((bank) => (
                   <button
                     key={bank}
@@ -180,26 +160,22 @@ const WithdrawRequestForm = ({
                     onClick={() =>
                       setValue("bankName", bank, { shouldValidate: true })
                     }
-                    className={`px-3 py-1.5 rounded-lg text-sm border flex items-center gap-1 transition ${
+                    className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm font-medium transition ${
                       selectedBank === bank
-                        ? "bg-sky-500 text-white border-sky-500 shadow"
-                        : "bg-white hover:bg-gray-100 text-gray-700 border-gray-200"
+                        ? "border-sky-500 bg-sky-600 text-white"
+                        : "border-slate-200 bg-white text-slate-700 hover:bg-sky-50 hover:text-sky-700"
                     }`}
                   >
-                    <Landmark className="w-3 h-3" />
+                    <Landmark className="h-3.5 w-3.5" />
                     {bank}
                   </button>
                 ))}
               </div>
 
-              {/* SELECT */}
               <div className="relative">
-                <Landmark className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <select
-                  {...register("bankName")}
-                  className="w-full pl-10 pr-3 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white"
-                >
-                  <option value="">-- Chọn ngân hàng khác --</option>
+                <Landmark className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                <select {...register("bankName")} className={inputClass}>
+                  <option value="">-- Chọn ngân hàng --</option>
                   {allBanks.map((bank) => (
                     <option key={bank} value={bank}>
                       {bank}
@@ -207,56 +183,66 @@ const WithdrawRequestForm = ({
                   ))}
                 </select>
               </div>
-
               {errors.bankName && (
-                <p className="text-red-500 text-sm mt-1">
+                <p className="mt-2 text-sm font-medium text-rose-600">
                   {errors.bankName.message}
                 </p>
               )}
             </div>
 
-            {/* BANK ACCOUNT */}
-            <div className="relative">
-              <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                placeholder="Số tài khoản"
-                className="w-full pl-10 pr-3 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                {...register("bankAccount")}
-              />
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Số tài khoản
+              </label>
+              <div className="relative">
+                <Hash className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                <input
+                  placeholder="Nhập số tài khoản"
+                  className={inputClass}
+                  {...register("bankAccount")}
+                />
+              </div>
               {errors.bankAccount && (
-                <p className="text-red-500 text-sm mt-1">
+                <p className="mt-2 text-sm font-medium text-rose-600">
                   {errors.bankAccount.message}
                 </p>
               )}
             </div>
 
-            {/* ACCOUNT HOLDER */}
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                placeholder="Tên chủ tài khoản"
-                className="w-full pl-10 pr-3 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                {...register("accountHolder")}
-              />
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Tên chủ tài khoản
+              </label>
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                <input
+                  placeholder="Nhập tên chủ tài khoản"
+                  className={inputClass}
+                  {...register("accountHolder")}
+                />
+              </div>
               {errors.accountHolder && (
-                <p className="text-red-500 text-sm mt-1">
+                <p className="mt-2 text-sm font-medium text-rose-600">
                   {errors.accountHolder.message}
                 </p>
               )}
             </div>
           </div>
 
-          {/* ACTION */}
-          <div className="col-span-1 md:col-span-2 flex justify-end gap-3 pt-2">
+          <div className="flex justify-end gap-3 border-t border-slate-100 pt-5 md:col-span-2">
             <button
               type="button"
               onClick={() => setOpenWithdraw(false)}
-              className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200"
+              className="rounded-2xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
             >
               Hủy
             </button>
 
-            <LoadingButton loading={loading} type="submit">
+            <LoadingButton
+              loading={loading}
+              type="submit"
+              className="rounded-2xl px-5 py-2.5 text-sm font-semibold shadow-lg shadow-sky-100"
+            >
               Gửi yêu cầu
             </LoadingButton>
           </div>

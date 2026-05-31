@@ -1,9 +1,12 @@
-import {
+﻿import {
   Branch,
   Category,
+  Feedback,
   Product,
   ProductImage,
   ProductVariant,
+  Profile,
+  User,
   VariantStock,
 } from "../../models/index.js";
 import { col, fn, Op } from "sequelize";
@@ -27,6 +30,7 @@ const getProductsByFilterService = async (data) => {
     page,
     limit,
     keyword,
+    groupName,
   } = data;
 
   const p = Number(page) || 1;
@@ -34,16 +38,36 @@ const getProductsByFilterService = async (data) => {
 
   const offset = (p - 1) * l;
 
-  const category = await Category.findByPk(cateId);
-  if (!category) {
-    throw new NotFoundError("Danh mục không tồn tại");
+  let categoryIds = [];
+
+  if (cateId) {
+    const category = await Category.findByPk(cateId);
+    if (!category) {
+      throw new NotFoundError("Danh muc khong ton tai");
+    }
+    categoryIds = [Number(cateId)];
+  } else if (groupName) {
+    const categories = await Category.findAll({
+      where: { menuGroup: groupName },
+      attributes: ["id"],
+      raw: true,
+    });
+
+    categoryIds = categories.map((category) => category.id);
+
+    if (categoryIds.length === 0) {
+      throw new NotFoundError("Nhom danh muc khong ton tai");
+    }
+  } else {
+    throw new NotFoundError("Danh muc khong ton tai");
   }
 
   // Xử lý keyword
   const kw = keyword && keyword !== "null" ? keyword : undefined;
 
   const whereCondition = {
-    categoryId: cateId,
+    categoryId:
+      categoryIds.length === 1 ? categoryIds[0] : { [Op.in]: categoryIds },
     ...(excludeProductId && { id: { [Op.ne]: Number(excludeProductId) } }),
     ...(kw && { productName: { [Op.like]: `%${kw}%` } }),
   };
@@ -234,8 +258,102 @@ const getProductDetailService = async (data) => {
   return productDetail;
 };
 
+const getProductFeedbacksService = async (data) => {
+  const { productId, page = 1, limit = 10, rating } = data;
+
+  const safePage = Number(page);
+  const safeLimit = Number(limit);
+  const offset = (safePage - 1) * safeLimit;
+
+  const whereClause = {};
+
+  if (rating) {
+    whereClause.rating = rating;
+  }
+
+  const { rows: feedbacks, count } = await Feedback.findAndCountAll({
+    where: whereClause,
+    include: [
+      {
+        model: ProductVariant,
+        as: "variant",
+        where: { productId },
+        attributes: ["id", "color", "size", "material"],
+      },
+      {
+        model: User,
+        as: "user",
+        attributes: ["id", "username"],
+        include: [
+          {
+            model: Profile,
+            as: "profile",
+            attributes: ["fullName", "avatar"],
+          },
+        ],
+      },
+    ],
+    order: [["updatedDate", "DESC"]],
+    limit: safeLimit,
+    offset,
+  });
+
+  // tính rating trung bình (toàn bộ feedback của product)
+  const allFeedbacks = await Feedback.findAll({
+    include: [
+      {
+        model: ProductVariant,
+        as: "variant",
+        where: { productId },
+        attributes: [],
+      },
+    ],
+    attributes: ["rating"],
+  });
+
+  const totalRating = allFeedbacks.reduce((sum, item) => sum + item.rating, 0);
+
+  const averageRating =
+    allFeedbacks.length > 0
+      ? Number((totalRating / allFeedbacks.length).toFixed(1))
+      : 0;
+
+  return {
+    productId: Number(productId),
+    totalFeedbacks: count,
+    averageRating,
+    page: safePage,
+    limit: safeLimit,
+    totalPages: Math.ceil(count / safeLimit),
+
+    feedbacks: feedbacks.map((fb) => ({
+      id: fb.id,
+      content: fb.content,
+      rating: fb.rating,
+      updatedDate: fb.updatedDate,
+
+      variant: {
+        id: fb.variant?.id,
+        color: fb.variant?.color,
+        size: fb.variant?.size,
+        material: fb.variant?.material,
+      },
+
+      user: {
+        id: fb.user?.id,
+        username: fb.user?.username,
+        fullName: fb.user?.profile?.fullName,
+        avatar: fb.user?.profile?.avatar,
+      },
+    })),
+  };
+};
+
 const productService = {
   getProductsByFilterService,
   getProductDetailService,
+  getProductFeedbacksService,
 };
+
 export default productService;
+

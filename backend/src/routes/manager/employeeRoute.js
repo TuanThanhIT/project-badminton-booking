@@ -6,6 +6,13 @@ import authorize from "../../middlewares/authorize.js";
 const employeeRoute = express.Router();
 
 const initEmployeeRoute = (app) => {
+  employeeRoute.get(
+    "/",
+    auth,
+    authorize("MANAGER"),
+    employeeController.getEmployees,
+  );
+
   employeeRoute.post(
     "/",
     auth,

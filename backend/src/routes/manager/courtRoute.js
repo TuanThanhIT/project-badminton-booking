@@ -1,4 +1,5 @@
 import express from "express";
+import multer from "multer";
 import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
 import validate from "../../middlewares/validate.js";
@@ -8,10 +9,39 @@ import {
   createCourtPriceSchema,
 } from "../../validations/courtValidation.js";
 import courtController from "../../controllers/manager/courtController.js";
+import asyncHandler from "../../middlewares/asyncHandler.js";
+import uploadBuffer from "../../utils/cloudinary.js";
+import SuccessResponse from "../../helpers/SuccessResponse.js";
+import BadRequestError from "../../errors/BadRequestError.js";
 
 const courtRoute = express.Router();
 
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_, file, cb) => {
+    if (!file.mimetype.startsWith("image/")) {
+      return cb(new Error("Chi chap nhan file anh"));
+    }
+    cb(null, true);
+  },
+});
+
 const initCourtRoute = (app) => {
+  courtRoute.post(
+    "/upload-image",
+    auth,
+    authorize(ROLE_NAME.MANAGER),
+    upload.single("image"),
+    asyncHandler(async (req, res) => {
+      if (!req.file) throw new BadRequestError("Khong tim thay file anh");
+      const result = await uploadBuffer(req.file.buffer, "court-uploads");
+      return res
+        .status(200)
+        .json(new SuccessResponse("Upload anh san thanh cong", { url: result.secure_url }));
+    }),
+  );
+
   courtRoute.post(
     "/",
     auth,

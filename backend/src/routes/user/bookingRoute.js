@@ -3,30 +3,84 @@ import bookingController from "../../controllers/user/bookingController.js";
 import validate from "../../middlewares/validate.js";
 import auth from "../../middlewares/auth.js";
 import {
+  bookingCallbackSchema,
+  cancelBookingSchema,
   createBookingSchema,
   getBookingsSchema,
+  bookingActionIdSchema,
+  walletBookingConfirmSchema,
 } from "../../validations/bookingValidation.js";
+import authorize from "../../middlewares/authorize.js";
+import { ROLE_NAME } from "../../constants/userConstant.js";
 
 const bookingRoute = express.Router();
 
 const initBookingRoute = (app) => {
-  // Lấy lịch sử đặt sân của user (cần đăng nhập)
   bookingRoute.get(
     "/my-bookings",
-    //auth,
+    auth,
+    authorize(ROLE_NAME.USER),
     validate(getBookingsSchema),
     bookingController.getMyBookingsController,
   );
 
-  // Tạo đơn đặt sân mới
+  bookingRoute.get(
+    "/:bookingId",
+    auth,
+    authorize(ROLE_NAME.USER),
+    validate(bookingActionIdSchema),
+    bookingController.getBookingByIdController,
+  );
+
+  bookingRoute.patch(
+    "/vnpay/callback",
+    auth,
+    authorize(ROLE_NAME.USER),
+    validate(bookingCallbackSchema),
+    bookingController.bookingCallbackController,
+  );
+
+  bookingRoute.post(
+    "/:bookingId/vnpay/retry",
+    auth,
+    authorize(ROLE_NAME.USER),
+    validate(bookingActionIdSchema),
+    bookingController.retryBookingVNPayController,
+  );
+
+  bookingRoute.patch(
+    "/wallet/confirm",
+    auth,
+    authorize(ROLE_NAME.USER),
+    validate(walletBookingConfirmSchema),
+    bookingController.walletBookingConfirmController,
+  );
+
+  bookingRoute.patch(
+    "/:bookingId/cancel",
+    auth,
+    authorize(ROLE_NAME.USER),
+    validate(cancelBookingSchema),
+    bookingController.cancelBookingController,
+  );
+
+  bookingRoute.patch(
+    "/:bookingId/cancel-request",
+    auth,
+    authorize(ROLE_NAME.USER),
+    validate(cancelBookingSchema),
+    bookingController.requestCancelBookingController,
+  );
+
   bookingRoute.post(
     "/",
-    //auth, // Phải đăng nhập mới được đặt
+    auth,
+    authorize(ROLE_NAME.USER),
     validate(createBookingSchema),
     bookingController.createBookingController,
   );
 
-  app.use("/bookings", bookingRoute);
+  app.use("/user/bookings", bookingRoute);
 };
 
 export default initBookingRoute;

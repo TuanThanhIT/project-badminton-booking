@@ -1,3 +1,4 @@
+import type { ReviewStatus } from "../utils/constants/review";
 import type { ApiResponse } from "./api";
 
 export type ShippingStatus =
@@ -19,9 +20,13 @@ export type OrderStatus =
   | "PREPARING"
   | "READY_TO_SHIP"
   | "SHIPPING"
+  | "CANCEL_REQUESTED"
+  | "CANCELLED"
+  | "RETURN_REQUESTED"
+  | "RETURNING"
+  | "RETURNED"
   | "COMPLETED"
-  | "FAILED"
-  | "CANCELLED";
+  | "FAILED";
 
 export type CheckoutPreviewAddress = {
   addressId: number;
@@ -74,6 +79,7 @@ export type CheckoutPreviewGroup = {
 
 export type CheckoutPreviewData = {
   cartId: string;
+  cartItemIds: number[];
   address: CheckoutPreviewAddress;
 
   group: CheckoutPreviewGroup;
@@ -84,9 +90,16 @@ export type CheckoutPreviewData = {
 
 export type CheckoutPreviewResponse = ApiResponse<CheckoutPreviewData>;
 
+export type BuyNowItemRequest = {
+  variantId: number;
+  quantity: number;
+};
+
 export type CheckoutPreviewRequest = {
   cartId: number;
   addressId: number;
+  cartItemIds?: number[];
+  buyNowItem?: BuyNowItemRequest;
 };
 
 export type CalculateShippingRequest = {
@@ -96,6 +109,8 @@ export type CalculateShippingRequest = {
 export type CreateOrderRequest = {
   cartId: number;
   addressId: number;
+  cartItemIds?: number[];
+  buyNowItem?: BuyNowItemRequest;
   paymentMethod: string;
   note?: string;
 };
@@ -103,10 +118,19 @@ export type CreateOrderRequest = {
 export type CreateOrderData = {
   orderGroupId: number;
   amount: number;
+  cartId?: number;
+  cartItemIds?: number[];
+  buyNowItem?: BuyNowItemRequest;
   paymentUrl?: string;
 };
 
 export type CreateOrderResponse = ApiResponse<CreateOrderData>;
+
+export type RetryOrderPaymentResponse = ApiResponse<{
+  orderGroupId: number;
+  amount: number;
+  paymentUrl: string;
+}>;
 
 export type OrderCallbackRequest = {
   vnp_Amount: string;
@@ -153,6 +177,9 @@ export type OrderGroupIdData = {
   amount: number;
   status: string;
   paymentMethod: string;
+  paymentStatus?: string | null;
+  canRetryPayment?: boolean;
+  retryExpiresAt?: string;
   isSuccess: boolean;
   createdDate: string;
 };
@@ -219,6 +246,7 @@ export type OrderDetailItem = {
   price: number;
   variantInfo: string;
   thumbnailUrl: string;
+  reviewStatus: ReviewStatus;
 };
 
 export type OrderDetailFee = {
@@ -260,3 +288,232 @@ export type TrackingProgressResponse = ApiResponse<OrderTrackingProgressItem[]>;
 export type OrderRequest = {
   orderId: number;
 };
+
+export type OrderShippingRealtimePayload = {
+  orderId: number;
+  orderGroupId?: number;
+  orderStatus: OrderStatus;
+  shippingStatus: ShippingStatus;
+  displayStatus?: string;
+  deliveredAt?: string | null;
+  tracking?: {
+    id: number;
+    status: ShippingStatus;
+    time: string;
+  } | null;
+  message: string;
+};
+
+// Order Action Types (Cancel/Return)
+export type RequestCancelOrderRequest = {
+  reason?: string;
+};
+
+export type RequestCancelOrderResponse = ApiResponse<null>;
+
+// export type ApproveCancelOrderResponse = ApiResponse<{
+//   message: string;
+//   refund?: {
+//     refunded: boolean;
+//     refundAmount: number;
+//   };
+// }>;
+
+// export type RejectCancelOrderRequest = {
+//   reason?: string;
+// };
+
+// export type RejectCancelOrderResponse = ApiResponse<{
+//   message: string;
+// }>;
+
+export type RequestReturnOrderRequest = {
+  reason?: string;
+};
+
+export type RequestReturnOrderResponse = ApiResponse<null>;
+
+export type EmployeeOrderDetailItem = {
+  id: number;
+  variantId: number;
+  productName: string;
+  variantInfo?: string | null;
+  quantity: number;
+  unitPrice: number;
+  subTotal: number;
+};
+
+export type EmployeeOrderPayment = {
+  id: number;
+  paymentMethod: string;
+  paymentStatus: string;
+  paymentAmount: number;
+  paidAt: string | null;
+} | null;
+
+export type EmployeeOrder = {
+  id: number;
+  orderGroupId: number;
+  orderStatus: OrderStatus;
+  previousOrderStatus?: OrderStatus | null;
+  shippingStatus: ShippingStatus;
+  shippingOrderCode?: string | null;
+  trackingCode?: string | null;
+  estimatedDelivery?: string | null;
+  deliveredAt?: string | null;
+  subtotal: number;
+  shippingFee: number;
+  shippingFeeReal: number;
+  totalAmount: number;
+  shippingName: string;
+  shippingPhone: string;
+  shippingAddress: string;
+  cancelledBy?: "USER" | "EMPLOYEE" | "SYSTEM" | null;
+  cancelReason?: string | null;
+  cancelRejectReason?: string | null;
+  cancelRequestedAt?: string | null;
+  cancelHandledAt?: string | null;
+  returnReason?: string | null;
+  returnRequestedAt?: string | null;
+  returnHandledAt?: string | null;
+  cancelledAt?: string | null;
+  returnedAt?: string | null;
+  createdDate: string;
+  updatedDate: string;
+  branch: {
+    id: number;
+    branchName: string;
+    address: string;
+    phoneNumber?: string;
+  } | null;
+  orderGroup: {
+    id: number;
+    userId: number;
+    status: string;
+    totalAmount: number;
+    totalShippingFee: number;
+    discountAmount: number;
+    finalAmount: number;
+    note?: string | null;
+  } | null;
+  payment: EmployeeOrderPayment;
+  details: EmployeeOrderDetailItem[];
+  shippingLogs: {
+    id: number;
+    status: ShippingStatus;
+    eventTime: string;
+    rawData?: unknown;
+  }[];
+};
+
+export type EmployeeOrderSummary = Partial<Record<OrderStatus, number>>;
+
+export type EmployeeOrdersRequest = {
+  status?: OrderStatus | "ALL";
+  keyword?: string;
+  date?: string;
+  page?: number;
+  limit?: number;
+};
+
+export type EmployeeOrdersData = {
+  items: EmployeeOrder[];
+  summary: EmployeeOrderSummary;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+};
+
+export type EmployeeOrdersResponse = ApiResponse<EmployeeOrdersData>;
+export type EmployeeOrderDetailResponse = ApiResponse<EmployeeOrder>;
+export type EmployeeOrderActionResponse = ApiResponse<EmployeeOrder | {
+  refund?: {
+    refunded: boolean;
+    refundAmount: number;
+  };
+} | null>;
+
+export type RejectEmployeeOrderActionRequest = {
+  reason?: string;
+};
+
+export type ManagerOrder = EmployeeOrder;
+export type ManagerOrderSummary = EmployeeOrderSummary & {
+  totalOrders?: number;
+  totalAmount?: number;
+};
+
+export type ManagerOrdersRequest = EmployeeOrdersRequest;
+
+export type ManagerOrdersData = {
+  branchId: number;
+  items: ManagerOrder[];
+  summary: ManagerOrderSummary;
+  pagination: EmployeeOrdersData["pagination"];
+};
+
+export type ManagerOrdersResponse = ApiResponse<ManagerOrdersData>;
+export type ManagerOrderDetailResponse = ApiResponse<ManagerOrder>;
+
+export type ManagerMonthlyHighlightsRequest = {
+  month?: number;
+  year?: number;
+};
+
+export type ManagerTopProduct = {
+  productName: string;
+  variantInfo?: string | null;
+  quantity: number;
+  revenue: number;
+};
+
+export type ManagerTopBooker = {
+  userId: number;
+  username: string;
+  fullName?: string | null;
+  avatar?: string | null;
+  bookingCount: number;
+  totalAmount: number;
+};
+
+export type ManagerTopEmployee = {
+  employeeId: number;
+  username: string;
+  fullName?: string | null;
+  avatar?: string | null;
+  shiftCount: number;
+  earnedWage: number;
+};
+
+export type ManagerMonthlyHighlightsData = {
+  branchId: number;
+  month: number;
+  year: number;
+  startDate: string;
+  endDate: string;
+  topProducts: ManagerTopProduct[];
+  topBookers: ManagerTopBooker[];
+  topEmployees: ManagerTopEmployee[];
+};
+
+export type ManagerMonthlyHighlightsResponse =
+  ApiResponse<ManagerMonthlyHighlightsData>;
+
+// export type ApproveReturnOrderResponse = ApiResponse<{
+//   message: string;
+// }>;
+
+// export type CompleteReturnOrderResponse = ApiResponse<{
+//   message: string;
+//   refund?: {
+//     refunded: boolean;
+//     refundAmount: number;
+//   };
+// }>;
+
+// export type ForceReturnGHNOrderResponse = ApiResponse<{
+//   message: string;
+// }>;

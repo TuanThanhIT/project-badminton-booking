@@ -18,7 +18,7 @@ interface FilterOption {
 }
 
 interface ProductFilterProps {
-  cateId: number;
+  cateId?: number;
   cateName: string;
   groupName: string;
   setIsFilterOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -71,8 +71,8 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
   const updateUrl = () => {
     const params = new URLSearchParams();
 
-    params.set("cateId", String(cateId));
-    params.set("cateName", cateName);
+    if (cateId) params.set("cateId", String(cateId));
+    if (cateName) params.set("cateName", cateName);
     params.set("groupName", groupName);
 
     params.set(

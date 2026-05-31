@@ -10,10 +10,9 @@ import {
   Edit2,
   Wrench,
   XCircle,
-  Calendar,
   Image as ImageIcon,
-  ChevronRight,
   Info,
+  Upload,
 } from "lucide-react";
 
 import {
@@ -32,6 +31,7 @@ import {
   closeCourt,
   maintenanceCourt,
   updateCourt,
+  uploadCourtImage,
 } from "../../redux/slices/manager/courtSlice";
 import { getMyBranch } from "../../redux/slices/manager/branchSlice";
 
@@ -40,6 +40,7 @@ const BranchPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [showPriceForm, setShowPriceForm] = useState(false);
   const [editingCourt, setEditingCourt] = useState<any>(null);
+  const [uploadingCourtImage, setUploadingCourtImage] = useState(false);
 
   const { courts, courtPrices } = useAppSelector((state) => state.managerCourt);
   const { branch } = useAppSelector((state) => state.managerBranch);
@@ -48,16 +49,18 @@ const BranchPage = () => {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<FormCreateCourt>({
     resolver: zodResolver(FormCreateCourtSchema),
   });
+  const courtThumbnailUrl = watch("thumbnailUrl");
 
   const {
     register: registerPrice,
     handleSubmit: handleSubmitPrice,
     reset: resetPrice,
-    formState: { errors: errorsPrice },
   } = useForm<FormCreateCourtPrice>({
     resolver: zodResolver(FormCreateCourtPriceSchema),
   });
@@ -91,9 +94,28 @@ const BranchPage = () => {
     }
   };
 
+  const handleUploadCourtImage = async (file?: File) => {
+    if (!file) return;
+
+    try {
+      setUploadingCourtImage(true);
+      const result = await dispatch(uploadCourtImage(file)).unwrap();
+      setValue("thumbnailUrl", result.url, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    } catch (error) {
+      console.log(error);
+      alert("Upload anh san that bai");
+    } finally {
+      setUploadingCourtImage(false);
+    }
+  };
+
   const closeModal = () => {
     setShowForm(false);
     setEditingCourt(null);
+    setUploadingCourtImage(false);
     reset();
   };
 
@@ -246,6 +268,30 @@ const BranchPage = () => {
                   className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   placeholder="https://..."
                 />
+                <label className="mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-blue-300 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 transition-colors hover:bg-blue-100">
+                  <Upload size={18} />
+                  {uploadingCourtImage ? "Dang upload..." : "Upload anh tu may"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={uploadingCourtImage}
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      handleUploadCourtImage(file);
+                      event.target.value = "";
+                    }}
+                  />
+                </label>
+                {courtThumbnailUrl ? (
+                  <div className="mt-3 overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
+                    <img
+                      src={courtThumbnailUrl}
+                      alt="Court preview"
+                      className="h-32 w-full object-cover"
+                    />
+                  </div>
+                ) : null}
               </div>
               <button
                 type="submit"

@@ -3,6 +3,7 @@ import { Court, BranchManager, CourtPrice } from "../../models/index.js";
 
 import NotFoundError from "../../errors/NotFoundError.js";
 import BadRequestError from "../../errors/BadRequestError.js";
+import sequelize from "../../config/db.js";
 
 const createCourtService = async (managerId, data) => {
   const { courtName, location, thumbnailUrl } = data;

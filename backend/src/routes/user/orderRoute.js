@@ -13,6 +13,7 @@ import {
   getTrackingProgressSchema,
   getUserOrdersSchema,
   orderCallbackSchema,
+  requestOrderActionSchema,
   walletOrderConfirmSchema,
 } from "../../validations/orderValidation.js";
 import orderController from "../../controllers/user/orderController.js";
@@ -61,6 +62,14 @@ const initOrderRoute = (app) => {
     orderController.orderCallbackController,
   );
 
+  orderRoute.post(
+    "/group/:orderGroupId/vnpay/retry",
+    auth,
+    authorize(ROLE_NAME.USER),
+    validate(getOrderGroupByIdSchema),
+    orderController.retryOrderVNPayController,
+  );
+
   orderRoute.patch(
     "/wallet/confirm",
     auth,
@@ -107,6 +116,22 @@ const initOrderRoute = (app) => {
     authorize(ROLE_NAME.USER),
     validate(getUserOrdersSchema),
     orderController.getUserOrdersController,
+  );
+
+  orderRoute.post(
+    "/:orderId/cancel-request",
+    auth,
+    authorize(ROLE_NAME.USER),
+    validate(requestOrderActionSchema),
+    orderController.requestCancelOrderController,
+  );
+
+  orderRoute.post(
+    "/:orderId/return-request",
+    auth,
+    authorize(ROLE_NAME.USER),
+    validate(requestOrderActionSchema),
+    orderController.requestReturnOrderController,
   );
 
   app.use("/user/orders", orderRoute);

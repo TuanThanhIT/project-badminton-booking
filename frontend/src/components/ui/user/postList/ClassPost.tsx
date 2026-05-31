@@ -1,202 +1,187 @@
-import { Calendar, Clock, MapPin, Users, DollarSign, Phone, MessageCircle, FileText } from 'lucide-react';
-import type { PostWithAuthor } from '../../../../types/post';
-import { PLAYER_LEVEL_LABEL } from '../../../../utils/constants/profileConstant';
+import { Calendar, Clock, MapPin, Users, DollarSign, Phone, MessageCircle, FileText } from "lucide-react";
+import type { PostWithAuthor } from "../../../../types/post";
+import { PLAYER_LEVEL_LABEL } from "../../../../utils/constants/profileConstant";
+
+type BranchInfo = {
+  branchName: string;
+  address?: string;
+  district?: string;
+  province?: string;
+  city?: string;
+};
 
 type Props = {
   post: PostWithAuthor;
   formData: Record<string, unknown>;
-  branchInfo: (branchId?: number) => { branchName: string; address?: string; district?: string; city?: string } | null;
+  branchInfo: (branchId?: number) => BranchInfo | null;
 };
 
+const infoCard =
+  "flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5";
+
 const ClassPost = ({ post, formData, branchInfo }: Props) => {
-  // Parse formData
   const inputLevel = formData.inputLevel as string | undefined;
   const ageRange = formData.ageRange as string | undefined;
-  const schedule = formData.schedule as { weekdays?: number[]; startTime?: string; endTime?: string; startDate?: string } | undefined;
+  const schedule = formData.schedule as
+    | { weekdays?: number[]; startTime?: string; endTime?: string; startDate?: string }
+    | undefined;
   const location = formData.location as { branchId?: number } | undefined;
   const maxStudents = formData.maxStudents as number | undefined;
   const tuitionFee = formData.tuitionFee as string | undefined;
-  const contact = formData.contact as { inAppChat?: boolean; phone?: string | null; zalo?: string | null } | undefined;
+  const contact = formData.contact as
+    | { inAppChat?: boolean; phone?: string | null; zalo?: string | null }
+    | undefined;
   const notes = formData.notes as string | null | undefined;
 
-  // Get branch info
   const branch = location?.branchId ? branchInfo(location.branchId) : null;
 
   const getWeekdayNames = (weekdays: number[]) => {
-    const days = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
-    return weekdays.map(day => days[day]).join(', ');
+    const days = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+    return weekdays.map((day) => days[day]).join(", ");
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4">
-        <h3 className="text-white font-bold text-lg flex items-center gap-2">
-          <Users className="w-5 h-5" />
+    <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white text-slate-700">
+      <div className="border-b border-sky-100 bg-sky-50/80 p-4">
+        <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+          <Users className="h-5 w-5 text-sky-600" />
           {post.title}
         </h3>
         {post.content && (
-          <p className="text-blue-100 text-sm mt-1 line-clamp-2">{post.content}</p>
+          <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-600">
+            {post.content}
+          </p>
         )}
       </div>
 
-      {/* Content */}
       <div className="p-4">
-        {/* Grid thông tin chính */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          {/* Trình độ */}
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {inputLevel && (
-            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-              <div className="bg-blue-100 p-2 rounded-full">
-                <FileText className="w-4 h-4 text-blue-600" />
-              </div>
+            <div className={infoCard}>
+              <FileText className="h-5 w-5 shrink-0 text-sky-600" />
               <div>
-                <p className="text-sm text-gray-600">Trình độ</p>
-                <p className="font-semibold text-gray-800">{PLAYER_LEVEL_LABEL[inputLevel] ?? inputLevel}</p>
+                <p className="text-xs text-slate-500">Trình độ</p>
+                <p className="font-medium text-slate-800">
+                  {PLAYER_LEVEL_LABEL[inputLevel] ?? inputLevel}
+                </p>
               </div>
             </div>
           )}
 
-          {/* Độ tuổi */}
           {ageRange && (
-            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-              <div className="bg-green-100 p-2 rounded-full">
-                <Users className="w-4 h-4 text-green-600" />
-              </div>
+            <div className={infoCard}>
+              <Users className="h-5 w-5 shrink-0 text-emerald-600" />
               <div>
-                <p className="text-sm text-gray-600">Độ tuổi</p>
-                <p className="font-semibold text-gray-800">{ageRange}</p>
+                <p className="text-xs text-slate-500">Độ tuổi</p>
+                <p className="font-medium text-slate-800">{ageRange}</p>
               </div>
             </div>
           )}
 
-          {/* Lịch học */}
           {schedule && (schedule.weekdays || schedule.startTime || schedule.endTime) && (
-            <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
-              <div className="bg-purple-100 p-2 rounded-full">
-                <Calendar className="w-4 h-4 text-purple-600" />
-              </div>
+            <div className={infoCard}>
+              <Calendar className="h-5 w-5 shrink-0 text-indigo-500" />
               <div>
-                <p className="text-sm text-gray-600">Lịch học</p>
-                <p className="font-semibold text-gray-800">
-                  {schedule.weekdays ? getWeekdayNames(schedule.weekdays) : ''}
+                <p className="text-xs text-slate-500">Lịch học</p>
+                <p className="font-medium text-slate-800">
+                  {schedule.weekdays ? getWeekdayNames(schedule.weekdays) : ""}
                 </p>
-                <p className="text-sm text-gray-600">
-                  {schedule.startTime && schedule.endTime ? `${schedule.startTime} - ${schedule.endTime}` : ''}
+                <p className="text-sm text-slate-500">
+                  {schedule.startTime && schedule.endTime
+                    ? `${schedule.startTime} - ${schedule.endTime}`
+                    : ""}
                 </p>
               </div>
             </div>
           )}
 
-          {/* Ngày bắt đầu */}
           {schedule?.startDate && (
-            <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg">
-              <div className="bg-orange-100 p-2 rounded-full">
-                <Clock className="w-4 h-4 text-orange-600" />
-              </div>
+            <div className={infoCard}>
+              <Clock className="h-5 w-5 shrink-0 text-amber-600" />
               <div>
-                <p className="text-sm text-gray-600">Ngày bắt đầu</p>
-                <p className="font-semibold text-gray-800">
-                  {new Date(schedule.startDate).toLocaleDateString('vi-VN')}
+                <p className="text-xs text-slate-500">Ngày bắt đầu</p>
+                <p className="font-medium text-slate-800">
+                  {new Date(schedule.startDate).toLocaleDateString("vi-VN")}
                 </p>
               </div>
             </div>
           )}
 
-          {/* Địa điểm */}
           {branch && (
-            <div className="flex items-center gap-3 p-3 bg-cyan-50 rounded-lg">
-              <div className="bg-cyan-100 p-2 rounded-full">
-                <MapPin className="w-4 h-4 text-cyan-600" />
-              </div>
+            <div className={infoCard}>
+              <MapPin className="h-5 w-5 shrink-0 text-sky-600" />
               <div>
-                <p className="text-sm text-gray-600">Địa điểm</p>
-                <p className="font-semibold text-gray-800">
-                  {[branch.branchName, branch.address, branch.district, branch.city]
+                <p className="text-xs text-slate-500">Địa điểm</p>
+                <p className="font-medium text-slate-800">
+                  {[branch.branchName, branch.address, branch.district, branch.province ?? branch.city]
                     .filter(Boolean)
-                    .join(', ')}
+                    .join(", ")}
                 </p>
               </div>
             </div>
           )}
 
-          {/* Số học viên tối đa */}
           {maxStudents && (
-            <div className="flex items-center gap-3 p-3 bg-indigo-50 rounded-lg">
-              <div className="bg-indigo-100 p-2 rounded-full">
-                <Users className="w-4 h-4 text-indigo-600" />
-              </div>
+            <div className={infoCard}>
+              <Users className="h-5 w-5 shrink-0 text-violet-500" />
               <div>
-                <p className="text-sm text-gray-600">Số học viên tối đa</p>
-                <p className="font-semibold text-gray-800">{maxStudents} học viên</p>
+                <p className="text-xs text-slate-500">Số học viên tối đa</p>
+                <p className="font-medium text-slate-800">{maxStudents} học viên</p>
               </div>
             </div>
           )}
 
-          {/* Học phí */}
           {tuitionFee && (
-            <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg">
-              <div className="bg-yellow-100 p-2 rounded-full">
-                <DollarSign className="w-4 h-4 text-yellow-600" />
-              </div>
+            <div className={infoCard}>
+              <DollarSign className="h-5 w-5 shrink-0 text-emerald-600" />
               <div>
-                <p className="text-sm text-gray-600">Học phí</p>
-                <p className="font-semibold text-gray-800">{tuitionFee}</p>
+                <p className="text-xs text-slate-500">Học phí</p>
+                <p className="font-medium text-slate-800">{tuitionFee}</p>
               </div>
             </div>
           )}
         </div>
 
-        {/* Thông tin liên hệ */}
         {(contact?.phone || contact?.zalo || contact?.inAppChat) && (
-          <div className="border-t pt-4">
-            <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-              <MessageCircle className="w-4 h-4" />
+          <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+            <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800">
+              <MessageCircle className="h-4 w-4 text-sky-600" />
               Thông tin liên hệ
             </h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="flex flex-wrap gap-3 text-sm">
               {contact.inAppChat && (
-                <div className="flex items-center gap-2 text-green-600">
-                  <MessageCircle className="w-4 h-4" />
-                  <span className="text-sm">Chat trong app</span>
-                </div>
+                <span className="inline-flex items-center gap-2 font-medium text-emerald-600">
+                  <MessageCircle className="h-4 w-4" />
+                  Chat trong app
+                </span>
               )}
               {contact.phone && (
-                <div className="flex items-center gap-2 text-blue-600">
-                  <Phone className="w-4 h-4" />
-                  <span className="text-sm">{contact.phone}</span>
-                </div>
+                <span className="inline-flex items-center gap-2 font-medium text-sky-700">
+                  <Phone className="h-4 w-4" />
+                  {contact.phone}
+                </span>
               )}
               {contact.zalo && (
-                <div className="flex items-center gap-2 text-blue-500">
-                  <MessageCircle className="w-4 h-4" />
-                  <span className="text-sm">Zalo: {contact.zalo}</span>
-                </div>
+                <span className="inline-flex items-center gap-2 font-medium text-sky-600">
+                  <MessageCircle className="h-4 w-4" />
+                  Zalo: {contact.zalo}
+                </span>
               )}
             </div>
           </div>
         )}
 
-        {/* Ghi chú */}
         {notes && (
-          <div className="border-t pt-4 mt-4">
-            <h4 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
-              <FileText className="w-4 h-4" />
+          <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+            <h4 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800">
+              <FileText className="h-4 w-4 text-sky-600" />
               Ghi chú
             </h4>
-            <p className="text-gray-700 text-sm bg-gray-50 p-3 rounded-lg">
+            <p className="whitespace-pre-wrap text-sm leading-6 text-slate-600">
               {notes}
             </p>
           </div>
         )}
-      </div>
-
-      {/* Footer */}
-      <div className="bg-gray-50 px-4 py-3 border-t">
-        <button className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
-          <Users className="w-4 h-4" />
-          Đăng ký học
-        </button>
       </div>
     </div>
   );

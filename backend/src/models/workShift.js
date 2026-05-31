@@ -38,8 +38,8 @@ const WorkShift = sequelize.define(
       validate: {
         notNull: { msg: "Start time is required" },
         is: {
-          args: /^([01]\d|2[0-3]):([0-5]\d)$/,
-          msg: "Start time must be in format HH:mm",
+          args: /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/,
+          msg: "Start time must be in format HH:mm or HH:mm:ss",
         },
       },
     },
@@ -49,8 +49,42 @@ const WorkShift = sequelize.define(
       validate: {
         notNull: { msg: "End time is required" },
         is: {
-          args: /^([01]\d|2[0-3]):([0-5]\d)$/,
-          msg: "End time must be in format HH:mm",
+          args: /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/,
+          msg: "End time must be in format HH:mm or HH:mm:ss",
+        },
+      },
+    },
+    cashierShiftWage: {
+      type: DataTypes.DOUBLE,
+      allowNull: false,
+      defaultValue: 0,
+      validate: {
+        notNull: {
+          msg: "Cashier shift wage is required",
+        },
+        isFloat: {
+          msg: "Cashier shift wage must be a number",
+        },
+        min: {
+          args: [0],
+          msg: "Cashier shift wage must be greater than or equal to 0",
+        },
+      },
+    },
+    staffShiftWage: {
+      type: DataTypes.DOUBLE,
+      allowNull: false,
+      defaultValue: 0,
+      validate: {
+        notNull: {
+          msg: "Staff shift wage is required",
+        },
+        isFloat: {
+          msg: "Staff shift wage must be a number",
+        },
+        min: {
+          args: [0],
+          msg: "Staff shift wage must be greater than or equal to 0",
         },
       },
     },

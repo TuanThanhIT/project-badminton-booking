@@ -1,6 +1,7 @@
 import instance from "../../utils/axiosCustomize";
 
 import type {
+  CourtImageUploadResponse,
   CreateCourtPriceRequest,
   CreateCourtRequest,
 } from "../../types/court";
@@ -24,6 +25,16 @@ const updateCourtService = (courtId: number, data: CreateCourtRequest) => {
   return instance.put(`/manager/courts/${courtId}`, data);
 };
 
+const uploadCourtImageService = (file: File) => {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  return instance.post<CourtImageUploadResponse>(
+    "/manager/courts/upload-image",
+    formData,
+  );
+};
+
 const maintenanceCourtService = (courtId: number) => {
   return instance.patch(`/manager/courts/${courtId}/maintenance`);
 };
@@ -38,6 +49,7 @@ const managerCourtService = {
   getCourtsService,
   getCourtPricesService,
   updateCourtService,
+  uploadCourtImageService,
   maintenanceCourtService,
   closeCourtService,
 };

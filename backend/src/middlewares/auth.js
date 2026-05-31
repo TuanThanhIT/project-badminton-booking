@@ -25,6 +25,7 @@ const auth = (req, res, next) => {
       username: decoded?.username,
       email: decoded?.email,
       role: decoded?.role,
+      branchIds: decoded?.branchIds || [],
     };
 
     next();

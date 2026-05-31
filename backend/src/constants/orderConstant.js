@@ -5,9 +5,15 @@ export const ORDER_STATUS = Object.freeze({
   READY_TO_SHIP: "READY_TO_SHIP", // sẵn sàng giao GHN
   SHIPPING: "SHIPPING", // đã bàn giao GHN
 
+  CANCEL_REQUESTED: "CANCEL_REQUESTED", // user yêu cầu hủy
+  CANCELLED: "CANCELLED", // bị hủy (user/shop)
+
+  RETURN_REQUESTED: "RETURN_REQUESTED", // user yêu cầu trả hàng
+  RETURNING: "RETURNING", // đang hoàn hàng
+  RETURNED: "RETURNED", // đã hoàn về shop
+
   COMPLETED: "COMPLETED", // giao thành công (done business flow)
   FAILED: "FAILED", // giao thất bại
-  CANCELLED: "CANCELLED", // bị hủy (user/shop)
 });
 
 export const ORDER_GROUP_STATUS = Object.freeze({
@@ -37,6 +43,7 @@ export const SHIPPING_STATUS = Object.freeze({
 });
 
 export const SHIPPING_TRACKING_LABEL = Object.freeze({
+  PENDING: "Chưa tạo vận đơn",
   CREATED: "Đã tạo vận đơn",
   PICKING: "Đang lấy hàng",
   PICKED: "Đã lấy hàng",
@@ -44,4 +51,7 @@ export const SHIPPING_TRACKING_LABEL = Object.freeze({
   DELIVERING: "Đang giao",
   DELIVERED: "Giao thành công",
   FAILED: "Giao thất bại",
+  RETURNING: "Đang hoàn hàng",
+  RETURNED: "Đã hoàn về shop",
+  CANCELLED: "Đã hủy giao hàng",
 });

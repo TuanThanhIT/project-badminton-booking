@@ -12,7 +12,9 @@ export type MonthlyBookingRequest = {
   startTime: string;
   endTime: string;
 
-  totalAmount: number;
+  totalAmount?: number;
+  discountId?: number | null;
+  paymentMethod: "VNPAY" | "WALLET";
 
   note?: string;
 };
@@ -26,6 +28,9 @@ export type MonthlyBookingResult = {
     id: number;
   };
 
+  discountAmount?: number;
+  paymentMethod?: "VNPAY" | "WALLET";
+  paymentUrl?: string;
   totalSessions: number;
 };
 

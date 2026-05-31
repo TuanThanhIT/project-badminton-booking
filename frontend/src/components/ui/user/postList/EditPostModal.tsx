@@ -1,8 +1,10 @@
+import { FilePenLine, X } from "lucide-react";
 import type { PostWithAuthor } from "../../../../types/post";
 import CreateFindPlayerPostForm from "./CreateFindPlayerPostForm";
 import CreateClassPostForm from "./CreateClassPostForm";
 import CreateTournamentPostForm from "./CreateTournamentPostForm";
 import CreateGroupPostForm from "./CreateGroupPostForm";
+import { POST_TYPE_LABEL } from "../../../../utils/constants/postConstant";
 
 type EditTarget = {
   id: number;
@@ -22,20 +24,24 @@ const EditPostModal = ({ editTarget, onClose, onSave }: EditPostModalProps) => {
   if (!editTarget) return null;
 
   const commonProps = {
-    submitText: "Luu thay doi",
+    submitText: "Lưu thay đổi",
     redirectOnSuccess: false,
   };
 
   const renderForm = () => {
+    const baseValues = {
+      title: editTarget.title,
+      content: editTarget.content || "",
+      formData: editTarget.formData,
+    };
+
     if (editTarget.type === "FIND_PLAYER") {
       return (
         <CreateFindPlayerPostForm
           {...commonProps}
           initialValues={{
-            title: editTarget.title,
-            content: editTarget.content || "",
+            ...baseValues,
             type: "FIND_PLAYER",
-            formData: editTarget.formData,
           }}
           onSubmitForm={async (dt) =>
             onSave(editTarget.id, {
@@ -47,15 +53,14 @@ const EditPostModal = ({ editTarget, onClose, onSave }: EditPostModalProps) => {
         />
       );
     }
+
     if (editTarget.type === "CLASS") {
       return (
         <CreateClassPostForm
           {...commonProps}
           initialValues={{
-            title: editTarget.title,
-            content: editTarget.content || "",
+            ...baseValues,
             type: "CLASS",
-            formData: editTarget.formData,
           }}
           onSubmitForm={async (dt) =>
             onSave(editTarget.id, {
@@ -67,15 +72,14 @@ const EditPostModal = ({ editTarget, onClose, onSave }: EditPostModalProps) => {
         />
       );
     }
+
     if (editTarget.type === "TOURNAMENT") {
       return (
         <CreateTournamentPostForm
           {...commonProps}
           initialValues={{
-            title: editTarget.title,
-            content: editTarget.content || "",
+            ...baseValues,
             type: "TOURNAMENT",
-            formData: editTarget.formData,
           }}
           onSubmitForm={async (dt) =>
             onSave(editTarget.id, {
@@ -87,15 +91,14 @@ const EditPostModal = ({ editTarget, onClose, onSave }: EditPostModalProps) => {
         />
       );
     }
+
     if (editTarget.type === "GROUP") {
       return (
         <CreateGroupPostForm
           {...commonProps}
           initialValues={{
-            title: editTarget.title,
-            content: editTarget.content || "",
+            ...baseValues,
             type: "GROUP",
-            formData: editTarget.formData,
           }}
           onSubmitForm={async (dt) =>
             onSave(editTarget.id, {
@@ -109,28 +112,45 @@ const EditPostModal = ({ editTarget, onClose, onSave }: EditPostModalProps) => {
     }
 
     return (
-      <p className="text-sm text-gray-500">
-        Loai bai nay chua ho tro chinh sua.
-      </p>
+      <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
+        Loại bài này chưa hỗ trợ chỉnh sửa.
+      </div>
     );
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-      <div className="w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-white rounded-xl border border-gray-200 p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Chinh sua bai dang
-          </h3>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
+      <div className="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-50 shadow-2xl">
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-5 py-4 sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+              <FilePenLine size={22} />
+            </div>
+            <div className="min-w-0">
+              <h3 className="truncate text-xl font-semibold text-slate-900">
+                Chỉnh sửa bài đăng
+              </h3>
+              <p className="mt-0.5 text-sm text-slate-500">
+                {POST_TYPE_LABEL[editTarget.type]} · Cập nhật nội dung và thông tin bài đăng
+              </p>
+            </div>
+          </div>
+
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-1.5 rounded border"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+            aria-label="Đóng"
           >
-            Dong
+            <X size={20} />
           </button>
         </div>
-        {renderForm()}
+
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+          <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+            {renderForm()}
+          </div>
+        </div>
       </div>
     </div>
   );

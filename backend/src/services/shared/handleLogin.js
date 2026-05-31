@@ -1,10 +1,11 @@
-import { Role, User } from "../../models/index.js";
+import { Branch, Role, User } from "../../models/index.js";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import sequelize from "../../config/db.js";
 import BadRequestError from "../../errors/BadRequestError.js";
 import RefreshToken from "../../models/refreshToken.js";
 import { generateAccessToken, generateRefreshToken } from "../../utils/jwt.js";
+import { getEmployeeBranchIds } from "../employee/branchAccessService.js";
 dotenv.config();
 
 export const handleLogin = async (username, password) => {
@@ -19,6 +20,13 @@ export const handleLogin = async (username, password) => {
           model: Role,
           as: "role",
           attributes: ["id", "roleName"],
+        },
+        {
+          model: Branch,
+          as: "employeeBranches",
+          attributes: ["id", "branchName"],
+          through: { attributes: [] },
+          required: false,
         },
       ],
       transaction: t,
@@ -39,11 +47,17 @@ export const handleLogin = async (username, password) => {
       throw new BadRequestError("Thông tin đăng nhập không chính xác!");
     }
 
+    const branchIds =
+      user.role.roleName === "EMPLOYEE"
+        ? await getEmployeeBranchIds(user.id, t)
+        : [];
+
     const payloadAccessToken = {
       id: user.id,
       username: user.username,
       email: user.email,
       role: user.role.roleName,
+      branchIds,
     };
 
     const accessToken = generateAccessToken(payloadAccessToken);
@@ -69,6 +83,7 @@ export const handleLogin = async (username, password) => {
         email: user.email,
         username: user.username,
         role: user.role.roleName,
+        branchIds,
       },
     };
   });

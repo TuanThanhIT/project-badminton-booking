@@ -82,19 +82,87 @@ const BranchPage = () => {
 
   return (
     <div className="min-h-screen pb-20">
-      {/* HEADER SECTION */}
-      <div className="bg-sky-900 text-white py-12 mb-10">
-        <div className="w-11/12 mx-auto">
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <MapIcon className="text-sky-400" /> Hệ thống chi nhánh B-Hub
-          </h1>
-          <p className="text-sky-200 mt-2">
-            Tìm kiếm sân cầu lông gần bạn nhất và bắt đầu trải nghiệm
-          </p>
+      <div className="relative overflow-hidden bg-gradient-to-r from-sky-950 via-sky-900 to-sky-800 text-white py-16 mb-10">
+        {/* DECOR BACKGROUND */}
+        <div className="absolute inset-0">
+          <div className="absolute -top-20 -right-20 w-80 h-80 bg-sky-500/20 blur-3xl rounded-full animate-pulse" />
+          <div className="absolute bottom-0 left-20 w-72 h-72 bg-cyan-400/10 blur-3xl rounded-full animate-pulse" />
+        </div>
+
+        {/* CONTENT */}
+        <div className="relative w-11/12 mx-auto flex items-center justify-between gap-10">
+          {/* LEFT TEXT */}
+          <div className="max-w-2xl">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="px-3 py-1 text-xs font-bold bg-sky-500/20 text-sky-200 rounded-full border border-sky-400/30">
+                Hệ thống sân cầu lông
+              </span>
+            </div>
+
+            <h1 className="text-4xl md:text-5xl font-extrabold leading-tight">
+              Hệ thống chi nhánh{" "}
+              <span className="text-sky-300 drop-shadow-lg">B-Hub</span>
+            </h1>
+
+            <p className="text-sky-100 mt-4 text-base md:text-lg leading-relaxed">
+              Tìm kiếm sân cầu lông gần bạn nhất, đặt sân nhanh chóng và trải
+              nghiệm không gian thể thao hiện đại.
+            </p>
+
+            {/* STATS */}
+            <div className="flex gap-6 mt-6 text-sky-200 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-sky-300 rounded-full animate-ping" />
+                100+ sân chất lượng
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-sky-300 rounded-full animate-ping" />
+                Đặt sân nhanh 30s
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-sky-300 rounded-full animate-ping" />
+                Hỗ trợ 24/7
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT VISUAL CARD */}
+          <div className="hidden lg:block">
+            <div className="relative w-72 h-44">
+              {/* glow background */}
+              <div className="absolute inset-0 bg-sky-400/20 blur-2xl rounded-3xl scale-110" />
+
+              {/* image wrapper */}
+              <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl border border-white/10">
+                <img
+                  src="./img/branch.jpg"
+                  alt="about"
+                  className="
+          w-full h-full object-cover
+          hover:scale-110 transition-transform duration-700
+        "
+                />
+              </div>
+
+              {/* floating badge */}
+              <div
+                className="
+      absolute -bottom-4 left-4 z-20
+      bg-white text-sky-700
+      px-3 py-1 rounded-full text-xs font-bold shadow-lg
+      backdrop-blur-md
+    "
+              >
+                🔥 Sân hot nhất khu vực
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="w-11/12 mx-auto">
+      <div className="w-11/12 mx-auto ">
         <div className="grid grid-cols-12 gap-8">
           {/* LEFT PANEL */}
 

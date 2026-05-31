@@ -1,11 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { CreditCard, Wallet, X } from "lucide-react";
+import { useState, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import {
   FormWalletDepositSchema,
   type formWalletDeposit,
 } from "../../../../schemas/FormWalletDepositSchema";
-import { CreditCard, Wallet, X } from "lucide-react";
-import { useState } from "react";
 
 type DepositFormProps = {
   setOpenDeposit: (open: boolean) => void;
@@ -32,108 +32,99 @@ const DepositForm = ({ setOpenDeposit, onSubmit }: DepositFormProps) => {
 
   const handleSelectAmount = (value: number) => {
     setSelectedAmount(value);
-    setValue("amount", value);
+    setValue("amount", value, { shouldValidate: true });
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSelectedAmount(null);
-    setValue("amount", Number(e.target.value));
+    setValue("amount", Number(e.target.value), { shouldValidate: true });
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-      <div className="bg-gradient-to-br from-white to-sky-50 rounded-3xl w-full max-w-md shadow-2xl p-6 relative border border-gray-200">
-        {/* CLOSE */}
-        <button
-          onClick={() => setOpenDeposit(false)}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-800 transition-colors"
-        >
-          <X size={22} />
-        </button>
-
-        {/* HEADER */}
-        <div className="flex items-center gap-2 mb-4">
-          <CreditCard className="w-6 h-6 text-sky-500" />
-          <div>
-            <h3 className="text-xl font-bold text-gray-800">Nạp tiền</h3>
-            <p className="text-sm text-gray-500">
-              Nhập số tiền bạn muốn nạp vào ví
-            </p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4">
+      <div className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-2xl">
+        <div className="flex items-start justify-between gap-4 border-b border-slate-200 p-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+              <CreditCard size={21} />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900">
+                Nạp tiền vào ví
+              </h3>
+              <p className="mt-1 text-sm text-slate-500">
+                Thanh toán qua VNPay để cộng tiền vào ví.
+              </p>
+            </div>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setOpenDeposit(false)}
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
+          >
+            <X size={18} />
+          </button>
         </div>
 
-        <p className="text-sm font-medium text-gray-700 mb-2">Chọn số tiền</p>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          {/* QUICK AMOUNT */}
-          <div className="grid grid-cols-3 gap-3">
-            {quickAmounts.map((value, idx) => {
-              // tạo gradient cho từng nút, kiểu vòng lặp 3 màu
-              const gradients = [
-                "from-green-400 to-green-500",
-                "from-yellow-400 to-yellow-500",
-                "from-pink-400 to-pink-500",
-                "from-purple-400 to-purple-500",
-                "from-indigo-400 to-indigo-500",
-              ];
-
-              const gradient = gradients[idx % gradients.length];
-
-              return (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 p-5">
+          <div>
+            <p className="mb-3 text-sm font-medium text-slate-700">
+              Chọn nhanh số tiền
+            </p>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {quickAmounts.map((value) => (
                 <button
                   key={value}
                   type="button"
                   onClick={() => handleSelectAmount(value)}
-                  className={`py-2 rounded-xl text-sm font-medium transition transform hover:-translate-y-0.5 hover:scale-105 duration-150 shadow-sm ${
+                  className={`rounded-2xl border px-3 py-2.5 text-sm font-medium transition-all ${
                     selectedAmount === value
-                      ? `bg-gradient-to-r ${gradient} text-white shadow-lg`
-                      : "bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200"
+                      ? "border-sky-500 bg-sky-600 text-white shadow-lg shadow-sky-100"
+                      : "border-slate-200 bg-slate-50 text-slate-700 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
                   }`}
                 >
-                  {value.toLocaleString()}
+                  {value.toLocaleString("vi-VN")}đ
                 </button>
-              );
-            })}
+              ))}
+            </div>
           </div>
 
-          {/* INPUT */}
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-slate-700">
               Hoặc nhập số tiền
-            </p>
-
+            </label>
             <div className="relative">
-              <Wallet className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Wallet className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
               <input
                 type="number"
                 placeholder="Nhập số tiền"
                 value={amount || ""}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-3 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white"
+                className="w-full rounded-2xl border border-slate-300 bg-white py-3 pl-12 pr-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
               />
             </div>
 
             <input type="hidden" {...register("amount")} />
             {errors.amount && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="mt-2 text-sm font-medium text-rose-600">
                 {errors.amount.message}
               </p>
             )}
           </div>
 
-          {/* ACTION */}
-          <div className="flex justify-end gap-3 mt-4">
+          <div className="flex justify-end gap-3 border-t border-slate-100 pt-5">
             <button
               type="button"
               onClick={() => setOpenDeposit(false)}
-              className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 transition-shadow shadow-sm"
+              className="rounded-2xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
             >
               Hủy
             </button>
 
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-500 text-white font-semibold hover:from-sky-600 hover:to-indigo-600 shadow-lg transform hover:-translate-y-0.5 hover:scale-105 transition-all duration-150"
+              className="rounded-2xl bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-100 transition hover:bg-sky-700 active:scale-[0.98]"
             >
               Nạp tiền
             </button>

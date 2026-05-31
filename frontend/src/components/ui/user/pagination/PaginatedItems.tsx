@@ -23,53 +23,63 @@ function PaginatedItems({
   if (pageCount <= 1) return null;
 
   return (
-    <div className="flex justify-center mt-10">
-      <ReactPaginate
-        previousLabel="‹‹"
-        nextLabel="››"
-        breakLabel="..."
-        pageCount={pageCount}
-        marginPagesDisplayed={1}
-        pageRangeDisplayed={3}
-        onPageChange={handlePageClick}
-        forcePage={page - 1}
-        renderOnZeroPageCount={null}
-        containerClassName="flex flex-wrap gap-2 justify-center items-center select-none"
-        pageClassName="list-none"
-        previousClassName="list-none"
-        nextClassName="list-none"
-        breakClassName="list-none"
-        // Nút số trang
-        pageLinkClassName="
-      flex items-center justify-center w-8 h-8 rounded-lg border border-gray-300
-      text-gray-700 font-medium transition-all duration-200
-      hover:bg-sky-50 hover:border-sky-400 cursor-pointer
-    "
-        previousLinkClassName="
-      flex items-center justify-center w-8 h-8 rounded-lg border border-gray-300
-      text-gray-700 font-bold text-base transition-all duration-200
-      hover:bg-sky-50 hover:border-sky-400 cursor-pointer
-    "
-        nextLinkClassName="
-      flex items-center justify-center w-8 h-8 rounded-lg border border-gray-300
-      text-gray-700 font-bold text-base transition-all duration-200
-      hover:bg-sky-50 hover:border-sky-400 cursor-pointer
-    "
-        // Active page
-        activeLinkClassName="
-      !bg-sky-500 !border-sky-500 !text-white shadow-md
-      hover:!bg-sky-600
-    "
-        // Break (...)
-        breakLinkClassName="
-      px-3 py-2 text-gray-400 font-semibold
-    "
-        // Disabled
-        disabledLinkClassName="
-      !text-gray-300 !border-gray-200 !cursor-not-allowed
-      hover:!bg-white hover:!border-gray-200
-    "
-      />
+    <div className="mt-8 flex justify-center px-2">
+      <div className="inline-flex rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_8px_26px_rgba(15,23,42,0.05)]">
+        <ReactPaginate
+          previousLabel="‹"
+          nextLabel="›"
+          breakLabel="..."
+          pageCount={pageCount}
+          marginPagesDisplayed={1}
+          pageRangeDisplayed={3}
+          onPageChange={handlePageClick}
+          forcePage={page - 1}
+          renderOnZeroPageCount={null}
+          containerClassName="flex flex-wrap gap-1.5 justify-center items-center select-none"
+          pageClassName="list-none"
+          previousClassName="list-none"
+          nextClassName="list-none"
+          breakClassName="list-none"
+          pageLinkClassName="
+            flex h-9 min-w-9 items-center justify-center
+            rounded-xl border border-transparent
+            px-3 text-sm font-medium text-slate-600
+            transition-all duration-200
+            hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700
+            cursor-pointer
+          "
+          previousLinkClassName="
+            flex h-9 min-w-9 items-center justify-center
+            rounded-xl border border-slate-200 bg-slate-50
+            px-3 text-lg font-medium text-slate-600
+            transition-all duration-200
+            hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700
+            cursor-pointer
+          "
+          nextLinkClassName="
+            flex h-9 min-w-9 items-center justify-center
+            rounded-xl border border-slate-200 bg-slate-50
+            px-3 text-lg font-medium text-slate-600
+            transition-all duration-200
+            hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700
+            cursor-pointer
+          "
+          activeLinkClassName="
+  !border-sky-200 !bg-sky-500 !text-white
+  shadow-md shadow-sky-100
+  hover:!bg-sky-600 hover:!text-white
+"
+          breakLinkClassName="
+            flex h-9 min-w-9 items-center justify-center
+            rounded-xl px-3 text-sm font-medium text-slate-400
+          "
+          disabledLinkClassName="
+            !cursor-not-allowed !border-slate-100 !bg-slate-50
+            !text-slate-300
+            hover:!border-slate-100 hover:!bg-slate-50 hover:!text-slate-300
+          "
+        />
+      </div>
     </div>
   );
 }

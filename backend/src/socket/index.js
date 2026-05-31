@@ -1,14 +1,23 @@
 import { Server as IOServer } from "socket.io";
 import { StatusCodes } from "http-status-codes";
-import jwt from "jsonwebtoken";
 
 import ApiError from "../errors/ApiError.js";
+import { verifyAccessToken } from "../utils/jwt.js";
+
+// File này tạo Socket.IO server. Khi frontend connect lên, backend lấy token, verify JWT, rồi cho socket vào room riêng:
+
+// user:5
+// role:USER
+// Nhờ vậy muốn gửi realtime cho user nào thì emit vào đúng room user đó.
 
 let io = null;
 export const initSocket = (httpServer) => {
   io = new IOServer(httpServer, {
-    cors: process.env.CLIENT_URL || "*",
-    methods: ["GET", "POST"],
+    cors: {
+      origin: process.env.CLIENT_URL || "*",
+      methods: ["GET", "POST"],
+      credentials: true,
+    },
   });
 
   // Middleware xác thực JWT
@@ -16,11 +25,11 @@ export const initSocket = (httpServer) => {
     const token = socket.handshake.auth?.token;
 
     if (!token) {
-      return next(new ApiError(StatusCodes.NOT_FOUND, "NO_TOKEN"));
+      return next(new ApiError(StatusCodes.UNAUTHORIZED, "NO_TOKEN"));
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = verifyAccessToken(token);
 
       // Lưu info user vào socket
       socket.data.userId = decoded.id;
@@ -28,7 +37,7 @@ export const initSocket = (httpServer) => {
 
       return next();
     } catch (error) {
-      return next(new ApiError(StatusCodes.BAD_REQUEST, "INVALID_TOKEN"));
+      return next(new ApiError(StatusCodes.UNAUTHORIZED, "INVALID_TOKEN"));
     }
   });
 

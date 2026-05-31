@@ -1,19 +1,21 @@
-import {
-  Branch,
-  BranchManager,
-  Court,
-  CourtPrice,
-} from "../../models/index.js";
-
+import sequelize from "../../config/db.js";
+import { Branch, Court, CourtPrice } from "../../models/index.js";
 import NotFoundError from "../../errors/NotFoundError.js";
 
 const getMyBranchService = async (managerId) => {
-  // tìm manager thuộc branch nào
-  const branchManager = await BranchManager.findOne({
-    where: {
-      managerId,
+  const [rows] = await sequelize.query(
+    `
+    SELECT branchId
+    FROM BranchManagers
+    WHERE managerId = :managerId
+    LIMIT 1
+    `,
+    {
+      replacements: { managerId },
     },
-  });
+  );
+
+  const branchManager = rows[0];
 
   if (!branchManager) {
     throw new NotFoundError("Manager chưa được gán chi nhánh");
@@ -23,7 +25,6 @@ const getMyBranchService = async (managerId) => {
     where: {
       id: branchManager.branchId,
     },
-
     include: [
       {
         model: Court,
@@ -43,8 +44,6 @@ const getMyBranchService = async (managerId) => {
   return branch;
 };
 
-const branchService = {
+export default {
   getMyBranchService,
 };
-
-export default branchService;

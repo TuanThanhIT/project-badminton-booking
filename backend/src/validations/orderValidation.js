@@ -1,23 +1,17 @@
 import Joi from "joi";
 import {
   cancelReasonField,
-  codeField,
   noteField,
-  paymentAmountField,
   paymentMethodField,
-  paymentStatusField,
-  totalAmountField,
 } from "./common/bookingFields.js";
 import {
   orderFilterStatusField,
   orderGroupStatusField,
-  orderStatusField,
 } from "./common/orderFields.js";
 import { idParams, quantityField } from "./common/numberField.js";
 import { dateField, keywordField } from "./common/searchFields.js";
 import { limitField, pageField } from "./common/paginationFields.js";
 import { emailField, otpCodeField } from "./common/authFields.js";
-import OrderGroup from "../models/orderGroup.js";
 
 const buyNowItemSchema = Joi.object({
   variantId: idParams("variantId"),

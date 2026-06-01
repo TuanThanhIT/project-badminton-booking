@@ -50,8 +50,8 @@ const formatBranchFeedback = (feedback) => ({
   id: feedback.id,
   content: feedback.content,
   rating: feedback.rating,
-  createdDate: feedback.createdDate,
-  updatedDate: feedback.updatedDate,
+  createdAt: feedback.createdAt,
+  updatedAt: feedback.updatedAt,
   user: {
     id: feedback.user?.id,
     email: feedback.user?.email,
@@ -108,7 +108,7 @@ const getPagedBranchesService = async (data) => {
     where,
     limit: Number(limit),
     offset: Number(offset),
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
   });
 
   const branches = rows.map((item) => {
@@ -190,8 +190,8 @@ const getBranchDetailService = async (data) => {
       "userId",
       "content",
       "rating",
-      "createdDate",
-      "updatedDate",
+      "createdAt",
+      "updatedAt",
     ],
     include: [
       {
@@ -207,7 +207,7 @@ const getBranchDetailService = async (data) => {
         ],
       },
     ],
-    order: [["updatedDate", "DESC"]],
+    order: [["updatedAt", "DESC"]],
   });
 
   const feedbacks = feedbackRows.map((feedback) =>

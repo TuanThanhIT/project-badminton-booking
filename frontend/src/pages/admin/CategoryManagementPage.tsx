@@ -129,7 +129,7 @@ const CategoryManagementPage = () => {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center text-xs text-gray-500">
-                      {c.createdDate ? new Date(c.createdDate).toLocaleDateString("vi-VN") : "—"}
+                      {c.createdAt ? new Date(c.createdAt).toLocaleDateString("vi-VN") : "—"}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-2">

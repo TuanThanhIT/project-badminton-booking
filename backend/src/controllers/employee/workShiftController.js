@@ -1,124 +1,116 @@
+import SuccessResponse from "../../helpers/SuccessResponse.js";
+import asyncHandler from "../../middlewares/asyncHandler.js";
 import workShiftService from "../../services/employee/workShiftService.js";
 
-const getWorkShiftByDate = async (req, res, next) => {
-  try {
-    const workDate = req.query.date;
-    const workShifts = await workShiftService.getWorkShiftByDateService(
-      req.user.id,
-      workDate,
-    );
+const getWorkShiftByDateController = asyncHandler(async (req, res) => {
+  const data = {
+    employeeId: req.user.id,
+    workDate: req.query.date,
+  };
+  const result = await workShiftService.getWorkShiftByDateService(data);
 
-    return res.status(200).json({
-      success: true,
-      message: "Lấy danh sách ca làm thành công!",
-      data: workShifts,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  return res
+    .status(200)
+    .json(new SuccessResponse("Lấy danh sách ca làm thành công", result));
+});
 
-const getCurrentWorkShift = async (req, res, next) => {
-  try {
-    const { date, time } = req.query;
-    const workShift = await workShiftService.getCurrentWorkShiftService(
-      req.user.id,
-      date,
-      time,
-    );
+const getCurrentWorkShiftController = asyncHandler(async (req, res) => {
+  const data = {
+    employeeId: req.user.id,
+    workDate: req.query.date,
+    currentTime: req.query.time,
+  };
+  const result = await workShiftService.getCurrentWorkShiftService(data);
+  const message = result
+    ? "Lấy ca làm hiện tại thành công"
+    : "Không có ca làm hiện tại";
 
-    return res.status(200).json({
-      success: true,
-      message: workShift
-        ? "Lấy ca làm hiện tại thành công!"
-        : "Không có ca làm hiện tại.",
-      data: workShift,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  return res.status(200).json(new SuccessResponse(message, result));
+});
 
-const updateCheckInAndCashRegister = async (req, res, next) => {
-  try {
-    const result = await workShiftService.updateCheckInAndCashRegisterService({
+const updateCheckInAndCashRegisterController = asyncHandler(
+  async (req, res) => {
+    const data = {
       employeeId: req.user.id,
       workShiftId: req.params.workShiftId,
       checkInTime: req.body.checkInTime,
       openingCash: req.body.openingCash,
-    });
+    };
+    const result =
+      await workShiftService.updateCheckInAndCashRegisterService(data);
 
-    return res.status(200).json({
-      success: true,
-      ...result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+    return res
+      .status(200)
+      .json(
+        new SuccessResponse(
+          "Cập nhật check-in và tiền mặt đầu ca thành công",
+          result,
+        ),
+      );
+  },
+);
 
-const updateCheckOutAndCashRegister = async (req, res, next) => {
-  try {
-    const result = await workShiftService.updateCheckoutAndCashRegisterService({
+const updateCheckOutAndCashRegisterController = asyncHandler(
+  async (req, res) => {
+    const data = {
       employeeId: req.user.id,
       workShiftId: req.params.workShiftId,
       checkOutTime: req.body.checkOutTime,
       closingCash: req.body.closingCash,
-    });
+    };
+    const result =
+      await workShiftService.updateCheckoutAndCashRegisterService(data);
 
-    return res.status(200).json({
-      success: true,
-      ...result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+    return res
+      .status(200)
+      .json(
+        new SuccessResponse(
+          "Check-out và chốt tiền mặt cuối ca thành công",
+          result,
+        ),
+      );
+  },
+);
 
-const getShiftAssignments = async (req, res, next) => {
-  try {
-    const result = await workShiftService.getShiftAssignmentsService({
-      employeeId: req.user.id,
-      workShiftId: req.params.workShiftId,
-    });
+const getShiftAssignmentsController = asyncHandler(async (req, res) => {
+  const data = {
+    employeeId: req.user.id,
+    workShiftId: req.params.workShiftId,
+  };
+  const result = await workShiftService.getShiftAssignmentsService(data);
 
-    return res.status(200).json({
-      success: true,
-      message: "Lấy danh sách nhân viên trong ca thành công!",
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse(
+        "Lấy danh sách nhân viên trong ca thành công",
+        result,
+      ),
+    );
+});
 
-const updateShiftAssignmentTime = async (req, res, next) => {
-  try {
-    const result = await workShiftService.updateShiftAssignmentTimeService({
-      employeeId: req.user.id,
-      workShiftId: req.params.workShiftId,
-      assignmentId: req.params.assignmentId,
-      checkInTime: req.body.checkInTime,
-      checkOutTime: req.body.checkOutTime,
-    });
+const updateShiftAssignmentTimeController = asyncHandler(async (req, res) => {
+  const data = {
+    employeeId: req.user.id,
+    workShiftId: req.params.workShiftId,
+    assignmentId: req.params.assignmentId,
+    checkInTime: req.body.checkInTime,
+    checkOutTime: req.body.checkOutTime,
+  };
+  const result = await workShiftService.updateShiftAssignmentTimeService(data);
 
-    return res.status(200).json({
-      success: true,
-      message: "Cập nhật giờ làm nhân viên thành công!",
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  return res
+    .status(200)
+    .json(new SuccessResponse("Cập nhật giờ làm nhân viên thành công", result));
+});
 
 const workShiftController = {
-  getWorkShiftByDate,
-  getCurrentWorkShift,
-  updateCheckInAndCashRegister,
-  updateCheckOutAndCashRegister,
-  getShiftAssignments,
-  updateShiftAssignmentTime,
+  getWorkShiftByDateController,
+  getCurrentWorkShiftController,
+  updateCheckInAndCashRegisterController,
+  updateCheckOutAndCashRegisterController,
+  getShiftAssignmentsController,
+  updateShiftAssignmentTimeController,
 };
 
 export default workShiftController;

@@ -21,7 +21,7 @@ const initEmployeeWorkShiftRoute = (app) => {
     auth,
     authorize(ROLE_NAME.EMPLOYEE),
     validate(getWorkShiftByDateSchema),
-    workShiftController.getWorkShiftByDate,
+    workShiftController.getWorkShiftByDateController,
   );
 
   workShiftRoute.get(
@@ -29,7 +29,7 @@ const initEmployeeWorkShiftRoute = (app) => {
     auth,
     authorize(ROLE_NAME.EMPLOYEE),
     validate(getCurrentWorkShiftSchema),
-    workShiftController.getCurrentWorkShift,
+    workShiftController.getCurrentWorkShiftController,
   );
 
   workShiftRoute.patch(
@@ -37,7 +37,7 @@ const initEmployeeWorkShiftRoute = (app) => {
     auth,
     authorize(ROLE_NAME.EMPLOYEE),
     validate(updateCheckInAndCashRegisterSchema),
-    workShiftController.updateCheckInAndCashRegister,
+    workShiftController.updateCheckInAndCashRegisterController,
   );
 
   workShiftRoute.get(
@@ -45,7 +45,7 @@ const initEmployeeWorkShiftRoute = (app) => {
     auth,
     authorize(ROLE_NAME.EMPLOYEE),
     validate(getShiftAssignmentsSchema),
-    workShiftController.getShiftAssignments,
+    workShiftController.getShiftAssignmentsController,
   );
 
   workShiftRoute.patch(
@@ -53,7 +53,7 @@ const initEmployeeWorkShiftRoute = (app) => {
     auth,
     authorize(ROLE_NAME.EMPLOYEE),
     validate(updateShiftAssignmentTimeSchema),
-    workShiftController.updateShiftAssignmentTime,
+    workShiftController.updateShiftAssignmentTimeController,
   );
 
   workShiftRoute.patch(
@@ -61,7 +61,7 @@ const initEmployeeWorkShiftRoute = (app) => {
     auth,
     authorize(ROLE_NAME.EMPLOYEE),
     validate(updateCheckOutAndCashRegisterSchema),
-    workShiftController.updateCheckOutAndCashRegister,
+    workShiftController.updateCheckOutAndCashRegisterController,
   );
 
   app.use("/employee/work-shifts", workShiftRoute);

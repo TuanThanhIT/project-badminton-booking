@@ -36,6 +36,18 @@ import employeeCounterReducer from "./slices/employee/counterSlice";
 import employeeOrderReducer from "./slices/employee/orderSlice";
 import employeeBookingReducer from "./slices/employee/bookingSlice";
 
+///MANAGER
+import managerCourtReducer from "./slices/manager/courtSlice";
+import managerBranchReducer from "./slices/manager/branchSlice";
+import managerEmployeeReducer from "./slices/manager/employeeSlice";
+import managerProductReducer from "./slices/manager/productSlice";
+import managerBeverageReducer from "./slices/manager/beverageSlice";
+import managerWorkShiftReducer from "./slices/manager/workShiftSlice";
+import managerSalaryReducer from "./slices/manager/salarySlice";
+import managerRevenueReducer from "./slices/manager/revenueSlice";
+import managerOrderReducer from "./slices/manager/orderSlice";
+import managerConversationReducer from "./slices/manager/conversationSlice";
+
 const persistConfig = {
   key: "root",
   storage,
@@ -66,6 +78,18 @@ const rootReducer = combineReducers({
   employeeCounter: employeeCounterReducer,
   employeeOrder: employeeOrderReducer,
   employeeBooking: employeeBookingReducer,
+
+  ///MANAGER
+  managerCourt: managerCourtReducer,
+  managerBranch: managerBranchReducer,
+  managerEmployee: managerEmployeeReducer,
+  managerProduct: managerProductReducer,
+  managerBeverage: managerBeverageReducer,
+  managerWorkShift: managerWorkShiftReducer,
+  managerSalary: managerSalaryReducer,
+  managerRevenue: managerRevenueReducer,
+  managerOrder: managerOrderReducer,
+  managerConversation: managerConversationReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

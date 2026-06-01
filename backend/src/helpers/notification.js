@@ -11,7 +11,7 @@ const buildNotificationPayload = (notify) => ({
   title: notify.title,
   message: notify.message,
   isRead: notify.isRead,
-  createdDate: notify.createdDate,
+  createdAt: notify.createdAt,
 });
 
 const runAfterCommit = (transaction, callback) => {

@@ -1,4 +1,4 @@
-ï»¿import sequelize from "../../config/db.js";
+import sequelize from "../../config/db.js";
 import { Op } from "sequelize";
 import {
   Booking,
@@ -6,6 +6,7 @@ import {
   Branch,
   Court,
   Payment,
+  Profile,
   User,
   Wallet,
   WalletTransaction,
@@ -26,11 +27,12 @@ import {
   WALLET_TRANSACTION_TYPE,
 } from "../../constants/paymentConstant.js";
 import {
-  assertEmployeeCanAccessBranch,
-  getEmployeeBranchIds,
+  assertEmployeeActiveCashierForBranch,
+  getActiveCashierBranchIds,
 } from "./branchAccessService.js";
 import { sendUserNotification } from "../../helpers/notification.js";
 import { formatBookingCode } from "../../utils/displayCode.js";
+import { handleSendBookingMail } from "../shared/sendBookingMail.js";
 
 const bookingInclude = [
   {
@@ -50,6 +52,13 @@ const bookingInclude = [
     model: User,
     as: "user",
     attributes: ["id", "username", "email"],
+    include: [
+      {
+        model: Profile,
+        as: "profile",
+        attributes: ["fullName", "phoneNumber"],
+      },
+    ],
   },
   {
     model: BookingDetail,
@@ -73,10 +82,17 @@ const mapBooking = (booking, payment = null) => {
     cancelRequestedAt: plain.cancelRequestedAt,
     cancelHandledAt: plain.cancelHandledAt,
     cancelledAt: plain.cancelledAt,
-    createdDate: plain.createdDate,
-    updatedDate: plain.updatedDate,
+    createdAt: plain.createdAt,
+    updatedAt: plain.updatedAt,
     branch: plain.branch || null,
     user: plain.user || null,
+    customer: plain.user
+      ? {
+          fullName:
+            plain.user.profile?.fullName || plain.user.username || "Khách",
+          phoneNumber: plain.user.profile?.phoneNumber || "",
+        }
+      : null,
     payment: payment
       ? {
           id: payment.id,
@@ -121,15 +137,174 @@ const attachBookingPayments = async (bookings) => {
   );
 };
 
-const getBookingsService = async ({
-  employeeId,
-  status,
-  keyword,
-  date,
-  page = 1,
-  limit = 12,
-}) => {
-  const branchIds = await getEmployeeBranchIds(employeeId);
+const getPrimaryDetail = (booking) => {
+  const details = booking.details || [];
+  return [...details].sort((a, b) =>
+    `${a.playDate} ${a.startTime}`.localeCompare(`${b.playDate} ${b.startTime}`),
+  )[0];
+};
+
+const getLastDetail = (booking) => {
+  const details = booking.details || [];
+  return [...details].sort((a, b) =>
+    `${b.playDate} ${b.endTime}`.localeCompare(`${a.playDate} ${a.endTime}`),
+  )[0];
+};
+
+const toLocalDateTime = (date, time) => {
+  const [year, month, day] = String(date).split("-").map(Number);
+  const [hour, minute] = String(time).split(":").map(Number);
+  return new Date(year, month - 1, day, hour, minute, 0, 0);
+};
+
+const assertNoShowWindowReached = (booking) => {
+  const firstDetail = getPrimaryDetail(booking);
+  if (!firstDetail) return;
+
+  const noShowAt = new Date(
+    toLocalDateTime(firstDetail.playDate, firstDetail.startTime).getTime() +
+      30 * 60 * 1000,
+  );
+
+  if (Date.now() < noShowAt.getTime()) {
+    throw new BadRequestError(
+      "Ch? du?c h?y v?ng m?t sau khi khách tr? nh?n sân quá 30 phút.",
+    );
+  }
+};
+
+const assertBookingPlayTimeEnded = (booking) => {
+  const lastDetail = getLastDetail(booking);
+  if (!lastDetail) return;
+
+  const endAt = toLocalDateTime(lastDetail.playDate, lastDetail.endTime);
+  if (Date.now() < endAt.getTime()) {
+    throw new BadRequestError(
+      "Ch? du?c hoàn thành sau khi khách dã dánh h?t th?i gian d?t sân.",
+    );
+  }
+};
+
+const getBookingPayment = async ({ booking, transaction, lock = false }) =>
+  Payment.findOne({
+    where: {
+      targetPaymentType: TARGET_PAYMENT_TYPE.BOOKING,
+      targetPaymentId: booking.id,
+    },
+    transaction,
+    lock: lock ? transaction?.LOCK?.UPDATE : undefined,
+  });
+
+const getDepositDescription = (booking) =>
+  `C?c gi? sân ${formatBookingCode(booking.id, booking.createdAt)}`;
+
+const getBookingMailPayload = async ({ bookingId, transaction }) => {
+  const booking = await Booking.findByPk(bookingId, {
+    include: [
+      { model: Branch, as: "branch" },
+      {
+        model: User,
+        as: "user",
+        attributes: ["id", "username", "email"],
+        include: [
+          {
+            model: Profile,
+            as: "profile",
+            attributes: ["fullName", "phoneNumber"],
+          },
+        ],
+      },
+      {
+        model: BookingDetail,
+        as: "details",
+        include: [{ model: Court, as: "court", attributes: ["id", "courtName"] }],
+      },
+    ],
+    transaction,
+  });
+
+  if (!booking) return null;
+
+  const payment = await getBookingPayment({ booking, transaction });
+  const plain = booking.get({ plain: true });
+  plain.payment = payment?.get ? payment.get({ plain: true }) : payment;
+  plain.bookingCode = formatBookingCode(booking.id, booking.createdAt);
+  plain.depositAmount =
+    plain.payment?.paymentMethod === PAYMENT_METHOD_STATUS.COD
+      ? Math.round(Number(booking.totalAmount || 0) * 0.5)
+      : 0;
+
+  return plain;
+};
+
+const sendBookingMailSafely = async ({ bookingId, type, penaltyAmount = 0 }) => {
+  try {
+    const booking = await getBookingMailPayload({ bookingId });
+    if (!booking) return;
+
+    booking.penaltyAmount = penaltyAmount;
+    await handleSendBookingMail(booking, type);
+  } catch (error) {
+    console.error("Send booking email failed", error.message);
+  }
+};
+
+const releaseBookingDeposit = async ({ booking, payment, transaction }) => {
+  if (payment?.paymentMethod !== PAYMENT_METHOD_STATUS.COD) return;
+
+  await WalletTransaction.update(
+    { status: WALLET_TRANSACTION_STATUS.CANCELLED },
+    {
+      where: {
+        paymentId: payment.id,
+        status: WALLET_TRANSACTION_STATUS.PENDING,
+        description: getDepositDescription(booking),
+      },
+      transaction,
+    },
+  );
+};
+
+const chargeNoShowDeposit = async ({ booking, payment, transaction }) => {
+  if (payment?.paymentMethod !== PAYMENT_METHOD_STATUS.COD) {
+    return { charged: false, amount: 0 };
+  }
+
+  const tx = await WalletTransaction.findOne({
+    where: {
+      paymentId: payment.id,
+      status: WALLET_TRANSACTION_STATUS.PENDING,
+      description: getDepositDescription(booking),
+    },
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
+
+  if (!tx) return { charged: false, amount: 0 };
+
+  const wallet = await Wallet.findByPk(tx.walletId, {
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
+
+  if (!wallet || Number(wallet.balance) < Number(tx.amount)) {
+    throw new BadRequestError("Ví khách không d? s? du d? tr? c?c gi? sân.");
+  }
+
+  await wallet.update(
+    { balance: sequelize.literal(`balance - ${Number(tx.amount)}`) },
+    { transaction },
+  );
+
+  await tx.update({ status: WALLET_TRANSACTION_STATUS.SUCCESS }, { transaction });
+
+  return { charged: true, amount: Number(tx.amount) };
+};
+
+const getBookingsService = async (data) => {
+  const { employeeId, status, keyword, date, page = 1, limit = 12 } = data;
+
+  const branchIds = await getActiveCashierBranchIds(employeeId);
   if (!branchIds.length) {
     return {
       items: [],
@@ -174,7 +349,7 @@ const getBookingsService = async ({
     ),
     distinct: true,
     subQuery: false,
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
     limit: Number(limit),
     offset,
   });
@@ -201,14 +376,15 @@ const getBookingsService = async ({
   };
 };
 
-const getBookingDetailService = async ({ bookingId, employeeId }) => {
+const getBookingDetailService = async (data) => {
+  const { bookingId, employeeId } = data;
   const booking = await Booking.findByPk(bookingId, {
     include: bookingInclude,
   });
 
-  if (!booking) throw new NotFoundError("Lá»‹ch Ä‘áº·t sÃ¢n khÃ´ng tá»“n táº¡i");
+  if (!booking) throw new NotFoundError("L?ch d?t sân không t?n t?i");
 
-  await assertEmployeeCanAccessBranch({
+  await assertEmployeeActiveCashierForBranch({
     employeeId,
     branchId: booking.branchId,
   });
@@ -223,7 +399,8 @@ const getBookingDetailService = async ({ bookingId, employeeId }) => {
   return mapBooking(booking, payment);
 };
 
-const confirmBookingService = async ({ bookingId, employeeId }) => {
+const confirmBookingService = async (data) => {
+  const { bookingId, employeeId } = data;
   const booking = await sequelize.transaction(async (transaction) => {
     const booking = await getEmployeeBookingForAction({
       bookingId,
@@ -233,7 +410,7 @@ const confirmBookingService = async ({ bookingId, employeeId }) => {
 
     if (booking.bookingStatus !== BOOKING_STATUS.PENDING) {
       throw new BadRequestError(
-        "Chá»‰ cÃ³ thá»ƒ xÃ¡c nháº­n lá»‹ch sÃ¢n Ä‘ang chá» xÃ¡c nháº­n",
+        "Ch? có th? xác nh?n l?ch sân dang ch? xác nh?n",
       );
     }
 
@@ -251,16 +428,15 @@ const confirmBookingService = async ({ bookingId, employeeId }) => {
   await sendUserNotification(
     booking.userId,
     "booking-confirmed",
-    "Lá»‹ch sÃ¢n Ä‘Ã£ Ä‘Æ°á»£c xÃ¡c nháº­n",
-    `${booking.branch?.branchName || "Chi nhÃ¡nh"} Ä‘Ã£ xÃ¡c nháº­n lá»‹ch sÃ¢n ${formatBookingCode(booking.id, booking.createdDate)}. Vui lÃ²ng Ä‘áº¿n Ä‘Ãºng giá» vÃ  xuáº¥t trÃ¬nh email xÃ¡c nháº­n Ä‘á»ƒ nháº­n sÃ¢n.`,
+    "L?ch sân dã du?c xác nh?n",
+    `${booking.branch?.branchName || "Chi nhánh"} dã xác nh?n l?ch sân ${formatBookingCode(booking.id, booking.createdAt)}. Vui lòng d?n dúng gi? và xu?t trình email xác nh?n d? nh?n sân.`,
   );
+
+  await sendBookingMailSafely({ bookingId: booking.id, type: "confirm" });
 };
 
-const completeBookingService = async ({
-  bookingId,
-  employeeId,
-  paymentMethod,
-}) => {
+const completeBookingService = async (data) => {
+  const { bookingId, employeeId, paymentMethod } = data;
   const booking = await sequelize.transaction(async (transaction) => {
     const booking = await getEmployeeBookingForAction({
       bookingId,
@@ -268,17 +444,16 @@ const completeBookingService = async ({
       transaction,
     });
 
-    if (booking.bookingStatus !== BOOKING_STATUS.CONFIRMED) {
-      throw new BadRequestError("Chá»‰ cÃ³ thá»ƒ hoÃ n thÃ nh lá»‹ch sÃ¢n Ä‘Ã£ xÃ¡c nháº­n");
+    if (booking.bookingStatus !== BOOKING_STATUS.CHECKED_IN) {
+      throw new BadRequestError("Ch? có th? hoàn thành l?ch sân dã nh?n sân");
     }
 
-    let payment = await Payment.findOne({
-      where: {
-        targetPaymentType: TARGET_PAYMENT_TYPE.BOOKING,
-        targetPaymentId: booking.id,
-      },
+    assertBookingPlayTimeEnded(booking);
+
+    let payment = await getBookingPayment({
+      booking,
       transaction,
-      lock: transaction.LOCK.UPDATE,
+      lock: true,
     });
 
     if (!payment) {
@@ -294,13 +469,15 @@ const completeBookingService = async ({
       );
     }
 
+    await releaseBookingDeposit({ booking, payment, transaction });
+
     if (payment.paymentStatus !== PAYMENT_STATUS.PAID) {
       if (
         !paymentMethod ||
         !Object.values(PAYMENT_OFFLINE_METHOD_STATUS).includes(paymentMethod)
       ) {
         throw new BadRequestError(
-          "Vui lÃ²ng chá»n phÆ°Æ¡ng thá»©c thanh toÃ¡n táº¡i sÃ¢n",
+          "Vui lòng ch?n phuong th?c thanh toán t?i sân",
         );
       }
 
@@ -325,9 +502,45 @@ const completeBookingService = async ({
   await sendUserNotification(
     booking.userId,
     "booking-completed",
-    "Lá»‹ch sÃ¢n Ä‘Ã£ hoÃ n táº¥t",
-    `Lá»‹ch sÃ¢n ${formatBookingCode(booking.id, booking.createdDate)} táº¡i ${booking.branch?.branchName || "chi nhÃ¡nh"} Ä‘Ã£ Ä‘Æ°á»£c hoÃ n táº¥t. Cáº£m Æ¡n báº¡n Ä‘Ã£ sá»­ dá»¥ng dá»‹ch vá»¥ B-Hub.`,
+    "L?ch sân dã hoàn t?t",
+    `L?ch sân ${formatBookingCode(booking.id, booking.createdAt)} t?i ${booking.branch?.branchName || "chi nhánh"} dã du?c hoàn t?t. C?m on b?n dã s? d?ng d?ch v? B-Hub.`,
   );
+
+  await sendBookingMailSafely({ bookingId: booking.id, type: "complete" });
+};
+
+const receiveBookingService = async (data) => {
+  const { bookingId, employeeId } = data;
+  const booking = await sequelize.transaction(async (transaction) => {
+    const booking = await getEmployeeBookingForAction({
+      bookingId,
+      employeeId,
+      transaction,
+    });
+
+    if (booking.bookingStatus !== BOOKING_STATUS.CONFIRMED) {
+      throw new BadRequestError("Ch? có th? nh?n sân cho l?ch dã xác nh?n");
+    }
+
+    await booking.update(
+      {
+        bookingStatus: BOOKING_STATUS.CHECKED_IN,
+        previousBookingStatus: BOOKING_STATUS.CONFIRMED,
+      },
+      { transaction },
+    );
+
+    return booking;
+  });
+
+  await sendUserNotification(
+    booking.userId,
+    "booking-checked-in",
+    "B?n dã nh?n sân",
+    `L?ch sân ${formatBookingCode(booking.id, booking.createdAt)} t?i ${booking.branch?.branchName || "chi nhánh"} dã du?c xác nh?n nh?n sân. Chúc b?n có bu?i choi vui v?.`,
+  );
+
+  await sendBookingMailSafely({ bookingId: booking.id, type: "checkedIn" });
 };
 
 const getEmployeeBookingForAction = async ({
@@ -338,15 +551,31 @@ const getEmployeeBookingForAction = async ({
   const booking = await Booking.findByPk(bookingId, {
     include: [
       { model: Branch, as: "branch" },
-      { model: BookingDetail, as: "details" },
+      {
+        model: User,
+        as: "user",
+        attributes: ["id", "username", "email"],
+        include: [
+          {
+            model: Profile,
+            as: "profile",
+            attributes: ["fullName", "phoneNumber"],
+          },
+        ],
+      },
+      {
+        model: BookingDetail,
+        as: "details",
+        include: [{ model: Court, as: "court", attributes: ["id", "courtName"] }],
+      },
     ],
     transaction,
     lock: transaction.LOCK.UPDATE,
   });
 
-  if (!booking) throw new NotFoundError("Lá»‹ch Ä‘áº·t sÃ¢n khÃ´ng tá»“n táº¡i");
+  if (!booking) throw new NotFoundError("L?ch d?t sân không t?n t?i");
 
-  await assertEmployeeCanAccessBranch({
+  await assertEmployeeActiveCashierForBranch({
     employeeId,
     branchId: booking.branchId,
     transaction,
@@ -373,7 +602,7 @@ const refundBookingToWallet = async ({ booking, transaction }) => {
     };
   }
 
-  const refundDescription = `HoÃ n tiá»n lá»‹ch sÃ¢n ${formatBookingCode(booking.id, booking.createdDate)}`;
+  const refundDescription = `Hoàn ti?n l?ch sân ${formatBookingCode(booking.id, booking.createdAt)}`;
 
   let wallet = await Wallet.findOne({
     where: { userId: booking.userId },
@@ -447,7 +676,8 @@ const refundBookingToWallet = async ({ booking, transaction }) => {
   };
 };
 
-const approveCancelBookingService = async ({ bookingId, employeeId }) => {
+const approveCancelBookingService = async (data) => {
+  const { bookingId, employeeId } = data;
   let refundResult;
   let handledBooking;
 
@@ -459,8 +689,15 @@ const approveCancelBookingService = async ({ bookingId, employeeId }) => {
     });
 
     if (booking.bookingStatus !== BOOKING_STATUS.CANCEL_REQUESTED) {
-      throw new BadRequestError("Lá»‹ch sÃ¢n chÆ°a cÃ³ yÃªu cáº§u há»§y");
+      throw new BadRequestError("L?ch sân chua có yêu c?u h?y");
     }
+
+    const payment = await getBookingPayment({
+      booking,
+      transaction,
+      lock: true,
+    });
+    await releaseBookingDeposit({ booking, payment, transaction });
 
     refundResult = await refundBookingToWallet({ booking, transaction });
 
@@ -479,12 +716,12 @@ const approveCancelBookingService = async ({ bookingId, employeeId }) => {
   await sendUserNotification(
     handledBooking.userId,
     "booking-cancel-approved",
-    "YÃªu cáº§u há»§y lá»‹ch sÃ¢n Ä‘Ã£ Ä‘Æ°á»£c duyá»‡t",
+    "Yêu c?u h?y l?ch sân dã du?c duy?t",
     refundResult?.refunded
-      ? `Lá»‹ch sÃ¢n ${formatBookingCode(handledBooking.id, handledBooking.createdDate)} Ä‘Ã£ Ä‘Æ°á»£c há»§y vÃ  hoÃ n ${Number(
+      ? `L?ch sân ${formatBookingCode(handledBooking.id, handledBooking.createdAt)} dã du?c h?y và hoàn ${Number(
           refundResult.refundAmount,
-        ).toLocaleString("vi-VN")}Ä‘ vÃ o vÃ­.`
-      : `Lá»‹ch sÃ¢n ${formatBookingCode(handledBooking.id, handledBooking.createdDate)} Ä‘Ã£ Ä‘Æ°á»£c há»§y thÃ nh cÃ´ng.`,
+        ).toLocaleString("vi-VN")}d vào ví.`
+      : `L?ch sân ${formatBookingCode(handledBooking.id, handledBooking.createdAt)} dã du?c h?y thành công.`,
   );
 
   return {
@@ -492,11 +729,8 @@ const approveCancelBookingService = async ({ bookingId, employeeId }) => {
   };
 };
 
-const rejectCancelBookingService = async ({
-  bookingId,
-  employeeId,
-  reason,
-}) => {
+const rejectCancelBookingService = async (data) => {
+  const { bookingId, employeeId, reason } = data;
   const booking = await sequelize.transaction(async (transaction) => {
     const booking = await getEmployeeBookingForAction({
       bookingId,
@@ -505,7 +739,7 @@ const rejectCancelBookingService = async ({
     });
 
     if (booking.bookingStatus !== BOOKING_STATUS.CANCEL_REQUESTED) {
-      throw new BadRequestError("Lá»‹ch sÃ¢n chÆ°a cÃ³ yÃªu cáº§u há»§y");
+      throw new BadRequestError("L?ch sân chua có yêu c?u h?y");
     }
 
     await booking.update(
@@ -525,18 +759,15 @@ const rejectCancelBookingService = async ({
   await sendUserNotification(
     booking.userId,
     "booking-cancel-rejected",
-    "YÃªu cáº§u há»§y lá»‹ch sÃ¢n bá»‹ tá»« chá»‘i",
+    "Yêu c?u h?y l?ch sân b? t? ch?i",
     reason
-      ? `YÃªu cáº§u há»§y lá»‹ch sÃ¢n ${formatBookingCode(booking.id, booking.createdDate)} bá»‹ tá»« chá»‘i. LÃ½ do: ${reason}`
-      : `YÃªu cáº§u há»§y lá»‹ch sÃ¢n ${formatBookingCode(booking.id, booking.createdDate)} bá»‹ tá»« chá»‘i.`,
+      ? `Yêu c?u h?y l?ch sân ${formatBookingCode(booking.id, booking.createdAt)} b? t? ch?i. Lý do: ${reason}`
+      : `Yêu c?u h?y l?ch sân ${formatBookingCode(booking.id, booking.createdAt)} b? t? ch?i.`,
   );
 };
 
-const cancelNoShowBookingService = async ({
-  bookingId,
-  employeeId,
-  reason,
-}) => {
+const cancelNoShowBookingService = async (data) => {
+  const { bookingId, employeeId, reason } = data;
   let refundResult;
   let handledBooking;
 
@@ -547,11 +778,13 @@ const cancelNoShowBookingService = async ({
       transaction,
     });
 
-    if (booking.bookingStatus !== BOOKING_STATUS.PENDING) {
+    if (booking.bookingStatus !== BOOKING_STATUS.CONFIRMED) {
       throw new BadRequestError(
-        "Chi co the huy truc tiep lich san dang cho xac nhan",
+        "Ch? có th? h?y v?ng m?t l?ch sân dã xác nh?n",
       );
     }
+
+    assertNoShowWindowReached(booking);
 
     if (
       [
@@ -560,17 +793,30 @@ const cancelNoShowBookingService = async ({
         BOOKING_STATUS.FAILED,
       ].includes(booking.bookingStatus)
     ) {
-      throw new BadRequestError("Tráº¡ng thÃ¡i lá»‹ch sÃ¢n hiá»‡n táº¡i khÃ´ng thá»ƒ há»§y");
+      throw new BadRequestError("Tr?ng thái l?ch sân hi?n t?i không th? h?y");
     }
 
-    refundResult = await refundBookingToWallet({ booking, transaction });
+    const payment = await getBookingPayment({
+      booking,
+      transaction,
+      lock: true,
+    });
+    const penalty = await chargeNoShowDeposit({
+      booking,
+      payment,
+      transaction,
+    });
+
+    refundResult = penalty.charged
+      ? { refunded: false, refundAmount: 0, penaltyAmount: penalty.amount }
+      : await refundBookingToWallet({ booking, transaction });
 
     await booking.update(
       {
         previousBookingStatus: booking.bookingStatus,
         bookingStatus: BOOKING_STATUS.CANCELLED,
         cancelledBy: CANCELLED_BY.EMPLOYEE,
-        cancelReason: reason || "KhÃ¡ch khÃ´ng Ä‘áº¿n nháº­n sÃ¢n",
+        cancelReason: reason || "Khách không d?n nh?n sân",
         cancelHandledAt: new Date(),
         cancelledAt: new Date(),
       },
@@ -583,13 +829,19 @@ const cancelNoShowBookingService = async ({
   await sendUserNotification(
     handledBooking.userId,
     "booking-cancelled-by-employee",
-    "Lá»‹ch sÃ¢n Ä‘Ã£ bá»‹ há»§y",
+    "L?ch sân dã b? h?y",
     refundResult?.refunded
-      ? `Lá»‹ch sÃ¢n ${formatBookingCode(handledBooking.id, handledBooking.createdDate)} Ä‘Ã£ bá»‹ há»§y vÃ  hoÃ n ${Number(
+      ? `L?ch sân ${formatBookingCode(handledBooking.id, handledBooking.createdAt)} dã b? h?y và hoàn ${Number(
           refundResult.refundAmount,
-        ).toLocaleString("vi-VN")}Ä‘ vÃ o vÃ­.`
-      : `Lá»‹ch sÃ¢n ${formatBookingCode(handledBooking.id, handledBooking.createdDate)} Ä‘Ã£ bá»‹ há»§y. LÃ½ do: ${reason || "KhÃ¡ch khÃ´ng Ä‘áº¿n nháº­n sÃ¢n"}`,
+        ).toLocaleString("vi-VN")}d vào ví.`
+      : `L?ch sân ${formatBookingCode(handledBooking.id, handledBooking.createdAt)} dã b? h?y. Lý do: ${reason || "Khách không d?n nh?n sân"}`,
   );
+
+  await sendBookingMailSafely({
+    bookingId: handledBooking.id,
+    type: "cancel",
+    penaltyAmount: refundResult?.penaltyAmount || 0,
+  });
 
   return {
     refund: refundResult,
@@ -600,6 +852,7 @@ const employeeBookingService = {
   getBookingsService,
   getBookingDetailService,
   confirmBookingService,
+  receiveBookingService,
   completeBookingService,
   approveCancelBookingService,
   rejectCancelBookingService,
@@ -607,6 +860,3 @@ const employeeBookingService = {
 };
 
 export default employeeBookingService;
-
-
-

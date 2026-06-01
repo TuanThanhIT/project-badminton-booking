@@ -90,6 +90,11 @@ export const confirmEmployeeBooking = actionThunk(
   (bookingId) => employeeBookingService.confirmBookingService(bookingId),
 );
 
+export const receiveEmployeeBooking = actionThunk(
+  "employeeBooking/receiveEmployeeBooking",
+  (bookingId) => employeeBookingService.receiveBookingService(bookingId),
+);
+
 export const completeEmployeeBooking = createAsyncThunk<
   EmployeeBookingActionResponse,
   { bookingId: number; data?: CompleteEmployeeBookingRequest },

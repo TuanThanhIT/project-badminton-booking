@@ -39,7 +39,7 @@ export type RegisterData = {
   roleId: number;
   isVerified: boolean;
   isActive: boolean;
-  createdDate: string;
+  createdAt: string;
 };
 
 export type RegisterResponse = ApiResponse<RegisterData>;

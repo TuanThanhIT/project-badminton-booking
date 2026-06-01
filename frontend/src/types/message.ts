@@ -30,7 +30,7 @@ export type ChatMessage = {
   body: string;
   type: MessageType;
   isRead: boolean;
-  createdDate: string;
+  createdAt: string;
   mediaUrl?: string | null;
   isRecalled?: boolean;
   replyTo?: ReplyToMessage | null;
@@ -41,7 +41,7 @@ export type Conversation = {
   type: ConversationType;
   conversationName: string;
   avatar?: string | null;
-  updatedDate: string;
+  updatedAt: string;
   participants: ConversationParticipant[];
   unreadCount: number;
   lastMessage?: ChatMessage | null;

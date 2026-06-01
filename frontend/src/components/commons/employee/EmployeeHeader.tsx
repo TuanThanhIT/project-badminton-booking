@@ -129,18 +129,6 @@ const EmployeeHeader = () => {
             Lịch sân
           </NavLink>
           <NavLink
-            to="/employee/shifts"
-            className={({ isActive }) =>
-              `rounded-xl px-4 py-2 text-sm font-semibold transition ${
-                isActive
-                  ? "bg-white text-sky-700 shadow-sm"
-                  : "text-slate-600 hover:text-slate-950"
-              }`
-            }
-          >
-            Ca làm
-          </NavLink>
-          <NavLink
             to="/employee/orders"
             className={({ isActive }) =>
               `rounded-xl px-4 py-2 text-sm font-semibold transition ${
@@ -151,6 +139,18 @@ const EmployeeHeader = () => {
             }
           >
             Đơn hàng
+          </NavLink>
+          <NavLink
+            to="/employee/shifts"
+            className={({ isActive }) =>
+              `rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                isActive
+                  ? "bg-white text-sky-700 shadow-sm"
+                  : "text-slate-600 hover:text-slate-950"
+              }`
+            }
+          >
+            Ca làm
           </NavLink>
           <NavLink
             to="/employee/cash-register"
@@ -263,7 +263,7 @@ const EmployeeHeader = () => {
                             </p>
                             <p className="mt-2 text-xs text-slate-400">
                               {new Date(
-                                notification.createdDate,
+                                notification.createdAt,
                               ).toLocaleString("vi-VN")}
                             </p>
                           </div>

@@ -50,8 +50,8 @@ const RefreshToken = sequelize.define(
   {
     tableName: "RefreshTokens",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
 
     indexes: [
       {

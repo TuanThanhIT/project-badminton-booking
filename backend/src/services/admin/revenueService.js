@@ -511,21 +511,21 @@ const getDashboardService = async () => {
     getRevenueByBranchService(thisMonthStart, today),
     getRevenueProductsService(thisMonthStart, today, 5),
     Booking.findAll({
-      attributes: ["id", "bookingStatus", "totalAmount", "createdDate"],
+      attributes: ["id", "bookingStatus", "totalAmount", "createdAt"],
       include: [
         { model: User, as: "user", attributes: ["id", "username", "email"], include: [{ model: Profile, as: "profile", attributes: ["fullName", "avatar"] }] },
         { model: Branch, as: "branch", attributes: ["id", "branchName"] },
       ],
-      order: [["createdDate", "DESC"]],
+      order: [["createdAt", "DESC"]],
       limit: 5,
     }),
     Order.findAll({
-      attributes: ["id", "orderStatus", "totalAmount", "createdDate"],
+      attributes: ["id", "orderStatus", "totalAmount", "createdAt"],
       include: [
         { model: Branch, as: "branch", attributes: ["id", "branchName"] },
         { model: OrderGroup, as: "orderGroup", attributes: ["id", "userId"], include: [{ model: User, as: "user", attributes: ["id", "username", "email"], include: [{ model: Profile, as: "profile", attributes: ["fullName", "avatar"] }] }] },
       ],
-      order: [["createdDate", "DESC"]],
+      order: [["createdAt", "DESC"]],
       limit: 5,
     }),
   ]);
@@ -565,11 +565,11 @@ const getDashboardService = async () => {
     chart,
     recentBookings: recentBookings.map((b) => {
       const bj = b.toJSON();
-      return { id: bj.id, status: bj.bookingStatus, amount: Number(bj.totalAmount), createdDate: bj.createdDate, branchName: bj.branch?.branchName, fullName: bj.user?.profile?.fullName, username: bj.user?.username, avatar: bj.user?.profile?.avatar, email: bj.user?.email };
+      return { id: bj.id, status: bj.bookingStatus, amount: Number(bj.totalAmount), createdAt: bj.createdAt, branchName: bj.branch?.branchName, fullName: bj.user?.profile?.fullName, username: bj.user?.username, avatar: bj.user?.profile?.avatar, email: bj.user?.email };
     }),
     recentOrders: recentOrders.map((o) => {
       const oj = o.toJSON();
-      return { id: oj.id, status: oj.orderStatus, amount: Number(oj.totalAmount), createdDate: oj.createdDate, branchName: oj.branch?.branchName, fullName: oj.orderGroup?.user?.profile?.fullName, username: oj.orderGroup?.user?.username, avatar: oj.orderGroup?.user?.profile?.avatar, email: oj.orderGroup?.user?.email };
+      return { id: oj.id, status: oj.orderStatus, amount: Number(oj.totalAmount), createdAt: oj.createdAt, branchName: oj.branch?.branchName, fullName: oj.orderGroup?.user?.profile?.fullName, username: oj.orderGroup?.user?.username, avatar: oj.orderGroup?.user?.profile?.avatar, email: oj.orderGroup?.user?.email };
     }),
   };
 };

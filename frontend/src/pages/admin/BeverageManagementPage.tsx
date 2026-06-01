@@ -134,7 +134,7 @@ const BeverageManagementPage = () => {
                       )}
                     </td>
                     <td className="px-4 py-3 text-center text-gray-500 text-xs">
-                      {new Date(b.createdDate).toLocaleDateString("vi-VN")}
+                      {new Date(b.createdAt).toLocaleDateString("vi-VN")}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-2">

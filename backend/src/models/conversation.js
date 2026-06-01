@@ -52,8 +52,8 @@ const Conversation = sequelize.define(
   {
     tableName: "Conversations",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   },
 );
 

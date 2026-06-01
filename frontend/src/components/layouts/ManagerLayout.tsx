@@ -16,7 +16,7 @@ const ManagerLayout = () => {
       <ManagerSidebar collapsed={collapsed} setCollapsed={setCollapsed} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <ManagerHeader collapsed={collapsed} />
+        <ManagerHeader />
 
         <main className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-100 via-white to-sky-50 p-8">
           <Outlet />

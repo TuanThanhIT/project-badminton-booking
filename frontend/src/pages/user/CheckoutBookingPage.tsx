@@ -167,6 +167,19 @@ const CheckoutBookingPage = () => {
       });
   };
 
+  const handleBackFromCheckout = async () => {
+    const confirmed = await showConfirmDialog(
+      "Xác nhận thoát",
+      "Bạn chưa hoàn tất thanh toán. Quay lại có thể làm gián đoạn lịch đặt hiện tại.",
+      "Xác nhận",
+      "Hủy",
+      "danger",
+    );
+
+    if (!confirmed) return;
+    navigate("/courts");
+  };
+
   const handlePayNow = async () => {
     const confirmed = await showConfirmDialog(
       "Xác nhận đặt sân",
@@ -300,8 +313,9 @@ const CheckoutBookingPage = () => {
             <div className="flex items-start gap-4">
               <button
                 type="button"
-                onClick={() => navigate(-1)}
+                onClick={handleBackFromCheckout}
                 className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 transition hover:bg-slate-50"
+                aria-label="Quay lại"
               >
                 <ArrowLeft size={21} />
               </button>
@@ -502,6 +516,16 @@ const CheckoutBookingPage = () => {
                   />
                   Lịch đặt sẽ được ghi nhận ngay sau khi xác nhận thành công.
                 </div>
+
+                {selectedMethod === BOOKING_PAYMENT_METHOD.CASH.value && (
+                  <div className="mt-3 rounded-2xl border border-amber-100 bg-amber-50 p-4 text-xs leading-5 text-amber-800">
+                    Thanh toán tại sân yêu cầu ví B-Hub còn khả dụng tối thiểu{" "}
+                    <strong>{formatPrice(Math.round(finalAmount * 0.5))}</strong>{" "}
+                    để giữ cọc 50%. Nếu bạn không đến nhận sân quá 30 phút so
+                    với giờ bắt đầu và không có yêu cầu hủy hợp lệ, khoản cọc
+                    này có thể bị trừ.
+                  </div>
+                )}
 
                 <button
                   type="button"

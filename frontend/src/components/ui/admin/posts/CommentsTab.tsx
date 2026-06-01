@@ -115,7 +115,7 @@ const CommentsTab = () => {
                     <p className="text-xs text-gray-600 truncate">{c.postTitle || `#${c.postId}`}</p>
                     {c.postType && <span className={`px-1.5 py-0.5 rounded border text-xs ${POST_TYPE_COLOR[c.postType] || ""}`}>{POST_TYPE_LABEL[c.postType] || c.postType}</span>}
                   </td>
-                  <td className="px-3 py-3 text-center text-xs text-gray-500">{new Date(c.createdDate).toLocaleDateString("vi-VN")}</td>
+                  <td className="px-3 py-3 text-center text-xs text-gray-500">{new Date(c.createdAt).toLocaleDateString("vi-VN")}</td>
                   <td className="px-3 py-3 text-center">
                     <button onClick={() => handleDelete(c.id)} disabled={deletingId === c.id}
                       className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-red-50 text-red-500 hover:bg-red-100 border border-red-200 transition disabled:opacity-60">

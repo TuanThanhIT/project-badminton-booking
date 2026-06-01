@@ -55,8 +55,8 @@ const Wallet = sequelize.define(
   {
     tableName: "Wallets",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   },
 );
 

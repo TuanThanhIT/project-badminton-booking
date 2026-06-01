@@ -4,7 +4,7 @@ export type NotificationResponse = {
   message: string;
   isRead: boolean;
   type: string;
-  createdDate: string;
+  createdAt: string;
 };
 
 export type NotificationListResponse = NotificationResponse[];

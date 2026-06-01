@@ -19,7 +19,7 @@ const getAdminProductsService = async (data) => {
 
   const { rows, count } = await Product.findAndCountAll({
     where,
-    attributes: ["id", "productName", "brand", "description", "thumbnailUrl", "categoryId", "createdDate"],
+    attributes: ["id", "productName", "brand", "description", "thumbnailUrl", "categoryId", "createdAt"],
     include: [
       { model: Category, as: "category", attributes: ["id", "cateName", "menuGroup"] },
       {
@@ -33,7 +33,7 @@ const getAdminProductsService = async (data) => {
     ],
     limit: Number(limit),
     offset: Number(offset),
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
     distinct: true,
   });
 
@@ -53,7 +53,7 @@ const getAdminProductsService = async (data) => {
       menuGroup: prod.category?.menuGroup,
       variantCount: prod.variants?.length || 0,
       totalStock,
-      createdDate: prod.createdDate,
+      createdAt: prod.createdAt,
     };
   });
 

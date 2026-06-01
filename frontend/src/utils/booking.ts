@@ -1,12 +1,12 @@
 export const formatBookingCode = (
   id: string | number,
-  createdDate?: string | null,
+  createdAt?: string | null,
 ) => {
-  if (!createdDate) {
+  if (!createdAt) {
     return `BK-${String(id).padStart(6, "0")}`;
   }
 
-  const d = new Date(createdDate);
+  const d = new Date(createdAt);
 
   const datePart = `${d.getFullYear().toString().slice(-2)}${String(
     d.getMonth() + 1,

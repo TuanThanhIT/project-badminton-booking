@@ -72,7 +72,7 @@ const getUsersService = async (data) => {
     attributes: ["id", "username", "email", "isVerified", "isActive", "createdDate"],
     limit: Number(limit),
     offset: Number(offset),
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
     distinct: true,
   });
 
@@ -84,7 +84,7 @@ const getUsersService = async (data) => {
       email: user.email,
       isVerified: user.isVerified,
       isActive: user.isActive,
-      createdDate: user.createdDate,
+      createdAt: user.createdAt,
       role: user.role?.roleName,
       fullName: user.profile?.fullName,
       phoneNumber: user.profile?.phoneNumber,
@@ -161,7 +161,7 @@ const getUserDetailService = async (userId) => {
     email: data.email,
     isVerified: data.isVerified,
     isActive: data.isActive,
-    createdDate: data.createdDate,
+    createdAt: data.createdAt,
     role: data.role?.roleName,
     profile: data.profile,
     managedBranches: managedBranches.map((branch) => ({

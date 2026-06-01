@@ -8,6 +8,7 @@ type CreateGroupModalProps = {
   currentUserId?: number;
   onClose: () => void;
   onSubmit: (name: string, userIds: number[]) => Promise<void>;
+  searchUsers?: (q: string, limit?: number) => Promise<UserSearchHit[]>;
 };
 
 const CreateGroupModal = ({
@@ -15,6 +16,7 @@ const CreateGroupModal = ({
   currentUserId,
   onClose,
   onSubmit,
+  searchUsers,
 }: CreateGroupModalProps) => {
   const [name, setName] = useState("");
   const [selected, setSelected] = useState<UserSearchHit[]>([]);
@@ -107,6 +109,7 @@ const CreateGroupModal = ({
               excludeUserIds={excludeIds}
               selected={selected}
               onSelectedChange={setSelected}
+              searchUsers={searchUsers}
               placeholder="Tìm theo tên hoặc username..."
             />
           </div>

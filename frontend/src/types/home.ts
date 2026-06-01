@@ -51,7 +51,7 @@ export type HomeProduct = {
   productName: string;
   brand: string;
   thumbnailUrl: string;
-  createdDate?: string;
+  createdAt?: string;
 
   category: HomeProductCategory | null;
 
@@ -123,7 +123,7 @@ export type HomeCustomerReview = {
   targetType: "BRANCH" | "PRODUCT" | string;
   rating: number;
   content: string;
-  createdDate?: string;
+  createdAt?: string;
 
   user: HomeCustomerReviewUser;
   branch: HomeCustomerReviewBranch | null;

@@ -23,6 +23,7 @@ const STATUS_LABEL: Record<string, string> = {
   ALL: "Tất cả",
   PENDING: "Chờ xử lý",
   CONFIRMED: "Đã xác nhận",
+  CHECKED_IN: "Đã nhận sân",
   COMPLETED: "Hoàn thành",
   CANCELLED: "Đã hủy",
 };
@@ -30,6 +31,7 @@ const STATUS_LABEL: Record<string, string> = {
 const STATUS_CLASS: Record<string, string> = {
   PENDING: "bg-amber-50 text-amber-700 ring-1 ring-amber-100",
   CONFIRMED: "bg-sky-50 text-sky-700 ring-1 ring-sky-100",
+  CHECKED_IN: "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100",
   COMPLETED: "bg-slate-100 text-slate-700 ring-1 ring-slate-200",
   CANCELLED: "bg-red-50 text-red-600 ring-1 ring-red-100",
 };
@@ -71,6 +73,7 @@ const TABS = [
   "ALL",
   "PENDING",
   "CONFIRMED",
+  "CHECKED_IN",
   "CANCEL_REQUESTED",
   "COMPLETED",
   "CANCELLED",
@@ -113,7 +116,9 @@ const BookingPage = () => {
     const paidCount = bookings.filter(
       (item) =>
         item.payment?.status === "PAID" ||
-        ["CONFIRMED", "COMPLETED"].includes(item.bookingStatus),
+        ["CONFIRMED", "CHECKED_IN", "COMPLETED"].includes(
+          item.bookingStatus,
+        ),
     ).length;
 
     return {
@@ -387,7 +392,7 @@ const BookingPage = () => {
                                 <p className="mt-1 font-mono text-lg font-semibold text-sky-700">
                                   {formatBookingCode(
                                     booking.bookingId,
-                                    booking.createdDate,
+                                    booking.createdAt,
                                   )}
                                 </p>
                               </div>
@@ -609,7 +614,7 @@ const BookingPage = () => {
 
                             <p className="mt-3 text-xs text-slate-500">
                               Tạo lúc{" "}
-                              {new Date(booking.createdDate).toLocaleDateString(
+                              {new Date(booking.createdAt).toLocaleDateString(
                                 "vi-VN",
                               )}
                             </p>

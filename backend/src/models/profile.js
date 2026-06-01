@@ -113,8 +113,8 @@ const Profile = sequelize.define(
   {
     tableName: "Profiles",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   },
 );
 

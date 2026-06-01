@@ -50,8 +50,8 @@ const BranchManager = sequelize.define(
   {
     tableName: "BranchManagers",
     timestamps: true,
-    createdAt: "assignedDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   },
 );
 

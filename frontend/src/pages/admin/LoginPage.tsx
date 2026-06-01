@@ -8,7 +8,11 @@ import { toast } from "react-toastify";
 import { Lock, ShieldCheck, UserRound } from "lucide-react";
 import { FormLoginSchema, type formLogin } from "../../schemas/FormLoginSchema";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
-import { login, logout, logoutLocal } from "../../redux/slices/user/authSlice";
+import {
+  adminLogin,
+  logout,
+  logoutLocal,
+} from "../../redux/slices/user/authSlice";
 import type { LoginRequest } from "../../types/auth";
 import LoadingButton from "../../components/ui/common/LoadingButton";
 import { ROLE_NAME } from "../../utils/constants/role";
@@ -20,7 +24,7 @@ const LoginPage = () => {
   const dispatch = useAppDispatch();
 
   const loginLoading = useAppSelector(
-    (state) => state.ui.loadingMap["user/login"] || false,
+    (state) => state.ui.loadingMap["auth/adminLogin"] || false,
   );
 
   const navigate = useNavigate();
@@ -61,7 +65,7 @@ const LoginPage = () => {
       localStorage.removeItem("rememberMe");
     }
 
-    dispatch(login({ data }))
+    dispatch(adminLogin({ data }))
       .unwrap()
       .then((res) => {
         const user = res.data.user;

@@ -12,7 +12,7 @@ const getAdminBeveragesService = async (data) => {
 
   const { rows, count } = await Beverage.findAndCountAll({
     where,
-    attributes: ["id", "beverageName", "thumbnailUrl", "price", "createdDate"],
+    attributes: ["id", "beverageName", "thumbnailUrl", "price", "createdAt"],
     include: [
       {
         model: BeverageStock,
@@ -23,7 +23,7 @@ const getAdminBeveragesService = async (data) => {
     ],
     limit: Number(limit),
     offset: Number(offset),
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
   });
 
   return {

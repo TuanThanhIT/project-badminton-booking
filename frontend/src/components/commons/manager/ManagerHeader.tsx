@@ -5,11 +5,7 @@
 import { Bell, Mail, Search } from "lucide-react";
 import { useAppSelector } from "../../../redux/hook";
 
-interface Props {
-  collapsed: boolean;
-}
-
-const ManagerHeader = ({ collapsed }: Props) => {
+const ManagerHeader = () => {
   const { user } = useAppSelector((state) => state.auth);
 
   return (

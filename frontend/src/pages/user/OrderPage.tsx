@@ -382,7 +382,7 @@ const OrderPage = () => {
                                 #
                                 {formatOrderCode(
                                   group.orderGroupId,
-                                  group.createdDate,
+                                  group.createdAt,
                                 )}
                               </p>
                             </div>

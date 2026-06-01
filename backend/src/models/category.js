@@ -47,8 +47,8 @@ const Category = sequelize.define(
   {
     tableName: "Categories",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   },
 );
 

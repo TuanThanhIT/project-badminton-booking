@@ -2,9 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import sequelize from "./config/db.js";
-import { syncEnumColumns } from "./config/syncEnumColumns.js";
-import { syncClassRoomColumns } from "./config/syncClassRoomColumns.js";
+import { testConnection } from "./config/db.js";
 import { createServer } from "http";
 import { initSocket } from "./socket/index.js";
 import errorHandler from "./middlewares/errorHandler.js";
@@ -33,6 +31,17 @@ import initEmployeeWorkShiftRoute from "./routes/employee/workShiftRoute.js";
 import initEmployeeCounterRoute from "./routes/employee/counterRoute.js";
 import initEmployeeBookingRoute from "./routes/employee/bookingRoute.js";
 import initWebhookRoute from "./routes/user/webhookRoute.js";
+import initCourtRouteManager from "./routes/manager/courtRoute.js";
+import initBranchRouteManager from "./routes/manager/branchRoute.js";
+import initEmployeeRouteManager from "./routes/manager/employeeRoute.js";
+import initBeverageRouteManager from "./routes/manager/beverageRoute.js";
+import initProductRouteManager from "./routes/manager/productRoute.js";
+import initWorkShiftRouteManager from "./routes/manager/workShiftRoute.js";
+import initSalaryRouteManager from "./routes/manager/salaryRoute.js";
+import initRevenueRouteManager from "./routes/manager/revenueRoute.js";
+import initOrderRouteManager from "./routes/manager/orderRoute.js";
+import initConversationRouteManager from "./routes/manager/conversationRoute.js";
+import initInventoryReceiptRouteManager from "./routes/manager/inventoryReceiptRoute.js";
 import initFeedbackRoute from "./routes/user/feedbackRoute.js";
 import initNotificationRoute from "./routes/user/notificationRoute.js";
 import initHomeRoute from "./routes/user/homeRoute.js";
@@ -56,13 +65,24 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 8088;
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+].filter(Boolean);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   }),
 );
@@ -116,6 +136,18 @@ initAdminCategoryRoute(app);
 initAdminUploadRoute(app);
 initAdminCoachApplicationRoute(app);
 
+// Manager
+initCourtRouteManager(app);
+initBranchRouteManager(app);
+initEmployeeRouteManager(app);
+initBeverageRouteManager(app);
+initProductRouteManager(app);
+initWorkShiftRouteManager(app);
+initSalaryRouteManager(app);
+initRevenueRouteManager(app);
+initOrderRouteManager(app);
+initConversationRouteManager(app);
+initInventoryReceiptRouteManager(app);
 // create http server
 const httpServer = createServer(app);
 
@@ -124,11 +156,15 @@ initSocket(httpServer);
 
 app.use(errorHandler);
 
-sequelize.sync().then(async () => {
-  await syncEnumColumns(sequelize);
-  await syncClassRoomColumns(sequelize);
-  console.log("Database synced");
+const startServer = async () => {
+  await testConnection();
+
   httpServer.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
+};
+
+startServer().catch((error) => {
+  console.error("Unable to start server:", error);
+  process.exit(1);
 });

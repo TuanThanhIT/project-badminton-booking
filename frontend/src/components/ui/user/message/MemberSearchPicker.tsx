@@ -7,6 +7,7 @@ type MemberSearchPickerProps = {
   selected: UserSearchHit[];
   onSelectedChange: (users: UserSearchHit[]) => void;
   placeholder?: string;
+  searchUsers?: (q: string, limit?: number) => Promise<UserSearchHit[]>;
 };
 
 const useDebounced = <T,>(value: T, ms: number): T => {
@@ -23,6 +24,7 @@ const MemberSearchPicker = ({
   selected,
   onSelectedChange,
   placeholder = "Tìm theo tên hoặc username...",
+  searchUsers,
 }: MemberSearchPickerProps) => {
   const formatUserLabel = (u: UserSearchHit) => {
     const name = u.fullName?.trim();
@@ -50,12 +52,16 @@ const MemberSearchPicker = ({
     let cancelled = false;
     setLoading(true);
     setErr("");
-    userSearchService
-      .searchUsersService(q, 15)
+
+    const request = searchUsers
+      ? searchUsers(q, 15)
+      : userSearchService.searchUsersService(q, 15).then((res) => res.data.data || []);
+
+    request
       .then((res) => {
         if (cancelled) return;
         const ex = excludeSet();
-        setHits((res.data.data || []).filter((u) => !ex.has(u.id)));
+        setHits((res || []).filter((u) => !ex.has(u.id)));
       })
       .catch(() => {
         if (!cancelled) {
@@ -69,7 +75,7 @@ const MemberSearchPicker = ({
     return () => {
       cancelled = true;
     };
-  }, [debounced, excludeSet]);
+  }, [debounced, excludeSet, searchUsers]);
 
   const addOne = (u: UserSearchHit) => {
     if (excludeSet().has(u.id)) return;

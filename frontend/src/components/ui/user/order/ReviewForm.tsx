@@ -217,14 +217,14 @@ const ReviewForm = ({
             )}
           </div>
 
-          {feedback?.updatedDate && (
+          {feedback?.updatedAt && (
             <div className="flex justify-center">
               <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-500">
                 <Clock size={14} />
                 <span>
                   Cập nhật lần cuối:{" "}
                   <span className="font-semibold text-slate-700">
-                    {formatDateTime(feedback.updatedDate)}
+                    {formatDateTime(feedback.updatedAt)}
                   </span>
                 </span>
               </div>

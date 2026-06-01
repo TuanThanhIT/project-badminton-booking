@@ -120,8 +120,8 @@ const Post = sequelize.define(
   {
     tableName: "Posts",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   },
 );
 

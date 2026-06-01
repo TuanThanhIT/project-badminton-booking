@@ -24,7 +24,7 @@ const DashboardRecentRow = ({ item, statusConfig }: DashboardRecentRowProps) => 
         <div>
           <p className="font-semibold text-slate-800 text-sm">{item.fullName || item.username || "—"}</p>
           <p className="text-xs text-slate-400 mt-0.5">
-            {item.branchName || item.email || "—"} · {fmtDate(item.createdDate)}
+            {item.branchName || item.email || "—"} · {fmtDate(item.createdAt)}
           </p>
         </div>
       </div>

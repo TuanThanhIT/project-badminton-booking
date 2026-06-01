@@ -71,8 +71,8 @@ const UserDetailModal = ({ userId, onClose }: UserDetailModalProps) => {
               { label: "Trạng thái", value: user.isActive ? "🟢 Hoạt động" : "🔴 Đã khóa" },
               {
                 label: "Ngày tạo",
-                value: user.createdDate
-                  ? new Date(user.createdDate).toLocaleDateString("vi-VN")
+                value: user.createdAt
+                  ? new Date(user.createdAt).toLocaleDateString("vi-VN")
                   : "—",
               },
             ].map(({ label, value }) => (

@@ -185,7 +185,7 @@ const getPostsService = async (data) => {
       where,
       limit,
       offset,
-      order: [["createdDate", "DESC"]],
+      order: [["createdAt", "DESC"]],
       transaction: t,
       attributes: {
         include: [

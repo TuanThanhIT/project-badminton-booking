@@ -6,9 +6,10 @@ import BadRequestError from "../../errors/BadRequestError.js";
 import RefreshToken from "../../models/refreshToken.js";
 import { generateAccessToken, generateRefreshToken } from "../../utils/jwt.js";
 import { getEmployeeBranchIds } from "../employee/branchAccessService.js";
+import { ROLE_NAME } from "../../constants/userConstant.js";
 dotenv.config();
 
-export const handleLogin = async (username, password) => {
+export const handleLogin = async (username, password, expectedRole) => {
   if (!username || !password) {
     throw new BadRequestError("Vui lòng nhập username và password.");
   }
@@ -47,8 +48,14 @@ export const handleLogin = async (username, password) => {
       throw new BadRequestError("Thông tin đăng nhập không chính xác!");
     }
 
+    if (expectedRole && user.role.roleName !== expectedRole) {
+      throw new BadRequestError(
+        "Tài khoản không có quyền đăng nhập khu vực này.",
+      );
+    }
+
     const branchIds =
-      user.role.roleName === "EMPLOYEE"
+      user.role.roleName === ROLE_NAME.EMPLOYEE
         ? await getEmployeeBranchIds(user.id, t)
         : [];
 

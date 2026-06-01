@@ -113,7 +113,7 @@ const WalletsTab = () => {
                       {w.status === "ACTIVE" ? "Hoạt động" : "Đã khóa"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-center text-xs text-gray-500">{fmtDate(w.createdDate)}</td>
+                  <td className="px-4 py-3 text-center text-xs text-gray-500">{fmtDate(w.createdAt)}</td>
                   <td className="px-4 py-3 text-center">
                     <button onClick={() => setToggleModal({ open: true, wallet: w })}
                       className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-white text-xs font-semibold transition ${

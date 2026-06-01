@@ -119,7 +119,11 @@ const getSuccessOrderStatuses = () => {
 };
 
 const getSuccessBookingStatuses = () => {
-  return [BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.COMPLETED];
+  return [
+    BOOKING_STATUS.CONFIRMED,
+    BOOKING_STATUS.CHECKED_IN,
+    BOOKING_STATUS.COMPLETED,
+  ];
 };
 
 const getCategoryGroups = async () => {
@@ -217,11 +221,11 @@ const formatProduct = (product, extra = {}) => {
     );
   }, 0);
 
-  const createdDate = data.createdDate ? new Date(data.createdDate) : null;
+  const createdAt = data.createdAt ? new Date(data.createdAt) : null;
   const now = new Date();
 
-  const diffDays = createdDate
-    ? (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)
+  const diffDays = createdAt
+    ? (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)
     : 999;
 
   return {
@@ -229,7 +233,7 @@ const formatProduct = (product, extra = {}) => {
     productName: data.productName,
     brand: data.brand,
     thumbnailUrl: data.thumbnailUrl,
-    createdDate: data.createdDate,
+    createdAt: data.createdAt,
     category: data.category || null,
 
     minPrice,
@@ -257,7 +261,7 @@ const getProductCardsByIds = async (productIds = [], extraMap = new Map()) => {
       "brand",
       "thumbnailUrl",
       "categoryId",
-      "createdDate",
+      "createdAt",
     ],
     include: [
       {
@@ -333,7 +337,7 @@ const getHotProducts = async (limit = 4) => {
   if (!soldRows.length) {
     const fallbackProducts = await Product.findAll({
       attributes: ["id"],
-      order: [["createdDate", "DESC"]],
+      order: [["createdAt", "DESC"]],
       limit,
       raw: true,
     });
@@ -436,10 +440,10 @@ const getNewProductsByGroup = async (
       const productRows = await Product.findAll({
         where: {
           categoryId: { [Op.in]: categoryIds },
-          createdDate: { [Op.gte]: fifteenDaysAgo },
+          createdAt: { [Op.gte]: fifteenDaysAgo },
         },
         attributes: ["id"],
-        order: [["createdDate", "DESC"]],
+        order: [["createdAt", "DESC"]],
         limit: limitPerGroup,
         raw: true,
       });
@@ -609,7 +613,7 @@ const getHotBranches = async (limit = 3) => {
     const fallbackBranches = await Branch.findAll({
       where: { isActive: true },
       attributes: ["id"],
-      order: [["createdDate", "DESC"]],
+      order: [["createdAt", "DESC"]],
       limit,
       raw: true,
     });
@@ -822,7 +826,7 @@ const getCustomerReviews = async (limit = 6) => {
         data.feedbackContent ||
         data.description ||
         "Khách hàng hài lòng với trải nghiệm tại B-Hub.",
-      createdDate: data.createdDate,
+      createdAt: data.createdAt,
 
       user: {
         id: data.user?.id || null,

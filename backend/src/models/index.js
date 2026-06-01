@@ -63,11 +63,12 @@ import CoachProfile from "./coachProfile.js";
 import CoachApplication from "./coachApplication.js";
 import ClassEnrollment from "./classEnrollment.js";
 import ClassRoom from "./classRoom.js";
-import WithdrawRequest from "./withDrawRequest.js";
+import WithdrawRequest from "./withdrawRequest.js";
 import RefreshToken from "./refreshToken.js";
 
 import OrderGroup from "./orderGroup.js";
 import VariantStock from "./variantStock.js";
+import InventoryReceipt from "./inventoryReceipt.js";
 import OrderShippingLog from "./orderShippingLog.js";
 
 //////////////////////////////////////////////////////
@@ -162,6 +163,16 @@ BranchImage.belongsTo(Branch, {
   foreignKey: "branchId",
   as: "branch",
 });
+
+// Branch.hasMany(User, {
+//   foreignKey: "branchId",
+//   as: "employees",
+// });
+
+// User.belongsTo(Branch, {
+//   foreignKey: "branchId",
+//   as: "branch",
+// });
 
 //////////////////////////////////////////////////////
 /////////////// BRANCH MANAGER ///////////////////////
@@ -315,6 +326,39 @@ VariantStock.belongsTo(Branch, {
   as: "branch",
 });
 
+Branch.hasMany(InventoryReceipt, {
+  foreignKey: "branchId",
+  as: "inventoryReceipts",
+});
+InventoryReceipt.belongsTo(Branch, {
+  foreignKey: "branchId",
+  as: "branch",
+});
+User.hasMany(InventoryReceipt, {
+  foreignKey: "managerId",
+  as: "createdInventoryReceipts",
+});
+InventoryReceipt.belongsTo(User, {
+  foreignKey: "managerId",
+  as: "manager",
+});
+Product.hasMany(InventoryReceipt, {
+  foreignKey: "productId",
+  as: "inventoryReceipts",
+});
+InventoryReceipt.belongsTo(Product, {
+  foreignKey: "productId",
+  as: "product",
+});
+ProductVariant.hasMany(InventoryReceipt, {
+  foreignKey: "variantId",
+  as: "inventoryReceipts",
+});
+InventoryReceipt.belongsTo(ProductVariant, {
+  foreignKey: "variantId",
+  as: "variant",
+});
+
 //////////////////////////////////////////////////////
 //////////////// PRODUCT /////////////////////////////
 //////////////////////////////////////////////////////
@@ -463,11 +507,11 @@ DraftProductItem.belongsTo(DraftBooking, {
 });
 
 ProductVariant.hasMany(DraftProductItem, {
-  foreignKey: "productVariantId",
+  foreignKey: "variantId",
   as: "draftItems",
 });
 DraftProductItem.belongsTo(ProductVariant, {
-  foreignKey: "productVariantId",
+  foreignKey: "variantId",
   as: "variant",
 });
 
@@ -511,7 +555,7 @@ OfflineBooking.belongsTo(DraftBooking, {
 //////////////////////////////////////////////////////
 //////////////// MONTHLY BOOKING /////////////////////
 //////////////////////////////////////////////////////
-// Quan h? cho Ð?t sân tháng
+// Quan h? cho �?t s�n th�ng
 User.hasMany(MonthlyBooking, { foreignKey: "userId", as: "monthlyBookings" });
 MonthlyBooking.belongsTo(User, { foreignKey: "userId", as: "user" });
 
@@ -524,7 +568,7 @@ MonthlyBooking.belongsTo(Branch, { foreignKey: "branchId", as: "branch" });
 Court.hasMany(MonthlyBooking, { foreignKey: "courtId", as: "monthlyBookings" });
 MonthlyBooking.belongsTo(Court, { foreignKey: "courtId", as: "court" });
 
-// Quan h? k?t n?i Gói tháng v?i các Bu?i t?p chi ti?t
+// Quan h? k?t n?i G�i th�ng v?i c�c Bu?i t?p chi ti?t
 MonthlyBooking.hasMany(BookingDetail, {
   foreignKey: "monthlyBookingId",
   as: "details",
@@ -846,9 +890,8 @@ export {
   ClassEnrollment,
   ClassRoom,
   VariantStock,
+  InventoryReceipt,
   BeverageStock,
   MonthlyBooking,
   RefreshToken,
 };
-
-

@@ -38,8 +38,8 @@ const WorkShift = sequelize.define(
       validate: {
         notNull: { msg: "Start time is required" },
         is: {
-          args: /^([01]\d|2[0-3]):([0-5]\d)$/,
-          msg: "Start time must be in format HH:mm",
+          args: /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/,
+          msg: "Start time must be in format HH:mm or HH:mm:ss",
         },
       },
     },
@@ -49,13 +49,13 @@ const WorkShift = sequelize.define(
       validate: {
         notNull: { msg: "End time is required" },
         is: {
-          args: /^([01]\d|2[0-3]):([0-5]\d)$/,
-          msg: "End time must be in format HH:mm",
+          args: /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/,
+          msg: "End time must be in format HH:mm or HH:mm:ss",
         },
       },
     },
     cashierShiftWage: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       defaultValue: 0,
       validate: {
@@ -72,7 +72,7 @@ const WorkShift = sequelize.define(
       },
     },
     staffShiftWage: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       defaultValue: 0,
       validate: {
@@ -124,8 +124,8 @@ const WorkShift = sequelize.define(
   {
     tableName: "WorkShifts",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   },
 );
 

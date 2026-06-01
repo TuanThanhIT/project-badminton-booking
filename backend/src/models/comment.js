@@ -79,8 +79,8 @@ const Comment = sequelize.define(
   {
     tableName: "Comments",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   },
 );
 

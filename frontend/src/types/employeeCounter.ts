@@ -45,6 +45,7 @@ export type CounterProduct = {
 
 export type CounterBeverage = {
   id: number;
+  beverageId?: number;
   beverageName: string;
   thumbnailUrl?: string;
   price: number;
@@ -108,8 +109,8 @@ export type CounterDraft = {
   note: string;
   draftBookingStatus: string;
   totalAmount: number;
-  createdDate: string;
-  updatedDate: string;
+  createdAt: string;
+  updatedAt: string;
   courtItems: {
     id: number;
     courtId: number;
@@ -126,6 +127,8 @@ export type CounterDraft = {
     thumbnailUrl?: string;
     size?: string;
     color?: string;
+    material?: string;
+    sku?: string;
     price: number;
     quantity: number;
     subTotal: number;

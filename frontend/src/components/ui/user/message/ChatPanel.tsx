@@ -44,6 +44,7 @@ type ChatPanelProps = {
   onDeleteGroup?: () => Promise<void>;
   onAddMembers?: (userIds: number[]) => Promise<void>;
   onRemoveMember?: (userId: number) => Promise<void>;
+  searchUsers?: (q: string, limit?: number) => Promise<UserSearchHit[]>;
 };
 
 const dayKeyVi = (iso: string) => {
@@ -246,6 +247,7 @@ const ChatPanel = ({
   onDeleteGroup,
   onAddMembers,
   onRemoveMember,
+  searchUsers,
 }: ChatPanelProps) => {
   const [body, setBody] = useState("");
   const [showMembers, setShowMembers] = useState(false);
@@ -293,7 +295,7 @@ const ChatPanel = ({
     () =>
       [...messages].sort(
         (a, b) =>
-          new Date(a.createdDate).getTime() - new Date(b.createdDate).getTime(),
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
       ),
     [messages],
   );
@@ -307,7 +309,7 @@ const ChatPanel = ({
     let prev: ChatMessage | null = null;
 
     for (const m of sorted) {
-      const dk = dayKeyVi(m.createdDate);
+      const dk = dayKeyVi(m.createdAt);
       if (dk && dk !== lastDay) {
         lastDay = dk;
         out.push({ kind: "day", label: dk });
@@ -315,8 +317,8 @@ const ChatPanel = ({
       const sameSender = prev?.senderId === m.senderId;
       const gapMin =
         prev &&
-        (new Date(m.createdDate).getTime() -
-          new Date(prev.createdDate).getTime()) /
+        (new Date(m.createdAt).getTime() -
+          new Date(prev.createdAt).getTime()) /
           60000 <
           4;
       out.push({ kind: "msg", message: m, showMeta: !(sameSender && gapMin) });
@@ -482,6 +484,7 @@ const ChatPanel = ({
                 excludeUserIds={participantIds}
                 selected={pendingAdds}
                 onSelectedChange={setPendingAdds}
+                searchUsers={searchUsers}
                 placeholder="Tìm người để thêm..."
               />
               <button
@@ -674,7 +677,7 @@ const ChatPanel = ({
                 <span
                   className={`text-[10px] text-slate-400 mt-1 px-1 ${mine ? "text-right" : "text-left"}`}
                 >
-                  {formatRelativeTimeVi(m.createdDate)}
+                  {formatRelativeTimeVi(m.createdAt)}
                 </span>
               </div>
 

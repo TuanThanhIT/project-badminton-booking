@@ -51,7 +51,7 @@ const OfflineBooking = sequelize.define(
       },
     },
     totalAmount: {
-      type: DataTypes.DOUBLE,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       defaultValue: 0,
       validate: {
@@ -78,8 +78,8 @@ const OfflineBooking = sequelize.define(
   {
     tableName: "OfflineBookings",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   },
 );
 

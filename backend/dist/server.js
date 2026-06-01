@@ -4,10 +4,7 @@ var _express = _interopRequireDefault(require("express"));
 var _dotenv = _interopRequireDefault(require("dotenv"));
 var _cors = _interopRequireDefault(require("cors"));
 var _cookieParser = _interopRequireDefault(require("cookie-parser"));
-var _db = _interopRequireDefault(require("./config/db.js"));
-var _syncEnumColumns = require("./config/syncEnumColumns.js");
-var _syncClassRoomColumns = require("./config/syncClassRoomColumns.js");
-var _syncCoachProfileColumns = require("./config/syncCoachProfileColumns.js");
+var _db = require("./config/db.js");
 var _http = require("http");
 var _index = require("./socket/index.js");
 var _errorHandler = _interopRequireDefault(require("./middlewares/errorHandler.js"));
@@ -35,19 +32,30 @@ var _workShiftRoute = _interopRequireDefault(require("./routes/employee/workShif
 var _counterRoute = _interopRequireDefault(require("./routes/employee/counterRoute.js"));
 var _bookingRoute2 = _interopRequireDefault(require("./routes/employee/bookingRoute.js"));
 var _webhookRoute = _interopRequireDefault(require("./routes/user/webhookRoute.js"));
+var _courtRoute2 = _interopRequireDefault(require("./routes/manager/courtRoute.js"));
+var _branchRoute2 = _interopRequireDefault(require("./routes/manager/branchRoute.js"));
+var _employeeRoute = _interopRequireDefault(require("./routes/manager/employeeRoute.js"));
+var _beverageRoute = _interopRequireDefault(require("./routes/manager/beverageRoute.js"));
+var _productRoute2 = _interopRequireDefault(require("./routes/manager/productRoute.js"));
+var _workShiftRoute2 = _interopRequireDefault(require("./routes/manager/workShiftRoute.js"));
+var _salaryRoute = _interopRequireDefault(require("./routes/manager/salaryRoute.js"));
+var _revenueRoute = _interopRequireDefault(require("./routes/manager/revenueRoute.js"));
+var _orderRoute3 = _interopRequireDefault(require("./routes/manager/orderRoute.js"));
+var _conversationRoute2 = _interopRequireDefault(require("./routes/manager/conversationRoute.js"));
+var _inventoryReceiptRoute = _interopRequireDefault(require("./routes/manager/inventoryReceiptRoute.js"));
 var _feedbackRoute = _interopRequireDefault(require("./routes/user/feedbackRoute.js"));
 var _notificationRoute = _interopRequireDefault(require("./routes/user/notificationRoute.js"));
 var _homeRoute = _interopRequireDefault(require("./routes/user/homeRoute.js"));
 var _userRoute = _interopRequireDefault(require("./routes/admin/userRoute.js"));
-var _branchRoute2 = _interopRequireDefault(require("./routes/admin/branchRoute.js"));
+var _branchRoute3 = _interopRequireDefault(require("./routes/admin/branchRoute.js"));
 var _managerRoute = _interopRequireDefault(require("./routes/admin/managerRoute.js"));
-var _productRoute2 = _interopRequireDefault(require("./routes/admin/productRoute.js"));
-var _beverageRoute = _interopRequireDefault(require("./routes/admin/beverageRoute.js"));
+var _productRoute3 = _interopRequireDefault(require("./routes/admin/productRoute.js"));
+var _beverageRoute2 = _interopRequireDefault(require("./routes/admin/beverageRoute.js"));
 var _postRoute2 = _interopRequireDefault(require("./routes/admin/postRoute.js"));
 var _discountRoute2 = _interopRequireDefault(require("./routes/admin/discountRoute.js"));
 var _feedbackRoute2 = _interopRequireDefault(require("./routes/admin/feedbackRoute.js"));
 var _financeRoute = _interopRequireDefault(require("./routes/admin/financeRoute.js"));
-var _revenueRoute = _interopRequireDefault(require("./routes/admin/revenueRoute.js"));
+var _revenueRoute2 = _interopRequireDefault(require("./routes/admin/revenueRoute.js"));
 var _categoryRoute = _interopRequireDefault(require("./routes/admin/categoryRoute.js"));
 var _uploadRoute = _interopRequireDefault(require("./routes/admin/uploadRoute.js"));
 var _coachClassRoute = _interopRequireDefault(require("./routes/user/coachClassRoute.js"));
@@ -59,12 +67,18 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
 _dotenv["default"].config();
 var app = (0, _express["default"])();
 var PORT = process.env.PORT || 8088;
+var allowedOrigins = [process.env.CLIENT_URL, "http://localhost:5173", "http://127.0.0.1:5173"].filter(Boolean);
 app.use(_express["default"].json());
 app.use(_express["default"].urlencoded({
   extended: true
 }));
 app.use((0, _cors["default"])({
-  origin: "http://localhost:5173",
+  origin: function origin(_origin, callback) {
+    if (!_origin || allowedOrigins.includes(_origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error("Not allowed by CORS"));
+  },
   credentials: true
 }));
 app.use((0, _cookieParser["default"])());
@@ -103,43 +117,57 @@ app.use((0, _cookieParser["default"])());
 
 // Admin
 (0, _userRoute["default"])(app);
-(0, _branchRoute2["default"])(app);
+(0, _branchRoute3["default"])(app);
 (0, _managerRoute["default"])(app);
-(0, _productRoute2["default"])(app);
-(0, _beverageRoute["default"])(app);
+(0, _productRoute3["default"])(app);
+(0, _beverageRoute2["default"])(app);
 (0, _postRoute2["default"])(app);
 (0, _discountRoute2["default"])(app);
 (0, _feedbackRoute2["default"])(app);
 (0, _financeRoute["default"])(app);
-(0, _revenueRoute["default"])(app);
+(0, _revenueRoute2["default"])(app);
 (0, _categoryRoute["default"])(app);
 (0, _uploadRoute["default"])(app);
 
+// Manager
+(0, _courtRoute2["default"])(app);
+(0, _branchRoute2["default"])(app);
+(0, _employeeRoute["default"])(app);
+(0, _beverageRoute["default"])(app);
+(0, _productRoute2["default"])(app);
+(0, _workShiftRoute2["default"])(app);
+(0, _salaryRoute["default"])(app);
+(0, _revenueRoute["default"])(app);
+(0, _orderRoute3["default"])(app);
+(0, _conversationRoute2["default"])(app);
+(0, _inventoryReceiptRoute["default"])(app);
 // create http server
 var httpServer = (0, _http.createServer)(app);
 
 // init socket
 (0, _index.initSocket)(httpServer);
 app.use(_errorHandler["default"]);
-_db["default"].sync().then(/*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
-  return _regenerator().w(function (_context) {
-    while (1) switch (_context.n) {
-      case 0:
-        _context.n = 1;
-        return (0, _syncEnumColumns.syncEnumColumns)(_db["default"]);
-      case 1:
-        _context.n = 2;
-        return (0, _syncClassRoomColumns.syncClassRoomColumns)(_db["default"]);
-      case 2:
-        _context.n = 3;
-        return (0, _syncCoachProfileColumns.syncCoachProfileColumns)(_db["default"]);
-      case 3:
-        console.log("Database synced");
-        httpServer.listen(PORT, function () {
-          console.log("Server running on http://localhost:".concat(PORT));
-        });
-      case 4:
-        return _context.a(2);
-    }
-  }, _callee);
-})));
+var startServer = /*#__PURE__*/function () {
+  var _ref = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
+    return _regenerator().w(function (_context) {
+      while (1) switch (_context.n) {
+        case 0:
+          _context.n = 1;
+          return (0, _db.testConnection)();
+        case 1:
+          httpServer.listen(PORT, function () {
+            console.log("Server running on http://localhost:".concat(PORT));
+          });
+        case 2:
+          return _context.a(2);
+      }
+    }, _callee);
+  }));
+  return function startServer() {
+    return _ref.apply(this, arguments);
+  };
+}();
+startServer()["catch"](function (error) {
+  console.error("Unable to start server:", error);
+  process.exit(1);
+});

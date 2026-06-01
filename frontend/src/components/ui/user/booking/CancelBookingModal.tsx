@@ -90,7 +90,7 @@ const CancelBookingModal = ({
             Mã lịch sân
           </p>
           <p className="mt-1 font-mono text-lg font-semibold text-sky-700">
-            {formatBookingCode(booking.bookingId, booking.createdDate)}
+            {formatBookingCode(booking.bookingId, booking.createdAt)}
           </p>
           <p className="mt-2 text-sm text-slate-500">
             {isPending

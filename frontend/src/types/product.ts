@@ -7,7 +7,7 @@ export type Product = {
   productName: string;
   brand: string;
   thumbnailUrl: string;
-  createdDate: string;
+  createdAt: string;
   minPrice: number;
   category: Category;
   discount: number;
@@ -91,7 +91,7 @@ export type ProductFeedback = {
   id: number;
   content: string;
   rating: number;
-  updatedDate: string;
+  updatedAt: string;
   variant: ProductFeedbackVariant;
   user: ProductFeedbackUser;
 };
@@ -114,3 +114,75 @@ export type ProductFeedbackRequest = {
   limit?: number;
   rating?: number;
 };
+
+///MANAGER
+export type ManagerProductVariant = {
+  id: number;
+  sku?: string | null;
+  price: number;
+  discount: number;
+  color?: string | null;
+  size?: string | null;
+  material?: string | null;
+  weight: number;
+  stockId: number | null;
+  branchId: number;
+  stock: number;
+};
+
+///MANAGER
+export type ManagerProductStockUpdateData = ManagerProductVariant & {
+  productId: number;
+};
+
+///MANAGER
+export type ManagerProductStockUpdateRequest = {
+  variantId: number;
+  stock: number;
+};
+
+///MANAGER
+export type ManagerProduct = {
+  id: number;
+  productName: string;
+  brand: string;
+  description: string;
+  thumbnailUrl: string;
+  categoryId: number;
+  category: {
+    id: number;
+    cateName: string;
+    menuGroup?: string | null;
+  } | null;
+  branchId: number;
+  variantCount: number;
+  totalStock: number;
+  variants: ManagerProductVariant[];
+  createdAt: string;
+  updatedAt?: string;
+};
+
+///MANAGER
+export type ManagerProductListData = {
+  branchId: number;
+  products: ManagerProduct[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+  };
+};
+
+///MANAGER
+export type ManagerProductQueries = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  categoryId?: number;
+};
+
+///MANAGER
+export type ManagerProductsResponse = ApiResponse<ManagerProductListData>;
+export type ManagerProductDetailResponse = ApiResponse<ManagerProduct>;
+export type ManagerProductStockUpdateResponse =
+  ApiResponse<ManagerProductStockUpdateData>;

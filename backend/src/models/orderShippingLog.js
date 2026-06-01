@@ -61,13 +61,13 @@ const OrderShippingLog = sequelize.define(
   {
     tableName: "OrderShippingLogs",
     timestamps: true,
-    createdAt: "createdDate",
+    createdAt: "createdAt",
     updatedAt: false, // log không cần update
 
     indexes: [
       { fields: ["orderId"] },
       { fields: ["status"] },
-      { fields: ["createdDate"] },
+      { fields: ["createdAt"] },
 
       // chống duplicate webhook
       {

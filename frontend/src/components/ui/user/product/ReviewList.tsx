@@ -108,7 +108,7 @@ const ReviewList = ({ productFeedbacks }: ReviewListProps) => {
               {/* DATE */}
               <div className="flex items-center gap-1.5 text-xs text-slate-400">
                 <Calendar size={13} />
-                {formatDate(review.updatedDate)}
+                {formatDate(review.updatedAt)}
               </div>
             </div>
 

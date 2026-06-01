@@ -113,7 +113,7 @@ const feedbackSlice = createSlice({
         if (state.feedback) {
           state.feedback.content = action.payload.data.content;
           state.feedback.rating = Number(action.payload.data.rating);
-          state.feedback.updatedDate = action.payload.data.updatedDate;
+          state.feedback.updatedAt = action.payload.data.updatedAt;
         }
       });
   },

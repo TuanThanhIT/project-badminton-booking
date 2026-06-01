@@ -7,7 +7,6 @@ import {
   Phone,
   Search,
   ChevronRight,
-  Map as MapIcon,
   Filter,
   RotateCcw,
   Navigation2,

@@ -142,7 +142,7 @@ const checkoutPreviewService = async (data) => {
       transaction: t,
     });
 
-    if (!cart) throw new NotFoundError("Giỏ hàng không tồn tại");
+    if (!cart) throw new NotFoundError("Gi? h�ng kh�ng t?n t?i");
 
     let checkoutItems = [];
 
@@ -158,7 +158,7 @@ const checkoutPreviewService = async (data) => {
         transaction: t,
       });
 
-      if (!variant) throw new NotFoundError("Sản phẩm không tồn tại");
+      if (!variant) throw new NotFoundError("S?n ph?m kh�ng t?n t?i");
 
       checkoutItems = [
         {
@@ -170,12 +170,12 @@ const checkoutPreviewService = async (data) => {
     } else {
       if (!cart.items.length)
         throw new BadRequestError(
-          "Vui lòng chọn sản phẩm để thanh toán",
+          "Vui l�ng ch?n s?n ph?m d? thanh to�n",
         );
 
       if (cart.items.length !== selectedCartItemIds.length) {
         throw new BadRequestError(
-          "Một số sản phẩm đã chọn không còn trong giỏ hàng",
+          "M?t s? s?n ph?m d� ch?n kh�ng c�n trong gi? h�ng",
         );
       }
 
@@ -187,9 +187,9 @@ const checkoutPreviewService = async (data) => {
       transaction: t,
     });
 
-    if (!address) throw new NotFoundError("Địa chỉ không tồn tại");
+    if (!address) throw new NotFoundError("�?a ch? kh�ng t?n t?i");
     if (!address.latitude || !address.longitude) {
-      throw new BadRequestError("Địa chỉ chưa có tọa độ");
+      throw new BadRequestError("�?a ch? chua c� t?a d?");
     }
 
     const oldCartItemIds = normalizeCartItemIds(oldSession?.cartItemIds || []);
@@ -224,7 +224,7 @@ const checkoutPreviewService = async (data) => {
     });
 
     if (!branches.length) {
-      throw new NotFoundError("Không có chi nhánh nào hoạt động");
+      throw new NotFoundError("Kh�ng c� chi nh�nh n�o ho?t d?ng");
     }
 
     const branchesWithDistance = branches
@@ -363,7 +363,7 @@ const checkoutPreviewService = async (data) => {
         }
 
         if (need > 0) {
-          throw new BadRequestError("Không đủ hàng trong hệ thống");
+          throw new BadRequestError("Kh�ng d? h�ng trong h? th?ng");
         }
       }
 
@@ -451,7 +451,7 @@ const calculateShippingService = async (data) => {
   const redisKey = getCheckoutKey({ userId, cartId });
   const raw = await redisClient.get(redisKey);
 
-  if (!raw) throw new BadRequestError("Checkout session hết hạn");
+  if (!raw) throw new BadRequestError("Checkout session h?t h?n");
 
   const session = JSON.parse(raw);
 
@@ -493,7 +493,7 @@ const calculateShippingService = async (data) => {
       const selectedService = pickDefaultService(services);
 
       if (!selectedService) {
-        throw new BadRequestError("Không có dịch vụ GHN");
+        throw new BadRequestError("Kh�ng c� d?ch v? GHN");
       }
 
       serviceId = selectedService.service_id;
@@ -590,7 +590,7 @@ const clearCheckoutSessionService = async (data) => {
 const getCheckoutPreviewService = async (userId, cartId) => {
   const redisKey = getCheckoutKey({ userId, cartId });
   const raw = await redisClient.get(redisKey);
-  if (!raw) throw new BadRequestError("Checkout session hết hạn");
+  if (!raw) throw new BadRequestError("Checkout session h?t h?n");
   const session = JSON.parse(raw);
   return session;
 };
@@ -605,7 +605,7 @@ const activateOrderGroupForFulfillment = async ({
   });
 
   if (!orderGroup) {
-    throw new NotFoundError("Đơn hàng không tồn tại");
+    throw new NotFoundError("�on h�ng kh�ng t?n t?i");
   }
 
   if (orderGroup.status === ORDER_GROUP_STATUS.PAID) {
@@ -639,7 +639,7 @@ const activateOrderGroupForFulfillment = async ({
       });
 
       if (!stock || stock.stock < item.quantity) {
-        throw new BadRequestError("Cửa hàng không đủ số lượng");
+        throw new BadRequestError("C?a h�ng kh�ng d? s? lu?ng");
       }
 
       stock.stock -= item.quantity;
@@ -661,8 +661,8 @@ const activateOrderGroupForFulfillment = async ({
     await sendBranchEmployeesNotification(
       order.branchId,
       "order-created",
-      "Có đơn hàng mới",
-      `${order.branch?.branchName || "Chi nhánh"}: đơn hàng ${formatOrderItemCode(order.id)} vừa được khách đặt và đang chờ xử lý.`,
+      "C� don h�ng m?i",
+      `${order.branch?.branchName || "Chi nh�nh"}: don h�ng ${formatOrderItemCode(order.id)} v?a du?c kh�ch d?t v� dang ch? x? l�.`,
       { transaction },
     );
   }
@@ -675,7 +675,7 @@ const PAYMENT_RETRY_WINDOW_MS = 15 * 60 * 1000;
 const assertRetryWindowOpen = (createdAt) => {
   const createdTime = new Date(createdAt).getTime();
   if (!createdTime || Date.now() - createdTime > PAYMENT_RETRY_WINDOW_MS) {
-    throw new BadRequestError("Đã hết thời gian thanh toán lại");
+    throw new BadRequestError("�� h?t th?i gian thanh to�n l?i");
   }
 };
 
@@ -724,12 +724,12 @@ const createOrderService = async (data) => {
 
     if (!isSameSelection) {
       throw new BadRequestError(
-        "Danh sách sản phẩm checkout đã thay đổi",
+        "Danh s�ch s?n ph?m checkout d� thay d?i",
       );
     }
 
     const address = await UserAddress.findByPk(addressId, { transaction: t });
-    if (!address) throw new NotFoundError("Địa chỉ không tồn tại");
+    if (!address) throw new NotFoundError("�?a ch? kh�ng t?n t?i");
 
     // ================= ORDER GROUP =================
     const orderGroup = await OrderGroup.create(
@@ -832,9 +832,9 @@ const createOrderService = async (data) => {
         lock: t.LOCK.UPDATE,
       });
 
-      if (!wallet) throw new NotFoundError("Ví không tồn tại");
+      if (!wallet) throw new NotFoundError("V� kh�ng t?n t?i");
 
-      // tính available
+      // t�nh available
       const pendingAmount = await WalletTransaction.sum("amount", {
         where: {
           walletId: wallet.id,
@@ -846,7 +846,7 @@ const createOrderService = async (data) => {
       const available = Number(wallet.balance) - Number(pendingAmount || 0);
 
       if (available < orderGroup.finalAmount) {
-        throw new BadRequestError("Số dư không đủ");
+        throw new BadRequestError("S? du kh�ng d?");
       }
 
       const payment = await Payment.create(
@@ -860,7 +860,7 @@ const createOrderService = async (data) => {
         { transaction: t },
       );
 
-      // lock tiền bằng transaction
+      // lock ti?n b?ng transaction
       await WalletTransaction.create(
         {
           walletId: wallet.id,
@@ -869,7 +869,7 @@ const createOrderService = async (data) => {
           type: WALLET_TRANSACTION_TYPE.PAYMENT,
           status: WALLET_TRANSACTION_STATUS.PENDING,
           expiredAt: new Date(Date.now() + 10 * 60 * 1000),
-          description: `Thanh toán đơn #${orderGroup.id}`,
+          description: `Thanh to�n don #${orderGroup.id}`,
         },
         { transaction: t },
       );
@@ -924,28 +924,28 @@ const createOrderService = async (data) => {
 };
 
 const orderCallbackService = async (data) => {
-  // 1. verify ngoài
+  // 1. verify ngo�i
   const isValid = verifyVNPayURL(data);
   if (!isValid) {
-    throw new BadRequestError("Chữ ký không hợp lệ");
+    throw new BadRequestError("Ch? k� kh�ng h?p l?");
   }
 
   const { vnp_TxnRef, vnp_ResponseCode, vnp_TransactionNo, vnp_Amount } = data;
 
   if (vnp_ResponseCode !== "00") {
-    throw new BadRequestError("Thanh toán thất bại");
+    throw new BadRequestError("Thanh to�n th?t b?i");
   }
 
-  // 2. query trước (KHÔNG lock)
+  // 2. query tru?c (KH�NG lock)
   const paymentRaw = await Payment.findOne({
     where: { externalId: vnp_TxnRef },
   });
 
   if (!paymentRaw) {
-    throw new NotFoundError("Thanh toán không tồn tại");
+    throw new NotFoundError("Thanh to�n kh�ng t?n t?i");
   }
 
-  // idempotent sớm
+  // idempotent s?m
   if (paymentRaw.paymentStatus === PAYMENT_STATUS.PAID) {
     return;
   }
@@ -954,7 +954,7 @@ const orderCallbackService = async (data) => {
   const expectedAmount = Math.round(Number(paymentRaw.paymentAmount));
 
   if (paidAmount !== expectedAmount) {
-    throw new BadRequestError("Số tiền không hợp lệ");
+    throw new BadRequestError("S? ti?n kh�ng h?p l?");
   }
 
   // 3. transaction
@@ -976,7 +976,7 @@ const orderCallbackService = async (data) => {
     });
 
     if (!orderGroup) {
-      throw new NotFoundError("Đơn hàng không tồn tại");
+      throw new NotFoundError("�on h�ng kh�ng t?n t?i");
     }
 
     await activateOrderGroupForFulfillment({
@@ -1012,24 +1012,24 @@ const walletOrderConfirmService = async (data) => {
   const { otpCode, email, orderGroupId } = data;
 
   const user = await User.findOne({ where: { email } });
-  if (!user) throw new NotFoundError("Người dùng không tồn tại");
+  if (!user) throw new NotFoundError("Ngu?i d�ng kh�ng t?n t?i");
 
   const otpCodeHash = crypto.createHash("sha256").update(otpCode).digest("hex");
 
-  // lấy OTP ngoài
+  // l?y OTP ngo�i
   const userOtp = await UserOtp.findOne({
     where: {
       userId: user.id,
       type: OTP_TYPE.WALLET_PAYMENT,
       isUsed: false,
     },
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
   });
 
-  if (!userOtp) throw new BadRequestError("OTP không tồn tại");
+  if (!userOtp) throw new BadRequestError("OTP kh�ng t?n t?i");
 
   if (userOtp.otpExpiry < new Date()) {
-    throw new BadRequestError("OTP hết hạn");
+    throw new BadRequestError("OTP h?t h?n");
   }
 
   if (userOtp.otpCode !== otpCodeHash) {
@@ -1043,7 +1043,7 @@ const walletOrderConfirmService = async (data) => {
       { where: { id: userOtp.id } },
     );
 
-    throw new BadRequestError("OTP không đúng");
+    throw new BadRequestError("OTP kh�ng d�ng");
   }
 
   // transaction
@@ -1055,7 +1055,7 @@ const walletOrderConfirmService = async (data) => {
       lock: t.LOCK.UPDATE,
     });
 
-    if (!wallet) throw new NotFoundError("Ví không tồn tại");
+    if (!wallet) throw new NotFoundError("V� kh�ng t?n t?i");
 
     // 2. lock payment
     const payment = await Payment.findOne({
@@ -1068,7 +1068,7 @@ const walletOrderConfirmService = async (data) => {
       lock: t.LOCK.UPDATE,
     });
 
-    if (!payment) throw new NotFoundError("Thanh toán không tồn tại");
+    if (!payment) throw new NotFoundError("Thanh to�n kh�ng t?n t?i");
 
     // 3. lock orderGroup
     const orderGroup = await OrderGroup.findByPk(orderGroupId, {
@@ -1077,7 +1077,7 @@ const walletOrderConfirmService = async (data) => {
     });
 
     if (!orderGroup) {
-      throw new NotFoundError("Đơn hàng không tồn tại");
+      throw new NotFoundError("�on h�ng kh�ng t?n t?i");
     }
 
     // 4. lock transaction
@@ -1090,7 +1090,7 @@ const walletOrderConfirmService = async (data) => {
       lock: t.LOCK.UPDATE,
     });
 
-    if (!tx) throw new BadRequestError("Transaction không tồn tại");
+    if (!tx) throw new BadRequestError("Transaction kh�ng t?n t?i");
 
     // expire
     if (tx.expiredAt && tx.expiredAt < new Date()) {
@@ -1098,22 +1098,22 @@ const walletOrderConfirmService = async (data) => {
         { status: WALLET_TRANSACTION_STATUS.FAILED },
         { transaction: t },
       );
-      throw new BadRequestError("Phiên thanh toán đã hết hạn");
+      throw new BadRequestError("Phi�n thanh to�n d� h?t h?n");
     }
 
     // check balance
     if (Number(wallet.balance) < Number(tx.amount)) {
-      throw new BadRequestError("Số dư không đủ");
+      throw new BadRequestError("S? du kh�ng d?");
     }
 
-    // 5. lock OTP cuối
+    // 5. lock OTP cu?i
     const otp = await UserOtp.findByPk(userOtp.id, {
       transaction: t,
       lock: t.LOCK.UPDATE,
     });
 
     if (!otp || otp.isUsed) {
-      throw new BadRequestError("OTP đã được sử dụng");
+      throw new BadRequestError("OTP d� du?c s? d?ng");
     }
 
     await activateOrderGroupForFulfillment({
@@ -1121,7 +1121,7 @@ const walletOrderConfirmService = async (data) => {
       transaction: t,
     });
 
-    // TRỪ TIỀN (atomic)
+    // TR? TI?N (atomic)
     await wallet.update(
       {
         balance: sequelize.literal(`balance - ${Number(tx.amount)}`),
@@ -1166,21 +1166,21 @@ const getOrderGroupByIdService = async (data) => {
 
   const user = await User.findByPk(userId);
   if (!user) {
-    throw new NotFoundError("Người dùng không tồn tại");
+    throw new NotFoundError("Ngu?i d�ng kh�ng t?n t?i");
   }
 
   const orderGroup = await OrderGroup.findByPk(orderGroupId);
 
   if (!orderGroup) {
-    throw new NotFoundError("Đơn hàng không tồn tại");
+    throw new NotFoundError("�on h�ng kh�ng t?n t?i");
   }
 
-  // chống hack orderId
+  // ch?ng hack orderId
   if (orderGroup.userId !== user.id) {
-    throw new ForbiddenError("Không có quyền truy cập đơn hàng");
+    throw new ForbiddenError("Kh�ng c� quy?n truy c?p don h�ng");
   }
 
-  // lấy payment theo orderGroup
+  // l?y payment theo orderGroup
   const payment = await Payment.findOne({
     where: {
       targetPaymentId: orderGroup.id,
@@ -1195,7 +1195,7 @@ const getOrderGroupByIdService = async (data) => {
     paymentMethod = payment.paymentMethod;
 
     if (paymentMethod === PAYMENT_METHOD_STATUS.COD) {
-      // COD: luôn success
+      // COD: lu�n success
       isSuccess = true;
     } else {
       // WALLET / VNPAY
@@ -1219,22 +1219,22 @@ const getOrderGroupByIdService = async (data) => {
       new Date(orderGroup.createdAt).getTime() + PAYMENT_RETRY_WINDOW_MS,
     ).toISOString(),
     isSuccess,
-    createdDate: orderGroup.createdAt,
+    createdAt: orderGroup.createdAt,
   };
 };
 
 const retryOrderVNPayService = async ({ orderGroupId, userId, ip }) => {
   const orderGroup = await OrderGroup.findByPk(orderGroupId);
-  if (!orderGroup) throw new NotFoundError("Đơn hàng không tồn tại");
+  if (!orderGroup) throw new NotFoundError("�on h�ng kh�ng t?n t?i");
 
   if (orderGroup.userId !== userId) {
-    throw new ForbiddenError("Không có quyền truy cập đơn hàng");
+    throw new ForbiddenError("Kh�ng c� quy?n truy c?p don h�ng");
   }
 
   assertRetryWindowOpen(orderGroup.createdAt);
 
   if (orderGroup.status !== ORDER_GROUP_STATUS.PENDING_PAYMENT) {
-    throw new BadRequestError("Đơn hàng không còn ở trạng thái chờ thanh toán");
+    throw new BadRequestError("�on h�ng kh�ng c�n ? tr?ng th�i ch? thanh to�n");
   }
 
   const payment = await Payment.findOne({
@@ -1246,11 +1246,11 @@ const retryOrderVNPayService = async ({ orderGroupId, userId, ip }) => {
   });
 
   if (!payment) {
-    throw new NotFoundError("Thanh toán VNPay không tồn tại");
+    throw new NotFoundError("Thanh to�n VNPay kh�ng t?n t?i");
   }
 
   if (payment.paymentStatus === PAYMENT_STATUS.PAID) {
-    throw new BadRequestError("Đơn hàng đã thanh toán");
+    throw new BadRequestError("�on h�ng d� thanh to�n");
   }
 
   const txnRef = uuidv4();
@@ -1339,7 +1339,7 @@ const getUserOrdersService = async (data) => {
       totalShippingFee: group.totalShippingFee,
       finalAmount: group.finalAmount,
       status: group.status,
-      createdDate: group.createdAt,
+      createdAt: group.createdAt,
 
       orders: group.orders.map((o) => ({
         orderId: o.id,
@@ -1395,7 +1395,7 @@ const getOrderDetailService = async (data) => {
   });
 
   if (!order) {
-    throw new NotFoundError("Đơn hàng không tồn tại");
+    throw new NotFoundError("�on h�ng kh�ng t?n t?i");
   }
 
   // redis key review
@@ -1405,7 +1405,7 @@ const getOrderDetailService = async (data) => {
     order.details.map(async (i) => {
       const variantId = i.variantId;
 
-      // check đã review chưa
+      // check d� review chua
       const isReviewed = await redisClient.sismember(reviewKey, variantId);
 
       const canReview = order.orderStatus === ORDER_STATUS.COMPLETED;
@@ -1484,7 +1484,7 @@ const getTrackingProgressService = async (data) => {
   const { orderId } = data;
   const order = await Order.findByPk(orderId);
 
-  if (!order) throw new NotFoundError("Đơn hàng không tồn tại");
+  if (!order) throw new NotFoundError("�on h�ng kh�ng t?n t?i");
 
   const currentIndex = TRACKING_STEPS.indexOf(order.shippingStatus);
 
@@ -1495,7 +1495,7 @@ const getTrackingProgressService = async (data) => {
   }));
 };
 
-// YÊU CẦU HỦY ĐƠN VÀ HOÀN ĐƠN
+// Y�U C?U H?Y �ON V� HO�N �ON
 const cancellableStatuses = [
   ORDER_STATUS.PENDING,
   ORDER_STATUS.CONFIRMED,
@@ -1506,6 +1506,150 @@ const cancellableStatuses = [
 ];
 
 const returnableStatuses = [ORDER_STATUS.COMPLETED];
+
+const calculateRefundAmount = async (order, orderGroup) => {
+  const groupBeforeDiscount =
+    Number(orderGroup.totalAmount || 0) +
+    Number(orderGroup.totalShippingFee || 0);
+
+  const orderAmount = Number(order.totalAmount || 0);
+  const discountAmount = Number(orderGroup.discountAmount || 0);
+
+  if (!discountAmount || !groupBeforeDiscount) {
+    return orderAmount;
+  }
+
+  const discountShare = Math.round(
+    discountAmount * (orderAmount / groupBeforeDiscount),
+  );
+
+  return Math.max(0, orderAmount - discountShare);
+};
+
+const refundOrderToWallet = async ({ order, orderGroup, transaction }) => {
+  const payment = await Payment.findOne({
+    where: {
+      targetPaymentType: TARGET_PAYMENT_TYPE.ORDER,
+      targetPaymentId: orderGroup.id,
+      paymentStatus: PAYMENT_STATUS.PAID,
+    },
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
+
+  if (!payment) {
+    return {
+      refunded: false,
+      refundAmount: 0,
+    };
+  }
+
+  const refundAmount = await calculateRefundAmount(order, orderGroup);
+
+  const wallet = await Wallet.findOne({
+    where: { userId: orderGroup.userId },
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
+
+  if (!wallet) {
+    throw new NotFoundError("V� ngu?i d�ng kh�ng t?n t?i");
+  }
+
+  const refundDescription = `Ho�n ti?n don ${formatOrderItemCode(order.id)} thu?c nh�m don #${orderGroup.id}`;
+
+  const existedRefund = await WalletTransaction.findOne({
+    where: {
+      walletId: wallet.id,
+      paymentId: payment.id,
+      type: WALLET_TRANSACTION_TYPE.REFUND,
+      description: refundDescription,
+    },
+    transaction,
+  });
+
+  if (existedRefund) {
+    return {
+      refunded: false,
+      refundAmount: 0,
+    };
+  }
+
+  await wallet.update(
+    {
+      balance: sequelize.literal(`balance + ${Number(refundAmount)}`),
+    },
+    { transaction },
+  );
+
+  await WalletTransaction.create(
+    {
+      walletId: wallet.id,
+      paymentId: payment.id,
+      amount: refundAmount,
+      type: WALLET_TRANSACTION_TYPE.REFUND,
+      status: WALLET_TRANSACTION_STATUS.SUCCESS,
+      description: refundDescription,
+    },
+    { transaction },
+  );
+
+  return {
+    refunded: true,
+    refundAmount,
+  };
+};
+
+const updateOrderGroupAfterChildChanged = async ({
+  orderGroupId,
+  transaction,
+}) => {
+  const orderGroup = await OrderGroup.findByPk(orderGroupId, {
+    transaction,
+    lock: transaction.LOCK.UPDATE,
+  });
+
+  const orders = await Order.findAll({
+    where: { orderGroupId },
+    transaction,
+  });
+
+  const allCancelled = orders.every(
+    (o) => o.orderStatus === ORDER_STATUS.CANCELLED,
+  );
+
+  if (
+    allCancelled &&
+    orderGroup.status === ORDER_GROUP_STATUS.PENDING_PAYMENT
+  ) {
+    await orderGroup.update(
+      { status: ORDER_GROUP_STATUS.CANCELLED },
+      { transaction },
+    );
+  }
+
+  return orderGroup;
+};
+
+const restoreOrderStock = async ({ order, transaction }) => {
+  const details = await OrderDetail.findAll({
+    where: { orderId: order.id },
+    transaction,
+  });
+
+  await Promise.all(
+    details.map((detail) =>
+      VariantStock.increment("stock", {
+        by: detail.quantity,
+        where: {
+          branchId: order.branchId,
+          variantId: detail.variantId,
+        },
+        transaction,
+      }),
+    ),
+  );
+};
 
 const getUserOrderForAction = async ({ orderId, userId, transaction }) => {
   const order = await Order.findByPk(orderId, {
@@ -1524,17 +1668,17 @@ const getUserOrderForAction = async ({ orderId, userId, transaction }) => {
   });
 
   if (!order) {
-    throw new NotFoundError("Đơn hàng không tồn tại");
+    throw new NotFoundError("�on h�ng kh�ng t?n t?i");
   }
 
   if (order.orderGroup.userId !== userId) {
-    throw new ForbiddenError("Không có quyền thao tác đơn hàng này");
+    throw new ForbiddenError("Kh�ng c� quy?n thao t�c don h�ng n�y");
   }
 
   return order;
 };
 
-// Khi user bấm hủy đơn, service đổi trạng thái sang CANCEL_REQUESTED, rồi gọi realtime.
+
 const requestCancelOrderService = async (data) => {
   const { orderId, userId, reason } = data;
   const result = await sequelize.transaction(async (t) => {
@@ -1546,20 +1690,65 @@ const requestCancelOrderService = async (data) => {
 
     if (order.orderStatus === ORDER_STATUS.CANCEL_REQUESTED) {
       throw new BadRequestError(
-        "Đơn hàng đã được yêu cầu hủy trước đó",
+        "�on h�ng d� du?c y�u c?u h?y tru?c d�",
       );
     }
 
     if (!cancellableStatuses.includes(order.orderStatus)) {
-      throw new BadRequestError(
-        "Đơn hàng hiện không thể yêu cầu hủy",
-      );
+      throw new BadRequestError("�on h�ng hi?n kh�ng th? y�u c?u h?y");
     }
 
     if (order.orderStatus === ORDER_STATUS.COMPLETED) {
-      throw new BadRequestError(
-        "Đơn hàng đã hoàn thành, không thể hủy",
+      throw new BadRequestError("�on h�ng d� ho�n th�nh, kh�ng th? h?y");
+    }
+
+    if (order.orderStatus === ORDER_STATUS.PENDING) {
+      const refund = await refundOrderToWallet({
+        order,
+        orderGroup: order.orderGroup,
+        transaction: t,
+      });
+
+      await order.update(
+        {
+          previousOrderStatus: order.orderStatus,
+          orderStatus: ORDER_STATUS.CANCELLED,
+          shippingStatus: SHIPPING_STATUS.CANCELLED,
+          cancelledBy: CANCELLED_BY.USER,
+          cancelReason: reason || null,
+          cancelRequestedAt: new Date(),
+          cancelHandledAt: new Date(),
+          cancelledAt: new Date(),
+          cancelRejectReason: null,
+        },
+        { transaction: t },
       );
+
+      await OrderShippingLog.create(
+        {
+          orderId: order.id,
+          status: SHIPPING_STATUS.CANCELLED,
+          eventTime: new Date(),
+          rawData: {
+            source: "SYSTEM",
+            action: "USER_CANCEL_ORDER_PENDING",
+          },
+        },
+        { transaction: t },
+      );
+
+      await restoreOrderStock({ order, transaction: t });
+
+      await updateOrderGroupAfterChildChanged({
+        orderGroupId: order.orderGroupId,
+        transaction: t,
+      });
+
+      return {
+        mode: "CANCELLED",
+        order,
+        refund,
+      };
     }
 
     await order.update(
@@ -1575,21 +1764,42 @@ const requestCancelOrderService = async (data) => {
       { transaction: t },
     );
 
-    return order;
+    return {
+      mode: "REQUESTED",
+      order,
+    };
   });
 
   await emitOrderActionRealtime({
-    order: result,
+    order: result.order,
     log: null,
     message:
-      "Yêu cầu hủy đơn của bạn đã được gửi đến nhân viên",
+      result.mode === "CANCELLED"
+        ? "�on h�ng d� du?c h?y th�nh c�ng"
+        : "Y�u c?u h?y don c?a b?n d� du?c g?i d?n nh�n vi�n",
   });
-  await sendBranchEmployeesNotification(
-    result.branchId,
-    "order-cancel-requested",
-    "Khách yêu cầu hủy đơn hàng",
-    `${result.branch?.branchName || "Chi nhánh"}: đơn hàng ${formatOrderItemCode(result.id)} cần nhân viên xử lý yêu cầu hủy.`,
-  );
+
+  if (result.mode === "CANCELLED") {
+    await sendBranchEmployeesNotification(
+      result.order.branchId,
+      "order-cancelled",
+      "Kh�ch d� h?y don h�ng",
+      `${result.order.branch?.branchName || "Chi nh�nh"}: kh�ch d� h?y don h�ng ${formatOrderItemCode(result.order.id)}.`,
+    );
+  } else {
+    await sendBranchEmployeesNotification(
+      result.order.branchId,
+      "order-cancel-requested",
+      "Kh�ch y�u c?u h?y don h�ng",
+      `${result.order.branch?.branchName || "Chi nh�nh"}: don h�ng ${formatOrderItemCode(result.order.id)} c?n nh�n vi�n x? l� y�u c?u h?y.`,
+    );
+  }
+
+  return {
+    mode: result.mode,
+    orderId: result.order.id,
+    refund: result.refund,
+  };
 };
 
 const requestReturnOrderService = async (data) => {
@@ -1605,13 +1815,13 @@ const requestReturnOrderService = async (data) => {
 
     if (!returnableStatuses.includes(order.orderStatus)) {
       throw new BadRequestError(
-        "Chỉ có thể yêu cầu trả hàng khi đơn đã giao thành công",
+        "Ch? c� th? y�u c?u tr? h�ng khi don d� giao th�nh c�ng",
       );
     }
 
     if (order.shippingStatus !== SHIPPING_STATUS.DELIVERED) {
       throw new BadRequestError(
-        "Chỉ có thể yêu cầu trả hàng khi đơn đã giao thành công",
+        "Ch? c� th? y�u c?u tr? h�ng khi don d� giao th�nh c�ng",
       );
     }
 
@@ -1631,7 +1841,7 @@ const requestReturnOrderService = async (data) => {
     order: updatedOrder,
     log: null,
     message:
-      "Yêu cầu trả hàng của bạn đã được gửi đến nhân viên",
+      "Y�u c?u tr? h�ng c?a b?n d� du?c g?i d?n nh�n vi�n",
   });
 };
 

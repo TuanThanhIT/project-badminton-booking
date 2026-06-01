@@ -135,8 +135,8 @@ export type Post = {
   isRepost?: boolean;
   isActive: boolean;
   isDeleted: boolean;
-  createdDate: string;
-  updatedDate: string;
+  createdAt: string;
+  updatedAt: string;
   // Social counts (được trả từ API getPosts)
   likesCount?: number;
   commentsCount?: number;
@@ -190,7 +190,7 @@ export type PostComment = {
   parentId?: number | null;
   content: string;
   type: string;
-  createdDate: string;
+  createdAt: string;
   author?: {
     id: number;
     username: string;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { X } from "lucide-react";
 import { toast } from "react-toastify";
 import { useAppDispatch } from "../../../../redux/hook";
@@ -7,6 +7,7 @@ import type { RequestCancelOrderRequest } from "../../../../types/order";
 
 interface CancelOrderModalProps {
   orderId: number;
+  isPending?: boolean;
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
@@ -14,6 +15,7 @@ interface CancelOrderModalProps {
 
 const CancelOrderModal = ({
   orderId,
+  isPending = false,
   isOpen,
   onClose,
   onSuccess,
@@ -35,7 +37,14 @@ const CancelOrderModal = ({
         requestCancelOrder({ orderId, data }),
       ).unwrap();
 
-      toast.success(response.message || "Yêu cầu hủy đơn thành công");
+      const mode = response?.data?.mode;
+      toast.success(
+        mode === "CANCELLED"
+          ? "Hủy đơn hàng thành công"
+          : mode === "REQUESTED"
+            ? "Đã gửi yêu cầu hủy đơn, vui lòng chờ nhân viên xác nhận"
+            : response.message || "Yêu cầu hủy đơn thành công",
+      );
       setReason("");
       onClose();
       onSuccess?.();
@@ -56,7 +65,7 @@ const CancelOrderModal = ({
       <div className="w-full max-w-md rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_20px_50px_rgba(15,23,42,0.18)]">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-slate-800">
-            Yêu cầu hủy đơn
+            {isPending ? "Hủy đơn hàng" : "Yêu cầu hủy đơn"}
           </h2>
           <button
             type="button"
@@ -100,7 +109,7 @@ const CancelOrderModal = ({
             disabled={isLoading || !reason.trim()}
             className="flex-1 rounded-2xl bg-red-500 py-3 text-sm font-medium text-white hover:bg-red-600 disabled:opacity-50"
           >
-            {isLoading ? "Đang gửi..." : "Gửi yêu cầu"}
+            {isLoading ? "Đang gửi..." : isPending ? "Hủy đơn" : "Gửi yêu cầu"}
           </button>
         </div>
       </div>
@@ -109,3 +118,4 @@ const CancelOrderModal = ({
 };
 
 export default CancelOrderModal;
+

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { Edit3, Plus, Search, Users, X } from "lucide-react";
+import { Edit3, MessageCircle, Plus, Search, Users, X } from "lucide-react";
 import type { Conversation } from "../../../../types/message";
+import type { UserSearchHit } from "../../../../types/userSearch";
 import { formatRelativeTimeVi } from "../../../../utils/formatRelativeTimeVi";
 
 export type SidebarTab = "all" | "unread" | "group";
@@ -9,7 +10,10 @@ type ConversationSidebarProps = {
   conversations: Conversation[];
   selectedConversationId?: number;
   currentUserId?: number;
+  starterUsers?: UserSearchHit[];
+  loadingStarterUsers?: boolean;
   onSelect: (id: number) => void;
+  onStartDirect?: (userId: number) => void;
   onCreateGroup: () => void;
 };
 
@@ -60,7 +64,10 @@ const ConversationSidebar = ({
   conversations,
   selectedConversationId,
   currentUserId,
+  starterUsers = [],
+  loadingStarterUsers = false,
   onSelect,
+  onStartDirect,
   onCreateGroup,
 }: ConversationSidebarProps) => {
   const [query, setQuery] = useState("");
@@ -88,7 +95,7 @@ const ConversationSidebar = ({
     () =>
       [...filtered].sort(
         (a, b) =>
-          new Date(b.updatedDate).getTime() - new Date(a.updatedDate).getTime(),
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
       ),
     [filtered],
   );
@@ -173,7 +180,75 @@ const ConversationSidebar = ({
       </div>
 
       <div className="flex-1 overflow-y-auto min-h-0 p-3 bg-slate-50/80">
-        {sorted.length === 0 ? (
+        {conversations.length === 0 && !query.trim() && tab === "all" ? (
+          <div className="space-y-3">
+            <div className="rounded-3xl border border-sky-100 bg-white p-4 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
+                  <MessageCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-extrabold text-slate-900">
+                    Bat dau chat voi nhan vien
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500 leading-relaxed">
+                    Chon mot nhan vien trong chi nhanh de tao hoi thoai 1-1.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {loadingStarterUsers ? (
+              <div className="rounded-3xl bg-white border border-slate-100 px-4 py-8 text-center text-sm text-slate-400">
+                Dang tai danh sach nhan vien...
+              </div>
+            ) : starterUsers.length === 0 ? (
+              <div className="h-full min-h-[240px] flex flex-col items-center justify-center gap-3 text-center px-4">
+                <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 text-slate-300 flex items-center justify-center shadow-sm">
+                  <Edit3 className="w-7 h-7" strokeWidth={1.5} />
+                </div>
+                <p className="text-sm font-semibold text-slate-600">
+                  Chua co nhan vien trong chi nhanh
+                </p>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Them nhan vien truoc, sau do quay lai day de bat dau chat.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {starterUsers.map((user) => {
+                  const displayName = user.fullName?.trim() || user.username;
+
+                  return (
+                    <button
+                      key={user.id}
+                      type="button"
+                      onClick={() => onStartDirect?.(user.id)}
+                      className="group w-full text-left p-3 flex items-center gap-3 rounded-3xl border border-transparent bg-white/80 hover:bg-white hover:border-sky-100 hover:shadow-sm transition-all"
+                    >
+                      <ConvAvatar
+                        name={displayName}
+                        url={user.avatar}
+                        isGroup={false}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-slate-800 truncate">
+                          {displayName}
+                        </p>
+                        <p className="text-xs text-slate-400 truncate">
+                          @{user.username}
+                        </p>
+                      </div>
+                      <span className="text-[11px] font-bold text-sky-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                        Chat
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : sorted.length === 0 ? (
           <div className="h-full min-h-[280px] flex flex-col items-center justify-center gap-3 text-center px-4">
             <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 text-slate-300 flex items-center justify-center shadow-sm">
               <Edit3 className="w-7 h-7" strokeWidth={1.5} />
@@ -252,7 +327,7 @@ const ConversationSidebar = ({
                       <span className="text-[10px] text-slate-400 tabular-nums whitespace-nowrap pt-0.5">
                         {conversation.lastMessage
                           ? formatRelativeTimeVi(
-                              conversation.lastMessage.createdDate,
+                              conversation.lastMessage.createdAt,
                             )
                           : ""}
                       </span>

@@ -83,8 +83,8 @@ const CoachProfile = sequelize.define(
   {
     tableName: "CoachProfiles",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
   },
 );
 

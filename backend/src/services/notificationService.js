@@ -14,7 +14,7 @@ const formatNotification = (notify) => ({
   message: notify.message,
   isRead: notify.isRead,
   type: notify.type,
-  createdDate: notify.createdDate,
+  createdAt: notify.createdAt,
 });
 
 const getUserNotificationsService = async ({
@@ -35,7 +35,7 @@ const getUserNotificationsService = async ({
 
   const { rows, count } = await Notification.findAndCountAll({
     where,
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
     limit: Number(limit),
     offset,
     distinct: true,

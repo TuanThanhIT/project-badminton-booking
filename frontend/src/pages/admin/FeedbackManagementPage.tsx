@@ -173,7 +173,7 @@ const FeedbackManagementPage = () => {
                         ? <span className="px-2 py-0.5 rounded border text-xs font-medium bg-blue-50 text-blue-700 border-blue-200">Chi nhánh</span>
                         : <span className="px-2 py-0.5 rounded border text-xs font-medium bg-purple-50 text-purple-700 border-purple-200">Sản phẩm</span>}
                     </td>
-                    <td className="px-3 py-3 text-center text-xs text-gray-500">{new Date(f.createdDate).toLocaleDateString("vi-VN")}</td>
+                    <td className="px-3 py-3 text-center text-xs text-gray-500">{new Date(f.createdAt).toLocaleDateString("vi-VN")}</td>
                     <td className="px-3 py-3 text-center">
                       <button onClick={() => handleDelete(f.id)} disabled={deletingId === f.id}
                         className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-red-50 text-red-500 hover:bg-red-100 border border-red-200 transition disabled:opacity-60">

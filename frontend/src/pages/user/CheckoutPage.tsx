@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
   AlertTriangle,
+  ArrowLeft,
   CheckCircle,
   CreditCard,
   FileText,
@@ -208,6 +209,19 @@ const CheckoutPage = () => {
 
   const isMultiBranch = (checkoutPreview?.group?.orders?.length || 0) > 1;
 
+  const handleBackFromCheckout = async () => {
+    const confirmed = await showConfirmDialog(
+      "Xác nhận thoát",
+      "Bạn chưa hoàn tất thanh toán. Quay lại có thể làm gián đoạn lịch đặt hiện tại.",
+      "Xác nhận",
+      "Hủy",
+      "danger",
+    );
+
+    if (!confirmed) return;
+    navigate("/cart");
+  };
+
   const handleAddAddress = async (dt: AddOrUpdateAddressPayload) => {
     if (!dt.latitude || !dt.longitude) return;
     const data: AddUserAddressRequest = {
@@ -351,18 +365,31 @@ const CheckoutPage = () => {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.24),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.16),transparent_35%)]" />
         <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-sky-100">
-                <Receipt size={16} className="text-sky-300" />
-                B-Hub Checkout
+            <div className="flex items-start gap-4">
+              <div>
+                <div className="flex flex-row items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={handleBackFromCheckout}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-sky-100 backdrop-blur-sm transition hover:bg-white/15"
+                    aria-label="Quay lại"
+                  >
+                    <ArrowLeft size={21} />
+                  </button>
+
+                  <div className="inline-flex h-10 items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-medium text-sky-100 backdrop-blur-sm">
+                    <Receipt size={16} className="text-sky-300" />
+                    <span>B-Hub Checkout</span>
+                  </div>
+                </div>
+                <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
+                  Thanh toán đơn hàng
+                </h1>
+                <p className="mt-4 max-w-2xl text-sm leading-relaxed text-sky-100 sm:text-base">
+                  Kiểm tra địa chỉ, phương thức thanh toán và tổng tiền trước
+                  khi hoàn tất đơn hàng.
+                </p>
               </div>
-              <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
-                Thanh toán đơn hàng
-              </h1>
-              <p className="mt-4 max-w-2xl text-sm leading-relaxed text-sky-100 sm:text-base">
-                Kiểm tra địa chỉ, phương thức thanh toán và tổng tiền trước khi
-                hoàn tất đơn hàng.
-              </p>
             </div>
 
             {isMultiBranch && (

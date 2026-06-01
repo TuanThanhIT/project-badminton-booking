@@ -40,8 +40,8 @@ const PostLike = sequelize.define(
   {
     tableName: "PostLikes",
     timestamps: true,
-    createdAt: "createdDate",
-    updatedAt: "updatedDate",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
     indexes: [
       {
         unique: true,

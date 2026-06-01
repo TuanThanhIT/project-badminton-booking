@@ -33,6 +33,12 @@ const getRevenueByBranchDetailController = asyncHandler(async (req, res) => {
   return res.status(200).json(new SuccessResponse("Lấy chi tiết doanh thu chi nhánh thành công", result));
 });
 
+const getRevenueProductsController = asyncHandler(async (req, res) => {
+  const { startDate, endDate, limit } = req.query;
+  const result = await adminRevenueService.getRevenueProductsService(startDate, endDate, limit);
+  return res.status(200).json(new SuccessResponse("Lấy chi tiết doanh thu sản phẩm thành công", result));
+});
+
 const getDashboardController = asyncHandler(async (req, res) => {
   const result = await adminRevenueService.getDashboardService();
   return res.status(200).json(new SuccessResponse("Lấy dữ liệu dashboard thành công", result));
@@ -44,6 +50,7 @@ const adminRevenueController = {
   getRevenueByDateController,
   getRevenueByMonthController,
   getRevenueByBranchDetailController,
+  getRevenueProductsController,
   getDashboardController,
 };
 

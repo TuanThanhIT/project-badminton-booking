@@ -15,7 +15,7 @@ const initCourtRoute = (app) => {
   courtRoute.get(
     "/available",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(getAvailableCourtsSchema),
     courtController.getAvailableCourtsController,
   );
@@ -23,14 +23,14 @@ const initCourtRoute = (app) => {
   courtRoute.get(
     "/:courtId",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(getCourtByIdSchema),
     courtController.getCourtByIdController,
   );
   courtRoute.get(
     "/",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     courtController.getCourtsController,
   );
   app.use("/user/courts", courtRoute);

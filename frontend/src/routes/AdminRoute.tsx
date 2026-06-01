@@ -16,6 +16,7 @@ import FeedbackManagementPage from "../pages/admin/FeedbackManagementPage";
 import FinanceManagementPage from "../pages/admin/FinanceManagementPage";
 import RevenueManagementPage from "../pages/admin/RevenueManagementPage";
 import CategoryManagementPage from "../pages/admin/CategoryManagementPage";
+import CoachApplicationManagementPage from "../pages/admin/CoachApplicationManagementPage";
 
 const AdminRoute = () => {
   return (
@@ -31,6 +32,7 @@ const AdminRoute = () => {
         <Route element={<AdminLayout />}>
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="users" element={<UserManagementPage />} />
+          <Route path="coach-applications" element={<CoachApplicationManagementPage />} />
           <Route path="branches" element={<BranchManagementPage />} />
           <Route path="managers" element={<ManagerManagementPage />} />
           <Route path="categories" element={<CategoryManagementPage />} />

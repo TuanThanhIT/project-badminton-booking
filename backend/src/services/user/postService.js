@@ -1,19 +1,20 @@
 import sequelize from "../../config/db.js";
-import { Post, User, Profile } from "../../models/index.js";
+import { Post, User, Profile, ClassRoom } from "../../models/index.js";
 import { POST_TYPE } from "../../constants/postConstant.js";
+import { ROLE_NAME } from "../../constants/userConstant.js";
+import { CLASS_ENROLLMENT_STATUS } from "../../constants/classConstant.js";
 import ForbiddenError from "../../errors/ForbiddenError.js";
 import NotFoundError from "../../errors/NotFoundError.js";
 import { Op } from "sequelize";
 
 // Tạo bài đăng mới. Nếu type = Class thì chỉ Coach được đăng.
 const createPostService = async (data) => {
-  const { title, content, type, formData, userId } = data;
+  const { title, content, type, formData, userId, userRole } = data;
 
   return sequelize.transaction(async (t) => {
-    const currentUser = await User.findByPk(userId, { transaction: t });
     // Rule: chỉ Coach được đăng lớp học
-    if (type === POST_TYPE.CLASS && currentUser?.role !== "Coach") {
-      throw new ForbiddenError("Chỉ huấn luyện viên mới được đăng bài lớp học.");
+    if (type === POST_TYPE.CLASS && userRole !== ROLE_NAME.COACH) {
+      throw new ForbiddenError("Chỉ người dạy cầu lông mới được đăng bài lớp học.");
     }
 
     const post = await Post.create(
@@ -28,6 +29,19 @@ const createPostService = async (data) => {
       },
       { transaction: t },
     );
+
+    if (type === POST_TYPE.CLASS) {
+      await ClassRoom.findOrCreate({
+        where: { postId: post.id },
+        defaults: {
+          postId: post.id,
+          coachUserId: userId,
+          conversationId: null,
+          enrollmentStatus: CLASS_ENROLLMENT_STATUS.OPEN,
+        },
+        transaction: t,
+      });
+    }
 
     // Nếu muốn trả thêm thông tin author/profile (optional)
     const created = await Post.findOne({

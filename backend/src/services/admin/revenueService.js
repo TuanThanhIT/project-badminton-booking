@@ -1,240 +1,478 @@
-import { Op, fn, col } from "sequelize";
+import { QueryTypes } from "sequelize";
 import sequelize from "../../config/db.js";
 import { Booking, Order, Branch, User, Profile, Role, OrderGroup } from "../../models/index.js";
 import { BOOKING_STATUS } from "../../constants/bookingConstant.js";
 import { ORDER_STATUS } from "../../constants/orderConstant.js";
+import { PAYMENT_STATUS } from "../../constants/paymentConstant.js";
 import { ROLE_NAME } from "../../constants/userConstant.js";
 
-const PAID_BOOKING_STATUSES = [BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.PAID, BOOKING_STATUS.COMPLETED];
+const PAID_BOOKING_STATUSES = [
+  BOOKING_STATUS.CONFIRMED,
+  BOOKING_STATUS.PAID,
+  BOOKING_STATUS.COMPLETED,
+].filter(Boolean);
+
 const PAID_ORDER_STATUSES = [
-  ORDER_STATUS.CONFIRMED, ORDER_STATUS.PREPARING, ORDER_STATUS.READY_TO_SHIP,
-  ORDER_STATUS.SHIPPING, ORDER_STATUS.COMPLETED,
+  ORDER_STATUS.CONFIRMED,
+  ORDER_STATUS.PREPARING,
+  ORDER_STATUS.READY_TO_SHIP,
+  ORDER_STATUS.SHIPPING,
+  ORDER_STATUS.COMPLETED,
 ];
 
-const buildDateRange = (startDate, endDate) => {
-  const where = {};
-  if (startDate || endDate) {
-    where.createdDate = {};
-    if (startDate) where.createdDate[Op.gte] = new Date(startDate);
-    if (endDate) {
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
-      where.createdDate[Op.lte] = end;
-    }
+const toNumber = (value) => Number(value || 0);
+
+const buildDateSql = (dateExpression, startDate, endDate) => {
+  const clauses = [];
+  const replacements = {};
+
+  if (startDate) {
+    clauses.push(`${dateExpression} >= :startDate`);
+    replacements.startDate = new Date(startDate);
   }
-  return where;
-};
 
-const getRevenueOverviewService = async (startDate, endDate) => {
-  const dateFilter = buildDateRange(startDate, endDate);
-
-  const [bookingResult, orderResult, bookingCount, orderCount] = await Promise.all([
-    Booking.findOne({
-      attributes: [[fn("SUM", col("totalAmount")), "total"]],
-      where: { bookingStatus: { [Op.in]: PAID_BOOKING_STATUSES }, ...dateFilter },
-      raw: true,
-    }),
-    Order.findOne({
-      attributes: [[fn("SUM", col("totalAmount")), "total"]],
-      where: { orderStatus: { [Op.in]: PAID_ORDER_STATUSES }, ...dateFilter },
-      raw: true,
-    }),
-    Booking.count({
-      where: { bookingStatus: { [Op.in]: PAID_BOOKING_STATUSES }, ...dateFilter },
-    }),
-    Order.count({
-      where: { orderStatus: { [Op.in]: PAID_ORDER_STATUSES }, ...dateFilter },
-    }),
-  ]);
-
-  const bookingRevenue = Number(bookingResult?.total || 0);
-  const orderRevenue = Number(orderResult?.total || 0);
+  if (endDate) {
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+    clauses.push(`${dateExpression} <= :endDate`);
+    replacements.endDate = end;
+  }
 
   return {
-    bookingRevenue,
-    orderRevenue,
-    totalRevenue: bookingRevenue + orderRevenue,
-    bookingCount,
-    orderCount,
+    sql: clauses.length ? ` AND ${clauses.join(" AND ")}` : "",
+    replacements,
   };
 };
 
-const getRevenueByBranchService = async (startDate, endDate) => {
-  const dateFilter = buildDateRange(startDate, endDate);
+const getGroupParts = ({ groupBy, branchExpression, dateExpression }) => {
+  if (groupBy === "branch") {
+    return {
+      select: `${branchExpression} AS revenueKey`,
+      group: `GROUP BY ${branchExpression}`,
+      order: "ORDER BY revenueKey ASC",
+    };
+  }
 
-  const branches = await Branch.findAll({ attributes: ["id", "branchName"], raw: true });
+  if (groupBy === "date") {
+    return {
+      select: `DATE(${dateExpression}) AS revenueKey`,
+      group: `GROUP BY DATE(${dateExpression})`,
+      order: "ORDER BY revenueKey ASC",
+    };
+  }
 
-  const [bookingsByBranch, ordersByBranch] = await Promise.all([
-    Booking.findAll({
-      attributes: ["branchId", [fn("SUM", col("totalAmount")), "revenue"], [fn("COUNT", col("Booking.id")), "count"]],
-      where: { bookingStatus: { [Op.in]: PAID_BOOKING_STATUSES }, ...dateFilter },
-      group: ["branchId"],
-      raw: true,
+  if (groupBy === "month") {
+    return {
+      select: `DATE_FORMAT(${dateExpression}, '%Y-%m') AS revenueKey`,
+      group: `GROUP BY DATE_FORMAT(${dateExpression}, '%Y-%m')`,
+      order: "ORDER BY revenueKey ASC",
+    };
+  }
+
+  return {
+    select: "'all' AS revenueKey",
+    group: "",
+    order: "",
+  };
+};
+
+const createRevenueRow = (key) => ({
+  revenueKey: String(key),
+  onlineBookingRevenue: 0,
+  onlineBookingCount: 0,
+  offlineBookingRevenue: 0,
+  offlineBookingCount: 0,
+  offlineBookingSlotCount: 0,
+  bookingRevenue: 0,
+  bookingCount: 0,
+  onlineProductRevenue: 0,
+  onlineProductOrderCount: 0,
+  onlineProductQuantity: 0,
+  offlineProductRevenue: 0,
+  offlineProductOrderCount: 0,
+  offlineProductQuantity: 0,
+  productRevenue: 0,
+  productOrderCount: 0,
+  productQuantity: 0,
+  beverageRevenue: 0,
+  beverageOrderCount: 0,
+  beverageQuantity: 0,
+  orderRevenue: 0,
+  orderCount: 0,
+  totalRevenue: 0,
+});
+
+const finalizeRevenueRow = (row) => ({
+  ...row,
+  bookingRevenue: row.onlineBookingRevenue + row.offlineBookingRevenue,
+  bookingCount: row.onlineBookingCount + row.offlineBookingCount,
+  productRevenue: row.onlineProductRevenue + row.offlineProductRevenue,
+  productOrderCount: row.onlineProductOrderCount + row.offlineProductOrderCount,
+  productQuantity: row.onlineProductQuantity + row.offlineProductQuantity,
+  orderRevenue: row.onlineProductRevenue + row.offlineProductRevenue + row.beverageRevenue,
+  orderCount:
+    row.onlineProductOrderCount + row.offlineProductOrderCount + row.beverageOrderCount,
+  totalRevenue:
+    row.onlineBookingRevenue +
+    row.offlineBookingRevenue +
+    row.onlineProductRevenue +
+    row.offlineProductRevenue +
+    row.beverageRevenue,
+});
+
+const mergeRows = (targetMap, rows, handler) => {
+  rows.forEach((row) => {
+    const key = String(row.revenueKey || "all");
+    if (!targetMap.has(key)) targetMap.set(key, createRevenueRow(key));
+    handler(targetMap.get(key), row);
+  });
+};
+
+const runRevenueQuery = async ({
+  sql,
+  startDate,
+  endDate,
+  dateExpression,
+  branchExpression,
+  branchId,
+}) => {
+  const dateFilter = buildDateSql(dateExpression, startDate, endDate);
+  const branchFilter = branchId ? ` AND ${branchExpression} = :branchId` : "";
+
+  return sequelize.query(sql(dateFilter.sql, branchFilter), {
+    replacements: {
+      bookingStatuses: PAID_BOOKING_STATUSES,
+      orderStatuses: PAID_ORDER_STATUSES,
+      paidStatus: PAYMENT_STATUS.PAID,
+      branchId,
+      ...dateFilter.replacements,
+    },
+    type: QueryTypes.SELECT,
+  });
+};
+
+const getGroupedRevenue = async ({ startDate, endDate, groupBy = "all", branchId }) => {
+  const onlineBookingGroup = getGroupParts({
+    groupBy,
+    branchExpression: "b.branchId",
+    dateExpression: "b.createdDate",
+  });
+  const onlineProductGroup = getGroupParts({
+    groupBy,
+    branchExpression: "o.branchId",
+    dateExpression: "o.createdDate",
+  });
+  const offlineGroup = getGroupParts({
+    groupBy,
+    branchExpression: "db.branchId",
+    dateExpression: "COALESCE(ob.paidAt, ob.createdDate)",
+  });
+
+  const [
+    onlineBookings,
+    offlineCourtBookings,
+    onlineProducts,
+    offlineProducts,
+    offlineBeverages,
+  ] = await Promise.all([
+    runRevenueQuery({
+      startDate,
+      endDate,
+      branchId,
+      dateExpression: "b.createdDate",
+      branchExpression: "b.branchId",
+      sql: (dateSql, branchSql) => `
+        SELECT ${onlineBookingGroup.select},
+               COALESCE(SUM(b.totalAmount), 0) AS revenue,
+               COUNT(b.id) AS count
+        FROM Bookings b
+        WHERE b.bookingStatus IN (:bookingStatuses)
+          ${dateSql}
+          ${branchSql}
+        ${onlineBookingGroup.group}
+        ${onlineBookingGroup.order}
+      `,
     }),
-    Order.findAll({
-      attributes: ["branchId", [fn("SUM", col("totalAmount")), "revenue"], [fn("COUNT", col("Order.id")), "count"]],
-      where: { orderStatus: { [Op.in]: PAID_ORDER_STATUSES }, ...dateFilter },
-      group: ["branchId"],
-      raw: true,
+    runRevenueQuery({
+      startDate,
+      endDate,
+      branchId,
+      dateExpression: "COALESCE(ob.paidAt, ob.createdDate)",
+      branchExpression: "db.branchId",
+      sql: (dateSql, branchSql) => `
+        SELECT ${offlineGroup.select},
+               COALESCE(SUM(dbi.price), 0) AS revenue,
+               COUNT(DISTINCT ob.id) AS count,
+               COUNT(dbi.id) AS slotCount
+        FROM DraftBookingItems dbi
+        INNER JOIN DraftBookings db ON dbi.draftId = db.id
+        INNER JOIN OfflineBookings ob ON ob.draftId = db.id
+        WHERE ob.paymentStatus = :paidStatus
+          ${dateSql}
+          ${branchSql}
+        ${offlineGroup.group}
+        ${offlineGroup.order}
+      `,
+    }),
+    runRevenueQuery({
+      startDate,
+      endDate,
+      branchId,
+      dateExpression: "o.createdDate",
+      branchExpression: "o.branchId",
+      sql: (dateSql, branchSql) => `
+        SELECT ${onlineProductGroup.select},
+               COALESCE(SUM(od.subTotal), 0) AS revenue,
+               COUNT(DISTINCT o.id) AS count,
+               COALESCE(SUM(od.quantity), 0) AS quantity
+        FROM OrderDetails od
+        INNER JOIN Orders o ON od.orderId = o.id
+        WHERE o.orderStatus IN (:orderStatuses)
+          ${dateSql}
+          ${branchSql}
+        ${onlineProductGroup.group}
+        ${onlineProductGroup.order}
+      `,
+    }),
+    runRevenueQuery({
+      startDate,
+      endDate,
+      branchId,
+      dateExpression: "COALESCE(ob.paidAt, ob.createdDate)",
+      branchExpression: "db.branchId",
+      sql: (dateSql, branchSql) => `
+        SELECT ${offlineGroup.select},
+               COALESCE(SUM(dpi.subTotal), 0) AS revenue,
+               COUNT(DISTINCT ob.id) AS count,
+               COALESCE(SUM(dpi.quantity), 0) AS quantity
+        FROM DraftProductItems dpi
+        INNER JOIN DraftBookings db ON dpi.draftId = db.id
+        INNER JOIN OfflineBookings ob ON ob.draftId = db.id
+        WHERE ob.paymentStatus = :paidStatus
+          ${dateSql}
+          ${branchSql}
+        ${offlineGroup.group}
+        ${offlineGroup.order}
+      `,
+    }),
+    runRevenueQuery({
+      startDate,
+      endDate,
+      branchId,
+      dateExpression: "COALESCE(ob.paidAt, ob.createdDate)",
+      branchExpression: "db.branchId",
+      sql: (dateSql, branchSql) => `
+        SELECT ${offlineGroup.select},
+               COALESCE(SUM(dbi.subTotal), 0) AS revenue,
+               COUNT(DISTINCT ob.id) AS count,
+               COALESCE(SUM(dbi.quantity), 0) AS quantity
+        FROM DraftBeverageItems dbi
+        INNER JOIN DraftBookings db ON dbi.draftId = db.id
+        INNER JOIN OfflineBookings ob ON ob.draftId = db.id
+        WHERE ob.paymentStatus = :paidStatus
+          ${dateSql}
+          ${branchSql}
+        ${offlineGroup.group}
+        ${offlineGroup.order}
+      `,
     }),
   ]);
 
-  const bookingMap = {};
-  bookingsByBranch.forEach((b) => { bookingMap[b.branchId] = { revenue: Number(b.revenue), count: Number(b.count) }; });
+  const revenueMap = new Map();
 
-  const orderMap = {};
-  ordersByBranch.forEach((o) => { orderMap[o.branchId] = { revenue: Number(o.revenue), count: Number(o.count) }; });
+  if (groupBy === "all") revenueMap.set("all", createRevenueRow("all"));
 
-  return branches.map((branch) => {
-    const booking = bookingMap[branch.id] || { revenue: 0, count: 0 };
-    const order = orderMap[branch.id] || { revenue: 0, count: 0 };
-    return {
-      branchId: branch.id,
-      branchName: branch.branchName,
-      bookingRevenue: booking.revenue,
-      bookingCount: booking.count,
-      orderRevenue: order.revenue,
-      orderCount: order.count,
-      totalRevenue: booking.revenue + order.revenue,
-    };
-  }).sort((a, b) => b.totalRevenue - a.totalRevenue);
+  mergeRows(revenueMap, onlineBookings, (target, row) => {
+    target.onlineBookingRevenue += toNumber(row.revenue);
+    target.onlineBookingCount += toNumber(row.count);
+  });
+
+  mergeRows(revenueMap, offlineCourtBookings, (target, row) => {
+    target.offlineBookingRevenue += toNumber(row.revenue);
+    target.offlineBookingCount += toNumber(row.count);
+    target.offlineBookingSlotCount += toNumber(row.slotCount);
+  });
+
+  mergeRows(revenueMap, onlineProducts, (target, row) => {
+    target.onlineProductRevenue += toNumber(row.revenue);
+    target.onlineProductOrderCount += toNumber(row.count);
+    target.onlineProductQuantity += toNumber(row.quantity);
+  });
+
+  mergeRows(revenueMap, offlineProducts, (target, row) => {
+    target.offlineProductRevenue += toNumber(row.revenue);
+    target.offlineProductOrderCount += toNumber(row.count);
+    target.offlineProductQuantity += toNumber(row.quantity);
+  });
+
+  mergeRows(revenueMap, offlineBeverages, (target, row) => {
+    target.beverageRevenue += toNumber(row.revenue);
+    target.beverageOrderCount += toNumber(row.count);
+    target.beverageQuantity += toNumber(row.quantity);
+  });
+
+  return Array.from(revenueMap.values()).map(finalizeRevenueRow);
+};
+
+const getRevenueOverviewService = async (startDate, endDate) => {
+  const [overview] = await getGroupedRevenue({ startDate, endDate, groupBy: "all" });
+  return overview || finalizeRevenueRow(createRevenueRow("all"));
+};
+
+const getRevenueByBranchService = async (startDate, endDate) => {
+  const [branches, revenueRows] = await Promise.all([
+    Branch.findAll({ attributes: ["id", "branchName"], raw: true }),
+    getGroupedRevenue({ startDate, endDate, groupBy: "branch" }),
+  ]);
+
+  const revenueMap = new Map(revenueRows.map((row) => [String(row.revenueKey), row]));
+
+  return branches
+    .map((branch) => {
+      const row = revenueMap.get(String(branch.id)) || finalizeRevenueRow(createRevenueRow(branch.id));
+      return {
+        ...row,
+        branchId: branch.id,
+        branchName: branch.branchName,
+      };
+    })
+    .sort((a, b) => b.totalRevenue - a.totalRevenue);
 };
 
 const getRevenueByDateService = async (startDate, endDate) => {
-  const dateFilter = buildDateRange(startDate, endDate);
-
-  const dateExpr = fn("DATE", col("createdDate"));
-
-  const [bookingsByDate, ordersByDate] = await Promise.all([
-    Booking.findAll({
-      attributes: [[dateExpr, "date"], [fn("SUM", col("totalAmount")), "revenue"], [fn("COUNT", col("Booking.id")), "count"]],
-      where: { bookingStatus: { [Op.in]: PAID_BOOKING_STATUSES }, ...dateFilter },
-      group: [fn("DATE", col("createdDate"))],
-      order: [[fn("DATE", col("createdDate")), "ASC"]],
-      raw: true,
-    }),
-    Order.findAll({
-      attributes: [[dateExpr, "date"], [fn("SUM", col("totalAmount")), "revenue"], [fn("COUNT", col("Order.id")), "count"]],
-      where: { orderStatus: { [Op.in]: PAID_ORDER_STATUSES }, ...dateFilter },
-      group: [fn("DATE", col("createdDate"))],
-      order: [[fn("DATE", col("createdDate")), "ASC"]],
-      raw: true,
-    }),
-  ]);
-
-  const allDates = new Set([
-    ...bookingsByDate.map((b) => b.date),
-    ...ordersByDate.map((o) => o.date),
-  ]);
-
-  const bookingMap = {};
-  bookingsByDate.forEach((b) => { bookingMap[b.date] = { revenue: Number(b.revenue), count: Number(b.count) }; });
-
-  const orderMap = {};
-  ordersByDate.forEach((o) => { orderMap[o.date] = { revenue: Number(o.revenue), count: Number(o.count) }; });
-
-  return Array.from(allDates).sort().map((date) => {
-    const booking = bookingMap[date] || { revenue: 0, count: 0 };
-    const order = orderMap[date] || { revenue: 0, count: 0 };
-    return {
-      date,
-      bookingRevenue: booking.revenue,
-      bookingCount: booking.count,
-      orderRevenue: order.revenue,
-      orderCount: order.count,
-      totalRevenue: booking.revenue + order.revenue,
-    };
-  });
+  const revenueRows = await getGroupedRevenue({ startDate, endDate, groupBy: "date" });
+  return revenueRows
+    .map((row) => ({
+      ...row,
+      date: row.revenueKey,
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
 };
 
 const getRevenueByMonthService = async (startDate, endDate) => {
-  const dateFilter = buildDateRange(startDate, endDate);
-  const monthExpr = fn("DATE_FORMAT", col("createdDate"), "%Y-%m");
-
-  const [bookingsByMonth, ordersByMonth] = await Promise.all([
-    Booking.findAll({
-      attributes: [[monthExpr, "month"], [fn("SUM", col("totalAmount")), "revenue"], [fn("COUNT", col("Booking.id")), "count"]],
-      where: { bookingStatus: { [Op.in]: PAID_BOOKING_STATUSES }, ...dateFilter },
-      group: [fn("DATE_FORMAT", col("createdDate"), "%Y-%m")],
-      order: [[fn("DATE_FORMAT", col("createdDate"), "%Y-%m"), "ASC"]],
-      raw: true,
-    }),
-    Order.findAll({
-      attributes: [[monthExpr, "month"], [fn("SUM", col("totalAmount")), "revenue"], [fn("COUNT", col("Order.id")), "count"]],
-      where: { orderStatus: { [Op.in]: PAID_ORDER_STATUSES }, ...dateFilter },
-      group: [fn("DATE_FORMAT", col("createdDate"), "%Y-%m")],
-      order: [[fn("DATE_FORMAT", col("createdDate"), "%Y-%m"), "ASC"]],
-      raw: true,
-    }),
-  ]);
-
-  const allMonths = new Set([
-    ...bookingsByMonth.map((b) => b.month),
-    ...ordersByMonth.map((o) => o.month),
-  ]);
-
-  const bMap = {};
-  bookingsByMonth.forEach((b) => { bMap[b.month] = { revenue: Number(b.revenue), count: Number(b.count) }; });
-  const oMap = {};
-  ordersByMonth.forEach((o) => { oMap[o.month] = { revenue: Number(o.revenue), count: Number(o.count) }; });
-
-  return Array.from(allMonths).sort().map((month) => {
-    const booking = bMap[month] || { revenue: 0, count: 0 };
-    const order = oMap[month] || { revenue: 0, count: 0 };
-    return {
-      month,
-      bookingRevenue: booking.revenue,
-      bookingCount: booking.count,
-      orderRevenue: order.revenue,
-      orderCount: order.count,
-      totalRevenue: booking.revenue + order.revenue,
-    };
-  });
+  const revenueRows = await getGroupedRevenue({ startDate, endDate, groupBy: "month" });
+  return revenueRows
+    .map((row) => ({
+      ...row,
+      month: row.revenueKey,
+    }))
+    .sort((a, b) => a.month.localeCompare(b.month));
 };
 
 const getRevenueByBranchDetailService = async (branchId, startDate, endDate) => {
-  const dateFilter = buildDateRange(startDate, endDate);
-  const dateExpr = fn("DATE", col("createdDate"));
-
-  const [bookingsByDate, ordersByDate] = await Promise.all([
-    Booking.findAll({
-      attributes: [[dateExpr, "date"], [fn("SUM", col("totalAmount")), "revenue"], [fn("COUNT", col("Booking.id")), "count"]],
-      where: { branchId, bookingStatus: { [Op.in]: PAID_BOOKING_STATUSES }, ...dateFilter },
-      group: [fn("DATE", col("createdDate"))],
-      order: [[fn("DATE", col("createdDate")), "ASC"]],
-      raw: true,
-    }),
-    Order.findAll({
-      attributes: [[dateExpr, "date"], [fn("SUM", col("totalAmount")), "revenue"], [fn("COUNT", col("Order.id")), "count"]],
-      where: { branchId, orderStatus: { [Op.in]: PAID_ORDER_STATUSES }, ...dateFilter },
-      group: [fn("DATE", col("createdDate"))],
-      order: [[fn("DATE", col("createdDate")), "ASC"]],
-      raw: true,
-    }),
-  ]);
-
-  const allDates = new Set([
-    ...bookingsByDate.map((b) => b.date),
-    ...ordersByDate.map((o) => o.date),
-  ]);
-
-  const bMap = {};
-  bookingsByDate.forEach((b) => { bMap[b.date] = { revenue: Number(b.revenue), count: Number(b.count) }; });
-  const oMap = {};
-  ordersByDate.forEach((o) => { oMap[o.date] = { revenue: Number(o.revenue), count: Number(o.count) }; });
-
-  return Array.from(allDates).sort().map((date) => {
-    const booking = bMap[date] || { revenue: 0, count: 0 };
-    const order = oMap[date] || { revenue: 0, count: 0 };
-    return {
-      date,
-      bookingRevenue: booking.revenue,
-      bookingCount: booking.count,
-      orderRevenue: order.revenue,
-      orderCount: order.count,
-      totalRevenue: booking.revenue + order.revenue,
-    };
+  const revenueRows = await getGroupedRevenue({
+    startDate,
+    endDate,
+    branchId,
+    groupBy: "date",
   });
+
+  return revenueRows
+    .map((row) => ({
+      ...row,
+      date: row.revenueKey,
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+};
+
+const getRevenueProductsService = async (startDate, endDate, limit = 12) => {
+  const parsedLimit = Math.min(Math.max(Number(limit) || 12, 1), 50);
+  const orderDateFilter = buildDateSql("o.createdDate", startDate, endDate);
+  const offlineDateFilter = buildDateSql("COALESCE(ob.paidAt, ob.createdDate)", startDate, endDate);
+
+  const [onlineProducts, offlineProducts] = await Promise.all([
+    sequelize.query(
+      `
+        SELECT od.variantId AS productVariantId,
+               od.productName AS productName,
+               od.variantInfo AS variantInfo,
+               COALESCE(SUM(od.subTotal), 0) AS onlineRevenue,
+               COALESCE(SUM(od.quantity), 0) AS onlineQuantity,
+               COUNT(DISTINCT o.id) AS onlineOrderCount
+        FROM OrderDetails od
+        INNER JOIN Orders o ON od.orderId = o.id
+        WHERE o.orderStatus IN (:orderStatuses)
+          ${orderDateFilter.sql}
+        GROUP BY od.variantId, od.productName, od.variantInfo
+      `,
+      {
+        replacements: {
+          orderStatuses: PAID_ORDER_STATUSES,
+          ...orderDateFilter.replacements,
+        },
+        type: QueryTypes.SELECT,
+      },
+    ),
+    sequelize.query(
+      `
+        SELECT dpi.productVariantId AS productVariantId,
+               p.productName AS productName,
+               CONCAT_WS(' / ', NULLIF(pv.size, ''), NULLIF(pv.color, '')) AS variantInfo,
+               COALESCE(SUM(dpi.subTotal), 0) AS offlineRevenue,
+               COALESCE(SUM(dpi.quantity), 0) AS offlineQuantity,
+               COUNT(DISTINCT ob.id) AS offlineOrderCount
+        FROM DraftProductItems dpi
+        INNER JOIN DraftBookings db ON dpi.draftId = db.id
+        INNER JOIN OfflineBookings ob ON ob.draftId = db.id
+        INNER JOIN ProductVariants pv ON dpi.productVariantId = pv.id
+        INNER JOIN Products p ON pv.productId = p.id
+        WHERE ob.paymentStatus = :paidStatus
+          ${offlineDateFilter.sql}
+        GROUP BY dpi.productVariantId, p.productName, pv.size, pv.color
+      `,
+      {
+        replacements: {
+          paidStatus: PAYMENT_STATUS.PAID,
+          ...offlineDateFilter.replacements,
+        },
+        type: QueryTypes.SELECT,
+      },
+    ),
+  ]);
+
+  const productMap = new Map();
+  const ensureProduct = (row) => {
+    const key = String(row.productVariantId);
+    if (!productMap.has(key)) {
+      productMap.set(key, {
+        productVariantId: row.productVariantId,
+        productName: row.productName || "Sản phẩm",
+        variantInfo: row.variantInfo || "",
+        onlineRevenue: 0,
+        onlineQuantity: 0,
+        onlineOrderCount: 0,
+        offlineRevenue: 0,
+        offlineQuantity: 0,
+        offlineOrderCount: 0,
+        totalRevenue: 0,
+        totalQuantity: 0,
+      });
+    }
+    return productMap.get(key);
+  };
+
+  onlineProducts.forEach((row) => {
+    const product = ensureProduct(row);
+    product.onlineRevenue += toNumber(row.onlineRevenue);
+    product.onlineQuantity += toNumber(row.onlineQuantity);
+    product.onlineOrderCount += toNumber(row.onlineOrderCount);
+  });
+
+  offlineProducts.forEach((row) => {
+    const product = ensureProduct(row);
+    product.offlineRevenue += toNumber(row.offlineRevenue);
+    product.offlineQuantity += toNumber(row.offlineQuantity);
+    product.offlineOrderCount += toNumber(row.offlineOrderCount);
+  });
+
+  return Array.from(productMap.values())
+    .map((product) => ({
+      ...product,
+      totalRevenue: product.onlineRevenue + product.offlineRevenue,
+      totalQuantity: product.onlineQuantity + product.offlineQuantity,
+    }))
+    .sort((a, b) => b.totalRevenue - a.totalRevenue)
+    .slice(0, parsedLimit);
 };
 
 const calcGrowth = (curr, prev) => {
@@ -251,50 +489,27 @@ const getDashboardService = async () => {
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
   thirtyDaysAgo.setHours(0, 0, 0, 0);
 
+  const today = new Date(now);
+  today.setHours(23, 59, 59, 999);
+
   const [
-    thisBooking, thisOrder,
-    lastBooking, lastOrder,
+    thisOverview,
+    lastOverview,
     totalUsers,
-    chartBookings, chartOrders,
-    recentBookings, recentOrders,
+    chartRevenue,
+    topBranches,
+    topProducts,
+    recentBookings,
+    recentOrders,
   ] = await Promise.all([
-    Booking.findOne({
-      attributes: [[fn("SUM", col("totalAmount")), "revenue"], [fn("COUNT", col("id")), "count"]],
-      where: { bookingStatus: { [Op.in]: PAID_BOOKING_STATUSES }, createdDate: { [Op.gte]: thisMonthStart } },
-      raw: true,
-    }),
-    Order.findOne({
-      attributes: [[fn("SUM", col("totalAmount")), "revenue"], [fn("COUNT", col("id")), "count"]],
-      where: { orderStatus: { [Op.in]: PAID_ORDER_STATUSES }, createdDate: { [Op.gte]: thisMonthStart } },
-      raw: true,
-    }),
-    Booking.findOne({
-      attributes: [[fn("SUM", col("totalAmount")), "revenue"], [fn("COUNT", col("id")), "count"]],
-      where: { bookingStatus: { [Op.in]: PAID_BOOKING_STATUSES }, createdDate: { [Op.gte]: lastMonthStart, [Op.lte]: lastMonthEnd } },
-      raw: true,
-    }),
-    Order.findOne({
-      attributes: [[fn("SUM", col("totalAmount")), "revenue"], [fn("COUNT", col("id")), "count"]],
-      where: { orderStatus: { [Op.in]: PAID_ORDER_STATUSES }, createdDate: { [Op.gte]: lastMonthStart, [Op.lte]: lastMonthEnd } },
-      raw: true,
-    }),
+    getRevenueOverviewService(thisMonthStart, today),
+    getRevenueOverviewService(lastMonthStart, lastMonthEnd),
     User.count({
       include: [{ model: Role, as: "role", where: { roleName: ROLE_NAME.USER }, required: true }],
     }),
-    Booking.findAll({
-      attributes: [[fn("DATE", col("createdDate")), "date"], [fn("SUM", col("totalAmount")), "revenue"]],
-      where: { bookingStatus: { [Op.in]: PAID_BOOKING_STATUSES }, createdDate: { [Op.gte]: thirtyDaysAgo } },
-      group: [fn("DATE", col("createdDate"))],
-      order: [[fn("DATE", col("createdDate")), "ASC"]],
-      raw: true,
-    }),
-    Order.findAll({
-      attributes: [[fn("DATE", col("createdDate")), "date"], [fn("SUM", col("totalAmount")), "revenue"]],
-      where: { orderStatus: { [Op.in]: PAID_ORDER_STATUSES }, createdDate: { [Op.gte]: thirtyDaysAgo } },
-      group: [fn("DATE", col("createdDate"))],
-      order: [[fn("DATE", col("createdDate")), "ASC"]],
-      raw: true,
-    }),
+    getRevenueByDateService(thirtyDaysAgo, today),
+    getRevenueByBranchService(thisMonthStart, today),
+    getRevenueProductsService(thisMonthStart, today, 5),
     Booking.findAll({
       attributes: ["id", "bookingStatus", "totalAmount", "createdDate"],
       include: [
@@ -315,42 +530,38 @@ const getDashboardService = async () => {
     }),
   ]);
 
-  const thisRevenue = Number(thisBooking?.revenue || 0) + Number(thisOrder?.revenue || 0);
-  const lastRevenue = Number(lastBooking?.revenue || 0) + Number(lastOrder?.revenue || 0);
-  const thisBookingCount = Number(thisBooking?.count || 0);
-  const lastBookingCount = Number(lastBooking?.count || 0);
-  const thisOrderCount = Number(thisOrder?.count || 0);
-  const lastOrderCount = Number(lastOrder?.count || 0);
-
-  // Build 30-day chart array (fill empty days with 0)
-  const bMap = {};
-  chartBookings.forEach((b) => { bMap[b.date] = Number(b.revenue); });
-  const oMap = {};
-  chartOrders.forEach((o) => { oMap[o.date] = Number(o.revenue); });
+  const chartMap = {};
+  chartRevenue.forEach((item) => {
+    chartMap[item.date] = item;
+  });
 
   const chart = Array.from({ length: 30 }, (_, i) => {
     const d = new Date(thirtyDaysAgo);
     d.setDate(thirtyDaysAgo.getDate() + i);
     const key = d.toISOString().slice(0, 10);
+    const item = chartMap[key] || {};
     return {
       date: key,
       label: d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" }),
-      bookingRevenue: bMap[key] || 0,
-      orderRevenue: oMap[key] || 0,
-      total: (bMap[key] || 0) + (oMap[key] || 0),
+      bookingRevenue: toNumber(item.bookingRevenue),
+      orderRevenue: toNumber(item.orderRevenue),
+      total: toNumber(item.totalRevenue),
     };
   });
 
   return {
     stats: {
-      totalRevenue: thisRevenue,
-      revenueGrowth: calcGrowth(thisRevenue, lastRevenue),
-      orderCount: thisOrderCount,
-      orderGrowth: calcGrowth(thisOrderCount, lastOrderCount),
-      bookingCount: thisBookingCount,
-      bookingGrowth: calcGrowth(thisBookingCount, lastBookingCount),
+      totalRevenue: thisOverview.totalRevenue,
+      revenueGrowth: calcGrowth(thisOverview.totalRevenue, lastOverview.totalRevenue),
+      orderCount: thisOverview.orderCount,
+      orderGrowth: calcGrowth(thisOverview.orderCount, lastOverview.orderCount),
+      bookingCount: thisOverview.bookingCount,
+      bookingGrowth: calcGrowth(thisOverview.bookingCount, lastOverview.bookingCount),
       userCount: totalUsers,
     },
+    overview: thisOverview,
+    topBranches: topBranches.slice(0, 3),
+    topProducts,
     chart,
     recentBookings: recentBookings.map((b) => {
       const bj = b.toJSON();
@@ -369,6 +580,7 @@ const adminRevenueService = {
   getRevenueByDateService,
   getRevenueByMonthService,
   getRevenueByBranchDetailService,
+  getRevenueProductsService,
   getDashboardService,
 };
 

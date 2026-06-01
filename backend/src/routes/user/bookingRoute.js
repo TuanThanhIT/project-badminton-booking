@@ -19,7 +19,7 @@ const initBookingRoute = (app) => {
   bookingRoute.get(
     "/my-bookings",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(getBookingsSchema),
     bookingController.getMyBookingsController,
   );
@@ -27,7 +27,7 @@ const initBookingRoute = (app) => {
   bookingRoute.get(
     "/:bookingId",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(bookingActionIdSchema),
     bookingController.getBookingByIdController,
   );
@@ -35,7 +35,7 @@ const initBookingRoute = (app) => {
   bookingRoute.patch(
     "/vnpay/callback",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(bookingCallbackSchema),
     bookingController.bookingCallbackController,
   );
@@ -43,7 +43,7 @@ const initBookingRoute = (app) => {
   bookingRoute.post(
     "/:bookingId/vnpay/retry",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(bookingActionIdSchema),
     bookingController.retryBookingVNPayController,
   );
@@ -51,7 +51,7 @@ const initBookingRoute = (app) => {
   bookingRoute.patch(
     "/wallet/confirm",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(walletBookingConfirmSchema),
     bookingController.walletBookingConfirmController,
   );
@@ -59,7 +59,7 @@ const initBookingRoute = (app) => {
   bookingRoute.patch(
     "/:bookingId/cancel",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(cancelBookingSchema),
     bookingController.cancelBookingController,
   );
@@ -67,7 +67,7 @@ const initBookingRoute = (app) => {
   bookingRoute.patch(
     "/:bookingId/cancel-request",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(cancelBookingSchema),
     bookingController.requestCancelBookingController,
   );
@@ -75,7 +75,7 @@ const initBookingRoute = (app) => {
   bookingRoute.post(
     "/",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(createBookingSchema),
     bookingController.createBookingController,
   );

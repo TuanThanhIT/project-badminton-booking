@@ -9,7 +9,7 @@ export const POST_TYPE_LABEL: Record<PostType, string> = {
   FIND_PLAYER: "Tìm người chơi cùng",
   TOURNAMENT: "Giải đấu",
   GROUP: "Nhóm",
-  FIND_COACH: "Tìm HLV",
+  FIND_COACH: "Tìm người dạy",
   CLASS: "Lớp học",
 };
 

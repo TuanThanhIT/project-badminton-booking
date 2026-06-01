@@ -12,7 +12,7 @@ const initUserSearchRoute = (app) => {
   userSearchRoute.get(
     "/search",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(searchUsersSchema),
     userSearchController.searchUsersController,
   );

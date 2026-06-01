@@ -19,7 +19,7 @@ const initMonthlyBookingRoute = (app) => {
   monthlyBookingRoute.post(
     "/calculate",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(calculateMonthlyBookingSchema),
     monthlyBookingController.calculateMonthlyBookingController,
   );
@@ -28,7 +28,7 @@ const initMonthlyBookingRoute = (app) => {
   monthlyBookingRoute.post(
     "/",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(createMonthlyBookingSchema),
     monthlyBookingController.createMonthlyBookingController,
   );

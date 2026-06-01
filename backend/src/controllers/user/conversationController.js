@@ -11,7 +11,10 @@ const getConversationsController = asyncHandler(async (req, res) => {
 });
 
 const createOrGetDirectConversationController = asyncHandler(async (req, res) => {
-  const data = { userId: req.user.id, targetUserId: req.params.targetUserId };
+  const data = {
+    userId: Number(req.user.id),
+    targetUserId: Number(req.params.targetUserId),
+  };
   const conversation = await conversationService.createOrGetDirectConversationService(data);
   return res
     .status(200)

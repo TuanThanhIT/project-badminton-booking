@@ -173,7 +173,7 @@ const BranchManageModal = ({ manager, branches, onClose, onSuccess }: BranchMana
             ) : (
               <div className="space-y-2">
                 {currentBranches.map((b) => (
-                  <div key={b.branchManagerId}
+                  <div key={b.branchManagerId ?? b.branchId}
                     className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
                     <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
                       <Building2 className="w-4 h-4 text-blue-600" />
@@ -181,7 +181,9 @@ const BranchManageModal = ({ manager, branches, onClose, onSuccess }: BranchMana
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-blue-800 truncate">{b.branchName}</p>
                       <p className="text-xs text-blue-500">
-                        Từ {new Date(b.assignedDate).toLocaleDateString("vi-VN")}
+                        {b.assignedDate
+                          ? `Từ ${new Date(b.assignedDate).toLocaleDateString("vi-VN")}`
+                          : "Đang quản lý"}
                       </p>
                     </div>
                     <div className="flex gap-1.5 shrink-0">
@@ -189,7 +191,11 @@ const BranchManageModal = ({ manager, branches, onClose, onSuccess }: BranchMana
                         className="w-7 h-7 rounded-lg bg-white border border-blue-200 flex items-center justify-center text-blue-500 hover:bg-blue-100 transition">
                         <History className="w-3.5 h-3.5" />
                       </button>
-                      <button onClick={() => handleRevoke(b.branchManagerId)} disabled={revokingId === b.branchManagerId}
+                      <button
+                        onClick={() => {
+                          if (b.branchManagerId != null) handleRevoke(b.branchManagerId);
+                        }}
+                        disabled={b.branchManagerId == null || revokingId === b.branchManagerId}
                         title="Thu hồi quyền"
                         className="w-7 h-7 rounded-lg bg-red-50 border border-red-200 flex items-center justify-center text-red-500 hover:bg-red-100 transition disabled:opacity-60">
                         {revokingId === b.branchManagerId

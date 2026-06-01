@@ -8,6 +8,7 @@ import FormDataSummary from "./FormDataSummary";
 import PostActions from "./PostActions";
 import RepostOriginalEmbed from "./RepostOriginalEmbed";
 import { useAppSelector } from "../../../../redux/hook";
+import ClassEnrollAction from "../coach/ClassEnrollAction";
 
 type Props = {
   post: PostWithAuthor | null;
@@ -64,6 +65,12 @@ const PostDetailModal = ({
   }, [post]);
 
   const currentPost = latestPost || post;
+  const avatar = currentPost?.author?.profile?.avatar;
+  const [avatarError, setAvatarError] = useState(false);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [avatar]);
 
   const commentPreviewNames = useMemo(() => {
     const names =
@@ -85,10 +92,7 @@ const PostDetailModal = ({
     currentPost.author?.profile?.fullName ||
     currentPost.author?.username ||
     "Ẩn danh";
-  const avatar = currentPost.author?.profile?.avatar;
   const letter = authorName.charAt(0).toUpperCase();
-  const [avatarError, setAvatarError] = useState(false);
-  useEffect(() => { setAvatarError(false); }, [avatar]);
   const isRepost = Boolean(
     currentPost.repostOfPostId && currentPost.repostOfPostId > 0,
   );
@@ -225,9 +229,16 @@ const PostDetailModal = ({
             <span className="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-[10px] font-semibold text-sky-700">
               {POST_TYPE_LABEL[currentPost.type]}
             </span>
-            <h1 className="mt-2 text-lg font-semibold leading-snug text-slate-900">
-              {currentPost.title}
-            </h1>
+            <div className="mt-2 flex items-start justify-between gap-3">
+              <h1 className="min-w-0 flex-1 text-lg font-semibold leading-snug text-slate-900">
+                {currentPost.title}
+              </h1>
+              {currentPost.type === "CLASS" && (
+                <div className="shrink-0 md:hidden">
+                  <ClassEnrollAction postId={currentPost.id} compact />
+                </div>
+              )}
+            </div>
             {currentPost.content && (
               <p className="mt-2 whitespace-pre-wrap text-[15px] leading-relaxed text-slate-700">
                 {currentPost.content}

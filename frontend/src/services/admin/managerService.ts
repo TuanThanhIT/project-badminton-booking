@@ -1,6 +1,12 @@
 import instance from "../../utils/axiosCustomize";
 
-const getAllManagersService = (params?: { search?: string }) =>
+const getAllManagersService = (params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  branchId?: number | string;
+}) =>
   instance.get("/admin/managers", { params });
 
 const getBranchManagersService = (branchId: number) =>

@@ -4,6 +4,7 @@ import {
   CalendarCheck,
   CalendarPlus,
   CheckCheck,
+  GraduationCap,
   LogOut,
   MessageCircle,
   Package,
@@ -22,6 +23,7 @@ import {
 } from "../../../redux/slices/user/notificationSlice";
 import { getUserOrders } from "../../../redux/slices/user/orderSlice";
 import { getMyProfile } from "../../../redux/slices/user/profileSlice";
+import { ROLE_NAME } from "../../../utils/constants/role";
 
 interface HeaderProps {
   cartRef: RefObject<HTMLDivElement | null>;
@@ -154,6 +156,30 @@ const Header = ({ cartRef }: HeaderProps) => {
                 <CalendarPlus className="h-5 w-5 text-sky-600" />
                 <span className="hidden xl:inline">Đăng bài</span>
               </NavLink>
+
+              {user.role === ROLE_NAME.COACH ? (
+                <NavLink
+                  to="/coach/students"
+                  className={(state) =>
+                    `${actionLinkClass(state)} hidden md:flex`
+                  }
+                  title="Quản lý lớp học"
+                >
+                  <GraduationCap className="h-5 w-5 text-amber-600" />
+                  <span className="hidden xl:inline">Lớp học</span>
+                </NavLink>
+              ) : (
+                <NavLink
+                  to="/my-classes"
+                  className={(state) =>
+                    `${actionLinkClass(state)} hidden md:flex`
+                  }
+                  title="Lớp đã đăng ký"
+                >
+                  <GraduationCap className="h-5 w-5 text-sky-600" />
+                  <span className="hidden xl:inline">Lớp học</span>
+                </NavLink>
+              )}
 
               <NavLink
                 to="/bookings"

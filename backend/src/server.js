@@ -4,6 +4,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import sequelize from "./config/db.js";
 import { syncEnumColumns } from "./config/syncEnumColumns.js";
+import { syncClassRoomColumns } from "./config/syncClassRoomColumns.js";
 import { createServer } from "http";
 import { initSocket } from "./socket/index.js";
 import errorHandler from "./middlewares/errorHandler.js";
@@ -47,6 +48,9 @@ import initAdminFinanceRoute from "./routes/admin/financeRoute.js";
 import initAdminRevenueRoute from "./routes/admin/revenueRoute.js";
 import initAdminCategoryRoute from "./routes/admin/categoryRoute.js";
 import initAdminUploadRoute from "./routes/admin/uploadRoute.js";
+import initAdminCoachApplicationRoute from "./routes/admin/coachApplicationRoute.js";
+import initCoachClassRoute from "./routes/user/coachClassRoute.js";
+import initCoachApplicationRoute from "./routes/user/coachApplicationRoute.js";
 
 dotenv.config();
 
@@ -88,6 +92,8 @@ initPostSocialRoute(app);
 initProfileRoute(app);
 initConversationRoute(app);
 initUserSearchRoute(app);
+initCoachClassRoute(app);
+initCoachApplicationRoute(app);
 
 // Employee
 initEmployeeOrderRoute(app);
@@ -108,6 +114,7 @@ initAdminFinanceRoute(app);
 initAdminRevenueRoute(app);
 initAdminCategoryRoute(app);
 initAdminUploadRoute(app);
+initAdminCoachApplicationRoute(app);
 
 // create http server
 const httpServer = createServer(app);
@@ -119,6 +126,7 @@ app.use(errorHandler);
 
 sequelize.sync().then(async () => {
   await syncEnumColumns(sequelize);
+  await syncClassRoomColumns(sequelize);
   console.log("Database synced");
   httpServer.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

@@ -4,6 +4,7 @@ export type UserProfileData = {
   id: number;
   username: string;
   email: string;
+  role?: string;
   createdDate: string;
   postCount: number;
   profile: {
@@ -14,6 +15,12 @@ export type UserProfileData = {
     phoneNumber?: string | null;
     avatar?: string | null;
     level?: string | null;
+  } | null;
+  coachProfile?: {
+    experienceYears?: number | null;
+    certificate?: string | null;
+    certificateImages?: string[] | null;
+    introduction?: string | null;
   } | null;
 };
 
@@ -28,4 +35,10 @@ export type UpdateMyProfileRequest = {
   phoneNumber?: string;
   avatar?: string | null;
   level?: string | null;
+  coachProfile?: {
+    experienceYears?: number;
+    certificate?: string | null;
+    certificateImages?: string[];
+    introduction?: string | null;
+  };
 };

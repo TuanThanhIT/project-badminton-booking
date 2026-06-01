@@ -60,6 +60,9 @@ import WorkShiftEmployee from "./workShiftEmployee.js";
 import CashRegister from "./cashRegister.js";
 
 import CoachProfile from "./coachProfile.js";
+import CoachApplication from "./coachApplication.js";
+import ClassEnrollment from "./classEnrollment.js";
+import ClassRoom from "./classRoom.js";
 import WithdrawRequest from "./withDrawRequest.js";
 import RefreshToken from "./refreshToken.js";
 
@@ -736,6 +739,38 @@ CoachProfile.belongsTo(User, {
   as: "user",
 });
 
+User.hasMany(CoachApplication, {
+  foreignKey: "userId",
+  as: "coachApplications",
+});
+CoachApplication.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+CoachApplication.belongsTo(User, {
+  foreignKey: "reviewedBy",
+  as: "reviewer",
+});
+
+Post.hasOne(ClassRoom, { foreignKey: "postId", as: "classRoom" });
+ClassRoom.belongsTo(Post, { foreignKey: "postId", as: "post" });
+ClassRoom.belongsTo(Conversation, {
+  foreignKey: "conversationId",
+  as: "conversation",
+});
+ClassRoom.belongsTo(User, { foreignKey: "coachUserId", as: "coach" });
+
+Post.hasMany(ClassEnrollment, { foreignKey: "postId", as: "enrollments" });
+ClassEnrollment.belongsTo(Post, { foreignKey: "postId", as: "post" });
+ClassEnrollment.belongsTo(User, {
+  foreignKey: "studentUserId",
+  as: "student",
+});
+ClassEnrollment.belongsTo(User, {
+  foreignKey: "coachUserId",
+  as: "coach",
+});
+
 //////////////////////////////////////////////////////
 //////////////// FEEDBACK ///////////////////////////////
 //////////////////////////////////////////////////////
@@ -807,6 +842,9 @@ export {
   WorkShiftEmployee,
   CashRegister,
   CoachProfile,
+  CoachApplication,
+  ClassEnrollment,
+  ClassRoom,
   VariantStock,
   BeverageStock,
   MonthlyBooking,

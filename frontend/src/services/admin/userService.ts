@@ -6,6 +6,7 @@ export interface AdminUsersParams {
   search?: string;
   role?: string;
   isActive?: string;
+  branchId?: number | string;
 }
 
 const getUsersService = (params: AdminUsersParams) =>

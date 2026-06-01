@@ -3,6 +3,7 @@ import instance from "../../utils/axiosCustomize";
 export interface DateRangeParams {
   startDate?: string;
   endDate?: string;
+  limit?: number;
 }
 
 const getRevenueOverviewService = (params: DateRangeParams) =>
@@ -20,6 +21,9 @@ const getRevenueByMonthService = (params: DateRangeParams) =>
 const getRevenueByBranchDetailService = (branchId: number, params: DateRangeParams) =>
   instance.get(`/admin/revenue/by-branch/${branchId}/detail`, { params });
 
+const getRevenueProductsService = (params: DateRangeParams) =>
+  instance.get("/admin/revenue/products", { params });
+
 const getDashboardService = () =>
   instance.get("/admin/revenue/dashboard");
 
@@ -30,6 +34,7 @@ const adminRevenueService = {
   getRevenueByDateService,
   getRevenueByMonthService,
   getRevenueByBranchDetailService,
+  getRevenueProductsService,
 };
 
 export default adminRevenueService;

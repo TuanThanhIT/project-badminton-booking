@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Shield, Search, Plus, ChevronDown, Building2,
   ArrowLeftRight, Trash2, Lock, Unlock, CheckCircle,
-  ChevronLeft, ChevronRight, Users, Mail, Phone,
+  Users, Mail, Phone,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import adminManagerService from "../../services/admin/managerService";
@@ -16,6 +16,8 @@ import CreateManagerModal from "../../components/ui/admin/managers/CreateManager
 import BranchManageModal from "../../components/ui/admin/managers/BranchManageModal";
 import ChangeRoleModal from "../../components/ui/admin/managers/ChangeRoleModal";
 import DeleteManagerModal from "../../components/ui/admin/managers/DeleteManagerModal";
+import AdminConfirmModal from "../../components/ui/admin/AdminConfirmModal";
+import AdminPagination from "../../components/ui/admin/AdminPagination";
 
 const StatCard = ({
   label, value, icon: Icon, bg, text, border,
@@ -35,6 +37,13 @@ const ManagerManagementPage = () => {
   const [allManagers, setAllManagers] = useState<AdminManager[]>([]);
   const [branches,    setBranches]    = useState<AdminBranchOption[]>([]);
   const [loading,     setLoading]     = useState(false);
+  const [total,       setTotal]       = useState(0);
+  const [stats,       setStats]       = useState({
+    total: 0,
+    active: 0,
+    locked: 0,
+    unassigned: 0,
+  });
 
   const [searchInput,   setSearchInput]   = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
@@ -47,17 +56,27 @@ const ManagerManagementPage = () => {
   const [branchManageTarget, setBranchManageTarget] = useState<AdminManager | null>(null);
   const [deleteTarget,       setDeleteTarget]       = useState<AdminManager | null>(null);
   const [changeRoleTarget,   setChangeRoleTarget]   = useState<AdminManager | null>(null);
+  const [lockTarget,         setLockTarget]         = useState<AdminManager | null>(null);
   const [togglingId,         setTogglingId]         = useState<number | null>(null);
 
   const fetchManagers = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await adminManagerService.getAllManagersService();
-      setAllManagers((res.data as any).data || []);
+      const res = await adminManagerService.getAllManagersService({
+        page,
+        limit: LIMIT,
+        search: appliedSearch,
+        status: statusFilter || undefined,
+        branchId: branchFilter === "" ? undefined : branchFilter,
+      });
+      const data = (res.data as any).data;
+      setAllManagers(data?.managers || []);
+      setTotal(data?.pagination?.total || 0);
+      setStats(data?.stats || { total: 0, active: 0, locked: 0, unassigned: 0 });
     } catch (err: any) {
       toast.error(err?.message || "Không thể tải danh sách manager");
     } finally { setLoading(false); }
-  }, []);
+  }, [page, appliedSearch, statusFilter, branchFilter]);
 
   const fetchBranches = useCallback(async () => {
     try {
@@ -68,40 +87,18 @@ const ManagerManagementPage = () => {
 
   useEffect(() => { fetchManagers(); fetchBranches(); }, [fetchManagers, fetchBranches]);
 
-  const stats = useMemo(() => ({
-    total:      allManagers.length,
-    active:     allManagers.filter((m) => m.isActive).length,
-    locked:     allManagers.filter((m) => !m.isActive).length,
-    unassigned: allManagers.filter((m) => m.managedBranches.length === 0).length,
-  }), [allManagers]);
-
-  const filteredManagers = useMemo(() => {
-    const q = appliedSearch.toLowerCase();
-    return allManagers.filter((m) => {
-      const matchSearch = !q
-        || m.username.toLowerCase().includes(q)
-        || m.email.toLowerCase().includes(q)
-        || (m.fullName || "").toLowerCase().includes(q);
-      const matchStatus = !statusFilter
-        || (statusFilter === "active" ? m.isActive : !m.isActive);
-      const matchBranch = branchFilter === ""
-        || (branchFilter === -1
-          ? m.managedBranches.length === 0
-          : m.managedBranches.some((b) => b.branchId === branchFilter));
-      return matchSearch && matchStatus && matchBranch;
-    });
-  }, [allManagers, appliedSearch, statusFilter, branchFilter]);
-
-  const totalPages       = Math.ceil(filteredManagers.length / LIMIT);
-  const paginatedManagers = filteredManagers.slice((page - 1) * LIMIT, page * LIMIT);
+  const totalPages = Math.ceil(total / LIMIT);
+  const paginatedManagers = allManagers;
 
   const applySearch = () => { setAppliedSearch(searchInput); setPage(1); };
 
-  const handleToggleActive = async (manager: AdminManager) => {
-    setTogglingId(manager.id);
+  const handleToggleActive = async () => {
+    if (!lockTarget) return;
+    setTogglingId(lockTarget.id);
     try {
-      await adminUserService.toggleUserActiveService(manager.id);
-      toast.success(manager.isActive ? "Đã khóa tài khoản" : "Đã mở khóa tài khoản");
+      await adminUserService.toggleUserActiveService(lockTarget.id);
+      toast.success(lockTarget.isActive ? "Đã khóa tài khoản manager" : "Đã mở khóa tài khoản manager");
+      setLockTarget(null);
       fetchManagers();
     } catch (err: any) {
       toast.error(err?.message || "Có lỗi xảy ra");
@@ -111,10 +108,15 @@ const ManagerManagementPage = () => {
   const handleBranchSuccess = () => {
     fetchManagers();
     if (branchManageTarget) {
-      adminManagerService.getAllManagersService().then((res) => {
-        const updated = ((res.data as any).data || []).find((m: AdminManager) => m.id === branchManageTarget.id);
+      adminManagerService.getAllManagersService({
+        page,
+        limit: LIMIT,
+        search: appliedSearch,
+        status: statusFilter || undefined,
+        branchId: branchFilter === "" ? undefined : branchFilter,
+      }).then((res) => {
+        const updated = ((res.data as any).data?.managers || []).find((m: AdminManager) => m.id === branchManageTarget.id);
         if (updated) setBranchManageTarget(updated);
-        setAllManagers((res.data as any).data || []);
       });
     }
   };
@@ -278,7 +280,7 @@ const ManagerManagementPage = () => {
                           className="w-8 h-8 rounded-lg flex items-center justify-center bg-orange-50 text-orange-500 hover:bg-orange-100 border border-orange-200 transition">
                           <ArrowLeftRight className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => handleToggleActive(manager)} disabled={togglingId === manager.id}
+                        <button onClick={() => setLockTarget(manager)} disabled={togglingId === manager.id}
                           title={manager.isActive ? "Khóa tài khoản" : "Mở khóa"}
                           className={`w-8 h-8 rounded-lg flex items-center justify-center border transition disabled:opacity-60 ${
                             manager.isActive
@@ -301,33 +303,7 @@ const ManagerManagementPage = () => {
             </table>
           )}
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between px-5 py-3.5 border-t border-gray-100 bg-gray-50/70">
-              <p className="text-sm text-gray-500">
-                Trang <b>{page}</b> / {totalPages} · Tổng <b className="text-sky-600">{filteredManagers.length}</b> manager
-              </p>
-              <div className="flex items-center gap-1">
-                <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
-                  className="w-8 h-8 rounded-lg border border-gray-300 flex items-center justify-center disabled:opacity-40 hover:bg-gray-100 transition">
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const p = page <= 3 ? i + 1 : page - 2 + i;
-                  if (p < 1 || p > totalPages) return null;
-                  return (
-                    <button key={p} onClick={() => setPage(p)}
-                      className={`w-8 h-8 rounded-lg text-xs font-semibold border transition ${p === page ? "bg-sky-600 text-white border-sky-600" : "border-gray-300 hover:bg-gray-100 text-gray-600"}`}>
-                      {p}
-                    </button>
-                  );
-                })}
-                <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                  className="w-8 h-8 rounded-lg border border-gray-300 flex items-center justify-center disabled:opacity-40 hover:bg-gray-100 transition">
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
+          <AdminPagination page={page} totalPages={totalPages} total={total} onPage={setPage} unit="manager" />
         </div>
       </div>
 
@@ -356,6 +332,23 @@ const ManagerManagementPage = () => {
           onSuccess={fetchManagers}
         />
       )}
+      <AdminConfirmModal
+        open={!!lockTarget}
+        title={lockTarget?.isActive ? "Khóa tài khoản manager?" : "Mở khóa tài khoản manager?"}
+        message={
+          lockTarget
+            ? lockTarget.isActive
+              ? `Tài khoản @${lockTarget.username} sẽ không thể đăng nhập. Phân công chi nhánh hiện tại vẫn được giữ nguyên.`
+              : `Tài khoản @${lockTarget.username} sẽ được đăng nhập trở lại. Phân công chi nhánh hiện tại vẫn được giữ nguyên.`
+            : ""
+        }
+        confirmLabel={lockTarget?.isActive ? "Khóa tài khoản" : "Mở khóa"}
+        confirmClass={lockTarget?.isActive ? "bg-red-500 hover:bg-red-600" : "bg-emerald-500 hover:bg-emerald-600"}
+        icon={lockTarget?.isActive ? <Lock className="w-6 h-6 text-red-500" /> : <Unlock className="w-6 h-6 text-emerald-600" />}
+        loading={togglingId === lockTarget?.id}
+        onConfirm={handleToggleActive}
+        onCancel={() => setLockTarget(null)}
+      />
     </div>
   );
 };

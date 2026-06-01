@@ -8,7 +8,7 @@ import AdminPagination from "../AdminPagination";
 
 const POST_TYPE_LABEL: Record<string, string> = {
   FIND_PLAYER: "Tìm người chơi", TOURNAMENT: "Giải đấu",
-  GROUP: "Nhóm", FIND_COACH: "Tìm HLV", CLASS: "Lớp học",
+  GROUP: "Nhóm", FIND_COACH: "Tìm người dạy", CLASS: "Lớp học",
 };
 
 const POST_TYPE_COLOR: Record<string, string> = {

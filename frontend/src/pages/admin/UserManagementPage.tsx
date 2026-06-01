@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { Lock, Unlock, Eye, Search } from "lucide-react";
+import { Lock, Unlock, Eye, Search, UserCog } from "lucide-react";
 import { toast } from "react-toastify";
 import adminUserService from "../../services/admin/userService";
-import type { AdminUser } from "../../types/admin";
+import adminBranchService from "../../services/admin/branchService";
+import adminManagerService from "../../services/admin/managerService";
+import type { AdminBranchOption, AdminUser } from "../../types/admin";
 import { ROLE_TAG, ROLE_OPTIONS } from "../../utils/constants/adminConstant";
 import UserAvatar from "../../components/ui/admin/UserAvatar";
 import AdminSpinner from "../../components/ui/admin/AdminSpinner";
@@ -13,12 +15,14 @@ import UserDetailModal from "../../components/ui/admin/users/UserDetailModal";
 
 const UserManagementPage = () => {
   const [users, setUsers]           = useState<AdminUser[]>([]);
+  const [branches, setBranches]     = useState<AdminBranchOption[]>([]);
   const [loading, setLoading]       = useState(false);
   const [togglingId, setTogglingId] = useState<number | null>(null);
 
   const [search,   setSearch]   = useState("");
   const [role,     setRole]     = useState("");
   const [isActive, setIsActive] = useState("");
+  const [branchId, setBranchId] = useState("");
   const [page,     setPage]     = useState(1);
   const [total,    setTotal]    = useState(0);
   const limit = 10;
@@ -28,7 +32,7 @@ const UserManagementPage = () => {
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const res  = await adminUserService.getUsersService({ page, limit, search, role, isActive });
+      const res  = await adminUserService.getUsersService({ page, limit, search, role, isActive, branchId });
       const data = (res.data as any).data;
       setUsers(data.users || []);
       setTotal(data.pagination?.total || 0);
@@ -37,9 +41,19 @@ const UserManagementPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, search, role, isActive]);
+  }, [page, search, role, isActive, branchId]);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
+
+  useEffect(() => {
+    adminBranchService
+      .getAdminBranchesService({ page: 1, limit: 100, isActive: "true" })
+      .then((res) => {
+        const data = (res.data as any).data;
+        setBranches(data.branches || []);
+      })
+      .catch(() => {});
+  }, []);
 
   const handleToggleActive = async (user: AdminUser) => {
     setTogglingId(user.id);
@@ -51,6 +65,24 @@ const UserManagementPage = () => {
       toast.error(err?.message || "Có lỗi xảy ra");
     } finally {
       setTogglingId(null);
+    }
+  };
+
+  const handleToggleCoachRole = async (user: AdminUser) => {
+    const newRole = user.role === "COACH" ? "USER" : "COACH";
+    const message =
+      newRole === "COACH"
+        ? "Chuyển tài khoản này thành người dạy cầu lông?"
+        : "Thu hồi quyền dạy cầu lông và chuyển về User?";
+
+    if (!window.confirm(message)) return;
+
+    try {
+      await adminManagerService.changeUserRoleService(user.id, { newRole });
+      toast.success(newRole === "COACH" ? "Đã cấp quyền dạy cầu lông" : "Đã chuyển về User");
+      fetchUsers();
+    } catch (err: any) {
+      toast.error(err?.message || "Khong the thay doi role");
     }
   };
 
@@ -80,11 +112,28 @@ const UserManagementPage = () => {
             <label className="block text-xs font-medium text-gray-600 mb-1">Vai trò</label>
             <select
               value={role}
-              onChange={(e) => { setRole(e.target.value); setPage(1); }}
+              onChange={(e) => { setRole(e.target.value); setBranchId(""); setPage(1); }}
               className="py-2 px-3 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-sky-400 bg-white transition"
             >
               {ROLE_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Chi nhánh</label>
+            <select
+              value={branchId}
+              onChange={(e) => {
+                setBranchId(e.target.value);
+                if (e.target.value) setRole("EMPLOYEE");
+                setPage(1);
+              }}
+              className="py-2 px-3 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-sky-400 bg-white transition"
+            >
+              <option value="">Tất cả chi nhánh</option>
+              {branches.map((branch) => (
+                <option key={branch.id} value={branch.id}>{branch.branchName}</option>
               ))}
             </select>
           </div>
@@ -115,11 +164,19 @@ const UserManagementPage = () => {
           ) : users.length === 0 ? (
             <div className="text-center py-14 text-gray-400 text-sm">Không có dữ liệu</div>
           ) : (
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[1024px] text-sm">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                  {["#", "Người dùng", "Email", "Vai trò", "Xác thực", "Trạng thái", "Thao tác"].map((h) => (
-                    <th key={h} className="text-center px-4 py-3 font-semibold">{h}</th>
+                  {["#", "Người dùng", "Email", "Vai trò", "Chi nhánh", "Xác thực", "Trạng thái", "Thao tác"].map((h) => (
+                    <th
+                      key={h}
+                      className={`px-4 py-3 text-center font-semibold ${
+                        h === "Thao tác" ? "min-w-[300px] whitespace-nowrap" : ""
+                      }`}
+                    >
+                      {h}
+                    </th>
                   ))}
                 </tr>
               </thead>
@@ -150,6 +207,19 @@ const UserManagementPage = () => {
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
+                      {user.role === "EMPLOYEE" && (user.assignedBranches?.length ?? 0) > 0 ? (
+                        <div className="flex flex-col gap-1 items-center">
+                          {user.assignedBranches!.map((branch) => (
+                            <span key={branch.branchId} className="px-2 py-0.5 rounded border text-xs font-medium bg-indigo-50 text-indigo-700 border-indigo-200">
+                              {branch.branchName}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-center">
                       <AdminStatusBadge
                         color={user.isVerified
                           ? "bg-green-100 text-green-700 border-green-200"
@@ -165,26 +235,35 @@ const UserManagementPage = () => {
                         label={user.isActive ? "Hoạt động" : "Đã khóa"}
                       />
                     </td>
-                    <td className="px-4 py-3 text-center">
-                      <div className="flex items-center justify-center gap-2">
+                    <td className="whitespace-nowrap px-4 py-3 text-center">
+                      <div className="inline-flex flex-nowrap items-center justify-center gap-1.5">
                         <button
                           onClick={() => setDetailUserId(user.id)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-sky-50 text-sky-600 hover:bg-sky-100 border border-sky-200 transition"
+                          className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg border border-sky-200 bg-sky-50 px-2.5 py-1.5 text-xs font-medium text-sky-600 transition hover:bg-sky-100"
                         >
                           <Eye size={13} /> Chi tiết
                         </button>
+                        {(user.role === "USER" || user.role === "COACH") && (
+                          <button
+                            onClick={() => handleToggleCoachRole(user)}
+                            className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg border border-yellow-200 bg-yellow-50 px-2.5 py-1.5 text-xs font-medium text-yellow-700 transition hover:bg-yellow-100"
+                          >
+                            <UserCog size={13} />
+                            {user.role === "COACH" ? "Về User" : "Dạy cầu lông"}
+                          </button>
+                        )}
                         {user.role !== "ADMIN" && (
                           <button
                             onClick={() => handleToggleActive(user)}
                             disabled={togglingId === user.id}
-                            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition disabled:opacity-60 ${
+                            className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-xs font-medium transition disabled:opacity-60 ${
                               user.isActive
                                 ? "bg-red-50 text-red-500 hover:bg-red-100 border-red-200"
                                 : "bg-green-50 text-green-600 hover:bg-green-100 border-green-200"
                             }`}
                           >
                             {togglingId === user.id ? (
-                              <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                              <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
                             ) : user.isActive ? (
                               <><Lock size={13} /> Khóa</>
                             ) : (
@@ -198,6 +277,7 @@ const UserManagementPage = () => {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
           <AdminPagination page={page} totalPages={totalPages} total={total} onPage={setPage} />
         </div>

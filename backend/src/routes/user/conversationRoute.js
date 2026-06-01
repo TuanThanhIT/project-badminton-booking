@@ -25,14 +25,14 @@ const initConversationRoute = (app) => {
   conversationRoute.get(
     "/",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     conversationController.getConversationsController,
   );
 
   conversationRoute.post(
     "/direct/:targetUserId",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(directConversationSchema),
     conversationController.createOrGetDirectConversationController,
   );
@@ -40,7 +40,7 @@ const initConversationRoute = (app) => {
   conversationRoute.post(
     "/group",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(createGroupSchema),
     conversationController.createGroupConversationController,
   );
@@ -48,7 +48,7 @@ const initConversationRoute = (app) => {
   conversationRoute.patch(
     "/:conversationId/nickname",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(updateDirectNicknameSchema),
     conversationController.updateDirectNicknameController,
   );
@@ -56,7 +56,7 @@ const initConversationRoute = (app) => {
   conversationRoute.post(
     "/:conversationId/attachments",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(uploadChatAttachmentSchema),
     chatUpload.single("file"),
     messageController.uploadChatAttachmentController,
@@ -65,7 +65,7 @@ const initConversationRoute = (app) => {
   conversationRoute.patch(
     "/:conversationId/messages/:messageId/recall",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(recallMessageSchema),
     messageController.recallMessageController,
   );
@@ -73,7 +73,7 @@ const initConversationRoute = (app) => {
   conversationRoute.post(
     "/:conversationId/members",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(addMembersSchema),
     conversationController.addMembersController,
   );
@@ -81,7 +81,7 @@ const initConversationRoute = (app) => {
   conversationRoute.delete(
     "/:conversationId/members/:userId",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(removeMemberSchema),
     conversationController.removeMemberController,
   );
@@ -89,7 +89,7 @@ const initConversationRoute = (app) => {
   conversationRoute.delete(
     "/:conversationId/leave",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(conversationIdParamSchema),
     conversationController.leaveGroupController,
   );
@@ -97,7 +97,7 @@ const initConversationRoute = (app) => {
   conversationRoute.delete(
     "/:conversationId",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(conversationIdParamSchema),
     conversationController.deleteGroupConversationController,
   );
@@ -105,7 +105,7 @@ const initConversationRoute = (app) => {
   conversationRoute.get(
     "/:conversationId/messages",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(getMessagesSchema),
     messageController.getMessagesController,
   );
@@ -113,7 +113,7 @@ const initConversationRoute = (app) => {
   conversationRoute.post(
     "/:conversationId/messages",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(sendMessageSchema),
     messageController.sendMessageController,
   );

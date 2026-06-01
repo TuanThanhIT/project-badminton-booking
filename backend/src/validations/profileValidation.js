@@ -45,6 +45,31 @@ export const updateMyProfileSchema = {
       .messages({
         "any.only": "Trình độ không hợp lệ.",
       }),
+    coachProfile: Joi.object({
+      experienceYears: Joi.number().integer().min(0).max(80).messages({
+        "number.base": "So nam kinh nghiem phai la so.",
+        "number.integer": "So nam kinh nghiem phai la so nguyen.",
+        "number.min": "So nam kinh nghiem khong duoc am.",
+        "number.max": "So nam kinh nghiem khong hop le.",
+      }),
+      certificate: Joi.string().trim().max(500).allow(null, "").messages({
+        "string.base": "Chung chi phai la chuoi.",
+        "string.max": "Chung chi toi da 500 ky tu.",
+      }),
+      certificateImages: Joi.array()
+        .items(Joi.string().uri().max(1000))
+        .max(10)
+        .messages({
+          "array.base": "Danh sach anh chung chi khong hop le.",
+          "array.max": "Toi da 10 anh chung chi.",
+          "string.uri": "Anh chung chi phai la URL hop le.",
+          "string.max": "URL anh chung chi toi da 1000 ky tu.",
+        }),
+      introduction: Joi.string().trim().max(2000).allow(null, "").messages({
+        "string.base": "Giới thiệu dạy cầu lông phải là chuỗi.",
+        "string.max": "Giới thiệu dạy cầu lông tối đa 2000 ký tự.",
+      }),
+    }),
   })
     .min(1)
     .messages({

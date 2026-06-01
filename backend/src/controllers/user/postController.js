@@ -4,7 +4,7 @@ import postService from "../../services/user/postService.js";
 
 // Tạo bài đăng mới (User/Coach). Riêng loại "Class" chỉ Coach được phép (check trong service).
 const createPostController = asyncHandler(async (req, res) => {
-  const data = { userId: req.user.id, ...req.body };
+  const data = { userId: req.user.id, userRole: req.user.role, ...req.body };
   const post = await postService.createPostService(data);
   return res
     .status(201)

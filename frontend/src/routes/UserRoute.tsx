@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import HomePage from "../pages/user/HomePage";
 import ProductPage from "../pages/user/ProductPage";
 import ContactPage from "../pages/user/ContactPage";
@@ -30,6 +30,9 @@ import VNPayResultPage from "../pages/user/VNPayResultPage";
 import BookingResultPage from "../pages/user/BookingResultPage";
 import UserProtectedRoute from "./ProtectedRoute/UserProtectedRoute";
 import CheckoutBookingPage from "../pages/user/CheckoutBookingPage";
+import CoachStudentsPage from "../pages/user/CoachStudentsPage";
+import MyClassEnrollmentsPage from "../pages/user/MyClassEnrollmentsPage";
+import BecomeCoachPage from "../pages/user/BecomeCoachPage";
 
 const UserRoute = () => {
   return (
@@ -70,6 +73,10 @@ const UserRoute = () => {
           <Route path="courts" element={<CourtPage />} />
           <Route path="order-result" element={<OrderResultPage />} />
           <Route path="/checkout/booking" element={<CheckoutBookingPage />} />
+          <Route path="my-classes" element={<MyClassEnrollmentsPage />} />
+          <Route path="become-coach" element={<BecomeCoachPage />} />
+          <Route path="coach/classes" element={<Navigate to="/coach/students" replace />} />
+          <Route path="coach/students" element={<CoachStudentsPage />} />
         </Route>
       </Route>
     </Routes>

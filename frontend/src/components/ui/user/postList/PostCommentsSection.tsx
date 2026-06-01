@@ -75,9 +75,16 @@ function CommentItem({
   onReplyContentChange,
   onReplySubmit,
 }: CommentItemProps) {
+  const name =
+    node.author?.profile?.fullName || node.author?.username || "Ẩn danh";
+  const avatarUrl = node.author?.profile?.avatar;
+  const [avatarError, setAvatarError] = useState(false);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [avatarUrl]);
+
   if (depth > 20) {
-    const name =
-      node.author?.profile?.fullName || node.author?.username || "Ẩn danh";
     return (
       <div className="mt-2 pl-2 border-l-2 border-gray-200">
         <p className="font-semibold text-[13px] text-gray-900">{name}</p>
@@ -89,12 +96,7 @@ function CommentItem({
   }
 
   const isReplyBoxOpen = replyToId === node.id;
-  const name =
-    node.author?.profile?.fullName || node.author?.username || "Ẩn danh";
-  const avatarUrl = node.author?.profile?.avatar;
   const initial = name.charAt(0).toUpperCase();
-  const [avatarError, setAvatarError] = useState(false);
-  useEffect(() => { setAvatarError(false); }, [avatarUrl]);
   const indentClass = depth > 0 ? "ml-10 mt-2" : "mt-3";
 
   return (

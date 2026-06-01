@@ -22,10 +22,21 @@ const uploadMyAvatarService = (file: File) => {
   });
 };
 
+const uploadCoachCertificateImagesService = (files: File[]) => {
+  const body = new FormData();
+  files.forEach((file) => body.append("images", file));
+  return instance.post<GetMyProfileResponse>(
+    "/user/profile/me/coach-certificates",
+    body,
+    { timeout: 120000 },
+  );
+};
+
 const profileService = {
   getMyProfileService,
   updateMyProfileService,
   uploadMyAvatarService,
+  uploadCoachCertificateImagesService,
   getPublicProfileService,
 };
 

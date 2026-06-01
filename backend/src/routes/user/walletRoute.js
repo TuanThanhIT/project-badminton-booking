@@ -17,35 +17,35 @@ const initWalletRoute = (app) => {
   walletRoute.get(
     "/",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     walletController.getWalletOverviewController,
   );
 
   walletRoute.post(
     "/deposit",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(walletDepositSchema),
     walletController.walletDepositController,
   );
   walletRoute.patch(
     "/vnpay/callback",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(walletCallbackSchema),
     walletController.walletCallbackController,
   );
   walletRoute.post(
     "/withdraw",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(walletWithdrawRequestSchema),
     walletController.walletWithdrawRequestController,
   );
   walletRoute.patch(
     "/withdraw/confirm",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(walletWithdrawConfirmSchema),
     walletController.walletWithdrawConfirmController,
   );

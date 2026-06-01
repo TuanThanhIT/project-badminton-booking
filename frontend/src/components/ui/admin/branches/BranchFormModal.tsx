@@ -168,7 +168,7 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto border border-gray-200">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50 rounded-t-2xl sticky top-0 z-10">
           <div className="flex items-center gap-2">
             <Store className="w-5 h-5 text-sky-600" />
@@ -181,10 +181,10 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           {basicFields.map(({ label, key, type, rows }) =>
             key === "description" ? (
-              <div key={key} className="col-span-2">
+              <div key={key} className="md:col-span-3">
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs font-medium text-gray-700">{label}</label>
                   {String(form[key] ?? "") && (
@@ -207,7 +207,7 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
                 {errors[key] && <p className="text-xs text-red-500 mt-1">{errors[key]}</p>}
               </div>
             ) : (
-              <div key={key} className={rows ? "col-span-2" : ""}>
+              <div key={key} className={rows ? "md:col-span-3" : ""}>
                 <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
                 {rows ? (
                   <textarea rows={rows} value={String(form[key] ?? "")}
@@ -227,7 +227,7 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
           )}
 
           {/* Map picker */}
-          <div className="col-span-2">
+          <div className="md:col-span-3">
             <div className="mb-1 flex items-center justify-between">
               <label className="text-xs font-medium text-gray-700">
                 Vị trí trên bản đồ {!isEdit && <span className="text-red-500">*</span>}
@@ -251,14 +251,14 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
           </div>
 
           {/* Technical fields - collapsible */}
-          <div className="col-span-2">
+          <div className="md:col-span-3">
             <button type="button" onClick={() => setShowTechnical(!showTechnical)}
               className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-500 hover:bg-gray-100 transition">
               <span>⚙️ Cài đặt kỹ thuật (GHN, tọa độ)</span>
               {showTechnical ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </button>
             {showTechnical && (
-              <div className="grid grid-cols-2 gap-4 mt-3 p-3 rounded-lg bg-gray-50/60 border border-gray-100">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-3 p-3 rounded-lg bg-gray-50/60 border border-gray-100">
                 {technicalFields.map(({ label, key, type }) => (
                   <div key={key}>
                     <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
@@ -277,7 +277,7 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
 
           {/* Image management — edit mode only */}
           {isEdit && (
-            <div className="col-span-2">
+            <div className="md:col-span-3">
               <div className="flex items-center justify-between mb-2">
                 <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Hình ảnh ({images.length})
@@ -292,7 +292,7 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
                 <input ref={imgInputRef} type="file" accept="image/*" className="hidden" onChange={handleAddImage} />
               </div>
               {images.length > 0 ? (
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                   {images.map((img) => (
                     <div key={img.id} className="relative group rounded-xl overflow-hidden border border-gray-200 aspect-square bg-gray-50">
                       <img src={img.imageUrl} alt="" className="w-full h-full object-cover" />
@@ -312,7 +312,7 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
             </div>
           )}
 
-          <div className="col-span-2 flex gap-3 pt-2 border-t border-gray-100">
+          <div className="md:col-span-3 flex gap-3 pt-2 border-t border-gray-100">
             <button type="button" onClick={onClose}
               className="flex-1 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition">
               Hủy

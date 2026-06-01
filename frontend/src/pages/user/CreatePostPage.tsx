@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   GraduationCap,
@@ -6,23 +6,27 @@ import {
   Users,
   UserPlus,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import type { PostType } from "../../types/post";
 import CreateFindPlayerPostForm from "../../components/ui/user/postList/CreateFindPlayerPostForm";
 import CreateClassPostForm from "../../components/ui/user/postList/CreateClassPostForm";
 import CreateTournamentPostForm from "../../components/ui/user/postList/CreateTournamentPostForm";
 import CreateGroupPostForm from "../../components/ui/user/postList/CreateGroupPostForm";
+import CreateFindCoachPostForm from "../../components/ui/user/postList/CreateFindCoachPostForm";
+import { useAppSelector } from "../../redux/hook";
+import { ROLE_NAME } from "../../utils/constants/role";
 
 const POST_TYPE_LABEL: Record<PostType, string> = {
   FIND_PLAYER: "Tìm người chơi cùng",
   TOURNAMENT: "Giải đấu",
   GROUP: "Nhóm",
-  FIND_COACH: "Tìm HLV",
+  FIND_COACH: "Tìm người dạy",
   CLASS: "Lớp học",
 };
 
 const POST_TYPE_DESC: Partial<Record<PostType, string>> = {
   FIND_PLAYER: "Tìm thêm người chơi cho buổi cầu lông",
+  FIND_COACH: "Tìm người dạy cầu lông phù hợp với mục tiêu tập luyện",
   CLASS: "Đăng lớp học hoặc khóa đào tạo",
   TOURNAMENT: "Thông báo giải đấu, hạng mục và lịch thi",
   GROUP: "Tạo nhóm chơi cố định theo khu vực",
@@ -30,20 +34,33 @@ const POST_TYPE_DESC: Partial<Record<PostType, string>> = {
 
 const POST_TYPE_ICON: Partial<Record<PostType, React.ElementType>> = {
   FIND_PLAYER: UserPlus,
+  FIND_COACH: GraduationCap,
   CLASS: GraduationCap,
   TOURNAMENT: Trophy,
   GROUP: Users,
 };
 
-const AVAILABLE_TYPES: PostType[] = [
-  "FIND_PLAYER",
-  "CLASS",
-  "TOURNAMENT",
-  "GROUP",
-];
-
 const CreatePostPage = () => {
-  const [selectedType, setSelectedType] = useState<PostType>("FIND_PLAYER");
+  const userRole = useAppSelector((state) => state.auth.user?.role);
+  const [searchParams] = useSearchParams();
+  const availableTypes: PostType[] =
+    userRole === ROLE_NAME.COACH
+      ? ["FIND_PLAYER", "CLASS", "TOURNAMENT", "GROUP"]
+      : ["FIND_PLAYER", "FIND_COACH", "TOURNAMENT", "GROUP"];
+
+  const defaultType: PostType =
+    userRole === ROLE_NAME.COACH ? "CLASS" : "FIND_PLAYER";
+  const typeFromQuery = searchParams.get("type") as PostType | null;
+  const initialType =
+    typeFromQuery && availableTypes.includes(typeFromQuery)
+      ? typeFromQuery
+      : defaultType;
+
+  const [selectedType, setSelectedType] = useState<PostType>(initialType);
+
+  useEffect(() => {
+    setSelectedType(initialType);
+  }, [initialType]);
   const ActiveIcon = POST_TYPE_ICON[selectedType] || UserPlus;
 
   const renderForm = () => {
@@ -52,6 +69,8 @@ const CreatePostPage = () => {
         return <CreateFindPlayerPostForm />;
       case "CLASS":
         return <CreateClassPostForm />;
+      case "FIND_COACH":
+        return <CreateFindCoachPostForm />;
       case "TOURNAMENT":
         return <CreateTournamentPostForm />;
       case "GROUP":
@@ -124,7 +143,7 @@ const CreatePostPage = () => {
           {/* TABS */}
           <div className="p-3 sm:p-5 border-b border-slate-100 bg-white">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {AVAILABLE_TYPES.map((type) => {
+              {availableTypes.map((type) => {
                 const Icon = POST_TYPE_ICON[type] || UserPlus;
                 const active = selectedType === type;
 

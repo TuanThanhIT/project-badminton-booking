@@ -22,47 +22,54 @@ import type {
   ShippingStatus,
 } from "../../types/order";
 import { formatOrderItemCode } from "../../utils/order";
+import {
+  ManagerEmptyState,
+  ManagerPageHeader,
+  managerCardClass,
+  managerInputClass,
+  managerSecondaryButtonClass,
+} from "../../components/commons/manager/ManagerPage";
 
 const ORDER_TABS: { value: OrderStatus | "ALL"; label: string }[] = [
-  { value: "ALL", label: "Tat ca" },
-  { value: "PENDING", label: "Cho xac nhan" },
-  { value: "CONFIRMED", label: "Da xac nhan" },
-  { value: "PREPARING", label: "Dang soan" },
-  { value: "READY_TO_SHIP", label: "Cho giao" },
-  { value: "SHIPPING", label: "Dang giao" },
-  { value: "CANCEL_REQUESTED", label: "Yeu cau huy" },
-  { value: "RETURN_REQUESTED", label: "Yeu cau tra" },
-  { value: "COMPLETED", label: "Hoan tat" },
-  { value: "CANCELLED", label: "Da huy" },
+  { value: "ALL", label: "Tất cả" },
+  { value: "PENDING", label: "Chờ xác nhận" },
+  { value: "CONFIRMED", label: "Đã xác nhận" },
+  { value: "PREPARING", label: "Đang soạn" },
+  { value: "READY_TO_SHIP", label: "Chờ giao" },
+  { value: "SHIPPING", label: "Đang giao" },
+  { value: "CANCEL_REQUESTED", label: "Yêu cầu hủy" },
+  { value: "RETURN_REQUESTED", label: "Yêu cầu trả" },
+  { value: "COMPLETED", label: "Hoàn tất" },
+  { value: "CANCELLED", label: "Đã hủy" },
 ];
 
 const ORDER_LABEL: Record<OrderStatus, string> = {
-  PENDING: "Cho xac nhan",
-  CONFIRMED: "Da xac nhan",
-  PREPARING: "Dang chuan bi",
-  READY_TO_SHIP: "San sang giao",
-  SHIPPING: "Dang giao",
-  CANCEL_REQUESTED: "Yeu cau huy",
-  CANCELLED: "Da huy",
-  RETURN_REQUESTED: "Yeu cau tra hang",
-  RETURNING: "Dang hoan hang",
-  RETURNED: "Da hoan",
-  COMPLETED: "Hoan tat",
-  FAILED: "That bai",
+  PENDING: "Chờ xác nhận",
+  CONFIRMED: "Đã xác nhận",
+  PREPARING: "Đang chuẩn bị",
+  READY_TO_SHIP: "Sẵn sàng giao",
+  SHIPPING: "Đang giao",
+  CANCEL_REQUESTED: "Yêu cầu hủy",
+  CANCELLED: "Đã hủy",
+  RETURN_REQUESTED: "Yêu cầu trả hàng",
+  RETURNING: "Đang hoàn hàng",
+  RETURNED: "Đã hoàn",
+  COMPLETED: "Hoàn tất",
+  FAILED: "Thất bại",
 };
 
 const SHIPPING_LABEL: Record<ShippingStatus, string> = {
-  PENDING: "Chua tao van don",
-  CREATED: "Da tao van don",
-  PICKING: "Dang lay hang",
-  PICKED: "Da lay hang",
-  IN_TRANSIT: "Dang van chuyen",
-  DELIVERING: "Dang giao",
-  DELIVERED: "Giao thanh cong",
-  FAILED: "Giao that bai",
-  RETURNING: "Dang hoan",
-  RETURNED: "Da hoan",
-  CANCELLED: "Da huy giao hang",
+  PENDING: "Chưa tạo vận đơn",
+  CREATED: "Đã tạo vận đơn",
+  PICKING: "Đang lấy hàng",
+  PICKED: "Đã lấy hàng",
+  IN_TRANSIT: "Đang vận chuyển",
+  DELIVERING: "Đang giao",
+  DELIVERED: "Giao thành công",
+  FAILED: "Giao thất bại",
+  RETURNING: "Đang hoàn",
+  RETURNED: "Đã hoàn",
+  CANCELLED: "Đã hủy giao hàng",
 };
 
 const statusClass: Record<OrderStatus, string> = {
@@ -150,33 +157,17 @@ const OrderPage = () => {
 
   return (
     <div className="space-y-5">
-      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-        <div className="grid gap-4 border-b border-slate-100 bg-slate-950 p-5 text-white lg:grid-cols-[1fr_auto] lg:items-center">
-          <div>
-            <p className="text-xs font-bold uppercase text-sky-200">
-              ///MANAGER orders
-            </p>
-            <h1 className="mt-1 text-2xl font-black">Quan ly don hang</h1>
-            <p className="mt-2 text-sm text-slate-300">
-              Theo doi don hang online, thanh toan va van chuyen cua chi nhanh.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg border border-white/10 bg-white/10 p-4">
-              <p className="text-xs uppercase text-slate-300">Tong don</p>
-              <p className="mt-1 text-2xl font-black">
-                {summary.totalOrders || pagination.total}
-              </p>
-            </div>
-            <div className="rounded-lg border border-white/10 bg-white/10 p-4">
-              <p className="text-xs uppercase text-slate-300">Gia tri dang xem</p>
-              <p className="mt-1 text-2xl font-black">
-                {formatCurrency(totalVisibleAmount)}
-              </p>
-            </div>
-          </div>
-        </div>
+      <ManagerPageHeader
+        eyebrow="Manager orders"
+        title="Quản lý đơn hàng"
+        description="Theo dõi đơn hàng online, thanh toán và vận chuyển của chi nhánh."
+        metrics={[
+          { label: "Tổng đơn", value: summary.totalOrders || pagination.total },
+          { label: "Giá trị đang xem", value: formatCurrency(totalVisibleAmount) },
+        ]}
+      />
 
+      <section className={`${managerCardClass} overflow-hidden`}>
         <div className="grid gap-3 p-4 lg:grid-cols-[1fr_180px_auto]">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -186,8 +177,8 @@ const OrderPage = () => {
                 setKeyword(event.target.value);
                 setPage(1);
               }}
-              placeholder="Tim ma don, ten, sdt, ma GHN..."
-              className="h-11 w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 text-sm outline-none focus:border-sky-400 focus:bg-white"
+              placeholder="Tìm mã đơn, tên, SĐT, mã GHN..."
+              className={`w-full bg-slate-50 pl-9 ${managerInputClass}`}
             />
           </div>
           <input
@@ -198,15 +189,15 @@ const OrderPage = () => {
               setDate(event.target.value);
               setPage(1);
             }}
-            className="h-11 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-sky-400 focus:bg-white"
+            className={managerInputClass}
           />
           <button
             type="button"
             onClick={fetchOrders}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 text-sm font-bold text-slate-700 hover:bg-slate-50"
+            className={managerSecondaryButtonClass}
           >
             <RefreshCw className="h-4 w-4" />
-            Lam moi
+            Làm mới
           </button>
         </div>
 
@@ -218,7 +209,7 @@ const OrderPage = () => {
                 setStatus(tab.value);
                 setPage(1);
               }}
-              className={`shrink-0 rounded-lg border px-3 py-2 text-xs font-bold transition ${
+              className={`shrink-0 rounded-xl border px-3 py-2 text-xs font-bold transition ${
                 status === tab.value
                   ? "border-sky-300 bg-sky-50 text-sky-700"
                   : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
@@ -236,12 +227,12 @@ const OrderPage = () => {
       </section>
 
       <div className="grid gap-5 xl:grid-cols-[0.95fr_1.25fr]">
-        <section className="min-h-[560px] rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <section className={`min-h-[560px] p-4 ${managerCardClass}`}>
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-black text-slate-900">Danh sach don</h2>
+            <h2 className="text-lg font-black text-slate-900">Danh sách đơn</h2>
             {loading && (
               <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-bold text-slate-500">
-                Dang tai
+                Đang tải
               </span>
             )}
           </div>
@@ -252,7 +243,7 @@ const OrderPage = () => {
                   key={order.id}
                   type="button"
                   onClick={() => selectOrder(order)}
-                  className={`w-full rounded-lg border p-4 text-left transition ${
+                  className={`w-full rounded-2xl border p-4 text-left transition ${
                     selectedOrder?.id === order.id
                       ? "border-sky-300 bg-sky-50"
                       : "border-slate-200 bg-white hover:border-sky-200 hover:bg-sky-50/40"
@@ -282,9 +273,11 @@ const OrderPage = () => {
                 </button>
               ))
             ) : (
-              <div className="rounded-lg border border-dashed border-slate-300 py-16 text-center text-sm font-semibold text-slate-500">
-                Chua co don hang phu hop.
-              </div>
+              <ManagerEmptyState
+                icon={ReceiptText}
+                title="Chưa có đơn hàng phù hợp"
+                description="Thử đổi trạng thái, ngày hoặc từ khóa tìm kiếm để xem đơn hàng khác."
+              />
             )}
           </div>
 
@@ -294,7 +287,7 @@ const OrderPage = () => {
               onClick={() => setPage((current) => Math.max(1, current - 1))}
               className="rounded-lg border border-slate-200 px-3 py-2 font-bold disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Truoc
+              Trước
             </button>
             <span className="font-semibold text-slate-500">
               Trang {pagination.page}/{pagination.totalPages || 1}
@@ -309,10 +302,10 @@ const OrderPage = () => {
           </div>
         </section>
 
-        <section className="min-h-[560px] rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <section className={`min-h-[560px] p-5 ${managerCardClass}`}>
           {selectedOrder ? (
             <div className="space-y-5">
-              <div className="flex flex-wrap items-start justify-between gap-4 rounded-lg bg-slate-50 p-4">
+              <div className="flex flex-wrap items-start justify-between gap-4 rounded-2xl bg-slate-50 p-4">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="font-mono text-2xl font-black text-sky-700">
@@ -327,12 +320,12 @@ const OrderPage = () => {
                     </span>
                   </div>
                   <p className="mt-2 text-sm font-semibold text-slate-500">
-                    Tao luc {formatDateTime(selectedOrder.createdAt)}
+                    Tạo lúc {formatDateTime(selectedOrder.createdAt)}
                   </p>
                 </div>
                 <div className="text-left lg:text-right">
                   <p className="text-xs font-bold uppercase text-slate-500">
-                    Tong thanh toan
+                    Tổng thanh toán
                   </p>
                   <p className="text-2xl font-black text-slate-900">
                     {formatCurrency(selectedOrder.totalAmount)}
@@ -341,29 +334,29 @@ const OrderPage = () => {
               </div>
 
               <div className="grid gap-4 lg:grid-cols-2">
-                <InfoPanel icon={UserRound} title="Nguoi nhan">
-                  <InfoRow label="Ten khach" value={selectedOrder.shippingName} />
-                  <InfoRow label="So dien thoai" value={selectedOrder.shippingPhone} />
-                  <InfoRow label="Dia chi" value={selectedOrder.shippingAddress} />
+                <InfoPanel icon={UserRound} title="Người nhận">
+                  <InfoRow label="Tên khách" value={selectedOrder.shippingName} />
+                  <InfoRow label="Số điện thoại" value={selectedOrder.shippingPhone} />
+                  <InfoRow label="Địa chỉ" value={selectedOrder.shippingAddress} />
                 </InfoPanel>
 
-                <InfoPanel icon={Truck} title="Van chuyen">
+                <InfoPanel icon={Truck} title="Vận chuyển">
                   <InfoRow
-                    label="Trang thai"
+                    label="Trạng thái"
                     value={SHIPPING_LABEL[selectedOrder.shippingStatus]}
                   />
                   <InfoRow
-                    label="Ma GHN"
-                    value={selectedOrder.shippingOrderCode || "Chua tao"}
+                    label="Mã GHN"
+                    value={selectedOrder.shippingOrderCode || "Chưa tạo"}
                   />
                   <InfoRow
-                    label="Du kien giao"
+                    label="Dự kiến giao"
                     value={formatDateTime(selectedOrder.estimatedDelivery)}
                   />
                 </InfoPanel>
               </div>
 
-              <InfoPanel icon={Package} title="San pham trong don">
+              <InfoPanel icon={Package} title="Sản phẩm trong đơn">
                 <div className="divide-y divide-slate-100">
                   {selectedDetails.map((item) => (
                     <div
@@ -375,7 +368,7 @@ const OrderPage = () => {
                           {item.productName}
                         </p>
                         <p className="text-xs font-semibold text-slate-500">
-                          {item.variantInfo || "Mac dinh"} - SL {item.quantity}
+                          {item.variantInfo || "Mặc định"} - SL {item.quantity}
                         </p>
                       </div>
                       <p className="font-black text-slate-900">
@@ -387,7 +380,7 @@ const OrderPage = () => {
               </InfoPanel>
 
               <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
-                <InfoPanel icon={Clock3} title="Nhat ky van chuyen">
+                <InfoPanel icon={Clock3} title="Nhật ký vận chuyển">
                   <div className="max-h-52 space-y-3 overflow-y-auto">
                   {selectedShippingLogs.length ? (
                     selectedShippingLogs.map((log) => (
@@ -405,7 +398,7 @@ const OrderPage = () => {
                       ))
                     ) : (
                       <p className="text-sm font-semibold text-slate-500">
-                        Chua co nhat ky van chuyen.
+                        Chưa có nhật ký vận chuyển.
                       </p>
                     )}
                   </div>
@@ -413,27 +406,24 @@ const OrderPage = () => {
 
                 <InfoPanel icon={CreditCard} title="Thanh toan">
                   <InfoRow
-                    label="Phuong thuc"
+                    label="Phương thức"
                     value={selectedOrder.payment?.paymentMethod || "--"}
                   />
                   <InfoRow
-                    label="Trang thai"
+                    label="Trạng thái"
                     value={selectedOrder.payment?.paymentStatus || "UNPAID"}
                   />
-                  <InfoRow label="Tam tinh" value={formatCurrency(selectedOrder.subtotal)} />
-                  <InfoRow label="Phi giao" value={formatCurrency(selectedOrder.shippingFee)} />
+                  <InfoRow label="Tạm tính" value={formatCurrency(selectedOrder.subtotal)} />
+                  <InfoRow label="Phí giao" value={formatCurrency(selectedOrder.shippingFee)} />
                 </InfoPanel>
               </div>
             </div>
           ) : (
-            <div className="grid min-h-[500px] place-items-center text-center">
-              <div>
-                <ReceiptText className="mx-auto h-10 w-10 text-slate-300" />
-                <p className="mt-3 text-sm font-semibold text-slate-500">
-                  Chon mot don hang de xem chi tiet.
-                </p>
-              </div>
-            </div>
+            <ManagerEmptyState
+              icon={ReceiptText}
+              title="Chọn một đơn hàng để xem chi tiết"
+              description="Thông tin khách hàng, vận chuyển và sản phẩm sẽ hiển thị tại đây."
+            />
           )}
         </section>
       </div>
@@ -448,9 +438,9 @@ type PanelProps = {
 };
 
 const InfoPanel = ({ icon: Icon, title, children }: PanelProps) => (
-  <div className="rounded-lg border border-slate-200 bg-white p-4">
+  <div className="rounded-2xl border border-slate-200 bg-white p-4">
     <h3 className="mb-3 flex items-center gap-2 text-sm font-black text-slate-800">
-      <span className="grid h-9 w-9 place-items-center rounded-lg bg-sky-50 text-sky-600">
+      <span className="grid h-9 w-9 place-items-center rounded-xl bg-sky-50 text-sky-600">
         <Icon className="h-4 w-4" />
       </span>
       {title}
@@ -460,7 +450,7 @@ const InfoPanel = ({ icon: Icon, title, children }: PanelProps) => (
 );
 
 const InfoRow = ({ label, value }: { label: string; value: string }) => (
-  <div className="mb-2 rounded-lg bg-slate-50 px-3 py-2 text-sm last:mb-0">
+  <div className="mb-2 rounded-xl bg-slate-50 px-3 py-2 text-sm last:mb-0">
     <p className="text-xs font-bold uppercase text-slate-500">{label}</p>
     <p className="mt-1 break-words font-semibold text-slate-800">{value}</p>
   </div>

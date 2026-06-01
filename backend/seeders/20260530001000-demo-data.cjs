@@ -7,16 +7,203 @@ const timestamp = new Date("2025-11-25T10:00:00");
 const roles = [
   { id: 1, roleName: "ADMIN" },
   { id: 2, roleName: "USER" },
-<<<<<<< HEAD
   { id: 3, roleName: "EMPLOYEE" },
   { id: 4, roleName: "COACH" },
   { id: 5, roleName: "MANAGER" },
-=======
-  { id: 5, roleName: "MANAGER" },
-  { id: 3, roleName: "EMPLOYEE" },
-  { id: 4, roleName: "COACH" },
->>>>>>> dev_Toan_Manager
 ];
+
+const avatarUrls = {
+  admin:
+    "https://res.cloudinary.com/dyjqsqkir/image/upload/v1776204749/profile_avatars/mucivyuba5wprids8kgy.jpg",
+  manager:
+    "https://res.cloudinary.com/dyjqsqkir/image/upload/v1770823593/profiles/esm2vvrstcbqwrevr1p5.jpg",
+  employee:
+    "https://res.cloudinary.com/dyjqsqkir/image/upload/v1767693865/profiles/e4xezs0wvotp9rxsgifv.jpg",
+  user:
+    "https://res.cloudinary.com/dyjqsqkir/image/upload/v1764228319/kznpcugyoveaxm1lanmm.jpg",
+};
+
+const demoAccountGroups = [
+  {
+    count: 5,
+    prefix: "demo_manager",
+    emailPrefix: "demo.manager",
+    roleId: 5,
+    avatar: avatarUrls.manager,
+    fullNames: [
+      "Nguyễn Minh Khang",
+      "Trần Hoàng Nam",
+      "Lê Quốc Bảo",
+      "Phạm Gia Huy",
+      "Võ Thanh Tùng",
+    ],
+    dobs: [
+      "1988-03-12T00:00:00",
+      "1990-07-24T00:00:00",
+      "1986-11-08T00:00:00",
+      "1992-01-19T00:00:00",
+      "1989-09-30T00:00:00",
+    ],
+    phoneNumbers: [
+      "0901100001",
+      "0901100002",
+      "0901100003",
+      "0901100004",
+      "0901100005",
+    ],
+  },
+  {
+    count: 10,
+    prefix: "demo_employee",
+    emailPrefix: "demo.employee",
+    roleId: 3,
+    avatar: avatarUrls.employee,
+    fullNames: [
+      "Nguyễn Thị Mai",
+      "Trần Văn Phúc",
+      "Lê Minh Anh",
+      "Phạm Thu Hà",
+      "Võ Đức Huy",
+      "Đặng Ngọc Linh",
+      "Bùi Tuấn Kiệt",
+      "Hoàng Thanh Vy",
+      "Đỗ Quang Minh",
+      "Huỳnh Gia Bảo",
+    ],
+    dobs: [
+      "1998-02-14T00:00:00",
+      "1997-05-21T00:00:00",
+      "1999-08-09T00:00:00",
+      "2000-12-03T00:00:00",
+      "1996-04-17T00:00:00",
+      "1998-10-25T00:00:00",
+      "1995-06-11T00:00:00",
+      "2001-01-29T00:00:00",
+      "1997-09-06T00:00:00",
+      "1999-03-18T00:00:00",
+    ],
+    phoneNumbers: [
+      "0901200001",
+      "0901200002",
+      "0901200003",
+      "0901200004",
+      "0901200005",
+      "0901200006",
+      "0901200007",
+      "0901200008",
+      "0901200009",
+      "0901200010",
+    ],
+  },
+  {
+    count: 15,
+    prefix: "demo_user",
+    emailPrefix: "demo.user",
+    roleId: 2,
+    avatar: avatarUrls.user,
+    fullNames: [
+      "Nguyễn Hoài An",
+      "Trần Khánh Linh",
+      "Lê Đức Anh",
+      "Phạm Ngọc Hân",
+      "Võ Minh Quân",
+      "Đặng Gia Nhi",
+      "Bùi Nhật Long",
+      "Hoàng Thảo Vy",
+      "Đỗ Minh Châu",
+      "Huỳnh Anh Khoa",
+      "Ngô Bảo Ngọc",
+      "Mai Thành Đạt",
+      "Cao Phương Uyên",
+      "Trương Hải Đăng",
+      "Phan Kim Ngân",
+    ],
+    dobs: [
+      "2002-04-05T00:00:00",
+      "2001-07-16T00:00:00",
+      "2000-09-22T00:00:00",
+      "2003-11-13T00:00:00",
+      "1999-01-27T00:00:00",
+      "2002-06-08T00:00:00",
+      "2001-12-19T00:00:00",
+      "2000-03-30T00:00:00",
+      "2003-08-24T00:00:00",
+      "1998-10-02T00:00:00",
+      "2002-02-11T00:00:00",
+      "1999-05-26T00:00:00",
+      "2001-09-14T00:00:00",
+      "2000-12-07T00:00:00",
+      "2003-03-21T00:00:00",
+    ],
+    phoneNumbers: [
+      "0901300001",
+      "0901300002",
+      "0901300003",
+      "0901300004",
+      "0901300005",
+      "0901300006",
+      "0901300007",
+      "0901300008",
+      "0901300009",
+      "0901300010",
+      "0901300011",
+      "0901300012",
+      "0901300013",
+      "0901300014",
+      "0901300015",
+    ],
+  },
+];
+
+const buildDemoAccounts = async () => {
+  const password = await bcrypt.hash(
+    process.env.DEMO_PASSWORD || "@Tuanthanh0708",
+    10,
+  );
+
+  let userId = 2;
+  let profileId = 2;
+  const users = [];
+  const profiles = [];
+
+  demoAccountGroups.forEach((group) => {
+    Array.from({ length: group.count }, (_, index) => {
+      const number = index + 1;
+      const currentUserId = userId;
+
+      users.push({
+        id: currentUserId,
+        username: `${group.prefix}${number}`,
+        password,
+        email: `${group.emailPrefix}${number}@bhub.local`,
+        isVerified: true,
+        isActive: true,
+        roleId: group.roleId,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      });
+
+      profiles.push({
+        id: profileId,
+        fullName: group.fullNames[index],
+        dob: group.dobs[index],
+        gender: number % 2 === 0 ? "female" : "male",
+        address: "B-Hub Badminton Center",
+        phoneNumber: group.phoneNumbers[index],
+        avatar: group.avatar,
+        level: "BEGINNER",
+        userId: currentUserId,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      });
+
+      userId += 1;
+      profileId += 1;
+    });
+  });
+
+  return { users, profiles };
+};
 
 const buildAdminUser = async () => {
   const password = await bcrypt.hash(
@@ -40,11 +227,11 @@ const buildAdminUser = async () => {
 const buildAdminProfile = (adminUserId) => ({
   id: 1,
   fullName: process.env.ADMIN_FULL_NAME || "Admin",
-  dob: "2000-01-01T00:00:00",
+  dob: "1995-07-08T00:00:00",
   gender: "other",
   address: "Badminton booking system",
-  phoneNumber: process.env.ADMIN_PHONE || "0900000001",
-  avatar: null,
+  phoneNumber: process.env.ADMIN_PHONE || "0901000001",
+  avatar: avatarUrls.admin,
   level: "BEGINNER",
   userId: adminUserId,
   createdAt: timestamp,
@@ -99,12 +286,14 @@ module.exports = {
   async up(queryInterface) {
     const adminUser = await buildAdminUser();
     const adminProfile = buildAdminProfile(adminUser.id);
+    const { users: demoUsers, profiles: demoProfiles } =
+      await buildDemoAccounts();
 
     await upsert(queryInterface, "Roles", roles, ["roleName"]);
     await upsert(
       queryInterface,
       "Users",
-      [adminUser],
+      [adminUser, ...demoUsers],
       [
         "username",
         "password",
@@ -118,7 +307,7 @@ module.exports = {
     await upsert(
       queryInterface,
       "Profiles",
-      [adminProfile],
+      [adminProfile, ...demoProfiles],
       [
         "fullName",
         "dob",
@@ -134,8 +323,11 @@ module.exports = {
   },
 
   async down(queryInterface) {
-    await deleteByIds(queryInterface, "Profiles", [1]);
-    await deleteByIds(queryInterface, "Users", [1]);
+    const demoProfileIds = Array.from({ length: 30 }, (_, index) => index + 2);
+    const demoUserIds = Array.from({ length: 30 }, (_, index) => index + 2);
+
+    await deleteByIds(queryInterface, "Profiles", [1, ...demoProfileIds]);
+    await deleteByIds(queryInterface, "Users", [1, ...demoUserIds]);
     await deleteRolesIfUnused(queryInterface);
   },
 };

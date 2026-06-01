@@ -11,7 +11,6 @@ import {
   Wrench,
   XCircle,
   Image as ImageIcon,
-  Info,
   Upload,
 } from "lucide-react";
 
@@ -34,6 +33,17 @@ import {
   uploadCourtImage,
 } from "../../redux/slices/manager/courtSlice";
 import { getMyBranch } from "../../redux/slices/manager/branchSlice";
+import { toast } from "react-toastify";
+import { showConfirmDialog } from "../../utils/confirmDialog";
+import {
+  ManagerEmptyState,
+  ManagerModalOverlay,
+  ManagerPageHeader,
+  managerCardClass,
+  managerInputClass,
+  managerPrimaryButtonClass,
+  managerSecondaryButtonClass,
+} from "../../components/commons/manager/ManagerPage";
 
 const BranchPage = () => {
   const dispatch = useAppDispatch();
@@ -71,26 +81,28 @@ const BranchPage = () => {
         await dispatch(
           updateCourt({ courtId: editingCourt.id, data }),
         ).unwrap();
-        alert("Cập nhật sân thành công");
+        toast.success("Cập nhật sân thành công");
       } else {
         await dispatch(createCourt(data)).unwrap();
-        alert("Tạo sân thành công");
+        toast.success("Tạo sân thành công");
       }
       await dispatch(getCourts());
       closeModal();
     } catch (error) {
       console.log(error);
+      toast.error("Không thể lưu thông tin sân");
     }
   };
 
   const onSubmitPrice = async (data: FormCreateCourtPrice) => {
     try {
       await dispatch(createCourtPrice(data)).unwrap();
-      alert("Thêm giá sân thành công");
+      toast.success("Thêm giá sân thành công");
       resetPrice();
       setShowPriceForm(false);
     } catch (error) {
       console.log(error);
+      toast.error("Không thể thêm giá sân");
     }
   };
 
@@ -106,7 +118,7 @@ const BranchPage = () => {
       });
     } catch (error) {
       console.log(error);
-      alert("Upload anh san that bai");
+      toast.error("Upload ảnh sân thất bại");
     } finally {
       setUploadingCourtImage(false);
     }
@@ -120,11 +132,29 @@ const BranchPage = () => {
   };
 
   const handleMaintenanceCourt = async (courtId: number) => {
+    const confirmed = await showConfirmDialog(
+      "Chuyển sân sang bảo trì?",
+      "Sân sẽ tạm ngưng nhận lịch mới cho đến khi được mở lại.",
+      "Bảo trì",
+      "Hủy",
+      "warning",
+    );
+    if (!confirmed) return;
+
     await dispatch(maintenanceCourt(courtId));
     dispatch(getCourts());
   };
 
   const handleCloseCourt = async (courtId: number) => {
+    const confirmed = await showConfirmDialog(
+      "Đóng sân này?",
+      "Sân sẽ không hiển thị để khách đặt lịch mới.",
+      "Đóng sân",
+      "Hủy",
+      "danger",
+    );
+    if (!confirmed) return;
+
     await dispatch(closeCourt(courtId));
     dispatch(getCourts());
   };
@@ -146,38 +176,38 @@ const BranchPage = () => {
   };
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      {/* HEADER SECTION */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-            Quản lý cửa hàng
-          </h1>
-          <p className="text-gray-500 flex items-center gap-1 mt-1">
-            <Info size={16} /> Quản lý hoạt động và cấu hình chi nhánh B-Hub
-          </p>
-        </div>
-        <div className="flex gap-3">
+    <div className="space-y-8">
+      <ManagerPageHeader
+        eyebrow="Manager bookings"
+        title="Quản lý sân"
+        description="Quản lý sân, giá thuê và trạng thái vận hành của chi nhánh."
+        metrics={[
+          { label: "Số sân", value: courts.length },
+          { label: "Bảng giá", value: courtPrices.length },
+        ]}
+        actions={
+          <div className="flex gap-3">
           <button
             onClick={() => setShowPriceForm(true)}
-            className="flex items-center gap-2 bg-white border border-orange-200 text-orange-600 px-5 py-2.5 rounded-xl font-semibold shadow-sm hover:bg-orange-50 transition-all"
+            className={managerSecondaryButtonClass}
           >
             <DollarSign size={18} /> Thêm giá sân
           </button>
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold shadow-md hover:bg-blue-700 transition-all transform hover:-translate-y-0.5"
+            className={managerPrimaryButtonClass}
           >
             <Plus size={18} /> Thêm sân mới
           </button>
-        </div>
-      </div>
+          </div>
+        }
+      />
 
       {/* BRANCH INFO CARD */}
       {branch && (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-10 flex flex-col md:flex-row justify-between items-center transition-all hover:shadow-md">
+        <div className={`${managerCardClass} p-6 flex flex-col md:flex-row justify-between items-center transition-all hover:shadow-md`}>
           <div className="flex gap-6 items-center">
-            <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600">
+            <div className="w-16 h-16 bg-sky-50 rounded-2xl flex items-center justify-center text-sky-700">
               <ImageIcon size={32} />
             </div>
             <div>
@@ -186,11 +216,11 @@ const BranchPage = () => {
               </h2>
               <div className="flex flex-col gap-1 mt-2">
                 <p className="text-gray-500 flex items-center gap-2 text-sm">
-                  <MapPin size={14} className="text-blue-500" />{" "}
+                  <MapPin size={14} className="text-sky-600" />{" "}
                   {branch.address}, {branch.districtName}, {branch.provinceName}
                 </p>
                 <p className="text-gray-500 flex items-center gap-2 text-sm">
-                  <Phone size={14} className="text-blue-500" />{" "}
+                  <Phone size={14} className="text-sky-600" />{" "}
                   {branch.phoneNumber}
                 </p>
               </div>
@@ -215,9 +245,9 @@ const BranchPage = () => {
 
       {/* MODAL FORM CREATE/EDIT COURT */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="p-6 border-b flex justify-between items-center bg-gray-50">
+        <ManagerModalOverlay>
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
               <h3 className="text-xl font-bold">
                 {editingCourt ? "Cập nhật sân" : "Tạo sân mới"}
               </h3>
@@ -235,7 +265,7 @@ const BranchPage = () => {
                 </label>
                 <input
                   {...register("courtName")}
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className={`w-full ${managerInputClass}`}
                   placeholder="VD: Sân 01"
                 />
                 {errors.courtName && (
@@ -250,7 +280,7 @@ const BranchPage = () => {
                 </label>
                 <input
                   {...register("location")}
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className={`w-full ${managerInputClass}`}
                   placeholder="VD: Khu A"
                 />
                 {errors.location && (
@@ -265,12 +295,12 @@ const BranchPage = () => {
                 </label>
                 <input
                   {...register("thumbnailUrl")}
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className={`w-full ${managerInputClass}`}
                   placeholder="https://..."
                 />
-                <label className="mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-blue-300 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 transition-colors hover:bg-blue-100">
+                <label className="mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-sky-300 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700 transition-colors hover:bg-sky-100">
                   <Upload size={18} />
-                  {uploadingCourtImage ? "Dang upload..." : "Upload anh tu may"}
+                  {uploadingCourtImage ? "Đang upload..." : "Upload ảnh từ máy"}
                   <input
                     type="file"
                     accept="image/*"
@@ -295,21 +325,21 @@ const BranchPage = () => {
               </div>
               <button
                 type="submit"
-                className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition-all mt-4"
+                className="w-full rounded-xl bg-sky-600 py-3 font-bold text-white shadow-sm transition-all hover:bg-sky-700 mt-4"
               >
                 {editingCourt ? "Lưu thay đổi" : "Tạo sân ngay"}
               </button>
             </form>
           </div>
-        </div>
+        </ManagerModalOverlay>
       )}
 
       {/* MODAL PRICE FORM */}
       {showPriceForm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200">
-            <div className="p-6 border-b flex justify-between items-center bg-gray-50">
-              <h3 className="text-xl font-bold text-orange-600">
+        <ManagerModalOverlay>
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="text-xl font-bold text-sky-700">
                 Thêm bảng giá sân
               </h3>
               <button
@@ -328,7 +358,7 @@ const BranchPage = () => {
                   <label className="text-sm font-medium">Thứ trong tuần</label>
                   <select
                     {...registerPrice("dayOfWeek")}
-                    className="w-full mt-1 px-4 py-2 border rounded-xl"
+                    className="w-full mt-1 px-4 py-2 border border-slate-200 rounded-xl focus:border-sky-300 focus:ring-4 focus:ring-sky-100 outline-none"
                   >
                     <option value="">Chọn thứ</option>
                     {[
@@ -353,7 +383,7 @@ const BranchPage = () => {
                   <input
                     type="time"
                     {...registerPrice("startTime")}
-                    className="w-full mt-1 px-4 py-2 border rounded-xl"
+                    className="w-full mt-1 px-4 py-2 border border-slate-200 rounded-xl focus:border-sky-300 focus:ring-4 focus:ring-sky-100 outline-none"
                   />
                 </div>
                 <div>
@@ -363,7 +393,7 @@ const BranchPage = () => {
                   <input
                     type="time"
                     {...registerPrice("endTime")}
-                    className="w-full mt-1 px-4 py-2 border rounded-xl"
+                    className="w-full mt-1 px-4 py-2 border border-slate-200 rounded-xl focus:border-sky-300 focus:ring-4 focus:ring-sky-100 outline-none"
                   />
                 </div>
                 <div className="col-span-2">
@@ -371,7 +401,7 @@ const BranchPage = () => {
                   <input
                     type="number"
                     {...registerPrice("price", { valueAsNumber: true })}
-                    className="w-full mt-1 px-4 py-2 border rounded-xl"
+                    className="w-full mt-1 px-4 py-2 border border-slate-200 rounded-xl focus:border-sky-300 focus:ring-4 focus:ring-sky-100 outline-none"
                     placeholder="50000"
                   />
                 </div>
@@ -379,7 +409,7 @@ const BranchPage = () => {
                   <label className="text-sm font-medium">Loại khung giờ</label>
                   <select
                     {...registerPrice("periodType")}
-                    className="w-full mt-1 px-4 py-2 border rounded-xl"
+                    className="w-full mt-1 px-4 py-2 border border-slate-200 rounded-xl focus:border-sky-300 focus:ring-4 focus:ring-sky-100 outline-none"
                   >
                     <option value="">Chọn loại</option>
                     <option value="DAYTIME">Ban ngày (DAYTIME)</option>
@@ -390,30 +420,31 @@ const BranchPage = () => {
               </div>
               <button
                 type="submit"
-                className="w-full bg-orange-500 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-orange-600 transition-all mt-4"
+                className="w-full bg-sky-600 text-white py-3 rounded-xl font-bold shadow-sm hover:bg-sky-700 transition-all mt-4"
               >
                 Lưu bảng giá
               </button>
             </form>
           </div>
-        </div>
+        </ManagerModalOverlay>
       )}
 
       {/* LIST COURTS SECTION */}
-      <section className="mb-12">
+      <section>
         <div className="flex items-center gap-2 mb-6">
-          <div className="h-8 w-1.5 bg-blue-600 rounded-full"></div>
-          <h2 className="text-2xl font-bold text-gray-800">Danh sách sân</h2>
-          <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-600 text-xs font-bold rounded-md">
+          <div className="h-8 w-1.5 bg-sky-600 rounded-full"></div>
+          <h2 className="text-2xl font-bold text-slate-900">Danh sách sân</h2>
+          <span className="ml-2 px-2 py-0.5 bg-sky-50 text-sky-700 text-xs font-bold rounded-md">
             {courts.length} sân
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {courts.map((court) => (
+        {courts.length ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {courts.map((court) => (
             <div
               key={court.id}
-              className="group bg-white rounded-[2rem] overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300"
+              className="group bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300"
             >
               <div className="relative h-52 overflow-hidden">
                 <img
@@ -434,10 +465,10 @@ const BranchPage = () => {
               </div>
 
               <div className="p-6">
-                <h3 className="font-extrabold text-xl text-gray-800 mb-1">
+                <h3 className="font-extrabold text-xl text-slate-900 mb-1">
                   {court.courtName}
                 </h3>
-                <p className="text-gray-400 flex items-center gap-1.5 text-sm mb-4">
+                <p className="text-slate-500 flex items-center gap-1.5 text-sm mb-4">
                   <MapPin size={14} /> {court.location}
                 </p>
 
@@ -452,7 +483,7 @@ const BranchPage = () => {
                         thumbnailUrl: court.thumbnailUrl,
                       });
                     }}
-                    className="flex flex-col items-center gap-1 py-2 rounded-xl hover:bg-blue-50 text-blue-600 transition-colors"
+                    className="flex flex-col items-center gap-1 py-2 rounded-xl hover:bg-sky-50 text-sky-700 transition-colors"
                   >
                     <Edit2 size={16} />
                     <span className="text-[10px] font-bold">SỬA</span>
@@ -474,18 +505,25 @@ const BranchPage = () => {
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <ManagerEmptyState
+            icon={ImageIcon}
+            title="Chưa có sân nào"
+            description="Thêm sân mới để khách có thể xem lịch và đặt sân tại chi nhánh."
+          />
+        )}
       </section>
 
       {/* LIST COURT PRICES SECTION */}
       <section>
         <div className="flex items-center gap-2 mb-6">
-          <div className="h-8 w-1.5 bg-orange-500 rounded-full"></div>
-          <h2 className="text-2xl font-bold text-gray-800">Cấu hình giá sân</h2>
+          <div className="h-8 w-1.5 bg-sky-600 rounded-full"></div>
+          <h2 className="text-2xl font-bold text-slate-900">Cấu hình giá sân</h2>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className={`${managerCardClass} overflow-hidden`}>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -500,14 +538,14 @@ const BranchPage = () => {
                 {courtPrices.map((item) => (
                   <tr
                     key={item.id}
-                    className="hover:bg-orange-50/30 transition-colors"
+                    className="hover:bg-sky-50/60 transition-colors"
                   >
                     <td className="px-6 py-4 font-bold text-gray-700">
                       {item.dayOfWeek}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-gray-600">
-                        <Clock size={14} className="text-orange-400" />
+                        <Clock size={14} className="text-sky-600" />
                         <span className="font-medium">
                           {item.startTime} - {item.endTime}
                         </span>
@@ -519,13 +557,24 @@ const BranchPage = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <span className="text-lg font-black text-orange-600 tracking-tight">
+                      <span className="text-lg font-black text-sky-700 tracking-tight">
                         {item.price.toLocaleString()}{" "}
                         <span className="text-xs">VNĐ</span>
                       </span>
                     </td>
                   </tr>
                 ))}
+                {courtPrices.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-12">
+                      <ManagerEmptyState
+                        icon={DollarSign}
+                        title="Chưa có cấu hình giá sân"
+                        description="Thêm giá theo ngày và khung giờ để hệ thống tính tiền đặt sân."
+                      />
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

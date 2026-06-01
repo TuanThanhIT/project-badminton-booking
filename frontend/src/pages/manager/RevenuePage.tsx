@@ -27,6 +27,10 @@ import {
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { getManagerRevenue } from "../../redux/slices/manager/revenueSlice";
 import type { ManagerRevenueBreakdownItem } from "../../types/revenue";
+import {
+  ManagerEmptyState,
+  ManagerPageHeader,
+} from "../../components/commons/manager/ManagerPage";
 
 const getDefaultStartDate = () => {
   const date = new Date();
@@ -149,8 +153,40 @@ const RevenuePage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 lg:p-8">
-      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div className="space-y-6">
+      <ManagerPageHeader
+        eyebrow="Manager revenue"
+        title="Thống kê doanh thu"
+        description="Theo dõi doanh thu sân, sản phẩm, đồ uống và tổng thể của chi nhánh."
+        metrics={[
+          { label: "Tổng doanh thu", value: formatCurrency(overview?.totalRevenue || 0) },
+          { label: "Lợi nhuận", value: formatCurrency(overview?.profit || 0) },
+        ]}
+        actions={
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <label className="flex h-11 items-center gap-2 rounded-xl border border-white/10 bg-white px-3 text-slate-800 shadow-sm">
+              <CalendarDays className="h-4 w-4 text-slate-400" />
+              <input
+                type="date"
+                value={startDate}
+                onChange={(event) => setStartDate(event.target.value)}
+                className="bg-transparent text-sm font-semibold text-slate-800 outline-none"
+              />
+            </label>
+            <label className="flex h-11 items-center gap-2 rounded-xl border border-white/10 bg-white px-3 text-slate-800 shadow-sm">
+              <CalendarDays className="h-4 w-4 text-slate-400" />
+              <input
+                type="date"
+                value={endDate}
+                onChange={(event) => setEndDate(event.target.value)}
+                className="bg-transparent text-sm font-semibold text-slate-800 outline-none"
+              />
+            </label>
+          </div>
+        }
+      />
+
+      <div className="hidden">
         <div>
           <p className="text-sm font-bold text-sky-700">///MANAGER</p>
           <h1 className="mt-1 text-3xl font-bold text-slate-900">
@@ -183,7 +219,7 @@ const RevenuePage = () => {
         </div>
       </div>
 
-      <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {cards.map((card) => {
           const Icon = card.icon;
           return (
@@ -263,8 +299,9 @@ const RevenuePage = () => {
             )}
           </div>
           <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chart}>
+            {chart.length ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chart}>
                 <defs>
                   <linearGradient id="totalRevenue" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.35} />
@@ -296,8 +333,15 @@ const RevenuePage = () => {
                   strokeWidth={3}
                   fill="url(#profit)"
                 />
-              </AreaChart>
-            </ResponsiveContainer>
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <ManagerEmptyState
+                icon={TrendingUp}
+                title="Chưa có dữ liệu doanh thu theo ngày"
+                description="Dữ liệu sẽ hiển thị sau khi có giao dịch trong khoảng thời gian đã chọn."
+              />
+            )}
           </div>
         </section>
 
@@ -307,8 +351,9 @@ const RevenuePage = () => {
             Nguồn cao nhất: {bestSource.label}
           </p>
           <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
+            {breakdown.length ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
                 <Pie
                   data={breakdown}
                   dataKey="revenue"
@@ -325,8 +370,15 @@ const RevenuePage = () => {
                   formatter={(value: number) => formatCurrency(Number(value))}
                 />
                 <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <ManagerEmptyState
+                icon={WalletCards}
+                title="Chưa có cơ cấu doanh thu"
+                description="Khi có doanh thu sân, sản phẩm hoặc đồ uống, biểu đồ sẽ tự cập nhật."
+              />
+            )}
           </div>
         </section>
       </div>
@@ -343,8 +395,9 @@ const RevenuePage = () => {
           </div>
         </div>
         <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={monthlyChart}>
+          {monthlyChart.length ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={monthlyChart}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
               <XAxis dataKey="label" tick={{ fontSize: 12 }} />
               <YAxis
@@ -365,8 +418,15 @@ const RevenuePage = () => {
                 fill="#22c55e"
                 radius={[4, 4, 0, 0]}
               />
-            </BarChart>
-          </ResponsiveContainer>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <ManagerEmptyState
+              icon={CalendarDays}
+              title="Chưa có dữ liệu theo tháng"
+              description="Thử chọn khoảng thời gian rộng hơn hoặc phát sinh giao dịch mới."
+            />
+          )}
         </div>
       </section>
 
@@ -387,8 +447,9 @@ const RevenuePage = () => {
           </div>
         </div>
         <div className="h-96">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chart}>
+          {chart.length ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chart}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
               <XAxis dataKey="label" tick={{ fontSize: 12 }} />
               <YAxis
@@ -418,8 +479,15 @@ const RevenuePage = () => {
                 fill="#f59e0b"
                 radius={[4, 4, 0, 0]}
               />
-            </BarChart>
-          </ResponsiveContainer>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <ManagerEmptyState
+              icon={WalletCards}
+              title="Chưa có dữ liệu so sánh nguồn"
+              description="Biểu đồ sẽ xuất hiện khi hệ thống ghi nhận doanh thu trong khoảng đã chọn."
+            />
+          )}
         </div>
       </section>
     </div>

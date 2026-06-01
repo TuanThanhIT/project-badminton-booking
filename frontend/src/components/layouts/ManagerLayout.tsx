@@ -12,13 +12,13 @@ const ManagerLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="h-screen flex bg-slate-100 overflow-hidden">
+    <div className="h-screen flex bg-slate-50 overflow-hidden font-sans text-slate-800">
       <ManagerSidebar collapsed={collapsed} setCollapsed={setCollapsed} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <ManagerHeader />
 
-        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-100 via-white to-sky-50 p-8">
+        <main className="flex-1 overflow-y-auto bg-slate-50 p-4 sm:p-6 lg:p-8">
           <Outlet />
         </main>
 

@@ -18,7 +18,10 @@ import {
   removeManagerShiftAssignment,
   updateManagerShiftAssignment,
 } from "../../redux/slices/manager/workShiftSlice";
-import { FormWorkShiftSchema } from "../../schemas/FormWorkShiftSchema";
+import {
+  FormShiftAssignmentSchema,
+  FormWorkShiftSchema,
+} from "../../schemas/FormWorkShiftSchema";
 import type { ManagerShiftRole, ManagerWorkShift } from "../../types/workShift";
 
 const today = new Date().toISOString().slice(0, 10);
@@ -108,9 +111,9 @@ const WorkShiftPage = () => {
 
   const handleAssign = async (shift: ManagerWorkShift) => {
     const form = assignmentForms[shift.id];
-    const employeeId = Number(form?.employeeId);
+    const parsed = FormShiftAssignmentSchema.safeParse(form);
 
-    if (!employeeId) {
+    if (!parsed.success) {
       toast.warning("Vui lòng chọn nhân viên");
       return;
     }
@@ -119,8 +122,8 @@ const WorkShiftPage = () => {
       await dispatch(
         assignManagerShiftEmployee({
           workShiftId: shift.id,
-          employeeId,
-          roleInShift: form.roleInShift,
+          employeeId: parsed.data.employeeId,
+          roleInShift: parsed.data.roleInShift,
         }),
       ).unwrap();
       toast.success("Đã phân ca cho nhân viên");
@@ -171,7 +174,7 @@ const WorkShiftPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 lg:p-8">
+    <div className="space-y-6">
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">

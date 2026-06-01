@@ -29,6 +29,7 @@ import { store } from "../../redux/store";
 import { connectSocket, socket } from "../../socket";
 import type { ChatMessage } from "../../types/message";
 import type { UserSearchHit } from "../../types/userSearch";
+import { showConfirmDialog } from "../../utils/confirmDialog";
 
 const ConversationPage = () => {
   const dispatch = useAppDispatch();
@@ -191,21 +192,21 @@ const ConversationPage = () => {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 px-4 py-2 text-sm font-semibold text-sky-100 mb-3">
                 <MessageCircle size={16} className="text-sky-300" />
-                Branch Chat
+                Chat chi nhánh
               </div>
               <h1 className="text-3xl font-extrabold text-white leading-tight">
-                Tro chuyen noi bo chi nhanh
+                Trò chuyện nội bộ chi nhánh
               </h1>
               <p className="mt-2 max-w-2xl text-sky-100 leading-relaxed">
-                Chi quan ly va nhan vien thuoc chi nhanh cua ban moi duoc them vao hoi thoai.
+                Chỉ quản lý và nhân viên thuộc chi nhánh của bạn mới được thêm vào hội thoại.
               </p>
             </div>
 
             <div className="grid grid-cols-3 gap-3 sm:min-w-[420px]">
               {[
-                { icon: MessageCircle, value: stats.total, label: "Hoi thoai" },
-                { icon: ShieldCheck, value: stats.unread, label: "Chua doc" },
-                { icon: Users, value: stats.groups, label: "Nhom" },
+                { icon: MessageCircle, value: stats.total, label: "Hội thoại" },
+                { icon: ShieldCheck, value: stats.unread, label: "Chưa đọc" },
+                { icon: Users, value: stats.groups, label: "Nhóm" },
               ].map((item) => (
                 <div
                   key={item.label}
@@ -236,7 +237,7 @@ const ConversationPage = () => {
         <div className="h-[76vh] min-h-[620px] rounded-[2rem] overflow-hidden bg-white flex relative shadow-[0_18px_55px_rgba(15,23,42,0.14)] border border-slate-200/80">
           {loadingConversations && conversations.length === 0 ? (
             <aside className="w-[22rem] border-r border-slate-200 bg-white flex items-center justify-center text-sm text-slate-400">
-              Dang tai hoi thoai...
+              Đang tải hội thoại...
             </aside>
           ) : (
             <ConversationSidebar
@@ -275,14 +276,29 @@ const ConversationPage = () => {
             }}
             onRecall={async (messageId) => {
               if (!selectedConversationId) return;
-              if (!window.confirm("Thu hoi tin nhan nay?")) return;
+              const confirmed = await showConfirmDialog(
+                "Thu hồi tin nhắn?",
+                "Tin nhắn sẽ được đánh dấu là đã thu hồi trong hội thoại.",
+                "Thu hồi",
+                "Hủy",
+                "warning",
+              );
+              if (!confirmed) return;
               await dispatch(recallManagerMessage({ conversationId: selectedConversationId, messageId }));
             }}
             onForward={handleForward}
             onLeaveGroup={
               selectedConversation?.type === "GROUP"
                 ? async () => {
-                    if (!selectedConversationId || !window.confirm("Roi nhom nay?")) return;
+                    if (!selectedConversationId) return;
+                    const confirmed = await showConfirmDialog(
+                      "Rời nhóm này?",
+                      "Bạn sẽ không còn nhận tin nhắn mới từ nhóm này.",
+                      "Rời nhóm",
+                      "Hủy",
+                      "warning",
+                    );
+                    if (!confirmed) return;
                     await dispatch(leaveManagerGroup({ conversationId: selectedConversationId }));
                     navigate("/manager/messages", { replace: true });
                   }
@@ -291,7 +307,15 @@ const ConversationPage = () => {
             onDeleteGroup={
               selectedConversation?.type === "GROUP" && isGroupAdmin
                 ? async () => {
-                    if (!selectedConversationId || !window.confirm("Xoa nhom cho moi thanh vien?")) return;
+                    if (!selectedConversationId) return;
+                    const confirmed = await showConfirmDialog(
+                      "Xóa nhóm cho mọi thành viên?",
+                      "Hội thoại nhóm sẽ bị xóa khỏi danh sách của tất cả thành viên.",
+                      "Xóa nhóm",
+                      "Hủy",
+                      "danger",
+                    );
+                    if (!confirmed) return;
                     await dispatch(deleteManagerGroupConversation({ conversationId: selectedConversationId }));
                     navigate("/manager/messages", { replace: true });
                   }
@@ -308,8 +332,15 @@ const ConversationPage = () => {
             onRemoveMember={
               selectedConversation?.type === "GROUP" && isGroupAdmin
                 ? async (userId) => {
-                    if (!selectedConversationId) return;
-                    if (!window.confirm("Xoa thanh vien khoi nhom?")) return;
+                  if (!selectedConversationId) return;
+                    const confirmed = await showConfirmDialog(
+                      "Xóa thành viên khỏi nhóm?",
+                      "Thành viên này sẽ không còn thấy tin nhắn mới của nhóm.",
+                      "Xóa thành viên",
+                      "Hủy",
+                      "danger",
+                    );
+                    if (!confirmed) return;
                     await dispatch(removeMemberFromManagerGroup({ conversationId: selectedConversationId, userId }));
                   }
                 : undefined
@@ -319,7 +350,7 @@ const ConversationPage = () => {
           {loadingMessages && messages.length === 0 && selectedConversationId ? (
             <div className="absolute inset-y-0 right-0 left-[22rem] flex items-center justify-center pointer-events-none">
               <div className="rounded-full bg-white/90 border border-slate-200 px-4 py-2 text-sm font-medium text-slate-500 shadow-sm">
-                Dang tai tin nhan...
+                Đang tải tin nhắn...
               </div>
             </div>
           ) : null}

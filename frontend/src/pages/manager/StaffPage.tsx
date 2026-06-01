@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Mail,
@@ -24,6 +25,16 @@ import {
 } from "../../redux/slices/manager/employeeSlice";
 import type { ManagerEmployee } from "../../types/employee";
 import type { ApiErrorType } from "../../types/error";
+import {
+  ManagerEmptyState,
+  ManagerModalOverlay,
+  ManagerPageHeader,
+  ManagerStatCard,
+  managerCardClass,
+  managerInputClass,
+  managerPrimaryButtonClass,
+  managerSecondaryButtonClass,
+} from "../../components/commons/manager/ManagerPage";
 
 const genderLabel: Record<string, string> = {
   male: "Nam",
@@ -43,7 +54,6 @@ const formatDate = (value?: string) => {
 
 const getErrorMessage = (error: unknown) => {
   const apiError = error as ApiErrorType;
-
   return apiError?.message || "Thao tác thất bại";
 };
 
@@ -53,7 +63,7 @@ const EmployeeAvatar = ({ employee }: { employee: ManagerEmployee }) => {
       <img
         src={employee.avatar}
         alt={employee.fullName || employee.username}
-        className="h-11 w-11 rounded-lg object-cover"
+        className="h-11 w-11 rounded-xl object-cover"
       />
     );
   }
@@ -63,7 +73,7 @@ const EmployeeAvatar = ({ employee }: { employee: ManagerEmployee }) => {
     .toUpperCase();
 
   return (
-    <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-sky-100 text-base font-bold text-sky-700">
+    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-100 text-base font-bold text-sky-700">
       {initial}
     </div>
   );
@@ -84,9 +94,7 @@ const StaffPage = () => {
     formState: { errors },
   } = useForm<FormEmployee>({
     resolver: zodResolver(FormEmployeeSchema),
-    defaultValues: {
-      gender: "male",
-    },
+    defaultValues: { gender: "male" },
   });
 
   useEffect(() => {
@@ -95,7 +103,6 @@ const StaffPage = () => {
 
   const filteredEmployees = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase();
-
     if (!normalizedKeyword) return employees;
 
     return employees.filter((employee) =>
@@ -127,44 +134,24 @@ const StaffPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 lg:p-8">
-      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">
-            Quản lý nhân viên
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Danh sách nhân viên đang thuộc chi nhánh của quản lý.
-          </p>
-        </div>
+    <div className="space-y-6">
+      <ManagerPageHeader
+        eyebrow="Manager staff"
+        title="Quản lý nhân viên"
+        description="Danh sách nhân viên đang thuộc chi nhánh của quản lý."
+        metrics={[{ label: "Tổng nhân viên", value: employees.length }]}
+        actions={
+          <button onClick={() => setShowForm(true)} className={managerPrimaryButtonClass}>
+            <Plus className="h-4 w-4" />
+            Thêm nhân viên
+          </button>
+        }
+      />
 
-        <button
-          onClick={() => setShowForm(true)}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-sky-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700"
-        >
-          <Plus className="h-4 w-4" />
-          Thêm nhân viên
-        </button>
-      </div>
+      <div className="grid gap-4 md:grid-cols-[220px_1fr]">
+        <ManagerStatCard label="Tổng nhân viên" value={employees.length} icon={Users} />
 
-      <div className="mb-6 grid gap-4 md:grid-cols-[220px_1fr]">
-        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
-              <Users className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase text-slate-500">
-                Tổng nhân viên
-              </p>
-              <p className="text-2xl font-bold text-slate-900">
-                {employees.length}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <label className="flex h-full min-h-20 items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 shadow-sm">
+        <label className={`flex min-h-20 items-center gap-3 px-4 ${managerCardClass}`}>
           <Search className="h-5 w-5 text-slate-400" />
           <input
             value={keyword}
@@ -175,7 +162,7 @@ const StaffPage = () => {
         </label>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div className={`${managerCardClass} overflow-hidden`}>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[860px] text-left">
             <thead className="bg-slate-100 text-xs font-bold uppercase tracking-wide text-slate-500">
@@ -224,7 +211,7 @@ const StaffPage = () => {
                   </td>
                   <td className="px-5 py-4">
                     <span
-                      className={`inline-flex rounded-lg px-2.5 py-1 text-xs font-bold ${
+                      className={`inline-flex rounded-xl px-2.5 py-1 text-xs font-bold ${
                         employee.isActive
                           ? "bg-emerald-50 text-emerald-700"
                           : "bg-rose-50 text-rose-700"
@@ -241,14 +228,12 @@ const StaffPage = () => {
 
               {!loading && filteredEmployees.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-5 py-12 text-center">
-                    <UserRound className="mx-auto h-10 w-10 text-slate-300" />
-                    <p className="mt-3 font-semibold text-slate-700">
-                      Chưa có nhân viên
-                    </p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      Thêm nhân viên để bắt đầu phân quyền làm việc tại chi nhánh.
-                    </p>
+                  <td colSpan={5} className="px-5 py-12">
+                    <ManagerEmptyState
+                      icon={UserRound}
+                      title="Chưa có nhân viên"
+                      description="Thêm nhân viên để bắt đầu phân quyền làm việc tại chi nhánh."
+                    />
                   </td>
                 </tr>
               )}
@@ -266,8 +251,8 @@ const StaffPage = () => {
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
-          <div className="w-full max-w-2xl rounded-lg bg-white shadow-xl">
+        <ManagerModalOverlay>
+          <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl">
             <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
               <div>
                 <h2 className="text-lg font-bold text-slate-900">
@@ -279,7 +264,7 @@ const StaffPage = () => {
               </div>
               <button
                 onClick={closeForm}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100"
                 type="button"
               >
                 <X className="h-5 w-5" />
@@ -288,140 +273,71 @@ const StaffPage = () => {
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 p-6">
               <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-sm font-semibold text-slate-700">
-                    Tên đăng nhập
-                  </label>
-                  <input
-                    {...register("username")}
-                    className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
-                  />
-                  {errors.username && (
-                    <p className="mt-1 text-xs text-rose-600">
-                      {errors.username.message}
-                    </p>
-                  )}
-                </div>
+                <Field label="Tên đăng nhập" error={errors.username?.message}>
+                  <input {...register("username")} className={`w-full ${managerInputClass}`} />
+                </Field>
 
-                <div>
-                  <label className="mb-1 block text-sm font-semibold text-slate-700">
-                    Email
-                  </label>
-                  <input
-                    {...register("email")}
-                    type="email"
-                    className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
-                  />
-                  {errors.email && (
-                    <p className="mt-1 text-xs text-rose-600">
-                      {errors.email.message}
-                    </p>
-                  )}
-                </div>
+                <Field label="Email" error={errors.email?.message}>
+                  <input {...register("email")} type="email" className={`w-full ${managerInputClass}`} />
+                </Field>
 
-                <div>
-                  <label className="mb-1 block text-sm font-semibold text-slate-700">
-                    Mật khẩu
-                  </label>
-                  <input
-                    {...register("password")}
-                    type="password"
-                    className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
-                  />
-                  {errors.password && (
-                    <p className="mt-1 text-xs text-rose-600">
-                      {errors.password.message}
-                    </p>
-                  )}
-                </div>
+                <Field label="Mật khẩu" error={errors.password?.message}>
+                  <input {...register("password")} type="password" className={`w-full ${managerInputClass}`} />
+                </Field>
 
-                <div>
-                  <label className="mb-1 block text-sm font-semibold text-slate-700">
-                    Họ tên
-                  </label>
-                  <input
-                    {...register("fullName")}
-                    className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
-                  />
-                  {errors.fullName && (
-                    <p className="mt-1 text-xs text-rose-600">
-                      {errors.fullName.message}
-                    </p>
-                  )}
-                </div>
+                <Field label="Họ tên" error={errors.fullName?.message}>
+                  <input {...register("fullName")} className={`w-full ${managerInputClass}`} />
+                </Field>
 
-                <div>
-                  <label className="mb-1 block text-sm font-semibold text-slate-700">
-                    Số điện thoại
-                  </label>
-                  <input
-                    {...register("phoneNumber")}
-                    className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
-                  />
-                  {errors.phoneNumber && (
-                    <p className="mt-1 text-xs text-rose-600">
-                      {errors.phoneNumber.message}
-                    </p>
-                  )}
-                </div>
+                <Field label="Số điện thoại" error={errors.phoneNumber?.message}>
+                  <input {...register("phoneNumber")} className={`w-full ${managerInputClass}`} />
+                </Field>
 
-                <div>
-                  <label className="mb-1 block text-sm font-semibold text-slate-700">
-                    Giới tính
-                  </label>
-                  <select
-                    {...register("gender")}
-                    className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
-                  >
+                <Field label="Giới tính" error={errors.gender?.message}>
+                  <select {...register("gender")} className={`w-full ${managerInputClass}`}>
                     <option value="male">Nam</option>
                     <option value="female">Nữ</option>
                     <option value="other">Khác</option>
                   </select>
-                  {errors.gender && (
-                    <p className="mt-1 text-xs text-rose-600">
-                      {errors.gender.message}
-                    </p>
-                  )}
-                </div>
+                </Field>
               </div>
 
-              <div>
-                <label className="mb-1 block text-sm font-semibold text-slate-700">
-                  Địa chỉ
-                </label>
-                <input
-                  {...register("address")}
-                  className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
-                />
-                {errors.address && (
-                  <p className="mt-1 text-xs text-rose-600">
-                    {errors.address.message}
-                  </p>
-                )}
-              </div>
+              <Field label="Địa chỉ" error={errors.address?.message}>
+                <input {...register("address")} className={`w-full ${managerInputClass}`} />
+              </Field>
 
               <div className="flex justify-end gap-3 border-t border-slate-100 pt-5">
-                <button
-                  type="button"
-                  onClick={closeForm}
-                  className="h-10 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                >
+                <button type="button" onClick={closeForm} className={managerSecondaryButtonClass}>
                   Hủy
                 </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="h-10 rounded-lg bg-sky-600 px-4 text-sm font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70"
-                >
+                <button type="submit" disabled={loading} className={managerPrimaryButtonClass}>
                   {loading ? "Đang lưu..." : "Thêm nhân viên"}
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </ManagerModalOverlay>
       )}
     </div>
   );
 };
+
+const Field = ({
+  label,
+  error,
+  children,
+}: {
+  label: string;
+  error?: string;
+  children: ReactNode;
+}) => (
+  <div>
+    <label className="mb-1 block text-sm font-semibold text-slate-700">
+      {label}
+    </label>
+    {children}
+    {error ? <p className="mt-1 text-xs text-rose-600">{error}</p> : null}
+  </div>
+);
 
 export default StaffPage;

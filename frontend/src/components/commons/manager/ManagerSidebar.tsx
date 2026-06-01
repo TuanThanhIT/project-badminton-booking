@@ -1,20 +1,16 @@
-// =========================
-// commons/storeManager/StoreManagerSidebar.tsx
-// =========================
-
 import { NavLink, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard,
-  ShoppingBag,
-  ClipboardList,
+  BadgeDollarSign,
   Calendar,
-  Warehouse,
-  Users,
-  MessageSquare,
   ChevronLeft,
   ChevronRight,
+  ClipboardList,
+  LayoutDashboard,
   LogOut,
-  BadgeDollarSign,
+  MessageSquare,
+  ShoppingBag,
+  Users,
+  Warehouse,
 } from "lucide-react";
 
 import { useAppDispatch, useAppSelector } from "../../../redux/hook";
@@ -25,10 +21,22 @@ interface Props {
   setCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
+const menus = [
+  { title: "Tổng quan", icon: LayoutDashboard, path: "/manager/dashboard" },
+  { title: "Sản phẩm", icon: ShoppingBag, path: "/manager/products" },
+  { title: "Đơn hàng", icon: ClipboardList, path: "/manager/orders" },
+  { title: "Đặt sân", icon: Calendar, path: "/manager/bookings" },
+  { title: "Kho hàng", icon: Warehouse, path: "/manager/inventory" },
+  { title: "Nhân viên", icon: Users, path: "/manager/staffs" },
+  { title: "Phân ca", icon: Calendar, path: "/manager/work-shifts" },
+  { title: "Doanh thu", icon: BadgeDollarSign, path: "/manager/revenue" },
+  { title: "Lương", icon: BadgeDollarSign, path: "/manager/salaries" },
+  { title: "Tin nhắn", icon: MessageSquare, path: "/manager/messages" },
+];
+
 const ManagerSidebar = ({ collapsed, setCollapsed }: Props) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-
   const { user } = useAppSelector((state) => state.auth);
 
   const handleLogout = () => {
@@ -37,129 +45,42 @@ const ManagerSidebar = ({ collapsed, setCollapsed }: Props) => {
     navigate("/manager/login");
   };
 
-  const menus = [
-    {
-      title: "Tổng quan",
-      icon: LayoutDashboard,
-      path: "/manager/dashboard",
-    },
-    {
-      title: "Sản phẩm",
-      icon: ShoppingBag,
-      path: "/manager/products",
-    },
-    {
-      title: "Đơn hàng",
-      icon: ClipboardList,
-      path: "/manager/orders",
-    },
-    {
-      title: "Đặt sân",
-      icon: Calendar,
-      path: "/manager/bookings",
-    },
-    {
-      title: "Kho hàng",
-      icon: Warehouse,
-      path: "/manager/inventory",
-    },
-    {
-      title: "Nhân viên",
-      icon: Users,
-      path: "/manager/staffs",
-    },
-    {
-      title: "Phân ca",
-      icon: Calendar,
-      path: "/manager/work-shifts",
-    },
-    {
-      title: "Doanh thu",
-      icon: BadgeDollarSign,
-      path: "/manager/revenue",
-    },
-    {
-      title: "Lương",
-      icon: BadgeDollarSign,
-      path: "/manager/salaries",
-    },
-    {
-      title: "Tin nhắn",
-      icon: MessageSquare,
-      path: "/manager/messages",
-    },
-  ];
-
   return (
     <aside
-      className={`
-        relative
-        transition-all duration-300
-        border-r border-sky-800/40
-        bg-gradient-to-b from-sky-700 via-sky-800 to-slate-900
-        text-white
-        shadow-2xl
-        flex flex-col
-        ${collapsed ? "w-24" : "w-80"}
-      `}
+      className={`relative flex shrink-0 flex-col border-r border-slate-200 bg-white text-slate-700 shadow-sm transition-all duration-300 ${
+        collapsed ? "w-24" : "w-80"
+      }`}
     >
-      {/* TOGGLE */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="
-          absolute
-          -right-4
-          top-8
-          z-50
-          w-9 h-9
-          rounded-full
-          bg-sky-800
-          border border-sky-600
-          flex items-center justify-center
-          text-slate-200
-          shadow-lg
-          hover:bg-sky-500
-          hover:text-white
-          transition
-        "
+        className="absolute -right-4 top-8 z-50 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
+        aria-label={collapsed ? "Mở rộng menu" : "Thu gọn menu"}
       >
-        {collapsed ? (
-          <ChevronRight className="w-5 h-5" />
-        ) : (
-          <ChevronLeft className="w-5 h-5" />
-        )}
+        {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
       </button>
 
-      {/* LOGO */}
       <div
-        className={`
-          h-24
-          border-b border-white/10
-          flex items-center
-          ${collapsed ? "justify-center" : "px-6"}
-        `}
+        className={`flex h-24 items-center border-b border-slate-100 ${
+          collapsed ? "justify-center" : "px-6"
+        }`}
       >
         <div className="flex items-center gap-4">
           <img
             src="/img/logo_badminton.jpg"
-            alt="logo"
-            className="w-14 h-14 rounded-2xl object-cover shadow-lg border border-white/10"
+            alt="B-Hub"
+            className="h-14 w-14 rounded-2xl border border-slate-100 object-cover shadow-sm"
           />
 
           {!collapsed && (
             <div>
-              <h1 className="text-2xl font-bold tracking-wide text-white">
-                B-Hub
-              </h1>
-
-              <p className="text-sm text-sky-100/70">Quản lý cửa hàng</p>
+              <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">B-Hub</h1>
+              <p className="text-sm font-medium text-slate-500">Quản lý cửa hàng</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* MENU */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-3">
+      <nav className="flex-1 space-y-2 overflow-y-auto px-4 py-6">
         {menus.map((item) => {
           const Icon = item.icon;
 
@@ -168,120 +89,60 @@ const ManagerSidebar = ({ collapsed, setCollapsed }: Props) => {
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `
-                  group
-                  flex items-center
-                  gap-4
-                  rounded-2xl
-                  transition-all duration-200
-
-                  ${collapsed ? "justify-center py-4 px-0" : "px-4 py-4"}
-
-                  ${
-                    isActive
-                      ? "bg-white text-sky-800 shadow-xl"
-                      : "text-slate-100 hover:bg-white/10"
-                  }
-                `
+                `group flex items-center gap-3 rounded-2xl border px-3 py-3 transition ${
+                  collapsed ? "justify-center" : ""
+                } ${
+                  isActive
+                    ? "border-sky-100 bg-sky-50 text-sky-700 shadow-sm"
+                    : "border-transparent text-slate-600 hover:border-slate-100 hover:bg-slate-50 hover:text-slate-900"
+                }`
               }
             >
               {({ isActive }) => (
                 <>
-                  <div
-                    className={`
-                      w-12 h-12
-                      rounded-2xl
-                      flex items-center justify-center
-                      transition
-
-                      ${
-                        isActive
-                          ? "bg-sky-100"
-                          : "bg-white/10 group-hover:bg-white/20"
-                      }
-                    `}
+                  <span
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition ${
+                      isActive ? "bg-white text-sky-700 shadow-sm" : "bg-slate-100 text-slate-500 group-hover:bg-white"
+                    }`}
                   >
-                    <Icon
-                      className={`
-                        w-5 h-5
-                        ${isActive ? "text-sky-700" : "text-white"}
-                      `}
-                    />
-                  </div>
+                    <Icon className="h-5 w-5" />
+                  </span>
 
                   {!collapsed && (
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className={`
-                          font-semibold text-sm truncate
-                          ${isActive ? "text-sky-900" : "text-white"}
-                        `}
-                      >
-                        {item.title}
-                      </p>
-
-                      <p
-                        className={`
-                          text-xs mt-1 truncate
-                          ${isActive ? "text-sky-600" : "text-sky-100/60"}
-                        `}
-                      >
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-bold">{item.title}</span>
+                      <span className={`mt-0.5 block truncate text-xs ${isActive ? "text-sky-600" : "text-slate-400"}`}>
                         Quản lý {item.title.toLowerCase()}
-                      </p>
-                    </div>
+                      </span>
+                    </span>
                   )}
                 </>
               )}
             </NavLink>
           );
         })}
-      </div>
+      </nav>
 
-      {/* USER */}
-      <div className="border-t border-white/10 p-4">
-        <div
-          className="
-            bg-white/10
-            backdrop-blur-md
-            rounded-3xl
-            border border-white/10
-            p-4
-          "
-        >
-          <div
-            className={`
-              flex items-center
-              ${collapsed ? "justify-center" : "gap-3"}
-            `}
-          >
-            <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center text-xl font-bold shrink-0">
+      <div className="border-t border-slate-100 p-4">
+        <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+          <div className={`flex items-center ${collapsed ? "justify-center" : "gap-3"}`}>
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-sky-600 text-lg font-bold text-white shadow-sm">
               {user?.username?.charAt(0).toUpperCase()}
             </div>
 
             {!collapsed && (
               <>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate text-white">
-                    {user?.username}
-                  </p>
-
-                  <p className="text-sm text-sky-100/70 truncate">
-                    Quản lý cửa hàng
-                  </p>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold text-slate-900">{user?.username}</p>
+                  <p className="truncate text-xs font-medium text-slate-500">Quản lý cửa hàng</p>
                 </div>
 
                 <button
                   onClick={handleLogout}
-                  className="
-                    w-11 h-11
-                    rounded-2xl
-                    bg-white/10
-                    hover:bg-red-500
-                    transition
-                    flex items-center justify-center
-                  "
+                  className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition hover:bg-red-50 hover:text-red-600"
+                  aria-label="Đăng xuất"
                 >
-                  <LogOut className="w-5 h-5 text-white" />
+                  <LogOut className="h-5 w-5" />
                 </button>
               </>
             )}

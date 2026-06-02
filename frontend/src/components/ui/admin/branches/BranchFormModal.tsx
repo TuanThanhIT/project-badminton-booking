@@ -282,17 +282,24 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
   };
 
   return (
-    <AdminModal
-      title={isEdit ? "Cập nhật chi nhánh" : "Tạo chi nhánh mới"}
-      description="Quản lý thông tin, vị trí bản đồ và hình ảnh chi nhánh."
-      icon={<Store className="h-5 w-5 text-sky-600" />}
-      onClose={onClose}
-      maxWidth="max-w-3xl"
-    >
-        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4 p-6">
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto border border-gray-200">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50 rounded-t-2xl sticky top-0 z-10">
+          <div className="flex items-center gap-2">
+            <Store className="w-5 h-5 text-sky-600" />
+            <h2 className="text-base font-bold text-gray-800">
+              {isEdit ? "Cập nhật chi nhánh" : "Tạo chi nhánh mới"}
+            </h2>
+          </div>
+          <button onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-gray-200 flex items-center justify-center transition">
+            <X className="w-4 h-4 text-gray-500" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           {basicFields.map(({ label, key, type, rows }) =>
             key === "description" ? (
-              <div key={key} className="col-span-2">
+              <div key={key} className="md:col-span-3">
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-sm font-semibold text-slate-700">{label}</label>
                   {String(form[key] ?? "") && (
@@ -315,8 +322,8 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
                 {errors[key] && <p className="mt-1 text-xs text-rose-600">{errors[key]}</p>}
               </div>
             ) : (
-              <div key={key} className={rows ? "col-span-2" : ""}>
-                <label className="mb-1 block text-sm font-semibold text-slate-700">{label}</label>
+              <div key={key} className={rows ? "md:col-span-3" : ""}>
+                <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
                 {rows ? (
                   <textarea rows={rows} value={String(form[key] ?? "")}
                     onChange={(e) => { setForm({ ...form, [key]: e.target.value }); setErrors({ ...errors, [key]: "" }); }}
@@ -334,86 +341,8 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
             )
           )}
 
-          <div>
-            <label className="mb-1 block text-sm font-semibold text-slate-700">
-              Tỉnh/Thành *
-            </label>
-            <select
-              value={form.provinceId || ""}
-              onChange={(event) => handleProvinceChange(event.target.value)}
-              disabled={loadingProvinces}
-              className={`w-full ${adminInputClass}`}
-            >
-              <option value="">
-                {loadingProvinces ? "Đang tải tỉnh/thành..." : "Chọn tỉnh/thành"}
-              </option>
-              {provinces.map((province) => (
-                <option key={province.ProvinceID} value={province.ProvinceID}>
-                  {province.ProvinceName}
-                </option>
-              ))}
-            </select>
-            {(errors.provinceId || errors.provinceName) && (
-              <p className="mt-1 text-xs text-rose-600">
-                {errors.provinceId || errors.provinceName}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-semibold text-slate-700">
-              Quận/Huyện *
-            </label>
-            <select
-              value={form.districtId || ""}
-              onChange={(event) => handleDistrictChange(event.target.value)}
-              disabled={!form.provinceId || loadingDistricts}
-              className={`w-full ${adminInputClass}`}
-            >
-              <option value="">
-                {loadingDistricts ? "Đang tải quận/huyện..." : "Chọn quận/huyện"}
-              </option>
-              {districts.map((district) => (
-                <option key={district.DistrictID} value={district.DistrictID}>
-                  {district.DistrictName}
-                </option>
-              ))}
-            </select>
-            {(errors.districtId || errors.districtName) && (
-              <p className="mt-1 text-xs text-rose-600">
-                {errors.districtId || errors.districtName}
-              </p>
-            )}
-          </div>
-
-          <div className="col-span-2">
-            <label className="mb-1 block text-sm font-semibold text-slate-700">
-              Phường/Xã *
-            </label>
-            <select
-              value={form.wardCode || ""}
-              onChange={(event) => handleWardChange(event.target.value)}
-              disabled={!form.districtId || loadingWards}
-              className={`w-full ${adminInputClass}`}
-            >
-              <option value="">
-                {loadingWards ? "Đang tải phường/xã..." : "Chọn phường/xã"}
-              </option>
-              {wards.map((ward) => (
-                <option key={ward.WardCode} value={ward.WardCode}>
-                  {ward.WardName}
-                </option>
-              ))}
-            </select>
-            {(errors.wardCode || errors.wardName) && (
-              <p className="mt-1 text-xs text-rose-600">
-                {errors.wardCode || errors.wardName}
-              </p>
-            )}
-          </div>
-
           {/* Map picker */}
-          <div className="col-span-2">
+          <div className="md:col-span-3">
             <div className="mb-1 flex items-center justify-between">
               <label className="text-sm font-semibold text-slate-700">
                 Vị trí trên bản đồ {!isEdit && <span className="text-red-500">*</span>}
@@ -437,14 +366,14 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
           </div>
 
           {/* Technical fields - collapsible */}
-          <div className="col-span-2">
+          <div className="md:col-span-3">
             <button type="button" onClick={() => setShowTechnical(!showTechnical)}
               className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-500 hover:bg-gray-100 transition">
               <span>Cài đặt kỹ thuật (GHN, tọa độ)</span>
               {showTechnical ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </button>
             {showTechnical && (
-              <div className="grid grid-cols-2 gap-4 mt-3 p-3 rounded-lg bg-gray-50/60 border border-gray-100">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-3 p-3 rounded-lg bg-gray-50/60 border border-gray-100">
                 {technicalFields.map(({ label, key, type }) => (
                   <div key={key}>
                     <label className="mb-1 block text-sm font-semibold text-slate-700">{label}</label>
@@ -463,7 +392,7 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
 
           {/* Image management — edit mode only */}
           {isEdit && (
-            <div className="col-span-2">
+            <div className="md:col-span-3">
               <div className="flex items-center justify-between mb-2">
                 <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Hình ảnh ({images.length})
@@ -478,7 +407,7 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
                 <input ref={imgInputRef} type="file" accept="image/*" className="hidden" onChange={handleAddImage} />
               </div>
               {images.length > 0 ? (
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                   {images.map((img) => (
                     <div key={img.id} className="relative group rounded-xl overflow-hidden border border-gray-200 aspect-square bg-gray-50">
                       <img src={img.imageUrl} alt="" className="w-full h-full object-cover" />
@@ -498,7 +427,7 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
             </div>
           )}
 
-          <div className="col-span-2 flex justify-end gap-3 border-t border-slate-100 pt-5">
+          <div className="md:col-span-3 flex gap-3 pt-2 border-t border-gray-100">
             <button type="button" onClick={onClose}
               className={adminSecondaryButtonClass}>
               Hủy

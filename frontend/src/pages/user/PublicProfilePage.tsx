@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Award, GraduationCap } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import {
   clearPublicProfileState,
@@ -13,6 +14,7 @@ import ProfileHeroBanner from "../../components/ui/user/profile/ProfileHeroBanne
 import PostCard from "../../components/ui/user/postList/PostCard";
 import { getAllBranches } from "../../redux/slices/user/branchSlice";
 import { PLAYER_LEVEL_LABEL } from "../../utils/constants/profileConstant";
+import { ROLE_NAME } from "../../utils/constants/role";
 
 const PublicProfilePage = () => {
   const dispatch = useAppDispatch();
@@ -147,6 +149,8 @@ const PublicProfilePage = () => {
   const avatarLetter = displayName.charAt(0).toUpperCase();
   const avatarUrl = profile.profile?.avatar || "";
 
+  const isCoach = profile?.role === ROLE_NAME.COACH;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50/90 via-white to-slate-50 pb-16">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-10 sm:pt-12">
@@ -160,10 +164,12 @@ const PublicProfilePage = () => {
           avatarLoadError={avatarLoadError}
           onAvatarImgError={() => setAvatarLoadError(true)}
           levelLabel={
-            profile.profile?.level
+            !isCoach && profile.profile?.level
               ? PLAYER_LEVEL_LABEL[profile.profile.level]
               : undefined
           }
+          isCoach={isCoach}
+          coachExperienceYears={profile.coachProfile?.experienceYears ?? undefined}
           trailingActions={
             <button
               type="button"
@@ -174,6 +180,68 @@ const PublicProfilePage = () => {
             </button>
           }
         />
+
+        {isCoach && (
+          <section className="mt-8 rounded-[2rem] border border-sky-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex items-start gap-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+                <GraduationCap size={24} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-lg font-bold text-slate-900">
+                    Hồ sơ dạy cầu lông
+                  </h2>
+                  <span className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700">
+                    {profile.coachProfile?.experienceYears ?? 0} năm kinh nghiệm
+                  </span>
+                </div>
+
+                {profile.coachProfile?.certificate && (
+                  <p className="mt-3 flex items-start gap-2 text-sm font-medium text-slate-700">
+                    <Award className="mt-0.5 h-4 w-4 shrink-0 text-sky-600" />
+                    {profile.coachProfile.certificate}
+                  </p>
+                )}
+
+                {profile.coachProfile?.introduction ? (
+                  <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-600">
+                    {profile.coachProfile.introduction}
+                  </p>
+                ) : (
+                  <p className="mt-3 text-sm text-slate-500">
+                    Chưa cập nhật giới thiệu dạy cầu lông.
+                  </p>
+                )}
+                {Array.isArray(profile.coachProfile?.certificateImages) &&
+                  profile.coachProfile.certificateImages.length > 0 && (
+                    <div className="mt-5">
+                      <p className="mb-3 text-sm font-semibold text-slate-800">
+                        Hinh anh chung chi
+                      </p>
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        {profile.coachProfile.certificateImages.map((url) => (
+                          <a
+                            key={url}
+                            href={url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 transition hover:border-sky-200"
+                          >
+                            <img
+                              src={url}
+                              alt="Chứng chỉ dạy cầu lông"
+                              className="aspect-[4/3] w-full object-cover"
+                            />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+              </div>
+            </div>
+          </section>
+        )}
 
         <section className="mt-10">
           <div className="flex items-baseline justify-between gap-3 mb-4">

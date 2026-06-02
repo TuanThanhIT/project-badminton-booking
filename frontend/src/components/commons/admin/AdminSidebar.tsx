@@ -15,8 +15,7 @@ import {
   Star,
   TrendingUp,
   Tag,
-  Warehouse,
-  PackageCheck,
+  GraduationCap,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../../redux/hook";
 import { logout, logoutLocal } from "../../../redux/slices/user/authSlice";
@@ -73,9 +72,10 @@ const AdminSidebar = ({ collapsed, setCollapsed }: Props) => {
     {
       group: "Người dùng",
       items: [
-        { title: "Tài khoản", icon: Users, path: "/admin/users", description: "Người dùng" },
-        { title: "Chi nhánh", icon: Store, path: "/admin/branches", description: "Cơ sở B-Hub" },
-        { title: "Manager", icon: Shield, path: "/admin/managers", description: "Phân quyền quản lý" },
+        { title: "Tài khoản", icon: Users, path: "/admin/users" },
+        { title: "Yêu cầu dạy cầu lông", icon: GraduationCap, path: "/admin/coach-applications" },
+        { title: "Chi nhánh", icon: Store, path: "/admin/branches" },
+        { title: "Manager", icon: Shield, path: "/admin/managers" },
       ],
     },
     {

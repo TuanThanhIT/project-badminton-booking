@@ -59,7 +59,7 @@ const BranchDetailModal = ({ branchId, onClose }: BranchDetailModalProps) => {
       title="Chi tiết chi nhánh"
       icon={<Eye className="w-5 h-5 text-sky-600" />}
       onClose={onClose}
-      maxWidth="max-w-3xl"
+      maxWidth="max-w-4xl"
     >
       {loading ? (
         <div className="flex justify-center py-10">

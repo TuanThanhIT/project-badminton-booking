@@ -16,21 +16,21 @@ const initProductRoute = (app) => {
   productRoute.get(
     "/",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(getProductsByFilterSchema),
     productController.getProductsByFilterController,
   );
   productRoute.get(
     "/:productId",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(getProductDetailSchema),
     productController.getProductDetailController,
   );
   productRoute.get(
     "/feedbacks/:productId",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(getProductFeedbacksSchema),
     productController.getProductFeedbacksController,
   );

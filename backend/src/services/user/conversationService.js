@@ -126,8 +126,14 @@ const getConversationsService = async (data) => {
 };
 
 const createOrGetDirectConversationService = async (data) => {
-  const { userId, targetUserId } = data;
-  if (Number(targetUserId) === Number(userId)) {
+  const userId = Number(data.userId);
+  const targetUserId = Number(data.targetUserId);
+
+  if (!Number.isInteger(userId) || !Number.isInteger(targetUserId)) {
+    throw new BadRequestError("Thông tin người dùng không hợp lệ.");
+  }
+
+  if (targetUserId === userId) {
     throw new ForbiddenError("Không thể tự nhắn tin cho chính bạn.");
   }
 
@@ -139,22 +145,30 @@ const createOrGetDirectConversationService = async (data) => {
     if (!targetUser) throw new NotFoundError("Không tìm thấy người dùng.");
 
     const memberships = await ConversationParticipant.findAll({
-      where: { userId: [userId, targetUserId] },
+      where: { userId: { [Op.in]: [userId, targetUserId] } },
       attributes: ["conversationId", "userId"],
-      include: [{ model: Conversation, as: "conversation", attributes: ["id", "type"] }],
+      include: [
+        {
+          model: Conversation,
+          as: "conversation",
+          attributes: ["id", "type"],
+          where: { type: CONVERSATION_TYPE.PRIVATE },
+          required: true,
+        },
+      ],
       transaction: t,
     });
 
-    const groups = memberships.reduce((acc, m) => {
-      if (m.conversation?.type !== CONVERSATION_TYPE.PRIVATE) return acc;
-      if (!acc[m.conversationId]) acc[m.conversationId] = [];
-      acc[m.conversationId].push(m.userId);
+    const participantSets = memberships.reduce((acc, row) => {
+      const conversationId = Number(row.conversationId);
+      if (!acc[conversationId]) acc[conversationId] = new Set();
+      acc[conversationId].add(Number(row.userId));
       return acc;
     }, {});
 
-    const matchedId = Object.entries(groups).find(
-      ([, users]) => users.includes(userId) && users.includes(targetUserId),
-    )?.[0];
+    const matchedId = Object.entries(participantSets).find(([, ids]) => {
+      return ids.size === 2 && ids.has(userId) && ids.has(targetUserId);
+    })?.[0];
 
     if (matchedId) {
       const existed = await Conversation.findByPk(Number(matchedId), { transaction: t });

@@ -106,7 +106,7 @@ const getAdminBranchesService = async (data) => {
         model: User,
         as: "managers",
         attributes: ["id", "username", "email"],
-        through: { attributes: [], where: { isActive: true } },
+        through: { attributes: [] },
         required: false,
         include: [
           {
@@ -159,7 +159,7 @@ const getAdminBranchDetailService = async (branchId) => {
         model: User,
         as: "managers",
         attributes: ["id", "username", "email"],
-        through: { attributes: [], where: { isActive: true } },
+        through: { attributes: [] },
         required: false,
         include: [
           {

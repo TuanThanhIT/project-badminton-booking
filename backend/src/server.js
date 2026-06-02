@@ -59,6 +59,9 @@ import initAdminFinanceRoute from "./routes/admin/financeRoute.js";
 import initAdminRevenueRoute from "./routes/admin/revenueRoute.js";
 import initAdminCategoryRoute from "./routes/admin/categoryRoute.js";
 import initAdminUploadRoute from "./routes/admin/uploadRoute.js";
+import initAdminCoachApplicationRoute from "./routes/admin/coachApplicationRoute.js";
+import initCoachClassRoute from "./routes/user/coachClassRoute.js";
+import initCoachApplicationRoute from "./routes/user/coachApplicationRoute.js";
 import initAdminSupplierRoute from "./routes/admin/supplierRoute.js";
 import initAdminPurchaseReceiptRoute from "./routes/admin/purchaseReceiptRoute.js";
 import initAdminInventoryRoute from "./routes/admin/inventoryRoute.js";
@@ -114,6 +117,8 @@ initPostSocialRoute(app);
 initProfileRoute(app);
 initConversationRoute(app);
 initUserSearchRoute(app);
+initCoachClassRoute(app);
+initCoachApplicationRoute(app);
 
 // Employee
 initEmployeeOrderRoute(app);
@@ -134,6 +139,7 @@ initAdminFinanceRoute(app);
 initAdminRevenueRoute(app);
 initAdminCategoryRoute(app);
 initAdminUploadRoute(app);
+initAdminCoachApplicationRoute(app);
 initAdminSupplierRoute(app);
 initAdminPurchaseReceiptRoute(app);
 initAdminInventoryRoute(app);

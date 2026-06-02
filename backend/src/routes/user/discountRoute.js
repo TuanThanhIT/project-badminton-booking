@@ -16,21 +16,21 @@ const initDiscountRoute = (app) => {
   discountRoute.post(
     "/check-booking-discount",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(applyDiscountBookingSchema),
     discountController.checkDiscountController,
   );
   discountRoute.post(
     "/apply",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(applyDiscountSchema),
     discountController.applyDiscountController,
   );
   discountRoute.get(
     "/",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(getDiscountsCheckoutSchema),
     discountController.getDiscountsCheckoutController,
   );

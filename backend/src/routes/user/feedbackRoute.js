@@ -22,7 +22,7 @@ const initFeedbackRoute = (app) => {
   feedbackRoute.post(
     "/",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(createFeedbackOrderSchema),
     feedbackController.createFeedbackOrderController,
   );
@@ -31,7 +31,7 @@ const initFeedbackRoute = (app) => {
   feedbackRoute.get(
     "/branches/:branchId/me",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(getFeedbackBranchDetailSchema),
     feedbackController.getFeedbackBranchDetailController,
   );
@@ -39,7 +39,7 @@ const initFeedbackRoute = (app) => {
   feedbackRoute.put(
     "/branches/:branchId",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(upsertFeedbackBranchSchema),
     feedbackController.upsertFeedbackBranchController,
   );
@@ -47,7 +47,7 @@ const initFeedbackRoute = (app) => {
   feedbackRoute.get(
     "/orders/:orderId/products/:variantId",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(getFeedbackOrderDetailSchema),
     feedbackController.getFeedbackOrderDetailController,
   );
@@ -56,7 +56,7 @@ const initFeedbackRoute = (app) => {
   feedbackRoute.patch(
     "/orders/:orderId/products/:variantId",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(updateFeedbackOrderSchema),
     feedbackController.updateFeedbackOrderController,
   );
@@ -65,7 +65,7 @@ const initFeedbackRoute = (app) => {
   feedbackRoute.delete(
     "/feedbackId",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(deleteFeedbackOrderSchema),
     feedbackController.deleteFeedbackOrderController,
   );

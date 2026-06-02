@@ -108,6 +108,19 @@ export const uploadMyAvatar = createAsyncThunk<
   }
 });
 
+export const uploadCoachCertificateImages = createAsyncThunk<
+  GetMyProfileResponse,
+  File[],
+  { rejectValue: ApiErrorType }
+>("profile/uploadCoachCertificateImages", async (files, { rejectWithValue }) => {
+  try {
+    const res = await profileService.uploadCoachCertificateImagesService(files);
+    return res.data as GetMyProfileResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
 export const getPublicProfile = createAsyncThunk<
   GetPublicProfileResponse,
   { userId: number },
@@ -187,6 +200,9 @@ const profileSlice = createSlice({
           me.profile,
           me.username,
         );
+      })
+      .addCase(uploadCoachCertificateImages.fulfilled, (state, action) => {
+        state.myProfile = action.payload.data;
       })
       .addCase(getPublicProfile.fulfilled, (state, action) => {
         state.publicProfile = action.payload.data;

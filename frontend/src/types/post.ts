@@ -64,6 +64,22 @@ export type ClassFormData = {
   notes?: string | null;
 };
 
+export type FindCoachFormData = {
+  location: {
+    branchId: number;
+  };
+  currentLevel: string;
+  goal: string;
+  scheduleNote: string;
+  budget?: string | null;
+  contact: {
+    inApp: boolean;
+    phone?: string | null;
+    zalo?: string | null;
+  };
+  notes?: string | null;
+};
+
 export type TournamentFormData = {
   organizerName: string;
   location: {
@@ -107,7 +123,13 @@ export type Post = {
   type: PostType;
   title: string;
   content?: string | null;
-  formData?: FindPlayerFormData | ClassFormData | TournamentFormData | GroupFormData | null;
+  formData?:
+    | FindPlayerFormData
+    | ClassFormData
+    | FindCoachFormData
+    | TournamentFormData
+    | GroupFormData
+    | null;
   comments?: PostComment[];
   repostOfPostId?: number | null;
   isRepost?: boolean;
@@ -128,6 +150,7 @@ export type Post = {
 export type PostFormData =
   | FindPlayerFormData
   | ClassFormData
+  | FindCoachFormData
   | TournamentFormData
   | GroupFormData;
 

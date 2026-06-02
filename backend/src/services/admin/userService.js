@@ -1,7 +1,15 @@
 import bcrypt from "bcrypt";
-import { Op } from "sequelize";
+import { Op, QueryTypes } from "sequelize";
 import sequelize from "../../config/db.js";
-import { User, Profile, Role, BranchManager, Branch, Wallet } from "../../models/index.js";
+import {
+  User,
+  Profile,
+  Role,
+  BranchManager,
+  BranchEmployee,
+  Branch,
+  Wallet,
+} from "../../models/index.js";
 import { ROLE_NAME } from "../../constants/userConstant.js";
 import { WALLET_STATUS } from "../../constants/paymentConstant.js";
 import ConflictError from "../../errors/ConflictError.js";
@@ -11,7 +19,7 @@ import BadRequestError from "../../errors/BadRequestError.js";
 const saltRounds = 10;
 
 const getUsersService = async (data) => {
-  const { page = 1, limit = 10, search, role, isActive } = data;
+  const { page = 1, limit = 10, search, role, isActive, branchId } = data;
   const offset = (page - 1) * limit;
 
   const userWhere = {};
@@ -28,6 +36,8 @@ const getUsersService = async (data) => {
   const roleWhere = {};
   if (role) {
     roleWhere.roleName = role;
+  } else if (branchId) {
+    roleWhere.roleName = ROLE_NAME.EMPLOYEE;
   }
 
   const { rows, count } = await User.findAndCountAll({
@@ -44,8 +54,22 @@ const getUsersService = async (data) => {
         attributes: ["roleName"],
         where: Object.keys(roleWhere).length ? roleWhere : undefined,
       },
+      {
+        model: BranchEmployee,
+        as: "branchEmployees",
+        attributes: ["branchId"],
+        required: !!branchId,
+        where: branchId ? { branchId } : undefined,
+        include: [
+          {
+            model: Branch,
+            as: "branch",
+            attributes: ["id", "branchName", "address"],
+          },
+        ],
+      },
     ],
-    attributes: ["id", "username", "email", "isVerified", "isActive", "createdAt"],
+    attributes: ["id", "username", "email", "isVerified", "isActive", "createdDate"],
     limit: Number(limit),
     offset: Number(offset),
     order: [["createdAt", "DESC"]],
@@ -66,6 +90,11 @@ const getUsersService = async (data) => {
       phoneNumber: user.profile?.phoneNumber,
       avatar: user.profile?.avatar,
       gender: user.profile?.gender,
+      assignedBranches: user.branchEmployees?.map((item) => ({
+        branchId: item.branchId,
+        branchName: item.branch?.branchName,
+        address: item.branch?.address,
+      })) || [],
     };
   });
 
@@ -80,8 +109,9 @@ const getUsersService = async (data) => {
 };
 
 const getUserDetailService = async (userId) => {
-  const user = await User.findByPk(userId, {
-    attributes: ["id", "username", "email", "isVerified", "isActive", "createdAt"],
+  const [user, managedBranches] = await Promise.all([
+    User.findByPk(userId, {
+    attributes: ["id", "username", "email", "isVerified", "isActive", "createdDate"],
     include: [
       {
         model: Profile,
@@ -94,9 +124,8 @@ const getUserDetailService = async (userId) => {
         attributes: ["id", "roleName"],
       },
       {
-        model: BranchManager,
-        as: "branchManagers",
-        where: { isActive: true },
+        model: BranchEmployee,
+        as: "branchEmployees",
         required: false,
         include: [
           {
@@ -105,10 +134,23 @@ const getUserDetailService = async (userId) => {
             attributes: ["id", "branchName", "address"],
           },
         ],
-        attributes: ["id", "branchId", "isActive", "createdAt"],
+        attributes: ["branchId", "employeeId"],
       },
     ],
-  });
+    }),
+    sequelize.query(
+      `
+        SELECT bm.branchId, b.branchName, b.address
+        FROM BranchManagers bm
+        INNER JOIN Branches b ON bm.branchId = b.id
+        WHERE bm.managerId = :userId
+      `,
+      {
+        replacements: { userId },
+        type: QueryTypes.SELECT,
+      },
+    ),
+  ]);
 
   if (!user) throw new NotFoundError("Không tìm thấy người dùng");
 
@@ -122,12 +164,17 @@ const getUserDetailService = async (userId) => {
     createdAt: data.createdAt,
     role: data.role?.roleName,
     profile: data.profile,
-    managedBranches: data.branchManagers?.map((bm) => ({
-      branchManagerId: bm.id,
-      branchId: bm.branchId,
-      branchName: bm.branch?.branchName,
-      address: bm.branch?.address,
-      createdAt: bm.createdAt,
+    managedBranches: managedBranches.map((branch) => ({
+      branchManagerId: null,
+      branchId: branch.branchId,
+      branchName: branch.branchName,
+      address: branch.address,
+      assignedDate: null,
+    })) || [],
+    assignedBranches: data.branchEmployees?.map((be) => ({
+      branchId: be.branchId,
+      branchName: be.branch?.branchName,
+      address: be.branch?.address,
     })) || [],
   };
 };

@@ -1,4 +1,4 @@
-import { Heart, MessageCircle, FileText, Trophy } from "lucide-react";
+import { GraduationCap, Heart, MessageCircle, FileText, Trophy } from "lucide-react";
 import type { ReactNode } from "react";
 
 type ProfileHeroBannerProps = {
@@ -17,8 +17,11 @@ type ProfileHeroBannerProps = {
   trailingActions?: ReactNode;
   /** Vòng quanh ảnh khi đang upload */
   avatarBusy?: boolean;
-  /** Trình độ cầu lông */
+  /** Trình độ cầu lông (User thường) */
   levelLabel?: string;
+  /** Hồ sơ dạy cầu lông */
+  isCoach?: boolean;
+  coachExperienceYears?: number;
 };
 
 /**
@@ -37,18 +40,43 @@ const ProfileHeroBanner = ({
   trailingActions,
   avatarBusy,
   levelLabel,
+  isCoach = false,
+  coachExperienceYears,
 }: ProfileHeroBannerProps) => {
   return (
     <section className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_12px_35px_rgba(15,23,42,0.08)]">
       {/* COVER */}
-      <div className="relative h-36 overflow-hidden bg-sky-900 sm:h-44">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.24),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.14),transparent_36%)]" />
-        <div className="absolute right-0 top-0 h-full w-1/3 translate-x-16 skew-x-12 bg-sky-800/30" />
+      <div
+        className={`relative h-36 overflow-hidden sm:h-44 ${
+          isCoach ? "bg-slate-950" : "bg-sky-900"
+        }`}
+      >
+        <div
+          className={`absolute inset-0 ${
+            isCoach
+              ? "bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.28),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(99,102,241,0.20),transparent_38%)]"
+              : "bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.24),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.14),transparent_36%)]"
+          }`}
+        />
+        <div
+          className={`absolute right-0 top-0 h-full w-1/3 translate-x-16 skew-x-12 ${
+            isCoach ? "bg-cyan-800/25" : "bg-sky-800/30"
+          }`}
+        />
 
         <div className="absolute left-5 top-5 sm:left-7">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-medium text-white backdrop-blur-sm">
-            <Trophy size={15} className="text-sky-200" />
-            Hồ sơ B-Hub Player
+            {isCoach ? (
+              <>
+                <GraduationCap size={15} className="text-cyan-200" />
+                Hồ sơ dạy cầu lông · B-Hub
+              </>
+            ) : (
+              <>
+                <Trophy size={15} className="text-sky-200" />
+                Hồ sơ B-Hub Player
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -100,7 +128,14 @@ const ProfileHeroBanner = ({
                 </div>
 
                 <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-                  {levelLabel && (
+                  {isCoach && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-800">
+                      <GraduationCap className="h-3.5 w-3.5" />
+                      Dạy cầu lông · {coachExperienceYears ?? 0} năm kinh nghiệm
+                    </span>
+                  )}
+
+                  {!isCoach && levelLabel && (
                     <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-800">
                       🏸 {levelLabel}
                     </span>

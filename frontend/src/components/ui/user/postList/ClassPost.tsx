@@ -1,6 +1,7 @@
 import { Calendar, Clock, MapPin, Users, DollarSign, Phone, MessageCircle, FileText } from "lucide-react";
 import type { PostWithAuthor } from "../../../../types/post";
 import { PLAYER_LEVEL_LABEL } from "../../../../utils/constants/profileConstant";
+import ClassEnrollAction from "../coach/ClassEnrollAction";
 
 type BranchInfo = {
   branchName: string;
@@ -43,10 +44,20 @@ const ClassPost = ({ post, formData, branchInfo }: Props) => {
   return (
     <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white text-slate-700">
       <div className="border-b border-sky-100 bg-sky-50/80 p-4">
-        <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
-          <Users className="h-5 w-5 text-sky-600" />
-          {post.title}
-        </h3>
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="flex min-w-0 flex-1 items-center gap-2 text-lg font-semibold text-slate-900">
+            <Users className="h-5 w-5 shrink-0 text-sky-600" />
+            <span className="line-clamp-2">{post.title}</span>
+          </h3>
+          <div
+            className="shrink-0"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+            role="presentation"
+          >
+            <ClassEnrollAction postId={post.id} compact />
+          </div>
+        </div>
         {post.content && (
           <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-600">
             {post.content}

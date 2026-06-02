@@ -49,6 +49,26 @@ const CoachProfile = sequelize.define(
         },
       },
     },
+    certificateImages: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      validate: {
+        isValidImageList(value) {
+          if (value == null) return;
+          if (!Array.isArray(value)) {
+            throw new Error("Certificate images must be an array");
+          }
+          if (value.length > 10) {
+            throw new Error("Certificate images must not exceed 10 items");
+          }
+          value.forEach((url) => {
+            if (typeof url !== "string" || url.length > 1000) {
+              throw new Error("Certificate image URL is invalid");
+            }
+          });
+        },
+      },
+    },
     introduction: {
       type: DataTypes.TEXT,
       allowNull: true,

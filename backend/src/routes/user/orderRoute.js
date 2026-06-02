@@ -25,7 +25,7 @@ const initOrderRoute = (app) => {
   orderRoute.post(
     "/checkout/preview",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(checkoutPreviewSchema),
     orderController.checkoutPreviewController,
   );
@@ -33,7 +33,7 @@ const initOrderRoute = (app) => {
   orderRoute.post(
     "/checkout/shipping",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(calculateShippingSchema),
     orderController.calculateShippingController,
   );
@@ -41,7 +41,7 @@ const initOrderRoute = (app) => {
   orderRoute.delete(
     "/checkout/session",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(clearCheckoutSessionSchema),
     orderController.clearCheckoutSessionController,
   );
@@ -49,7 +49,7 @@ const initOrderRoute = (app) => {
   orderRoute.post(
     "/",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(createOrderSchema),
     orderController.createOrderController,
   );
@@ -57,7 +57,7 @@ const initOrderRoute = (app) => {
   orderRoute.patch(
     "/vnpay/callback",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(orderCallbackSchema),
     orderController.orderCallbackController,
   );
@@ -65,7 +65,7 @@ const initOrderRoute = (app) => {
   orderRoute.post(
     "/group/:orderGroupId/vnpay/retry",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(getOrderGroupByIdSchema),
     orderController.retryOrderVNPayController,
   );
@@ -73,7 +73,7 @@ const initOrderRoute = (app) => {
   orderRoute.patch(
     "/wallet/confirm",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(walletOrderConfirmSchema),
     orderController.walletOrderConfirmController,
   );
@@ -81,7 +81,7 @@ const initOrderRoute = (app) => {
   orderRoute.get(
     "/tracking/:orderId",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(getOrderTrackingSchema),
     orderController.getOrderTrackingController,
   );
@@ -89,7 +89,7 @@ const initOrderRoute = (app) => {
   orderRoute.get(
     "/progress/:orderId",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(getTrackingProgressSchema),
     orderController.getTrackingProgressController,
   );
@@ -97,7 +97,7 @@ const initOrderRoute = (app) => {
   orderRoute.get(
     "/detail/:orderId",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(getOrderDetailSchema),
     orderController.getOrderDetailController,
   );
@@ -105,7 +105,7 @@ const initOrderRoute = (app) => {
   orderRoute.get(
     "/group/:orderGroupId",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(getOrderGroupByIdSchema),
     orderController.getOrderGroupByIdController,
   );
@@ -113,7 +113,7 @@ const initOrderRoute = (app) => {
   orderRoute.get(
     "/",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(getUserOrdersSchema),
     orderController.getUserOrdersController,
   );
@@ -121,7 +121,7 @@ const initOrderRoute = (app) => {
   orderRoute.post(
     "/:orderId/cancel-request",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(requestOrderActionSchema),
     orderController.requestCancelOrderController,
   );
@@ -129,7 +129,7 @@ const initOrderRoute = (app) => {
   orderRoute.post(
     "/:orderId/return-request",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(requestOrderActionSchema),
     orderController.requestReturnOrderController,
   );

@@ -60,6 +60,7 @@ var _financeRoute = _interopRequireDefault(require("./routes/admin/financeRoute.
 var _revenueRoute2 = _interopRequireDefault(require("./routes/admin/revenueRoute.js"));
 var _categoryRoute = _interopRequireDefault(require("./routes/admin/categoryRoute.js"));
 var _uploadRoute = _interopRequireDefault(require("./routes/admin/uploadRoute.js"));
+var _coachClassRoute = _interopRequireDefault(require("./routes/user/coachClassRoute.js"));
 var _supplierRoute2 = _interopRequireDefault(require("./routes/admin/supplierRoute.js"));
 var _purchaseReceiptRoute2 = _interopRequireDefault(require("./routes/admin/purchaseReceiptRoute.js"));
 var _inventoryRoute2 = _interopRequireDefault(require("./routes/admin/inventoryRoute.js"));
@@ -111,6 +112,7 @@ app.use((0, _cookieParser["default"])());
 (0, _profileRoute["default"])(app);
 (0, _conversationRoute["default"])(app);
 (0, _userSearchRoute["default"])(app);
+(0, _coachClassRoute["default"])(app);
 
 // Employee
 (0, _orderRoute2["default"])(app);

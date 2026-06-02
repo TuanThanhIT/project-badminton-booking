@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import {
@@ -13,6 +14,7 @@ import {
   Trophy,
   Sparkles,
   Wallet,
+  GraduationCap,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import type { PostWithAuthor } from "../../types/post";
@@ -35,6 +37,7 @@ import {
   PLAYER_LEVELS,
 } from "../../utils/constants/profileConstant";
 import WalletPanel from "../../components/ui/user/wallet/WalletPanel";
+import { ROLE_NAME } from "../../utils/constants/role";
 
 type EditTarget = {
   id: number;
@@ -97,10 +100,16 @@ const ProfilePage = () => {
     dob: "",
     avatar: "",
     level: "",
+    coachExperienceYears: 0,
+    coachCertificate: "",
+    coachIntroduction: "",
   });
 
   const displayName = form.fullName.trim() || profile?.username || "Bạn";
   const avatarLetter = displayName.charAt(0).toUpperCase();
+  const isCoach =
+    currentUser?.role === ROLE_NAME.COACH ||
+    profile?.role === ROLE_NAME.COACH;
 
   const engagementStats = useMemo(
     () =>
@@ -140,6 +149,9 @@ const ProfilePage = () => {
         : "",
       avatar: profile.profile?.avatar || "",
       level: profile.profile?.level || "",
+      coachExperienceYears: profile.coachProfile?.experienceYears ?? 0,
+      coachCertificate: profile.coachProfile?.certificate || "",
+      coachIntroduction: profile.coachProfile?.introduction || "",
     });
   }, [profile]);
 
@@ -206,6 +218,15 @@ const ProfilePage = () => {
             gender: form.gender as "male" | "female" | "other",
             dob: form.dob || null,
             level: form.level || null,
+            ...(isCoach
+              ? {
+                  coachProfile: {
+                    experienceYears: Number(form.coachExperienceYears) || 0,
+                    certificate: form.coachCertificate.trim() || null,
+                    introduction: form.coachIntroduction.trim() || null,
+                  },
+                }
+              : {}),
           },
         }),
       ).unwrap();
@@ -323,7 +344,11 @@ const ProfilePage = () => {
           avatarLoadError={avatarLoadError}
           onAvatarImgError={() => setAvatarLoadError(true)}
           avatarBusy={uploadingAvatar}
-          levelLabel={form.level ? PLAYER_LEVEL_LABEL[form.level] : undefined}
+          levelLabel={
+            !isCoach && form.level ? PLAYER_LEVEL_LABEL[form.level] : undefined
+          }
+          isCoach={isCoach}
+          coachExperienceYears={form.coachExperienceYears}
           avatarOverlay={
             <button
               type="button"
@@ -391,6 +416,35 @@ const ProfilePage = () => {
                   <Wallet className="h-5 w-5 shrink-0" strokeWidth={2} />
                   <span>Ví thanh toán</span>
                 </button>
+
+                {isCoach ? (
+                  <Link
+                    to="/coach/students"
+                    className={tabBtnClass(false)}
+                  >
+                    <GraduationCap className="h-5 w-5 shrink-0" strokeWidth={2} />
+                    <span>Lớp học</span>
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      to="/my-classes"
+                      className={tabBtnClass(false)}
+                    >
+                      <GraduationCap className="h-5 w-5 shrink-0" strokeWidth={2} />
+                      <span>Lớp học</span>
+                    </Link>
+                    {currentUser?.role === ROLE_NAME.USER && (
+                      <Link
+                        to="/become-coach"
+                        className={tabBtnClass(false)}
+                      >
+                        <Trophy className="h-5 w-5 shrink-0" strokeWidth={2} />
+                        <span>Đăng ký dạy cầu lông</span>
+                      </Link>
+                    )}
+                  </>
+                )}
               </nav>
             </div>
           </aside>
@@ -501,6 +555,7 @@ const ProfilePage = () => {
                         />
                       </div>
 
+                      {!isCoach && (
                       <div className="relative sm:col-span-2">
                         <label className={labelClass}>Trình độ cầu lông</label>
                         <Trophy size={17} className={fieldIconClass} />
@@ -524,6 +579,71 @@ const ProfilePage = () => {
                           Hiển thị công khai để mọi người dễ kết nối giao lưu.
                         </p>
                       </div>
+                      )}
+
+                      {isCoach && (
+                        <div className="sm:col-span-2 rounded-3xl border border-amber-200 bg-amber-50/60 p-4 sm:p-5">
+                          <div className="mb-4 flex items-center gap-2">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-amber-600 shadow-sm">
+                              <GraduationCap size={20} />
+                            </div>
+                            <div>
+                              <h3 className="text-sm font-bold text-slate-900">Hồ sơ dạy cầu lông</h3>
+                              <p className="text-xs text-slate-500">
+                                Các thông tin này sẽ hiển thị công khai trên trang cá nhân của bạn.
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                              <label className={labelClass}>Số năm kinh nghiệm</label>
+                              <input
+                                type="number"
+                                min={0}
+                                className={inputClass}
+                                value={form.coachExperienceYears}
+                                onChange={(e) =>
+                                  setForm((p) => ({
+                                    ...p,
+                                    coachExperienceYears: Number(e.target.value),
+                                  }))
+                                }
+                              />
+                            </div>
+
+                            <div>
+                              <label className={labelClass}>Chứng chỉ / thành tích</label>
+                              <input
+                                className={inputClass}
+                                placeholder="VD: Chứng chỉ dạy cầu lông cấp CLB, giải phong trào..."
+                                value={form.coachCertificate}
+                                onChange={(e) =>
+                                  setForm((p) => ({
+                                    ...p,
+                                    coachCertificate: e.target.value,
+                                  }))
+                                }
+                              />
+                            </div>
+
+                            <div className="sm:col-span-2">
+                              <label className={labelClass}>Giới thiệu</label>
+                              <textarea
+                                className={`${inputClass} min-h-[120px] resize-none leading-relaxed`}
+                                placeholder="Phong cách dạy, đối tượng học viên phù hợp, mục tiêu huấn luyện..."
+                                value={form.coachIntroduction}
+                                onChange={(e) =>
+                                  setForm((p) => ({
+                                    ...p,
+                                    coachIntroduction: e.target.value,
+                                  }))
+                                }
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="mt-6 flex justify-end border-t border-slate-200 pt-5">

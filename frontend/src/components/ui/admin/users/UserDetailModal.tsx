@@ -95,8 +95,23 @@ const UserDetailModal = ({ userId, onClose }: UserDetailModalProps) => {
                 >
                   <span className="text-sm font-medium text-blue-800">{b.branchName}</span>
                   <span className="text-xs text-blue-500">
-                    {new Date(b.createdAt).toLocaleDateString("vi-VN")}
+                    {b.assignedDate ? new Date(b.assignedDate).toLocaleDateString("vi-VN") : ""}
                   </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {(user.assignedBranches?.length ?? 0) > 0 && (
+            <div>
+              <p className="text-sm font-semibold text-gray-700 mb-2">Chi nhánh nhân viên</p>
+              {user.assignedBranches!.map((branch) => (
+                <div
+                  key={branch.branchId}
+                  className="bg-indigo-50 rounded-lg px-3 py-2 mb-1"
+                >
+                  <p className="text-sm font-medium text-indigo-800">{branch.branchName}</p>
+                  {branch.address && <p className="text-xs text-indigo-500 mt-0.5">{branch.address}</p>}
                 </div>
               ))}
             </div>

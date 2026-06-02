@@ -16,33 +16,33 @@ const initCartRoute = (app) => {
   cartRoute.post(
     "/",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(addItemToCartSchema),
     cartController.addItemToCartController,
   );
   cartRoute.get(
     "/",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     cartController.getCartItemsController,
   );
   cartRoute.patch(
     "/:cartItemId",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(updateQuantitySchema),
     cartController.updateQuantityController,
   );
   cartRoute.delete(
     "/",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     cartController.deleteAllCartItemController,
   );
   cartRoute.delete(
     "/:cartItemId",
     auth,
-    authorize(ROLE_NAME.USER),
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(deleteCartItemSchema),
     cartController.deleteCartItemController,
   );

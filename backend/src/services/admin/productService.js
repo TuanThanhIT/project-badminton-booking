@@ -1,5 +1,6 @@
-import { Op, fn, col, literal } from "sequelize";
-import { Product, ProductVariant, ProductImage, Category, VariantStock } from "../../models/index.js";
+import { Op } from "sequelize";
+import sequelize from "../../config/db.js";
+import { Product, ProductVariant, ProductImage, Category, VariantStock, Branch } from "../../models/index.js";
 import NotFoundError from "../../errors/NotFoundError.js";
 import ConflictError from "../../errors/ConflictError.js";
 
@@ -73,7 +74,12 @@ const getAdminProductDetailService = async (productId) => {
         model: ProductVariant,
         as: "variants",
         attributes: ["id", "sku", "price", "discount", "color", "size", "material", "weight"],
-        include: [{ model: VariantStock, as: "stocks", attributes: ["stock", "branchId"] }],
+        include: [{
+          model: VariantStock,
+          as: "stocks",
+          attributes: ["stock", "branchId"],
+          include: [{ model: Branch, as: "branch", attributes: ["id", "branchName"] }],
+        }],
       },
       { model: ProductImage, as: "images", attributes: ["id", "imageUrl"] },
     ],
@@ -113,6 +119,187 @@ const updateAdminProductService = async (productId, data) => {
   return product.toJSON();
 };
 
+const getAdminProductImagesService = async (productId) => {
+  const product = await Product.findByPk(productId);
+  if (!product) throw new NotFoundError("Khong tim thay san pham");
+
+  const images = await ProductImage.findAll({
+    where: { productId },
+    attributes: ["id", "imageUrl"],
+    order: [["id", "ASC"]],
+  });
+
+  return images.map((image) => image.toJSON());
+};
+
+const createAdminProductImagesService = async (productId, data) => {
+  const product = await Product.findByPk(productId);
+  if (!product) throw new NotFoundError("Khong tim thay san pham");
+
+  const urls = (data.thumbnailUrls || data.imageUrls || [])
+    .map((url) => String(url || "").trim())
+    .filter(Boolean);
+
+  if (!urls.length) return [];
+
+  const images = await ProductImage.bulkCreate(
+    urls.map((imageUrl) => ({ productId, imageUrl })),
+  );
+
+  return images.map((image) => image.toJSON());
+};
+
+const updateAdminProductImageService = async (imageId, data) => {
+  const image = await ProductImage.findByPk(imageId);
+  if (!image) throw new NotFoundError("Khong tim thay hinh anh san pham");
+
+  await image.update({ imageUrl: data.imageUrl || data.thumbnailUrl });
+  return image.toJSON();
+};
+
+const deleteAdminProductImageService = async (imageId) => {
+  const image = await ProductImage.findByPk(imageId);
+  if (!image) throw new NotFoundError("Khong tim thay hinh anh san pham");
+
+  await image.destroy();
+  return { id: Number(imageId) };
+};
+
+const getAdminProductVariantsService = async (productId) => {
+  const product = await Product.findByPk(productId);
+  if (!product) throw new NotFoundError("Khong tim thay san pham");
+
+  const variants = await ProductVariant.findAll({
+    where: { productId },
+    attributes: ["id", "sku", "price", "discount", "color", "size", "material", "weight", "productId"],
+    include: [{
+      model: VariantStock,
+      as: "stocks",
+      attributes: ["branchId", "stock"],
+      include: [{ model: Branch, as: "branch", attributes: ["id", "branchName"] }],
+    }],
+    order: [["id", "ASC"]],
+  });
+
+  return variants.map((variant) => variant.toJSON());
+};
+
+const normalizeStocks = (stocks = []) => (
+  Array.isArray(stocks)
+    ? stocks
+        .map((stock) => ({
+          branchId: Number(stock.branchId),
+          stock: Math.max(0, Number(stock.stock || 0)),
+        }))
+        .filter((stock) => Number.isInteger(stock.branchId) && stock.branchId > 0)
+    : []
+);
+
+const saveVariantStocks = async ({ variantId, stocks, transaction }) => {
+  const normalizedStocks = normalizeStocks(stocks);
+  await VariantStock.destroy({ where: { variantId }, transaction });
+
+  if (!normalizedStocks.length) return;
+
+  await VariantStock.bulkCreate(
+    normalizedStocks.map((stock) => ({ ...stock, variantId })),
+    { transaction },
+  );
+};
+
+const createAdminProductVariantService = async (productId, data) => {
+  const product = await Product.findByPk(productId);
+  if (!product) throw new NotFoundError("Khong tim thay san pham");
+
+  const transaction = await sequelize.transaction();
+  try {
+    const variant = await ProductVariant.create(
+      {
+        productId,
+        sku: data.sku || null,
+        price: data.price,
+        discount: data.discount || 0,
+        color: data.color || null,
+        size: data.size || null,
+        material: data.material || null,
+        weight: data.weight ?? 0.5,
+      },
+      { transaction },
+    );
+
+    await saveVariantStocks({ variantId: variant.id, stocks: data.stocks, transaction });
+    await transaction.commit();
+
+    return ProductVariant.findByPk(variant.id, {
+      include: [{
+        model: VariantStock,
+        as: "stocks",
+        include: [{ model: Branch, as: "branch", attributes: ["id", "branchName"] }],
+      }],
+    });
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
+  }
+};
+
+const updateAdminProductVariantService = async (variantId, data) => {
+  const variant = await ProductVariant.findByPk(variantId);
+  if (!variant) throw new NotFoundError("Khong tim thay bien the san pham");
+
+  const transaction = await sequelize.transaction();
+  try {
+    const updateData = {};
+    ["sku", "price", "discount", "color", "size", "material", "weight"].forEach((field) => {
+      if (Object.prototype.hasOwnProperty.call(data, field)) updateData[field] = data[field];
+    });
+
+    await variant.update(updateData, { transaction });
+    if (Object.prototype.hasOwnProperty.call(data, "stocks")) {
+      await saveVariantStocks({ variantId: variant.id, stocks: data.stocks, transaction });
+    }
+
+    await transaction.commit();
+
+    return ProductVariant.findByPk(variant.id, {
+      include: [{
+        model: VariantStock,
+        as: "stocks",
+        include: [{ model: Branch, as: "branch", attributes: ["id", "branchName"] }],
+      }],
+    });
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
+  }
+};
+
+const deleteAdminProductVariantService = async (variantId) => {
+  const variant = await ProductVariant.findByPk(variantId);
+  if (!variant) throw new NotFoundError("Khong tim thay bien the san pham");
+
+  const transaction = await sequelize.transaction();
+  try {
+    await VariantStock.destroy({ where: { variantId }, transaction });
+    await variant.destroy({ transaction });
+    await transaction.commit();
+    return { id: Number(variantId) };
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
+  }
+};
+
+const getAdminProductStockBranchesService = async () => {
+  const branches = await Branch.findAll({
+    attributes: ["id", "branchName"],
+    where: { isActive: true },
+    order: [["branchName", "ASC"]],
+  });
+
+  return branches.map((branch) => branch.toJSON());
+};
+
 const deleteAdminProductService = async (productId) => {
   const product = await Product.findByPk(productId);
   if (!product) throw new NotFoundError("Không tìm thấy sản phẩm");
@@ -136,6 +323,15 @@ const adminProductService = {
   updateAdminProductService,
   deleteAdminProductService,
   getAdminCategoriesService,
+  getAdminProductImagesService,
+  createAdminProductImagesService,
+  updateAdminProductImageService,
+  deleteAdminProductImageService,
+  getAdminProductVariantsService,
+  createAdminProductVariantService,
+  updateAdminProductVariantService,
+  deleteAdminProductVariantService,
+  getAdminProductStockBranchesService,
 };
 
 export default adminProductService;

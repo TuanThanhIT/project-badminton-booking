@@ -175,6 +175,33 @@ const LegacyFormDataSummary = ({
     }
   }
 
+  if (post.type === "FIND_COACH") {
+    const location = fd.location as { branchId?: number } | undefined;
+    if (location?.branchId) {
+      left.push(`Dia diem: ${getBranchFullLocation(location.branchId)}`);
+    }
+
+    const currentLevel = fd.currentLevel as string | undefined;
+    if (currentLevel) {
+      right.push(`Trinh do hien tai: ${PLAYER_LEVEL_LABEL[currentLevel] ?? currentLevel}`);
+    }
+
+    const goal = fd.goal as string | undefined;
+    if (goal) left.push(`Muc tieu: ${goal}`);
+
+    const scheduleNote = fd.scheduleNote as string | undefined;
+    if (scheduleNote) left.push(`Thoi gian: ${scheduleNote}`);
+
+    const budget = fd.budget as string | undefined;
+    if (budget) right.push(`Ngan sach: ${budget}`);
+
+    const contact = fd.contact as
+      | { phone?: string | null; zalo?: string | null }
+      | undefined;
+    if (contact?.phone) right.push(`SDT: ${contact.phone}`);
+    if (contact?.zalo) right.push(`Zalo: ${contact.zalo}`);
+  }
+
   if (left.length === 0 && right.length === 0) return null;
 
   return (

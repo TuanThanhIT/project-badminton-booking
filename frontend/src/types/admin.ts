@@ -11,7 +11,8 @@ export interface AdminUser {
   role?: string;
   isVerified: boolean;
   isActive: boolean;
-  createdAt: string;
+  createdDate: string;
+  assignedBranches?: AdminEmployeeBranch[];
 }
 
 export interface AdminUserProfile {
@@ -27,15 +28,16 @@ export interface AdminUserProfile {
 export interface AdminUserDetail extends AdminUser {
   profile?: AdminUserProfile;
   managedBranches?: AdminManagedBranch[];
+  assignedBranches?: AdminEmployeeBranch[];
 }
 
 // ─── Manager Management ───────────────────────────────────────────────────────
 
 export interface AdminManagedBranch {
-  branchManagerId: number;
+  branchManagerId?: number | null;
   branchId: number;
   branchName: string;
-  createdAt: string;
+  assignedDate?: string | null;
 }
 
 export interface AdminManager {
@@ -111,7 +113,47 @@ export interface AdminProduct {
   menuGroup?: string;
   variantCount: number;
   totalStock: number;
-  createdAt: string;
+  createdDate: string;
+  images?: AdminProductImage[];
+  variants?: AdminProductVariant[];
+}
+
+export interface AdminEmployeeBranch {
+  branchId: number;
+  branchName: string;
+  address?: string;
+}
+
+export interface AdminProductImage {
+  id: number;
+  imageUrl: string;
+}
+
+export interface AdminProductVariantStock {
+  branchId: number;
+  stock: number;
+  branch?: {
+    id: number;
+    branchName: string;
+  };
+}
+
+export interface AdminProductVariant {
+  id: number;
+  sku?: string;
+  price: number;
+  discount?: number;
+  color?: string;
+  size?: string;
+  material?: string;
+  weight: number;
+  productId?: number;
+  stocks?: AdminProductVariantStock[];
+}
+
+export interface AdminStockBranch {
+  id: number;
+  branchName: string;
 }
 
 // ─── Discount Management ──────────────────────────────────────────────────────
@@ -235,7 +277,24 @@ export interface AdminComment {
 // ─── Revenue Management ───────────────────────────────────────────────────────
 
 export interface AdminRevenueOverview {
+  onlineBookingRevenue: number;
+  onlineBookingCount: number;
+  offlineBookingRevenue: number;
+  offlineBookingCount: number;
+  offlineBookingSlotCount: number;
   bookingRevenue: number;
+  onlineProductRevenue: number;
+  onlineProductOrderCount: number;
+  onlineProductQuantity: number;
+  offlineProductRevenue: number;
+  offlineProductOrderCount: number;
+  offlineProductQuantity: number;
+  productRevenue: number;
+  productOrderCount: number;
+  productQuantity: number;
+  beverageRevenue: number;
+  beverageOrderCount: number;
+  beverageQuantity: number;
   orderRevenue: number;
   totalRevenue: number;
   bookingCount: number;
@@ -245,7 +304,24 @@ export interface AdminRevenueOverview {
 export interface AdminBranchRevenue {
   branchId: number;
   branchName: string;
+  onlineBookingRevenue: number;
+  onlineBookingCount: number;
+  offlineBookingRevenue: number;
+  offlineBookingCount: number;
+  offlineBookingSlotCount: number;
   bookingRevenue: number;
+  onlineProductRevenue: number;
+  onlineProductOrderCount: number;
+  onlineProductQuantity: number;
+  offlineProductRevenue: number;
+  offlineProductOrderCount: number;
+  offlineProductQuantity: number;
+  productRevenue: number;
+  productOrderCount: number;
+  productQuantity: number;
+  beverageRevenue: number;
+  beverageOrderCount: number;
+  beverageQuantity: number;
   bookingCount: number;
   orderRevenue: number;
   orderCount: number;
@@ -254,7 +330,24 @@ export interface AdminBranchRevenue {
 
 export interface AdminDateRevenue {
   date: string;
+  onlineBookingRevenue: number;
+  onlineBookingCount: number;
+  offlineBookingRevenue: number;
+  offlineBookingCount: number;
+  offlineBookingSlotCount: number;
   bookingRevenue: number;
+  onlineProductRevenue: number;
+  onlineProductOrderCount: number;
+  onlineProductQuantity: number;
+  offlineProductRevenue: number;
+  offlineProductOrderCount: number;
+  offlineProductQuantity: number;
+  productRevenue: number;
+  productOrderCount: number;
+  productQuantity: number;
+  beverageRevenue: number;
+  beverageOrderCount: number;
+  beverageQuantity: number;
   bookingCount: number;
   orderRevenue: number;
   orderCount: number;
@@ -263,11 +356,42 @@ export interface AdminDateRevenue {
 
 export interface AdminMonthRevenue {
   month: string;
+  onlineBookingRevenue: number;
+  onlineBookingCount: number;
+  offlineBookingRevenue: number;
+  offlineBookingCount: number;
+  offlineBookingSlotCount: number;
   bookingRevenue: number;
+  onlineProductRevenue: number;
+  onlineProductOrderCount: number;
+  onlineProductQuantity: number;
+  offlineProductRevenue: number;
+  offlineProductOrderCount: number;
+  offlineProductQuantity: number;
+  productRevenue: number;
+  productOrderCount: number;
+  productQuantity: number;
+  beverageRevenue: number;
+  beverageOrderCount: number;
+  beverageQuantity: number;
   bookingCount: number;
   orderRevenue: number;
   orderCount: number;
   totalRevenue: number;
+}
+
+export interface AdminProductRevenue {
+  productVariantId: number;
+  productName: string;
+  variantInfo: string;
+  onlineRevenue: number;
+  onlineQuantity: number;
+  onlineOrderCount: number;
+  offlineRevenue: number;
+  offlineQuantity: number;
+  offlineOrderCount: number;
+  totalRevenue: number;
+  totalQuantity: number;
 }
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
@@ -304,6 +428,9 @@ export interface AdminDashboardRecentItem {
 
 export interface AdminDashboardData {
   stats: AdminDashboardStats;
+  overview: AdminRevenueOverview;
+  topBranches: AdminBranchRevenue[];
+  topProducts: AdminProductRevenue[];
   chart: AdminDashboardChartItem[];
   recentBookings: AdminDashboardRecentItem[];
   recentOrders: AdminDashboardRecentItem[];

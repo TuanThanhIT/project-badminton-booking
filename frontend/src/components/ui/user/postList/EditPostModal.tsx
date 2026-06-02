@@ -4,6 +4,7 @@ import CreateFindPlayerPostForm from "./CreateFindPlayerPostForm";
 import CreateClassPostForm from "./CreateClassPostForm";
 import CreateTournamentPostForm from "./CreateTournamentPostForm";
 import CreateGroupPostForm from "./CreateGroupPostForm";
+import CreateFindCoachPostForm from "./CreateFindCoachPostForm";
 import { POST_TYPE_LABEL } from "../../../../utils/constants/postConstant";
 
 type EditTarget = {
@@ -61,6 +62,25 @@ const EditPostModal = ({ editTarget, onClose, onSave }: EditPostModalProps) => {
           initialValues={{
             ...baseValues,
             type: "CLASS",
+          }}
+          onSubmitForm={async (dt) =>
+            onSave(editTarget.id, {
+              title: dt.title,
+              content: dt.content,
+              formData: dt.formData,
+            })
+          }
+        />
+      );
+    }
+
+    if (editTarget.type === "FIND_COACH") {
+      return (
+        <CreateFindCoachPostForm
+          {...commonProps}
+          initialValues={{
+            ...baseValues,
+            type: "FIND_COACH",
           }}
           onSubmitForm={async (dt) =>
             onSave(editTarget.id, {

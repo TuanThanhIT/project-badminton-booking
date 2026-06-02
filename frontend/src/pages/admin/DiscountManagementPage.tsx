@@ -5,6 +5,7 @@ import adminDiscountService from "../../services/admin/discountService";
 import type { AdminDiscount } from "../../types/admin";
 import DiscountFormModal from "../../components/ui/admin/discounts/DiscountFormModal";
 import AdminPagination from "../../components/ui/admin/AdminPagination";
+import AdminPageHeader from "../../components/ui/admin/AdminPageHeader";
 
 const DISCOUNT_TYPE_LABEL: Record<string, string> = { AMOUNT: "Số tiền", PERCENT: "Phần trăm" };
 const APPLY_TYPE_LABEL: Record<string, string> = { ALL: "Tất cả", ORDER: "Đơn hàng", BOOKING: "Đặt sân" };
@@ -33,7 +34,10 @@ const DiscountManagementPage = () => {
       const data = (res.data as any).data;
       setDiscounts(data.discounts || []);
       setTotal(data.pagination?.total || 0);
-    } catch { toast.error("Không thể tải danh sách khuyến mãi"); }
+    } catch {
+      setDiscounts([]);
+      setTotal(0);
+    }
     finally { setLoading(false); }
   }, [page, appliedSearch, typeFilter, isActiveFilter]);
 
@@ -65,7 +69,17 @@ const DiscountManagementPage = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="bg-white rounded-2xl border border-gray-200 p-8 space-y-6">
-        <div className="mb-8 flex items-center justify-between">
+        <AdminPageHeader
+          title="Quản lý Khuyến mãi"
+          subtitle="Kiểm soát mã giảm giá, phạm vi áp dụng và trạng thái hoạt động."
+          action={
+            <button onClick={() => setFormDiscount(null)}
+              className="inline-flex h-11 items-center gap-2 rounded-xl bg-sky-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700">
+              <Plus className="w-4 h-4" /> Tạo mã mới
+            </button>
+          }
+        />
+        <div className="hidden">
           <h1 className="text-2xl font-bold text-sky-700 relative inline-block">
             Quản lý Khuyến mãi
             <span className="absolute left-0 -bottom-3 w-1/2 h-1 bg-sky-400 rounded-sm" />

@@ -7,16 +7,24 @@ type AdminPageHeaderProps = {
 };
 
 const AdminPageHeader = ({ title, subtitle, action }: AdminPageHeaderProps) => (
-  <div className="flex items-start justify-between mb-10">
-    <div>
-      <h1 className="text-2xl font-bold text-sky-700 relative inline-block">
-        {title}
-        <span className="absolute left-0 -bottom-3 w-1/2 h-1 bg-sky-400 rounded-sm" />
-      </h1>
-      {subtitle && <p className="text-sm text-gray-400 mt-4">{subtitle}</p>}
+  <section className="mb-6 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#0b3f56] text-white shadow-sm">
+    <div className="grid gap-5 p-6 sm:p-7 lg:grid-cols-[1fr_auto] lg:items-center">
+      <div className="min-w-0">
+        <p className="text-sm font-semibold uppercase tracking-wide text-sky-100">
+          Admin console
+        </p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight lg:text-4xl">
+          {title}
+        </h1>
+        {subtitle ? (
+          <p className="mt-4 max-w-3xl text-base leading-7 text-sky-50">
+            {subtitle}
+          </p>
+        ) : null}
+      </div>
+      {action ? <div className="flex items-center gap-3">{action}</div> : null}
     </div>
-    {action && <div>{action}</div>}
-  </div>
+  </section>
 );
 
 export default AdminPageHeader;

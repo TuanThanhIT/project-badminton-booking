@@ -19,7 +19,7 @@ const LandingPage = () => {
               Manager Secure System
             </div>
 
-            <h1 className="mt-4 text-3xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
+            <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
               Hệ thống quản lý
               <span className="block text-sky-700">B-Hub Manager</span>
             </h1>
@@ -76,7 +76,7 @@ const LandingPage = () => {
                     <ChevronRight className="h-4 w-4" />
                     Manager Workspace
                   </div>
-                  <h2 className="mt-4 text-2xl font-extrabold sm:text-3xl">
+                  <h2 className="mt-4 text-2xl font-bold sm:text-3xl">
                     Welcome Manager
                   </h2>
                   <p className="mt-2 text-sm leading-relaxed text-sky-100 sm:text-base">

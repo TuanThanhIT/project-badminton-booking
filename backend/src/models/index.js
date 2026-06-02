@@ -38,6 +38,10 @@ import OfflineBooking from "./offlineBooking.js";
 
 import Beverage from "./beverage.js";
 import BeverageStock from "./beverageStock.js";
+import Supplier from "./supplier.js";
+import PurchaseReceipt from "./purchaseReceipt.js";
+import PurchaseReceiptDetail from "./purchaseReceiptDetail.js";
+import StockTransaction from "./stockTransaction.js";
 
 import Wallet from "./wallet.js";
 import WalletTransaction from "./walletTransaction.js";
@@ -65,7 +69,6 @@ import RefreshToken from "./refreshToken.js";
 
 import OrderGroup from "./orderGroup.js";
 import VariantStock from "./variantStock.js";
-import InventoryReceipt from "./inventoryReceipt.js";
 import OrderShippingLog from "./orderShippingLog.js";
 
 //////////////////////////////////////////////////////
@@ -323,39 +326,6 @@ VariantStock.belongsTo(Branch, {
   as: "branch",
 });
 
-Branch.hasMany(InventoryReceipt, {
-  foreignKey: "branchId",
-  as: "inventoryReceipts",
-});
-InventoryReceipt.belongsTo(Branch, {
-  foreignKey: "branchId",
-  as: "branch",
-});
-User.hasMany(InventoryReceipt, {
-  foreignKey: "managerId",
-  as: "createdInventoryReceipts",
-});
-InventoryReceipt.belongsTo(User, {
-  foreignKey: "managerId",
-  as: "manager",
-});
-Product.hasMany(InventoryReceipt, {
-  foreignKey: "productId",
-  as: "inventoryReceipts",
-});
-InventoryReceipt.belongsTo(Product, {
-  foreignKey: "productId",
-  as: "product",
-});
-ProductVariant.hasMany(InventoryReceipt, {
-  foreignKey: "variantId",
-  as: "inventoryReceipts",
-});
-InventoryReceipt.belongsTo(ProductVariant, {
-  foreignKey: "variantId",
-  as: "variant",
-});
-
 //////////////////////////////////////////////////////
 //////////////// PRODUCT /////////////////////////////
 //////////////////////////////////////////////////////
@@ -534,6 +504,109 @@ Beverage.hasMany(BeverageStock, { foreignKey: "beverageId", as: "stocks" });
 BeverageStock.belongsTo(Beverage, { foreignKey: "beverageId", as: "beverage" });
 Branch.hasMany(BeverageStock, { foreignKey: "branchId", as: "beverageStocks" });
 BeverageStock.belongsTo(Branch, { foreignKey: "branchId", as: "branch" });
+
+//////////////////////////////////////////////////////
+//////////////// INVENTORY ///////////////////////////
+//////////////////////////////////////////////////////
+
+Supplier.hasMany(PurchaseReceipt, {
+  foreignKey: "supplierId",
+  as: "purchaseReceipts",
+});
+PurchaseReceipt.belongsTo(Supplier, {
+  foreignKey: "supplierId",
+  as: "supplier",
+});
+
+Branch.hasMany(PurchaseReceipt, {
+  foreignKey: "branchId",
+  as: "purchaseReceipts",
+});
+PurchaseReceipt.belongsTo(Branch, {
+  foreignKey: "branchId",
+  as: "branch",
+});
+
+User.hasMany(PurchaseReceipt, {
+  foreignKey: "createdBy",
+  as: "createdPurchaseReceipts",
+});
+PurchaseReceipt.belongsTo(User, {
+  foreignKey: "createdBy",
+  as: "creator",
+});
+
+User.hasMany(PurchaseReceipt, {
+  foreignKey: "approvedBy",
+  as: "approvedPurchaseReceipts",
+});
+PurchaseReceipt.belongsTo(User, {
+  foreignKey: "approvedBy",
+  as: "approver",
+});
+
+PurchaseReceipt.hasMany(PurchaseReceiptDetail, {
+  foreignKey: "purchaseReceiptId",
+  as: "details",
+});
+PurchaseReceiptDetail.belongsTo(PurchaseReceipt, {
+  foreignKey: "purchaseReceiptId",
+  as: "purchaseReceipt",
+});
+
+ProductVariant.hasMany(PurchaseReceiptDetail, {
+  foreignKey: "variantId",
+  as: "purchaseReceiptDetails",
+});
+PurchaseReceiptDetail.belongsTo(ProductVariant, {
+  foreignKey: "variantId",
+  as: "variant",
+});
+
+Beverage.hasMany(PurchaseReceiptDetail, {
+  foreignKey: "beverageId",
+  as: "purchaseReceiptDetails",
+});
+PurchaseReceiptDetail.belongsTo(Beverage, {
+  foreignKey: "beverageId",
+  as: "beverage",
+});
+
+Branch.hasMany(StockTransaction, {
+  foreignKey: "branchId",
+  as: "stockTransactions",
+});
+StockTransaction.belongsTo(Branch, {
+  foreignKey: "branchId",
+  as: "branch",
+});
+
+ProductVariant.hasMany(StockTransaction, {
+  foreignKey: "variantId",
+  as: "stockTransactions",
+});
+StockTransaction.belongsTo(ProductVariant, {
+  foreignKey: "variantId",
+  as: "variant",
+});
+
+Beverage.hasMany(StockTransaction, {
+  foreignKey: "beverageId",
+  as: "stockTransactions",
+});
+StockTransaction.belongsTo(Beverage, {
+  foreignKey: "beverageId",
+  as: "beverage",
+});
+
+User.hasMany(StockTransaction, {
+  foreignKey: "createdBy",
+  as: "stockTransactions",
+});
+StockTransaction.belongsTo(User, {
+  foreignKey: "createdBy",
+  as: "creator",
+});
 
 //////////////////////////////////////////////////////
 //////////////// OFFLINE BOOKING /////////////////////
@@ -852,8 +925,11 @@ export {
   CashRegister,
   CoachProfile,
   VariantStock,
-  InventoryReceipt,
   BeverageStock,
+  Supplier,
+  PurchaseReceipt,
+  PurchaseReceiptDetail,
+  StockTransaction,
   MonthlyBooking,
   RefreshToken,
 };

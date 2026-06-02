@@ -189,10 +189,10 @@ const ConversationSidebar = ({
                 </div>
                 <div>
                   <p className="text-sm font-extrabold text-slate-900">
-                    Bat dau chat voi nhan vien
+                    Bắt đầu chat với nhân viên
                   </p>
                   <p className="mt-1 text-xs text-slate-500 leading-relaxed">
-                    Chon mot nhan vien trong chi nhanh de tao hoi thoai 1-1.
+                    Chọn một nhân viên trong chi nhánh để tạo hội thoại 1-1.
                   </p>
                 </div>
               </div>
@@ -208,10 +208,10 @@ const ConversationSidebar = ({
                   <Edit3 className="w-7 h-7" strokeWidth={1.5} />
                 </div>
                 <p className="text-sm font-semibold text-slate-600">
-                  Chua co nhan vien trong chi nhanh
+                  Chưa có nhân viên trong chi nhánh
                 </p>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Them nhan vien truoc, sau do quay lai day de bat dau chat.
+                  Thêm nhân viên trước sau đó quay lại đây để bắt đầu chat.
                 </p>
               </div>
             ) : (

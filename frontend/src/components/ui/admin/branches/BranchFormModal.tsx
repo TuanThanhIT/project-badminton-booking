@@ -10,6 +10,18 @@ import adminBranchService, {
 } from "../../../../services/admin/branchService";
 import adminUploadService from "../../../../services/admin/uploadService";
 import type { AdminBranch } from "../../../../types/admin";
+import AdminModal, {
+  adminInputClass,
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+  adminTextAreaClass,
+} from "../AdminModal";
+import {
+  AdminBranchFormSchema,
+  AdminBranchUpdateFormSchema,
+} from "../../../../schemas/AdminFormSchemas";
+import locationService from "../../../../services/user/locationService";
+import type { District, Province, Ward } from "../../../../types/address";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -45,9 +57,31 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
   const [previewDesc, setPreviewDesc] = useState(false);
   const [showTechnical, setShowTechnical] = useState(false);
   const [marker, setMarker] = useState<[number, number] | null>(null);
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [wards, setWards] = useState<Ward[]>([]);
+  const [loadingProvinces, setLoadingProvinces] = useState(false);
+  const [loadingDistricts, setLoadingDistricts] = useState(false);
+  const [loadingWards, setLoadingWards] = useState(false);
   const [images, setImages]           = useState<{ id: number; imageUrl: string }[]>([]);
   const [uploadingImg, setUploadingImg] = useState(false);
   const imgInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const loadProvinces = async () => {
+      try {
+        setLoadingProvinces(true);
+        const data = await locationService.getProvincesService();
+        setProvinces(data);
+      } catch {
+        toast.error("Không lấy được dữ liệu tỉnh/thành từ GHN");
+      } finally {
+        setLoadingProvinces(false);
+      }
+    };
+
+    loadProvinces();
+  }, []);
 
   useEffect(() => {
     if (branch) {
@@ -67,6 +101,48 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
       });
     }
   }, [branch]);
+
+  useEffect(() => {
+    if (!form.provinceId) {
+      setDistricts([]);
+      return;
+    }
+
+    const loadDistricts = async () => {
+      try {
+        setLoadingDistricts(true);
+        const data = await locationService.getDistrictsService(form.provinceId);
+        setDistricts(data);
+      } catch {
+        toast.error("Không lấy được dữ liệu quận/huyện từ GHN");
+      } finally {
+        setLoadingDistricts(false);
+      }
+    };
+
+    loadDistricts();
+  }, [form.provinceId]);
+
+  useEffect(() => {
+    if (!form.districtId) {
+      setWards([]);
+      return;
+    }
+
+    const loadWards = async () => {
+      try {
+        setLoadingWards(true);
+        const data = await locationService.getWardsService(form.districtId);
+        setWards(data);
+      } catch {
+        toast.error("Không lấy được dữ liệu phường/xã từ GHN");
+      } finally {
+        setLoadingWards(false);
+      }
+    };
+
+    loadWards();
+  }, [form.districtId]);
 
   const handleAddImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -94,26 +170,14 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
     } catch { toast.error("Không thể xóa ảnh"); }
   };
 
-  const validate = () => {
-    const errs: Record<string, string> = {};
-    if (!form.branchName.trim())   errs.branchName   = "Tên chi nhánh không được để trống";
-    if (!form.phoneNumber.trim())  errs.phoneNumber   = "Số điện thoại không được để trống";
-    if (!form.address.trim())      errs.address       = "Địa chỉ không được để trống";
-    if (!form.districtName.trim()) errs.districtName  = "Quận/Huyện không được để trống";
-    if (!form.provinceName.trim()) errs.provinceName  = "Tỉnh/Thành không được để trống";
-    if (!isEdit) {
-      if ((form.description || "").trim().length < 10) errs.description = "Mô tả tối thiểu 10 ký tự";
-      if (!form.provinceId) errs.provinceId = "Province ID không được để trống";
-      if (!form.districtId) errs.districtId = "District ID không được để trống";
-      if (!marker)          errs.latitude   = "Vui lòng chọn vị trí trên bản đồ";
-    }
-    return errs;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const errs = validate();
-    if (Object.keys(errs).length) { setErrors(errs); return; }
+    const parsed = (isEdit ? AdminBranchUpdateFormSchema : AdminBranchFormSchema).safeParse(form);
+    if (!parsed.success) {
+      setErrors(Object.fromEntries(parsed.error.issues.map((issue) => [issue.path[0], issue.message])));
+      return;
+    }
+    setErrors({});
     setLoading(true);
     try {
       if (isEdit) {
@@ -121,7 +185,9 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
           branchName: form.branchName, phoneNumber: form.phoneNumber,
           description: form.description, address: form.address,
           districtName: form.districtName, provinceName: form.provinceName,
-          wardName: form.wardName, latitude: form.latitude || undefined,
+          wardName: form.wardName, provinceId: form.provinceId,
+          districtId: form.districtId, wardCode: form.wardCode,
+          latitude: form.latitude || undefined,
           longitude: form.longitude || undefined,
         };
         await adminBranchService.updateBranchService(branch!.id, upd);
@@ -142,16 +208,65 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
     { label: "Số điện thoại *", key: "phoneNumber" },
     { label: "Mô tả",           key: "description", rows: 3 },
     { label: "Địa chỉ *",       key: "address" },
-    { label: "Phường/Xã",       key: "wardName" },
-    { label: "Quận/Huyện *",    key: "districtName" },
-    { label: "Tỉnh/Thành *",    key: "provinceName" },
   ];
   const technicalFields: FieldDef[] = [
-    { label: "Province ID *", key: "provinceId", type: "number" },
-    { label: "District ID *", key: "districtId", type: "number" },
-    { label: "Ward Code",     key: "wardCode" },
     { label: "GHN Shop ID",   key: "ghnShopId",  type: "number" },
   ];
+
+  const handleProvinceChange = (value: string) => {
+    const provinceId = Number(value) || 0;
+    const province = provinces.find((item) => item.ProvinceID === provinceId);
+    setForm((prev) => ({
+      ...prev,
+      provinceId,
+      provinceName: province?.ProvinceName || "",
+      districtId: 0,
+      districtName: "",
+      wardCode: "",
+      wardName: "",
+    }));
+    setDistricts([]);
+    setWards([]);
+    setErrors((prev) => ({
+      ...prev,
+      provinceId: "",
+      provinceName: "",
+      districtId: "",
+      districtName: "",
+      wardCode: "",
+      wardName: "",
+    }));
+  };
+
+  const handleDistrictChange = (value: string) => {
+    const districtId = Number(value) || 0;
+    const district = districts.find((item) => item.DistrictID === districtId);
+    setForm((prev) => ({
+      ...prev,
+      districtId,
+      districtName: district?.DistrictName || "",
+      wardCode: "",
+      wardName: "",
+    }));
+    setWards([]);
+    setErrors((prev) => ({
+      ...prev,
+      districtId: "",
+      districtName: "",
+      wardCode: "",
+      wardName: "",
+    }));
+  };
+
+  const handleWardChange = (value: string) => {
+    const ward = wards.find((item) => item.WardCode === value);
+    setForm((prev) => ({
+      ...prev,
+      wardCode: value,
+      wardName: ward?.WardName || "",
+    }));
+    setErrors((prev) => ({ ...prev, wardCode: "", wardName: "" }));
+  };
 
   const MapClick = () => {
     useMapEvents({
@@ -167,30 +282,23 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50 rounded-t-2xl sticky top-0 z-10">
-          <div className="flex items-center gap-2">
-            <Store className="w-5 h-5 text-sky-600" />
-            <h2 className="text-base font-bold text-gray-800">
-              {isEdit ? "Cập nhật chi nhánh" : "Tạo chi nhánh mới"}
-            </h2>
-          </div>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-gray-200 flex items-center justify-center transition">
-            <X className="w-4 h-4 text-gray-500" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 grid grid-cols-2 gap-4">
+    <AdminModal
+      title={isEdit ? "Cập nhật chi nhánh" : "Tạo chi nhánh mới"}
+      description="Quản lý thông tin, vị trí bản đồ và hình ảnh chi nhánh."
+      icon={<Store className="h-5 w-5 text-sky-600" />}
+      onClose={onClose}
+      maxWidth="max-w-3xl"
+    >
+        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4 p-6">
           {basicFields.map(({ label, key, type, rows }) =>
             key === "description" ? (
               <div key={key} className="col-span-2">
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-medium text-gray-700">{label}</label>
+                  <label className="text-sm font-semibold text-slate-700">{label}</label>
                   {String(form[key] ?? "") && (
                     <button type="button" onClick={() => setPreviewDesc(!previewDesc)}
                       className="text-xs text-sky-600 hover:text-sky-700 font-medium transition">
-                      {previewDesc ? "✏️ Chỉnh sửa" : "👁 Xem trước"}
+                      {previewDesc ? "Chỉnh sửa" : "Xem trước"}
                     </button>
                   )}
                 </div>
@@ -202,34 +310,112 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
                 ) : (
                   <textarea rows={rows || 3} value={String(form[key] ?? "")}
                     onChange={(e) => { setForm({ ...form, [key]: e.target.value }); setErrors({ ...errors, [key]: "" }); }}
-                    className={`w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-400 resize-none transition font-mono ${errors[key] ? "border-red-400" : "border-gray-300"}`} />
+                    className={`w-full resize-none ${adminTextAreaClass}`} />
                 )}
-                {errors[key] && <p className="text-xs text-red-500 mt-1">{errors[key]}</p>}
+                {errors[key] && <p className="mt-1 text-xs text-rose-600">{errors[key]}</p>}
               </div>
             ) : (
               <div key={key} className={rows ? "col-span-2" : ""}>
-                <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
+                <label className="mb-1 block text-sm font-semibold text-slate-700">{label}</label>
                 {rows ? (
                   <textarea rows={rows} value={String(form[key] ?? "")}
                     onChange={(e) => { setForm({ ...form, [key]: e.target.value }); setErrors({ ...errors, [key]: "" }); }}
-                    className={`w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-400 resize-none transition ${errors[key] ? "border-red-400" : "border-gray-300"}`} />
+                    className={`w-full resize-none ${adminTextAreaClass}`} />
                 ) : (
                   <input type={type || "text"} value={String(form[key] ?? "")}
                     onChange={(e) => {
                       const val = type === "number" ? (e.target.value === "" ? 0 : Number(e.target.value)) : e.target.value;
                       setForm({ ...form, [key]: val }); setErrors({ ...errors, [key]: "" });
                     }}
-                    className={`w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-400 transition ${errors[key] ? "border-red-400" : "border-gray-300"}`} />
+                    className={`w-full ${adminInputClass}`} />
                 )}
-                {errors[key] && <p className="text-xs text-red-500 mt-1">{errors[key]}</p>}
+                {errors[key] && <p className="mt-1 text-xs text-rose-600">{errors[key]}</p>}
               </div>
             )
           )}
 
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-slate-700">
+              Tỉnh/Thành *
+            </label>
+            <select
+              value={form.provinceId || ""}
+              onChange={(event) => handleProvinceChange(event.target.value)}
+              disabled={loadingProvinces}
+              className={`w-full ${adminInputClass}`}
+            >
+              <option value="">
+                {loadingProvinces ? "Đang tải tỉnh/thành..." : "Chọn tỉnh/thành"}
+              </option>
+              {provinces.map((province) => (
+                <option key={province.ProvinceID} value={province.ProvinceID}>
+                  {province.ProvinceName}
+                </option>
+              ))}
+            </select>
+            {(errors.provinceId || errors.provinceName) && (
+              <p className="mt-1 text-xs text-rose-600">
+                {errors.provinceId || errors.provinceName}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-slate-700">
+              Quận/Huyện *
+            </label>
+            <select
+              value={form.districtId || ""}
+              onChange={(event) => handleDistrictChange(event.target.value)}
+              disabled={!form.provinceId || loadingDistricts}
+              className={`w-full ${adminInputClass}`}
+            >
+              <option value="">
+                {loadingDistricts ? "Đang tải quận/huyện..." : "Chọn quận/huyện"}
+              </option>
+              {districts.map((district) => (
+                <option key={district.DistrictID} value={district.DistrictID}>
+                  {district.DistrictName}
+                </option>
+              ))}
+            </select>
+            {(errors.districtId || errors.districtName) && (
+              <p className="mt-1 text-xs text-rose-600">
+                {errors.districtId || errors.districtName}
+              </p>
+            )}
+          </div>
+
+          <div className="col-span-2">
+            <label className="mb-1 block text-sm font-semibold text-slate-700">
+              Phường/Xã *
+            </label>
+            <select
+              value={form.wardCode || ""}
+              onChange={(event) => handleWardChange(event.target.value)}
+              disabled={!form.districtId || loadingWards}
+              className={`w-full ${adminInputClass}`}
+            >
+              <option value="">
+                {loadingWards ? "Đang tải phường/xã..." : "Chọn phường/xã"}
+              </option>
+              {wards.map((ward) => (
+                <option key={ward.WardCode} value={ward.WardCode}>
+                  {ward.WardName}
+                </option>
+              ))}
+            </select>
+            {(errors.wardCode || errors.wardName) && (
+              <p className="mt-1 text-xs text-rose-600">
+                {errors.wardCode || errors.wardName}
+              </p>
+            )}
+          </div>
+
           {/* Map picker */}
           <div className="col-span-2">
             <div className="mb-1 flex items-center justify-between">
-              <label className="text-xs font-medium text-gray-700">
+              <label className="text-sm font-semibold text-slate-700">
                 Vị trí trên bản đồ {!isEdit && <span className="text-red-500">*</span>}
               </label>
               {marker ? (
@@ -240,7 +426,7 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
                 <span className="text-xs text-gray-400 italic">Bấm vào bản đồ để chọn vị trí</span>
               )}
             </div>
-            {errors.latitude && <p className="text-xs text-red-500 mb-1">{errors.latitude}</p>}
+            {errors.latitude && <p className="mb-1 text-xs text-rose-600">{errors.latitude}</p>}
             <div className="h-[280px] rounded-xl overflow-hidden border border-gray-300">
               <MapContainer center={marker ?? MAP_DEFAULT_CENTER} zoom={13} style={{ height: "100%", width: "100%" }}>
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
@@ -254,21 +440,21 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
           <div className="col-span-2">
             <button type="button" onClick={() => setShowTechnical(!showTechnical)}
               className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-500 hover:bg-gray-100 transition">
-              <span>⚙️ Cài đặt kỹ thuật (GHN, tọa độ)</span>
+              <span>Cài đặt kỹ thuật (GHN, tọa độ)</span>
               {showTechnical ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </button>
             {showTechnical && (
               <div className="grid grid-cols-2 gap-4 mt-3 p-3 rounded-lg bg-gray-50/60 border border-gray-100">
                 {technicalFields.map(({ label, key, type }) => (
                   <div key={key}>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+                    <label className="mb-1 block text-sm font-semibold text-slate-700">{label}</label>
                     <input type={type || "text"} value={String(form[key] ?? "")}
                       onChange={(e) => {
                         const val = type === "number" ? (e.target.value === "" ? 0 : Number(e.target.value)) : e.target.value;
                         setForm({ ...form, [key]: val }); setErrors({ ...errors, [key]: "" });
                       }}
-                      className={`w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-400 transition bg-white ${errors[key] ? "border-red-400" : "border-gray-300"}`} />
-                    {errors[key] && <p className="text-xs text-red-500 mt-1">{errors[key]}</p>}
+                      className={`w-full ${adminInputClass}`} />
+                    {errors[key] && <p className="mt-1 text-xs text-rose-600">{errors[key]}</p>}
                   </div>
                 ))}
               </div>
@@ -312,19 +498,18 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
             </div>
           )}
 
-          <div className="col-span-2 flex gap-3 pt-2 border-t border-gray-100">
+          <div className="col-span-2 flex justify-end gap-3 border-t border-slate-100 pt-5">
             <button type="button" onClick={onClose}
-              className="flex-1 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition">
+              className={adminSecondaryButtonClass}>
               Hủy
             </button>
             <button type="submit" disabled={loading}
-              className="flex-1 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-60 transition">
+              className={adminPrimaryButtonClass}>
               {loading ? "Đang lưu..." : isEdit ? "Cập nhật" : "Tạo chi nhánh"}
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </AdminModal>
   );
 };
 

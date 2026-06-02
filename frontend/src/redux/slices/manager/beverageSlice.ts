@@ -13,6 +13,7 @@ import type { ApiErrorType } from "../../../types/error";
 ///MANAGER
 type ManagerBeverageState = {
   loading: boolean;
+  error: string | null;
   beverages: ManagerBeverage[];
   branchId: number | null;
   pagination: ManagerBeverageListData["pagination"];
@@ -21,6 +22,7 @@ type ManagerBeverageState = {
 ///MANAGER
 const initialState: ManagerBeverageState = {
   loading: false,
+  error: null,
   beverages: [],
   branchId: null,
   pagination: {
@@ -77,15 +79,18 @@ const beverageSlice = createSlice({
     builder
       .addCase(getManagerBeverages.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(getManagerBeverages.fulfilled, (state, action) => {
         state.loading = false;
+        state.error = null;
         state.beverages = action.payload.beverages;
         state.branchId = action.payload.branchId;
         state.pagination = action.payload.pagination;
       })
       .addCase(getManagerBeverages.rejected, (state) => {
         state.loading = false;
+        state.error = "Không thể tải danh sách đồ uống";
       })
       .addCase(updateManagerBeverageStock.fulfilled, (state, action) => {
         const beverage = state.beverages.find(

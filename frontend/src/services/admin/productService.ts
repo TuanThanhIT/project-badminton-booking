@@ -5,6 +5,7 @@ export interface AdminProductsParams {
   limit?: number;
   search?: string;
   categoryId?: number | string;
+  menuGroup?: string;
 }
 
 const getProductsService = (params: AdminProductsParams) =>

@@ -15,10 +15,10 @@ type ManagerPageHeaderProps = {
 };
 
 export const managerCardClass =
-  "rounded-2xl border border-slate-200 bg-white shadow-sm";
+  "rounded-2xl border border-slate-200 bg-white";
 
 export const managerInputClass =
-  "h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100";
+  "h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 outline-none transition focus:border-sky-500 focus:ring-1 focus:ring-sky-100";
 
 export const managerPrimaryButtonClass =
   "inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70";
@@ -33,16 +33,16 @@ export const ManagerPageHeader = ({
   metrics = [],
   actions,
 }: ManagerPageHeaderProps) => (
-  <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 text-white shadow-sm">
-    <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[1fr_auto] lg:items-center">
+  <section className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#0b3f56] text-white shadow-sm">
+    <div className="grid gap-6 p-6 sm:p-7 lg:grid-cols-[1fr_auto] lg:items-center">
       <div className="min-w-0">
-        <p className="text-xs font-extrabold uppercase tracking-wide text-sky-200">
+        <p className="text-sm font-semibold uppercase tracking-wide text-sky-100">
           {eyebrow}
         </p>
-        <h1 className="mt-2 truncate text-3xl font-black tracking-tight lg:text-4xl">
+        <h1 className="mt-2 text-3xl font-bold tracking-tight lg:text-4xl">
           {title}
         </h1>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-200">
+        <p className="mt-4 max-w-3xl text-base leading-7 text-sky-50">
           {description}
         </p>
       </div>
@@ -52,12 +52,12 @@ export const ManagerPageHeader = ({
           {metrics.map((metric) => (
             <div
               key={metric.label}
-              className="min-w-36 rounded-2xl border border-white/10 bg-white/10 px-4 py-3"
+              className="min-w-40 rounded-2xl border border-white/15 bg-white/10 px-5 py-4"
             >
-              <p className="text-xs font-bold uppercase text-slate-300">
+              <p className="text-xs font-semibold uppercase text-slate-200">
                 {metric.label}
               </p>
-              <p className="mt-2 text-2xl font-black">{metric.value}</p>
+              <p className="mt-3 text-3xl font-bold">{metric.value}</p>
             </div>
           ))}
           {actions}
@@ -88,8 +88,8 @@ export const ManagerStatCard = ({
         <Icon className={`h-5 w-5 ${iconClassName}`} />
       </span>
       <div>
-        <p className="text-xs font-bold uppercase text-slate-500">{label}</p>
-        <p className="text-2xl font-black text-slate-900">{value}</p>
+        <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
+        <p className="text-2xl font-bold text-slate-900">{value}</p>
       </div>
     </div>
   </section>
@@ -106,7 +106,7 @@ export const ManagerEmptyState = ({
 }) => (
   <div className="flex min-h-40 flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
     <Icon className="h-11 w-11 text-slate-300" />
-    <p className="mt-3 font-bold text-slate-800">{title}</p>
+    <p className="mt-3 font-semibold text-slate-800">{title}</p>
     {description ? (
       <p className="mt-1 max-w-md text-sm text-slate-500">{description}</p>
     ) : null}

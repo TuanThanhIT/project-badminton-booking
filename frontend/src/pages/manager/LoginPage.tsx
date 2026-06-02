@@ -16,7 +16,7 @@ import LoadingButton from "../../components/ui/common/LoadingButton";
 import { ROLE_NAME } from "../../utils/constants/role";
 
 const inputClass =
-  "h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 pl-11 text-sm text-slate-800 outline-none transition-all placeholder:text-slate-400 hover:border-sky-200 hover:bg-white focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100";
+  "h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 pl-11 text-sm text-slate-800 outline-none transition-all placeholder:text-slate-400 hover:border-sky-200 hover:bg-white focus:border-sky-500 focus:bg-white focus:ring-1 focus:ring-sky-100";
 
 const LoginPage = () => {
   const dispatch = useAppDispatch();
@@ -105,7 +105,7 @@ const LoginPage = () => {
                 <BriefcaseBusiness size={16} />
                 Manager Portal
               </div>
-              <h1 className="mt-4 max-w-lg text-3xl font-extrabold leading-tight tracking-tight">
+              <h1 className="mt-4 max-w-lg text-3xl font-bold leading-tight tracking-tight">
                 Không gian quản lý B-Hub
               </h1>
               <p className="mt-3 max-w-lg text-sm leading-relaxed text-sky-100">
@@ -124,7 +124,7 @@ const LoginPage = () => {
                 <p className="text-sm font-semibold text-sky-700">
                   Secure Manager Access
                 </p>
-                <h2 className="mt-2 text-2xl font-extrabold text-slate-900 sm:text-3xl">
+                <h2 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
                   Đăng nhập Manager
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-slate-500">
@@ -181,7 +181,7 @@ const LoginPage = () => {
                 <input
                   type="checkbox"
                   {...register("rememberMe")}
-                  className="h-4 w-4 rounded border-slate-300 text-sky-600"
+                  className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-1 focus:ring-sky-100"
                 />
                 Ghi nhớ tài khoản
               </label>

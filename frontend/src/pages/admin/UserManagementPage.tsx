@@ -32,8 +32,9 @@ const UserManagementPage = () => {
       const data = (res.data as any).data;
       setUsers(data.users || []);
       setTotal(data.pagination?.total || 0);
-    } catch (err: any) {
-      toast.error(err?.message || "Không thể tải danh sách người dùng");
+    } catch {
+      setUsers([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }

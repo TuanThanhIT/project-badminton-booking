@@ -2,6 +2,7 @@ import { useState } from "react";
 import { FileText, MessageCircle } from "lucide-react";
 import PostsTab from "../../components/ui/admin/posts/PostsTab";
 import CommentsTab from "../../components/ui/admin/posts/CommentsTab";
+import AdminPageHeader from "../../components/ui/admin/AdminPageHeader";
 
 type TabType = "posts" | "comments";
 
@@ -16,7 +17,11 @@ const PostManagementPage = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="bg-white rounded-2xl border border-gray-200 p-8 space-y-6">
-        <div className="mb-8">
+        <AdminPageHeader
+          title="Quản lý Bài đăng & Bình luận"
+          subtitle="Duyệt nội dung cộng đồng, bình luận và trạng thái hiển thị."
+        />
+        <div className="hidden">
           <h1 className="text-2xl font-bold text-sky-700 relative inline-block">
             Quản lý Bài đăng & Bình luận
             <span className="absolute left-0 -bottom-3 w-1/2 h-1 bg-sky-400 rounded-sm" />

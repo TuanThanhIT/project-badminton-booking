@@ -11,6 +11,67 @@ import {
 import NotFoundError from "../../errors/NotFoundError.js";
 import ConflictError from "../../errors/ConflictError.js";
 
+const BRANCH_MUTABLE_FIELDS = [
+  "branchName",
+  "phoneNumber",
+  "description",
+  "address",
+  "districtName",
+  "provinceName",
+  "wardName",
+  "provinceId",
+  "districtId",
+  "wardCode",
+  "latitude",
+  "longitude",
+  "ghnShopId",
+];
+
+const toOptionalNumber = (value) => {
+  if (value === undefined || value === null || value === "") return null;
+  return Number(value);
+};
+
+const normalizeBranchPayload = (data, { partial = false } = {}) => {
+  const payload = {};
+
+  BRANCH_MUTABLE_FIELDS.forEach((field) => {
+    if (data[field] !== undefined) payload[field] = data[field];
+  });
+
+  ["branchName", "phoneNumber", "description", "address", "districtName", "provinceName", "wardName", "wardCode"].forEach((field) => {
+    if (payload[field] !== undefined && payload[field] !== null) {
+      payload[field] = String(payload[field]).trim();
+    }
+  });
+
+  ["provinceId", "districtId"].forEach((field) => {
+    if (payload[field] !== undefined) payload[field] = Number(payload[field]);
+  });
+
+  ["latitude", "longitude"].forEach((field) => {
+    if (payload[field] !== undefined) payload[field] = Number(payload[field]);
+  });
+
+  if (payload.ghnShopId !== undefined) {
+    payload.ghnShopId = toOptionalNumber(payload.ghnShopId);
+  }
+
+  if (partial) {
+    return Object.fromEntries(
+      Object.entries(payload).filter(([, value]) => value !== undefined),
+    );
+  }
+
+  return {
+    ...payload,
+    wardName: payload.wardName || null,
+    wardCode: payload.wardCode || null,
+    ghnShopId: payload.ghnShopId || null,
+    isActive: true,
+  };
+};
+
 const getAdminBranchesService = async (data) => {
   const { page = 1, limit = 10, search, isActive } = data;
   const offset = (page - 1) * limit;
@@ -134,41 +195,13 @@ const getAdminBranchDetailService = async (branchId) => {
 };
 
 const createBranchService = async (data) => {
-  const {
-    branchName,
-    phoneNumber,
-    description,
-    address,
-    districtName,
-    provinceName,
-    wardName,
-    provinceId,
-    districtId,
-    wardCode,
-    latitude,
-    longitude,
-    ghnShopId,
-  } = data;
+  const payload = normalizeBranchPayload(data);
+  const { branchName } = payload;
 
   const existing = await Branch.findOne({ where: { branchName } });
   if (existing) throw new ConflictError("Tên chi nhánh đã tồn tại");
 
-  const branch = await Branch.create({
-    branchName,
-    phoneNumber,
-    description,
-    address,
-    districtName,
-    provinceName,
-    wardName: wardName || null,
-    provinceId,
-    districtId,
-    wardCode: wardCode || null,
-    latitude,
-    longitude,
-    isActive: true,
-    ghnShopId: ghnShopId || null,
-  });
+  const branch = await Branch.create(payload);
 
   return branch;
 };
@@ -177,14 +210,16 @@ const updateBranchService = async (branchId, data) => {
   const branch = await Branch.findByPk(branchId);
   if (!branch) throw new NotFoundError("Không tìm thấy chi nhánh");
 
-  if (data.branchName && data.branchName !== branch.branchName) {
+  const payload = normalizeBranchPayload(data, { partial: true });
+
+  if (payload.branchName && payload.branchName !== branch.branchName) {
     const existing = await Branch.findOne({
-      where: { branchName: data.branchName, id: { [Op.ne]: branchId } },
+      where: { branchName: payload.branchName, id: { [Op.ne]: branchId } },
     });
     if (existing) throw new ConflictError("Tên chi nhánh đã tồn tại");
   }
 
-  await branch.update(data);
+  await branch.update(payload);
   return branch;
 };
 

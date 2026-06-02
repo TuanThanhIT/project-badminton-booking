@@ -12,14 +12,16 @@ const AdminLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="h-screen flex overflow-hidden bg-slate-100">
+    <div className="flex h-screen overflow-hidden bg-[#f8fafc] font-sans text-slate-800 antialiased">
       <AdminSidebar collapsed={collapsed} setCollapsed={setCollapsed} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <AdminHeader />
 
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-6 lg:p-8">
-          <Outlet />
+        <main className="flex-1 overflow-y-auto bg-[#f8fafc] p-4 sm:p-6 lg:p-8">
+          <section className="admin-content min-h-full rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm md:p-8">
+            <Outlet />
+          </section>
         </main>
 
         <AdminFooter />

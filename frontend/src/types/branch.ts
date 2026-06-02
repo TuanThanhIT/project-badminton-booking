@@ -114,17 +114,11 @@ export type BranchListItemResponse = ApiResponse<BranchListItem[]>;
 // Dành cho Manager
 export type ManagerBranch = {
   id: number;
-
   branchName: string;
-
   address: string;
-
   districtName: string;
-
   provinceName: string;
-
   phoneNumber: string;
-
   isActive: boolean;
 };
 

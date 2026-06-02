@@ -216,14 +216,17 @@ const conversationSlice = createSlice({
     ) => {
       const { message: msg, currentUserId } = action.payload;
       const list = state.messagesByConversation[msg.conversationId] || [];
-      if (!list.some((m) => m.id === msg.id)) {
+      const existed = list.some((m) => m.id === msg.id);
+
+      if (!existed) {
         state.messagesByConversation[msg.conversationId] = [...list, msg];
       }
+
       const idx = state.conversations.findIndex((c) => c.id === msg.conversationId);
       if (idx >= 0) {
         state.conversations[idx].lastMessage = msg;
         state.conversations[idx].updatedAt = msg.createdAt;
-        if (msg.senderId !== currentUserId && state.selectedConversationId !== msg.conversationId) {
+        if (!existed && msg.senderId !== currentUserId && state.selectedConversationId !== msg.conversationId) {
           state.conversations[idx].unreadCount = (state.conversations[idx].unreadCount || 0) + 1;
         }
       }

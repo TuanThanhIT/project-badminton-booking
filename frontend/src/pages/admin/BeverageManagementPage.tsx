@@ -6,6 +6,7 @@ import type { AdminBeverage } from "../../types/admin";
 import BeverageFormModal from "../../components/ui/admin/beverages/BeverageFormModal";
 import AdminPagination from "../../components/ui/admin/AdminPagination";
 import AdminConfirmModal from "../../components/ui/admin/AdminConfirmModal";
+import AdminPageHeader from "../../components/ui/admin/AdminPageHeader";
 
 const DEFAULT_THUMB = "https://via.placeholder.com/80x80?text=DU";
 const fmtCurrency = (n: number) => n.toLocaleString("vi-VN") + "₫";
@@ -31,7 +32,10 @@ const BeverageManagementPage = () => {
       const data = (res.data as any).data;
       setBeverages(data.beverages || []);
       setTotal(data.pagination?.total || 0);
-    } catch { toast.error("Không thể tải danh sách đồ uống"); }
+    } catch {
+      setBeverages([]);
+      setTotal(0);
+    }
     finally { setLoading(false); }
   }, [page, appliedSearch]);
 
@@ -55,7 +59,17 @@ const BeverageManagementPage = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="bg-white rounded-2xl border border-gray-200 p-8 space-y-6">
-        <div className="mb-8 flex items-center justify-between">
+        <AdminPageHeader
+          title="Quản lý Đồ uống"
+          subtitle="Theo dõi đồ uống bán tại quầy, giá bán và tồn kho theo chi nhánh."
+          action={
+            <button onClick={() => setFormBeverage(null)}
+              className="inline-flex h-11 items-center gap-2 rounded-xl bg-sky-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700">
+              <Plus className="w-4 h-4" /> Thêm đồ uống
+            </button>
+          }
+        />
+        <div className="hidden">
           <h1 className="text-2xl font-bold text-sky-700 relative inline-block">
             Quản lý Đồ uống
             <span className="absolute left-0 -bottom-3 w-1/2 h-1 bg-sky-400 rounded-sm" />

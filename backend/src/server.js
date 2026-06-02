@@ -41,7 +41,9 @@ import initSalaryRouteManager from "./routes/manager/salaryRoute.js";
 import initRevenueRouteManager from "./routes/manager/revenueRoute.js";
 import initOrderRouteManager from "./routes/manager/orderRoute.js";
 import initConversationRouteManager from "./routes/manager/conversationRoute.js";
-import initInventoryReceiptRouteManager from "./routes/manager/inventoryReceiptRoute.js";
+import initSupplierRouteManager from "./routes/manager/supplierRoute.js";
+import initPurchaseReceiptRouteManager from "./routes/manager/purchaseReceiptRoute.js";
+import initInventoryRouteManager from "./routes/manager/inventoryRoute.js";
 import initFeedbackRoute from "./routes/user/feedbackRoute.js";
 import initNotificationRoute from "./routes/user/notificationRoute.js";
 import initHomeRoute from "./routes/user/homeRoute.js";
@@ -57,6 +59,9 @@ import initAdminFinanceRoute from "./routes/admin/financeRoute.js";
 import initAdminRevenueRoute from "./routes/admin/revenueRoute.js";
 import initAdminCategoryRoute from "./routes/admin/categoryRoute.js";
 import initAdminUploadRoute from "./routes/admin/uploadRoute.js";
+import initAdminSupplierRoute from "./routes/admin/supplierRoute.js";
+import initAdminPurchaseReceiptRoute from "./routes/admin/purchaseReceiptRoute.js";
+import initAdminInventoryRoute from "./routes/admin/inventoryRoute.js";
 
 dotenv.config();
 
@@ -129,6 +134,9 @@ initAdminFinanceRoute(app);
 initAdminRevenueRoute(app);
 initAdminCategoryRoute(app);
 initAdminUploadRoute(app);
+initAdminSupplierRoute(app);
+initAdminPurchaseReceiptRoute(app);
+initAdminInventoryRoute(app);
 
 // Manager
 initCourtRouteManager(app);
@@ -141,7 +149,9 @@ initSalaryRouteManager(app);
 initRevenueRouteManager(app);
 initOrderRouteManager(app);
 initConversationRouteManager(app);
-initInventoryReceiptRouteManager(app);
+initSupplierRouteManager(app);
+initPurchaseReceiptRouteManager(app);
+initInventoryRouteManager(app);
 // create http server
 const httpServer = createServer(app);
 

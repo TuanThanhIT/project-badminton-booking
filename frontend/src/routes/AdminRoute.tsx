@@ -16,6 +16,9 @@ import FeedbackManagementPage from "../pages/admin/FeedbackManagementPage";
 import FinanceManagementPage from "../pages/admin/FinanceManagementPage";
 import RevenueManagementPage from "../pages/admin/RevenueManagementPage";
 import CategoryManagementPage from "../pages/admin/CategoryManagementPage";
+import SupplierManagementPage from "../pages/admin/SupplierManagementPage";
+import PurchaseReceiptManagementPage from "../pages/admin/PurchaseReceiptManagementPage";
+import InventoryManagementPage from "../pages/admin/InventoryManagementPage";
 
 const AdminRoute = () => {
   return (
@@ -41,6 +44,9 @@ const AdminRoute = () => {
           <Route path="feedbacks" element={<FeedbackManagementPage />} />
           <Route path="finance" element={<FinanceManagementPage />} />
           <Route path="revenue" element={<RevenueManagementPage />} />
+          <Route path="suppliers" element={<SupplierManagementPage />} />
+          <Route path="purchase-receipts" element={<PurchaseReceiptManagementPage />} />
+          <Route path="inventory" element={<InventoryManagementPage />} />
         </Route>
       </Route>
     </Routes>

@@ -1,13 +1,12 @@
 import { useState, useCallback, useEffect } from "react";
 import { CreditCard } from "lucide-react";
-import { toast } from "react-toastify";
 import adminFinanceService from "../../../../services/admin/financeService";
 import type { AdminWalletTransaction } from "../../../../types/admin";
 import { TX_TYPE_CONFIG, TX_STATUS_CONFIG, fmtCurrency, fmtDate } from "../../../../utils/constants/adminConstant";
 import AdminPagination from "../AdminPagination";
 import AdminUserCell from "../AdminUserCell";
 
-const LIMIT = 15;
+const LIMIT = 10;
 
 const TransactionsTab = () => {
   const [transactions, setTransactions] = useState<AdminWalletTransaction[]>([]);
@@ -32,7 +31,10 @@ const TransactionsTab = () => {
       const data = (res.data as any).data;
       setTransactions(data.transactions || []);
       setTotal(data.pagination?.total || 0);
-    } catch { toast.error("Không thể tải giao dịch"); }
+    } catch {
+      setTransactions([]);
+      setTotal(0);
+    }
     finally { setLoading(false); }
   }, [page, typeFilter, statusFilter, dateFrom, dateTo]);
 

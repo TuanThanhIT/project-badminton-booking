@@ -229,7 +229,7 @@ const OrderPage = () => {
       <div className="grid gap-5 xl:grid-cols-[0.95fr_1.25fr]">
         <section className={`min-h-[560px] p-4 ${managerCardClass}`}>
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-black text-slate-900">Danh sách đơn</h2>
+            <h2 className="text-lg font-bold text-slate-900">Danh sách đơn</h2>
             {loading && (
               <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-bold text-slate-500">
                 Đang tải
@@ -250,7 +250,7 @@ const OrderPage = () => {
                   }`}
                 >
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-sm font-black text-sky-700">
+                    <span className="font-mono text-sm font-bold text-sky-700">
                       {formatOrderItemCode(order.id)}
                     </span>
                     <span
@@ -266,7 +266,7 @@ const OrderPage = () => {
                       {order.shippingName} - {order.shippingPhone}
                     </p>
                     <p>{formatDateTime(order.createdAt)}</p>
-                    <p className="font-black text-slate-900">
+                    <p className="font-bold text-slate-900">
                       {formatCurrency(order.totalAmount)}
                     </p>
                   </div>
@@ -308,7 +308,7 @@ const OrderPage = () => {
               <div className="flex flex-wrap items-start justify-between gap-4 rounded-2xl bg-slate-50 p-4">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="font-mono text-2xl font-black text-sky-700">
+                    <h2 className="font-mono text-2xl font-bold text-sky-700">
                       {formatOrderItemCode(selectedOrder.id)}
                     </h2>
                     <span
@@ -327,7 +327,7 @@ const OrderPage = () => {
                   <p className="text-xs font-bold uppercase text-slate-500">
                     Tổng thanh toán
                   </p>
-                  <p className="text-2xl font-black text-slate-900">
+                  <p className="text-2xl font-bold text-slate-900">
                     {formatCurrency(selectedOrder.totalAmount)}
                   </p>
                 </div>
@@ -371,7 +371,7 @@ const OrderPage = () => {
                           {item.variantInfo || "Mặc định"} - SL {item.quantity}
                         </p>
                       </div>
-                      <p className="font-black text-slate-900">
+                      <p className="font-bold text-slate-900">
                         {formatCurrency(item.subTotal)}
                       </p>
                     </div>
@@ -439,7 +439,7 @@ type PanelProps = {
 
 const InfoPanel = ({ icon: Icon, title, children }: PanelProps) => (
   <div className="rounded-2xl border border-slate-200 bg-white p-4">
-    <h3 className="mb-3 flex items-center gap-2 text-sm font-black text-slate-800">
+    <h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-slate-800">
       <span className="grid h-9 w-9 place-items-center rounded-xl bg-sky-50 text-sky-600">
         <Icon className="h-4 w-4" />
       </span>

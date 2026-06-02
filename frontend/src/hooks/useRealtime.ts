@@ -1,23 +1,31 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { connectSocket, disconnectSocket } from "../socket";
+import type { ChatMessage } from "../types/message";
 import type { NotificationResponse } from "../types/notification";
 import type { OrderShippingRealtimePayload } from "../types/order";
-
-// Hook này chỉ nghe socket, không dispatch Redux trực tiếp. Nó trả ra 2 loại data:
-
-// notification   -> thông báo chuông
-// shippingUpdate -> cập nhật đơn hàng
 
 const SOCKET_EVENTS = {
   NOTIFICATION_NEW: "notification:new",
   ORDER_SHIPPING_UPDATED: "order:shipping-updated",
+  CHAT_NEW_MESSAGE: "chat:new-message",
+  CHAT_MESSAGES_READ: "chat:messages-read",
+  CHAT_CONVERSATION_UPDATED: "chat:conversation-updated",
 } as const;
 
 export const useRealtime = (token: string) => {
   const [notification, setNotification] = useState<NotificationResponse>();
   const [shippingUpdate, setShippingUpdate] =
     useState<OrderShippingRealtimePayload>();
+  const [chatMessage, setChatMessage] = useState<ChatMessage>();
+  const [chatMessagesRead, setChatMessagesRead] = useState<{
+    conversationId: number;
+    readerId: number;
+  }>();
+  const [chatConversationUpdated, setChatConversationUpdated] = useState<{
+    conversationId: number;
+    action?: string;
+  }>();
 
   useEffect(() => {
     if (!token) return;
@@ -45,9 +53,30 @@ export const useRealtime = (token: string) => {
       },
     );
 
+    socket.on(SOCKET_EVENTS.CHAT_NEW_MESSAGE, (data: ChatMessage) => {
+      setChatMessage(data);
+    });
+
+    socket.on(
+      SOCKET_EVENTS.CHAT_MESSAGES_READ,
+      (data: { conversationId: number; readerId: number }) => {
+        setChatMessagesRead(data);
+      },
+    );
+
+    socket.on(
+      SOCKET_EVENTS.CHAT_CONVERSATION_UPDATED,
+      (data: { conversationId: number; action?: string }) => {
+        setChatConversationUpdated(data);
+      },
+    );
+
     return () => {
       socket.off(SOCKET_EVENTS.NOTIFICATION_NEW);
       socket.off(SOCKET_EVENTS.ORDER_SHIPPING_UPDATED);
+      socket.off(SOCKET_EVENTS.CHAT_NEW_MESSAGE);
+      socket.off(SOCKET_EVENTS.CHAT_MESSAGES_READ);
+      socket.off(SOCKET_EVENTS.CHAT_CONVERSATION_UPDATED);
       socket.off("connect");
       socket.off("disconnect");
       disconnectSocket();
@@ -57,5 +86,8 @@ export const useRealtime = (token: string) => {
   return {
     notification,
     shippingUpdate,
+    chatMessage,
+    chatMessagesRead,
+    chatConversationUpdated,
   };
 };

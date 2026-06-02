@@ -42,7 +42,7 @@ import {
 } from "../../constants/discountConstant.js";
 import { applyDiscountUsage } from "../shared/applyDiscountUsage.js";
 import {
-  sendBranchEmployeesNotification,
+  sendBranchStaffNotification,
   sendUserNotification,
 } from "../../helpers/notification.js";
 import {
@@ -120,7 +120,7 @@ const notifyBranchEmployees = async ({
   message,
   transaction,
 }) => {
-  await sendBranchEmployeesNotification(
+  await sendBranchStaffNotification(
     branch.id,
     type,
     title,

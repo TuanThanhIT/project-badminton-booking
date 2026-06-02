@@ -12,6 +12,18 @@ const initRevenueRoute = (app) => {
     authorize("MANAGER"),
     revenueController.getRevenue,
   );
+  revenueRoute.get(
+    "/dashboard",
+    auth,
+    authorize("MANAGER"),
+    revenueController.getDashboard,
+  );
+  revenueRoute.get(
+    "/report",
+    auth,
+    authorize("MANAGER"),
+    revenueController.getRevenueReport,
+  );
 
   app.use("/manager/revenues", revenueRoute);
 };

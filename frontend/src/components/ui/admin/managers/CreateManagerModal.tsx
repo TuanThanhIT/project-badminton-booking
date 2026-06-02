@@ -1,9 +1,16 @@
 import { useState } from "react";
-import { X, UserCheck, ChevronDown } from "lucide-react";
+import { UserCheck, ChevronDown } from "lucide-react";
 import { toast } from "react-toastify";
 import adminManagerService from "../../../../services/admin/managerService";
 import adminUserService from "../../../../services/admin/userService";
 import type { AdminBranchOption } from "../../../../types/admin";
+import AdminModal, {
+  AdminField,
+  adminInputClass,
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+} from "../AdminModal";
+import { AdminCreateManagerFormSchema } from "../../../../schemas/AdminFormSchemas";
 
 type CreateManagerModalProps = {
   branches: AdminBranchOption[];
@@ -19,21 +26,17 @@ const CreateManagerModal = ({ branches, onClose, onSuccess }: CreateManagerModal
   const [loading, setLoading]   = useState(false);
   const [errors,  setErrors]    = useState<Record<string, string>>({});
 
-  const validate = () => {
-    const errs: Record<string, string> = {};
-    if (!form.username.trim())    errs.username = "Không được để trống";
-    if (!form.email.trim())       errs.email    = "Không được để trống";
-    if (form.password.length < 6) errs.password = "Tối thiểu 6 ký tự";
-    return errs;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const errs = validate();
-    if (Object.keys(errs).length) { setErrors(errs); return; }
+    const parsed = AdminCreateManagerFormSchema.safeParse(form);
+    if (!parsed.success) {
+      setErrors(Object.fromEntries(parsed.error.issues.map((issue) => [issue.path[0], issue.message])));
+      return;
+    }
+    setErrors({});
     setLoading(true);
     try {
-      const res = await adminUserService.createManagerService(form);
+      const res = await adminUserService.createManagerService(parsed.data);
       const newManagerId = (res.data as any).data?.id;
       if (branchId && newManagerId) {
         await adminManagerService.assignManagerService(Number(branchId), { managerId: newManagerId });
@@ -57,68 +60,54 @@ const CreateManagerModal = ({ branches, onClose, onSuccess }: CreateManagerModal
   ] as const;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-gray-200">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-sky-50 to-white rounded-t-2xl">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-sky-100 flex items-center justify-center">
-              <UserCheck className="w-4.5 h-4.5 text-sky-600" />
-            </div>
-            <div>
-              <h2 className="text-sm font-bold text-gray-800">Tạo tài khoản Manager</h2>
-              <p className="text-xs text-gray-400">Role: MANAGER</p>
-            </div>
+    <AdminModal
+      title="Tạo tài khoản Manager"
+      description="Role: MANAGER"
+      icon={<UserCheck className="h-5 w-5 text-sky-600" />}
+      onClose={onClose}
+      maxWidth="max-w-2xl"
+    >
+        <form onSubmit={handleSubmit} className="space-y-5 p-6">
+          <div className="grid gap-4 md:grid-cols-2">
+            {fields.map(({ label, key, type, placeholder }) => (
+              <AdminField key={key} label={label.replace(" *", "")} error={errors[key]}>
+                <input
+                  type={type}
+                  value={form[key as keyof typeof form]}
+                  onChange={(e) => { setForm({ ...form, [key]: e.target.value }); setErrors({ ...errors, [key]: "" }); }}
+                  placeholder={placeholder}
+                  className={`w-full ${adminInputClass}`}
+                />
+              </AdminField>
+            ))}
           </div>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-gray-200 flex items-center justify-center transition">
-            <X className="w-4 h-4 text-gray-500" />
-          </button>
-        </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-3.5">
-          {fields.map(({ label, key, type, placeholder }) => (
-            <div key={key}>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">{label}</label>
-              <input
-                type={type}
-                value={form[key as keyof typeof form]}
-                onChange={(e) => { setForm({ ...form, [key]: e.target.value }); setErrors({ ...errors, [key]: "" }); }}
-                placeholder={placeholder}
-                className={`w-full rounded-xl border px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-400 transition ${errors[key] ? "border-red-400 bg-red-50" : "border-gray-300"}`}
-              />
-              {errors[key] && <p className="text-xs text-red-500 mt-1">{errors[key]}</p>}
-            </div>
-          ))}
-
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">
-              Gán chi nhánh <span className="font-normal text-gray-400">(tùy chọn)</span>
-            </label>
+          <AdminField label="Gán chi nhánh">
+            <p className="mb-1 text-xs text-slate-400">Tùy chọn</p>
             <div className="relative">
               <select
                 value={branchId}
                 onChange={(e) => setBranchId(e.target.value === "" ? "" : Number(e.target.value))}
-                className="w-full rounded-xl border border-gray-300 px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-400 bg-white appearance-none"
+                className={`w-full appearance-none ${adminInputClass}`}
               >
-                <option value="">-- Không gán ngay --</option>
+                <option value="">Không gán ngay</option>
                 {branches.map((b) => <option key={b.id} value={b.id}>{b.branchName}</option>)}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 pointer-events-none" />
             </div>
-          </div>
-
-          <div className="flex gap-3 pt-2 border-t border-gray-100">
+          </AdminField>
+          <div className="flex justify-end gap-3 border-t border-slate-100 pt-5">
             <button type="button" onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl border border-gray-300 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition">
+              className={adminSecondaryButtonClass}>
               Hủy
             </button>
             <button type="submit" disabled={loading}
-              className="flex-1 py-2.5 rounded-xl bg-sky-600 text-white text-sm font-bold hover:bg-sky-700 disabled:opacity-60 transition shadow-sm">
+              className={adminPrimaryButtonClass}>
               {loading ? "Đang tạo..." : "Tạo tài khoản"}
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </AdminModal>
   );
 };
 

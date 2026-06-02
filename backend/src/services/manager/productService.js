@@ -1,16 +1,12 @@
-import { Op } from "sequelize";
-import sequelize from "../../config/db.js";
 import {
   BranchManager,
   Category,
-  InventoryReceipt,
   Product,
   ProductImage,
   ProductVariant,
   VariantStock,
 } from "../../models/index.js";
 import NotFoundError from "../../errors/NotFoundError.js";
-import BadRequestError from "../../errors/BadRequestError.js";
 
 const getManagerBranchId = async (managerId) => {
   const branchManager = await BranchManager.findOne({
@@ -28,6 +24,7 @@ const getManagerBranchId = async (managerId) => {
 
 const normalizeVariant = (variant, branchId) => {
   const branchStock = variant.stocks?.[0];
+  const stock = Number(branchStock?.stock || 0);
 
   return {
     id: variant.id,
@@ -40,22 +37,15 @@ const normalizeVariant = (variant, branchId) => {
     weight: Number(variant.weight || 0),
     stockId: branchStock?.id || null,
     branchId,
-    stock: Number(branchStock?.stock || 0),
+    stock,
+    stockStatus: getStockStatus(stock),
   };
 };
 
-const parseStock = (stock) => {
-  if (stock === undefined || stock === null || stock === "") {
-    throw new BadRequestError("Stock is required");
-  }
-
-  const stockNumber = Number(stock);
-
-  if (!Number.isInteger(stockNumber) || stockNumber < 0) {
-    throw new BadRequestError("Stock must be a non-negative integer");
-  }
-
-  return stockNumber;
+const getStockStatus = (stock) => {
+  if (stock <= 0) return "OUT_OF_STOCK";
+  if (stock <= 5) return "LOW_STOCK";
+  return "IN_STOCK";
 };
 
 const normalizeProduct = (product, branchId, includeDetail = false) => {
@@ -82,6 +72,7 @@ const normalizeProduct = (product, branchId, includeDetail = false) => {
     branchId,
     variantCount: variants.length,
     totalStock,
+    stockStatus: getStockStatus(totalStock),
     variants,
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,
@@ -94,27 +85,40 @@ const normalizeProduct = (product, branchId, includeDetail = false) => {
   return result;
 };
 
+const getProductCategoriesService = async () => {
+  const categories = await Category.findAll({
+    attributes: ["id", "cateName", "menuGroup"],
+    order: [
+      ["menuGroup", "ASC"],
+      ["cateName", "ASC"],
+    ],
+  });
+
+  return categories.map((category) => category.toJSON());
+};
+
 const getProductsService = async (managerId, data = {}) => {
-  const { page = 1, limit = 10, search, categoryId } = data;
+  const {
+    page = 1,
+    limit = 10,
+    search,
+    keyword,
+    categoryId,
+    brand,
+    stockStatus,
+  } = data;
   const branchId = await getManagerBranchId(managerId);
   const pageNumber = Math.max(Number(page) || 1, 1);
   const limitNumber = Math.max(Number(limit) || 10, 1);
-  const offset = (pageNumber - 1) * limitNumber;
+  const keywordText = String(keyword || search || "").trim().toLowerCase();
 
   const where = {};
-
-  if (search) {
-    where[Op.or] = [
-      { productName: { [Op.like]: `%${search}%` } },
-      { brand: { [Op.like]: `%${search}%` } },
-    ];
-  }
 
   if (categoryId) {
     where.categoryId = Number(categoryId);
   }
 
-  const { rows, count } = await Product.findAndCountAll({
+  const rows = await Product.findAll({
     where,
     attributes: [
       "id",
@@ -156,15 +160,43 @@ const getProductsService = async (managerId, data = {}) => {
         ],
       },
     ],
-    limit: limitNumber,
-    offset,
     order: [["createdAt", "DESC"]],
-    distinct: true,
   });
+
+  let products = rows.map((product) => normalizeProduct(product, branchId));
+
+  if (keywordText) {
+    products = products.filter((product) => {
+      const text = [
+        product.productName,
+        product.brand,
+        ...product.variants.map((variant) => variant.sku || ""),
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return text.includes(keywordText);
+    });
+  }
+
+  const brands = [...new Set(products.map((product) => product.brand).filter(Boolean))].sort();
+
+  if (brand) {
+    products = products.filter((product) => product.brand === String(brand));
+  }
+
+  if (stockStatus) {
+    products = products.filter((product) => product.stockStatus === stockStatus);
+  }
+
+  const count = products.length;
+  const offset = (pageNumber - 1) * limitNumber;
+  const pagedProducts = products.slice(offset, offset + limitNumber);
 
   return {
     branchId,
-    products: rows.map((product) => normalizeProduct(product, branchId)),
+    products: pagedProducts,
+    brands,
     pagination: {
       page: pageNumber,
       limit: limitNumber,
@@ -221,91 +253,8 @@ const getProductDetailService = async (managerId, productId) => {
   return normalizeProduct(product, branchId, true);
 };
 
-const updateProductVariantStockService = async (managerId, variantId, data) => {
-  const branchId = await getManagerBranchId(managerId);
-  const stock = parseStock(data.stock);
-
-  return sequelize.transaction(async (transaction) => {
-  const variant = await ProductVariant.findByPk(variantId, {
-    attributes: [
-      "id",
-      "productId",
-      "sku",
-      "price",
-      "discount",
-      "color",
-      "size",
-      "material",
-      "weight",
-    ],
-    transaction,
-  });
-
-  if (!variant) {
-    throw new NotFoundError("Không tìm thấy biến thể sản phẩm");
-  }
-
-  const [variantStock] = await VariantStock.findOrCreate({
-    where: {
-      variantId: Number(variantId),
-      branchId,
-    },
-    defaults: {
-      variantId: Number(variantId),
-      branchId,
-      stock: 0,
-    },
-    transaction,
-  });
-
-  const previousStock = Number(variantStock.stock || 0);
-  const increasedQuantity = stock - previousStock;
-
-  if (previousStock !== stock) {
-    await variantStock.update({ stock }, { transaction });
-  }
-
-  if (increasedQuantity > 0) {
-    const sellingPrice = Number(variant.price || 0);
-    const importPrice = Math.round(sellingPrice * 0.8);
-
-    await InventoryReceipt.create(
-      {
-        branchId,
-        managerId,
-        productId: variant.productId,
-        variantId: Number(variantId),
-        quantity: increasedQuantity,
-        sellingPrice,
-        importPrice,
-        totalAmount: importPrice * increasedQuantity,
-        previousStock,
-        newStock: stock,
-        note: data.note || null,
-      },
-      { transaction },
-    );
-  }
-
-  const item = variant.toJSON();
-  const updatedStock = variantStock.toJSON();
-  updatedStock.stock = stock;
-
-  return {
-    ...normalizeVariant(
-      {
-        ...item,
-        stocks: [updatedStock],
-      },
-      branchId,
-    ),
-    productId: item.productId,
-  };
-  });
-};
-
 export default {
+  getProductCategoriesService,
   getProductsService,
   getProductDetailService,
-  updateProductVariantStockService,
 };

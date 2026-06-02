@@ -1,8 +1,15 @@
 import { useState } from "react";
-import { X, TicketPercent } from "lucide-react";
+import { TicketPercent } from "lucide-react";
 import { toast } from "react-toastify";
 import adminDiscountService from "../../../../services/admin/discountService";
 import type { AdminDiscount } from "../../../../types/admin";
+import AdminModal, {
+  AdminField,
+  adminInputClass,
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+} from "../AdminModal";
+import { AdminDiscountFormSchema } from "../../../../schemas/AdminFormSchemas";
 
 const DISCOUNT_TYPE_LABEL: Record<string, string> = { AMOUNT: "Số tiền", PERCENT: "Phần trăm" };
 const APPLY_TYPE_LABEL: Record<string, string> = { ALL: "Tất cả", ORDER: "Đơn hàng", BOOKING: "Đặt sân" };
@@ -27,20 +34,22 @@ const DiscountFormModal = ({ discount, onClose, onSaved }: DiscountFormModalProp
     endDate: discount?.endDate || "",
   });
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.code.trim() || !form.value || !form.startDate || !form.endDate) {
-      toast.error("Vui lòng điền đầy đủ thông tin bắt buộc"); return;
+    const parsed = AdminDiscountFormSchema.safeParse(form);
+    if (!parsed.success) {
+      setErrors(Object.fromEntries(parsed.error.issues.map((issue) => [issue.path[0], issue.message])));
+      return;
     }
+    setErrors({});
     setSaving(true);
     try {
       const payload = {
-        ...form,
-        value: Number(form.value),
-        maxDiscount: form.maxDiscount !== "" ? Number(form.maxDiscount) : undefined,
-        minAmount: Number(form.minAmount) || 0,
-        usageLimit: form.usageLimit !== "" ? Number(form.usageLimit) : undefined,
+        ...parsed.data,
+        maxDiscount: parsed.data.maxDiscount !== "" ? Number(parsed.data.maxDiscount) : undefined,
+        usageLimit: parsed.data.usageLimit !== "" ? Number(parsed.data.usageLimit) : undefined,
       };
       if (isEdit) {
         await adminDiscountService.updateDiscountService(discount!.id, payload);
@@ -56,91 +65,118 @@ const DiscountFormModal = ({ discount, onClose, onSaved }: DiscountFormModalProp
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg border border-gray-200">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50 rounded-t-2xl">
-          <div className="flex items-center gap-2">
-            <TicketPercent className="w-5 h-5 text-sky-600" />
-            <h2 className="text-base font-bold text-gray-800">{isEdit ? "Chỉnh sửa mã giảm giá" : "Tạo mã giảm giá"}</h2>
-          </div>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-gray-200 flex items-center justify-center transition">
-            <X className="w-4 h-4 text-gray-500" />
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Mã giảm giá *</label>
-              <input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-sky-400 font-mono uppercase" placeholder="VD: SUMMER20" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Áp dụng cho</label>
-              <select value={form.applyType} onChange={(e) => setForm({ ...form, applyType: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-sky-400 bg-white">
+    <AdminModal
+      title={isEdit ? "Chỉnh sửa mã giảm giá" : "Tạo mã giảm giá"}
+      description="Thiết lập mã ưu đãi cho đơn hàng và đặt sân."
+      icon={<TicketPercent className="h-5 w-5 text-sky-600" />}
+      onClose={onClose}
+      maxWidth="max-w-xl"
+    >
+        <form onSubmit={handleSubmit} className="space-y-5 p-6">
+          <div className="grid gap-4 md:grid-cols-2">
+            <AdminField label="Mã giảm giá" error={errors.code}>
+              <input
+                value={form.code}
+                onChange={(e) => {
+                  setForm({ ...form, code: e.target.value.toUpperCase() });
+                  setErrors({ ...errors, code: "" });
+                }}
+                className={`w-full font-mono uppercase ${adminInputClass}`}
+                placeholder="VD: SUMMER20"
+              />
+            </AdminField>
+            <AdminField label="Áp dụng cho" error={errors.applyType}>
+              <select
+                value={form.applyType}
+                onChange={(e) => {
+                  setForm({ ...form, applyType: e.target.value });
+                  setErrors({ ...errors, applyType: "" });
+                }}
+                className={`w-full ${adminInputClass}`}
+              >
                 {Object.entries(APPLY_TYPE_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
               </select>
-            </div>
+            </AdminField>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Loại giảm giá</label>
-              <select value={form.type} title={DISCOUNT_TYPE_LABEL[form.type]} onChange={(e) => setForm({ ...form, type: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-sky-400 bg-white">
+          <div className="grid gap-4 md:grid-cols-2">
+            <AdminField label="Loại giảm giá" error={errors.type}>
+              <select
+                value={form.type}
+                title={DISCOUNT_TYPE_LABEL[form.type]}
+                onChange={(e) => {
+                  setForm({ ...form, type: e.target.value });
+                  setErrors({ ...errors, type: "" });
+                }}
+                className={`w-full ${adminInputClass}`}
+              >
                 <option value="AMOUNT">Số tiền cố định (₫)</option>
                 <option value="PERCENT">Phần trăm (%)</option>
               </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Giá trị * {form.type === "PERCENT" ? "(%)" : "(₫)"}</label>
+            </AdminField>
+            <AdminField label={`Giá trị ${form.type === "PERCENT" ? "(%)" : "(VNĐ)"}`} error={errors.value}>
               <input type="number" min={0} max={form.type === "PERCENT" ? 100 : undefined}
-                value={form.value} onChange={(e) => setForm({ ...form, value: Number(e.target.value) })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-sky-400" />
-            </div>
+                value={form.value}
+                onChange={(e) => {
+                  setForm({ ...form, value: Number(e.target.value) });
+                  setErrors({ ...errors, value: "" });
+                }}
+                className={`w-full ${adminInputClass}`} />
+            </AdminField>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Đơn tối thiểu (₫)</label>
-              <input type="number" min={0} value={form.minAmount} onChange={(e) => setForm({ ...form, minAmount: Number(e.target.value) })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-sky-400" />
-            </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <AdminField label="Đơn tối thiểu (VNĐ)" error={errors.minAmount}>
+              <input type="number" min={0} value={form.minAmount}
+                onChange={(e) => {
+                  setForm({ ...form, minAmount: Number(e.target.value) });
+                  setErrors({ ...errors, minAmount: "" });
+                }}
+                className={`w-full ${adminInputClass}`} />
+            </AdminField>
             {form.type === "PERCENT" && (
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Giảm tối đa (₫)</label>
+              <AdminField label="Giảm tối đa (VNĐ)" error={errors.maxDiscount}>
                 <input type="number" min={0} value={form.maxDiscount}
-                  onChange={(e) => setForm({ ...form, maxDiscount: e.target.value === "" ? "" : Number(e.target.value) })}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-sky-400" placeholder="Không giới hạn" />
-              </div>
+                  onChange={(e) => {
+                    setForm({ ...form, maxDiscount: e.target.value === "" ? "" : Number(e.target.value) });
+                    setErrors({ ...errors, maxDiscount: "" });
+                  }}
+                  className={`w-full ${adminInputClass}`} placeholder="Không giới hạn" />
+              </AdminField>
             )}
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Giới hạn sử dụng</label>
+            <AdminField label="Giới hạn sử dụng" error={errors.usageLimit}>
               <input type="number" min={1} value={form.usageLimit}
-                onChange={(e) => setForm({ ...form, usageLimit: e.target.value === "" ? "" : Number(e.target.value) })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-sky-400" placeholder="Không giới hạn" />
-            </div>
+                onChange={(e) => {
+                  setForm({ ...form, usageLimit: e.target.value === "" ? "" : Number(e.target.value) });
+                  setErrors({ ...errors, usageLimit: "" });
+                }}
+                className={`w-full ${adminInputClass}`} placeholder="Không giới hạn" />
+            </AdminField>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Ngày bắt đầu *</label>
-              <input type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-sky-400" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Ngày kết thúc *</label>
+          <div className="grid gap-4 md:grid-cols-2">
+            <AdminField label="Ngày bắt đầu" error={errors.startDate}>
+              <input type="date" value={form.startDate}
+                onChange={(e) => {
+                  setForm({ ...form, startDate: e.target.value });
+                  setErrors({ ...errors, startDate: "" });
+                }}
+                className={`w-full ${adminInputClass}`} />
+            </AdminField>
+            <AdminField label="Ngày kết thúc" error={errors.endDate}>
               <input type="date" value={form.endDate} min={form.startDate}
-                onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-sky-400" />
-            </div>
+                onChange={(e) => {
+                  setForm({ ...form, endDate: e.target.value });
+                  setErrors({ ...errors, endDate: "" });
+                }}
+                className={`w-full ${adminInputClass}`} />
+            </AdminField>
           </div>
-          <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 transition">Hủy</button>
-            <button type="submit" disabled={saving} className="flex-1 py-2 rounded-lg bg-sky-500 text-white text-sm font-semibold hover:bg-sky-600 transition disabled:opacity-60">
+          <div className="flex justify-end gap-3 border-t border-slate-100 pt-5">
+            <button type="button" onClick={onClose} className={adminSecondaryButtonClass}>Hủy</button>
+            <button type="submit" disabled={saving} className={adminPrimaryButtonClass}>
               {saving ? "Đang lưu..." : isEdit ? "Cập nhật" : "Tạo mới"}
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </AdminModal>
   );
 };
 

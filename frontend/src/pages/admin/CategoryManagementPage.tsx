@@ -6,8 +6,9 @@ import type { AdminCategory } from "../../types/admin";
 import CategoryFormModal from "../../components/ui/admin/categories/CategoryFormModal";
 import AdminPagination from "../../components/ui/admin/AdminPagination";
 import AdminConfirmModal from "../../components/ui/admin/AdminConfirmModal";
+import AdminPageHeader from "../../components/ui/admin/AdminPageHeader";
 
-const LIMIT = 15;
+const LIMIT = 10;
 
 const CategoryManagementPage = () => {
   const [categories, setCategories] = useState<AdminCategory[]>([]);
@@ -29,7 +30,10 @@ const CategoryManagementPage = () => {
       const data = (res.data as any).data;
       setCategories(data.categories || []);
       setTotal(data.pagination?.total || 0);
-    } catch { toast.error("Không thể tải danh sách danh mục"); }
+    } catch {
+      setCategories([]);
+      setTotal(0);
+    }
     finally { setLoading(false); }
   }, [page, appliedSearch]);
 
@@ -54,7 +58,17 @@ const CategoryManagementPage = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="bg-white rounded-2xl border border-gray-200 p-8 space-y-6">
-        <div className="mb-8 flex items-center justify-between">
+        <AdminPageHeader
+          title="Quản lý Danh mục"
+          subtitle="Tổ chức nhóm sản phẩm, đồ uống và nội dung hiển thị trong cửa hàng."
+          action={
+            <button onClick={() => setFormCat(null)}
+              className="inline-flex h-11 items-center gap-2 rounded-xl bg-sky-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700">
+              <Plus className="w-4 h-4" /> Thêm danh mục
+            </button>
+          }
+        />
+        <div className="hidden">
           <h1 className="text-2xl font-bold text-sky-700 relative inline-block">
             Quản lý Danh mục
             <span className="absolute left-0 -bottom-3 w-1/2 h-1 bg-sky-400 rounded-sm" />

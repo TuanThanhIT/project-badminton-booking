@@ -35,6 +35,9 @@ import {
   managerPrimaryButtonClass,
   managerSecondaryButtonClass,
 } from "../../components/commons/manager/ManagerPage";
+import TablePagination from "../../components/ui/TablePagination";
+
+const LIMIT = 10;
 
 const genderLabel: Record<string, string> = {
   male: "Nam",
@@ -86,6 +89,7 @@ const StaffPage = () => {
   );
   const [showForm, setShowForm] = useState(false);
   const [keyword, setKeyword] = useState("");
+  const [page, setPage] = useState(1);
 
   const {
     register,
@@ -117,6 +121,12 @@ const StaffPage = () => {
         .some((value) => value!.toLowerCase().includes(normalizedKeyword)),
     );
   }, [employees, keyword]);
+  const totalPages = Math.ceil(filteredEmployees.length / LIMIT);
+  const paginatedEmployees = filteredEmployees.slice((page - 1) * LIMIT, page * LIMIT);
+
+  useEffect(() => {
+    setPage(1);
+  }, [keyword]);
 
   const closeForm = () => {
     setShowForm(false);
@@ -141,27 +151,47 @@ const StaffPage = () => {
         description="Danh sách nhân viên đang thuộc chi nhánh của quản lý."
         metrics={[{ label: "Tổng nhân viên", value: employees.length }]}
         actions={
-          <button onClick={() => setShowForm(true)} className={managerPrimaryButtonClass}>
+          <button
+            onClick={() => setShowForm(true)}
+            className={managerPrimaryButtonClass}
+          >
             <Plus className="h-4 w-4" />
             Thêm nhân viên
           </button>
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-[220px_1fr]">
-        <ManagerStatCard label="Tổng nhân viên" value={employees.length} icon={Users} />
+      <div className="grid items-center gap-4 md:grid-cols-[220px_1fr]">
+        <ManagerStatCard
+          label="Tổng nhân viên"
+          value={employees.length}
+          icon={Users}
+        />
 
-        <label className={`flex min-h-20 items-center gap-3 px-4 ${managerCardClass}`}>
-          <Search className="h-5 w-5 text-slate-400" />
+        <label
+          className={`
+    flex h-12 self-center items-center gap-2.5 px-3.5
+    border border-slate-200 bg-white
+    transition-all duration-200
+    focus-within:border-sky-400
+    focus-within:ring-1
+    focus-within:ring-sky-50
+    ${managerCardClass}
+  `}
+        >
+          <Search className="h-4 w-4 shrink-0 text-slate-400 transition-colors duration-200 group-focus-within:text-sky-500" />
+
           <input
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
-            className="h-11 flex-1 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400"
+            className="
+      h-8 flex-1 bg-transparent text-sm text-slate-700 outline-none
+      placeholder:text-slate-400
+    "
             placeholder="Tìm theo tên, email, số điện thoại hoặc địa chỉ"
           />
         </label>
       </div>
-
       <div className={`${managerCardClass} overflow-hidden`}>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[860px] text-left">
@@ -175,7 +205,7 @@ const StaffPage = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredEmployees.map((employee) => (
+              {paginatedEmployees.map((employee) => (
                 <tr key={employee.employeeId} className="hover:bg-slate-50">
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
@@ -207,7 +237,9 @@ const StaffPage = () => {
                     </div>
                   </td>
                   <td className="px-5 py-4 text-sm font-medium text-slate-700">
-                    {employee.gender ? genderLabel[employee.gender] || employee.gender : "--"}
+                    {employee.gender
+                      ? genderLabel[employee.gender] || employee.gender
+                      : "--"}
                   </td>
                   <td className="px-5 py-4">
                     <span
@@ -240,7 +272,10 @@ const StaffPage = () => {
 
               {loading && (
                 <tr>
-                  <td colSpan={5} className="px-5 py-10 text-center text-sm text-slate-500">
+                  <td
+                    colSpan={5}
+                    className="px-5 py-10 text-center text-sm text-slate-500"
+                  >
                     Đang tải danh sách nhân viên...
                   </td>
                 </tr>
@@ -248,11 +283,12 @@ const StaffPage = () => {
             </tbody>
           </table>
         </div>
+        <TablePagination page={page} totalPages={totalPages} total={filteredEmployees.length} onPage={setPage} unit="nhân viên" />
       </div>
 
       {showForm && (
         <ManagerModalOverlay>
-          <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl">
+          <div className="w-full max-w-2xl rounded-2xl bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
               <div>
                 <h2 className="text-lg font-bold text-slate-900">
@@ -274,27 +310,50 @@ const StaffPage = () => {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 p-6">
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="Tên đăng nhập" error={errors.username?.message}>
-                  <input {...register("username")} className={`w-full ${managerInputClass}`} />
+                  <input
+                    {...register("username")}
+                    className={`w-full ${managerInputClass}`}
+                  />
                 </Field>
 
                 <Field label="Email" error={errors.email?.message}>
-                  <input {...register("email")} type="email" className={`w-full ${managerInputClass}`} />
+                  <input
+                    {...register("email")}
+                    type="email"
+                    className={`w-full ${managerInputClass}`}
+                  />
                 </Field>
 
                 <Field label="Mật khẩu" error={errors.password?.message}>
-                  <input {...register("password")} type="password" className={`w-full ${managerInputClass}`} />
+                  <input
+                    {...register("password")}
+                    type="password"
+                    className={`w-full ${managerInputClass}`}
+                  />
                 </Field>
 
                 <Field label="Họ tên" error={errors.fullName?.message}>
-                  <input {...register("fullName")} className={`w-full ${managerInputClass}`} />
+                  <input
+                    {...register("fullName")}
+                    className={`w-full ${managerInputClass}`}
+                  />
                 </Field>
 
-                <Field label="Số điện thoại" error={errors.phoneNumber?.message}>
-                  <input {...register("phoneNumber")} className={`w-full ${managerInputClass}`} />
+                <Field
+                  label="Số điện thoại"
+                  error={errors.phoneNumber?.message}
+                >
+                  <input
+                    {...register("phoneNumber")}
+                    className={`w-full ${managerInputClass}`}
+                  />
                 </Field>
 
                 <Field label="Giới tính" error={errors.gender?.message}>
-                  <select {...register("gender")} className={`w-full ${managerInputClass}`}>
+                  <select
+                    {...register("gender")}
+                    className={`w-full ${managerInputClass}`}
+                  >
                     <option value="male">Nam</option>
                     <option value="female">Nữ</option>
                     <option value="other">Khác</option>
@@ -303,14 +362,25 @@ const StaffPage = () => {
               </div>
 
               <Field label="Địa chỉ" error={errors.address?.message}>
-                <input {...register("address")} className={`w-full ${managerInputClass}`} />
+                <input
+                  {...register("address")}
+                  className={`w-full ${managerInputClass}`}
+                />
               </Field>
 
               <div className="flex justify-end gap-3 border-t border-slate-100 pt-5">
-                <button type="button" onClick={closeForm} className={managerSecondaryButtonClass}>
+                <button
+                  type="button"
+                  onClick={closeForm}
+                  className={managerSecondaryButtonClass}
+                >
                   Hủy
                 </button>
-                <button type="submit" disabled={loading} className={managerPrimaryButtonClass}>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={managerPrimaryButtonClass}
+                >
                   {loading ? "Đang lưu..." : "Thêm nhân viên"}
                 </button>
               </div>

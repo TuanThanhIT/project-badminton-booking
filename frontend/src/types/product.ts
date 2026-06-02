@@ -128,6 +128,7 @@ export type ManagerProductVariant = {
   stockId: number | null;
   branchId: number;
   stock: number;
+  stockStatus?: "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK";
 };
 
 ///MANAGER
@@ -157,6 +158,7 @@ export type ManagerProduct = {
   branchId: number;
   variantCount: number;
   totalStock: number;
+  stockStatus?: "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK";
   variants: ManagerProductVariant[];
   createdAt: string;
   updatedAt?: string;
@@ -166,6 +168,7 @@ export type ManagerProduct = {
 export type ManagerProductListData = {
   branchId: number;
   products: ManagerProduct[];
+  brands?: string[];
   pagination: {
     page: number;
     limit: number;
@@ -178,7 +181,10 @@ export type ManagerProductQueries = {
   page?: number;
   limit?: number;
   search?: string;
+  keyword?: string;
   categoryId?: number;
+  brand?: string;
+  stockStatus?: "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK";
 };
 
 ///MANAGER
@@ -186,3 +192,12 @@ export type ManagerProductsResponse = ApiResponse<ManagerProductListData>;
 export type ManagerProductDetailResponse = ApiResponse<ManagerProduct>;
 export type ManagerProductStockUpdateResponse =
   ApiResponse<ManagerProductStockUpdateData>;
+
+export type ManagerProductCategory = {
+  id: number;
+  cateName: string;
+  menuGroup?: string | null;
+};
+
+export type ManagerProductCategoriesResponse =
+  ApiResponse<ManagerProductCategory[]>;

@@ -13,7 +13,9 @@ import type {
 ///MANAGER
 type ManagerProductState = {
   loading: boolean;
+  error: string | null;
   products: ManagerProduct[];
+  brands: string[];
   branchId: number | null;
   pagination: ManagerProductListData["pagination"];
 };
@@ -21,7 +23,9 @@ type ManagerProductState = {
 ///MANAGER
 const initialState: ManagerProductState = {
   loading: false,
+  error: null,
   products: [],
+  brands: [],
   branchId: null,
   pagination: {
     page: 1,
@@ -72,15 +76,19 @@ const productSlice = createSlice({
     builder
       .addCase(getManagerProducts.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(getManagerProducts.fulfilled, (state, action) => {
         state.loading = false;
+        state.error = null;
         state.products = action.payload.products;
+        state.brands = action.payload.brands || [];
         state.branchId = action.payload.branchId;
         state.pagination = action.payload.pagination;
       })
       .addCase(getManagerProducts.rejected, (state) => {
         state.loading = false;
+        state.error = "Không thể tải danh sách sản phẩm";
       })
       .addCase(updateManagerProductStock.fulfilled, (state, action) => {
         const product = state.products.find(

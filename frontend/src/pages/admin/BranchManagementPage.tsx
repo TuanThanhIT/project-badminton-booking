@@ -32,8 +32,9 @@ const BranchManagementPage = () => {
       const data = (res.data as any).data;
       setBranches(data.branches || []);
       setTotal(data.pagination?.total || 0);
-    } catch (err: any) {
-      toast.error(err?.message || "Không thể tải danh sách chi nhánh");
+    } catch {
+      setBranches([]);
+      setTotal(0);
     } finally { setLoading(false); }
   }, [page, search, isActive]);
 

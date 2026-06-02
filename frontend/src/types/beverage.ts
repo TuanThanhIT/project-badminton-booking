@@ -9,6 +9,7 @@ export type ManagerBeverage = {
   stockId: number | null;
   branchId: number;
   stock: number;
+  stockStatus?: "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK";
   createdAt: string;
 };
 
@@ -39,6 +40,8 @@ export type ManagerBeverageQueries = {
   page?: number;
   limit?: number;
   search?: string;
+  keyword?: string;
+  stockStatus?: "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK";
 };
 
 ///MANAGER

@@ -8,7 +8,7 @@ import AdminPagination from "../AdminPagination";
 import AdminUserCell from "../AdminUserCell";
 import AdminConfirmModal from "../AdminConfirmModal";
 
-const LIMIT = 15;
+const LIMIT = 10;
 
 const WalletsTab = () => {
   const [wallets, setWallets] = useState<AdminUserWallet[]>([]);
@@ -32,7 +32,10 @@ const WalletsTab = () => {
       const data = (res.data as any).data;
       setWallets(data.wallets || []);
       setTotal(data.pagination?.total || 0);
-    } catch { toast.error("Không thể tải danh sách ví"); }
+    } catch {
+      setWallets([]);
+      setTotal(0);
+    }
     finally { setLoading(false); }
   }, [page, appliedSearch]);
 

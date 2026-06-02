@@ -11,20 +11,6 @@ const getBeveragesController = asyncHandler(async (req, res) => {
     .json(new SuccessResponse("Get beverages successfully", result));
 });
 
-const updateBeverageStockController = asyncHandler(async (req, res) => {
-  const managerId = req.user.id;
-  const result = await beverageService.updateBeverageStockService(
-    managerId,
-    req.params.beverageId,
-    req.body,
-  );
-
-  return res
-    .status(200)
-    .json(new SuccessResponse("Update beverage stock successfully", result));
-});
-
 export default {
   getBeveragesController,
-  updateBeverageStockController,
 };

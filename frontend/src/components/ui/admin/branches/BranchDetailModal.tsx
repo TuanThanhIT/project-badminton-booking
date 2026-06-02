@@ -59,6 +59,7 @@ const BranchDetailModal = ({ branchId, onClose }: BranchDetailModalProps) => {
       title="Chi tiết chi nhánh"
       icon={<Eye className="w-5 h-5 text-sky-600" />}
       onClose={onClose}
+      maxWidth="max-w-3xl"
     >
       {loading ? (
         <div className="flex justify-center py-10">
@@ -110,7 +111,7 @@ const BranchDetailModal = ({ branchId, onClose }: BranchDetailModalProps) => {
               <input ref={imgInputRef} type="file" accept="image/*" className="hidden" onChange={handleAddImage} />
             </div>
             {images.length > 0 ? (
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {images.map((img) => (
                   <div key={img.id} className="relative group rounded-xl overflow-hidden border border-gray-200 aspect-square bg-gray-50">
                     <img src={img.imageUrl} alt="" className="w-full h-full object-cover" />

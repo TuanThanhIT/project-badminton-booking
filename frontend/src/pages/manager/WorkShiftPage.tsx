@@ -23,8 +23,11 @@ import {
   FormWorkShiftSchema,
 } from "../../schemas/FormWorkShiftSchema";
 import type { ManagerShiftRole, ManagerWorkShift } from "../../types/workShift";
+import { ManagerPageHeader } from "../../components/commons/manager/ManagerPage";
+import TablePagination from "../../components/ui/TablePagination";
 
 const today = new Date().toISOString().slice(0, 10);
+const LIMIT = 10;
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("vi-VN", {
@@ -54,6 +57,7 @@ const WorkShiftPage = () => {
   const [assignmentForms, setAssignmentForms] = useState<
     Record<number, { employeeId: string; roleInShift: ManagerShiftRole }>
   >({});
+  const [assignmentPages, setAssignmentPages] = useState<Record<number, number>>({});
 
   useEffect(() => {
     dispatch(getEmployees());
@@ -175,7 +179,28 @@ const WorkShiftPage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <ManagerPageHeader
+        eyebrow="Manager shifts"
+        title="Phân ca nhân viên"
+        description="Tạo ca và phân nhân viên theo branch đang quản lý."
+        metrics={[
+          { label: "Số ca", value: stats.shiftCount },
+          { label: "Đã phân", value: stats.assignmentCount },
+        ]}
+        actions={
+          <label className="flex h-11 items-center gap-3 rounded-xl border border-white/10 bg-white/10 px-3 text-white">
+            <CalendarDays className="h-4 w-4 text-sky-100" />
+            <input
+              type="date"
+              value={workDate}
+              onChange={(event) => setWorkDate(event.target.value)}
+              className="bg-transparent text-sm font-semibold text-white outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
+            />
+          </label>
+        }
+      />
+
+      <div className="hidden flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">
             Phân ca nhân viên
@@ -191,7 +216,7 @@ const WorkShiftPage = () => {
             type="date"
             value={workDate}
             onChange={(event) => setWorkDate(event.target.value)}
-            className="bg-transparent text-sm font-semibold text-slate-800 outline-none"
+            className="bg-transparent text-sm font-semibold text-slate-800 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
           />
         </label>
       </div>
@@ -256,7 +281,7 @@ const WorkShiftPage = () => {
               }))
             }
             placeholder="Tên ca"
-            className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-400"
+            className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
           />
           <input
             type="date"
@@ -267,7 +292,7 @@ const WorkShiftPage = () => {
                 workDate: event.target.value,
               }))
             }
-            className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-400"
+            className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
           />
           <input
             type="time"
@@ -278,7 +303,7 @@ const WorkShiftPage = () => {
                 startTime: event.target.value,
               }))
             }
-            className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-400"
+            className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
           />
           <input
             type="time"
@@ -289,7 +314,7 @@ const WorkShiftPage = () => {
                 endTime: event.target.value,
               }))
             }
-            className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-400"
+            className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
           />
           <input
             type="number"
@@ -302,7 +327,7 @@ const WorkShiftPage = () => {
               }))
             }
             placeholder="Lương thu ngân"
-            className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-400"
+            className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
           />
           <input
             type="number"
@@ -315,7 +340,7 @@ const WorkShiftPage = () => {
               }))
             }
             placeholder="Lương nhân viên"
-            className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-400"
+            className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
           />
           <button
             type="button"
@@ -377,7 +402,7 @@ const WorkShiftPage = () => {
                           employeeId: event.target.value,
                         })
                       }
-                      className="h-10 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-400"
+                      className="h-10 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
                     >
                       <option value="">Chọn nhân viên</option>
                       {employeeOptions.map((employee) => (
@@ -397,7 +422,7 @@ const WorkShiftPage = () => {
                           roleInShift: event.target.value as ManagerShiftRole,
                         })
                       }
-                      className="h-10 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-400"
+                      className="h-10 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
                     >
                       <option value="STAFF">Nhân viên</option>
                       <option value="CASHIER">Thu ngân</option>
@@ -416,6 +441,7 @@ const WorkShiftPage = () => {
 
                 <div className="overflow-hidden rounded-lg border border-slate-100">
                   {shift.assignments.length ? (
+                    <>
                     <table className="w-full text-left text-sm">
                       <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                         <tr>
@@ -427,7 +453,12 @@ const WorkShiftPage = () => {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {shift.assignments.map((assignment) => (
+                        {shift.assignments
+                          .slice(
+                            ((assignmentPages[shift.id] || 1) - 1) * LIMIT,
+                            (assignmentPages[shift.id] || 1) * LIMIT,
+                          )
+                          .map((assignment) => (
                           <tr key={assignment.assignmentId}>
                             <td className="px-3 py-3">
                               <p className="font-bold text-slate-800">
@@ -448,7 +479,7 @@ const WorkShiftPage = () => {
                                     event.target.value as ManagerShiftRole,
                                   )
                                 }
-                                className="h-9 rounded-md border border-slate-200 px-2 text-sm outline-none focus:border-sky-400"
+                                className="h-9 rounded-md border border-slate-200 px-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
                               >
                                 <option value="STAFF">Nhân viên</option>
                                 <option value="CASHIER">Thu ngân</option>
@@ -476,6 +507,19 @@ const WorkShiftPage = () => {
                         ))}
                       </tbody>
                     </table>
+                    <TablePagination
+                      page={assignmentPages[shift.id] || 1}
+                      totalPages={Math.ceil(shift.assignments.length / LIMIT)}
+                      total={shift.assignments.length}
+                      onPage={(nextPage) =>
+                        setAssignmentPages((current) => ({
+                          ...current,
+                          [shift.id]: nextPage,
+                        }))
+                      }
+                      unit="nhân viên"
+                    />
+                    </>
                   ) : (
                     <div className="py-8 text-center text-sm font-semibold text-slate-500">
                       Chưa phân nhân viên cho ca này.

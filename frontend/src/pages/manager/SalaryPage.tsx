@@ -2,8 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Banknote, CalendarDays, Clock, Users } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { getManagerMonthlySalary } from "../../redux/slices/manager/salarySlice";
+import { ManagerPageHeader } from "../../components/commons/manager/ManagerPage";
+import TablePagination from "../../components/ui/TablePagination";
 
 const now = new Date();
+const LIMIT = 10;
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("vi-VN", {
@@ -37,6 +40,7 @@ const SalaryPage = () => {
   const [expandedEmployeeId, setExpandedEmployeeId] = useState<number | null>(
     null,
   );
+  const [assignmentPages, setAssignmentPages] = useState<Record<number, number>>({});
 
   useEffect(() => {
     dispatch(getManagerMonthlySalary({ month, year }));
@@ -49,7 +53,48 @@ const SalaryPage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <ManagerPageHeader
+        eyebrow="Manager salary"
+        title="Tính lương nhân viên"
+        description="Tổng hợp lương theo ca đã check-in/check-out trong tháng của branch đang quản lý."
+        metrics={[
+          { label: "Nhân viên", value: data?.employees?.length || 0 },
+          { label: "Tổng lương", value: formatCurrency(data?.totalSalary || 0) },
+        ]}
+        actions={
+          <div className="flex gap-2">
+            <label className="flex h-11 items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 text-white">
+              <CalendarDays className="h-4 w-4 text-sky-100" />
+              <select
+                value={month}
+                onChange={(event) => setMonth(Number(event.target.value))}
+                className="bg-transparent text-sm font-semibold text-white outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
+              >
+                {Array.from({ length: 12 }, (_, index) => index + 1).map(
+                  (item) => (
+                    <option key={item} value={item} className="text-slate-900">
+                      Tháng {item}
+                    </option>
+                  ),
+                )}
+              </select>
+            </label>
+            <select
+              value={year}
+              onChange={(event) => setYear(Number(event.target.value))}
+              className="h-11 rounded-xl border border-white/10 bg-white/10 px-3 text-sm font-semibold text-white outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
+            >
+              {years.map((item) => (
+                <option key={item} value={item} className="text-slate-900">
+                  {item}
+                </option>
+              ))}
+            </select>
+          </div>
+        }
+      />
+
+      <div className="hidden flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">
             Tính lương nhân viên
@@ -65,7 +110,7 @@ const SalaryPage = () => {
             <select
               value={month}
               onChange={(event) => setMonth(Number(event.target.value))}
-              className="bg-transparent text-sm font-semibold text-slate-800 outline-none"
+              className="bg-transparent text-sm font-semibold text-slate-800 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
             >
               {Array.from({ length: 12 }, (_, index) => index + 1).map(
                 (item) => (
@@ -79,7 +124,7 @@ const SalaryPage = () => {
           <select
             value={year}
             onChange={(event) => setYear(Number(event.target.value))}
-            className="h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 shadow-sm outline-none"
+            className="h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 shadow-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
           >
             {years.map((item) => (
               <option key={item} value={item}>
@@ -183,7 +228,7 @@ const SalaryPage = () => {
                     </div>
                     <div className="lg:text-right">
                       <p className="text-xs text-slate-500">Lương</p>
-                      <p className="font-black text-emerald-700">
+                      <p className="font-bold text-emerald-700">
                         {formatCurrency(employee.totalEarnedWage)}
                       </p>
                     </div>
@@ -204,7 +249,12 @@ const SalaryPage = () => {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100">
-                            {employee.assignments.map((assignment) => (
+                            {employee.assignments
+                              .slice(
+                                ((assignmentPages[employee.employeeId] || 1) - 1) * LIMIT,
+                                (assignmentPages[employee.employeeId] || 1) * LIMIT,
+                              )
+                              .map((assignment) => (
                               <tr key={assignment.assignmentId}>
                                 <td className="px-3 py-3">
                                   <p className="font-bold text-slate-800">
@@ -237,6 +287,18 @@ const SalaryPage = () => {
                             ))}
                           </tbody>
                         </table>
+                        <TablePagination
+                          page={assignmentPages[employee.employeeId] || 1}
+                          totalPages={Math.ceil(employee.assignments.length / LIMIT)}
+                          total={employee.assignments.length}
+                          onPage={(nextPage) =>
+                            setAssignmentPages((current) => ({
+                              ...current,
+                              [employee.employeeId]: nextPage,
+                            }))
+                          }
+                          unit="ca"
+                        />
                       </div>
                     </div>
                   )}

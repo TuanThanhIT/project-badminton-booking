@@ -8,17 +8,17 @@ const beverageRoute = express.Router();
 
 const initBeverageRoute = (app) => {
   beverageRoute.get(
-    "/",
+    "/inventory",
     auth,
     authorize("MANAGER"),
     beverageController.getBeveragesController,
   );
 
-  beverageRoute.patch(
-    "/:beverageId/stock",
+  beverageRoute.get(
+    "/",
     auth,
     authorize("MANAGER"),
-    beverageController.updateBeverageStockController,
+    beverageController.getBeveragesController,
   );
 
   app.use("/manager/beverages", beverageRoute);

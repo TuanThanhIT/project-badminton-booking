@@ -6,6 +6,7 @@ import adminBranchService from "../../services/admin/branchService";
 import type { AdminFeedback } from "../../types/admin";
 import UserAvatar from "../../components/ui/admin/UserAvatar";
 import AdminPagination from "../../components/ui/admin/AdminPagination";
+import AdminPageHeader from "../../components/ui/admin/AdminPageHeader";
 
 interface Branch { id: number; branchName: string; }
 
@@ -50,7 +51,10 @@ const FeedbackManagementPage = () => {
       const data = (res.data as any).data;
       setFeedbacks(data.feedbacks || []);
       setTotal(data.pagination?.total || 0);
-    } catch { toast.error("Không thể tải danh sách đánh giá"); }
+    } catch {
+      setFeedbacks([]);
+      setTotal(0);
+    }
     finally { setLoading(false); }
   }, [page, branchFilter, ratingFilter, typeFilter]);
 
@@ -75,7 +79,11 @@ const FeedbackManagementPage = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="bg-white rounded-2xl border border-gray-200 p-8 space-y-6">
-        <div className="mb-8">
+        <AdminPageHeader
+          title="Quản lý Feedback"
+          subtitle="Theo dõi đánh giá chi nhánh, sản phẩm và chất lượng trải nghiệm."
+        />
+        <div className="hidden">
           <h1 className="text-2xl font-bold text-sky-700 relative inline-block">
             Quản lý Feedback
             <span className="absolute left-0 -bottom-3 w-1/2 h-1 bg-sky-400 rounded-sm" />

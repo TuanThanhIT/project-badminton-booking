@@ -58,7 +58,7 @@ import {
 import { REVIEW_STATUS } from "../../constants/reviewConstant.js";
 import { emitOrderActionRealtime } from "../shared/emitRealtime.js";
 import { CANCELLED_BY } from "../../constants/bookingConstant.js";
-import { sendBranchEmployeesNotification } from "../../helpers/notification.js";
+import { sendBranchStaffNotification } from "../../helpers/notification.js";
 
 const normalizeCartItemIds = (cartItemIds = []) => [
   ...new Set(cartItemIds.map((id) => Number(id)).filter(Boolean)),
@@ -658,7 +658,7 @@ const activateOrderGroupForFulfillment = async ({
   );
 
   for (const order of orders) {
-    await sendBranchEmployeesNotification(
+    await sendBranchStaffNotification(
       order.branchId,
       "order-created",
       "Có don hàng m?i",
@@ -1780,14 +1780,14 @@ const requestCancelOrderService = async (data) => {
   });
 
   if (result.mode === "CANCELLED") {
-    await sendBranchEmployeesNotification(
+    await sendBranchStaffNotification(
       result.order.branchId,
       "order-cancelled",
       "Khách dã h?y don hàng",
       `${result.order.branch?.branchName || "Chi nhánh"}: khách dã h?y don hàng ${formatOrderItemCode(result.order.id)}.`,
     );
   } else {
-    await sendBranchEmployeesNotification(
+    await sendBranchStaffNotification(
       result.order.branchId,
       "order-cancel-requested",
       "Khách yêu c?u h?y don hàng",

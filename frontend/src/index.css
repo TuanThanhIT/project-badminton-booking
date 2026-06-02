@@ -70,6 +70,118 @@ body {
   animation: home-float 5.5s ease-in-out infinite;
 }
 
+.admin-content > div[class*="min-h-screen"],
+.admin-content > div[class*="bg-gray-50"] {
+  min-height: auto !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.admin-content > div > div[class*="bg-white"][class*="rounded-2xl"][class*="border"] {
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.admin-content table {
+  color: #334155;
+}
+
+.admin-content [class*="rounded-lg"],
+.admin-content [class*="rounded-xl"],
+.admin-content [class*="rounded-2xl"] {
+  border-radius: 1rem;
+}
+
+.admin-content [class*="grid"][class*="grid-cols"] > [class*="rounded-xl"][class*="border"],
+.admin-content [class*="grid"][class*="grid-cols"] > [class*="rounded-lg"][class*="border"] {
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.04);
+}
+
+.admin-content section[class*="bg-white"],
+.admin-content div[class*="bg-white"][class*="border"][class*="shadow"] {
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.04) !important;
+}
+
+.admin-content div[class*="overflow-hidden"][class*="border"] {
+  border-color: #e2e8f0 !important;
+}
+
+.admin-content button[class*="bg-sky-500"],
+.admin-content button[class*="bg-sky-600"] {
+  background: #0284c7;
+}
+
+.admin-content button[class*="bg-sky-500"]:hover,
+.admin-content button[class*="bg-sky-600"]:hover {
+  background: #0369a1;
+}
+
+.admin-content thead tr,
+.admin-content thead {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+}
+
+.admin-content tbody tr:hover {
+  background: #f8fafc !important;
+}
+
+.admin-content table,
+.manager-content table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.admin-content th,
+.manager-content th {
+  height: 3rem;
+  color: #64748b !important;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.admin-content td,
+.manager-content td {
+  color: #334155;
+  vertical-align: top;
+}
+
+.manager-content thead tr,
+.manager-content thead {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+}
+
+.manager-content tbody tr:hover {
+  background: #f8fafc !important;
+}
+
+.admin-content .table-pagination,
+.manager-content .table-pagination {
+  border-color: #e2e8f0;
+  background: #f8fafc;
+}
+
+.admin-content input,
+.admin-content select,
+.admin-content textarea {
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+.admin-content input:focus,
+.admin-content select:focus,
+.admin-content textarea:focus {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 1px #e0f2fe;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .home-reveal,
   .home-hero-copy,

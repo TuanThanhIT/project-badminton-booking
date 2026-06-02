@@ -19,6 +19,8 @@ const avatarUrls = {
     "https://res.cloudinary.com/dyjqsqkir/image/upload/v1770823593/profiles/esm2vvrstcbqwrevr1p5.jpg",
   employee:
     "https://res.cloudinary.com/dyjqsqkir/image/upload/v1767693865/profiles/e4xezs0wvotp9rxsgifv.jpg",
+  coach:
+    "https://res.cloudinary.com/dyjqsqkir/image/upload/v1767693865/profiles/e4xezs0wvotp9rxsgifv.jpg",
   user:
     "https://res.cloudinary.com/dyjqsqkir/image/upload/v1764228319/kznpcugyoveaxm1lanmm.jpg",
 };
@@ -152,6 +154,16 @@ const demoAccountGroups = [
       "0901300014",
       "0901300015",
     ],
+  },
+  {
+    count: 2,
+    prefix: "demo_coach",
+    emailPrefix: "demo.coach",
+    roleId: 4,
+    avatar: avatarUrls.coach,
+    fullNames: ["Nguyễn Hữu Phát", "Trần Thị Bích Ngọc"],
+    dobs: ["1991-06-15T00:00:00", "1993-10-20T00:00:00"],
+    phoneNumbers: ["0901400001", "0901400002"],
   },
 ];
 
@@ -323,8 +335,8 @@ module.exports = {
   },
 
   async down(queryInterface) {
-    const demoProfileIds = Array.from({ length: 30 }, (_, index) => index + 2);
-    const demoUserIds = Array.from({ length: 30 }, (_, index) => index + 2);
+    const demoProfileIds = Array.from({ length: 32 }, (_, index) => index + 2);
+    const demoUserIds = Array.from({ length: 32 }, (_, index) => index + 2);
 
     await deleteByIds(queryInterface, "Profiles", [1, ...demoProfileIds]);
     await deleteByIds(queryInterface, "Users", [1, ...demoUserIds]);

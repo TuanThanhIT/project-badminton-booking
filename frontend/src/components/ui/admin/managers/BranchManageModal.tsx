@@ -7,6 +7,13 @@ import { toast } from "react-toastify";
 import adminManagerService from "../../../../services/admin/managerService";
 import type { AdminManager, AdminBranchOption } from "../../../../types/admin";
 import UserAvatar from "../UserAvatar";
+import {
+  AdminModalOverlay,
+  adminInputClass,
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+  adminTextAreaClass,
+} from "../AdminModal";
 
 type BranchManageModalProps = {
   manager: AdminManager;
@@ -33,7 +40,9 @@ const BranchManageModal = ({ manager, branches, onClose, onSuccess }: BranchMana
     try {
       const res = await adminManagerService.getBranchManagerHistoryService(branchId);
       setHistory((res.data as any).data?.history || []);
-    } catch { toast.error("Không thể tải lịch sử"); }
+    } catch {
+      setHistory([]);
+    }
     finally { setLoadingHistory(false); }
   }, []);
 
@@ -73,7 +82,7 @@ const BranchManageModal = ({ manager, branches, onClose, onSuccess }: BranchMana
       "Chi nhánh";
 
     return (
-      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <AdminModalOverlay>
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] overflow-y-auto border border-gray-200">
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50 rounded-t-2xl sticky top-0">
             <div className="flex items-center gap-2">
@@ -138,12 +147,12 @@ const BranchManageModal = ({ manager, branches, onClose, onSuccess }: BranchMana
             </div>
           )}
         </div>
-      </div>
+      </AdminModalOverlay>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <AdminModalOverlay>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-gray-200">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-sky-50 to-white rounded-t-2xl">
           <div className="flex items-center gap-3">
@@ -209,7 +218,7 @@ const BranchManageModal = ({ manager, branches, onClose, onSuccess }: BranchMana
               <div className="relative">
                 <select value={selectedBranchId}
                   onChange={(e) => setSelectedBranchId(e.target.value === "" ? "" : Number(e.target.value))}
-                  className="w-full rounded-xl border border-gray-300 px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-400 bg-white appearance-none">
+                  className={`w-full appearance-none ${adminInputClass}`}>
                   <option value="">-- Chọn chi nhánh --</option>
                   {branches.map((b) => <option key={b.id} value={b.id}>{b.branchName}</option>)}
                 </select>
@@ -217,14 +226,14 @@ const BranchManageModal = ({ manager, branches, onClose, onSuccess }: BranchMana
               </div>
               <textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)}
                 placeholder="Ghi chú (tùy chọn)..."
-                className="w-full rounded-xl border border-gray-300 px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-400 resize-none" />
+                className={`w-full resize-none ${adminTextAreaClass}`} />
               <div className="flex gap-2">
                 <button onClick={() => setShowAssignForm(false)}
-                  className="flex-1 py-2 rounded-xl border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 transition">
+                  className={adminSecondaryButtonClass}>
                   Hủy
                 </button>
                 <button onClick={handleAssign} disabled={assigning || !selectedBranchId}
-                  className="flex-1 py-2 rounded-xl bg-sky-600 text-white text-sm font-semibold hover:bg-sky-700 disabled:opacity-60 transition">
+                  className={adminPrimaryButtonClass}>
                   {assigning ? "Đang gán..." : "Xác nhận"}
                 </button>
               </div>
@@ -237,7 +246,7 @@ const BranchManageModal = ({ manager, branches, onClose, onSuccess }: BranchMana
           )}
         </div>
       </div>
-    </div>
+    </AdminModalOverlay>
   );
 };
 

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Shield, Search, Plus, ChevronDown, Building2,
   ArrowLeftRight, Trash2, Lock, Unlock, CheckCircle,
-  ChevronLeft, ChevronRight, Users, Mail, Phone,
+  Users, Mail, Phone,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import adminManagerService from "../../services/admin/managerService";
@@ -16,6 +16,7 @@ import CreateManagerModal from "../../components/ui/admin/managers/CreateManager
 import BranchManageModal from "../../components/ui/admin/managers/BranchManageModal";
 import ChangeRoleModal from "../../components/ui/admin/managers/ChangeRoleModal";
 import DeleteManagerModal from "../../components/ui/admin/managers/DeleteManagerModal";
+import AdminPagination from "../../components/ui/admin/AdminPagination";
 
 const StatCard = ({
   label, value, icon: Icon, bg, text, border,
@@ -41,7 +42,7 @@ const ManagerManagementPage = () => {
   const [statusFilter,  setStatusFilter]  = useState("");
   const [branchFilter,  setBranchFilter]  = useState<number | "">("");
   const [page,          setPage]          = useState(1);
-  const LIMIT = 8;
+  const LIMIT = 10;
 
   const [showCreate,         setShowCreate]         = useState(false);
   const [branchManageTarget, setBranchManageTarget] = useState<AdminManager | null>(null);
@@ -54,8 +55,8 @@ const ManagerManagementPage = () => {
     try {
       const res = await adminManagerService.getAllManagersService();
       setAllManagers((res.data as any).data || []);
-    } catch (err: any) {
-      toast.error(err?.message || "Không thể tải danh sách manager");
+    } catch {
+      setAllManagers([]);
     } finally { setLoading(false); }
   }, []);
 
@@ -300,34 +301,13 @@ const ManagerManagementPage = () => {
               </tbody>
             </table>
           )}
-
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between px-5 py-3.5 border-t border-gray-100 bg-gray-50/70">
-              <p className="text-sm text-gray-500">
-                Trang <b>{page}</b> / {totalPages} · Tổng <b className="text-sky-600">{filteredManagers.length}</b> manager
-              </p>
-              <div className="flex items-center gap-1">
-                <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
-                  className="w-8 h-8 rounded-lg border border-gray-300 flex items-center justify-center disabled:opacity-40 hover:bg-gray-100 transition">
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const p = page <= 3 ? i + 1 : page - 2 + i;
-                  if (p < 1 || p > totalPages) return null;
-                  return (
-                    <button key={p} onClick={() => setPage(p)}
-                      className={`w-8 h-8 rounded-lg text-xs font-semibold border transition ${p === page ? "bg-sky-600 text-white border-sky-600" : "border-gray-300 hover:bg-gray-100 text-gray-600"}`}>
-                      {p}
-                    </button>
-                  );
-                })}
-                <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                  className="w-8 h-8 rounded-lg border border-gray-300 flex items-center justify-center disabled:opacity-40 hover:bg-gray-100 transition">
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
+          <AdminPagination
+            page={page}
+            totalPages={totalPages}
+            total={filteredManagers.length}
+            onPage={setPage}
+            unit="manager"
+          />
         </div>
       </div>
 

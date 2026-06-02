@@ -20,7 +20,7 @@ import {
   DISCOUNT_TYPE,
 } from "../../constants/discountConstant.js";
 import { applyDiscountUsage } from "../shared/applyDiscountUsage.js";
-import { sendBranchEmployeesNotification } from "../../helpers/notification.js";
+import { sendBranchStaffNotification } from "../../helpers/notification.js";
 import { formatBookingCode } from "../../utils/displayCode.js";
 import {
   PAYMENT_METHOD_STATUS,
@@ -427,7 +427,7 @@ const createMonthlyBookingService = async (data) => {
       transaction: t,
     });
 
-    await sendBranchEmployeesNotification(
+    await sendBranchStaffNotification(
       branchId,
       "monthly-booking-created",
       "Có lịch đặt sân tháng mới",

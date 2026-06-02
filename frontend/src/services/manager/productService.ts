@@ -2,6 +2,7 @@ import instance from "../../utils/axiosCustomize";
 
 import type {
   ManagerProductDetailResponse,
+  ManagerProductCategoriesResponse,
   ManagerProductQueries,
   ManagerProductStockUpdateRequest,
   ManagerProductStockUpdateResponse,
@@ -10,7 +11,13 @@ import type {
 
 ///MANAGER
 const getProductsService = (params: ManagerProductQueries) =>
-  instance.get<ManagerProductsResponse>("/manager/products", { params });
+  instance.get<ManagerProductsResponse>("/manager/products/inventory", {
+    params,
+  });
+
+///MANAGER
+const getProductCategoriesService = () =>
+  instance.get<ManagerProductCategoriesResponse>("/manager/product-categories");
 
 ///MANAGER
 const getProductDetailService = (productId: number) =>
@@ -29,6 +36,7 @@ const updateProductStockService = ({
 ///MANAGER
 const managerProductService = {
   getProductsService,
+  getProductCategoriesService,
   getProductDetailService,
   updateProductStockService,
 };

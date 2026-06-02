@@ -38,7 +38,10 @@ const CommentsTab = () => {
       const data = (res.data as any).data;
       setComments(data.comments || []);
       setTotal(data.pagination?.total || 0);
-    } catch { toast.error("Không thể tải bình luận"); }
+    } catch {
+      setComments([]);
+      setTotal(0);
+    }
     finally { setLoading(false); }
   }, [page, appliedSearch]);
 

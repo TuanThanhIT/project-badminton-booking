@@ -1,8 +1,16 @@
 import { useState } from "react";
-import { X, Tag } from "lucide-react";
+import { Tag } from "lucide-react";
 import { toast } from "react-toastify";
 import adminCategoryService from "../../../../services/admin/categoryService";
 import type { AdminCategory } from "../../../../types/admin";
+import {
+  AdminField,
+  adminInputClass,
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+} from "../AdminModal";
+import { AdminCategoryFormSchema } from "../../../../schemas/AdminFormSchemas";
+import AdminModal from "../AdminModal";
 
 const MENU_GROUPS = ["Cầu lông", "Vợt", "Giày", "Quần áo", "Phụ kiện", "Khác"];
 
@@ -19,18 +27,23 @@ const CategoryFormModal = ({ category, onClose, onSaved }: CategoryFormModalProp
     menuGroup: category?.menuGroup || MENU_GROUPS[0],
   });
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.cateName.trim()) { toast.error("Vui lòng nhập tên danh mục"); return; }
-    if (!form.menuGroup.trim()) { toast.error("Vui lòng nhập nhóm menu"); return; }
+    const parsed = AdminCategoryFormSchema.safeParse(form);
+    if (!parsed.success) {
+      setErrors(Object.fromEntries(parsed.error.issues.map((issue) => [issue.path[0], issue.message])));
+      return;
+    }
+    setErrors({});
     setSaving(true);
     try {
       if (isEdit) {
-        await adminCategoryService.updateCategoryService(category!.id, form);
+        await adminCategoryService.updateCategoryService(category!.id, parsed.data);
         toast.success("Đã cập nhật danh mục");
       } else {
-        await adminCategoryService.createCategoryService(form);
+        await adminCategoryService.createCategoryService(parsed.data);
         toast.success("Đã tạo danh mục");
       }
       onSaved();
@@ -40,50 +53,49 @@ const CategoryFormModal = ({ category, onClose, onSaved }: CategoryFormModalProp
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md border border-gray-200">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50 rounded-t-2xl">
-          <div className="flex items-center gap-2">
-            <Tag className="w-5 h-5 text-sky-600" />
-            <h2 className="text-base font-bold text-gray-800">
-              {isEdit ? "Chỉnh sửa danh mục" : "Thêm danh mục mới"}
-            </h2>
-          </div>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-gray-200 flex items-center justify-center transition">
-            <X className="w-4 h-4 text-gray-500" />
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Tên danh mục *</label>
+    <AdminModal
+      title={isEdit ? "Chỉnh sửa danh mục" : "Thêm danh mục mới"}
+      description="Quản lý nhóm hiển thị sản phẩm trong cửa hàng."
+      icon={<Tag className="h-5 w-5 text-sky-600" />}
+      onClose={onClose}
+      maxWidth="max-w-md"
+    >
+        <form onSubmit={handleSubmit} className="space-y-5 p-6">
+          <AdminField label="Tên danh mục" error={errors.cateName}>
             <input
-              value={form.cateName} onChange={(e) => setForm({ ...form, cateName: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-sky-400"
+              value={form.cateName}
+              onChange={(e) => {
+                setForm({ ...form, cateName: e.target.value });
+                setErrors({ ...errors, cateName: "" });
+              }}
+              className={`w-full ${adminInputClass}`}
               placeholder="VD: Vợt cầu lông..."
             />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Nhóm menu *</label>
+          </AdminField>
+          <AdminField label="Nhóm menu" error={errors.menuGroup}>
             <select
-              value={form.menuGroup} onChange={(e) => setForm({ ...form, menuGroup: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-sky-400 bg-white"
+              value={form.menuGroup}
+              onChange={(e) => {
+                setForm({ ...form, menuGroup: e.target.value });
+                setErrors({ ...errors, menuGroup: "" });
+              }}
+              className={`w-full ${adminInputClass}`}
             >
               {MENU_GROUPS.map((g) => <option key={g} value={g}>{g}</option>)}
             </select>
-          </div>
-          <div className="flex gap-3 pt-2">
+          </AdminField>
+          <div className="flex justify-end gap-3 border-t border-slate-100 pt-5">
             <button type="button" onClick={onClose}
-              className="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 transition">
+              className={adminSecondaryButtonClass}>
               Hủy
             </button>
             <button type="submit" disabled={saving}
-              className="flex-1 py-2 rounded-lg bg-sky-500 text-white text-sm font-semibold hover:bg-sky-600 transition disabled:opacity-60">
+              className={adminPrimaryButtonClass}>
               {saving ? "Đang lưu..." : isEdit ? "Cập nhật" : "Tạo mới"}
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </AdminModal>
   );
 };
 

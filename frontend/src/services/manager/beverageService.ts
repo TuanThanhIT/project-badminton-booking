@@ -9,7 +9,9 @@ import type {
 
 ///MANAGER
 const getBeveragesService = (params: ManagerBeverageQueries) =>
-  instance.get<ManagerBeveragesResponse>("/manager/beverages", { params });
+  instance.get<ManagerBeveragesResponse>("/manager/beverages/inventory", {
+    params,
+  });
 
 ///MANAGER
 const updateBeverageStockService = ({

@@ -15,6 +15,7 @@ import Navbar from "./Navbar";
 import { useAppDispatch, useAppSelector } from "../../../redux/hook";
 import { logout, logoutLocal } from "../../../redux/slices/user/authSlice";
 import { getMyBookings } from "../../../redux/slices/user/bookingSlice";
+import { getConversations } from "../../../redux/slices/user/conversationSlice";
 import {
   getNotifications,
   markAllNotificationsRead,
@@ -37,6 +38,12 @@ const Header = ({ cartRef }: HeaderProps) => {
   const cart = useAppSelector((state) => state.cart.cart);
   const { userOrderPagination } = useAppSelector((state) => state.order);
   const totalBookings = useAppSelector((state) => state.booking.totalBookings);
+  const unreadMessages = useAppSelector((state) =>
+    state.conversation.conversations.reduce(
+      (sum, conversation) => sum + (conversation.unreadCount || 0),
+      0,
+    ),
+  );
   const {
     notifications,
     unreadCount,
@@ -63,6 +70,7 @@ const Header = ({ cartRef }: HeaderProps) => {
     dispatch(getUserOrders({ data: { page: 1, limit: 1, status: "ALL" } }));
     dispatch(getMyBookings({ data: { page: 1, limit: 1 } }));
     dispatch(getNotifications({ data: { page: 1, limit: 8 } }));
+    dispatch(getConversations());
   }, [dispatch, accessToken]);
 
   useEffect(() => {
@@ -194,7 +202,14 @@ const Header = ({ cartRef }: HeaderProps) => {
                 }
                 title="Tin nhắn"
               >
-                <MessageCircle className="h-5 w-5 text-sky-600" />
+                <span className="relative">
+                  <MessageCircle className="h-5 w-5 text-sky-600" />
+                  {unreadMessages > 0 && (
+                    <span className={badgeClass}>
+                      {unreadMessages > 99 ? "99+" : unreadMessages}
+                    </span>
+                  )}
+                </span>
                 <span className="hidden xl:inline">Tin nhắn</span>
               </NavLink>
 

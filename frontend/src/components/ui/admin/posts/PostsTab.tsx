@@ -45,7 +45,10 @@ const PostsTab = () => {
       const data = (res.data as any).data;
       setPosts(data.posts || []);
       setTotal(data.pagination?.total || 0);
-    } catch { toast.error("Không thể tải bài đăng"); }
+    } catch {
+      setPosts([]);
+      setTotal(0);
+    }
     finally { setLoading(false); }
   }, [page, appliedSearch, typeFilter, statusFilter]);
 

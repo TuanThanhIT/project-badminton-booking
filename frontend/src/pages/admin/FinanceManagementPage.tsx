@@ -4,6 +4,7 @@ import FinanceStatsCards from "../../components/ui/admin/finance/FinanceStatsCar
 import WithdrawTab from "../../components/ui/admin/finance/WithdrawTab";
 import TransactionsTab from "../../components/ui/admin/finance/TransactionsTab";
 import WalletsTab from "../../components/ui/admin/finance/WalletsTab";
+import AdminPageHeader from "../../components/ui/admin/AdminPageHeader";
 
 type TabType = "transactions" | "withdraws" | "wallets";
 
@@ -19,7 +20,11 @@ const FinanceManagementPage = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="bg-white rounded-2xl border border-gray-200 p-8 space-y-6">
-        <div className="mb-2">
+        <AdminPageHeader
+          title="Quản lý Tài chính"
+          subtitle="Theo dõi ví người dùng, giao dịch và các yêu cầu rút tiền."
+        />
+        <div className="hidden">
           <h1 className="text-2xl font-bold text-sky-700 relative inline-block">
             Quản lý Tài chính
             <span className="absolute left-0 -bottom-3 w-1/2 h-1 bg-sky-400 rounded-sm" />

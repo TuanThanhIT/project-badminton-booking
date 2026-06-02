@@ -1,42 +1,24 @@
-// =========================
-// commons/admin/AdminFooter.tsx
-// =========================
-
 const AdminFooter = () => {
   return (
-    <footer
-      className="
-        h-16
-        bg-gradient-to-r
-        from-white
-        via-sky-50
-        to-white
-        border-t border-sky-100
-        px-8
-        flex items-center justify-between
-        shrink-0
-      "
-    >
-      {/* LEFT */}
-      <div className="flex items-center gap-2 text-sm">
+    <footer className="flex h-14 shrink-0 items-center justify-between border-t border-slate-200 bg-white px-4 text-sm sm:px-6 lg:px-8">
+      <div className="flex items-center gap-2">
         <span className="font-semibold text-slate-700">
           © 2026 B-Hub Dashboard
         </span>
 
-        <span className="text-slate-400">• Hệ thống quản trị cầu lông</span>
+        <span className="hidden text-slate-400 sm:inline">• Hệ thống quản trị cầu lông</span>
       </div>
 
-      {/* RIGHT */}
-      <div className="flex items-center gap-6 text-sm">
-        <button className="text-slate-500 hover:text-sky-700 transition font-medium">
+      <div className="hidden items-center gap-5 md:flex">
+        <button className="font-medium text-slate-500 transition hover:text-sky-700">
           Chính sách
         </button>
 
-        <button className="text-slate-500 hover:text-sky-700 transition font-medium">
+        <button className="font-medium text-slate-500 transition hover:text-sky-700">
           Điều khoản
         </button>
 
-        <button className="text-slate-500 hover:text-sky-700 transition font-medium">
+        <button className="font-medium text-slate-500 transition hover:text-sky-700">
           Hỗ trợ
         </button>
       </div>

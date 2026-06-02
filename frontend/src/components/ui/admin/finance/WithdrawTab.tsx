@@ -8,7 +8,7 @@ import AdminPagination from "../AdminPagination";
 import AdminUserCell from "../AdminUserCell";
 import AdminConfirmModal from "../AdminConfirmModal";
 
-const LIMIT = 15;
+const LIMIT = 10;
 
 const WithdrawTab = () => {
   const [requests, setRequests] = useState<AdminWithdrawRequest[]>([]);
@@ -31,7 +31,10 @@ const WithdrawTab = () => {
       const data = (res.data as any).data;
       setRequests(data.requests || []);
       setTotal(data.pagination?.total || 0);
-    } catch { toast.error("Không thể tải yêu cầu rút tiền"); }
+    } catch {
+      setRequests([]);
+      setTotal(0);
+    }
     finally { setLoading(false); }
   }, [page, statusFilter]);
 

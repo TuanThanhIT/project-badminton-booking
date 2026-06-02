@@ -12,12 +12,13 @@ import LoginPage from "../pages/manager/LoginPage";
 import LandingPage from "../pages/manager/LandingPage";
 import BranchPage from "../pages/manager/BranchPage";
 import StaffPage from "../pages/manager/StaffPage";
-import ProductPagae from "../pages/manager/ProductPagae";
+import ProductPagae from "../pages/manager/ProductPage";
 import WorkShiftPage from "../pages/manager/WorkShiftPage";
 import SalaryPage from "../pages/manager/SalaryPage";
 import RevenuePage from "../pages/manager/RevenuePage";
 import OrderPage from "../pages/manager/OrderPage";
 import ConversationPage from "../pages/manager/ConversationPage";
+import InventoryPage from "../pages/manager/InventoryPage";
 
 const ManagerRoute = () => {
   return (
@@ -41,8 +42,12 @@ const ManagerRoute = () => {
           <Route path="revenue" element={<RevenuePage />} />
           <Route path="orders" element={<OrderPage />} />
           <Route path="order" element={<OrderPage />} />
+          <Route path="inventory" element={<InventoryPage />} />
           <Route path="messages" element={<ConversationPage />} />
-          <Route path="messages/:conversationId" element={<ConversationPage />} />
+          <Route
+            path="messages/:conversationId"
+            element={<ConversationPage />}
+          />
         </Route>
       </Route>
     </Routes>

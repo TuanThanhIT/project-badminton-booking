@@ -1,4 +1,9 @@
 import type { ReactNode } from "react";
+import {
+  AdminModalOverlay,
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+} from "./AdminModal";
 
 type AdminConfirmModalProps = {
   open: boolean;
@@ -25,31 +30,31 @@ const AdminConfirmModal = ({
 }: AdminConfirmModalProps) => {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 space-y-4">
+    <AdminModalOverlay>
+      <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex items-center gap-3">
           {icon}
-          <h3 className="text-base font-bold text-gray-800">{title}</h3>
+          <h3 className="text-lg font-bold text-slate-900">{title}</h3>
         </div>
-        <p className="text-sm text-gray-600">{message}</p>
-        <div className="flex gap-2 justify-end pt-1">
+        <p className="mt-3 text-sm text-slate-600">{message}</p>
+        <div className="mt-5 flex justify-end gap-3 border-t border-slate-100 pt-5">
           <button
             onClick={onCancel}
             disabled={loading}
-            className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 transition disabled:opacity-50"
+            className={adminSecondaryButtonClass}
           >
             Hủy
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold text-white transition disabled:opacity-50 ${confirmClass}`}
+            className={`${adminPrimaryButtonClass} ${confirmClass}`}
           >
             {loading ? "Đang xử lý..." : confirmLabel}
           </button>
         </div>
       </div>
-    </div>
+    </AdminModalOverlay>
   );
 };
 

@@ -1,4 +1,4 @@
-import { BranchEmployee, Notification } from "../models/index.js";
+import { BranchEmployee, BranchManager, Notification } from "../models/index.js";
 import {
   emitNotificationToRole,
   emitNotificationToUser,
@@ -83,6 +83,59 @@ export const sendBranchEmployeesNotification = async (
       sendUserNotification(employeeId, type, title, message, options),
     ),
   );
+};
+
+export const sendBranchManagersNotification = async (
+  branchId,
+  type,
+  title,
+  message,
+  options = {},
+) => {
+  const branchManagers = await BranchManager.findAll({
+    where: { branchId, isActive: true },
+    attributes: ["managerId"],
+    transaction: options.transaction,
+  });
+
+  const managerIds = [
+    ...new Set(branchManagers.map((item) => item.managerId).filter(Boolean)),
+  ];
+
+  if (!managerIds.length) {
+    return [];
+  }
+
+  return Promise.all(
+    managerIds.map((managerId) =>
+      sendUserNotification(managerId, type, title, message, options),
+    ),
+  );
+};
+
+export const sendBranchStaffNotification = async (
+  branchId,
+  type,
+  title,
+  message,
+  options = {},
+) => {
+  const employees = await sendBranchEmployeesNotification(
+    branchId,
+    type,
+    title,
+    message,
+    options,
+  );
+  const managers = await sendBranchManagersNotification(
+    branchId,
+    type,
+    title,
+    message,
+    options,
+  );
+
+  return [...employees, ...managers];
 };
 
 export const sendEmployeesNotification = async (type, title, message) => {

@@ -2,6 +2,12 @@ import { useEffect, type ReactNode } from "react";
 import { useRealtime } from "../../../hooks/useRealtime";
 import { useAppDispatch, useAppSelector } from "../../../redux/hook";
 import { getMyBookings } from "../../../redux/slices/user/bookingSlice";
+import {
+  appendSocketMessage,
+  clearUnreadFromSocket,
+  getConversations,
+  removeConversationLocal,
+} from "../../../redux/slices/user/conversationSlice";
 import { addLocalNotification } from "../../../redux/slices/user/notificationSlice";
 import {
   getOrderDetail,
@@ -10,6 +16,13 @@ import {
   getUserOrders,
   updateOrderShippingRealtime,
 } from "../../../redux/slices/user/orderSlice";
+import { getManagerOrders } from "../../../redux/slices/manager/orderSlice";
+import {
+  appendManagerSocketMessage,
+  clearManagerUnreadFromSocket,
+  getManagerConversations,
+  removeManagerConversationLocal,
+} from "../../../redux/slices/manager/conversationSlice";
 
 // Đây là chỗ quan trọng nhất. App chỉ cần bọc RealtimeProvider, sau đó provider sẽ:
 
@@ -32,13 +45,28 @@ const RealtimeProvider = ({ children }: RealtimeProviderProps) => {
   const currentOrderId = useAppSelector(
     (state) => state.order.orderDetailData?.orderId,
   );
+  const authUser = useAppSelector((state) => state.auth.user);
+  const role = authUser?.role;
 
-  const { notification, shippingUpdate } = useRealtime(token);
+  const {
+    notification,
+    shippingUpdate,
+    chatMessage,
+    chatMessagesRead,
+    chatConversationUpdated,
+  } = useRealtime(token);
 
   useEffect(() => {
     if (!notification) return;
 
     dispatch(addLocalNotification({ notification }));
+
+    if (role === "MANAGER") {
+      if (notification.type?.startsWith("order-")) {
+        dispatch(getManagerOrders({ page: 1, limit: 12 }));
+      }
+      return;
+    }
 
     if (notification.type?.startsWith("booking-")) {
       dispatch(getMyBookings({ data: { page: 1, limit: 1 } }));
@@ -47,7 +75,7 @@ const RealtimeProvider = ({ children }: RealtimeProviderProps) => {
     if (notification.type?.startsWith("order-")) {
       dispatch(getUserOrders({ data: { page: 1, limit: 1, status: "ALL" } }));
     }
-  }, [dispatch, notification]);
+  }, [dispatch, notification, role]);
 
   useEffect(() => {
     if (!shippingUpdate) return;
@@ -62,6 +90,63 @@ const RealtimeProvider = ({ children }: RealtimeProviderProps) => {
       );
     }
   }, [dispatch, shippingUpdate, currentOrderId]);
+
+  useEffect(() => {
+    if (!authUser?.id || !chatMessage) return;
+
+    if (role === "MANAGER") {
+      dispatch(
+        appendManagerSocketMessage({
+          message: chatMessage,
+          currentUserId: authUser.id,
+        }),
+      );
+      return;
+    }
+
+    dispatch(
+      appendSocketMessage({
+        message: chatMessage,
+        currentUserId: authUser.id,
+      }),
+    );
+  }, [dispatch, role, authUser?.id, chatMessage]);
+
+  useEffect(() => {
+    if (!authUser?.id || !chatMessagesRead) return;
+
+    if (role === "MANAGER") {
+      dispatch(
+        clearManagerUnreadFromSocket({
+          ...chatMessagesRead,
+          selfId: authUser.id,
+        }),
+      );
+      return;
+    }
+
+    dispatch(
+      clearUnreadFromSocket({
+        ...chatMessagesRead,
+        selfId: authUser.id,
+      }),
+    );
+  }, [dispatch, role, authUser?.id, chatMessagesRead]);
+
+  useEffect(() => {
+    if (!chatConversationUpdated) return;
+
+    if (chatConversationUpdated.action === "deleted") {
+      dispatch(
+        role === "MANAGER"
+          ? removeManagerConversationLocal(chatConversationUpdated.conversationId)
+          : removeConversationLocal(chatConversationUpdated.conversationId),
+      );
+      return;
+    }
+
+    dispatch(role === "MANAGER" ? getManagerConversations() : getConversations());
+  }, [dispatch, role, chatConversationUpdated]);
 
   return <>{children}</>;
 };

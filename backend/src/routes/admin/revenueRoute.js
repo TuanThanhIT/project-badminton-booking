@@ -8,6 +8,7 @@ const adminRevenueRoute = express.Router();
 
 const initAdminRevenueRoute = (app) => {
   adminRevenueRoute.get("/dashboard", auth, authorize(ROLE_NAME.ADMIN), adminRevenueController.getDashboardController);
+  adminRevenueRoute.get("/report", auth, authorize(ROLE_NAME.ADMIN), adminRevenueController.getRevenueReportController);
   adminRevenueRoute.get("/overview", auth, authorize(ROLE_NAME.ADMIN), adminRevenueController.getRevenueOverviewController);
   adminRevenueRoute.get("/by-branch", auth, authorize(ROLE_NAME.ADMIN), adminRevenueController.getRevenueByBranchController);
   adminRevenueRoute.get("/by-branch/:id/detail", auth, authorize(ROLE_NAME.ADMIN), adminRevenueController.getRevenueByBranchDetailController);

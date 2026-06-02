@@ -1,8 +1,12 @@
 import { useState } from "react";
-import { X, ArrowLeftRight, AlertTriangle } from "lucide-react";
+import { ArrowLeftRight, AlertTriangle } from "lucide-react";
 import { toast } from "react-toastify";
 import adminManagerService from "../../../../services/admin/managerService";
 import type { AdminManager } from "../../../../types/admin";
+import AdminModal, {
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+} from "../AdminModal";
 
 type ChangeRoleModalProps = {
   manager: AdminManager;
@@ -26,17 +30,13 @@ const ChangeRoleModal = ({ manager, onClose, onSuccess }: ChangeRoleModalProps) 
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-gray-200">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 rounded-t-2xl">
-          <div className="flex items-center gap-2">
-            <ArrowLeftRight className="w-5 h-5 text-orange-500" />
-            <h2 className="text-sm font-bold text-gray-800">Thay đổi Role</h2>
-          </div>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-gray-200 flex items-center justify-center transition">
-            <X className="w-4 h-4 text-gray-500" />
-          </button>
-        </div>
+    <AdminModal
+      title="Thay đổi Role"
+      description="Thu hồi quyền quản lý của tài khoản này."
+      icon={<ArrowLeftRight className="h-5 w-5 text-orange-500" />}
+      onClose={onClose}
+      maxWidth="max-w-sm"
+    >
         <div className="p-6 space-y-4">
           <div className="flex items-center gap-3 bg-orange-50 border border-orange-200 rounded-xl p-4">
             <AlertTriangle className="w-5 h-5 text-orange-500 shrink-0" />
@@ -50,17 +50,16 @@ const ChangeRoleModal = ({ manager, onClose, onSuccess }: ChangeRoleModalProps) 
           </div>
           <div className="flex gap-3">
             <button onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl border border-gray-300 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition">
+              className={adminSecondaryButtonClass}>
               Hủy
             </button>
             <button onClick={handleDowngrade} disabled={loading}
-              className="flex-1 py-2.5 rounded-xl bg-orange-500 text-white text-sm font-bold hover:bg-orange-600 disabled:opacity-60 transition">
+              className={`${adminPrimaryButtonClass} bg-orange-500 hover:bg-orange-600`}>
               {loading ? "Đang xử lý..." : "Xác nhận thu hồi"}
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </AdminModal>
   );
 };
 

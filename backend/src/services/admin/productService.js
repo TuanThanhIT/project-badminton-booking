@@ -4,7 +4,7 @@ import NotFoundError from "../../errors/NotFoundError.js";
 import ConflictError from "../../errors/ConflictError.js";
 
 const getAdminProductsService = async (data) => {
-  const { page = 1, limit = 10, search, categoryId } = data;
+  const { page = 1, limit = 10, search, categoryId, menuGroup } = data;
   const offset = (page - 1) * limit;
 
   const where = {};
@@ -15,12 +15,18 @@ const getAdminProductsService = async (data) => {
     ];
   }
   if (categoryId) where.categoryId = categoryId;
+  const categoryInclude = {
+    model: Category,
+    as: "category",
+    attributes: ["id", "cateName", "menuGroup"],
+    ...(menuGroup ? { where: { menuGroup }, required: true } : {}),
+  };
 
   const { rows, count } = await Product.findAndCountAll({
     where,
     attributes: ["id", "productName", "brand", "description", "thumbnailUrl", "categoryId", "createdAt"],
     include: [
-      { model: Category, as: "category", attributes: ["id", "cateName", "menuGroup"] },
+      categoryInclude,
       {
         model: ProductVariant,
         as: "variants",

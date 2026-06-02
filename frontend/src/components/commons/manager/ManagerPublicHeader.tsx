@@ -12,7 +12,7 @@ const ManagerPublicHeader = () => {
             className="h-[52px] w-[52px] rounded-2xl border border-sky-100 object-cover shadow-sm"
           />
           <div className="min-w-0">
-            <p className="text-[1.55rem] font-extrabold leading-none tracking-tight text-slate-900 sm:text-[1.65rem]">
+            <p className="text-[1.55rem] font-bold leading-none tracking-tight text-slate-900 sm:text-[1.65rem]">
               B-Hub Manager
             </p>
             <p className="mt-1.5 hidden text-[13px] font-medium leading-snug text-slate-500 sm:block">

@@ -1,8 +1,17 @@
 import express from "express";
 import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
+import validate from "../../middlewares/validate.js";
 import { ROLE_NAME } from "../../constants/userConstant.js";
 import adminBranchController from "../../controllers/admin/branchController.js";
+import {
+  adminBranchIdSchema,
+  branchImageSchema,
+  createAdminBranchSchema,
+  deleteBranchImageSchema,
+  getAdminBranchesSchema,
+  updateAdminBranchSchema,
+} from "../../validations/branchValidation.js";
 
 const adminBranchRoute = express.Router();
 
@@ -11,6 +20,7 @@ const initAdminBranchRoute = (app) => {
     "/",
     auth,
     authorize(ROLE_NAME.ADMIN),
+    validate(getAdminBranchesSchema),
     adminBranchController.getAdminBranchesController,
   );
 
@@ -18,6 +28,7 @@ const initAdminBranchRoute = (app) => {
     "/:branchId",
     auth,
     authorize(ROLE_NAME.ADMIN),
+    validate(adminBranchIdSchema),
     adminBranchController.getAdminBranchDetailController,
   );
 
@@ -25,6 +36,7 @@ const initAdminBranchRoute = (app) => {
     "/",
     auth,
     authorize(ROLE_NAME.ADMIN),
+    validate(createAdminBranchSchema),
     adminBranchController.createBranchController,
   );
 
@@ -32,6 +44,7 @@ const initAdminBranchRoute = (app) => {
     "/:branchId",
     auth,
     authorize(ROLE_NAME.ADMIN),
+    validate(updateAdminBranchSchema),
     adminBranchController.updateBranchController,
   );
 
@@ -39,6 +52,7 @@ const initAdminBranchRoute = (app) => {
     "/:branchId/toggle-active",
     auth,
     authorize(ROLE_NAME.ADMIN),
+    validate(adminBranchIdSchema),
     adminBranchController.toggleBranchActiveController,
   );
 
@@ -46,6 +60,7 @@ const initAdminBranchRoute = (app) => {
     "/:branchId/images",
     auth,
     authorize(ROLE_NAME.ADMIN),
+    validate(branchImageSchema),
     adminBranchController.addBranchImageController,
   );
 
@@ -53,6 +68,7 @@ const initAdminBranchRoute = (app) => {
     "/:branchId/images/:imageId",
     auth,
     authorize(ROLE_NAME.ADMIN),
+    validate(deleteBranchImageSchema),
     adminBranchController.deleteBranchImageController,
   );
 

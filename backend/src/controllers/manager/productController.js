@@ -11,6 +11,14 @@ const getProductsController = asyncHandler(async (req, res) => {
     .json(new SuccessResponse("Get manager products successfully", result));
 });
 
+const getProductCategoriesController = asyncHandler(async (req, res) => {
+  const result = await productService.getProductCategoriesService();
+
+  return res
+    .status(200)
+    .json(new SuccessResponse("Get manager product categories successfully", result));
+});
+
 const getProductDetailController = asyncHandler(async (req, res) => {
   const managerId = req.user.id;
   const result = await productService.getProductDetailService(
@@ -23,21 +31,8 @@ const getProductDetailController = asyncHandler(async (req, res) => {
     .json(new SuccessResponse("Get manager product detail successfully", result));
 });
 
-const updateProductVariantStockController = asyncHandler(async (req, res) => {
-  const managerId = req.user.id;
-  const result = await productService.updateProductVariantStockService(
-    managerId,
-    req.params.variantId,
-    req.body,
-  );
-
-  return res
-    .status(200)
-    .json(new SuccessResponse("Update product stock successfully", result));
-});
-
 export default {
   getProductsController,
+  getProductCategoriesController,
   getProductDetailController,
-  updateProductVariantStockController,
 };

@@ -3,6 +3,10 @@ import { Trash2 } from "lucide-react";
 import { toast } from "react-toastify";
 import adminUserService from "../../../../services/admin/userService";
 import type { AdminManager } from "../../../../types/admin";
+import AdminModal, {
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+} from "../AdminModal";
 
 type DeleteManagerModalProps = {
   manager: AdminManager;
@@ -26,8 +30,13 @@ const DeleteManagerModal = ({ manager, onClose, onSuccess }: DeleteManagerModalP
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-gray-200">
+    <AdminModal
+      title="Xóa tài khoản Manager?"
+      description="Thao tác này không thể hoàn tác."
+      icon={<Trash2 className="h-5 w-5 text-red-500" />}
+      onClose={onClose}
+      maxWidth="max-w-sm"
+    >
         <div className="p-6 space-y-5">
           <div className="flex flex-col items-center text-center gap-3">
             <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center">
@@ -45,17 +54,16 @@ const DeleteManagerModal = ({ manager, onClose, onSuccess }: DeleteManagerModalP
           </div>
           <div className="flex gap-3">
             <button onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl border border-gray-300 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition">
+              className={adminSecondaryButtonClass}>
               Hủy
             </button>
             <button onClick={handleDelete} disabled={loading}
-              className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-bold hover:bg-red-600 disabled:opacity-60 transition">
+              className={`${adminPrimaryButtonClass} bg-red-500 hover:bg-red-600`}>
               {loading ? "Đang xóa..." : "Xóa vĩnh viễn"}
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </AdminModal>
   );
 };
 

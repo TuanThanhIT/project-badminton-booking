@@ -4,6 +4,8 @@ import type { ApiResponse } from "./api";
 export type ManagerRevenueQueries = {
   startDate?: string;
   endDate?: string;
+  revenueType?: string;
+  itemType?: string;
 };
 
 ///MANAGER
@@ -13,7 +15,6 @@ export type ManagerRevenueOverview = {
   productRevenue: number;
   beverageRevenue: number;
   salaryCost: number;
-  inventoryCost: number;
   totalCost: number;
   profit: number;
   bookingCount: number;
@@ -29,7 +30,6 @@ export type ManagerRevenueChartItem = {
   beverageRevenue: number;
   totalRevenue: number;
   salaryCost: number;
-  inventoryCost: number;
   totalCost: number;
   profit: number;
 };
@@ -42,7 +42,6 @@ export type ManagerRevenueMonthlyChartItem = {
   beverageRevenue: number;
   totalRevenue: number;
   salaryCost: number;
-  inventoryCost: number;
   totalCost: number;
   profit: number;
 };

@@ -219,7 +219,7 @@ const conversationSlice = createSlice({
         state.conversations[idx].updatedAt = msg.createdAt;
         const isOther = msg.senderId !== currentUserId;
         const notOpen = state.selectedConversationId !== msg.conversationId;
-        if (isOther && notOpen) {
+        if (!exists && isOther && notOpen) {
           state.conversations[idx].unreadCount = (state.conversations[idx].unreadCount || 0) + 1;
         }
       }

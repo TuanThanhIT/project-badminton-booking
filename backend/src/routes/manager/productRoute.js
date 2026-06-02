@@ -6,18 +6,25 @@ import productController from "../../controllers/manager/productController.js";
 const productRoute = express.Router();
 
 const initProductRoute = (app) => {
+  app.get(
+    "/manager/product-categories",
+    auth,
+    authorize("MANAGER"),
+    productController.getProductCategoriesController,
+  );
+
   productRoute.get(
-    "/",
+    "/inventory",
     auth,
     authorize("MANAGER"),
     productController.getProductsController,
   );
 
-  productRoute.patch(
-    "/variants/:variantId/stock",
+  productRoute.get(
+    "/",
     auth,
     authorize("MANAGER"),
-    productController.updateProductVariantStockController,
+    productController.getProductsController,
   );
 
   productRoute.get(

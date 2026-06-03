@@ -20,6 +20,8 @@ const getCommentsService = (params: {
   limit?: number;
   search?: string;
   postId?: number;
+  commentType?: string;
+  postType?: string;
 }) => instance.get("/admin/comments", { params });
 
 const deleteCommentService = (commentId: number) =>

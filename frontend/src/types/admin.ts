@@ -57,6 +57,7 @@ export interface AdminManager {
 export interface AdminBranchOption {
   id: number;
   branchName: string;
+  isActive?: boolean;
 }
 
 export interface AdminBranchManager {
@@ -64,20 +65,36 @@ export interface AdminBranchManager {
   username: string;
   email: string;
   fullName?: string;
+  phoneNumber?: string;
+  avatar?: string;
 }
 
 export interface AdminBranch {
   id: number;
   branchName: string;
+  description?: string;
   address: string;
   districtName: string;
   provinceName: string;
   wardName?: string;
+  provinceId?: number;
+  districtId?: number;
+  wardCode?: string;
+  latitude?: number;
+  longitude?: number;
+  ghnShopId?: number | null;
   fullAddress?: string;
   phoneNumber: string;
   isActive: boolean;
+  status?: string;
   createdAt: string;
+  updatedAt?: string;
   managers?: AdminBranchManager[];
+  manager?: AdminBranchManager | null;
+  images?: { id: number; imageUrl: string }[];
+  courts?: { id: number; courtName: string; courtStatus: string }[];
+  courtCount?: number;
+  employeeCount?: number;
 }
 
 // ─── Beverage Management ──────────────────────────────────────────────────────
@@ -200,6 +217,7 @@ export interface AdminFinanceStats {
   pendingWithdrawAmount: number;
   todayDeposit: number;
   totalSystemBalance: number;
+  lockedWalletCount?: number;
 }
 
 export interface AdminWalletUser {
@@ -383,6 +401,7 @@ export interface AdminMonthRevenue {
 export interface AdminProductRevenue {
   productVariantId: number;
   productName: string;
+  sku?: string;
   variantInfo: string;
   onlineRevenue: number;
   onlineQuantity: number;
@@ -392,6 +411,20 @@ export interface AdminProductRevenue {
   offlineOrderCount: number;
   totalRevenue: number;
   totalQuantity: number;
+  avgCost?: number;
+  totalCost?: number;
+  grossProfit?: number;
+}
+
+export interface AdminBeverageRevenue {
+  beverageId: number;
+  beverageName: string;
+  totalRevenue: number;
+  totalQuantity: number;
+  orderCount: number;
+  avgCost?: number;
+  totalCost?: number;
+  grossProfit?: number;
 }
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
@@ -410,6 +443,8 @@ export interface AdminDashboardChartItem {
   date: string;
   label: string;
   bookingRevenue: number;
+  productRevenue?: number;
+  beverageRevenue?: number;
   orderRevenue: number;
   total: number;
 }
@@ -427,11 +462,63 @@ export interface AdminDashboardRecentItem {
 }
 
 export interface AdminDashboardData {
+  summary?: {
+    todayRevenue: number;
+    todayBookingRevenue: number;
+    todaySalesRevenue: number;
+    todayBookingCount: number;
+    todayOrderCount: number;
+    pendingBookingCount: number;
+    pendingOrderCount: number;
+    pendingPurchaseReceiptCount: number;
+    lowStockCount: number;
+    outOfStockCount: number;
+  };
   stats: AdminDashboardStats;
   overview: AdminRevenueOverview;
+  revenueStructure?: {
+    bookingRevenue: number;
+    productRevenue: number;
+    beverageRevenue: number;
+  };
+  operationSummary?: {
+    totalBookingCount: number;
+    pendingBookingCount: number;
+    confirmedBookingCount: number;
+    checkedInBookingCount: number;
+    completedBookingCount: number;
+    cancelledBookingCount: number;
+    playingCourtCount: number;
+    totalCourtCount: number;
+    occupancyRate: number;
+  };
   topBranches: AdminBranchRevenue[];
   topProducts: AdminProductRevenue[];
+  topBeverages?: AdminBeverageRevenue[];
   chart: AdminDashboardChartItem[];
+  quickRevenueChart?: AdminDashboardChartItem[];
+  pendingPurchaseReceipts?: {
+    id: number;
+    receiptCode: string;
+    branchName?: string;
+    supplierName?: string;
+    creatorName?: string;
+    totalAmount: number;
+    status: string;
+    createdAt: string;
+  }[];
+  lowStockItems?: {
+    branchId: number;
+    branchName: string;
+    itemType: "PRODUCT_VARIANT" | "BEVERAGE";
+    itemId: number;
+    itemName: string;
+    sku?: string;
+    variantInfo?: string;
+    currentStock: number;
+    threshold: number;
+    status: "LOW_STOCK" | "OUT_OF_STOCK";
+  }[];
   recentBookings: AdminDashboardRecentItem[];
   recentOrders: AdminDashboardRecentItem[];
 }

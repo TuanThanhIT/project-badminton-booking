@@ -152,8 +152,9 @@ const InventoryManagementPage = () => {
         {tab === "history" ? (
           <div className="overflow-hidden rounded-xl border border-gray-200">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-xs uppercase text-gray-500">
-                <tr>
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                  <th className="px-4 py-3 text-center font-semibold">#</th>
                   <th className="px-4 py-3 text-left">Thời gian</th>
                   <th className="px-4 py-3 text-left">Chi nhánh</th>
                   <th className="px-4 py-3 text-left">Loại</th>
@@ -162,9 +163,10 @@ const InventoryManagementPage = () => {
                   <th className="px-4 py-3 text-left">Ghi chú</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
-                {transactions.map((item) => (
-                  <tr key={item.id}>
+              <tbody className="divide-y divide-slate-100">
+                {transactions.map((item, index) => (
+                  <tr key={item.id} className="transition hover:bg-sky-50/40">
+                    <td className="px-4 py-3 text-center text-slate-400">{(page - 1) * LIMIT + index + 1}</td>
                     <td className="px-4 py-3">
                       {new Date(item.createdAt).toLocaleString("vi-VN")}
                     </td>
@@ -183,7 +185,7 @@ const InventoryManagementPage = () => {
                   </tr>
                 ))}
                 {!transactions.length ? (
-                  <EmptyTableRow colSpan={6} label="Không có lịch sử kho" />
+                  <EmptyTableRow colSpan={7} label="Không có lịch sử kho" />
                 ) : null}
               </tbody>
             </table>
@@ -208,27 +210,31 @@ const StockTable = ({
 }) => (
   <div className="overflow-hidden rounded-xl border border-gray-200">
     <table className="w-full text-sm">
-      <thead className="bg-gray-50 text-xs uppercase text-gray-500">
-        <tr>
+      <thead>
+        <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+          <th className="px-4 py-3 text-center font-semibold">#</th>
           <th className="px-4 py-3 text-left">Mặt hàng</th>
           <th className="px-4 py-3 text-left">Thông tin</th>
           <th className="px-4 py-3 text-left">Chi nhánh</th>
           <th className="px-4 py-3 text-right">Tồn kho</th>
         </tr>
       </thead>
-      <tbody className="divide-y divide-gray-100">
-        {rows.map((row) => (
-          <tr key={row.id}>
-            <td className="px-4 py-3 font-bold text-gray-800">{row.name}</td>
-            <td className="px-4 py-3 text-gray-500">{row.extra || "-"}</td>
-            <td className="px-4 py-3">{row.branch}</td>
-            <td className="px-4 py-3 text-right text-lg font-black text-sky-700">
+      <tbody className="divide-y divide-slate-100">
+        {rows.map((row, index) => (
+          <tr key={row.id} className="transition hover:bg-sky-50/40">
+            <td className="px-4 py-3 text-center text-slate-400">
+              {(page - 1) * LIMIT + index + 1}
+            </td>
+            <td className="px-4 py-3 font-semibold text-slate-800">{row.name}</td>
+            <td className="px-4 py-3 text-slate-500">{row.extra || "-"}</td>
+            <td className="px-4 py-3 text-slate-600">{row.branch}</td>
+            <td className="px-4 py-3 text-right font-semibold text-sky-700">
               {row.stock}
             </td>
           </tr>
         ))}
         {!rows.length ? (
-          <EmptyTableRow colSpan={4} label="Không có dữ liệu tồn kho" />
+          <EmptyTableRow colSpan={5} label="Không có dữ liệu tồn kho" />
         ) : null}
       </tbody>
     </table>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Edit3, MessageCircle, Plus, Search, Users, X } from "lucide-react";
 import type { Conversation } from "../../../../types/message";
 import type { UserSearchHit } from "../../../../types/userSearch";
@@ -12,6 +12,13 @@ type ConversationSidebarProps = {
   currentUserId?: number;
   starterUsers?: UserSearchHit[];
   loadingStarterUsers?: boolean;
+  startTitle?: string;
+  startDescription?: string;
+  starterLoadingText?: string;
+  starterEmptyTitle?: string;
+  starterEmptyDescription?: string;
+  searchUsers?: (q: string, limit?: number) => Promise<UserSearchHit[]>;
+  directSearchTitle?: string;
   onSelect: (id: number) => void;
   onStartDirect?: (userId: number) => void;
   onCreateGroup: () => void;
@@ -40,10 +47,10 @@ const ConvAvatar = ({
 
   return (
     <div
-      className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white text-base font-extrabold shrink-0 overflow-hidden shadow-sm ${
+      className={`w-12 h-12 rounded-2xl flex items-center justify-center text-base font-bold shrink-0 overflow-hidden ${
         isGroup
-          ? "bg-gradient-to-br from-sky-500 to-emerald-500"
-          : "bg-gradient-to-br from-sky-400 to-indigo-500"
+          ? "bg-sky-100 text-sky-700 ring-1 ring-sky-200"
+          : "bg-sky-100 text-sky-700 ring-1 ring-sky-200"
       }`}
     >
       {url && !imgErr ? (
@@ -66,12 +73,22 @@ const ConversationSidebar = ({
   currentUserId,
   starterUsers = [],
   loadingStarterUsers = false,
+  startTitle = "Bắt đầu cuộc trò chuyện",
+  startDescription = "Chọn một người phù hợp để tạo hội thoại 1-1.",
+  starterLoadingText = "Đang tải danh sách gợi ý...",
+  starterEmptyTitle = "Chưa có gợi ý trò chuyện",
+  starterEmptyDescription = "Tìm người từ hồ sơ hoặc tạo nhóm để bắt đầu trò chuyện.",
+  searchUsers,
+  directSearchTitle = "Người dùng",
   onSelect,
   onStartDirect,
   onCreateGroup,
 }: ConversationSidebarProps) => {
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<SidebarTab>("all");
+  const [directHits, setDirectHits] = useState<UserSearchHit[]>([]);
+  const [directLoading, setDirectLoading] = useState(false);
+  const [directError, setDirectError] = useState("");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -105,13 +122,55 @@ const ConversationSidebar = ({
     [conversations],
   );
 
+  useEffect(() => {
+    const q = query.trim();
+    if (!searchUsers || !onStartDirect || q.length < 1) {
+      setDirectHits([]);
+      setDirectError("");
+      setDirectLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setDirectLoading(true);
+    setDirectError("");
+    const timer = window.setTimeout(() => {
+      searchUsers(q, 8)
+        .then((users) => {
+          if (cancelled) return;
+          setDirectHits(
+            (users || []).filter((user) => user.id !== currentUserId),
+          );
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setDirectHits([]);
+          setDirectError("Không tải được danh sách người dùng.");
+        })
+        .finally(() => {
+          if (!cancelled) setDirectLoading(false);
+        });
+    }, 320);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [currentUserId, onStartDirect, query, searchUsers]);
+
+  const handleStartDirect = (userId: number) => {
+    onStartDirect?.(userId);
+    setQuery("");
+    setDirectHits([]);
+  };
+
   return (
     <aside className="w-[22rem] border-r border-slate-200 bg-white flex flex-col min-h-0">
       <div className="px-5 pt-5 pb-4 border-b border-slate-100 shrink-0 bg-white">
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-extrabold text-xl text-slate-950">
+              <h2 className="font-bold text-xl text-slate-950">
                 Tin nhắn
               </h2>
               {totalUnread > 0 && (
@@ -128,7 +187,7 @@ const ConversationSidebar = ({
           <button
             type="button"
             onClick={onCreateGroup}
-            className="w-10 h-10 rounded-2xl bg-sky-600 text-white hover:bg-sky-500 transition-colors flex items-center justify-center shadow-lg shadow-sky-600/20"
+            className="w-10 h-10 rounded-2xl bg-sky-600 text-white hover:bg-sky-500 transition-colors flex items-center justify-center"
             title="Tạo nhóm"
           >
             <Plus className="w-5 h-5" />
@@ -140,7 +199,7 @@ const ConversationSidebar = ({
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Tìm hội thoại, thành viên..."
+            placeholder="Tìm username, SĐT hoặc email..."
             className="w-full h-11 pl-10 pr-10 border border-slate-200 rounded-2xl text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-sky-100 focus:border-sky-400 transition-all placeholder:text-slate-400"
           />
           {query ? (
@@ -152,6 +211,61 @@ const ConversationSidebar = ({
             >
               <X className="w-4 h-4" />
             </button>
+          ) : null}
+          {searchUsers && onStartDirect && query.trim() ? (
+            <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-30 rounded-2xl border border-slate-200 bg-white p-2 shadow-md">
+              <div className="mb-1 flex items-center justify-between gap-3 px-2">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                  {directSearchTitle}
+                </p>
+                {directLoading ? (
+                  <span className="text-[11px] text-slate-400">Đang tìm...</span>
+                ) : null}
+              </div>
+
+              {directError ? (
+                <p className="px-2 py-2 text-xs font-medium text-rose-600">
+                  {directError}
+                </p>
+              ) : directHits.length > 0 ? (
+                <div className="max-h-72 overflow-y-auto">
+                  {directHits.map((user) => {
+                    const displayName = user.fullName?.trim() || user.username;
+                    const detail = user.phoneNumber || user.email || `@${user.username}`;
+
+                    return (
+                      <button
+                        key={user.id}
+                        type="button"
+                        onClick={() => handleStartDirect(user.id)}
+                        className="group flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition hover:bg-sky-50"
+                      >
+                        <ConvAvatar
+                          name={displayName}
+                          url={user.avatar}
+                          isGroup={false}
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-semibold text-slate-800">
+                            {displayName}
+                          </span>
+                          <span className="block truncate text-xs text-slate-400">
+                            {detail}
+                          </span>
+                        </span>
+                        <span className="shrink-0 rounded-full bg-sky-50 px-3 py-1 text-[11px] font-bold text-sky-700">
+                          Chat
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : !directLoading ? (
+                <p className="px-2 py-2 text-xs text-slate-400">
+                  Không tìm thấy theo username, số điện thoại hoặc email.
+                </p>
+              ) : null}
+            </div>
           ) : null}
         </div>
 
@@ -169,7 +283,7 @@ const ConversationSidebar = ({
               onClick={() => setTab(key)}
               className={`h-9 rounded-xl text-xs font-bold transition-all ${
                 tab === key
-                  ? "bg-white text-sky-700 shadow-sm"
+                  ? "bg-white text-sky-700"
                   : "text-slate-500 hover:text-slate-800"
               }`}
             >
@@ -179,39 +293,40 @@ const ConversationSidebar = ({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto min-h-0 p-3 bg-slate-50/80">
+      <div className="flex-1 overflow-y-auto min-h-0 p-3 bg-slate-50">
+
         {conversations.length === 0 && !query.trim() && tab === "all" ? (
           <div className="space-y-3">
-            <div className="rounded-3xl border border-sky-100 bg-white p-4 shadow-sm">
+            <div className="rounded-2xl border border-sky-100 bg-white p-4">
               <div className="flex items-start gap-3">
                 <div className="w-11 h-11 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
                   <MessageCircle className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-extrabold text-slate-900">
-                    Bắt đầu chat với nhân viên
+                  <p className="text-sm font-bold text-slate-900">
+                    {startTitle}
                   </p>
                   <p className="mt-1 text-xs text-slate-500 leading-relaxed">
-                    Chọn một nhân viên trong chi nhánh để tạo hội thoại 1-1.
+                    {startDescription}
                   </p>
                 </div>
               </div>
             </div>
 
             {loadingStarterUsers ? (
-              <div className="rounded-3xl bg-white border border-slate-100 px-4 py-8 text-center text-sm text-slate-400">
-                Dang tai danh sach nhan vien...
+              <div className="rounded-2xl bg-white border border-slate-100 px-4 py-8 text-center text-sm text-slate-400">
+                {starterLoadingText}
               </div>
             ) : starterUsers.length === 0 ? (
               <div className="h-full min-h-[240px] flex flex-col items-center justify-center gap-3 text-center px-4">
-                <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 text-slate-300 flex items-center justify-center shadow-sm">
+                <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 text-slate-300 flex items-center justify-center">
                   <Edit3 className="w-7 h-7" strokeWidth={1.5} />
                 </div>
                 <p className="text-sm font-semibold text-slate-600">
-                  Chưa có nhân viên trong chi nhánh
+                  {starterEmptyTitle}
                 </p>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Thêm nhân viên trước sau đó quay lại đây để bắt đầu chat.
+                  {starterEmptyDescription}
                 </p>
               </div>
             ) : (
@@ -224,7 +339,7 @@ const ConversationSidebar = ({
                       key={user.id}
                       type="button"
                       onClick={() => onStartDirect?.(user.id)}
-                      className="group w-full text-left p-3 flex items-center gap-3 rounded-3xl border border-transparent bg-white/80 hover:bg-white hover:border-sky-100 hover:shadow-sm transition-all"
+                      className="group w-full text-left p-3 flex items-center gap-3 rounded-2xl border border-transparent bg-white/80 hover:bg-white hover:border-sky-100 transition-all"
                     >
                       <ConvAvatar
                         name={displayName}
@@ -250,7 +365,7 @@ const ConversationSidebar = ({
           </div>
         ) : sorted.length === 0 ? (
           <div className="h-full min-h-[280px] flex flex-col items-center justify-center gap-3 text-center px-4">
-            <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 text-slate-300 flex items-center justify-center shadow-sm">
+            <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 text-slate-300 flex items-center justify-center">
               <Edit3 className="w-7 h-7" strokeWidth={1.5} />
             </div>
             <p className="text-sm font-semibold text-slate-600">
@@ -292,10 +407,10 @@ const ConversationSidebar = ({
                   key={conversation.id}
                   type="button"
                   onClick={() => onSelect(conversation.id)}
-                  className={`group w-full text-left p-3 flex items-start gap-3 rounded-3xl border transition-all ${
+                  className={`group w-full text-left p-3 flex items-start gap-3 rounded-2xl border transition-all ${
                     isSelected
-                      ? "bg-white border-sky-200 shadow-[0_12px_30px_rgba(14,165,233,0.12)]"
-                      : "bg-white/80 border-transparent hover:bg-white hover:border-slate-200 hover:shadow-sm"
+                      ? "bg-white border-sky-200"
+                      : "bg-white/80 border-transparent hover:bg-white hover:border-slate-200"
                   }`}
                 >
                   <div className="relative shrink-0">
@@ -318,7 +433,7 @@ const ConversationSidebar = ({
                       <p
                         className={`text-sm truncate ${
                           unread > 0
-                            ? "font-extrabold text-slate-950"
+                            ? "font-bold text-slate-950"
                             : "font-bold text-slate-800"
                         }`}
                       >
@@ -345,7 +460,7 @@ const ConversationSidebar = ({
                         {preview}
                       </p>
                       {unread > 0 && (
-                        <span className="min-w-[1.2rem] h-[1.2rem] px-1.5 flex items-center justify-center rounded-full bg-sky-600 text-white text-[9px] font-extrabold">
+                        <span className="min-w-[1.2rem] h-[1.2rem] px-1.5 flex items-center justify-center rounded-full bg-sky-600 text-white text-[9px] font-bold">
                           {unread > 99 ? "99+" : unread}
                         </span>
                       )}

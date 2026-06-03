@@ -3,6 +3,7 @@ import { Trash2 } from "lucide-react";
 import { toast } from "react-toastify";
 import adminUserService from "../../../../services/admin/userService";
 import type { AdminManager } from "../../../../types/admin";
+import { showConfirmDialog } from "../../../../utils/confirmDialog";
 import AdminModal, {
   adminPrimaryButtonClass,
   adminSecondaryButtonClass,
@@ -18,10 +19,23 @@ const DeleteManagerModal = ({ manager, onClose, onSuccess }: DeleteManagerModalP
   const [loading, setLoading] = useState(false);
 
   const handleDelete = async () => {
+    const confirmed = await showConfirmDialog(
+      "Xóa tài khoản quản lý?",
+      `Tài khoản @${manager.username} sẽ bị xóa vĩnh viễn.${
+        manager.managedBranches.length > 0
+          ? " Các quyền quản lý chi nhánh sẽ bị thu hồi trước."
+          : ""
+      }`,
+      "Xóa vĩnh viễn",
+      "Hủy",
+      "danger",
+    );
+    if (!confirmed) return;
+
     setLoading(true);
     try {
       await adminUserService.deleteUserService(manager.id);
-      toast.success("Đã xóa tài khoản Manager");
+      toast.success("Đã xóa tài khoản quản lý");
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -31,7 +45,7 @@ const DeleteManagerModal = ({ manager, onClose, onSuccess }: DeleteManagerModalP
 
   return (
     <AdminModal
-      title="Xóa tài khoản Manager?"
+      title="Xóa tài khoản quản lý?"
       description="Thao tác này không thể hoàn tác."
       icon={<Trash2 className="h-5 w-5 text-red-500" />}
       onClose={onClose}
@@ -43,7 +57,7 @@ const DeleteManagerModal = ({ manager, onClose, onSuccess }: DeleteManagerModalP
               <Trash2 className="w-7 h-7 text-red-500" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-gray-800">Xóa tài khoản Manager?</h2>
+              <h2 className="text-base font-bold text-gray-800">Xóa tài khoản quản lý?</h2>
               <p className="text-sm text-gray-500 mt-1">
                 Tài khoản <strong className="text-gray-700">@{manager.username}</strong> sẽ bị xóa vĩnh viễn.
                 {manager.managedBranches.length > 0 && (

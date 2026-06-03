@@ -7,6 +7,7 @@ import AdminPublicLayout from "../components/layouts/AdminPublicLayout";
 import LandingPage from "../pages/admin/LandingPage";
 import UserManagementPage from "../pages/admin/UserManagementPage";
 import BranchManagementPage from "../pages/admin/BranchManagementPage";
+import BranchDetailPage from "../pages/admin/BranchDetailPage";
 import ManagerManagementPage from "../pages/admin/ManagerManagementPage";
 import ProductManagementPage from "../pages/admin/ProductManagementPage";
 import BeverageManagementPage from "../pages/admin/BeverageManagementPage";
@@ -17,6 +18,9 @@ import FinanceManagementPage from "../pages/admin/FinanceManagementPage";
 import RevenueManagementPage from "../pages/admin/RevenueManagementPage";
 import CategoryManagementPage from "../pages/admin/CategoryManagementPage";
 import CoachApplicationManagementPage from "../pages/admin/CoachApplicationManagementPage";
+import SupplierManagementPage from "../pages/admin/SupplierManagementPage";
+import PurchaseReceiptManagementPage from "../pages/admin/PurchaseReceiptManagementPage";
+import InventoryManagementPage from "../pages/admin/InventoryManagementPage";
 
 const AdminRoute = () => {
   return (
@@ -34,6 +38,7 @@ const AdminRoute = () => {
           <Route path="users" element={<UserManagementPage />} />
           <Route path="coach-applications" element={<CoachApplicationManagementPage />} />
           <Route path="branches" element={<BranchManagementPage />} />
+          <Route path="branches/:branchId" element={<BranchDetailPage />} />
           <Route path="managers" element={<ManagerManagementPage />} />
           <Route path="categories" element={<CategoryManagementPage />} />
           <Route path="products" element={<ProductManagementPage />} />

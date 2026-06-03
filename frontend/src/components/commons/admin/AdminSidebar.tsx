@@ -16,6 +16,8 @@ import {
   TrendingUp,
   Tag,
   GraduationCap,
+  PackageCheck,
+  Warehouse,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../../redux/hook";
 import { logout, logoutLocal } from "../../../redux/slices/user/authSlice";
@@ -72,10 +74,15 @@ const AdminSidebar = ({ collapsed, setCollapsed }: Props) => {
     {
       group: "Người dùng",
       items: [
-        { title: "Tài khoản", icon: Users, path: "/admin/users" },
-        { title: "Yêu cầu dạy cầu lông", icon: GraduationCap, path: "/admin/coach-applications" },
-        { title: "Chi nhánh", icon: Store, path: "/admin/branches" },
-        { title: "Manager", icon: Shield, path: "/admin/managers" },
+        { title: "Tài khoản", icon: Users, path: "/admin/users", description: "Quản lý người dùng" },
+        {
+          title: "Yêu cầu dạy cầu lông",
+          icon: GraduationCap,
+          path: "/admin/coach-applications",
+          description: "Duyệt hồ sơ huấn luyện viên",
+        },
+        { title: "Chi nhánh", icon: Store, path: "/admin/branches", description: "Quản lý cơ sở sân" },
+        { title: "Manager", icon: Shield, path: "/admin/managers", description: "Phân quyền quản lý" },
       ],
     },
     {
@@ -96,7 +103,7 @@ const AdminSidebar = ({ collapsed, setCollapsed }: Props) => {
       <button
         type="button"
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-4 top-8 z-50 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
+        className="absolute -right-4 top-7 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
         aria-label={collapsed ? "Mở rộng menu" : "Thu gọn menu"}
       >
         {collapsed ? (
@@ -107,7 +114,7 @@ const AdminSidebar = ({ collapsed, setCollapsed }: Props) => {
       </button>
 
       <div
-        className={`flex h-24 items-center border-b border-slate-100 ${
+        className={`flex h-20 items-center border-b border-slate-200 ${
           collapsed ? "justify-center" : "px-6"
         }`}
       >
@@ -115,14 +122,14 @@ const AdminSidebar = ({ collapsed, setCollapsed }: Props) => {
           <img
             src="/img/logo_badminton.jpg"
             alt="B-Hub"
-            className="h-14 w-14 shrink-0 rounded-2xl border border-slate-100 object-cover shadow-sm"
+            className="h-12 w-12 shrink-0 rounded-2xl border border-slate-100 object-cover shadow-sm"
           />
           {!collapsed && (
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+              <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
                 B-Hub
               </h1>
-              <p className="text-sm font-medium text-slate-500">
+              <p className="text-sm font-normal text-slate-500">
                 Quản trị hệ thống
               </p>
             </div>

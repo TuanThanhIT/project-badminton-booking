@@ -4,16 +4,16 @@ const getFinanceStatsService = () =>
   instance.get("/admin/finance/stats");
 
 const getWalletTransactionsService = (params: {
-  page?: number; limit?: number; type?: string; status?: string;
+  page?: number; limit?: number; search?: string; type?: string; status?: string;
   dateFrom?: string; dateTo?: string;
 }) => instance.get("/admin/finance/transactions", { params });
 
 const getWithdrawRequestsService = (params: {
-  page?: number; limit?: number; status?: string;
+  page?: number; limit?: number; search?: string; status?: string;
 }) => instance.get("/admin/finance/withdraws", { params });
 
 const getUserWalletsService = (params: {
-  page?: number; limit?: number; search?: string;
+  page?: number; limit?: number; search?: string; status?: string;
 }) => instance.get("/admin/finance/wallets", { params });
 
 const approveWithdrawRequestService = (id: number) =>

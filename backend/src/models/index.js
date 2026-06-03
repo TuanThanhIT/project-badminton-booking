@@ -320,6 +320,7 @@ VariantStock.belongsTo(ProductVariant, {
   foreignKey: "variantId",
   as: "variant",
 });
+
 Branch.hasMany(VariantStock, {
   foreignKey: "branchId",
   as: "variantStocks",
@@ -477,11 +478,11 @@ DraftProductItem.belongsTo(DraftBooking, {
 });
 
 ProductVariant.hasMany(DraftProductItem, {
-  foreignKey: "variantId",
+  foreignKey: "productVariantId",
   as: "draftItems",
 });
 DraftProductItem.belongsTo(ProductVariant, {
-  foreignKey: "variantId",
+  foreignKey: "productVariantId",
   as: "variant",
 });
 

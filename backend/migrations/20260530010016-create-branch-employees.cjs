@@ -7,32 +7,29 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         primaryKey: true,
-        unique: true,
         references: {
           model: "Branches",
-          key: "id"
+          key: "id",
         },
         onUpdate: "CASCADE",
-        onDelete: "CASCADE"
+        onDelete: "CASCADE",
       },
 
       employeeId: {
         type: Sequelize.INTEGER,
         allowNull: false,
         primaryKey: true,
-        unique: true,
         references: {
           model: "Users",
-          key: "id"
+          key: "id",
         },
         onUpdate: "CASCADE",
-        onDelete: "CASCADE"
-      }
+        onDelete: "CASCADE",
+      },
     });
-    await queryInterface.addIndex("BranchEmployees", ["branchId","employeeId"], {
-      unique: true,
-      name: "branch_employees_branch_id_employee_id"
-    });
+
+    await queryInterface.addIndex("BranchEmployees", ["branchId"]);
+    await queryInterface.addIndex("BranchEmployees", ["employeeId"]);
   },
 
   async down(queryInterface) {

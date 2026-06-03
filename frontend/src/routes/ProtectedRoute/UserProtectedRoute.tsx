@@ -1,7 +1,7 @@
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useAppSelector } from "../../redux/hook";
-import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
+import { useAppSelector } from "../../redux/hook";
 import { ROLE_NAME } from "../../utils/constants/role";
 
 const UserProtectedRoute = () => {
@@ -18,7 +18,9 @@ const UserProtectedRoute = () => {
 
   const isLoading = !authInitialized || isGetAccountLoading;
   const isNotLoggedIn = !accessToken || !user;
-  const isWrongRole = user && user.role !== ROLE_NAME.USER;
+  const canUseUserArea =
+    user?.role === ROLE_NAME.USER || user?.role === ROLE_NAME.COACH;
+  const isWrongRole = Boolean(user && !canUseUserArea);
 
   const [redirecting, setRedirecting] = useState(false);
 
@@ -37,26 +39,26 @@ const UserProtectedRoute = () => {
 
       return () => clearTimeout(timer);
     }
+
+    setRedirecting(false);
   }, [isLoading, isNotLoggedIn, isWrongRole, navigate, location]);
 
-  // LOADING
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="flex items-center gap-3 text-slate-600">
-          <Loader2 className="w-5 h-5 animate-spin" />
+          <Loader2 className="h-5 w-5 animate-spin" />
           <span>Đang xác thực đăng nhập...</span>
         </div>
       </div>
     );
   }
 
-  // REDIRECT UI (hiển thị trước khi chuyển)
   if (redirecting) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="flex items-center gap-3 text-slate-600">
-          <Loader2 className="w-5 h-5 animate-spin" />
+          <Loader2 className="h-5 w-5 animate-spin" />
           <span>Đang chuyển hướng đăng nhập...</span>
         </div>
       </div>

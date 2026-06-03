@@ -15,6 +15,7 @@ const initAdminRevenueRoute = (app) => {
   adminRevenueRoute.get("/by-date", auth, authorize(ROLE_NAME.ADMIN), adminRevenueController.getRevenueByDateController);
   adminRevenueRoute.get("/by-month", auth, authorize(ROLE_NAME.ADMIN), adminRevenueController.getRevenueByMonthController);
   adminRevenueRoute.get("/products", auth, authorize(ROLE_NAME.ADMIN), adminRevenueController.getRevenueProductsController);
+  adminRevenueRoute.get("/beverages", auth, authorize(ROLE_NAME.ADMIN), adminRevenueController.getRevenueBeveragesController);
 
   app.use("/admin/revenue", adminRevenueRoute);
 };

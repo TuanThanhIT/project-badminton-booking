@@ -1,6 +1,6 @@
 export const ROLE_TAG: Record<string, { color: string; label: string }> = {
   ADMIN:    { color: "bg-red-100 text-red-700 border-red-200",          label: "Quản trị viên" },
-  MANAGER:  { color: "bg-blue-100 text-blue-700 border-blue-200",       label: "Manager" },
+  MANAGER:  { color: "bg-blue-100 text-blue-700 border-blue-200",       label: "Quản lý" },
   EMPLOYEE: { color: "bg-orange-100 text-orange-700 border-orange-200", label: "Nhân viên" },
   USER:     { color: "bg-green-100 text-green-700 border-green-200",    label: "Người dùng" },
   COACH:    { color: "bg-yellow-100 text-yellow-700 border-yellow-200", label: "Dạy cầu lông" },
@@ -10,7 +10,7 @@ export const ROLE_OPTIONS = [
   { label: "Tất cả",     value: "" },
   { label: "Người dùng", value: "USER" },
   { label: "Dạy cầu lông", value: "COACH" },
-  { label: "Manager",    value: "MANAGER" },
+  { label: "Quản lý",    value: "MANAGER" },
   { label: "Nhân viên",  value: "EMPLOYEE" },
 ];
 

@@ -5,6 +5,8 @@ export type UserSearchHit = {
   username: string;
   fullName: string | null;
   avatar: string | null;
+  email?: string | null;
+  phoneNumber?: string | null;
 };
 
 export type UserSearchResponse = ApiResponse<UserSearchHit[]>;

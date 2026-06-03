@@ -27,6 +27,7 @@ const BranchEmployee = sequelize.define(
         },
       },
     },
+
     employeeId: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -52,12 +53,6 @@ const BranchEmployee = sequelize.define(
   {
     tableName: "BranchEmployees",
     timestamps: false,
-    indexes: [
-      {
-        unique: true,
-        fields: ["branchId", "employeeId"],
-      },
-    ],
   },
 );
 

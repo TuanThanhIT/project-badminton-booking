@@ -18,18 +18,12 @@ const FinanceManagementPage = () => {
   ];
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="bg-white rounded-2xl border border-gray-200 p-8 space-y-6">
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="space-y-6 rounded-2xl border border-gray-200 bg-white p-8">
         <AdminPageHeader
-          title="Quản lý Tài chính"
+          title="Quản lý tài chính"
           subtitle="Theo dõi ví người dùng, giao dịch và các yêu cầu rút tiền."
         />
-        <div className="hidden">
-          <h1 className="text-2xl font-bold text-sky-700 relative inline-block">
-            Quản lý Tài chính
-            <span className="absolute left-0 -bottom-3 w-1/2 h-1 bg-sky-400 rounded-sm" />
-          </h1>
-        </div>
 
         <FinanceStatsCards />
 

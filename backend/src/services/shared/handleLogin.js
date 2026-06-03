@@ -9,10 +9,11 @@ import { getEmployeeBranchIds } from "../employee/branchAccessService.js";
 import { ROLE_NAME } from "../../constants/userConstant.js";
 dotenv.config();
 
-export const handleLogin = async (username, password, expectedRole) => {
+export const handleLogin = async (username, password, expectedRoles) => {
   if (!username || !password) {
     throw new BadRequestError("Vui lòng nhập username và password.");
   }
+
   return sequelize.transaction(async (t) => {
     const user = await User.findOne({
       where: { username },
@@ -48,14 +49,22 @@ export const handleLogin = async (username, password, expectedRole) => {
       throw new BadRequestError("Thông tin đăng nhập không chính xác!");
     }
 
-    if (expectedRole && user.role.roleName !== expectedRole) {
-      throw new BadRequestError(
-        "Tài khoản không có quyền đăng nhập khu vực này.",
-      );
+    const userRole = user.role?.roleName;
+
+    if (expectedRoles) {
+      const allowedRoles = Array.isArray(expectedRoles)
+        ? expectedRoles
+        : [expectedRoles];
+
+      if (!allowedRoles.includes(userRole)) {
+        throw new BadRequestError(
+          "Tài khoản không có quyền đăng nhập khu vực này.",
+        );
+      }
     }
 
     const branchIds =
-      user.role.roleName === ROLE_NAME.EMPLOYEE
+      userRole === ROLE_NAME.EMPLOYEE
         ? await getEmployeeBranchIds(user.id, t)
         : [];
 
@@ -63,24 +72,24 @@ export const handleLogin = async (username, password, expectedRole) => {
       id: user.id,
       username: user.username,
       email: user.email,
-      role: user.role.roleName,
+      role: userRole,
       branchIds,
     };
 
     const accessToken = generateAccessToken(payloadAccessToken);
 
-    const payloadRefreshToken = {
+    const refreshToken = generateRefreshToken({
       id: user.id,
-    };
-
-    const refreshToken = generateRefreshToken(payloadRefreshToken);
-
-    // lưu DB
-    await RefreshToken.create({
-      token: refreshToken,
-      userId: user.id,
-      expiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
+
+    await RefreshToken.create(
+      {
+        token: refreshToken,
+        userId: user.id,
+        expiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+      { transaction: t },
+    );
 
     return {
       accessToken,
@@ -89,7 +98,7 @@ export const handleLogin = async (username, password, expectedRole) => {
         id: user.id,
         email: user.email,
         username: user.username,
-        role: user.role.roleName,
+        role: userRole,
         branchIds,
       },
     };

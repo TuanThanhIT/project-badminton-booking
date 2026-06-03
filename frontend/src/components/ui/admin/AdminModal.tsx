@@ -11,10 +11,10 @@ type AdminModalProps = {
 };
 
 export const adminInputClass =
-  "h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 outline-none transition focus:border-sky-500 focus:ring-1 focus:ring-sky-100";
+  "h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100";
 
 export const adminTextAreaClass =
-  "rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 outline-none transition focus:border-sky-500 focus:ring-1 focus:ring-sky-100";
+  "rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100";
 
 export const adminPrimaryButtonClass =
   "inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70";
@@ -40,7 +40,7 @@ export const AdminField = ({
   className?: string;
 }) => (
   <div className={className}>
-    <label className="mb-1 block text-sm font-semibold text-slate-700">
+    <label className="mb-1 block text-xs font-medium text-slate-600">
       {label}
     </label>
     {children}

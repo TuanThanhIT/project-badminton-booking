@@ -1,37 +1,94 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
+  AlertTriangle,
   BarChart3,
   CalendarCheck,
+  ClipboardCheck,
+  Coffee,
   DollarSign,
   PackageCheck,
   ShoppingBag,
-  TicketPercent,
+  Store,
   Trophy,
-  Users,
   Wallet,
 } from "lucide-react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import AdminPageHeader from "../../components/ui/admin/AdminPageHeader";
+import { adminPrimaryButtonClass } from "../../components/ui/admin/AdminModal";
+import DashboardRecentRow from "../../components/ui/admin/dashboard/DashboardRecentRow";
 import adminRevenueService from "../../services/admin/revenueService";
 import type { AdminDashboardData } from "../../types/admin";
-import { BOOKING_STATUS_CONFIG, fmtCurrency, ORDER_STATUS_CONFIG } from "../../utils/constants/adminConstant";
-import DashboardRecentRow from "../../components/ui/admin/dashboard/DashboardRecentRow";
-import DashboardRevenueChart from "../../components/ui/admin/dashboard/DashboardRevenueChart";
-import DashboardStatCard from "../../components/ui/admin/dashboard/DashboardStatCard";
+import {
+  BOOKING_STATUS_CONFIG,
+  fmtCurrency,
+  ORDER_STATUS_CONFIG,
+} from "../../utils/constants/adminConstant";
 
-const Skeleton = ({ className }: { className: string }) => (
-  <div className={`animate-pulse bg-slate-200 rounded-2xl ${className}`} />
-);
-
-const fmtShort = (n: number) =>
-  n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}Mđ`
-  : n >= 1_000 ? `${(n / 1_000).toFixed(0)}Kđ`
-  : `${n.toLocaleString("vi-VN")}đ`;
+const fmtShort = (value: number) =>
+  new Intl.NumberFormat("vi-VN", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value || 0);
 
 const percentOf = (value: number, total: number) =>
   total > 0 ? Math.round((value / total) * 100) : 0;
 
+const Skeleton = ({ className }: { className: string }) => (
+  <div className={`animate-pulse rounded-lg bg-slate-200 ${className}`} />
+);
+
+const StatCard = ({
+  title,
+  value,
+  note,
+  icon: Icon,
+  tone,
+}: {
+  title: string;
+  value: string;
+  note: string;
+  icon: typeof DollarSign;
+  tone: string;
+}) => (
+  <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="flex items-start justify-between gap-3">
+      <div>
+        <p className="text-sm font-medium text-slate-500">{title}</p>
+        <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
+        <p className="mt-1 text-xs text-slate-400">{note}</p>
+      </div>
+      <div className={`flex h-11 w-11 items-center justify-center rounded-lg ${tone}`}>
+        <Icon className="h-5 w-5" />
+      </div>
+    </div>
+  </div>
+);
+
+const ChartTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="space-y-1 rounded-lg border border-slate-200 bg-white p-3 text-xs shadow-lg">
+      <p className="font-semibold text-slate-700">{label}</p>
+      {payload.map((item: any) => (
+        <p key={item.name} style={{ color: item.color }}>
+          {item.name}: {fmtCurrency(Number(item.value))}
+        </p>
+      ))}
+    </div>
+  );
+};
+
 const AdminDashboardPage = () => {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<AdminDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,16 +99,35 @@ const AdminDashboardPage = () => {
       .finally(() => setLoading(false));
   }, []);
 
+  const summary = data?.summary;
+  const operation = data?.operationSummary;
+  const chart = data?.quickRevenueChart || data?.chart || [];
+
+  const revenueStructure = useMemo(() => {
+    const source = data?.revenueStructure || {
+      bookingRevenue: data?.overview?.bookingRevenue || 0,
+      productRevenue: data?.overview?.productRevenue || 0,
+      beverageRevenue: data?.overview?.beverageRevenue || 0,
+    };
+    const total =
+      source.bookingRevenue + source.productRevenue + source.beverageRevenue;
+    return [
+      { label: "Đặt sân", value: source.bookingRevenue, color: "bg-indigo-500" },
+      { label: "Sản phẩm", value: source.productRevenue, color: "bg-emerald-500" },
+      { label: "Đồ uống", value: source.beverageRevenue, color: "bg-amber-500" },
+    ].map((item) => ({ ...item, pct: percentOf(item.value, total), total }));
+  }, [data]);
+
   if (loading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-48" />
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-36" />
+        <Skeleton className="h-36" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+          {Array.from({ length: 10 }).map((_, index) => (
+            <Skeleton key={index} className="h-32" />
           ))}
         </div>
-        <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
           <Skeleton className="h-80 xl:col-span-2" />
           <Skeleton className="h-80" />
         </div>
@@ -59,315 +135,321 @@ const AdminDashboardPage = () => {
     );
   }
 
-  if (!data) {
+  if (!data || !summary) {
     return (
-      <div className="flex h-64 items-center justify-center text-slate-400">
+      <div className="flex h-64 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400">
         Không thể tải dữ liệu dashboard
       </div>
     );
   }
 
-  const { stats, overview, chart, recentBookings, recentOrders, topBranches, topProducts } = data;
-  const maxBranchRevenue = Math.max(...topBranches.map((item) => item.totalRevenue), 1);
-  const revenueMix = [
-    { label: "Sân cầu", value: overview.bookingRevenue, color: "bg-indigo-500" },
-    { label: "Sản phẩm", value: overview.productRevenue, color: "bg-emerald-500" },
-    { label: "Đồ uống", value: overview.beverageRevenue, color: "bg-amber-500" },
-  ];
-
-  const statCards = [
+  const cards = [
     {
-      title: "Doanh thu tháng này",
-      value: fmtCurrency(stats.totalRevenue),
-      growth: stats.revenueGrowth,
-      icon: <DollarSign className="h-6 w-6 text-sky-600" />,
-      color: "bg-sky-100",
+      title: "Doanh thu hôm nay",
+      value: fmtCurrency(summary.todayRevenue),
+      note: "Tổng đặt sân và bán hàng",
+      icon: DollarSign,
+      tone: "bg-sky-50 text-sky-600",
     },
     {
-      title: "Đơn hàng tháng này",
-      value: stats.orderCount.toLocaleString("vi-VN"),
-      growth: stats.orderGrowth,
-      icon: <ShoppingBag className="h-6 w-6 text-violet-600" />,
-      color: "bg-violet-100",
+      title: "Doanh thu đặt sân",
+      value: fmtCurrency(summary.todayBookingRevenue),
+      note: `${summary.todayBookingCount} lượt đặt sân`,
+      icon: CalendarCheck,
+      tone: "bg-indigo-50 text-indigo-600",
     },
     {
-      title: "Lượt đặt sân tháng này",
-      value: stats.bookingCount.toLocaleString("vi-VN"),
-      growth: stats.bookingGrowth,
-      icon: <CalendarCheck className="h-6 w-6 text-emerald-600" />,
-      color: "bg-emerald-100",
+      title: "Doanh thu bán hàng",
+      value: fmtCurrency(summary.todaySalesRevenue),
+      note: `${summary.todayOrderCount} đơn hàng hôm nay`,
+      icon: ShoppingBag,
+      tone: "bg-emerald-50 text-emerald-600",
     },
     {
-      title: "Tổng khách hàng",
-      value: stats.userCount.toLocaleString("vi-VN"),
-      growth: 0,
-      icon: <Users className="h-6 w-6 text-orange-600" />,
-      color: "bg-orange-100",
+      title: "Đang chờ xử lý",
+      value: String(summary.pendingBookingCount + summary.pendingOrderCount),
+      note: `${summary.pendingBookingCount} booking, ${summary.pendingOrderCount} đơn`,
+      icon: ClipboardCheck,
+      tone: "bg-amber-50 text-amber-600",
+    },
+    {
+      title: "Cảnh báo tồn kho",
+      value: String(summary.lowStockCount),
+      note: `${summary.outOfStockCount} mặt hàng hết hàng`,
+      icon: AlertTriangle,
+      tone: "bg-rose-50 text-rose-600",
     },
   ];
 
   return (
-    <div className="space-y-8">
-      <div className="overflow-hidden rounded-3xl bg-gradient-to-r from-sky-700 via-sky-600 to-cyan-500 p-8 text-white shadow-sm">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-sky-100/80">Admin dashboard</p>
-            <h1 className="mt-3 text-3xl font-bold">Tổng quan vận hành hôm nay</h1>
-            <p className="mt-2 max-w-2xl text-sm text-sky-50/80">
-              Theo dõi doanh thu, chi nhánh nổi bật, sản phẩm bán chạy và các giao dịch mới nhất trong một màn hình.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-            {revenueMix.map((item) => (
-              <div key={item.label} className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
-                <p className="text-sky-50/70">{item.label}</p>
-                <p className="mt-1 font-bold">{fmtShort(item.value)}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+    <div className="space-y-6">
+      <AdminPageHeader
+        title="Dashboard Admin"
+        subtitle="Tổng quan nhanh tình hình vận hành hôm nay: doanh thu, booking, đơn hàng, phiếu nhập và cảnh báo tồn kho."
+        action={
+          <Link
+            to="/admin/revenue"
+            className={adminPrimaryButtonClass}
+          >
+            <BarChart3 className="h-4 w-4" />
+            Xem báo cáo doanh thu
+          </Link>
+        }
+      />
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-        {statCards.map((card) => (
-          <DashboardStatCard key={card.title} {...card} />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+        {cards.map((card) => (
+          <StatCard key={card.title} {...card} />
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
-        <div className="space-y-8 xl:col-span-2">
-          <DashboardRevenueChart chart={chart} />
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-            <div className="mb-6 flex items-center justify-between gap-3">
-              <div>
-                <h3 className="text-xl font-bold text-slate-800">Top sản phẩm tháng này</h3>
-                <p className="mt-1 text-sm text-slate-500">Sắp xếp theo doanh thu online và tại quầy</p>
-              </div>
-              <Link to="/admin/revenue" className="text-sm font-semibold text-sky-600 hover:text-sky-700">
-                Xem doanh thu
-              </Link>
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm xl:col-span-2">
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">
+                Doanh thu 7 ngày gần nhất
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Tách nhanh theo đặt sân, sản phẩm và đồ uống
+              </p>
             </div>
-            {topProducts.length === 0 ? (
-              <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu sản phẩm</p>
-            ) : (
-              <div className="space-y-4">
-                {topProducts.map((item, index) => (
+            <Wallet className="h-5 w-5 text-slate-300" />
+          </div>
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chart} barSize={12} barGap={2}>
+                <CartesianGrid stroke="#f1f5f9" vertical={false} />
+                <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} tickFormatter={(v) => fmtShort(Number(v))} width={54} />
+                <Tooltip content={<ChartTooltip />} />
+                <Bar dataKey="bookingRevenue" name="Đặt sân" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="productRevenue" name="Sản phẩm" fill="#10b981" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="beverageRevenue" name="Đồ uống" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-slate-900">Cơ cấu doanh thu hôm nay</h2>
+          <p className="mt-1 text-sm text-slate-500">Dashboard chỉ hiển thị tỷ trọng nhanh</p>
+          <div className="mt-6 space-y-5">
+            {revenueStructure.map((item) => (
+              <div key={item.label}>
+                <div className="mb-2 flex items-center justify-between text-sm">
+                  <span className="font-medium text-slate-600">{item.label}</span>
+                  <span className="font-semibold text-slate-900">
+                    {fmtCurrency(item.value)} ({item.pct}%)
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-slate-100">
                   <div
-                    key={item.productVariantId}
-                    className="flex items-center gap-4 rounded-2xl border border-slate-100 p-4 transition hover:border-sky-200 hover:bg-sky-50/60"
-                  >
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-sm font-bold text-emerald-700">
-                      #{index + 1}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold text-slate-800">{item.productName}</p>
-                      <p className="mt-0.5 text-xs text-slate-400">
-                        {item.variantInfo || "Không có phân loại"} · {item.totalQuantity} sản phẩm
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-sky-700">{fmtShort(item.totalRevenue)}</p>
-                      <p className="text-xs text-slate-400">Online {item.onlineQuantity} · Quầy {item.offlineQuantity}</p>
-                    </div>
-                  </div>
-                ))}
+                    className={`h-2 rounded-full ${item.color}`}
+                    style={{ width: `${Math.max(item.pct, item.value > 0 ? 3 : 0)}%` }}
+                  />
+                </div>
               </div>
-            </section>
-          );
-        })}
+            ))}
+          </div>
+        </section>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
-        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-lg font-bold text-slate-900">
-            Doanh thu nhanh
-          </h2>
-          <p className="text-sm text-slate-500">Theo khoảng dashboard đã chọn.</p>
-          <div className="mt-4 h-80">
-            {chart.length ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chart}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-                  <YAxis tickFormatter={(value) => compactCurrency(Number(value))} />
-                  <Tooltip formatter={(value: number) => fmtCurrency(Number(value))} />
-                  <Bar dataKey="bookingRevenue" name="Đặt sân" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="productRevenue" name="Sản phẩm" fill="#10b981" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="beverageRevenue" name="Đồ uống" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-slate-900">Vận hành sân hôm nay</h2>
+          <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+            {[
+              ["Tổng booking", operation?.totalBookingCount || 0],
+              ["Chờ xác nhận", operation?.pendingBookingCount || 0],
+              ["Đã xác nhận", operation?.confirmedBookingCount || 0],
+              ["Đang chơi", operation?.checkedInBookingCount || 0],
+              ["Hoàn thành", operation?.completedBookingCount || 0],
+              ["Đã hủy", operation?.cancelledBookingCount || 0],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-lg bg-slate-50 p-3">
+                <p className="text-xs text-slate-500">{label}</p>
+                <p className="mt-1 text-lg font-bold text-slate-900">{value}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 rounded-lg border border-slate-100 p-4">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-slate-500">Sân đang sử dụng</span>
+              <span className="font-bold text-sky-700">
+                {operation?.playingCourtCount || 0}/{operation?.totalCourtCount || 0}
+              </span>
+            </div>
+            <div className="mt-3 h-2 rounded-full bg-slate-100">
+              <div
+                className="h-2 rounded-full bg-sky-500"
+                style={{ width: `${operation?.occupancyRate || 0}%` }}
+              />
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mb-5 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-slate-900">Phiếu nhập chờ duyệt</h2>
+            <PackageCheck className="h-5 w-5 text-slate-300" />
+          </div>
+          {(data.pendingPurchaseReceipts || []).length === 0 ? (
+            <p className="py-10 text-center text-sm text-slate-400">
+              Không có phiếu nhập chờ duyệt
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {(data.pendingPurchaseReceipts || []).map((receipt) => (
+                <Link
+                  key={receipt.id}
+                  to="/admin/purchase-receipts"
+                  className="block rounded-lg border border-slate-100 p-4 transition hover:border-sky-200 hover:bg-sky-50"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-semibold text-slate-800">{receipt.receiptCode}</p>
+                    <p className="font-bold text-sky-700">{fmtCurrency(receipt.totalAmount)}</p>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {receipt.branchName || "Chi nhánh"} · {receipt.supplierName || "Nhà cung cấp"}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mb-5 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-slate-900">Cảnh báo tồn kho</h2>
+            <AlertTriangle className="h-5 w-5 text-rose-400" />
+          </div>
+          {(data.lowStockItems || []).length === 0 ? (
+            <p className="py-10 text-center text-sm text-slate-400">
+              Không có mặt hàng sắp hết
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {(data.lowStockItems || []).map((item) => (
+                <Link
+                  key={`${item.itemType}-${item.branchId}-${item.itemId}`}
+                  to="/admin/inventory"
+                  className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 p-3 transition hover:border-rose-200 hover:bg-rose-50"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-800">{item.itemName}</p>
+                    <p className="mt-0.5 truncate text-xs text-slate-500">
+                      {item.branchName} · {item.itemType === "BEVERAGE" ? "Đồ uống" : "Sản phẩm"}
+                    </p>
+                  </div>
+                  <span className={`rounded-full px-2 py-1 text-xs font-bold ${
+                    item.status === "OUT_OF_STOCK"
+                      ? "bg-rose-100 text-rose-700"
+                      : "bg-amber-100 text-amber-700"
+                  }`}>
+                    {item.currentStock}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mb-5 flex items-center gap-3">
+            <Trophy className="h-5 w-5 text-amber-500" />
+            <h2 className="text-lg font-bold text-slate-900">Top 3 chi nhánh</h2>
+          </div>
+          <div className="space-y-3">
+            {data.topBranches.length === 0 ? (
+              <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu</p>
             ) : (
-              <Empty label="Không có dữ liệu doanh thu" />
+              data.topBranches.map((branch, index) => (
+                <div key={branch.branchId} className="rounded-lg bg-slate-50 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-semibold text-slate-800">#{index + 1} {branch.branchName}</p>
+                    <p className="font-bold text-sky-700">{fmtCurrency(branch.totalRevenue)}</p>
+                  </div>
+                </div>
+              ))
             )}
           </div>
         </section>
 
-        <div className="space-y-8">
-          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-            <div className="mb-6 flex items-center justify-between gap-3">
-              <div>
-                <h3 className="text-xl font-bold text-slate-800">Top 3 chi nhánh</h3>
-                <p className="mt-1 text-sm text-slate-500">Doanh thu cao nhất tháng này</p>
-              </div>
-              <Trophy className="h-6 w-6 text-amber-500" />
-            </div>
-            {topBranches.length === 0 ? (
-              <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu chi nhánh</p>
+        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mb-5 flex items-center gap-3">
+            <Store className="h-5 w-5 text-emerald-500" />
+            <h2 className="text-lg font-bold text-slate-900">Top sản phẩm</h2>
+          </div>
+          <div className="space-y-3">
+            {data.topProducts.length === 0 ? (
+              <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu</p>
             ) : (
-              <div className="space-y-4">
-                {topBranches.map((item, index) => (
-                  <div key={item.branchId} className="rounded-2xl border border-slate-100 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className={`flex h-10 w-10 items-center justify-center rounded-2xl font-bold ${
-                          index === 0 ? "bg-amber-100 text-amber-700"
-                          : index === 1 ? "bg-slate-100 text-slate-600"
-                          : "bg-orange-100 text-orange-700"
-                        }`}>
-                          {index + 1}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-slate-800">{item.branchName}</p>
-                          <p className="text-xs text-slate-400">{item.bookingCount + item.orderCount} giao dịch</p>
-                        </div>
-                      </div>
-                      <p className="font-bold text-sky-700">{fmtShort(item.totalRevenue)}</p>
-                    </div>
-                    <div className="mt-4 h-2 rounded-full bg-slate-100">
-                      <div
-                        className="h-2 rounded-full bg-sky-500"
-                        style={{ width: `${percentOf(item.totalRevenue, maxBranchRevenue)}%` }}
-                      />
-                    </div>
-                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-500">
-                      <span>Sân: {fmtShort(item.bookingRevenue)}</span>
-                      <span>Sản phẩm: {fmtShort(item.productRevenue + item.beverageRevenue)}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              data.topProducts.map((product, index) => (
+                <div key={product.productVariantId} className="rounded-lg bg-slate-50 p-4">
+                  <p className="truncate font-semibold text-slate-800">#{index + 1} {product.productName}</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {product.totalQuantity} sản phẩm · {fmtCurrency(product.totalRevenue)}
+                  </p>
+                </div>
+              ))
             )}
           </div>
+        </section>
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-            <h3 className="mb-6 text-xl font-bold text-slate-800">Tỷ trọng doanh thu</h3>
-            <div className="space-y-4">
-              {revenueMix.map((item) => (
-                <div key={item.label}>
-                  <div className="mb-2 flex items-center justify-between text-sm">
-                    <span className="font-medium text-slate-600">{item.label}</span>
-                    <span className="font-semibold text-slate-800">{percentOf(item.value, overview.totalRevenue)}%</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-slate-100">
-                    <div
-                      className={`h-2 rounded-full ${item.color}`}
-                      style={{ width: `${percentOf(item.value, overview.totalRevenue)}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mb-5 flex items-center gap-3">
+            <Coffee className="h-5 w-5 text-amber-500" />
+            <h2 className="text-lg font-bold text-slate-900">Top đồ uống</h2>
           </div>
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-            <h3 className="mb-6 text-xl font-bold text-slate-800">Thao tác nhanh</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { label: "Sản phẩm", icon: PackageCheck, to: "/admin/products" },
-                { label: "Khuyến mãi", icon: TicketPercent, to: "/admin/discounts" },
-                { label: "Tài chính", icon: Wallet, to: "/admin/finance" },
-                { label: "Doanh thu", icon: BarChart3, to: "/admin/revenue" },
-              ].map((item) => (
-                <Link
-                  key={item.label}
-                  to={item.to}
-                  className="flex h-24 flex-col items-center justify-center gap-2 rounded-2xl bg-slate-100 font-semibold text-slate-700 transition-all duration-200 hover:bg-sky-500 hover:text-white"
-                >
-                  <item.icon className="h-6 w-6" />
-                  <span className="text-sm">{item.label}</span>
-                </Link>
-              ))}
-            </div>
-          ))}
-        </div>
+          <div className="space-y-3">
+            {(data.topBeverages || []).length === 0 ? (
+              <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu</p>
+            ) : (
+              (data.topBeverages || []).map((beverage, index) => (
+                <div key={beverage.beverageId} className="rounded-lg bg-slate-50 p-4">
+                  <p className="truncate font-semibold text-slate-800">#{index + 1} {beverage.beverageName}</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {beverage.totalQuantity} món · {fmtCurrency(beverage.totalRevenue)}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
       </div>
 
-      <div className="grid grid-cols-1 gap-8 xl:grid-cols-2">
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-          <div className="mb-6">
-            <h3 className="text-xl font-bold text-slate-800">Đơn hàng gần đây</h3>
-            <p className="mt-1 text-sm text-slate-500">5 đơn hàng mới nhất</p>
-          </div>
-          {recentOrders.length === 0 ? (
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-5 text-lg font-bold text-slate-900">Đơn hàng gần đây</h2>
+          {data.recentOrders.length === 0 ? (
             <p className="py-8 text-center text-sm text-slate-400">Chưa có đơn hàng nào</p>
           ) : (
             <div className="space-y-3">
-              {recentOrders.map((item) => (
+              {data.recentOrders.map((item) => (
                 <DashboardRecentRow key={item.id} item={item} statusConfig={ORDER_STATUS_CONFIG} />
               ))}
             </div>
           )}
-        </div>
+        </section>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-          <div className="mb-6">
-            <h3 className="text-xl font-bold text-slate-800">Đặt sân gần đây</h3>
-            <p className="mt-1 text-sm text-slate-500">5 lượt đặt mới nhất</p>
-          </div>
-          {recentBookings.length === 0 ? (
+        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-5 text-lg font-bold text-slate-900">Đặt sân gần đây</h2>
+          {data.recentBookings.length === 0 ? (
             <p className="py-8 text-center text-sm text-slate-400">Chưa có lượt đặt sân nào</p>
           ) : (
             <div className="space-y-3">
-              {recentBookings.map((item) => (
+              {data.recentBookings.map((item) => (
                 <DashboardRecentRow key={item.id} item={item} statusConfig={BOOKING_STATUS_CONFIG} />
               ))}
             </div>
           )}
-        </div>
+        </section>
       </div>
     </div>
   );
 };
-
-const ListPanel = ({
-  title,
-  empty,
-  children,
-}: {
-  title: string;
-  empty: string;
-  children: ReactNode[];
-}) => (
-  <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-    <h2 className="text-lg font-bold text-slate-900">{title}</h2>
-    <div className="mt-4 space-y-3">
-      {children.length ? children : <Empty label={empty} />}
-    </div>
-  </section>
-);
-
-const ListItem = ({
-  title,
-  subtitle,
-  right,
-  foot,
-}: {
-  title: string;
-  subtitle?: string;
-  right?: string;
-  foot?: string;
-}) => (
-  <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 p-3">
-    <div className="min-w-0">
-      <p className="truncate text-sm font-bold text-slate-900">{title}</p>
-      {subtitle ? <p className="truncate text-xs text-slate-500">{subtitle}</p> : null}
-      {foot ? <p className="mt-1 text-xs text-slate-400">{foot}</p> : null}
-    </div>
-    {right ? (
-      <p className="shrink-0 text-right text-sm font-black text-sky-700">{right}</p>
-    ) : null}
-  </div>
-);
 
 export default AdminDashboardPage;

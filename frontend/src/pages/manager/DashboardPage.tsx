@@ -309,9 +309,10 @@ const DashboardPage = () => {
         </div>
         <div className="overflow-hidden rounded-lg border border-slate-200">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-              <tr>
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                 {[
+                  "#",
                   "Thời gian",
                   "Mặt hàng",
                   "Loại",
@@ -319,15 +320,18 @@ const DashboardPage = () => {
                   "Sau tồn",
                   "Ghi chú",
                 ].map((header) => (
-                  <th key={header} className="px-4 py-3 text-left">
+                  <th key={header} className="px-4 py-3 font-semibold">
                     {header}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
-              {paginatedStockTransactions.map((item: any) => (
+            <tbody className="divide-y divide-slate-100 [&_td]:align-top">
+              {paginatedStockTransactions.map((item: any, index: number) => (
                 <tr key={item.id}>
+                  <td className="px-4 py-3 text-slate-400">
+                    {(stockPage - 1) * LIMIT + index + 1}
+                  </td>
                   <td className="px-4 py-3">
                     {item.createdAt
                       ? new Date(item.createdAt).toLocaleString("vi-VN")
@@ -345,7 +349,7 @@ const DashboardPage = () => {
               {!recentStockTransactions.length ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-4 py-10 text-center text-sm font-semibold text-slate-400"
                   >
                     Không có hoạt động kho

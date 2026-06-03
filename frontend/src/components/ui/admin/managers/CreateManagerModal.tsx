@@ -40,9 +40,9 @@ const CreateManagerModal = ({ branches, onClose, onSuccess }: CreateManagerModal
       const newManagerId = (res.data as any).data?.id;
       if (branchId && newManagerId) {
         await adminManagerService.assignManagerService(Number(branchId), { managerId: newManagerId });
-        toast.success("Tạo Manager và gán chi nhánh thành công");
+        toast.success("Tạo tài khoản quản lý và gán chi nhánh thành công");
       } else {
-        toast.success("Tạo tài khoản Manager thành công");
+        toast.success("Tạo tài khoản quản lý thành công");
       }
       onSuccess();
       onClose();
@@ -61,8 +61,8 @@ const CreateManagerModal = ({ branches, onClose, onSuccess }: CreateManagerModal
 
   return (
     <AdminModal
-      title="Tạo tài khoản Manager"
-      description="Role: MANAGER"
+      title="Tạo tài khoản quản lý"
+      description="Vai trò: Quản lý"
       icon={<UserCheck className="h-5 w-5 text-sky-600" />}
       onClose={onClose}
       maxWidth="max-w-2xl"

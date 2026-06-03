@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import {
   CalendarCheck,
   Coffee,
@@ -9,12 +10,12 @@ import type { AdminRevenueOverview } from "../../../../types/admin";
 
 const fmtShort = (n: number) =>
   n >= 1_000_000
-    ? `${(n / 1_000_000).toFixed(1)}M₫`
+    ? `${(n / 1_000_000).toFixed(1)}Mđ`
     : n >= 1_000
-      ? `${(n / 1_000).toFixed(0)}K₫`
-      : `${n.toLocaleString("vi-VN")}₫`;
+      ? `${(n / 1_000).toFixed(0)}Kđ`
+      : `${n.toLocaleString("vi-VN")}đ`;
 
-const fmtFull = (n: number) => `${n.toLocaleString("vi-VN")}₫`;
+const fmtFull = (n: number) => `${n.toLocaleString("vi-VN")}đ`;
 
 const percentOf = (value: number, total: number) =>
   total > 0 ? Math.round((value / total) * 100) : 0;
@@ -22,15 +23,15 @@ const percentOf = (value: number, total: number) =>
 type ChannelCardProps = {
   title: string;
   total: number;
-  icon: React.ReactNode;
+  icon: ReactNode;
   accent: string;
   lines: { label: string; value: string; muted?: string }[];
 };
 
 const ChannelCard = ({ title, total, icon, accent, lines }: ChannelCardProps) => (
-  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-sky-200 hover:shadow-md">
+  <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:border-sky-200 hover:shadow-md">
     <div className="flex items-start justify-between gap-3">
-      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${accent}`}>
+      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${accent}`}>
         {icon}
       </div>
       <div className="min-w-0 text-right">
@@ -44,9 +45,9 @@ const ChannelCard = ({ title, total, icon, accent, lines }: ChannelCardProps) =>
           <span className="text-slate-500">{line.label}</span>
           <span className="font-semibold text-slate-700">
             {line.value}
-            {line.muted && (
+            {line.muted ? (
               <span className="ml-1 font-normal text-slate-400">{line.muted}</span>
-            )}
+            ) : null}
           </span>
         </div>
       ))}
@@ -78,8 +79,7 @@ const RevenueOverviewCards = ({ data }: { data: AdminRevenueOverview | null }) =
     },
   ];
 
-  const onlineTotal =
-    data.onlineBookingRevenue + data.onlineProductRevenue;
+  const onlineTotal = data.onlineBookingRevenue + data.onlineProductRevenue;
   const offlineTotal =
     data.offlineBookingRevenue +
     data.offlineProductRevenue +
@@ -87,7 +87,7 @@ const RevenueOverviewCards = ({ data }: { data: AdminRevenueOverview | null }) =
 
   return (
     <div className="space-y-5">
-      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
         <div className="grid lg:grid-cols-[1.2fr_1fr]">
           <div className="border-b border-slate-100 bg-gradient-to-br from-sky-600 via-sky-600 to-cyan-600 p-6 text-white lg:border-b-0 lg:border-r">
             <div className="flex items-start justify-between gap-4">
@@ -98,12 +98,12 @@ const RevenueOverviewCards = ({ data }: { data: AdminRevenueOverview | null }) =
                 </p>
                 <p className="mt-2 text-sm text-sky-50/80">{fmtFull(data.totalRevenue)}</p>
               </div>
-              <div className="rounded-2xl bg-white/15 p-3 backdrop-blur">
+              <div className="rounded-lg bg-white/15 p-3 backdrop-blur">
                 <TrendingUp className="h-6 w-6" />
               </div>
             </div>
             <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
+              <div className="rounded-lg border border-white/15 bg-white/10 px-4 py-3">
                 <p className="text-sky-100/70">Giao dịch</p>
                 <p className="mt-1 text-lg font-bold">
                   {(data.bookingCount + data.orderCount).toLocaleString("vi-VN")}
@@ -112,7 +112,7 @@ const RevenueOverviewCards = ({ data }: { data: AdminRevenueOverview | null }) =
                   {data.bookingCount} sân · {data.orderCount} đơn
                 </p>
               </div>
-              <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
+              <div className="rounded-lg border border-white/15 bg-white/10 px-4 py-3">
                 <p className="text-sky-100/70">Kênh</p>
                 <p className="mt-1 text-lg font-bold">Online / Quầy</p>
                 <p className="text-xs text-sky-50/70">

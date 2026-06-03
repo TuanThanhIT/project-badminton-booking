@@ -29,8 +29,8 @@ export type ClassEnrollmentItem = {
   source: string;
   coachNote?: string | null;
   rejectReason?: string | null;
-  createdDate: string;
-  updatedDate: string;
+  createdAt: string;
+  updatedAt: string;
   student?: ClassEnrollmentStudent | null;
   post?: {
     id: number;
@@ -50,7 +50,7 @@ export type CoachClassSummary = {
   title: string;
   content?: string | null;
   formData?: Record<string, unknown> | null;
-  createdDate: string;
+  createdAt: string;
   conversationId?: number | null;
   maxStudents?: number | null;
   enrollmentStatus?: ClassEnrollmentStatus;

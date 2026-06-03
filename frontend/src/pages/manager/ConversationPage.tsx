@@ -24,7 +24,6 @@ import {
   sendManagerMessage,
   uploadManagerChatAttachment,
 } from "../../redux/slices/manager/conversationSlice";
-import { getEmployees } from "../../redux/slices/manager/employeeSlice";
 import { store } from "../../redux/store";
 import { connectSocket, socket } from "../../socket";
 import type { ChatMessage } from "../../types/message";
@@ -37,6 +36,8 @@ const ConversationPage = () => {
   const navigate = useNavigate();
   const { conversationId } = useParams();
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
+  const [starterCustomers, setStarterCustomers] = useState<UserSearchHit[]>([]);
+  const [loadingStarterCustomers, setLoadingStarterCustomers] = useState(false);
 
   const authUser = useAppSelector((state) => state.auth.user);
   const accessToken = useAppSelector((state) => state.auth.accessToken);
@@ -52,10 +53,6 @@ const ConversationPage = () => {
   const uploadingAttachment = useAppSelector((state) =>
     Boolean(state.ui.loadingMap["managerConversation/uploadChatAttachment"]),
   );
-  const loadingEmployees = useAppSelector(
-    (state) => state.managerEmployee.loading,
-  );
-  const employees = useAppSelector((state) => state.managerEmployee.employees);
   const conversations = useAppSelector(
     (state) => state.managerConversation.conversations,
   );
@@ -77,19 +74,6 @@ const ConversationPage = () => {
   const selectedConversation = useMemo(
     () => conversations.find((c) => c.id === selectedConversationId),
     [conversations, selectedConversationId],
-  );
-
-  const starterUsers = useMemo<UserSearchHit[]>(
-    () =>
-      employees
-        .filter((employee) => employee.isActive)
-        .map((employee) => ({
-          id: employee.employeeId,
-          username: employee.username,
-          fullName: employee.fullName || null,
-          avatar: employee.avatar || null,
-        })),
-    [employees],
   );
 
   const stats = useMemo(() => {
@@ -125,8 +109,26 @@ const ConversationPage = () => {
 
   useEffect(() => {
     dispatch(getManagerConversations());
-    dispatch(getEmployees());
   }, [dispatch]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingStarterCustomers(true);
+    searchBranchMembers("", 20)
+      .then((users) => {
+        if (!cancelled) setStarterCustomers(users);
+      })
+      .catch(() => {
+        if (!cancelled) setStarterCustomers([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingStarterCustomers(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searchBranchMembers]);
 
   useEffect(() => {
     const cid = Number(conversationId);
@@ -239,8 +241,8 @@ const ConversationPage = () => {
     <div className="space-y-6 text-slate-800">
       <ManagerPageHeader
         eyebrow="Manager messages"
-        title="Trò chuyện nội bộ"
-        description="Chỉ quản lý và nhân viên thuộc chi nhánh của bạn mới được thêm vào hội thoại."
+        title="Trò chuyện khách hàng"
+        description="Quản lý có thể nhắn với khách hàng từng phát sinh booking hoặc đơn hàng tại chi nhánh."
         metrics={[
           { label: "Hội thoại", value: stats.total },
           { label: "Chưa đọc", value: stats.unread },
@@ -257,10 +259,10 @@ const ConversationPage = () => {
                 Chat chi nhánh
               </div>
               <h1 className="text-3xl font-bold text-white leading-tight">
-                Trò chuyện nội bộ chi nhánh
+                Trò chuyện khách hàng chi nhánh
               </h1>
               <p className="mt-2 max-w-2xl text-sky-100 leading-relaxed">
-                Chỉ quản lý và nhân viên thuộc chi nhánh của bạn mới được thêm
+                Chỉ khách hàng từng phát sinh booking hoặc đơn hàng tại chi nhánh của bạn mới được thêm
                 vào hội thoại.
               </p>
             </div>
@@ -311,8 +313,15 @@ const ConversationPage = () => {
               conversations={conversations}
               selectedConversationId={selectedConversationId}
               currentUserId={authUser?.id}
-              starterUsers={starterUsers}
-              loadingStarterUsers={loadingEmployees}
+              starterUsers={starterCustomers}
+              loadingStarterUsers={loadingStarterCustomers}
+              startTitle="Bắt đầu chat với khách hàng"
+              startDescription="Chọn một khách hàng từng phát sinh đặt sân hoặc đơn hàng tại chi nhánh để tạo hội thoại 1-1."
+              starterLoadingText="Đang tải danh sách khách hàng..."
+              starterEmptyTitle="Chưa có khách hàng để chat"
+              starterEmptyDescription="Khách hàng sẽ xuất hiện khi có booking hoặc đơn hàng tại chi nhánh của bạn."
+              searchUsers={searchBranchMembers}
+              directSearchTitle="Tìm khách hàng"
               onSelect={openConversation}
               onStartDirect={startDirectConversation}
               onCreateGroup={() => setCreateGroupOpen(true)}

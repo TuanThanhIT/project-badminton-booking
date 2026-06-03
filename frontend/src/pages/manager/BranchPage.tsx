@@ -48,7 +48,7 @@ import {
 } from "../../components/commons/manager/ManagerPage";
 import TablePagination from "../../components/ui/TablePagination";
 
-const TABLE_LIMIT = 10;
+const COURT_LIMIT = 9;
 
 const BranchPage = () => {
   const dispatch = useAppDispatch();
@@ -56,7 +56,7 @@ const BranchPage = () => {
   const [showPriceForm, setShowPriceForm] = useState(false);
   const [editingCourt, setEditingCourt] = useState<any>(null);
   const [uploadingCourtImage, setUploadingCourtImage] = useState(false);
-  const [pricePage, setPricePage] = useState(1);
+  const [courtPage, setCourtPage] = useState(1);
 
   const { courts, courtPrices } = useAppSelector((state) => state.managerCourt);
   const { branch } = useAppSelector((state) => state.managerBranch);
@@ -177,11 +177,17 @@ const BranchPage = () => {
     dispatch(getMyBranch());
   }, [dispatch]);
 
-  const priceTotalPages = Math.ceil(courtPrices.length / TABLE_LIMIT);
-  const paginatedCourtPrices = courtPrices.slice(
-    (pricePage - 1) * TABLE_LIMIT,
-    pricePage * TABLE_LIMIT,
+  const courtTotalPages = Math.ceil(courts.length / COURT_LIMIT);
+  const paginatedCourts = courts.slice(
+    (courtPage - 1) * COURT_LIMIT,
+    courtPage * COURT_LIMIT,
   );
+
+  useEffect(() => {
+    if (courtPage > courtTotalPages && courtTotalPages > 0) {
+      setCourtPage(courtTotalPages);
+    }
+  }, [courtPage, courtTotalPages]);
 
   // Helper cho trạng thái sân
   const getStatusBadge = (status: string) => {
@@ -197,7 +203,7 @@ const BranchPage = () => {
     <div className="space-y-8">
       <ManagerPageHeader
         eyebrow="Manager bookings"
-        title="Quản lý sân"
+        title="Quản lý sân cầu lông"
         description="Quản lý sân, giá thuê và trạng thái vận hành của chi nhánh."
         metrics={[
           { label: "Số sân", value: courts.length },
@@ -296,7 +302,10 @@ const BranchPage = () => {
                   />
                 </ManagerField>
 
-                <ManagerField label="Vị trí sân" error={errors.location?.message}>
+                <ManagerField
+                  label="Vị trí sân"
+                  error={errors.location?.message}
+                >
                   <input
                     {...register("location")}
                     className={`w-full ${managerInputClass}`}
@@ -305,7 +314,10 @@ const BranchPage = () => {
                 </ManagerField>
               </div>
 
-              <ManagerField label="Hình ảnh (URL)" error={errors.thumbnailUrl?.message}>
+              <ManagerField
+                label="Hình ảnh (URL)"
+                error={errors.thumbnailUrl?.message}
+              >
                 <input
                   {...register("thumbnailUrl")}
                   className={`w-full ${managerInputClass}`}
@@ -406,7 +418,10 @@ const BranchPage = () => {
                   </select>
                 </ManagerField>
 
-                <ManagerField label="Bắt đầu" error={errorsPrice.startTime?.message}>
+                <ManagerField
+                  label="Bắt đầu"
+                  error={errorsPrice.startTime?.message}
+                >
                   <input
                     type="time"
                     {...registerPrice("startTime")}
@@ -414,7 +429,10 @@ const BranchPage = () => {
                   />
                 </ManagerField>
 
-                <ManagerField label="Kết thúc" error={errorsPrice.endTime?.message}>
+                <ManagerField
+                  label="Kết thúc"
+                  error={errorsPrice.endTime?.message}
+                >
                   <input
                     type="time"
                     {...registerPrice("endTime")}
@@ -483,7 +501,7 @@ const BranchPage = () => {
 
         {courts.length ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {courts.map((court) => (
+            {paginatedCourts.map((court) => (
               <div
                 key={court.id}
                 className="group bg-white rounded-2xl overflow-hidden border border-slate-200 transition-all duration-300"
@@ -556,6 +574,17 @@ const BranchPage = () => {
             description="Thêm sân mới để khách có thể xem lịch và đặt sân tại chi nhánh."
           />
         )}
+        {courts.length ? (
+          <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+            <TablePagination
+              page={courtPage}
+              totalPages={courtTotalPages}
+              total={courts.length}
+              onPage={setCourtPage}
+              unit="sân"
+            />
+          </div>
+        ) : null}
       </section>
 
       {/* LIST COURT PRICES SECTION */}
@@ -567,39 +596,43 @@ const BranchPage = () => {
 
         <div className={`${managerCardClass} overflow-hidden`}>
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50 text-gray-500 uppercase text-[10px] font-bold tracking-widest">
-                  <th className="px-6 py-4">Thứ</th>
-                  <th className="px-6 py-4">Khung giờ</th>
-                  <th className="px-6 py-4">Phân loại</th>
-                  <th className="px-6 py-4 text-right">Giá tiền</th>
+                <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+                  <th className="px-4 py-3 font-semibold">#</th>
+                  <th className="px-4 py-3 font-semibold">Thứ</th>
+                  <th className="px-4 py-3 font-semibold">Khung giờ</th>
+                  <th className="px-4 py-3 font-semibold">Phân loại</th>
+                  <th className="px-4 py-3 text-right font-semibold">
+                    Giá tiền
+                  </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
-                {paginatedCourtPrices.map((item) => (
+              <tbody className="divide-y divide-slate-100 [&_td]:align-top">
+                {courtPrices.map((item, index) => (
                   <tr
                     key={item.id}
                     className="hover:bg-sky-50/60 transition-colors"
                   >
-                    <td className="px-6 py-4 font-bold text-gray-700">
+                    <td className="px-4 py-3 text-slate-400">{index + 1}</td>
+                    <td className="px-4 py-3 text-slate-700">
                       {item.dayOfWeek}
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 text-gray-600">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2 text-slate-600">
                         <Clock size={14} className="text-sky-600" />
-                        <span className="font-medium">
+                        <span>
                           {item.startTime} - {item.endTime}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-[10px] font-bold uppercase tracking-tighter">
+                    <td className="px-4 py-3">
+                      <span className="rounded bg-slate-100 px-2 py-1 text-xs font-bold uppercase text-slate-600">
                         {item.periodType}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <span className="text-lg font-bold text-sky-700 tracking-tight">
+                    <td className="px-4 py-3 text-right">
+                      <span className="font-bold text-sky-700">
                         {item.price.toLocaleString()}{" "}
                         <span className="text-xs">VNĐ</span>
                       </span>
@@ -608,7 +641,7 @@ const BranchPage = () => {
                 ))}
                 {courtPrices.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-6 py-12">
+                    <td colSpan={5} className="px-4 py-12">
                       <ManagerEmptyState
                         icon={DollarSign}
                         title="Chưa có cấu hình giá sân"
@@ -620,7 +653,6 @@ const BranchPage = () => {
               </tbody>
             </table>
           </div>
-          <TablePagination page={pricePage} totalPages={priceTotalPages} total={courtPrices.length} onPage={setPricePage} unit="bảng giá" />
         </div>
       </section>
     </div>
@@ -639,7 +671,7 @@ const ManagerField = ({
   className?: string;
 }) => (
   <div className={className}>
-    <label className="mb-1 block text-sm font-semibold text-slate-700">
+    <label className="mb-1 block text-xs font-medium text-slate-600">
       {label}
     </label>
     {children}

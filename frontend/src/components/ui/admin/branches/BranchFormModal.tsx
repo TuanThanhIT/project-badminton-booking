@@ -10,7 +10,7 @@ import adminBranchService, {
 } from "../../../../services/admin/branchService";
 import adminUploadService from "../../../../services/admin/uploadService";
 import type { AdminBranch } from "../../../../types/admin";
-import AdminModal, {
+import {
   adminInputClass,
   adminPrimaryButtonClass,
   adminSecondaryButtonClass,
@@ -22,6 +22,7 @@ import {
 } from "../../../../schemas/AdminFormSchemas";
 import locationService from "../../../../services/user/locationService";
 import type { District, Province, Ward } from "../../../../types/address";
+import { showConfirmDialog } from "../../../../utils/confirmDialog";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -163,6 +164,15 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
 
   const handleDeleteImage = async (imageId: number) => {
     if (!branch) return;
+    const confirmed = await showConfirmDialog(
+      "Xóa ảnh chi nhánh?",
+      "Ảnh này sẽ bị xóa khỏi chi nhánh.",
+      "Xóa",
+      "Hủy",
+      "danger",
+    );
+    if (!confirmed) return;
+
     try {
       await adminBranchService.deleteBranchImageService(branch.id, imageId);
       setImages((prev) => prev.filter((img) => img.id !== imageId));
@@ -206,7 +216,7 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
   const basicFields: FieldDef[] = [
     { label: "Tên chi nhánh *", key: "branchName" },
     { label: "Số điện thoại *", key: "phoneNumber" },
-    { label: "Mô tả",           key: "description", rows: 3 },
+    { label: "Mô tả",           key: "description", rows: 5 },
     { label: "Địa chỉ *",       key: "address" },
   ];
   const technicalFields: FieldDef[] = [
@@ -282,52 +292,52 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto border border-gray-200">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50 rounded-t-2xl sticky top-0 z-10">
-          <div className="flex items-center gap-2">
-            <Store className="w-5 h-5 text-sky-600" />
-            <h2 className="text-base font-bold text-gray-800">
+    <div className="fixed inset-0 z-[1000] flex min-h-dvh w-screen items-center justify-center overflow-y-auto bg-slate-950/60 p-4 backdrop-blur-sm">
+      <div className="flex w-full max-w-5xl max-h-[calc(100dvh-3rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white px-6 py-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
+              <Store className="h-5 w-5" />
+            </span>
+            <h2 className="text-lg font-bold text-slate-900">
               {isEdit ? "Cập nhật chi nhánh" : "Tạo chi nhánh mới"}
             </h2>
           </div>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-gray-200 flex items-center justify-center transition">
-            <X className="w-4 h-4 text-gray-500" />
+          <button onClick={onClose} type="button" className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100">
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <form onSubmit={handleSubmit} className="grid min-h-0 flex-1 grid-cols-1 gap-5 overflow-y-auto p-6 md:grid-cols-3">
           {basicFields.map(({ label, key, type, rows }) =>
             key === "description" ? (
               <div key={key} className="md:col-span-3">
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-sm font-semibold text-slate-700">{label}</label>
-                  {String(form[key] ?? "") && (
-                    <button type="button" onClick={() => setPreviewDesc(!previewDesc)}
-                      className="text-xs text-sky-600 hover:text-sky-700 font-medium transition">
+                <div className="mb-1 flex items-center justify-between">
+                  <label className="text-xs font-medium text-slate-600">{label}</label>
+                  <button type="button" onClick={() => setPreviewDesc(!previewDesc)}
+                      className="text-xs font-medium text-sky-600 transition hover:text-sky-700">
                       {previewDesc ? "Chỉnh sửa" : "Xem trước"}
                     </button>
-                  )}
                 </div>
                 {previewDesc ? (
                   <div
-                    className="w-full min-h-[80px] max-h-[220px] overflow-y-auto px-3 py-2 rounded-lg border border-sky-200 bg-sky-50/30 text-sm prose prose-sm max-w-none"
+                    className="prose prose-sm max-h-[260px] min-h-[140px] w-full max-w-none overflow-y-auto rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2 text-sm text-slate-700"
                     dangerouslySetInnerHTML={{ __html: String(form[key] ?? "") }}
                   />
                 ) : (
                   <textarea rows={rows || 3} value={String(form[key] ?? "")}
                     onChange={(e) => { setForm({ ...form, [key]: e.target.value }); setErrors({ ...errors, [key]: "" }); }}
-                    className={`w-full resize-none ${adminTextAreaClass}`} />
+                    className={`min-h-[140px] w-full resize-none ${adminTextAreaClass}`} />
                 )}
                 {errors[key] && <p className="mt-1 text-xs text-rose-600">{errors[key]}</p>}
               </div>
             ) : (
               <div key={key} className={rows ? "md:col-span-3" : ""}>
-                <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
+                <label className="mb-1 block text-xs font-medium text-slate-600">{label}</label>
                 {rows ? (
                   <textarea rows={rows} value={String(form[key] ?? "")}
                     onChange={(e) => { setForm({ ...form, [key]: e.target.value }); setErrors({ ...errors, [key]: "" }); }}
-                    className={`w-full resize-none ${adminTextAreaClass}`} />
+                    className={`min-h-[140px] w-full resize-none ${adminTextAreaClass}`} />
                 ) : (
                   <input type={type || "text"} value={String(form[key] ?? "")}
                     onChange={(e) => {
@@ -341,22 +351,100 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
             )
           )}
 
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Tỉnh/Thành *
+            </label>
+            <select
+              value={form.provinceId || ""}
+              onChange={(e) => handleProvinceChange(e.target.value)}
+              disabled={loadingProvinces}
+              className={`w-full bg-white ${adminInputClass}`}
+            >
+              <option value="">
+                {loadingProvinces ? "Đang tải..." : "Chọn tỉnh/thành"}
+              </option>
+              {provinces.map((province) => (
+                <option key={province.ProvinceID} value={province.ProvinceID}>
+                  {province.ProvinceName}
+                </option>
+              ))}
+            </select>
+            {(errors.provinceId || errors.provinceName) && (
+              <p className="mt-1 text-xs text-rose-600">
+                {errors.provinceId || errors.provinceName}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Quận/Huyện *
+            </label>
+            <select
+              value={form.districtId || ""}
+              onChange={(e) => handleDistrictChange(e.target.value)}
+              disabled={!form.provinceId || loadingDistricts}
+              className={`w-full bg-white ${adminInputClass}`}
+            >
+              <option value="">
+                {loadingDistricts ? "Đang tải..." : "Chọn quận/huyện"}
+              </option>
+              {districts.map((district) => (
+                <option key={district.DistrictID} value={district.DistrictID}>
+                  {district.DistrictName}
+                </option>
+              ))}
+            </select>
+            {(errors.districtId || errors.districtName) && (
+              <p className="mt-1 text-xs text-rose-600">
+                {errors.districtId || errors.districtName}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Phường/Xã *
+            </label>
+            <select
+              value={form.wardCode || ""}
+              onChange={(e) => handleWardChange(e.target.value)}
+              disabled={!form.districtId || loadingWards}
+              className={`w-full bg-white ${adminInputClass}`}
+            >
+              <option value="">
+                {loadingWards ? "Đang tải..." : "Chọn phường/xã"}
+              </option>
+              {wards.map((ward) => (
+                <option key={ward.WardCode} value={ward.WardCode}>
+                  {ward.WardName}
+                </option>
+              ))}
+            </select>
+            {(errors.wardCode || errors.wardName) && (
+              <p className="mt-1 text-xs text-rose-600">
+                {errors.wardCode || errors.wardName}
+              </p>
+            )}
+          </div>
+
           {/* Map picker */}
           <div className="md:col-span-3">
             <div className="mb-1 flex items-center justify-between">
-              <label className="text-sm font-semibold text-slate-700">
+              <label className="text-xs font-medium text-slate-600">
                 Vị trí trên bản đồ {!isEdit && <span className="text-red-500">*</span>}
               </label>
               {marker ? (
-                <span className="text-xs text-gray-400 font-mono">
+                <span className="font-mono text-xs text-slate-400">
                   {marker[0].toFixed(6)}, {marker[1].toFixed(6)}
                 </span>
               ) : (
-                <span className="text-xs text-gray-400 italic">Bấm vào bản đồ để chọn vị trí</span>
+                <span className="text-xs italic text-slate-400">Bấm vào bản đồ để chọn vị trí</span>
               )}
             </div>
             {errors.latitude && <p className="mb-1 text-xs text-rose-600">{errors.latitude}</p>}
-            <div className="h-[280px] rounded-xl overflow-hidden border border-gray-300">
+            <div className="h-[280px] overflow-hidden rounded-xl border border-slate-200">
               <MapContainer center={marker ?? MAP_DEFAULT_CENTER} zoom={13} style={{ height: "100%", width: "100%" }}>
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 {marker && <ChangeMapView center={marker} />}
@@ -368,15 +456,15 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
           {/* Technical fields - collapsible */}
           <div className="md:col-span-3">
             <button type="button" onClick={() => setShowTechnical(!showTechnical)}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-500 hover:bg-gray-100 transition">
+              className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-50">
               <span>Cài đặt kỹ thuật (GHN, tọa độ)</span>
               {showTechnical ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </button>
             {showTechnical && (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-3 p-3 rounded-lg bg-gray-50/60 border border-gray-100">
+              <div className="mt-3 grid grid-cols-1 gap-4 rounded-xl border border-slate-100 bg-slate-50/60 p-3 md:grid-cols-4">
                 {technicalFields.map(({ label, key, type }) => (
                   <div key={key}>
-                    <label className="mb-1 block text-sm font-semibold text-slate-700">{label}</label>
+                    <label className="mb-1 block text-xs font-medium text-slate-600">{label}</label>
                     <input type={type || "text"} value={String(form[key] ?? "")}
                       onChange={(e) => {
                         const val = type === "number" ? (e.target.value === "" ? 0 : Number(e.target.value)) : e.target.value;
@@ -394,11 +482,11 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
           {isEdit && (
             <div className="md:col-span-3">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <label className="text-xs font-medium text-slate-600">
                   Hình ảnh ({images.length})
                 </label>
                 <button type="button" onClick={() => imgInputRef.current?.click()} disabled={uploadingImg}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-sky-50 text-sky-600 hover:bg-sky-100 border border-sky-200 transition disabled:opacity-60">
+                  className="inline-flex items-center gap-1 rounded-lg border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-600 transition hover:bg-sky-100 disabled:opacity-60">
                   {uploadingImg
                     ? <div className="w-3 h-3 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
                     : <Upload className="w-3 h-3" />}
@@ -409,7 +497,7 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
               {images.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                   {images.map((img) => (
-                    <div key={img.id} className="relative group rounded-xl overflow-hidden border border-gray-200 aspect-square bg-gray-50">
+                    <div key={img.id} className="group relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
                       <img src={img.imageUrl} alt="" className="w-full h-full object-cover" />
                       <button type="button" onClick={() => handleDeleteImage(img.id)}
                         className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow">
@@ -419,15 +507,15 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
                   ))}
                 </div>
               ) : (
-                <div className="flex flex-col items-center py-5 rounded-xl border border-dashed border-gray-200 bg-gray-50">
-                  <Upload className="w-5 h-5 text-gray-300 mb-1" />
-                  <p className="text-xs text-gray-400">Chưa có hình ảnh · Nhấn "Thêm ảnh" để upload</p>
+                <div className="flex flex-col items-center rounded-xl border border-dashed border-slate-200 bg-slate-50 py-5">
+                  <Upload className="mb-1 h-5 w-5 text-slate-300" />
+                  <p className="text-xs text-slate-400">Chưa có hình ảnh · Nhấn "Thêm ảnh" để upload</p>
                 </div>
               )}
             </div>
           )}
 
-          <div className="md:col-span-3 flex gap-3 pt-2 border-t border-gray-100">
+          <div className="flex justify-end gap-3 border-t border-slate-100 pt-5 md:col-span-3">
             <button type="button" onClick={onClose}
               className={adminSecondaryButtonClass}>
               Hủy
@@ -438,7 +526,8 @@ const BranchFormModal = ({ branch, onClose, onSuccess }: BranchFormModalProps) =
             </button>
           </div>
         </form>
-    </AdminModal>
+      </div>
+    </div>
   );
 };
 

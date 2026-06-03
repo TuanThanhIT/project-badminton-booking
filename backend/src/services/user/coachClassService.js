@@ -76,8 +76,8 @@ const mapEnrollment = (row) => ({
   source: row.source,
   coachNote: row.coachNote,
   rejectReason: row.rejectReason,
-  createdDate: row.createdDate,
-  updatedDate: row.updatedDate,
+  createdAt: row.createdAt,
+  updatedAt: row.updatedAt,
   student: row.student
     ? {
         id: row.student.id,
@@ -204,7 +204,7 @@ const syncStudentToClassChat = async ({ post, studentUserId, transaction }) => {
       transaction,
     });
     await Conversation.update(
-      { updatedDate: new Date() },
+      { updatedAt: new Date() },
       { where: { id: conversationId }, transaction },
     );
   }
@@ -241,7 +241,7 @@ const getCoachClassesService = async ({ coachUserId }) => {
       isDeleted: false,
       isActive: true,
     },
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
     include: [
       {
         model: ClassRoom,
@@ -282,7 +282,7 @@ const getCoachClassesService = async ({ coachUserId }) => {
     title: post.title,
     content: post.content,
     formData: post.formData,
-    createdDate: post.createdDate,
+    createdAt: post.createdAt,
     conversationId: post.classRoom?.conversationId || null,
     enrollmentStatus: getClassEnrollmentStatus(post.classRoom),
     stats: statMap[post.id] || {
@@ -306,7 +306,7 @@ const getCoachEnrollmentsService = async (data) => {
     where,
     limit: Number(limit),
     offset,
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
     include: [studentInclude, postInclude],
   });
 
@@ -332,7 +332,7 @@ const getMyEnrollmentsService = async ({
     where,
     limit: Number(limit),
     offset,
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
     include: [postInclude],
   });
 

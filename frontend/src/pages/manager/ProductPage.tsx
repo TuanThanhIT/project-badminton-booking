@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   CupSoda,
-  History,
   PackagePlus,
   PackageSearch,
   Search,
@@ -13,7 +12,10 @@ import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { getManagerProducts } from "../../redux/slices/manager/productSlice";
 import { getManagerBeverages } from "../../redux/slices/manager/beverageSlice";
 import managerProductService from "../../services/manager/productService";
-import { ManagerPageHeader } from "../../components/commons/manager/ManagerPage";
+import {
+  ManagerPageHeader,
+  managerInputClass,
+} from "../../components/commons/manager/ManagerPage";
 import type {
   ManagerProduct,
   ManagerProductCategory,
@@ -42,6 +44,11 @@ const stockOptions: { value: StockStatus; label: string }[] = [
   { value: "LOW_STOCK", label: "Sắp hết" },
   { value: "OUT_OF_STOCK", label: "Hết hàng" },
 ];
+
+const filterSelectClass =
+  `w-full ${managerInputClass}`;
+
+const filterLabelClass = "mb-1 block text-xs font-medium text-slate-600";
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("vi-VN", {
@@ -270,12 +277,6 @@ const ProductPagae = () => {
     );
   };
 
-  const goToBeverageHistory = (beverageId: number) => {
-    navigate(
-      `/manager/inventory?tab=history&itemType=BEVERAGE&beverageId=${beverageId}`,
-    );
-  };
-
   return (
     <div className="space-y-7">
       <ManagerPageHeader
@@ -364,20 +365,24 @@ const ProductPagae = () => {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-        <label className="block">
-          <span className="text-xs font-semibold uppercase text-slate-500">
-            Tìm kiếm
-          </span>
-          <div className="mt-2 grid gap-3 lg:grid-cols-[1fr_auto]">
+      <div>
+        <div
+          className={
+            activeTab === "beverages"
+              ? "grid gap-4 md:grid-cols-[1fr_260px]"
+              : ""
+          }
+        >
+          <label className="block">
+            <span className={filterLabelClass}>Tìm kiếm</span>
             <div
               className="
     group flex h-11 flex-1 items-center gap-3 rounded-xl
     border border-slate-200 bg-white px-3
     transition-all duration-200
     focus-within:border-sky-400
-    focus-within:ring-1
-    focus-within:ring-sky-50
+    focus-within:ring-2
+    focus-within:ring-sky-100
   "
             >
               <Search className="h-4 w-4 text-slate-400 transition-colors duration-200 group-focus-within:text-sky-500" />
@@ -386,7 +391,7 @@ const ProductPagae = () => {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 className="
-      h-full flex-1 bg-transparent text-sm text-slate-800 outline-none
+      h-full flex-1 bg-transparent text-sm text-slate-700 outline-none
       placeholder:text-slate-400
     "
                 placeholder={
@@ -396,19 +401,106 @@ const ProductPagae = () => {
                 }
               />
             </div>
-            <button
-              type="button"
-              onClick={() => setPage(1)}
-              className="h-11 rounded-xl bg-sky-500 px-6 text-sm font-semibold text-white transition hover:bg-sky-600"
-            >
-              Tìm kiếm
-            </button>
-          </div>
-        </label>
+          </label>
+
+          {activeTab === "beverages" ? (
+            <label className="block">
+              <span className={filterLabelClass}>Tồn kho</span>
+              <select
+                value={stockStatus}
+                onChange={(event) =>
+                  setStockStatus(event.target.value as StockStatus)
+                }
+                className={filterSelectClass}
+              >
+                {stockOptions.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+        </div>
 
         {activeTab === "products" ? (
           <div className="mt-4 space-y-4">
-            <div>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <label className="block">
+                <span className={filterLabelClass}>Nhóm danh mục</span>
+                <select
+                  value={menuGroup}
+                  onChange={(event) => {
+                    setMenuGroup(event.target.value);
+                    setCategoryId("ALL");
+                  }}
+                  className={filterSelectClass}
+                >
+                  <option value="ALL">Tất cả nhóm</option>
+                  {menuGroups.map((group) => (
+                    <option key={group} value={group}>
+                      {group}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="block">
+                <span className={filterLabelClass}>Danh mục</span>
+                <select
+                  value={categoryId}
+                  onChange={(event) =>
+                    setCategoryId(
+                      event.target.value === "ALL"
+                        ? "ALL"
+                        : Number(event.target.value),
+                    )
+                  }
+                  className={filterSelectClass}
+                >
+                  <option value="ALL">Tất cả danh mục</option>
+                  {sortedCategories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.cateName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="block">
+                <span className={filterLabelClass}>Thương hiệu</span>
+                <select
+                  value={brand}
+                  onChange={(event) => setBrand(event.target.value)}
+                  className={filterSelectClass}
+                >
+                  <option value="ALL">Tất cả thương hiệu</option>
+                  {managerProduct.brands.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="block">
+                <span className={filterLabelClass}>Tồn kho</span>
+                <select
+                  value={stockStatus}
+                  onChange={(event) =>
+                    setStockStatus(event.target.value as StockStatus)
+                  }
+                  className={filterSelectClass}
+                >
+                  {stockOptions.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="hidden">
               <p className="mb-2 text-xs font-semibold uppercase text-slate-500">
                 Nhóm danh mục
               </p>
@@ -447,7 +539,7 @@ const ProductPagae = () => {
               </div>
             </div>
 
-            <div>
+            <div className="hidden">
               <p className="mb-2 text-xs font-semibold uppercase text-slate-500">
                 Danh mục
               </p>
@@ -480,11 +572,11 @@ const ProductPagae = () => {
               </div>
             </div>
 
-            <div className="grid gap-3 border-t border-slate-200 pt-4 md:grid-cols-2">
+            <div className="hidden">
               <select
                 value={brand}
                 onChange={(event) => setBrand(event.target.value)}
-                className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
+                className={filterSelectClass}
               >
                 <option value="ALL">Tất cả thương hiệu</option>
                 {managerProduct.brands.map((item) => (
@@ -498,7 +590,7 @@ const ProductPagae = () => {
                 onChange={(event) =>
                   setStockStatus(event.target.value as StockStatus)
                 }
-                className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
+                className={filterSelectClass}
               >
                 {stockOptions.map((item) => (
                   <option key={item.value} value={item.value}>
@@ -508,23 +600,7 @@ const ProductPagae = () => {
               </select>
             </div>
           </div>
-        ) : (
-          <div className="mt-4 border-t border-slate-200 pt-4">
-            <select
-              value={stockStatus}
-              onChange={(event) =>
-                setStockStatus(event.target.value as StockStatus)
-              }
-              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100 md:w-80"
-            >
-              {stockOptions.map((item) => (
-                <option key={item.value} value={item.value}>
-                  {item.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        ) : null}
       </div>
 
       <div className="mt-7 overflow-hidden rounded-2xl border border-slate-200">
@@ -558,7 +634,6 @@ const ProductPagae = () => {
             beverages={managerBeverage.beverages}
             page={page}
             onCreateReceipt={goToCreateBeverageReceipt}
-            onViewHistory={goToBeverageHistory}
           />
         ) : (
           <div className="p-5">
@@ -588,26 +663,26 @@ const ProductTable = ({
   onCreateReceipt: (variantId: number) => void;
 }) => (
   <table className="w-full min-w-[980px] text-sm">
-    <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-      <tr>
-        <th className="px-5 py-4 text-left">#</th>
-        <th className="px-5 py-4 text-left">Sản phẩm</th>
-        <th className="px-5 py-4 text-left">Danh mục</th>
-        <th className="px-5 py-4 text-left">Giá</th>
-        <th className="px-5 py-4 text-left">Tồn kho</th>
-        <th className="px-5 py-4 text-left">Biến thể</th>
+    <thead>
+      <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+        <th className="px-4 py-3 font-semibold">#</th>
+        <th className="px-4 py-3 font-semibold">Sản phẩm</th>
+        <th className="px-4 py-3 font-semibold">Danh mục</th>
+        <th className="px-4 py-3 font-semibold">Giá</th>
+        <th className="px-4 py-3 font-semibold">Tồn kho</th>
+        <th className="px-4 py-3 font-semibold">Biến thể</th>
       </tr>
     </thead>
-    <tbody className="divide-y divide-slate-100">
+    <tbody className="divide-y divide-slate-100 [&_td]:align-top">
       {products.map((product, index) => {
         const stock = getStockMeta(product.totalStock);
 
         return (
           <tr key={product.id} className="align-top">
-            <td className="px-5 py-4 text-slate-500">
+            <td className="px-4 py-3 text-slate-400">
               {(page - 1) * LIMIT + index + 1}
             </td>
-            <td className="px-5 py-4">
+            <td className="px-4 py-3">
               <div className="flex gap-3">
                 <img
                   src={product.thumbnailUrl}
@@ -624,15 +699,15 @@ const ProductTable = ({
                 </div>
               </div>
             </td>
-            <td className="px-5 py-4">
+            <td className="px-4 py-3">
               <span className="rounded-lg bg-sky-50 px-2.5 py-1 text-xs font-bold text-sky-700">
                 {product.category?.cateName || "Sản phẩm"}
               </span>
             </td>
-            <td className="px-5 py-4 font-bold text-sky-700">
+            <td className="px-4 py-3 font-bold text-sky-700">
               {getPriceRange(product.variants)}
             </td>
-            <td className="px-5 py-4">
+            <td className="px-4 py-3">
               <p className={`font-bold ${stock.text}`}>{product.totalStock}</p>
               <span
                 className={`mt-1 inline-flex rounded-md border px-2 py-0.5 text-xs font-bold ${stock.badge}`}
@@ -640,7 +715,7 @@ const ProductTable = ({
                 {stock.label}
               </span>
             </td>
-            <td className="px-5 py-4">
+            <td className="px-4 py-3">
               <div className="space-y-2">
                 {product.variants.map((variant) => {
                   const variantStock = getStockMeta(variant.stock);
@@ -692,34 +767,32 @@ const BeverageTable = ({
   beverages,
   page,
   onCreateReceipt,
-  onViewHistory,
 }: {
   beverages: ManagerBeverage[];
   page: number;
   onCreateReceipt: (beverageId: number) => void;
-  onViewHistory: (beverageId: number) => void;
 }) => (
   <table className="w-full min-w-[860px] text-sm">
-    <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-      <tr>
-        <th className="px-5 py-4 text-left">#</th>
-        <th className="px-5 py-4 text-left">Đồ uống</th>
-        <th className="px-5 py-4 text-left">Giá</th>
-        <th className="px-5 py-4 text-left">Tồn kho</th>
-        <th className="px-5 py-4 text-left">Ngày tạo</th>
-        <th className="px-5 py-4 text-left">Thao tác</th>
+    <thead>
+      <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+        <th className="px-4 py-3 font-semibold">#</th>
+        <th className="px-4 py-3 font-semibold">Đồ uống</th>
+        <th className="px-4 py-3 font-semibold">Giá</th>
+        <th className="px-4 py-3 font-semibold">Tồn kho</th>
+        <th className="px-4 py-3 font-semibold">Ngày tạo</th>
+        <th className="px-4 py-3 font-semibold">Thao tác</th>
       </tr>
     </thead>
-    <tbody className="divide-y divide-slate-100">
+    <tbody className="divide-y divide-slate-100 [&_td]:align-top">
       {beverages.map((beverage, index) => {
         const stock = getStockMeta(beverage.stock);
 
         return (
           <tr key={beverage.id}>
-            <td className="px-5 py-4 text-slate-500">
+            <td className="px-4 py-3 text-slate-400">
               {(page - 1) * LIMIT + index + 1}
             </td>
-            <td className="px-5 py-4">
+            <td className="px-4 py-3">
               <div className="flex items-center gap-3">
                 {beverage.thumbnailUrl ? (
                   <img
@@ -737,20 +810,20 @@ const BeverageTable = ({
                 </p>
               </div>
             </td>
-            <td className="px-5 py-4 font-bold text-sky-700">
+            <td className="px-4 py-3 font-bold text-sky-700">
               {formatCurrency(beverage.price)}
             </td>
-            <td className="px-5 py-4">
+            <td className="px-4 py-3">
               <span
                 className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-bold ${stock.badge}`}
               >
                 {stock.label}
               </span>
             </td>
-            <td className="px-5 py-4 text-slate-600">
+            <td className="px-4 py-3 text-slate-600">
               {new Date(beverage.createdAt).toLocaleDateString("vi-VN")}
             </td>
-            <td className="px-5 py-4">
+            <td className="px-4 py-3">
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -759,14 +832,6 @@ const BeverageTable = ({
                 >
                   <PackagePlus className="h-4 w-4" />
                   Nhập
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onViewHistory(beverage.id)}
-                  className="inline-flex h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
-                >
-                  <History className="h-4 w-4" />
-                  Lịch sử
                 </button>
               </div>
             </td>

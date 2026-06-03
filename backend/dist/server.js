@@ -41,6 +41,7 @@ var _workShiftRoute2 = _interopRequireDefault(require("./routes/manager/workShif
 var _salaryRoute = _interopRequireDefault(require("./routes/manager/salaryRoute.js"));
 var _revenueRoute = _interopRequireDefault(require("./routes/manager/revenueRoute.js"));
 var _orderRoute3 = _interopRequireDefault(require("./routes/manager/orderRoute.js"));
+var _bookingRoute3 = _interopRequireDefault(require("./routes/manager/bookingRoute.js"));
 var _conversationRoute2 = _interopRequireDefault(require("./routes/manager/conversationRoute.js"));
 var _supplierRoute = _interopRequireDefault(require("./routes/manager/supplierRoute.js"));
 var _purchaseReceiptRoute = _interopRequireDefault(require("./routes/manager/purchaseReceiptRoute.js"));
@@ -60,7 +61,9 @@ var _financeRoute = _interopRequireDefault(require("./routes/admin/financeRoute.
 var _revenueRoute2 = _interopRequireDefault(require("./routes/admin/revenueRoute.js"));
 var _categoryRoute = _interopRequireDefault(require("./routes/admin/categoryRoute.js"));
 var _uploadRoute = _interopRequireDefault(require("./routes/admin/uploadRoute.js"));
+var _coachApplicationRoute = _interopRequireDefault(require("./routes/admin/coachApplicationRoute.js"));
 var _coachClassRoute = _interopRequireDefault(require("./routes/user/coachClassRoute.js"));
+var _coachApplicationRoute2 = _interopRequireDefault(require("./routes/user/coachApplicationRoute.js"));
 var _supplierRoute2 = _interopRequireDefault(require("./routes/admin/supplierRoute.js"));
 var _purchaseReceiptRoute2 = _interopRequireDefault(require("./routes/admin/purchaseReceiptRoute.js"));
 var _inventoryRoute2 = _interopRequireDefault(require("./routes/admin/inventoryRoute.js"));
@@ -113,6 +116,7 @@ app.use((0, _cookieParser["default"])());
 (0, _conversationRoute["default"])(app);
 (0, _userSearchRoute["default"])(app);
 (0, _coachClassRoute["default"])(app);
+(0, _coachApplicationRoute2["default"])(app);
 
 // Employee
 (0, _orderRoute2["default"])(app);
@@ -133,6 +137,7 @@ app.use((0, _cookieParser["default"])());
 (0, _revenueRoute2["default"])(app);
 (0, _categoryRoute["default"])(app);
 (0, _uploadRoute["default"])(app);
+(0, _coachApplicationRoute["default"])(app);
 (0, _supplierRoute2["default"])(app);
 (0, _purchaseReceiptRoute2["default"])(app);
 (0, _inventoryRoute2["default"])(app);
@@ -147,6 +152,7 @@ app.use((0, _cookieParser["default"])());
 (0, _salaryRoute["default"])(app);
 (0, _revenueRoute["default"])(app);
 (0, _orderRoute3["default"])(app);
+(0, _bookingRoute3["default"])(app);
 (0, _conversationRoute2["default"])(app);
 (0, _supplierRoute["default"])(app);
 (0, _purchaseReceiptRoute["default"])(app);

@@ -1,15 +1,19 @@
 import { Op } from "sequelize";
 import sequelize from "../../config/db.js";
 import {
-  BranchEmployee,
   BranchManager,
+  Booking,
   Conversation,
   ConversationParticipant,
   Message,
+  Order,
+  OrderGroup,
   Profile,
+  Role,
   User,
 } from "../../models/index.js";
 import { CONVERSATION_TYPE, ROLE_CONVERSATION } from "../../constants/messageConstant.js";
+import { ROLE_NAME } from "../../constants/userConstant.js";
 import BadRequestError from "../../errors/BadRequestError.js";
 import ForbiddenError from "../../errors/ForbiddenError.js";
 import NotFoundError from "../../errors/NotFoundError.js";
@@ -25,27 +29,85 @@ const getManagedBranchIds = async (managerId, transaction) => {
   return [...new Set(rows.map((row) => Number(row.branchId)))];
 };
 
-const getAllowedMemberIds = async (managerId, transaction) => {
-  const branchIds = await getManagedBranchIds(managerId, transaction);
-  if (branchIds.length < 1) return new Set([Number(managerId)]);
+const getBranchCustomerIds = async (branchIds, transaction) => {
+  if (branchIds.length < 1) return [];
 
-  const [employees, managers] = await Promise.all([
-    BranchEmployee.findAll({
+  const [bookings, orders] = await Promise.all([
+    Booking.findAll({
       where: { branchId: branchIds },
-      attributes: ["employeeId"],
+      attributes: ["userId"],
       transaction,
     }),
-    BranchManager.findAll({
-      where: { branchId: branchIds, isActive: true },
-      attributes: ["managerId"],
+    Order.findAll({
+      where: { branchId: branchIds },
+      attributes: ["id"],
+      include: [
+        {
+          model: OrderGroup,
+          as: "orderGroup",
+          attributes: ["userId"],
+          required: true,
+        },
+      ],
       transaction,
     }),
   ]);
 
+  return [
+    ...new Set([
+      ...bookings.map((row) => Number(row.userId)),
+      ...orders
+        .map((row) => Number(row.orderGroup?.userId))
+        .filter((userId) => Number.isInteger(userId) && userId > 0),
+    ]),
+  ];
+};
+
+const getAllowedCustomerIds = async (managerId, transaction) => {
+  const branchIds = await getManagedBranchIds(managerId, transaction);
+  if (branchIds.length < 1) return new Set([Number(managerId)]);
+
+  const customerIds = await getBranchCustomerIds(branchIds, transaction);
+
   return new Set([
     Number(managerId),
-    ...employees.map((row) => Number(row.employeeId)),
-    ...managers.map((row) => Number(row.managerId)),
+    ...customerIds,
+  ]);
+};
+
+const getGeneralChatUserIds = async (managerId, transaction) => {
+  const rows = await User.findAll({
+    where: {
+      id: { [Op.ne]: Number(managerId) },
+      isActive: true,
+    },
+    attributes: ["id"],
+    include: [
+      {
+        model: Role,
+        as: "role",
+        attributes: [],
+        where: {
+          roleName: { [Op.in]: [ROLE_NAME.USER, ROLE_NAME.COACH] },
+        },
+        required: true,
+      },
+    ],
+    transaction,
+  });
+
+  return rows.map((row) => Number(row.id));
+};
+
+const getManagerChatAllowedIds = async (managerId, transaction) => {
+  const allowed = await getAllowedCustomerIds(managerId, transaction);
+  const customerIds = [...allowed].filter((id) => Number(id) !== Number(managerId));
+
+  if (customerIds.length > 0) return allowed;
+
+  return new Set([
+    Number(managerId),
+    ...(await getGeneralChatUserIds(managerId, transaction)),
   ]);
 };
 
@@ -59,10 +121,10 @@ const ensureManagedBranchAccess = async (managerId, transaction) => {
 
 const ensureUsersInManagedBranches = async (managerId, userIds, transaction) => {
   await ensureManagedBranchAccess(managerId, transaction);
-  const allowed = await getAllowedMemberIds(managerId, transaction);
+  const allowed = await getManagerChatAllowedIds(managerId, transaction);
   const invalid = userIds.map(Number).filter((id) => !allowed.has(id));
   if (invalid.length > 0) {
-    throw new ForbiddenError("Chi duoc tro chuyen voi quan ly/nhan vien cung chi nhanh.");
+    throw new ForbiddenError("Chi duoc tro chuyen voi khach hang hop le.");
   }
   return allowed;
 };
@@ -74,7 +136,7 @@ const ensureConversationAllowed = async (managerId, conversationId, transaction)
   });
   if (!membership) throw new ForbiddenError("Ban khong thuoc cuoc tro chuyen nay.");
 
-  const allowed = await getAllowedMemberIds(managerId, transaction);
+  const allowed = await getManagerChatAllowedIds(managerId, transaction);
   const participants = await ConversationParticipant.findAll({
     where: { conversationId },
     attributes: ["userId"],
@@ -172,27 +234,35 @@ const mapConversation = async (conversation, currentUserId, transaction) => {
 const searchBranchMembersService = async ({ managerId, query }) => {
   const q = String(query.q || "").trim();
   const limit = Math.min(Number(query.limit || 15), 30);
-  if (!q) return [];
 
   return sequelize.transaction(async (t) => {
     await ensureManagedBranchAccess(managerId, t);
-    const allowed = await getAllowedMemberIds(managerId, t);
+    const allowed = await getManagerChatAllowedIds(managerId, t);
     allowed.delete(Number(managerId));
     const ids = [...allowed];
     if (ids.length < 1) return [];
 
+    const where = {
+      id: ids,
+      isActive: true,
+    };
+
+    if (q) {
+      where[Op.or] = [
+        { username: { [Op.like]: `%${q}%` } },
+        { email: { [Op.like]: `%${q}%` } },
+        { "$profile.fullName$": { [Op.like]: `%${q}%` } },
+        { "$profile.phoneNumber$": { [Op.like]: `%${q}%` } },
+      ];
+    }
+
     const users = await User.findAll({
-      where: {
-        id: ids,
-        isActive: true,
-        [Op.or]: [
-          { username: { [Op.like]: `%${q}%` } },
-          { "$profile.fullName$": { [Op.like]: `%${q}%` } },
-        ],
-      },
-      attributes: ["id", "username"],
-      include: [{ model: Profile, as: "profile", attributes: ["fullName", "avatar"] }],
+      where,
+      attributes: ["id", "username", "email"],
+      include: [{ model: Profile, as: "profile", attributes: ["fullName", "avatar", "phoneNumber"] }],
       limit,
+      order: [["updatedAt", "DESC"]],
+      subQuery: false,
       transaction: t,
     });
 
@@ -201,6 +271,8 @@ const searchBranchMembersService = async ({ managerId, query }) => {
       username: user.username,
       fullName: user.profile?.fullName || null,
       avatar: user.profile?.avatar || null,
+      email: user.email || null,
+      phoneNumber: user.profile?.phoneNumber || null,
     }));
   });
 };
@@ -208,7 +280,7 @@ const searchBranchMembersService = async ({ managerId, query }) => {
 const getConversationsService = async ({ managerId }) => {
   return sequelize.transaction(async (t) => {
     await ensureManagedBranchAccess(managerId, t);
-    const allowed = await getAllowedMemberIds(managerId, t);
+    const allowed = await getManagerChatAllowedIds(managerId, t);
     const rows = await ConversationParticipant.findAll({
       where: { userId: managerId },
       include: [{ model: Conversation, as: "conversation" }],

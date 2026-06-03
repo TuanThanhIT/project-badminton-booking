@@ -8,7 +8,6 @@ import {
   Plus,
   Search,
   UserRound,
-  Users,
   X,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -29,7 +28,6 @@ import {
   ManagerEmptyState,
   ManagerModalOverlay,
   ManagerPageHeader,
-  ManagerStatCard,
   managerCardClass,
   managerInputClass,
   managerPrimaryButtonClass,
@@ -38,6 +36,11 @@ import {
 import TablePagination from "../../components/ui/TablePagination";
 
 const LIMIT = 10;
+const STATUS_OPTIONS = [
+  { value: "ALL", label: "Tất cả trạng thái" },
+  { value: "ACTIVE", label: "Đang hoạt động" },
+  { value: "LOCKED", label: "Tạm khóa" },
+];
 
 const genderLabel: Record<string, string> = {
   male: "Nam",
@@ -89,6 +92,7 @@ const StaffPage = () => {
   );
   const [showForm, setShowForm] = useState(false);
   const [keyword, setKeyword] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [page, setPage] = useState(1);
 
   const {
@@ -107,10 +111,16 @@ const StaffPage = () => {
 
   const filteredEmployees = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase();
-    if (!normalizedKeyword) return employees;
+    return employees.filter((employee) => {
+      const matchesStatus =
+        statusFilter === "ALL" ||
+        (statusFilter === "ACTIVE" && employee.isActive) ||
+        (statusFilter === "LOCKED" && !employee.isActive);
 
-    return employees.filter((employee) =>
-      [
+      if (!matchesStatus) return false;
+      if (!normalizedKeyword) return true;
+
+      return [
         employee.username,
         employee.email,
         employee.fullName,
@@ -118,15 +128,15 @@ const StaffPage = () => {
         employee.address,
       ]
         .filter(Boolean)
-        .some((value) => value!.toLowerCase().includes(normalizedKeyword)),
-    );
-  }, [employees, keyword]);
+        .some((value) => value!.toLowerCase().includes(normalizedKeyword));
+    });
+  }, [employees, keyword, statusFilter]);
   const totalPages = Math.ceil(filteredEmployees.length / LIMIT);
   const paginatedEmployees = filteredEmployees.slice((page - 1) * LIMIT, page * LIMIT);
 
   useEffect(() => {
     setPage(1);
-  }, [keyword]);
+  }, [keyword, statusFilter]);
 
   const closeForm = () => {
     setShowForm(false);
@@ -161,53 +171,70 @@ const StaffPage = () => {
         }
       />
 
-      <div className="grid items-center gap-4 md:grid-cols-[220px_1fr]">
-        <ManagerStatCard
-          label="Tổng nhân viên"
-          value={employees.length}
-          icon={Users}
-        />
+      <div className="grid items-end gap-4 md:grid-cols-[1fr_240px]">
+        <label>
+          <span className="mb-1 block text-xs font-medium text-slate-600">
+            Tìm kiếm
+          </span>
+          <div
+            className={`
+              flex h-11 items-center gap-2.5 px-3
+              border border-slate-200 bg-white
+              transition-all duration-200
+              focus-within:border-sky-400
+              focus-within:ring-2
+              focus-within:ring-sky-100
+              ${managerCardClass}
+            `}
+          >
+            <Search className="h-4 w-4 shrink-0 text-slate-400 transition-colors duration-200 group-focus-within:text-sky-500" />
 
-        <label
-          className={`
-    flex h-12 self-center items-center gap-2.5 px-3.5
-    border border-slate-200 bg-white
-    transition-all duration-200
-    focus-within:border-sky-400
-    focus-within:ring-1
-    focus-within:ring-sky-50
-    ${managerCardClass}
-  `}
-        >
-          <Search className="h-4 w-4 shrink-0 text-slate-400 transition-colors duration-200 group-focus-within:text-sky-500" />
+            <input
+              value={keyword}
+              onChange={(event) => setKeyword(event.target.value)}
+              className="h-full flex-1 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+              placeholder="Tên, email, số điện thoại hoặc địa chỉ..."
+            />
+          </div>
+        </label>
 
-          <input
-            value={keyword}
-            onChange={(event) => setKeyword(event.target.value)}
-            className="
-      h-8 flex-1 bg-transparent text-sm text-slate-700 outline-none
-      placeholder:text-slate-400
-    "
-            placeholder="Tìm theo tên, email, số điện thoại hoặc địa chỉ"
-          />
+        <label>
+          <span className="mb-1 block text-xs font-medium text-slate-600">
+            Trạng thái
+          </span>
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+            className={`w-full ${managerInputClass}`}
+          >
+            {STATUS_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </label>
       </div>
       <div className={`${managerCardClass} overflow-hidden`}>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[860px] text-left">
-            <thead className="bg-slate-100 text-xs font-bold uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-5 py-4">Nhân viên</th>
-                <th className="px-5 py-4">Liên hệ</th>
-                <th className="px-5 py-4">Giới tính</th>
-                <th className="px-5 py-4">Trạng thái</th>
-                <th className="px-5 py-4">Ngày tạo</th>
+          <table className="w-full min-w-[920px] text-sm">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+                <th className="px-4 py-3 font-semibold">#</th>
+                <th className="px-4 py-3 font-semibold">Nhân viên</th>
+                <th className="px-4 py-3 font-semibold">Liên hệ</th>
+                <th className="px-4 py-3 font-semibold">Giới tính</th>
+                <th className="px-4 py-3 font-semibold">Trạng thái</th>
+                <th className="px-4 py-3 font-semibold">Ngày tạo</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
-              {paginatedEmployees.map((employee) => (
+            <tbody className="divide-y divide-slate-100 [&_td]:align-top">
+              {paginatedEmployees.map((employee, index) => (
                 <tr key={employee.employeeId} className="hover:bg-slate-50">
-                  <td className="px-5 py-4">
+                  <td className="px-4 py-3 text-slate-400">
+                    {(page - 1) * LIMIT + index + 1}
+                  </td>
+                  <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <EmployeeAvatar employee={employee} />
                       <div className="min-w-0">
@@ -220,7 +247,7 @@ const StaffPage = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="px-5 py-4">
+                  <td className="px-4 py-3">
                     <div className="space-y-1 text-sm text-slate-600">
                       <p className="flex items-center gap-2">
                         <Mail className="h-4 w-4 text-slate-400" />
@@ -236,12 +263,12 @@ const StaffPage = () => {
                       </p>
                     </div>
                   </td>
-                  <td className="px-5 py-4 text-sm font-medium text-slate-700">
+                  <td className="px-4 py-3 font-medium text-slate-700">
                     {employee.gender
                       ? genderLabel[employee.gender] || employee.gender
                       : "--"}
                   </td>
-                  <td className="px-5 py-4">
+                  <td className="px-4 py-3">
                     <span
                       className={`inline-flex rounded-xl px-2.5 py-1 text-xs font-bold ${
                         employee.isActive
@@ -252,7 +279,7 @@ const StaffPage = () => {
                       {employee.isActive ? "Đang hoạt động" : "Tạm khóa"}
                     </span>
                   </td>
-                  <td className="px-5 py-4 text-sm text-slate-600">
+                  <td className="px-4 py-3 text-slate-600">
                     {formatDate(employee.createdAt)}
                   </td>
                 </tr>
@@ -260,7 +287,7 @@ const StaffPage = () => {
 
               {!loading && filteredEmployees.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-5 py-12">
+                  <td colSpan={6} className="px-4 py-12">
                     <ManagerEmptyState
                       icon={UserRound}
                       title="Chưa có nhân viên"
@@ -273,8 +300,8 @@ const StaffPage = () => {
               {loading && (
                 <tr>
                   <td
-                    colSpan={5}
-                    className="px-5 py-10 text-center text-sm text-slate-500"
+                    colSpan={6}
+                    className="px-4 py-10 text-center text-sm text-slate-500"
                   >
                     Đang tải danh sách nhân viên...
                   </td>
@@ -402,7 +429,7 @@ const Field = ({
   children: ReactNode;
 }) => (
   <div>
-    <label className="mb-1 block text-sm font-semibold text-slate-700">
+    <label className="mb-1 block text-xs font-medium text-slate-600">
       {label}
     </label>
     {children}

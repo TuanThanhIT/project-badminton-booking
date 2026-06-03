@@ -16,7 +16,8 @@ export const FormBecomeCoachSchema = z.object({
     .trim()
     .min(20, "Giới thiệu cần ít nhất 20 ký tự")
     .max(2000, "Tối đa 2000 ký tự"),
-  phoneContact: z.string().trim().max(20).optional().or(z.literal("")),
+  phoneContact: z.string().trim().max(20, "Tối đa 20 ký tự").optional().or(z.literal("")),
 });
 
 export type FormBecomeCoach = z.infer<typeof FormBecomeCoachSchema>;
+export type FormBecomeCoachInput = z.input<typeof FormBecomeCoachSchema>;

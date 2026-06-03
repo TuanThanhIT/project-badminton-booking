@@ -1,7 +1,7 @@
 import instance from "../../utils/axiosCustomize";
 
 const getCategoriesService = (params?: {
-  page?: number; limit?: number; search?: string;
+  page?: number; limit?: number; search?: string; menuGroup?: string;
 }) => instance.get("/admin/categories", { params });
 
 const createCategoryService = (data: { cateName: string; menuGroup: string }) =>

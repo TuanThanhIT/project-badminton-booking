@@ -12,35 +12,45 @@ import {
 import { AdminCategoryFormSchema } from "../../../../schemas/AdminFormSchemas";
 import AdminModal from "../AdminModal";
 
-const MENU_GROUPS = ["Cầu lông", "Vợt", "Giày", "Quần áo", "Phụ kiện", "Khác"];
-
 type CategoryFormModalProps = {
   category: AdminCategory | null;
+  menuGroups: string[];
   onClose: () => void;
   onSaved: () => void;
 };
 
-const CategoryFormModal = ({ category, onClose, onSaved }: CategoryFormModalProps) => {
+const CategoryFormModal = ({
+  category,
+  menuGroups,
+  onClose,
+  onSaved,
+}: CategoryFormModalProps) => {
   const isEdit = !!category;
+  const groupOptions = menuGroups.length > 0 ? menuGroups : ["Nhóm mặc định"];
   const [form, setForm] = useState({
     cateName: category?.cateName || "",
-    menuGroup: category?.menuGroup || MENU_GROUPS[0],
+    menuGroup: category?.menuGroup || groupOptions[0],
   });
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     const parsed = AdminCategoryFormSchema.safeParse(form);
     if (!parsed.success) {
-      setErrors(Object.fromEntries(parsed.error.issues.map((issue) => [issue.path[0], issue.message])));
+      setErrors(
+        Object.fromEntries(
+          parsed.error.issues.map((issue) => [String(issue.path[0]), issue.message]),
+        ),
+      );
       return;
     }
+
     setErrors({});
     setSaving(true);
     try {
       if (isEdit) {
-        await adminCategoryService.updateCategoryService(category!.id, parsed.data);
+        await adminCategoryService.updateCategoryService(category.id, parsed.data);
         toast.success("Đã cập nhật danh mục");
       } else {
         await adminCategoryService.createCategoryService(parsed.data);
@@ -49,7 +59,9 @@ const CategoryFormModal = ({ category, onClose, onSaved }: CategoryFormModalProp
       onSaved();
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Có lỗi xảy ra");
-    } finally { setSaving(false); }
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -60,41 +72,53 @@ const CategoryFormModal = ({ category, onClose, onSaved }: CategoryFormModalProp
       onClose={onClose}
       maxWidth="max-w-md"
     >
-        <form onSubmit={handleSubmit} className="space-y-5 p-6">
-          <AdminField label="Tên danh mục" error={errors.cateName}>
-            <input
-              value={form.cateName}
-              onChange={(e) => {
-                setForm({ ...form, cateName: e.target.value });
-                setErrors({ ...errors, cateName: "" });
-              }}
-              className={`w-full ${adminInputClass}`}
-              placeholder="VD: Vợt cầu lông..."
-            />
-          </AdminField>
-          <AdminField label="Nhóm menu" error={errors.menuGroup}>
-            <select
-              value={form.menuGroup}
-              onChange={(e) => {
-                setForm({ ...form, menuGroup: e.target.value });
-                setErrors({ ...errors, menuGroup: "" });
-              }}
-              className={`w-full ${adminInputClass}`}
-            >
-              {MENU_GROUPS.map((g) => <option key={g} value={g}>{g}</option>)}
-            </select>
-          </AdminField>
-          <div className="flex justify-end gap-3 border-t border-slate-100 pt-5">
-            <button type="button" onClick={onClose}
-              className={adminSecondaryButtonClass}>
-              Hủy
-            </button>
-            <button type="submit" disabled={saving}
-              className={adminPrimaryButtonClass}>
-              {saving ? "Đang lưu..." : isEdit ? "Cập nhật" : "Tạo mới"}
-            </button>
-          </div>
-        </form>
+      <form onSubmit={handleSubmit} className="space-y-5 p-6">
+        <AdminField label="Tên danh mục" error={errors.cateName}>
+          <input
+            value={form.cateName}
+            onChange={(event) => {
+              setForm({ ...form, cateName: event.target.value });
+              setErrors({ ...errors, cateName: "" });
+            }}
+            className={`w-full ${adminInputClass}`}
+            placeholder="VD: Vợt cầu lông..."
+          />
+        </AdminField>
+
+        <AdminField label="Nhóm menu" error={errors.menuGroup}>
+          <select
+            value={form.menuGroup}
+            onChange={(event) => {
+              setForm({ ...form, menuGroup: event.target.value });
+              setErrors({ ...errors, menuGroup: "" });
+            }}
+            className={`w-full ${adminInputClass}`}
+          >
+            {groupOptions.map((group) => (
+              <option key={group} value={group}>
+                {group}
+              </option>
+            ))}
+          </select>
+        </AdminField>
+
+        <div className="flex justify-end gap-3 border-t border-slate-100 pt-5">
+          <button
+            type="button"
+            onClick={onClose}
+            className={adminSecondaryButtonClass}
+          >
+            Hủy
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            className={adminPrimaryButtonClass}
+          >
+            {saving ? "Đang lưu..." : isEdit ? "Cập nhật" : "Tạo mới"}
+          </button>
+        </div>
+      </form>
     </AdminModal>
   );
 };

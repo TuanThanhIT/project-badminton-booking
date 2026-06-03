@@ -3,10 +3,20 @@ import { Feedback, User, Profile, Branch, ProductVariant, Product } from "../../
 import NotFoundError from "../../errors/NotFoundError.js";
 
 const getAdminFeedbacksService = async (data) => {
-  const { page = 1, limit = 10, branchId, rating, feedbackType } = data;
+  const { page = 1, limit = 10, branchId, rating, feedbackType, search } = data;
   const offset = (page - 1) * limit;
 
   const where = {};
+  const trimmedSearch = String(search || "").trim();
+  if (trimmedSearch) {
+    where[Op.or] = [
+      { content: { [Op.like]: `%${trimmedSearch}%` } },
+      { "$user.username$": { [Op.like]: `%${trimmedSearch}%` } },
+      { "$user.profile.fullName$": { [Op.like]: `%${trimmedSearch}%` } },
+      { "$branch.branchName$": { [Op.like]: `%${trimmedSearch}%` } },
+      { "$variant.product.productName$": { [Op.like]: `%${trimmedSearch}%` } },
+    ];
+  }
   if (branchId) where.branchId = branchId;
   if (rating) where.rating = Number(rating);
   if (feedbackType === "BRANCH") {

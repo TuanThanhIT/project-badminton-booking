@@ -377,7 +377,7 @@ const buildRevenueReport = async ({
       `
       SELECT DATE(COALESCE(ob.paidAt, ob.createdAt)) AS date,
              db.branchId,
-             dpi.variantId,
+             dpi.productVariantId AS variantId,
              SUM(dpi.quantity) AS quantity,
              SUM(dpi.subTotal) AS revenue,
              SUM(dpi.quantity * COALESCE(cost.avgCost, 0)) AS cost
@@ -385,14 +385,14 @@ const buildRevenueReport = async ({
       INNER JOIN DraftBookings db ON db.id = ob.draftId
       INNER JOIN DraftProductItems dpi ON dpi.draftId = db.id
       INNER JOIN (
-        SELECT dpi2.draftId, dpi2.variantId
+        SELECT dpi2.draftId, dpi2.productVariantId AS variantId
         FROM DraftProductItems dpi2
-      ) sales ON sales.draftId = dpi.draftId AND sales.variantId = dpi.variantId
+      ) sales ON sales.draftId = dpi.draftId AND sales.variantId = dpi.productVariantId
       ${getCostJoin(STOCK_ITEM_TYPE.PRODUCT_VARIANT, "variantId")}
       WHERE ob.paymentStatus = :paidStatus
         AND DATE(COALESCE(ob.paidAt, ob.createdAt)) BETWEEN :startDate AND :endDate
         ${draftBranchFilter}
-      GROUP BY DATE(COALESCE(ob.paidAt, ob.createdAt)), db.branchId, dpi.variantId
+      GROUP BY DATE(COALESCE(ob.paidAt, ob.createdAt)), db.branchId, dpi.productVariantId
       `,
       { replacements, type: QueryTypes.SELECT },
     ),
@@ -441,18 +441,18 @@ const buildRevenueReport = async ({
           ${orderBranchFilter}
         GROUP BY od.variantId, od.productName, od.variantInfo
         UNION ALL
-        SELECT dpi.variantId, NULL AS productName, NULL AS variantInfo, SUM(dpi.quantity) AS quantity,
+        SELECT dpi.productVariantId AS variantId, NULL AS productName, NULL AS variantInfo, SUM(dpi.quantity) AS quantity,
                SUM(dpi.subTotal) AS revenue, SUM(dpi.quantity * COALESCE(cost.avgCost, 0)) AS cost
         FROM OfflineBookings ob
         INNER JOIN DraftBookings db ON db.id = ob.draftId
         INNER JOIN DraftProductItems dpi ON dpi.draftId = db.id
-        INNER JOIN (SELECT dpi2.draftId, dpi2.variantId FROM DraftProductItems dpi2) sales
-          ON sales.draftId = dpi.draftId AND sales.variantId = dpi.variantId
+        INNER JOIN (SELECT dpi2.draftId, dpi2.productVariantId AS variantId FROM DraftProductItems dpi2) sales
+          ON sales.draftId = dpi.draftId AND sales.variantId = dpi.productVariantId
         ${getCostJoin(STOCK_ITEM_TYPE.PRODUCT_VARIANT, "variantId")}
         WHERE ob.paymentStatus = :paidStatus
           AND DATE(COALESCE(ob.paidAt, ob.createdAt)) BETWEEN :startDate AND :endDate
           ${draftBranchFilter}
-        GROUP BY dpi.variantId
+        GROUP BY dpi.productVariantId
       ) item
       LEFT JOIN ProductVariants pv ON pv.id = item.variantId
       LEFT JOIN Products p ON p.id = pv.productId

@@ -11,10 +11,20 @@ import NotFoundError from "../../errors/NotFoundError.js";
 import BadRequestError from "../../errors/BadRequestError.js";
 
 const getAdminWalletTransactionsService = async (data) => {
-  const { page = 1, limit = 15, type, status, dateFrom, dateTo } = data;
+  const { page = 1, limit = 15, type, status, dateFrom, dateTo, search } = data;
   const offset = (page - 1) * limit;
 
   const where = {};
+  const userWhere = {};
+  const trimmedSearch = String(search || "").trim();
+  if (trimmedSearch) {
+    where[Op.or] = [
+      { description: { [Op.like]: `%${trimmedSearch}%` } },
+      { "$wallet.user.username$": { [Op.like]: `%${trimmedSearch}%` } },
+      { "$wallet.user.email$": { [Op.like]: `%${trimmedSearch}%` } },
+      { "$wallet.user.profile.fullName$": { [Op.like]: `%${trimmedSearch}%` } },
+    ];
+  }
   if (type) where.type = type;
   if (status) where.status = status;
   if (dateFrom || dateTo) {
@@ -40,6 +50,7 @@ const getAdminWalletTransactionsService = async (data) => {
             model: User,
             as: "user",
             attributes: ["id", "username", "email"],
+            where: userWhere,
             include: [{ model: Profile, as: "profile", attributes: ["fullName", "avatar"] }],
           },
         ],
@@ -74,10 +85,21 @@ const getAdminWalletTransactionsService = async (data) => {
 };
 
 const getAdminWithdrawRequestsService = async (data) => {
-  const { page = 1, limit = 15, status } = data;
+  const { page = 1, limit = 15, status, search } = data;
   const offset = (page - 1) * limit;
 
   const where = {};
+  const trimmedSearch = String(search || "").trim();
+  if (trimmedSearch) {
+    where[Op.or] = [
+      { bankName: { [Op.like]: `%${trimmedSearch}%` } },
+      { bankAccount: { [Op.like]: `%${trimmedSearch}%` } },
+      { accountHolder: { [Op.like]: `%${trimmedSearch}%` } },
+      { "$wallet.user.username$": { [Op.like]: `%${trimmedSearch}%` } },
+      { "$wallet.user.email$": { [Op.like]: `%${trimmedSearch}%` } },
+      { "$wallet.user.profile.fullName$": { [Op.like]: `%${trimmedSearch}%` } },
+    ];
+  }
   if (status) where.status = status;
 
   const { rows, count } = await WithdrawRequest.findAndCountAll({
@@ -129,7 +151,7 @@ const getAdminWithdrawRequestsService = async (data) => {
 };
 
 const getAdminUserWalletsService = async (data) => {
-  const { page = 1, limit = 15, search } = data;
+  const { page = 1, limit = 15, search, status } = data;
   const offset = (page - 1) * limit;
 
   const userWhere = {};
@@ -140,7 +162,11 @@ const getAdminUserWalletsService = async (data) => {
     ];
   }
 
+  const where = {};
+  if (status) where.status = status;
+
   const { rows, count } = await Wallet.findAndCountAll({
+    where,
     attributes: ["id", "userId", "balance", "status", "createdAt"],
     include: [
       {
@@ -280,7 +306,7 @@ const getAdminFinanceStatsService = async () => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const [pendingWithdrawCount, pendingWithdrawAmount, todayDeposit, totalSystemBalance] =
+  const [pendingWithdrawCount, pendingWithdrawAmount, todayDeposit, totalSystemBalance, lockedWalletCount] =
     await Promise.all([
       WithdrawRequest.count({ where: { status: WITHDRAW_REQUEST_STATUS.CONFIRMED } }),
       WithdrawRequest.sum("amount", { where: { status: WITHDRAW_REQUEST_STATUS.CONFIRMED } }),
@@ -292,6 +318,7 @@ const getAdminFinanceStatsService = async () => {
         },
       }),
       Wallet.sum("balance"),
+      Wallet.count({ where: { status: WALLET_STATUS.LOCKED } }),
     ]);
 
   return {
@@ -299,6 +326,7 @@ const getAdminFinanceStatsService = async () => {
     pendingWithdrawAmount: Number(pendingWithdrawAmount || 0),
     todayDeposit: Number(todayDeposit || 0),
     totalSystemBalance: Number(totalSystemBalance || 0),
+    lockedWalletCount: lockedWalletCount || 0,
   };
 };
 

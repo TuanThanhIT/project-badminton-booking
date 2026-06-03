@@ -1,5 +1,5 @@
-import { QueryTypes } from "sequelize";
-import sequelize from "../../config/db.js";
+import { Op } from "sequelize";
+import { Profile, User } from "../../models/index.js";
 
 /**
  * Tìm người dùng theo username hoặc họ tên (Profiles.fullName), bỏ qua chính mình.
@@ -10,27 +10,44 @@ const searchUsersByNameService = async (data) => {
   const raw = (query || "").trim();
   if (raw.length < 1) return [];
 
-  const safe = raw.replace(/[%_\\]/g, "").trim().slice(0, 50);
+  const safe = raw.replace(/[%\\]/g, "").trim().slice(0, 50);
   if (!safe) return [];
 
   const lim = Math.min(Math.max(Number(limit) || 15, 1), 25);
   const like = `%${safe}%`;
 
-  const rows = await sequelize.query(
-    `SELECT u.id, u.username, p.fullName AS fullName, p.avatar AS avatar
-     FROM Users u
-     LEFT JOIN Profiles p ON p.userId = u.id
-     WHERE u.isActive = 1 AND u.id != :excludeId
-     AND (u.username LIKE :like OR COALESCE(p.fullName, '') LIKE :like)
-     ORDER BY u.username ASC
-     LIMIT :lim`,
-    {
-      replacements: { excludeId: currentUser.id, like, lim },
-      type: QueryTypes.SELECT,
+  const users = await User.findAll({
+    where: {
+      id: { [Op.ne]: currentUser.id },
+      isActive: true,
+      [Op.or]: [
+        { username: { [Op.like]: like } },
+        { email: { [Op.like]: like } },
+        { "$profile.phoneNumber$": { [Op.like]: like } },
+      ],
     },
-  );
+    attributes: ["id", "username", "email"],
+    include: [
+      {
+        model: Profile,
+        as: "profile",
+        attributes: ["fullName", "avatar", "phoneNumber"],
+      },
+    ],
+    order: [
+      ["username", "ASC"],
+    ],
+    limit: lim,
+  });
 
-  return rows;
+  return users.map((user) => ({
+    id: user.id,
+    username: user.username,
+    email: user.email || null,
+    fullName: user.profile?.fullName || null,
+    avatar: user.profile?.avatar || null,
+    phoneNumber: user.profile?.phoneNumber || null,
+  }));
 };
 
 export default { searchUsersByNameService };

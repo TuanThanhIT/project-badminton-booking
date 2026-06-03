@@ -31,9 +31,14 @@ const getAdminProductsService = async (data) => {
       {
         model: ProductVariant,
         as: "variants",
-        attributes: ["id", "price", "discount", "color", "size", "sku"],
+        attributes: ["id", "sku", "price", "discount", "color", "size", "material", "weight"],
         include: [
-          { model: VariantStock, as: "stocks", attributes: ["stock", "branchId"] },
+          {
+            model: VariantStock,
+            as: "stocks",
+            attributes: ["stock", "branchId"],
+            include: [{ model: Branch, as: "branch", attributes: ["id", "branchName"] }],
+          },
         ],
       },
     ],
@@ -58,8 +63,10 @@ const getAdminProductsService = async (data) => {
       cateName: prod.category?.cateName,
       menuGroup: prod.category?.menuGroup,
       variantCount: prod.variants?.length || 0,
+      variants: prod.variants || [],
       totalStock,
       createdAt: prod.createdAt,
+      createdDate: prod.createdAt,
     };
   });
 
@@ -90,7 +97,15 @@ const getAdminProductDetailService = async (productId) => {
 };
 
 const createAdminProductService = async (data) => {
-  const { productName, brand, description, thumbnailUrl, categoryId } = data;
+  const {
+    productName,
+    brand,
+    description,
+    thumbnailUrl,
+    categoryId,
+    imageUrls = [],
+    variants = [],
+  } = data;
 
   const category = await Category.findByPk(categoryId);
   if (!category) throw new NotFoundError("Danh mục không tồn tại");
@@ -98,8 +113,54 @@ const createAdminProductService = async (data) => {
   const existing = await Product.findOne({ where: { productName } });
   if (existing) throw new ConflictError("Tên sản phẩm đã tồn tại");
 
-  const product = await Product.create({ productName, brand, description, thumbnailUrl, categoryId });
-  return product.toJSON();
+  const transaction = await sequelize.transaction();
+  try {
+    const product = await Product.create(
+      { productName, brand, description, thumbnailUrl, categoryId },
+      { transaction },
+    );
+
+    const detailImageUrls = Array.isArray(imageUrls)
+      ? imageUrls.map((url) => String(url || "").trim()).filter(Boolean)
+      : [];
+
+    if (detailImageUrls.length) {
+      await ProductImage.bulkCreate(
+        detailImageUrls.map((imageUrl) => ({ productId: product.id, imageUrl })),
+        { transaction },
+      );
+    }
+
+    if (Array.isArray(variants)) {
+      for (const item of variants) {
+        const variant = await ProductVariant.create(
+          {
+            productId: product.id,
+            sku: item.sku || null,
+            price: Number(item.price || 0),
+            discount: Number(item.discount || 0),
+            color: item.color || null,
+            size: item.size || null,
+            material: item.material || null,
+            weight: item.weight ?? 0.5,
+          },
+          { transaction },
+        );
+
+        await saveVariantStocks({
+          variantId: variant.id,
+          stocks: item.stocks,
+          transaction,
+        });
+      }
+    }
+
+    await transaction.commit();
+    return getAdminProductDetailService(product.id);
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
+  }
 };
 
 const updateAdminProductService = async (productId, data) => {

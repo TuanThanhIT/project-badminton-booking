@@ -76,6 +76,7 @@ const UserRoute = () => {
           <Route path="my-classes" element={<MyClassEnrollmentsPage />} />
           <Route path="become-coach" element={<BecomeCoachPage />} />
           <Route path="coach/classes" element={<Navigate to="/coach/students" replace />} />
+          <Route path="coach/student" element={<Navigate to="/coach/students" replace />} />
           <Route path="coach/students" element={<CoachStudentsPage />} />
         </Route>
       </Route>

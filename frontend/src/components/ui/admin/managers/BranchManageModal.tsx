@@ -6,6 +6,7 @@ import {
 import { toast } from "react-toastify";
 import adminManagerService from "../../../../services/admin/managerService";
 import type { AdminManager, AdminBranchOption } from "../../../../types/admin";
+import { showConfirmDialog } from "../../../../utils/confirmDialog";
 import UserAvatar from "../UserAvatar";
 import {
   AdminModalOverlay,
@@ -64,6 +65,18 @@ const BranchManageModal = ({ manager, branches, onClose, onSuccess }: BranchMana
   };
 
   const handleRevoke = async (branchManagerId: number) => {
+    const branchName =
+      currentBranches.find((branch) => branch.branchManagerId === branchManagerId)
+        ?.branchName || "chi nhánh này";
+    const confirmed = await showConfirmDialog(
+      "Thu hồi quyền quản lý chi nhánh?",
+      `Tài khoản @${manager.username} sẽ không còn quản lý ${branchName}.`,
+      "Thu hồi quyền",
+      "Hủy",
+      "danger",
+    );
+    if (!confirmed) return;
+
     setRevokingId(branchManagerId);
     try {
       await adminManagerService.revokeManagerService(branchManagerId);

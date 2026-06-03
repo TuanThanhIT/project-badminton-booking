@@ -49,8 +49,8 @@ const formatApplication = (row) => {
     rejectReason: plain.rejectReason,
     reviewedBy: plain.reviewedBy,
     reviewedAt: plain.reviewedAt,
-    createdDate: plain.createdDate,
-    updatedDate: plain.updatedDate,
+    createdAt: plain.createdAt,
+    updatedAt: plain.updatedAt,
     user: plain.user
       ? {
           id: plain.user.id,
@@ -94,7 +94,7 @@ const assertCanApply = async (userId) => {
 const getMyCoachApplicationService = async ({ userId }) => {
   const latest = await CoachApplication.findOne({
     where: { userId },
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
     include: [userInclude],
   });
   return latest ? formatApplication(latest) : null;
@@ -129,7 +129,7 @@ const submitCoachApplicationService = async (data) => {
 
   const rejected = await CoachApplication.findOne({
     where: { userId, status: COACH_APPLICATION_STATUS.REJECTED },
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
   });
 
   let application;

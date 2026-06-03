@@ -90,7 +90,7 @@ const getAllManagersService = async (data = {}) => {
     ],
     limit: parsedLimit,
     offset,
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
     distinct: true,
     subQuery: false,
   });

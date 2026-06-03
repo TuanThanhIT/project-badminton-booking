@@ -1,4 +1,4 @@
-export {
+﻿export {
   sendAdminNotification,
   sendBranchEmployeesNotification,
   sendBranchManagersNotification,
@@ -13,7 +13,7 @@ import { Notification } from "../models/index.js";
 const formatNotification = (notify) => ({
   id: notify.id,
   title: notify.title,
-  message: notify.message,
+    message: "Đã đánh dấu tất cả thông báo là đã đọc",
   isRead: notify.isRead,
   type: notify.type,
   createdAt: notify.createdAt,

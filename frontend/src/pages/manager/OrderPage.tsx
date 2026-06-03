@@ -43,6 +43,8 @@ const ORDER_TABS: { value: OrderStatus | "ALL"; label: string }[] = [
   { value: "CANCELLED", label: "Đã hủy" },
 ];
 
+const LIMIT = 10;
+
 const ORDER_LABEL: Record<OrderStatus, string> = {
   PENDING: "Chờ xác nhận",
   CONFIRMED: "Đã xác nhận",
@@ -128,7 +130,7 @@ const OrderPage = () => {
         keyword: keyword.trim() || undefined,
         date: date || undefined,
         page,
-        limit: 12,
+        limit: LIMIT,
       }),
     );
   };
@@ -168,29 +170,39 @@ const OrderPage = () => {
       />
 
       <section className={`${managerCardClass} overflow-hidden`}>
-        <div className="grid gap-3 p-4 lg:grid-cols-[1fr_180px_auto]">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <div className="grid gap-3 p-4 lg:grid-cols-[1fr_180px_auto] lg:items-end">
+          <label>
+            <span className="mb-1 block text-xs font-medium text-slate-600">
+              Tìm kiếm
+            </span>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                value={keyword}
+                onChange={(event) => {
+                  setKeyword(event.target.value);
+                  setPage(1);
+                }}
+                placeholder="Mã đơn, tên, SĐT, mã GHN..."
+                className={`w-full pl-9 ${managerInputClass}`}
+              />
+            </div>
+          </label>
+          <label>
+            <span className="mb-1 block text-xs font-medium text-slate-600">
+              Ngày đặt
+            </span>
             <input
-              value={keyword}
+              type="date"
+              value={date}
+              max={getToday()}
               onChange={(event) => {
-                setKeyword(event.target.value);
+                setDate(event.target.value);
                 setPage(1);
               }}
-              placeholder="Tìm mã đơn, tên, SĐT, mã GHN..."
-              className={`w-full bg-slate-50 pl-9 ${managerInputClass}`}
+              className={`w-full ${managerInputClass}`}
             />
-          </div>
-          <input
-            type="date"
-            value={date}
-            max={getToday()}
-            onChange={(event) => {
-              setDate(event.target.value);
-              setPage(1);
-            }}
-            className={managerInputClass}
-          />
+          </label>
           <button
             type="button"
             onClick={fetchOrders}

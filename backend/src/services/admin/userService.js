@@ -69,7 +69,7 @@ const getUsersService = async (data) => {
         ],
       },
     ],
-    attributes: ["id", "username", "email", "isVerified", "isActive", "createdDate"],
+    attributes: ["id", "username", "email", "isVerified", "isActive", "createdAt"],
     limit: Number(limit),
     offset: Number(offset),
     order: [["createdAt", "DESC"]],
@@ -84,7 +84,7 @@ const getUsersService = async (data) => {
       email: user.email,
       isVerified: user.isVerified,
       isActive: user.isActive,
-      createdAt: user.createdAt,
+      createdDate: user.createdAt,
       role: user.role?.roleName,
       fullName: user.profile?.fullName,
       phoneNumber: user.profile?.phoneNumber,
@@ -111,7 +111,7 @@ const getUsersService = async (data) => {
 const getUserDetailService = async (userId) => {
   const [user, managedBranches] = await Promise.all([
     User.findByPk(userId, {
-    attributes: ["id", "username", "email", "isVerified", "isActive", "createdDate"],
+    attributes: ["id", "username", "email", "isVerified", "isActive", "createdAt"],
     include: [
       {
         model: Profile,
@@ -161,7 +161,7 @@ const getUserDetailService = async (userId) => {
     email: data.email,
     isVerified: data.isVerified,
     isActive: data.isActive,
-    createdAt: data.createdAt,
+    createdDate: data.createdAt,
     role: data.role?.roleName,
     profile: data.profile,
     managedBranches: managedBranches.map((branch) => ({

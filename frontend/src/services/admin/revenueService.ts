@@ -4,6 +4,11 @@ export interface DateRangeParams {
   startDate?: string;
   endDate?: string;
   limit?: number;
+  branchId?: number | string;
+  revenueType?: "ALL" | "BOOKING" | "PRODUCT" | "BEVERAGE";
+  itemType?: "ALL" | "PRODUCT_VARIANT" | "BEVERAGE";
+  groupBy?: "day" | "week" | "month" | "branch" | "item";
+  range?: "today" | "7days" | "30days" | "month";
 }
 
 const getRevenueReportService = (params: DateRangeParams) =>
@@ -27,8 +32,11 @@ const getRevenueByBranchDetailService = (branchId: number, params: DateRangePara
 const getRevenueProductsService = (params: DateRangeParams) =>
   instance.get("/admin/revenue/products", { params });
 
-const getDashboardService = () =>
-  instance.get("/admin/revenue/dashboard");
+const getRevenueBeveragesService = (params: DateRangeParams) =>
+  instance.get("/admin/revenue/beverages", { params });
+
+const getDashboardService = (params?: DateRangeParams) =>
+  instance.get("/admin/revenue/dashboard", { params });
 
 const adminRevenueService = {
   getDashboardService,
@@ -39,6 +47,7 @@ const adminRevenueService = {
   getRevenueByMonthService,
   getRevenueByBranchDetailService,
   getRevenueProductsService,
+  getRevenueBeveragesService,
 };
 
 export default adminRevenueService;

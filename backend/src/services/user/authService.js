@@ -435,7 +435,7 @@ const refreshTokenService = async (data) => {
 
 const handleLoginService = async (data) => {
   const { username, password } = data;
-  return handleLogin(username, password, ROLE_NAME.USER);
+  return handleLogin(username, password, [ROLE_NAME.USER, ROLE_NAME.COACH]);
 };
 
 const handleAdminLoginService = async (data) => {

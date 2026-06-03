@@ -1,12 +1,12 @@
-import { useState, useCallback, useEffect } from "react";
-import { AlertTriangle, CheckCircle, XCircle } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { AlertTriangle, CheckCircle, ChevronDown, Search, XCircle } from "lucide-react";
 import { toast } from "react-toastify";
 import adminFinanceService from "../../../../services/admin/financeService";
 import type { AdminWithdrawRequest } from "../../../../types/admin";
 import { WITHDRAW_STATUS_CONFIG, fmtCurrency, fmtDate } from "../../../../utils/constants/adminConstant";
+import AdminConfirmModal from "../AdminConfirmModal";
 import AdminPagination from "../AdminPagination";
 import AdminUserCell from "../AdminUserCell";
-import AdminConfirmModal from "../AdminConfirmModal";
 
 const LIMIT = 10;
 
@@ -15,10 +15,14 @@ const WithdrawTab = () => {
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("CONFIRMED");
 
   const [modal, setModal] = useState<{ open: boolean; id: number; action: "approve" | "reject" }>({
-    open: false, id: 0, action: "approve",
+    open: false,
+    id: 0,
+    action: "approve",
   });
   const [processing, setProcessing] = useState(false);
 
@@ -26,124 +30,176 @@ const WithdrawTab = () => {
     setLoading(true);
     try {
       const res = await adminFinanceService.getWithdrawRequestsService({
-        page, limit: LIMIT, status: statusFilter || undefined,
+        page,
+        limit: LIMIT,
+        search: appliedSearch || undefined,
+        status: statusFilter || undefined,
       });
       const data = (res.data as any).data;
       setRequests(data.requests || []);
       setTotal(data.pagination?.total || 0);
-    } catch {
+    } catch (err: any) {
       setRequests([]);
       setTotal(0);
+      toast.error(err?.response?.data?.message || "Không thể tải yêu cầu rút tiền");
+    } finally {
+      setLoading(false);
     }
-    finally { setLoading(false); }
-  }, [page, statusFilter]);
+  }, [page, appliedSearch, statusFilter]);
 
-  useEffect(() => { fetchRequests(); }, [fetchRequests]);
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setAppliedSearch(searchInput.trim());
+      setPage(1);
+    }, 350);
+
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
 
   const openModal = (id: number, action: "approve" | "reject") =>
     setModal({ open: true, id, action });
 
-  const closeModal = () => setModal((m) => ({ ...m, open: false }));
+  const closeModal = () => setModal((prev) => ({ ...prev, open: false }));
 
   const handleConfirm = async () => {
     setProcessing(true);
     try {
       if (modal.action === "approve") {
         await adminFinanceService.approveWithdrawRequestService(modal.id);
-        toast.success("Đã duyệt — tiền đã được trừ khỏi ví người dùng");
+        toast.success("Đã duyệt, tiền đã được trừ khỏi ví người dùng");
       } else {
         await adminFinanceService.rejectWithdrawRequestService(modal.id);
-        toast.success("Đã từ chối — tiền được hoàn lại vào số dư khả dụng");
+        toast.success("Đã từ chối, tiền được hoàn lại vào số dư khả dụng");
       }
       closeModal();
       fetchRequests();
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Xử lý thất bại");
-    } finally { setProcessing(false); }
+    } finally {
+      setProcessing(false);
+    }
   };
 
-  const totalPages = Math.ceil(total / LIMIT);
-  const selectedReq = requests.find((r) => r.id === modal.id);
+  const totalPages = Math.max(Math.ceil(total / LIMIT), 1);
+  const selectedReq = requests.find((request) => request.id === modal.id);
 
   return (
-    <div className="space-y-4">
-      <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-700 flex gap-2 items-start">
-        <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+    <div className="space-y-5">
+      <div className="flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50 p-3 text-xs text-blue-700">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
         <span>
-          <b>Quy trình:</b> Lọc theo <b>Đã xác nhận</b> → Admin chuyển khoản thực tế ra ngân hàng người dùng → Nhấn <b>Duyệt</b> để trừ tiền trong hệ thống. Nhấn <b>Từ chối</b> nếu không thể thực hiện.
+          <b>Quy trình:</b> Lọc theo <b>Đã xác nhận</b>, admin chuyển khoản thực tế ra ngân hàng người dùng, rồi nhấn <b>Duyệt</b> để trừ tiền trong hệ thống.
         </span>
       </div>
 
-      <div className="flex gap-3 items-end">
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Trạng thái</label>
-          <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="py-2 px-3 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-sky-400 bg-white transition">
-            <option value="">Tất cả</option>
-            {Object.entries(WITHDRAW_STATUS_CONFIG).map(([v, c]) => <option key={v} value={v}>{c.label}</option>)}
-          </select>
-        </div>
-      </div>
+      <section>
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">Tìm kiếm</label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    setAppliedSearch(searchInput.trim());
+                    setPage(1);
+                  }
+                }}
+                placeholder="Tên, email, ngân hàng, số tài khoản..."
+                className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              />
+            </div>
+          </div>
 
-      <div className="rounded-2xl border border-gray-200 overflow-hidden">
-        {loading ? (
-          <div className="flex justify-center py-14"><div className="w-8 h-8 border-4 border-sky-500 border-t-transparent rounded-full animate-spin" /></div>
-        ) : requests.length === 0 ? (
-          <div className="text-center py-14 text-gray-400 text-sm">Không có yêu cầu rút tiền</div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                {["#", "Người dùng", "Số tiền", "Thông tin ngân hàng", "Trạng thái", "Ngày tạo", "Thao tác"].map((h) => (
-                  <th key={h} className="text-center px-3 py-3 font-semibold">{h}</th>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">Trạng thái</label>
+            <div className="relative">
+              <select
+                value={statusFilter}
+                onChange={(event) => {
+                  setStatusFilter(event.target.value);
+                  setPage(1);
+                }}
+                className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-8 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              >
+                <option value="">Tất cả</option>
+                {Object.entries(WITHDRAW_STATUS_CONFIG).map(([value, config]) => (
+                  <option key={value} value={value}>{config.label}</option>
                 ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 [&_td]:align-top">
-              {requests.map((r, idx) => {
-                const statusConf = WITHDRAW_STATUS_CONFIG[r.status] || { label: r.status, color: "bg-gray-50 text-gray-500 border-gray-200" };
-                const canProcess = r.status === "CONFIRMED";
-                return (
-                  <tr key={r.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-3 py-3 text-center text-gray-400">{(page - 1) * LIMIT + idx + 1}</td>
-                    <td className="px-3 py-3"><AdminUserCell avatar={r.avatar} fullName={r.fullName} username={r.username} email={r.email} /></td>
-                    <td className="px-3 py-3 text-center font-bold text-red-600">{fmtCurrency(r.amount)}</td>
-                    <td className="px-3 py-3 text-center">
-                      <p className="text-xs font-semibold text-gray-800">{r.bankName}</p>
-                      <p className="text-xs text-gray-500 font-mono">{r.bankAccount}</p>
-                      <p className="text-xs text-gray-400">{r.accountHolder}</p>
-                    </td>
-                    <td className="px-3 py-3 text-center">
-                      <span className={`px-2 py-0.5 rounded border text-xs font-semibold ${statusConf.color}`}>{statusConf.label}</span>
-                    </td>
-                    <td className="px-3 py-3 text-center text-xs text-gray-500">
-                      {fmtDate(r.createdAt)}
-                      {r.processedAt && <p className="text-gray-400">Xử lý: {fmtDate(r.processedAt)}</p>}
-                    </td>
-                    <td className="px-3 py-3 text-center">
-                      {canProcess ? (
-                        <div className="flex gap-1.5 justify-center">
-                          <button onClick={() => openModal(r.id, "approve")}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-green-500 hover:bg-green-600 text-white text-xs font-semibold transition">
-                            <CheckCircle className="w-3.5 h-3.5" /> Duyệt
-                          </button>
-                          <button onClick={() => openModal(r.id, "reject")}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold transition">
-                            <XCircle className="w-3.5 h-3.5" /> Từ chối
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-gray-400">—</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        {loading ? (
+          <div className="flex justify-center py-14">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-sky-500 border-t-transparent" />
+          </div>
+        ) : requests.length === 0 ? (
+          <div className="py-14 text-center text-sm text-slate-400">Không có yêu cầu rút tiền</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[1024px] text-sm">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                  {["#", "Người dùng", "Số tiền", "Thông tin ngân hàng", "Trạng thái", "Ngày tạo", "Thao tác"].map((header) => (
+                    <th key={header} className="px-3 py-3 text-center font-semibold">{header}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 [&_td]:align-top">
+                {requests.map((request, index) => {
+                  const statusConf = WITHDRAW_STATUS_CONFIG[request.status] || { label: request.status, color: "bg-slate-50 text-slate-500 border-slate-200" };
+                  const canProcess = request.status === "CONFIRMED";
+                  return (
+                    <tr key={request.id} className="transition hover:bg-sky-50/40">
+                      <td className="px-3 py-3 text-center text-slate-400">{(page - 1) * LIMIT + index + 1}</td>
+                      <td className="px-3 py-3"><AdminUserCell avatar={request.avatar} fullName={request.fullName} username={request.username} email={request.email} /></td>
+                      <td className="px-3 py-3 text-center font-bold text-red-600">{fmtCurrency(request.amount)}</td>
+                      <td className="px-3 py-3 text-center">
+                        <p className="text-xs font-semibold text-slate-800">{request.bankName}</p>
+                        <p className="font-mono text-xs text-slate-500">{request.bankAccount}</p>
+                        <p className="text-xs text-slate-400">{request.accountHolder}</p>
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        <span className={`rounded border px-2 py-0.5 text-xs font-semibold ${statusConf.color}`}>{statusConf.label}</span>
+                      </td>
+                      <td className="px-3 py-3 text-center text-xs text-slate-500">
+                        {fmtDate(request.createdAt)}
+                        {request.processedAt ? <p className="text-slate-400">Xử lý: {fmtDate(request.processedAt)}</p> : null}
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        {canProcess ? (
+                          <div className="flex justify-center gap-1.5">
+                            <button type="button" onClick={() => openModal(request.id, "approve")} className="inline-flex items-center gap-1 rounded-lg bg-green-500 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-green-600">
+                              <CheckCircle className="h-3.5 w-3.5" /> Duyệt
+                            </button>
+                            <button type="button" onClick={() => openModal(request.id, "reject")} className="inline-flex items-center gap-1 rounded-lg bg-red-500 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-red-600">
+                              <XCircle className="h-3.5 w-3.5" /> Từ chối
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-400">-</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
         <AdminPagination page={page} totalPages={totalPages} total={total} onPage={setPage} />
-      </div>
+      </section>
 
       <AdminConfirmModal
         open={modal.open}
@@ -153,13 +209,9 @@ const WithdrawTab = () => {
             ? `Bạn xác nhận đã chuyển khoản ${selectedReq ? fmtCurrency(selectedReq.amount) : ""} cho ${selectedReq?.accountHolder} (${selectedReq?.bankName} - ${selectedReq?.bankAccount}). Hệ thống sẽ trừ tiền khỏi ví người dùng.`
             : `Từ chối yêu cầu rút ${selectedReq ? fmtCurrency(selectedReq.amount) : ""}. Số tiền sẽ được hoàn lại vào số dư khả dụng của người dùng.`
         }
-        confirmLabel={modal.action === "approve" ? "Đã chuyển khoản, Duyệt" : "Từ chối yêu cầu"}
+        confirmLabel={modal.action === "approve" ? "Đã chuyển khoản, duyệt" : "Từ chối yêu cầu"}
         confirmClass={modal.action === "approve" ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}
-        icon={
-          modal.action === "approve"
-            ? <CheckCircle className="w-6 h-6 text-green-500" />
-            : <XCircle className="w-6 h-6 text-red-500" />
-        }
+        icon={modal.action === "approve" ? <CheckCircle className="h-6 w-6 text-green-500" /> : <XCircle className="h-6 w-6 text-red-500" />}
         loading={processing}
         onConfirm={handleConfirm}
         onCancel={closeModal}

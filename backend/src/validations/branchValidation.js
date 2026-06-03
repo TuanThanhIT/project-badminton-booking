@@ -149,6 +149,9 @@ export const getAdminBranchesSchema = {
     page: pageField,
     limit: limitField,
     search: Joi.string().trim().allow("").max(255).optional(),
+    status: Joi.string().valid("ALL", "ACTIVE", "LOCKED", "MAINTENANCE", "").optional(),
+    districtName: Joi.string().trim().allow("").max(100).optional(),
+    provinceName: Joi.string().trim().allow("").max(100).optional(),
     isActive: Joi.alternatives().try(Joi.boolean(), Joi.string().valid("true", "false", "")).optional(),
   }),
 };
@@ -156,6 +159,23 @@ export const getAdminBranchesSchema = {
 export const adminBranchIdSchema = {
   params: Joi.object({
     branchId: idParams("branchId"),
+  }),
+};
+
+export const adminBranchTabQuerySchema = {
+  params: Joi.object({
+    branchId: idParams("branchId"),
+  }),
+  query: Joi.object({
+    page: pageField,
+    limit: limitField,
+    search: Joi.string().trim().allow("").max(255).optional(),
+    status: Joi.string().trim().allow("").max(50).optional(),
+    itemType: Joi.string().trim().allow("").max(50).optional(),
+    type: Joi.string().trim().allow("").max(50).optional(),
+    startDate: Joi.date().iso().optional(),
+    endDate: Joi.date().iso().optional(),
+    revenueType: Joi.string().trim().allow("").max(50).optional(),
   }),
 };
 

@@ -25,8 +25,8 @@ export type CoachApplication = {
   rejectReason?: string | null;
   reviewedBy?: number | null;
   reviewedAt?: string | null;
-  createdDate: string;
-  updatedDate: string;
+  createdAt: string;
+  updatedAt: string;
   user?: CoachApplicationUser | null;
 };
 

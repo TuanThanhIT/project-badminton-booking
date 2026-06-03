@@ -4,26 +4,44 @@ import NotFoundError from "../../errors/NotFoundError.js";
 import ConflictError from "../../errors/ConflictError.js";
 
 const getAdminCategoriesService = async (data) => {
-  const { page = 1, limit = 20, search } = data;
+  const { page = 1, limit = 20, search, menuGroup } = data;
   const offset = (page - 1) * limit;
   const where = {};
   if (search) where.cateName = { [Op.like]: `%${search}%` };
+  if (menuGroup) where.menuGroup = menuGroup;
 
-  const { rows, count } = await Category.findAndCountAll({
-    where,
-    attributes: ["id", "cateName", "menuGroup", "createdAt"],
-    limit: Number(limit),
-    offset: Number(offset),
-    order: [
-      ["menuGroup", "ASC"],
-      ["cateName", "ASC"],
-    ],
-    distinct: true,
-  });
+  const [{ rows, count }, groupRows, totalCategoryCount] = await Promise.all([
+    Category.findAndCountAll({
+      where,
+      attributes: ["id", "cateName", "menuGroup", "createdAt"],
+      limit: Number(limit),
+      offset: Number(offset),
+      order: [
+        ["menuGroup", "ASC"],
+        ["cateName", "ASC"],
+      ],
+      distinct: true,
+    }),
+    Category.findAll({
+      attributes: ["menuGroup"],
+      group: ["menuGroup"],
+      order: [["menuGroup", "ASC"]],
+      raw: true,
+    }),
+    Category.count(),
+  ]);
+
+  const menuGroups = groupRows.map((row) => row.menuGroup).filter(Boolean);
 
   return {
     categories: rows.map((c) => c.toJSON()),
     pagination: { page: Number(page), limit: Number(limit), total: count },
+    menuGroups,
+    stats: {
+      totalCategories: totalCategoryCount,
+      totalGroups: menuGroups.length,
+      currentPageCount: rows.length,
+    },
   };
 };
 

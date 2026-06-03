@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import {
+  BadgeDollarSign,
   CalendarDays,
   Clock,
   Plus,
   Trash2,
   UserPlus,
+  X,
   Users,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { toast } from "react-toastify";
 
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
@@ -23,7 +27,13 @@ import {
   FormWorkShiftSchema,
 } from "../../schemas/FormWorkShiftSchema";
 import type { ManagerShiftRole, ManagerWorkShift } from "../../types/workShift";
-import { ManagerPageHeader } from "../../components/commons/manager/ManagerPage";
+import {
+  ManagerModalOverlay,
+  ManagerPageHeader,
+  managerInputClass,
+  managerPrimaryButtonClass,
+  managerSecondaryButtonClass,
+} from "../../components/commons/manager/ManagerPage";
 import TablePagination from "../../components/ui/TablePagination";
 
 const today = new Date().toISOString().slice(0, 10);
@@ -37,6 +47,47 @@ const formatCurrency = (value: number) =>
   }).format(value || 0);
 
 const timeShort = (time: string) => time?.slice(0, 5) || "--:--";
+
+const ShiftStatCard = ({
+  label,
+  value,
+  icon: Icon,
+  color,
+}: {
+  label: string;
+  value: number;
+  icon: LucideIcon;
+  color: string;
+}) => (
+  <div className={`rounded-xl border p-4 ${color}`}>
+    <div className="flex items-center gap-4">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/5">
+        <Icon className="h-5 w-5" />
+      </div>
+      <div>
+        <p className="text-xs font-semibold opacity-75">{label}</p>
+        <p className="mt-2 text-3xl font-bold">{value}</p>
+      </div>
+    </div>
+  </div>
+);
+
+const ShiftField = ({
+  label,
+  children,
+  className = "",
+}: {
+  label: string;
+  children: ReactNode;
+  className?: string;
+}) => (
+  <label className={className}>
+    <span className="mb-1 block text-xs font-medium text-slate-600">
+      {label}
+    </span>
+    {children}
+  </label>
+);
 
 const WorkShiftPage = () => {
   const dispatch = useAppDispatch();
@@ -54,6 +105,7 @@ const WorkShiftPage = () => {
     cashierShiftWage: 150000,
     staffShiftWage: 120000,
   });
+  const [showShiftForm, setShowShiftForm] = useState(false);
   const [assignmentForms, setAssignmentForms] = useState<
     Record<number, { employeeId: string; roleInShift: ManagerShiftRole }>
   >({});
@@ -90,8 +142,9 @@ const WorkShiftPage = () => {
       shiftCount: workShifts.length,
       assignmentCount,
       cashierCount,
+      availableEmployeeCount: employeeOptions.length,
     };
-  }, [workShifts]);
+  }, [employeeOptions.length, workShifts]);
 
   const handleCreateShift = async () => {
     const parsed = FormWorkShiftSchema.safeParse(shiftForm);
@@ -108,6 +161,7 @@ const WorkShiftPage = () => {
         ...current,
         shiftName: "",
       }));
+      setShowShiftForm(false);
     } catch (error: any) {
       toast.error(error?.message || "Tạo ca thất bại");
     }
@@ -183,20 +237,26 @@ const WorkShiftPage = () => {
         eyebrow="Manager shifts"
         title="Phân ca nhân viên"
         description="Tạo ca và phân nhân viên theo branch đang quản lý."
-        metrics={[
-          { label: "Số ca", value: stats.shiftCount },
-          { label: "Đã phân", value: stats.assignmentCount },
-        ]}
         actions={
-          <label className="flex h-11 items-center gap-3 rounded-xl border border-white/10 bg-white/10 px-3 text-white">
-            <CalendarDays className="h-4 w-4 text-sky-100" />
-            <input
-              type="date"
-              value={workDate}
-              onChange={(event) => setWorkDate(event.target.value)}
-              className="bg-transparent text-sm font-semibold text-white outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
-            />
-          </label>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <label className="flex h-11 items-center gap-3 rounded-xl border border-white/10 bg-white/10 px-3 text-white">
+              <CalendarDays className="h-4 w-4 text-sky-100" />
+              <input
+                type="date"
+                value={workDate}
+                onChange={(event) => setWorkDate(event.target.value)}
+                className="bg-transparent text-sm font-medium text-white outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              />
+            </label>
+            <button
+              type="button"
+              onClick={() => setShowShiftForm(true)}
+              className={managerPrimaryButtonClass}
+            >
+              <Plus className="h-4 w-4" />
+              Tạo ca mới
+            </button>
+          </div>
         }
       />
 
@@ -216,143 +276,165 @@ const WorkShiftPage = () => {
             type="date"
             value={workDate}
             onChange={(event) => setWorkDate(event.target.value)}
-            className="bg-transparent text-sm font-semibold text-slate-800 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
+            className="bg-transparent text-sm font-medium text-slate-700 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
           />
         </label>
       </div>
 
-      <div className="mb-6 grid gap-4 md:grid-cols-3">
-        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <Clock className="h-5 w-5 text-sky-600" />
-            <div>
-              <p className="text-xs font-bold uppercase text-slate-500">
-                Số ca
-              </p>
-              <p className="text-2xl font-bold text-slate-900">
-                {stats.shiftCount}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <Users className="h-5 w-5 text-emerald-600" />
-            <div>
-              <p className="text-xs font-bold uppercase text-slate-500">
-                Nhân viên đã phân
-              </p>
-              <p className="text-2xl font-bold text-slate-900">
-                {stats.assignmentCount}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <UserPlus className="h-5 w-5 text-amber-600" />
-            <div>
-              <p className="text-xs font-bold uppercase text-slate-500">
-                Thu ngân
-              </p>
-              <p className="text-2xl font-bold text-slate-900">
-                {stats.cashierCount}
-              </p>
-            </div>
-          </div>
-        </div>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <ShiftStatCard
+          label="Số ca"
+          value={stats.shiftCount}
+          icon={Clock}
+          color="bg-sky-50 border-sky-200 text-sky-700"
+        />
+        <ShiftStatCard
+          label="Nhân viên đã phân"
+          value={stats.assignmentCount}
+          icon={UserPlus}
+          color="bg-emerald-50 border-emerald-200 text-emerald-700"
+        />
+        <ShiftStatCard
+          label="Thu ngân"
+          value={stats.cashierCount}
+          icon={BadgeDollarSign}
+          color="bg-amber-50 border-amber-200 text-amber-700"
+        />
+        <ShiftStatCard
+          label="Nhân viên khả dụng"
+          value={stats.availableEmployeeCount}
+          icon={Users}
+          color="bg-indigo-50 border-indigo-200 text-indigo-700"
+        />
       </div>
 
-      <section className="mb-6 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-slate-900">Tạo ca mới</h2>
-          <span className="rounded-md bg-sky-50 px-2 py-1 text-xs font-bold text-sky-700">
-            ///MANAGER
-          </span>
-        </div>
+      {showShiftForm ? (
+        <ManagerModalOverlay>
+          <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Tạo ca mới</h2>
+                <p className="text-sm text-slate-500">
+                  Thiết lập thời gian làm việc và mức lương theo vai trò.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowShiftForm(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
 
-        <div className="grid gap-3 lg:grid-cols-[1.2fr_160px_130px_130px_150px_150px_44px]">
-          <input
-            value={shiftForm.shiftName}
-            onChange={(event) =>
-              setShiftForm((current) => ({
-                ...current,
-                shiftName: event.target.value,
-              }))
-            }
-            placeholder="Tên ca"
-            className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
-          />
-          <input
-            type="date"
-            value={shiftForm.workDate}
-            onChange={(event) =>
-              setShiftForm((current) => ({
-                ...current,
-                workDate: event.target.value,
-              }))
-            }
-            className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
-          />
-          <input
-            type="time"
-            value={shiftForm.startTime}
-            onChange={(event) =>
-              setShiftForm((current) => ({
-                ...current,
-                startTime: event.target.value,
-              }))
-            }
-            className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
-          />
-          <input
-            type="time"
-            value={shiftForm.endTime}
-            onChange={(event) =>
-              setShiftForm((current) => ({
-                ...current,
-                endTime: event.target.value,
-              }))
-            }
-            className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
-          />
-          <input
-            type="number"
-            min={0}
-            value={shiftForm.cashierShiftWage}
-            onChange={(event) =>
-              setShiftForm((current) => ({
-                ...current,
-                cashierShiftWage: Number(event.target.value),
-              }))
-            }
-            placeholder="Lương thu ngân"
-            className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
-          />
-          <input
-            type="number"
-            min={0}
-            value={shiftForm.staffShiftWage}
-            onChange={(event) =>
-              setShiftForm((current) => ({
-                ...current,
-                staffShiftWage: Number(event.target.value),
-              }))
-            }
-            placeholder="Lương nhân viên"
-            className="h-11 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
-          />
-          <button
-            type="button"
-            disabled={actionLoading}
-            onClick={handleCreateShift}
-            className="flex h-11 items-center justify-center rounded-lg bg-sky-600 text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:bg-slate-300"
-            title="Tạo ca"
-          >
-            <Plus className="h-5 w-5" />
-          </button>
-        </div>
-      </section>
+            <div className="grid gap-4 p-6 md:grid-cols-2">
+              <ShiftField label="Tên ca" className="md:col-span-2">
+                <input
+                  value={shiftForm.shiftName}
+                  onChange={(event) =>
+                    setShiftForm((current) => ({
+                      ...current,
+                      shiftName: event.target.value,
+                    }))
+                  }
+                  placeholder="VD: Ca sáng"
+                  className={`w-full ${managerInputClass}`}
+                />
+              </ShiftField>
+
+              <ShiftField label="Ngày làm việc">
+                <input
+                  type="date"
+                  value={shiftForm.workDate}
+                  onChange={(event) =>
+                    setShiftForm((current) => ({
+                      ...current,
+                      workDate: event.target.value,
+                    }))
+                  }
+                  className={`w-full ${managerInputClass}`}
+                />
+              </ShiftField>
+
+              <ShiftField label="Giờ bắt đầu">
+                <input
+                  type="time"
+                  value={shiftForm.startTime}
+                  onChange={(event) =>
+                    setShiftForm((current) => ({
+                      ...current,
+                      startTime: event.target.value,
+                    }))
+                  }
+                  className={`w-full ${managerInputClass}`}
+                />
+              </ShiftField>
+
+              <ShiftField label="Giờ kết thúc">
+                <input
+                  type="time"
+                  value={shiftForm.endTime}
+                  onChange={(event) =>
+                    setShiftForm((current) => ({
+                      ...current,
+                      endTime: event.target.value,
+                    }))
+                  }
+                  className={`w-full ${managerInputClass}`}
+                />
+              </ShiftField>
+
+              <ShiftField label="Lương thu ngân">
+                <input
+                  type="number"
+                  min={0}
+                  value={shiftForm.cashierShiftWage}
+                  onChange={(event) =>
+                    setShiftForm((current) => ({
+                      ...current,
+                      cashierShiftWage: Number(event.target.value),
+                    }))
+                  }
+                  className={`w-full ${managerInputClass}`}
+                />
+              </ShiftField>
+
+              <ShiftField label="Lương nhân viên">
+                <input
+                  type="number"
+                  min={0}
+                  value={shiftForm.staffShiftWage}
+                  onChange={(event) =>
+                    setShiftForm((current) => ({
+                      ...current,
+                      staffShiftWage: Number(event.target.value),
+                    }))
+                  }
+                  className={`w-full ${managerInputClass}`}
+                />
+              </ShiftField>
+            </div>
+
+            <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
+              <button
+                type="button"
+                onClick={() => setShowShiftForm(false)}
+                className={managerSecondaryButtonClass}
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                disabled={actionLoading}
+                onClick={handleCreateShift}
+                className={managerPrimaryButtonClass}
+              >
+                {actionLoading ? "Đang lưu..." : "Tạo ca"}
+              </button>
+            </div>
+          </div>
+        </ManagerModalOverlay>
+      ) : null}
 
       {loading ? (
         <div className="rounded-lg border border-slate-200 bg-white py-14 text-center text-sm font-semibold text-slate-500">
@@ -402,7 +484,7 @@ const WorkShiftPage = () => {
                           employeeId: event.target.value,
                         })
                       }
-                      className="h-10 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
+                      className={managerInputClass}
                     >
                       <option value="">Chọn nhân viên</option>
                       {employeeOptions.map((employee) => (
@@ -422,7 +504,7 @@ const WorkShiftPage = () => {
                           roleInShift: event.target.value as ManagerShiftRole,
                         })
                       }
-                      className="h-10 rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
+                      className={managerInputClass}
                     >
                       <option value="STAFF">Nhân viên</option>
                       <option value="CASHIER">Thu ngân</option>
@@ -431,7 +513,7 @@ const WorkShiftPage = () => {
                       type="button"
                       disabled={actionLoading}
                       onClick={() => handleAssign(shift)}
-                      className="flex h-10 items-center justify-center rounded-lg bg-emerald-600 text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                      className="flex h-11 items-center justify-center rounded-xl bg-emerald-600 text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
                       title="Phân ca"
                     >
                       <UserPlus className="h-4 w-4" />
@@ -442,24 +524,28 @@ const WorkShiftPage = () => {
                 <div className="overflow-hidden rounded-lg border border-slate-100">
                   {shift.assignments.length ? (
                     <>
-                    <table className="w-full text-left text-sm">
-                      <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-                        <tr>
-                          <th className="px-3 py-3">Nhân viên</th>
-                          <th className="px-3 py-3">Vai trò</th>
-                          <th className="px-3 py-3">Check-in</th>
-                          <th className="px-3 py-3">Check-out</th>
-                          <th className="px-3 py-3 text-right">Thao tác</th>
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+                          <th className="px-3 py-3 font-semibold">#</th>
+                          <th className="px-3 py-3 font-semibold">Nhân viên</th>
+                          <th className="px-3 py-3 font-semibold">Vai trò</th>
+                          <th className="px-3 py-3 font-semibold">Check-in</th>
+                          <th className="px-3 py-3 font-semibold">Check-out</th>
+                          <th className="px-3 py-3 text-right font-semibold">Thao tác</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100">
+                      <tbody className="divide-y divide-slate-100 [&_td]:align-top">
                         {shift.assignments
                           .slice(
                             ((assignmentPages[shift.id] || 1) - 1) * LIMIT,
                             (assignmentPages[shift.id] || 1) * LIMIT,
                           )
-                          .map((assignment) => (
+                          .map((assignment, index) => (
                           <tr key={assignment.assignmentId}>
+                            <td className="px-3 py-3 text-slate-400">
+                              {((assignmentPages[shift.id] || 1) - 1) * LIMIT + index + 1}
+                            </td>
                             <td className="px-3 py-3">
                               <p className="font-bold text-slate-800">
                                 {assignment.employee?.fullName ||
@@ -479,7 +565,7 @@ const WorkShiftPage = () => {
                                     event.target.value as ManagerShiftRole,
                                   )
                                 }
-                                className="h-9 rounded-md border border-slate-200 px-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
+                                className={managerInputClass}
                               >
                                 <option value="STAFF">Nhân viên</option>
                                 <option value="CASHIER">Thu ngân</option>

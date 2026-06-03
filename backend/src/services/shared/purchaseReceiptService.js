@@ -1,4 +1,5 @@
 import sequelize from "../../config/db.js";
+import { Op } from "sequelize";
 import {
   Beverage,
   Branch,
@@ -216,7 +217,7 @@ const createReceiptService = async ({ branchId, supplierId, createdBy, data }) =
   });
 
 const getReceiptsService = async ({ where = {}, query = {} }) => {
-  const { page = 1, limit = 10, status, supplierId, branchId } = query;
+  const { page = 1, limit = 10, status, supplierId, branchId, search } = query;
   const pageNumber = Math.max(Number(page) || 1, 1);
   const limitNumber = Math.max(Number(limit) || 10, 1);
   const receiptWhere = { ...where };
@@ -224,6 +225,9 @@ const getReceiptsService = async ({ where = {}, query = {} }) => {
   if (status) receiptWhere.status = status;
   if (supplierId) receiptWhere.supplierId = Number(supplierId);
   if (branchId) receiptWhere.branchId = Number(branchId);
+  if (search) {
+    receiptWhere.receiptCode = { [Op.like]: `%${search}%` };
+  }
 
   const { rows, count } = await PurchaseReceipt.findAndCountAll({
     where: receiptWhere,

@@ -3,6 +3,7 @@ import instance from "../../utils/axiosCustomize";
 const getFeedbacksService = (params: {
   page?: number;
   limit?: number;
+  search?: string;
   branchId?: number | string;
   rating?: number | string;
   feedbackType?: string;

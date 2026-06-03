@@ -49,8 +49,8 @@ const formatApplication = (row) => {
     rejectReason: plain.rejectReason,
     reviewedBy: plain.reviewedBy,
     reviewedAt: plain.reviewedAt,
-    createdDate: plain.createdDate,
-    updatedDate: plain.updatedDate,
+    createdAt: plain.createdAt,
+    updatedAt: plain.updatedAt,
     user: plain.user
       ? {
           id: plain.user.id,
@@ -104,7 +104,7 @@ const getCoachApplicationsService = async (data) => {
   const result = await CoachApplication.findAndCountAll({
     where,
     include,
-    order: [["createdDate", "DESC"]],
+    order: [["createdAt", "DESC"]],
     limit: Number(limit),
     offset,
     distinct: true,

@@ -72,10 +72,10 @@ const ManagerHeader = () => {
   return (
     <header className="flex h-20 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6 lg:px-8">
       <div className="min-w-0">
-        <h2 className="truncate text-2xl font-semibold tracking-tight text-slate-900">
+        <h2 className="truncate text-xl font-semibold text-slate-800">
           Quản lý cửa hàng
         </h2>
-        <p className="mt-1 hidden text-sm font-medium text-slate-500 sm:block">
+        <p className="mt-1 hidden text-sm font-normal text-slate-500 sm:block">
           Theo dõi hoạt động chi nhánh B-Hub trong ngày
         </p>
       </div>
@@ -86,7 +86,7 @@ const ManagerHeader = () => {
           <input
             type="text"
             placeholder="Tìm kiếm..."
-            className="h-12 w-80 rounded-2xl border border-slate-200 bg-slate-50 pl-12 pr-5 text-sm font-medium outline-none transition focus:border-sky-500 focus:bg-white focus:ring-1 focus:ring-sky-100"
+            className="h-11 w-[420px] rounded-xl border border-slate-200 bg-white pl-11 pr-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-100 2xl:w-[520px]"
           />
         </div>
 

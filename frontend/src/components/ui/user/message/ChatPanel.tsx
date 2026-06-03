@@ -73,7 +73,7 @@ const UserAvatar = ({
   const letter = (name || "?").trim().charAt(0).toUpperCase();
   return (
     <div
-      className={`${sizeClass} ${rounded} shrink-0 overflow-hidden flex items-center justify-center bg-gradient-to-br from-sky-400 to-emerald-500 text-white text-xs font-extrabold shadow-sm`}
+      className={`${sizeClass} ${rounded} shrink-0 overflow-hidden flex items-center justify-center bg-sky-100 text-sky-700 text-xs font-bold ring-1 ring-sky-200`}
     >
       {url && !imgErr ? (
         <img
@@ -156,10 +156,10 @@ const ForwardModal = ({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[82vh] border border-white/60">
+      <div className="flex max-h-[82vh] w-full max-w-md flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl">
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
           <div>
-            <h3 className="font-extrabold text-slate-950">
+            <h3 className="font-bold text-slate-950">
               Chuyển tiếp tin nhắn
             </h3>
             <p className="text-xs text-slate-500 mt-1 line-clamp-1">
@@ -361,12 +361,12 @@ const ChatPanel = ({
 
   if (!conversation) {
     return (
-      <div className="flex-1 bg-[linear-gradient(180deg,#f8fafc_0%,#eef6ff_100%)] flex flex-col items-center justify-center gap-5 text-slate-400 px-8">
-        <div className="w-24 h-24 rounded-[2rem] bg-white border border-slate-200 shadow-sm flex items-center justify-center">
+      <div className="flex-1 bg-slate-50 flex flex-col items-center justify-center gap-5 text-slate-400 px-8">
+        <div className="w-24 h-24 rounded-3xl bg-white border border-slate-200 flex items-center justify-center">
           <MessageCircle className="w-12 h-12 text-sky-400" strokeWidth={1.5} />
         </div>
         <div className="text-center max-w-sm">
-          <p className="text-lg font-extrabold text-slate-800">
+          <p className="text-lg font-bold text-slate-800">
             Chào mừng đến B-Hub Chat
           </p>
           <p className="text-sm text-slate-500 mt-2 leading-relaxed">
@@ -395,7 +395,7 @@ const ChatPanel = ({
             sizeClass="w-12 h-12"
           />
           <div className="min-w-0">
-            <h3 className="font-extrabold text-slate-950 truncate text-base">
+            <h3 className="font-bold text-slate-950 truncate text-base">
               {headerDisplayName}
             </h3>
             {isGroup ? (
@@ -476,7 +476,7 @@ const ChatPanel = ({
 
           {isGroupAdmin && (
             <div className="mt-4 pt-4 border-t border-slate-100 space-y-3">
-              <p className="text-xs text-slate-600 font-extrabold flex items-center gap-2">
+              <p className="text-xs text-slate-600 font-bold flex items-center gap-2">
                 <UserPlus className="w-4 h-4 text-sky-600" />
                 Thêm thành viên
               </p>
@@ -525,13 +525,13 @@ const ChatPanel = ({
 
       <div
         ref={scrollAreaRef}
-        className="flex-1 overflow-y-auto px-5 py-5 min-h-0 bg-[linear-gradient(180deg,#f8fafc_0%,#eef6ff_100%)]"
+        className="flex-1 overflow-y-auto px-5 py-5 min-h-0 bg-slate-50"
       >
         {rows.map((row, idx) => {
           if (row.kind === "day") {
             return (
               <div key={`d-${idx}`} className="flex justify-center py-4">
-                <span className="text-[11px] text-slate-500 bg-white/90 px-4 py-1.5 rounded-full shadow-sm border border-slate-200 font-semibold">
+                <span className="text-[11px] text-slate-500 bg-white/90 px-4 py-1.5 rounded-full border border-slate-200 font-semibold">
                   {row.label}
                 </span>
               </div>
@@ -577,7 +577,7 @@ const ChatPanel = ({
                 )}
 
                 <div
-                  className={`rounded-[1.35rem] overflow-hidden max-w-full shadow-sm ${
+                  className={`rounded-2xl overflow-hidden max-w-full ${
                     mine
                       ? "rounded-br-md"
                       : "rounded-bl-md border border-slate-200"
@@ -625,7 +625,7 @@ const ChatPanel = ({
                   <div
                     className={`px-4 py-2.5 text-sm ${
                       mine
-                        ? "bg-gradient-to-br from-sky-500 to-sky-700 text-white"
+                        ? "bg-sky-600 text-white"
                         : "bg-white text-slate-900"
                     }`}
                   >
@@ -692,7 +692,7 @@ const ChatPanel = ({
                   type="button"
                   title="Trả lời"
                   onClick={() => setReplyTarget(m)}
-                  className="w-8 h-8 rounded-full text-slate-400 hover:text-sky-600 hover:bg-white transition-colors flex items-center justify-center shadow-sm"
+                  className="w-8 h-8 rounded-full text-slate-400 hover:text-sky-600 hover:bg-white transition-colors flex items-center justify-center"
                 >
                   <CornerUpLeft className="w-4 h-4" />
                 </button>
@@ -701,7 +701,7 @@ const ChatPanel = ({
                     type="button"
                     title="Chuyển tiếp"
                     onClick={() => setForwardTarget(m)}
-                    className="w-8 h-8 rounded-full text-slate-400 hover:text-sky-600 hover:bg-white transition-colors flex items-center justify-center shadow-sm"
+                    className="w-8 h-8 rounded-full text-slate-400 hover:text-sky-600 hover:bg-white transition-colors flex items-center justify-center"
                   >
                     <CornerUpRight className="w-4 h-4" />
                   </button>
@@ -711,7 +711,7 @@ const ChatPanel = ({
                     type="button"
                     title="Thu hồi tin nhắn"
                     onClick={() => onRecall(m.id)}
-                    className="w-8 h-8 rounded-full text-slate-400 hover:text-rose-500 hover:bg-white transition-colors flex items-center justify-center shadow-sm"
+                    className="w-8 h-8 rounded-full text-slate-400 hover:text-rose-500 hover:bg-white transition-colors flex items-center justify-center"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -726,7 +726,7 @@ const ChatPanel = ({
         <div className="px-5 py-3 border-t border-slate-200 bg-sky-50 flex items-center gap-3 shrink-0">
           <CornerUpLeft className="w-4 h-4 text-sky-600 shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-extrabold text-sky-800">
+            <p className="text-xs font-bold text-sky-800">
               Đang trả lời {replyTarget.senderName}
             </p>
             <p className="text-xs text-slate-500 truncate">
@@ -786,7 +786,7 @@ const ChatPanel = ({
         <button
           type="submit"
           disabled={!body.trim()}
-          className="w-11 h-11 rounded-2xl bg-sky-600 text-white hover:bg-sky-500 disabled:opacity-40 disabled:pointer-events-none transition-colors shrink-0 flex items-center justify-center shadow-lg shadow-sky-600/20"
+          className="w-11 h-11 rounded-2xl bg-sky-600 text-white hover:bg-sky-500 disabled:opacity-40 disabled:pointer-events-none transition-colors shrink-0 flex items-center justify-center"
           title="Gửi"
         >
           <Send className="w-4 h-4" />

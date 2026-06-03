@@ -15,6 +15,7 @@ import {
   ManagerEmptyState,
   ManagerPageHeader,
   managerCardClass,
+  managerInputClass,
 } from "../../components/commons/manager/ManagerPage";
 import TablePagination from "../../components/ui/TablePagination";
 
@@ -118,36 +119,36 @@ const RevenuePage = () => {
       <section
         className={`${managerCardClass} grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-5`}
       >
-        <label className="space-y-1">
-          <span className="text-xs font-bold uppercase text-slate-500">
+        <label>
+          <span className="mb-1 block text-xs font-medium text-slate-600">
             Từ ngày
           </span>
           <input
             type="date"
             value={startDate}
             onChange={(event) => setStartDate(event.target.value)}
-            className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
+            className={`w-full ${managerInputClass}`}
           />
         </label>
-        <label className="space-y-1">
-          <span className="text-xs font-bold uppercase text-slate-500">
+        <label>
+          <span className="mb-1 block text-xs font-medium text-slate-600">
             Đến ngày
           </span>
           <input
             type="date"
             value={endDate}
             onChange={(event) => setEndDate(event.target.value)}
-            className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
+            className={`w-full ${managerInputClass}`}
           />
         </label>
-        <label className="space-y-1">
-          <span className="text-xs font-bold uppercase text-slate-500">
+        <label>
+          <span className="mb-1 block text-xs font-medium text-slate-600">
             Loại doanh thu
           </span>
           <select
             value={revenueType}
             onChange={(event) => setRevenueType(event.target.value)}
-            className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
+            className={`w-full ${managerInputClass}`}
           >
             <option value="ALL">Tất cả</option>
             <option value="BOOKING">Đặt sân</option>
@@ -155,14 +156,14 @@ const RevenuePage = () => {
             <option value="BEVERAGE">Đồ uống</option>
           </select>
         </label>
-        <label className="space-y-1">
-          <span className="text-xs font-bold uppercase text-slate-500">
+        <label>
+          <span className="mb-1 block text-xs font-medium text-slate-600">
             Loại hàng
           </span>
           <select
             value={itemType}
             onChange={(event) => setItemType(event.target.value)}
-            className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
+            className={`w-full ${managerInputClass}`}
           >
             <option value="ALL">Tất cả</option>
             <option value="PRODUCT_VARIANT">Sản phẩm</option>
@@ -173,7 +174,7 @@ const RevenuePage = () => {
           type="button"
           onClick={fetchReport}
           disabled={loading}
-          className="inline-flex h-10 items-center justify-center gap-2 self-end rounded-lg bg-sky-600 px-3 text-sm font-bold text-white disabled:bg-slate-300"
+          className="inline-flex h-11 items-center justify-center gap-2 self-end rounded-xl bg-sky-600 px-3 text-sm font-bold text-white disabled:bg-slate-300"
         >
           <RefreshCw className="h-4 w-4" />
           Cập nhật
@@ -348,18 +349,22 @@ const ReportTable = ({
   return (
     <div className="mt-4 overflow-hidden rounded-lg border border-slate-200">
       <table className="w-full text-sm">
-        <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-          <tr>
+        <thead>
+          <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+            <th className="px-4 py-3 font-semibold">#</th>
             {headers.map((header) => (
-              <th key={header} className="px-4 py-3 text-left">
+              <th key={header} className="px-4 py-3 font-semibold">
                 {header}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-slate-100 [&_td]:align-top">
           {paginatedRows.map((row, index) => (
             <tr key={`${page}-${index}`}>
+              <td className="px-4 py-3 text-slate-400">
+                {(page - 1) * LIMIT + index + 1}
+              </td>
               {row.map((cell, cellIndex) => (
                 <td
                   key={cellIndex}
@@ -373,7 +378,7 @@ const ReportTable = ({
           {!rows.length ? (
             <tr>
               <td
-                colSpan={headers.length}
+                colSpan={headers.length + 1}
                 className="px-4 py-10 text-center text-sm font-semibold text-slate-400"
               >
                 {empty}

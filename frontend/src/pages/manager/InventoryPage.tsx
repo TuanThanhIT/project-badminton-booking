@@ -15,6 +15,7 @@ import managerProductService from "../../services/manager/productService";
 import managerBeverageService from "../../services/manager/beverageService";
 import {
   ManagerPageHeader,
+  managerInputClass,
   managerSecondaryButtonClass,
 } from "../../components/commons/manager/ManagerPage";
 import type {
@@ -388,14 +389,14 @@ const InventoryPage = () => {
       {tab === "create" ? (
         <section className="space-y-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <div className="grid gap-4 md:grid-cols-2">
-            <label className="space-y-1">
-              <span className="text-sm font-bold text-slate-700">
+            <label>
+              <span className="mb-1 block text-xs font-medium text-slate-600">
                 Nhà cung cấp
               </span>
               <select
                 value={supplierId}
                 onChange={(event) => setSupplierId(event.target.value)}
-                className="h-11 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
+                className={`w-full ${managerInputClass}`}
               >
                 <option value="">Chọn nhà cung cấp</option>
                 {suppliers.map((supplier) => (
@@ -405,18 +406,25 @@ const InventoryPage = () => {
                 ))}
               </select>
             </label>
-            <label className="space-y-1">
-              <span className="text-sm font-bold text-slate-700">Ghi chú</span>
+            <label>
+              <span className="mb-1 block text-xs font-medium text-slate-600">Ghi chú</span>
               <input
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
-                className="h-11 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
+                className={`w-full ${managerInputClass}`}
                 placeholder="Ghi chú phiếu nhập"
               />
             </label>
           </div>
 
           <div className="space-y-3">
+            <div className="hidden grid-cols-[160px_1fr_120px_140px_40px] gap-3 px-3 text-xs font-bold uppercase text-slate-500 md:grid">
+              <span>Loại hàng</span>
+              <span>Mặt hàng</span>
+              <span>Số lượng nhập</span>
+              <span>Giá nhập / đơn vị</span>
+              <span />
+            </div>
             {details.map((detail, index) => (
               <div
                 key={index}
@@ -430,7 +438,7 @@ const InventoryPage = () => {
                       itemId: "",
                     })
                   }
-                  className="h-10 rounded-md border border-slate-200 bg-white px-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
+                  className={managerInputClass}
                 >
                   <option value="PRODUCT_VARIANT">Sản phẩm</option>
                   <option value="BEVERAGE">Đồ uống</option>
@@ -440,7 +448,7 @@ const InventoryPage = () => {
                   onChange={(event) =>
                     updateDetail(index, { itemId: event.target.value })
                   }
-                  className="h-10 rounded-md border border-slate-200 bg-white px-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
+                  className={managerInputClass}
                 >
                   <option value="">Chọn mặt hàng</option>
                   {(detail.itemType === "PRODUCT_VARIANT"
@@ -464,8 +472,10 @@ const InventoryPage = () => {
                       quantity: Number(event.target.value),
                     })
                   }
-                  className="h-10 rounded-md border border-slate-200 bg-white px-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
-                  placeholder="Số lượng"
+                  className={managerInputClass}
+                  placeholder="Số lượng nhập"
+                  aria-label="Số lượng nhập"
+                  title="Số lượng nhập"
                 />
                 <input
                   type="number"
@@ -476,8 +486,10 @@ const InventoryPage = () => {
                       importPrice: Number(event.target.value),
                     })
                   }
-                  className="h-10 rounded-md border border-slate-200 bg-white px-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-100"
-                  placeholder="Giá nhập"
+                  className={managerInputClass}
+                  placeholder="Giá nhập / đơn vị"
+                  aria-label="Giá nhập trên mỗi đơn vị"
+                  title="Giá nhập / đơn vị"
                 />
                 <button
                   type="button"
@@ -488,7 +500,7 @@ const InventoryPage = () => {
                         : current.filter((_, itemIndex) => itemIndex !== index),
                     )
                   }
-                  className="flex h-10 w-10 items-center justify-center rounded-md bg-rose-50 text-rose-600"
+                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-50 text-rose-600"
                 >
                   <XCircle className="h-4 w-4" />
                 </button>
@@ -533,18 +545,22 @@ const InventoryPage = () => {
       {tab === "receipts" ? (
         <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-              <tr>
-                <th className="px-4 py-3 text-left">Mã phiếu</th>
-                <th className="px-4 py-3 text-left">Nhà cung cấp</th>
-                <th className="px-4 py-3 text-right">Tổng tiền</th>
-                <th className="px-4 py-3 text-center">Trạng thái</th>
-                <th className="px-4 py-3 text-center">Thao tác</th>
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+                <th className="px-4 py-3 font-semibold">#</th>
+                <th className="px-4 py-3 font-semibold">Mã phiếu</th>
+                <th className="px-4 py-3 font-semibold">Nhà cung cấp</th>
+                <th className="px-4 py-3 text-right font-semibold">Tổng tiền</th>
+                <th className="px-4 py-3 text-center font-semibold">Trạng thái</th>
+                <th className="px-4 py-3 text-center font-semibold">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
-              {receipts.map((receipt) => (
+            <tbody className="divide-y divide-slate-100 [&_td]:align-top">
+              {receipts.map((receipt, index) => (
                 <tr key={receipt.id}>
+                  <td className="px-4 py-3 text-slate-400">
+                    {(page - 1) * LIMIT + index + 1}
+                  </td>
                   <td className="px-4 py-3 font-bold text-slate-800">
                     {receipt.receiptCode}
                   </td>
@@ -577,7 +593,7 @@ const InventoryPage = () => {
                 </tr>
               ))}
               {!receipts.length ? (
-                <EmptyTableRow colSpan={5} label="Không có phiếu nhập" />
+                <EmptyTableRow colSpan={6} label="Không có phiếu nhập" />
               ) : null}
             </tbody>
           </table>
@@ -588,6 +604,7 @@ const InventoryPage = () => {
       {tab === "variant" ? (
         <>
         <StockTable
+          page={page}
           rows={variantStocks.map((item) => ({
             id: item.id,
             name: item.variant?.product?.productName || "Sản phẩm",
@@ -607,6 +624,7 @@ const InventoryPage = () => {
       {tab === "beverage" ? (
         <>
         <StockTable
+          page={page}
           rows={beverageStocks.map((item) => ({
             id: item.id,
             name: item.beverage?.beverageName || "Đồ uống",
@@ -622,18 +640,22 @@ const InventoryPage = () => {
       {tab === "history" ? (
         <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-              <tr>
-                <th className="px-4 py-3 text-left">Thời gian</th>
-                <th className="px-4 py-3 text-left">Loại</th>
-                <th className="px-4 py-3 text-right">Thay đổi</th>
-                <th className="px-4 py-3 text-right">Sau tồn</th>
-                <th className="px-4 py-3 text-left">Ghi chú</th>
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+                <th className="px-4 py-3 font-semibold">#</th>
+                <th className="px-4 py-3 font-semibold">Thời gian</th>
+                <th className="px-4 py-3 font-semibold">Loại</th>
+                <th className="px-4 py-3 text-right font-semibold">Thay đổi</th>
+                <th className="px-4 py-3 text-right font-semibold">Sau tồn</th>
+                <th className="px-4 py-3 font-semibold">Ghi chú</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
-              {transactions.map((item) => (
+            <tbody className="divide-y divide-slate-100 [&_td]:align-top">
+              {transactions.map((item, index) => (
                 <tr key={item.id}>
+                  <td className="px-4 py-3 text-slate-400">
+                    {(page - 1) * LIMIT + index + 1}
+                  </td>
                   <td className="px-4 py-3">
                     {new Date(item.createdAt).toLocaleString("vi-VN")}
                   </td>
@@ -651,7 +673,7 @@ const InventoryPage = () => {
                 </tr>
               ))}
               {!transactions.length ? (
-                <EmptyTableRow colSpan={5} label="Không có lịch sử kho" />
+                <EmptyTableRow colSpan={6} label="Không có lịch sử kho" />
               ) : null}
             </tbody>
           </table>
@@ -663,8 +685,10 @@ const InventoryPage = () => {
 };
 
 const StockTable = ({
+  page,
   rows,
 }: {
+  page: number;
   rows: {
     id: number;
     name: string;
@@ -675,17 +699,21 @@ const StockTable = ({
 }) => (
   <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
     <table className="w-full text-sm">
-      <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-        <tr>
-          <th className="px-4 py-3 text-left">Mặt hàng</th>
-          <th className="px-4 py-3 text-left">Thông tin</th>
-          <th className="px-4 py-3 text-left">Chi nhánh</th>
-          <th className="px-4 py-3 text-right">Tồn kho</th>
+      <thead>
+        <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+          <th className="px-4 py-3 font-semibold">#</th>
+          <th className="px-4 py-3 font-semibold">Mặt hàng</th>
+          <th className="px-4 py-3 font-semibold">Thông tin</th>
+          <th className="px-4 py-3 font-semibold">Chi nhánh</th>
+          <th className="px-4 py-3 text-right font-semibold">Tồn kho</th>
         </tr>
       </thead>
-      <tbody className="divide-y divide-slate-100">
-        {rows.map((row) => (
+      <tbody className="divide-y divide-slate-100 [&_td]:align-top">
+        {rows.map((row, index) => (
           <tr key={row.id}>
+            <td className="px-4 py-3 text-slate-400">
+              {(page - 1) * LIMIT + index + 1}
+            </td>
             <td className="px-4 py-3 font-bold text-slate-800">{row.name}</td>
             <td className="px-4 py-3 text-slate-500">{row.extra}</td>
             <td className="px-4 py-3">{row.branch}</td>
@@ -695,7 +723,7 @@ const StockTable = ({
           </tr>
         ))}
         {!rows.length ? (
-          <EmptyTableRow colSpan={4} label="Không có dữ liệu tồn kho" />
+          <EmptyTableRow colSpan={5} label="Không có dữ liệu tồn kho" />
         ) : null}
       </tbody>
     </table>

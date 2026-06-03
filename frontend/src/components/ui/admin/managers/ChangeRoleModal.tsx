@@ -3,6 +3,7 @@ import { ArrowLeftRight, AlertTriangle } from "lucide-react";
 import { toast } from "react-toastify";
 import adminManagerService from "../../../../services/admin/managerService";
 import type { AdminManager } from "../../../../types/admin";
+import { showConfirmDialog } from "../../../../utils/confirmDialog";
 import AdminModal, {
   adminPrimaryButtonClass,
   adminSecondaryButtonClass,
@@ -18,10 +19,23 @@ const ChangeRoleModal = ({ manager, onClose, onSuccess }: ChangeRoleModalProps) 
   const [loading, setLoading] = useState(false);
 
   const handleDowngrade = async () => {
+    const confirmed = await showConfirmDialog(
+      "Thu hồi quyền quản lý?",
+      `Tài khoản @${manager.username} sẽ bị hạ xuống vai trò Người dùng.${
+        manager.managedBranches.length > 0
+          ? " Tất cả quyền quản lý chi nhánh sẽ bị thu hồi."
+          : ""
+      }`,
+      "Thu hồi quyền",
+      "Hủy",
+      "danger",
+    );
+    if (!confirmed) return;
+
     setLoading(true);
     try {
       await adminManagerService.changeUserRoleService(manager.id, { newRole: "USER" });
-      toast.success("Đã đổi về role USER");
+      toast.success("Đã đổi về vai trò Người dùng");
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -31,7 +45,7 @@ const ChangeRoleModal = ({ manager, onClose, onSuccess }: ChangeRoleModalProps) 
 
   return (
     <AdminModal
-      title="Thay đổi Role"
+      title="Thay đổi vai trò"
       description="Thu hồi quyền quản lý của tài khoản này."
       icon={<ArrowLeftRight className="h-5 w-5 text-orange-500" />}
       onClose={onClose}
@@ -41,9 +55,9 @@ const ChangeRoleModal = ({ manager, onClose, onSuccess }: ChangeRoleModalProps) 
           <div className="flex items-center gap-3 bg-orange-50 border border-orange-200 rounded-xl p-4">
             <AlertTriangle className="w-5 h-5 text-orange-500 shrink-0" />
             <div>
-              <p className="text-sm font-semibold text-orange-800">Thu hồi quyền Manager</p>
+              <p className="text-sm font-semibold text-orange-800">Thu hồi quyền quản lý</p>
               <p className="text-xs text-orange-600 mt-0.5">
-                Tài khoản <strong>@{manager.username}</strong> sẽ bị hạ xuống role USER.
+                Tài khoản <strong>@{manager.username}</strong> sẽ bị hạ xuống vai trò Người dùng.
                 {manager.managedBranches.length > 0 && " Tất cả quyền quản lý chi nhánh sẽ bị thu hồi."}
               </p>
             </div>

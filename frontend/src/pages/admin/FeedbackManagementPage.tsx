@@ -1,49 +1,92 @@
-import { useState, useEffect, useCallback } from "react";
-import { Trash2, Star, Store, Package } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  ChevronDown,
+  MessageSquare,
+  Package,
+  Search,
+  Star,
+  Store,
+  Trash2,
+  type LucideIcon,
+} from "lucide-react";
 import { toast } from "react-toastify";
-import adminFeedbackService from "../../services/admin/feedbackService";
-import adminBranchService from "../../services/admin/branchService";
-import type { AdminFeedback } from "../../types/admin";
-import UserAvatar from "../../components/ui/admin/UserAvatar";
-import AdminPagination from "../../components/ui/admin/AdminPagination";
 import AdminPageHeader from "../../components/ui/admin/AdminPageHeader";
-
-interface Branch { id: number; branchName: string; }
+import AdminPagination from "../../components/ui/admin/AdminPagination";
+import UserAvatar from "../../components/ui/admin/UserAvatar";
+import adminBranchService from "../../services/admin/branchService";
+import adminFeedbackService from "../../services/admin/feedbackService";
+import type { AdminBranchOption, AdminFeedback } from "../../types/admin";
+import { showConfirmDialog } from "../../utils/confirmDialog";
 
 const LIMIT = 10;
+
 const stripHtml = (html = "") => html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 
+const StatCard = ({
+  label,
+  value,
+  icon: Icon,
+  color,
+}: {
+  label: string;
+  value: number | string;
+  icon: LucideIcon;
+  color: string;
+}) => (
+  <div className={`rounded-xl border p-4 ${color}`}>
+    <div className="flex items-center gap-4">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/5">
+        <Icon className="h-5 w-5" />
+      </div>
+      <div>
+        <p className="text-xs font-semibold opacity-75">{label}</p>
+        <p className="mt-2 text-3xl font-bold">{value}</p>
+      </div>
+    </div>
+  </div>
+);
+
 const StarRating = ({ rating }: { rating: number }) => (
-  <div className="flex items-center gap-0.5">
-    {[1, 2, 3, 4, 5].map((s) => (
-      <Star key={s} className={`w-3.5 h-3.5 ${s <= rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
+  <div className="flex items-center justify-center gap-0.5">
+    {[1, 2, 3, 4, 5].map((star) => (
+      <Star
+        key={star}
+        className={`h-3.5 w-3.5 ${star <= rating ? "fill-yellow-400 text-yellow-400" : "text-slate-300"}`}
+      />
     ))}
-    <span className="ml-1 text-xs font-semibold text-gray-700">{rating}/5</span>
+    <span className="ml-1 text-xs font-semibold text-slate-700">{rating}/5</span>
   </div>
 );
 
 const FeedbackManagementPage = () => {
-  const [feedbacks,   setFeedbacks]   = useState<AdminFeedback[]>([]);
-  const [branches,    setBranches]    = useState<Branch[]>([]);
-  const [loading,     setLoading]     = useState(false);
-  const [total,       setTotal]       = useState(0);
-  const [page,        setPage]        = useState(1);
+  const [feedbacks, setFeedbacks] = useState<AdminFeedback[]>([]);
+  const [branches, setBranches] = useState<AdminBranchOption[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
   const [branchFilter, setBranchFilter] = useState("");
   const [ratingFilter, setRatingFilter] = useState("");
-  const [typeFilter,   setTypeFilter]   = useState("");
-  const [deletingId,   setDeletingId]   = useState<number | null>(null);
+  const [typeFilter, setTypeFilter] = useState("");
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   useEffect(() => {
-    adminBranchService.getAdminBranchesService({ limit: 100 }).then((res: any) => {
-      setBranches((res.data as any).data?.branches || []);
-    }).catch(() => {});
+    adminBranchService
+      .getAdminBranchOptionsService()
+      .then((res) => {
+        setBranches((res.data as any).data || []);
+      })
+      .catch(() => setBranches([]));
   }, []);
 
   const fetchFeedbacks = useCallback(async () => {
     setLoading(true);
     try {
       const res = await adminFeedbackService.getFeedbacksService({
-        page, limit: LIMIT,
+        page,
+        limit: LIMIT,
+        search: appliedSearch || undefined,
         branchId: branchFilter || undefined,
         rating: ratingFilter || undefined,
         feedbackType: typeFilter || undefined,
@@ -51,150 +94,236 @@ const FeedbackManagementPage = () => {
       const data = (res.data as any).data;
       setFeedbacks(data.feedbacks || []);
       setTotal(data.pagination?.total || 0);
-    } catch {
+    } catch (err: any) {
       setFeedbacks([]);
       setTotal(0);
+      toast.error(err?.response?.data?.message || "Không thể tải danh sách đánh giá");
+    } finally {
+      setLoading(false);
     }
-    finally { setLoading(false); }
-  }, [page, branchFilter, ratingFilter, typeFilter]);
+  }, [page, appliedSearch, branchFilter, ratingFilter, typeFilter]);
 
-  useEffect(() => { fetchFeedbacks(); }, [fetchFeedbacks]);
+  useEffect(() => {
+    fetchFeedbacks();
+  }, [fetchFeedbacks]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setAppliedSearch(searchInput.trim());
+      setPage(1);
+    }, 350);
+
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
 
   const handleDelete = async (feedbackId: number) => {
-    if (!window.confirm("Xóa đánh giá này?")) return;
+    const confirmed = await showConfirmDialog(
+      "Xóa đánh giá?",
+      "Đánh giá này sẽ bị xóa khỏi hệ thống.",
+      "Xóa",
+      "Hủy",
+      "danger",
+    );
+    if (!confirmed) return;
+
     setDeletingId(feedbackId);
     try {
       await adminFeedbackService.deleteFeedbackService(feedbackId);
       toast.success("Đã xóa đánh giá");
       fetchFeedbacks();
-    } catch (err: any) { toast.error(err?.response?.data?.message || "Có lỗi xảy ra"); }
-    finally { setDeletingId(null); }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Có lỗi xảy ra");
+    } finally {
+      setDeletingId(null);
+    }
   };
 
-  const totalPages = Math.ceil(total / LIMIT);
+  const totalPages = Math.max(Math.ceil(total / LIMIT), 1);
+  const branchCount = feedbacks.filter((feedback) => feedback.feedbackType === "BRANCH").length;
+  const productCount = feedbacks.filter((feedback) => feedback.feedbackType === "PRODUCT").length;
   const avgRating = feedbacks.length
-    ? (feedbacks.reduce((s, f) => s + f.rating, 0) / feedbacks.length).toFixed(1)
-    : "—";
+    ? (feedbacks.reduce((sum, feedback) => sum + feedback.rating, 0) / feedbacks.length).toFixed(1)
+    : "0.0";
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="bg-white rounded-2xl border border-gray-200 p-8 space-y-6">
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="space-y-6 rounded-2xl border border-gray-200 bg-white p-8">
         <AdminPageHeader
-          title="Quản lý Feedback"
+          title="Quản lý đánh giá"
           subtitle="Theo dõi đánh giá chi nhánh, sản phẩm và chất lượng trải nghiệm."
         />
-        <div className="hidden">
-          <h1 className="text-2xl font-bold text-sky-700 relative inline-block">
-            Quản lý Feedback
-            <span className="absolute left-0 -bottom-3 w-1/2 h-1 bg-sky-400 rounded-sm" />
-          </h1>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <StatCard label="Tổng đánh giá" value={total} icon={MessageSquare} color="bg-sky-50 border-sky-200 text-sky-700" />
+          <StatCard label="Về chi nhánh đang hiển thị" value={branchCount} icon={Store} color="bg-emerald-50 border-emerald-200 text-emerald-700" />
+          <StatCard label="Về sản phẩm đang hiển thị" value={productCount} icon={Package} color="bg-purple-50 border-purple-200 text-purple-700" />
+          <StatCard label="Đánh giá trung bình" value={avgRating} icon={Star} color="bg-yellow-50 border-yellow-200 text-yellow-700" />
         </div>
 
-        <div className="grid grid-cols-4 gap-4">
-          {[
-            { label: "Tổng feedback", value: total, color: "bg-sky-50 border-sky-200 text-sky-700" },
-            { label: "Về chi nhánh", value: feedbacks.filter((f) => f.feedbackType === "BRANCH").length, icon: Store, color: "bg-blue-50 border-blue-200 text-blue-700" },
-            { label: "Về sản phẩm", value: feedbacks.filter((f) => f.feedbackType === "PRODUCT").length, icon: Package, color: "bg-purple-50 border-purple-200 text-purple-700" },
-            { label: "Đánh giá TB", value: avgRating, color: "bg-yellow-50 border-yellow-200 text-yellow-700" },
-          ].map((s) => (
-            <div key={s.label} className={`rounded-xl border p-4 ${s.color}`}>
-              <p className="text-xs font-medium opacity-70">{s.label}</p>
-              <p className="text-2xl font-bold mt-1">{s.value}</p>
+        <section>
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_190px_220px_160px]">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-600">Tìm kiếm</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  value={searchInput}
+                  onChange={(event) => setSearchInput(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      setAppliedSearch(searchInput.trim());
+                      setPage(1);
+                    }
+                  }}
+                  placeholder="Nội dung, người dùng, chi nhánh, sản phẩm..."
+                  className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                />
+              </div>
             </div>
-          ))}
-        </div>
 
-        <div className="flex flex-wrap gap-3 items-end">
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Loại feedback</label>
-            <select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
-              className="py-2 px-3 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-sky-400 bg-white transition">
-              <option value="">Tất cả</option>
-              <option value="BRANCH">Chi nhánh</option>
-              <option value="PRODUCT">Sản phẩm</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Chi nhánh</label>
-            <select value={branchFilter} onChange={(e) => { setBranchFilter(e.target.value); setPage(1); }}
-              className="py-2 px-3 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-sky-400 bg-white transition">
-              <option value="">Tất cả chi nhánh</option>
-              {branches.map((b) => <option key={b.id} value={b.id}>{b.branchName}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Đánh giá</label>
-            <select value={ratingFilter} onChange={(e) => { setRatingFilter(e.target.value); setPage(1); }}
-              className="py-2 px-3 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-sky-400 bg-white transition">
-              <option value="">Tất cả</option>
-              {[5, 4, 3, 2, 1].map((r) => <option key={r} value={r}>{r} sao</option>)}
-            </select>
-          </div>
-        </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-600">Loại đánh giá</label>
+              <div className="relative">
+                <select
+                  value={typeFilter}
+                  onChange={(event) => {
+                    setTypeFilter(event.target.value);
+                    setPage(1);
+                  }}
+                  className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-8 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                >
+                  <option value="">Tất cả</option>
+                  <option value="BRANCH">Chi nhánh</option>
+                  <option value="PRODUCT">Sản phẩm</option>
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              </div>
+            </div>
 
-        <div className="rounded-2xl border border-gray-200 overflow-hidden">
-          {loading ? (
-            <div className="flex justify-center py-14"><div className="w-8 h-8 border-4 border-sky-500 border-t-transparent rounded-full animate-spin" /></div>
-          ) : feedbacks.length === 0 ? (
-            <div className="text-center py-14 text-gray-400 text-sm">Không có feedback</div>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100 bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                  {["#", "Người dùng", "Nội dung", "Đánh giá", "Đối tượng", "Loại", "Ngày", "Thao tác"].map((h) => (
-                    <th key={h} className="text-center px-3 py-3 font-semibold">{h}</th>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-600">Chi nhánh</label>
+              <div className="relative">
+                <select
+                  value={branchFilter}
+                  onChange={(event) => {
+                    setBranchFilter(event.target.value);
+                    setPage(1);
+                  }}
+                  className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-8 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                >
+                  <option value="">Tất cả chi nhánh</option>
+                  {branches.map((branch) => (
+                    <option key={branch.id} value={branch.id}>{branch.branchName}</option>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 [&_td]:align-top">
-                {feedbacks.map((f, idx) => (
-                  <tr key={f.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-3 py-3 text-center text-gray-400">{(page - 1) * LIMIT + idx + 1}</td>
-                    <td className="px-3 py-3">
-                      <div className="flex items-center gap-2">
-                        <UserAvatar src={f.userAvatar} name={f.userName || "?"} className="w-8 h-8 rounded-lg border border-gray-200" />
-                        <p className="text-xs font-medium text-gray-800">{f.userName || `User #${f.userId}`}</p>
-                      </div>
-                    </td>
-                    <td className="px-3 py-3 max-w-[200px]">
-                      <p className="text-xs text-gray-700 line-clamp-2">{stripHtml(f.content)}</p>
-                    </td>
-                    <td className="px-3 py-3 text-center"><StarRating rating={f.rating} /></td>
-                    <td className="px-3 py-3 text-center">
-                      {f.feedbackType === "BRANCH" ? (
-                        <span className="text-xs text-blue-700 font-medium">{f.branchName || `Chi nhánh #${f.branchId}`}</span>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          {f.productThumbnail && (
-                            <img src={f.productThumbnail} alt="" className="w-8 h-8 rounded object-cover border border-gray-200 shrink-0"
-                              onError={(e) => { (e.target as HTMLImageElement).src = ""; }} />
-                          )}
-                          <div>
-                            <p className="text-xs font-medium text-gray-800 truncate max-w-[100px]">{f.productName}</p>
-                            {f.variantInfo && <p className="text-xs text-gray-400">{f.variantInfo}</p>}
-                          </div>
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-3 py-3 text-center">
-                      {f.feedbackType === "BRANCH"
-                        ? <span className="px-2 py-0.5 rounded border text-xs font-medium bg-blue-50 text-blue-700 border-blue-200">Chi nhánh</span>
-                        : <span className="px-2 py-0.5 rounded border text-xs font-medium bg-purple-50 text-purple-700 border-purple-200">Sản phẩm</span>}
-                    </td>
-                    <td className="px-3 py-3 text-center text-xs text-gray-500">{new Date(f.createdAt).toLocaleDateString("vi-VN")}</td>
-                    <td className="px-3 py-3 text-center">
-                      <button onClick={() => handleDelete(f.id)} disabled={deletingId === f.id}
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-red-50 text-red-500 hover:bg-red-100 border border-red-200 transition disabled:opacity-60">
-                        {deletingId === f.id ? <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <><Trash2 size={11} /> Xóa</>}
-                      </button>
-                    </td>
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-600">Đánh giá</label>
+              <div className="relative">
+                <select
+                  value={ratingFilter}
+                  onChange={(event) => {
+                    setRatingFilter(event.target.value);
+                    setPage(1);
+                  }}
+                  className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-8 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                >
+                  <option value="">Tất cả</option>
+                  {[5, 4, 3, 2, 1].map((rating) => (
+                    <option key={rating} value={rating}>{rating} sao</option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+          {loading ? (
+            <div className="flex justify-center py-14">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-sky-500 border-t-transparent" />
+            </div>
+          ) : feedbacks.length === 0 ? (
+            <div className="py-14 text-center text-sm text-slate-400">Không có đánh giá</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[1040px] text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                    {["#", "Người dùng", "Nội dung", "Đánh giá", "Đối tượng", "Loại", "Ngày", "Thao tác"].map((header) => (
+                      <th key={header} className="px-3 py-3 text-center font-semibold">{header}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100 [&_td]:align-top">
+                  {feedbacks.map((feedback, index) => (
+                    <tr key={feedback.id} className="transition hover:bg-sky-50/40">
+                      <td className="px-3 py-3 text-center text-slate-400">{(page - 1) * LIMIT + index + 1}</td>
+                      <td className="px-3 py-3">
+                        <div className="flex items-center gap-2">
+                          <UserAvatar src={feedback.userAvatar} name={feedback.userName || "?"} className="h-8 w-8 rounded-lg border border-slate-200" />
+                          <p className="text-xs font-medium text-slate-800">{feedback.userName || `User #${feedback.userId}`}</p>
+                        </div>
+                      </td>
+                      <td className="max-w-[220px] px-3 py-3">
+                        <p className="line-clamp-2 text-xs text-slate-700">{stripHtml(feedback.content)}</p>
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        <StarRating rating={feedback.rating} />
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        {feedback.feedbackType === "BRANCH" ? (
+                          <span className="text-xs font-medium text-blue-700">{feedback.branchName || `Chi nhánh #${feedback.branchId}`}</span>
+                        ) : (
+                          <div className="flex items-center justify-center gap-2">
+                            {feedback.productThumbnail ? (
+                              <img
+                                src={feedback.productThumbnail}
+                                alt=""
+                                className="h-8 w-8 shrink-0 rounded border border-slate-200 object-cover"
+                              />
+                            ) : null}
+                            <div className="min-w-0 text-left">
+                              <p className="max-w-[120px] truncate text-xs font-medium text-slate-800">{feedback.productName}</p>
+                              {feedback.variantInfo ? <p className="text-xs text-slate-400">{feedback.variantInfo}</p> : null}
+                            </div>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        {feedback.feedbackType === "BRANCH" ? (
+                          <span className="rounded border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">Chi nhánh</span>
+                        ) : (
+                          <span className="rounded border border-purple-200 bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-700">Sản phẩm</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-3 text-center text-xs text-slate-500">{new Date(feedback.createdAt).toLocaleDateString("vi-VN")}</td>
+                      <td className="px-3 py-3 text-center">
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(feedback.id)}
+                          disabled={deletingId === feedback.id}
+                          className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-500 transition hover:bg-red-100 disabled:opacity-60"
+                        >
+                          {deletingId === feedback.id ? (
+                            <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                          ) : (
+                            <><Trash2 size={11} /> Xóa</>
+                          )}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
           <AdminPagination page={page} totalPages={totalPages} total={total} onPage={setPage} />
-        </div>
+        </section>
       </div>
     </div>
   );

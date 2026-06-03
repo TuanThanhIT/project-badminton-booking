@@ -26,6 +26,8 @@ const createProductService = (data: {
   description: string;
   thumbnailUrl: string;
   categoryId: number;
+  imageUrls?: string[];
+  variants?: ProductVariantPayload[];
 }) => instance.post("/admin/products", data);
 
 const updateProductService = (productId: number, data: Partial<{

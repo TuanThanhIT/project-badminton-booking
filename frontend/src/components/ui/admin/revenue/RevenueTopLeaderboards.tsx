@@ -6,10 +6,10 @@ import type {
 
 const fmtShort = (n: number) =>
   n >= 1_000_000
-    ? `${(n / 1_000_000).toFixed(1)}M₫`
+    ? `${(n / 1_000_000).toFixed(1)}Mđ`
     : n >= 1_000
-      ? `${(n / 1_000).toFixed(0)}K₫`
-      : `${n.toLocaleString("vi-VN")}₫`;
+      ? `${(n / 1_000).toFixed(0)}Kđ`
+      : `${n.toLocaleString("vi-VN")}đ`;
 
 const rankStyle = (index: number) => {
   if (index === 0) return "bg-amber-100 text-amber-800 ring-amber-200";
@@ -34,21 +34,21 @@ const RevenueTopLeaderboards = ({
   onBranchClick,
 }: Props) => {
   const topBranches = [...branches]
-    .filter((b) => b.totalRevenue > 0)
+    .filter((branch) => branch.totalRevenue > 0)
     .sort((a, b) => b.totalRevenue - a.totalRevenue)
     .slice(0, 8);
 
   const topProducts = [...products]
-    .filter((p) => p.totalRevenue > 0)
+    .filter((product) => product.totalRevenue > 0)
     .sort((a, b) => b.totalRevenue - a.totalRevenue)
     .slice(0, 8);
 
   return (
     <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
         <div className="mb-5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
               <Trophy className="h-5 w-5" />
             </div>
             <div>
@@ -70,11 +70,11 @@ const RevenueTopLeaderboards = ({
                 key={branch.branchId}
                 type="button"
                 onClick={() => onBranchClick?.(branch)}
-                className="group w-full rounded-2xl border border-slate-100 p-4 text-left transition hover:border-sky-200 hover:bg-sky-50/50"
+                className="group w-full rounded-lg border border-slate-100 p-4 text-left transition hover:border-sky-200 hover:bg-sky-50/50"
               >
                 <div className="flex items-center gap-3">
                   <span
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold ring-1 ${rankStyle(index)}`}
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold ring-1 ${rankStyle(index)}`}
                   >
                     {index + 1}
                   </span>
@@ -111,10 +111,10 @@ const RevenueTopLeaderboards = ({
         )}
       </section>
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
         <div className="mb-5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
               <Package className="h-5 w-5" />
             </div>
             <div>
@@ -133,11 +133,11 @@ const RevenueTopLeaderboards = ({
             {topProducts.map((product, index) => (
               <div
                 key={product.productVariantId}
-                className="rounded-2xl border border-slate-100 p-4"
+                className="rounded-lg border border-slate-100 p-4"
               >
                 <div className="flex items-center gap-3">
                   <span
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold ring-1 ${rankStyle(index)}`}
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold ring-1 ${rankStyle(index)}`}
                   >
                     {index + 1}
                   </span>

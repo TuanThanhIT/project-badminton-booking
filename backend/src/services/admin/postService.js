@@ -82,12 +82,13 @@ const deleteAdminPostService = async (postId) => {
 };
 
 const getAdminCommentsService = async (data) => {
-  const { page = 1, limit = 10, search, postId } = data;
+  const { page = 1, limit = 10, search, postId, commentType, postType } = data;
   const offset = (page - 1) * limit;
 
   const where = {};
   if (search) where.content = { [Op.like]: `%${search}%` };
   if (postId) where.postId = postId;
+  if (commentType) where.type = commentType;
 
   const { rows, count } = await Comment.findAndCountAll({
     where,
@@ -103,6 +104,8 @@ const getAdminCommentsService = async (data) => {
         model: Post,
         as: "post",
         attributes: ["id", "title", "type"],
+        where: postType ? { type: postType } : undefined,
+        required: !!postType,
       },
     ],
     limit: Number(limit),

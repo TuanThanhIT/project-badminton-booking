@@ -50,10 +50,16 @@ const menuGroups: { group: string; items: MenuItem[] }[] = [
     group: "Vận hành",
     items: [
       {
-        title: "Đặt sân",
+        title: "Lịch sân",
         icon: Calendar,
         path: "/manager/bookings",
-        description: "Lịch sân và booking",
+        description: "Lịch đặt sân",
+      },
+      {
+        title: "Sân cầu lông",
+        icon: Calendar,
+        path: "/manager/courts",
+        description: "Sân và bảng giá",
       },
       {
         title: "Đơn hàng",
@@ -65,7 +71,7 @@ const menuGroups: { group: string; items: MenuItem[] }[] = [
         title: "Tin nhắn",
         icon: MessageSquare,
         path: "/manager/messages",
-        description: "Trao đổi nhân viên",
+        description: "Trao đổi khách hàng",
       },
     ],
   },
@@ -134,7 +140,7 @@ const ManagerSidebar = ({ collapsed, setCollapsed }: Props) => {
       <button
         type="button"
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-4 top-8 z-50 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
+        className="absolute -right-4 top-7 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
         aria-label={collapsed ? "Mở rộng menu" : "Thu gọn menu"}
       >
         {collapsed ? (
@@ -145,7 +151,7 @@ const ManagerSidebar = ({ collapsed, setCollapsed }: Props) => {
       </button>
 
       <div
-        className={`flex h-24 items-center border-b border-slate-100 ${
+        className={`flex h-20 items-center border-b border-slate-200 ${
           collapsed ? "justify-center" : "px-6"
         }`}
       >
@@ -153,15 +159,13 @@ const ManagerSidebar = ({ collapsed, setCollapsed }: Props) => {
           <img
             src="/img/logo_badminton.jpg"
             alt="B-Hub"
-            className="h-14 w-14 shrink-0 rounded-2xl border border-slate-100 object-cover shadow-sm"
+            className="h-12 w-12 shrink-0 rounded-2xl border border-slate-100 object-cover shadow-sm"
           />
 
           {!collapsed && (
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-                B-Hub
-              </h1>
-              <p className="text-sm font-medium text-slate-500">
+              <h1 className="text-2xl font-semibold text-slate-900">B-Hub</h1>
+              <p className="text-sm font-normal text-slate-500">
                 Quản lý cửa hàng
               </p>
             </div>

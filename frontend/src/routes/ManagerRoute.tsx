@@ -11,6 +11,7 @@ import DashboardPage from "../pages/manager/DashboardPage";
 import LoginPage from "../pages/manager/LoginPage";
 import LandingPage from "../pages/manager/LandingPage";
 import BranchPage from "../pages/manager/BranchPage";
+import BookingSchedulePage from "../pages/manager/BookingSchedulePage";
 import StaffPage from "../pages/manager/StaffPage";
 import ProductPagae from "../pages/manager/ProductPage";
 import WorkShiftPage from "../pages/manager/WorkShiftPage";
@@ -34,7 +35,8 @@ const ManagerRoute = () => {
         <Route element={<ManagerLayout />}>
           {/* ///MANAGER */}
           <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="bookings" element={<BranchPage />} />
+          <Route path="bookings" element={<BookingSchedulePage />} />
+          <Route path="courts" element={<BranchPage />} />
           <Route path="products" element={<ProductPagae />} />
           <Route path="staffs" element={<StaffPage />} />
           <Route path="work-shifts" element={<WorkShiftPage />} />

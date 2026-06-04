@@ -28,7 +28,7 @@ import type {
 } from "../../types/inventory";
 import type { ManagerProduct } from "../../types/product";
 import type { ManagerBeverage } from "../../types/beverage";
-import TablePagination from "../../components/ui/TablePagination";
+import TablePagination from "../../components/ui/user/pagination/TablePagination";
 
 const LIMIT = 10;
 
@@ -407,7 +407,9 @@ const InventoryPage = () => {
               </select>
             </label>
             <label>
-              <span className="mb-1 block text-xs font-medium text-slate-600">Ghi chú</span>
+              <span className="mb-1 block text-xs font-medium text-slate-600">
+                Ghi chú
+              </span>
               <input
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
@@ -550,9 +552,15 @@ const InventoryPage = () => {
                 <th className="px-4 py-3 font-semibold">#</th>
                 <th className="px-4 py-3 font-semibold">Mã phiếu</th>
                 <th className="px-4 py-3 font-semibold">Nhà cung cấp</th>
-                <th className="px-4 py-3 text-right font-semibold">Tổng tiền</th>
-                <th className="px-4 py-3 text-center font-semibold">Trạng thái</th>
-                <th className="px-4 py-3 text-center font-semibold">Thao tác</th>
+                <th className="px-4 py-3 text-right font-semibold">
+                  Tổng tiền
+                </th>
+                <th className="px-4 py-3 text-center font-semibold">
+                  Trạng thái
+                </th>
+                <th className="px-4 py-3 text-center font-semibold">
+                  Thao tác
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 [&_td]:align-top">
@@ -597,43 +605,59 @@ const InventoryPage = () => {
               ) : null}
             </tbody>
           </table>
-          <TablePagination page={page} totalPages={totalPages} total={total} onPage={setPage} unit="phiếu nhập" />
+          <TablePagination
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            onPage={setPage}
+            unit="phiếu nhập"
+          />
         </section>
       ) : null}
 
       {tab === "variant" ? (
         <>
-        <StockTable
-          page={page}
-          rows={variantStocks.map((item) => ({
-            id: item.id,
-            name: item.variant?.product?.productName || "Sản phẩm",
-            extra:
-              item.variant?.size ||
-              item.variant?.color ||
-              item.variant?.sku ||
-              "",
-            branch: item.branch?.branchName || "",
-            stock: item.stock,
-          }))}
-        />
-        <TablePagination page={page} totalPages={totalPages} total={total} onPage={setPage} />
+          <StockTable
+            page={page}
+            rows={variantStocks.map((item) => ({
+              id: item.id,
+              name: item.variant?.product?.productName || "Sản phẩm",
+              extra:
+                item.variant?.size ||
+                item.variant?.color ||
+                item.variant?.sku ||
+                "",
+              branch: item.branch?.branchName || "",
+              stock: item.stock,
+            }))}
+          />
+          <TablePagination
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            onPage={setPage}
+          />
         </>
       ) : null}
 
       {tab === "beverage" ? (
         <>
-        <StockTable
-          page={page}
-          rows={beverageStocks.map((item) => ({
-            id: item.id,
-            name: item.beverage?.beverageName || "Đồ uống",
-            extra: formatCurrency(Number(item.beverage?.price || 0)),
-            branch: item.branch?.branchName || "",
-            stock: item.stock,
-          }))}
-        />
-        <TablePagination page={page} totalPages={totalPages} total={total} onPage={setPage} />
+          <StockTable
+            page={page}
+            rows={beverageStocks.map((item) => ({
+              id: item.id,
+              name: item.beverage?.beverageName || "Đồ uống",
+              extra: formatCurrency(Number(item.beverage?.price || 0)),
+              branch: item.branch?.branchName || "",
+              stock: item.stock,
+            }))}
+          />
+          <TablePagination
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            onPage={setPage}
+          />
         </>
       ) : null}
 
@@ -677,7 +701,12 @@ const InventoryPage = () => {
               ) : null}
             </tbody>
           </table>
-          <TablePagination page={page} totalPages={totalPages} total={total} onPage={setPage} />
+          <TablePagination
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            onPage={setPage}
+          />
         </section>
       ) : null}
     </div>

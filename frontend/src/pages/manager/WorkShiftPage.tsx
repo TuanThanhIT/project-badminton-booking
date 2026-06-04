@@ -34,7 +34,7 @@ import {
   managerPrimaryButtonClass,
   managerSecondaryButtonClass,
 } from "../../components/commons/manager/ManagerPage";
-import TablePagination from "../../components/ui/TablePagination";
+import TablePagination from "../../components/ui/user/pagination/TablePagination";
 
 const today = new Date().toISOString().slice(0, 10);
 const LIMIT = 10;
@@ -109,7 +109,9 @@ const WorkShiftPage = () => {
   const [assignmentForms, setAssignmentForms] = useState<
     Record<number, { employeeId: string; roleInShift: ManagerShiftRole }>
   >({});
-  const [assignmentPages, setAssignmentPages] = useState<Record<number, number>>({});
+  const [assignmentPages, setAssignmentPages] = useState<
+    Record<number, number>
+  >({});
 
   useEffect(() => {
     dispatch(getEmployees());
@@ -524,87 +526,98 @@ const WorkShiftPage = () => {
                 <div className="overflow-hidden rounded-lg border border-slate-100">
                   {shift.assignments.length ? (
                     <>
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
-                          <th className="px-3 py-3 font-semibold">#</th>
-                          <th className="px-3 py-3 font-semibold">Nhân viên</th>
-                          <th className="px-3 py-3 font-semibold">Vai trò</th>
-                          <th className="px-3 py-3 font-semibold">Check-in</th>
-                          <th className="px-3 py-3 font-semibold">Check-out</th>
-                          <th className="px-3 py-3 text-right font-semibold">Thao tác</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 [&_td]:align-top">
-                        {shift.assignments
-                          .slice(
-                            ((assignmentPages[shift.id] || 1) - 1) * LIMIT,
-                            (assignmentPages[shift.id] || 1) * LIMIT,
-                          )
-                          .map((assignment, index) => (
-                          <tr key={assignment.assignmentId}>
-                            <td className="px-3 py-3 text-slate-400">
-                              {((assignmentPages[shift.id] || 1) - 1) * LIMIT + index + 1}
-                            </td>
-                            <td className="px-3 py-3">
-                              <p className="font-bold text-slate-800">
-                                {assignment.employee?.fullName ||
-                                  assignment.employee?.username ||
-                                  "Nhân viên"}
-                              </p>
-                              <p className="text-xs text-slate-500">
-                                {assignment.employee?.email}
-                              </p>
-                            </td>
-                            <td className="px-3 py-3">
-                              <select
-                                value={assignment.roleInShift}
-                                onChange={(event) =>
-                                  handleUpdateRole(
-                                    assignment.assignmentId,
-                                    event.target.value as ManagerShiftRole,
-                                  )
-                                }
-                                className={managerInputClass}
-                              >
-                                <option value="STAFF">Nhân viên</option>
-                                <option value="CASHIER">Thu ngân</option>
-                              </select>
-                            </td>
-                            <td className="px-3 py-3 text-slate-600">
-                              {assignment.checkIn || "Chưa check-in"}
-                            </td>
-                            <td className="px-3 py-3 text-slate-600">
-                              {assignment.checkOut || "Chưa check-out"}
-                            </td>
-                            <td className="px-3 py-3 text-right">
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleRemove(assignment.assignmentId)
-                                }
-                                className="inline-flex h-9 w-9 items-center justify-center rounded-md text-red-600 transition hover:bg-red-50"
-                                title="Xóa phân ca"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </td>
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+                            <th className="px-3 py-3 font-semibold">#</th>
+                            <th className="px-3 py-3 font-semibold">
+                              Nhân viên
+                            </th>
+                            <th className="px-3 py-3 font-semibold">Vai trò</th>
+                            <th className="px-3 py-3 font-semibold">
+                              Check-in
+                            </th>
+                            <th className="px-3 py-3 font-semibold">
+                              Check-out
+                            </th>
+                            <th className="px-3 py-3 text-right font-semibold">
+                              Thao tác
+                            </th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    <TablePagination
-                      page={assignmentPages[shift.id] || 1}
-                      totalPages={Math.ceil(shift.assignments.length / LIMIT)}
-                      total={shift.assignments.length}
-                      onPage={(nextPage) =>
-                        setAssignmentPages((current) => ({
-                          ...current,
-                          [shift.id]: nextPage,
-                        }))
-                      }
-                      unit="nhân viên"
-                    />
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 [&_td]:align-top">
+                          {shift.assignments
+                            .slice(
+                              ((assignmentPages[shift.id] || 1) - 1) * LIMIT,
+                              (assignmentPages[shift.id] || 1) * LIMIT,
+                            )
+                            .map((assignment, index) => (
+                              <tr key={assignment.assignmentId}>
+                                <td className="px-3 py-3 text-slate-400">
+                                  {((assignmentPages[shift.id] || 1) - 1) *
+                                    LIMIT +
+                                    index +
+                                    1}
+                                </td>
+                                <td className="px-3 py-3">
+                                  <p className="font-bold text-slate-800">
+                                    {assignment.employee?.fullName ||
+                                      assignment.employee?.username ||
+                                      "Nhân viên"}
+                                  </p>
+                                  <p className="text-xs text-slate-500">
+                                    {assignment.employee?.email}
+                                  </p>
+                                </td>
+                                <td className="px-3 py-3">
+                                  <select
+                                    value={assignment.roleInShift}
+                                    onChange={(event) =>
+                                      handleUpdateRole(
+                                        assignment.assignmentId,
+                                        event.target.value as ManagerShiftRole,
+                                      )
+                                    }
+                                    className={managerInputClass}
+                                  >
+                                    <option value="STAFF">Nhân viên</option>
+                                    <option value="CASHIER">Thu ngân</option>
+                                  </select>
+                                </td>
+                                <td className="px-3 py-3 text-slate-600">
+                                  {assignment.checkIn || "Chưa check-in"}
+                                </td>
+                                <td className="px-3 py-3 text-slate-600">
+                                  {assignment.checkOut || "Chưa check-out"}
+                                </td>
+                                <td className="px-3 py-3 text-right">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleRemove(assignment.assignmentId)
+                                    }
+                                    className="inline-flex h-9 w-9 items-center justify-center rounded-md text-red-600 transition hover:bg-red-50"
+                                    title="Xóa phân ca"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                      <TablePagination
+                        page={assignmentPages[shift.id] || 1}
+                        totalPages={Math.ceil(shift.assignments.length / LIMIT)}
+                        total={shift.assignments.length}
+                        onPage={(nextPage) =>
+                          setAssignmentPages((current) => ({
+                            ...current,
+                            [shift.id]: nextPage,
+                          }))
+                        }
+                        unit="nhân viên"
+                      />
                     </>
                   ) : (
                     <div className="py-8 text-center text-sm font-semibold text-slate-500">

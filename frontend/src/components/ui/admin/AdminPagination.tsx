@@ -1,4 +1,4 @@
-import TablePagination from "../TablePagination";
+import TablePagination from "../user/pagination/TablePagination";
 
 type AdminPaginationProps = {
   page: number;

@@ -25,7 +25,7 @@ import {
   managerInputClass,
   managerSecondaryButtonClass,
 } from "../../components/commons/manager/ManagerPage";
-import TablePagination from "../../components/ui/TablePagination";
+import TablePagination from "../../components/ui/user/pagination/TablePagination";
 
 const LIMIT = 10;
 
@@ -128,7 +128,11 @@ const BookingSchedulePage = () => {
   const [detailLoading, setDetailLoading] = useState(false);
 
   const totalVisibleAmount = useMemo(
-    () => bookings.reduce((sum, booking) => sum + Number(booking.totalAmount || 0), 0),
+    () =>
+      bookings.reduce(
+        (sum, booking) => sum + Number(booking.totalAmount || 0),
+        0,
+      ),
     [bookings],
   );
 
@@ -148,7 +152,10 @@ const BookingSchedulePage = () => {
       if (!selectedBooking && res.data.data.items[0]) {
         fetchBookingDetail(res.data.data.items[0].id);
       }
-      if (selectedBooking && !res.data.data.items.some((item) => item.id === selectedBooking.id)) {
+      if (
+        selectedBooking &&
+        !res.data.data.items.some((item) => item.id === selectedBooking.id)
+      ) {
         setSelectedBooking(null);
       }
     } finally {
@@ -183,7 +190,10 @@ const BookingSchedulePage = () => {
         description="Theo dõi lịch đặt sân theo trạng thái và xem nhanh chi tiết từng lịch."
         metrics={[
           { label: "Tổng lịch", value: pagination.total },
-          { label: "Giá trị đang xem", value: formatCurrency(totalVisibleAmount) },
+          {
+            label: "Giá trị đang xem",
+            value: formatCurrency(totalVisibleAmount),
+          },
         ]}
       />
 
@@ -249,7 +259,9 @@ const BookingSchedulePage = () => {
       </section>
 
       <div className="grid gap-5 xl:grid-cols-[0.95fr_1.25fr]">
-        <section className={`min-h-[560px] overflow-hidden ${managerCardClass}`}>
+        <section
+          className={`min-h-[560px] overflow-hidden ${managerCardClass}`}
+        >
           <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
             <h2 className="text-lg font-bold text-slate-900">Danh sách lịch</h2>
             {loading ? (
@@ -288,7 +300,9 @@ const BookingSchedulePage = () => {
                     </div>
                     <div className="mt-3 grid gap-2 text-sm text-slate-600">
                       <p className="font-semibold text-slate-800">
-                        {booking.customer?.fullName || booking.user?.username || "Khách"}
+                        {booking.customer?.fullName ||
+                          booking.user?.username ||
+                          "Khách"}
                       </p>
                       <p>
                         {firstDetail
@@ -411,7 +425,10 @@ const BookingDetailPanel = ({
     </div>
 
     <InfoPanel icon={MapPin} title="Chi nhánh">
-      <InfoRow label="Tên chi nhánh" value={booking.branch?.branchName || "--"} />
+      <InfoRow
+        label="Tên chi nhánh"
+        value={booking.branch?.branchName || "--"}
+      />
       <InfoRow
         label="Địa chỉ"
         value={
@@ -439,7 +456,8 @@ const BookingDetailPanel = ({
               </p>
             </div>
             <p className="mt-1 text-sm text-slate-500">
-              {formatDate(detail.playDate)} · {detail.startTime} - {detail.endTime}
+              {formatDate(detail.playDate)} · {detail.startTime} -{" "}
+              {detail.endTime}
             </p>
           </div>
         ))}

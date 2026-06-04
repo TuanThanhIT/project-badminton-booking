@@ -7,7 +7,6 @@ import { createServer } from "http";
 import { initSocket } from "./socket/index.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import "./models/index.js";
-import "./workers/ghnWebhookWorker.js";
 
 import initAuthRoute from "./routes/user/authRoute.js";
 import initCateRoute from "./routes/user/cateRoute.js";
@@ -70,7 +69,7 @@ import initAdminInventoryRoute from "./routes/admin/inventoryRoute.js";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 8088;
+const PORT = process.env.PORT || 8080;
 const allowedOrigins = [
   process.env.CLIENT_URL,
   "http://localhost:5173",

@@ -1,11 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
-import { Banknote, CalendarDays, CheckCircle, Clock, Users } from "lucide-react";
+import {
+  Banknote,
+  CalendarDays,
+  CheckCircle,
+  Clock,
+  Users,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { getManagerMonthlySalary } from "../../redux/slices/manager/salarySlice";
 import { ManagerPageHeader } from "../../components/commons/manager/ManagerPage";
-import TablePagination from "../../components/ui/TablePagination";
+import TablePagination from "../../components/ui/user/pagination/TablePagination";
 
 const now = new Date();
 const LIMIT = 10;
@@ -66,7 +72,9 @@ const SalaryPage = () => {
   const [expandedEmployeeId, setExpandedEmployeeId] = useState<number | null>(
     null,
   );
-  const [assignmentPages, setAssignmentPages] = useState<Record<number, number>>({});
+  const [assignmentPages, setAssignmentPages] = useState<
+    Record<number, number>
+  >({});
 
   useEffect(() => {
     dispatch(getManagerMonthlySalary({ month, year }));
@@ -220,7 +228,9 @@ const SalaryPage = () => {
                   <button
                     type="button"
                     onClick={() =>
-                      setExpandedEmployeeId(expanded ? null : employee.employeeId)
+                      setExpandedEmployeeId(
+                        expanded ? null : employee.employeeId,
+                      )
                     }
                     className="grid w-full gap-3 px-4 py-4 text-left transition hover:bg-slate-50 lg:grid-cols-[1.5fr_120px_150px_140px_170px]"
                   >
@@ -264,58 +274,79 @@ const SalaryPage = () => {
                             <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                               <th className="px-3 py-3 font-semibold">#</th>
                               <th className="px-3 py-3 font-semibold">Ca</th>
-                              <th className="px-3 py-3 font-semibold">Vai trò</th>
-                              <th className="px-3 py-3 font-semibold">Check-in</th>
-                              <th className="px-3 py-3 font-semibold">Check-out</th>
+                              <th className="px-3 py-3 font-semibold">
+                                Vai trò
+                              </th>
+                              <th className="px-3 py-3 font-semibold">
+                                Check-in
+                              </th>
+                              <th className="px-3 py-3 font-semibold">
+                                Check-out
+                              </th>
                               <th className="px-3 py-3 font-semibold">Tỷ lệ</th>
-                              <th className="px-3 py-3 text-right font-semibold">Lương</th>
+                              <th className="px-3 py-3 text-right font-semibold">
+                                Lương
+                              </th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100 [&_td]:align-top">
                             {employee.assignments
                               .slice(
-                                ((assignmentPages[employee.employeeId] || 1) - 1) * LIMIT,
-                                (assignmentPages[employee.employeeId] || 1) * LIMIT,
+                                ((assignmentPages[employee.employeeId] || 1) -
+                                  1) *
+                                  LIMIT,
+                                (assignmentPages[employee.employeeId] || 1) *
+                                  LIMIT,
                               )
                               .map((assignment, index) => (
-                              <tr key={assignment.assignmentId}>
-                                <td className="px-3 py-3 text-slate-400">
-                                  {((assignmentPages[employee.employeeId] || 1) - 1) * LIMIT + index + 1}
-                                </td>
-                                <td className="px-3 py-3">
-                                  <p className="font-bold text-slate-800">
-                                    {assignment.workShift.shiftName}
-                                  </p>
-                                  <p className="text-xs text-slate-500">
-                                    {assignment.workShift.workDate} •{" "}
-                                    {timeShort(assignment.workShift.startTime)} -{" "}
-                                    {timeShort(assignment.workShift.endTime)}
-                                  </p>
-                                </td>
-                                <td className="px-3 py-3">
-                                  {assignment.roleInShift === "CASHIER"
-                                    ? "Thu ngân"
-                                    : "Nhân viên"}
-                                </td>
-                                <td className="px-3 py-3">
-                                  {formatDateTime(assignment.checkIn)}
-                                </td>
-                                <td className="px-3 py-3">
-                                  {formatDateTime(assignment.checkOut)}
-                                </td>
-                                <td className="px-3 py-3">
-                                  {formatPercent(assignment.completionRate)}
-                                </td>
-                                <td className="px-3 py-3 text-right font-bold text-emerald-700">
-                                  {formatCurrency(assignment.earnedWage)}
-                                </td>
-                              </tr>
-                            ))}
+                                <tr key={assignment.assignmentId}>
+                                  <td className="px-3 py-3 text-slate-400">
+                                    {((assignmentPages[employee.employeeId] ||
+                                      1) -
+                                      1) *
+                                      LIMIT +
+                                      index +
+                                      1}
+                                  </td>
+                                  <td className="px-3 py-3">
+                                    <p className="font-bold text-slate-800">
+                                      {assignment.workShift.shiftName}
+                                    </p>
+                                    <p className="text-xs text-slate-500">
+                                      {assignment.workShift.workDate} •{" "}
+                                      {timeShort(
+                                        assignment.workShift.startTime,
+                                      )}{" "}
+                                      -{" "}
+                                      {timeShort(assignment.workShift.endTime)}
+                                    </p>
+                                  </td>
+                                  <td className="px-3 py-3">
+                                    {assignment.roleInShift === "CASHIER"
+                                      ? "Thu ngân"
+                                      : "Nhân viên"}
+                                  </td>
+                                  <td className="px-3 py-3">
+                                    {formatDateTime(assignment.checkIn)}
+                                  </td>
+                                  <td className="px-3 py-3">
+                                    {formatDateTime(assignment.checkOut)}
+                                  </td>
+                                  <td className="px-3 py-3">
+                                    {formatPercent(assignment.completionRate)}
+                                  </td>
+                                  <td className="px-3 py-3 text-right font-bold text-emerald-700">
+                                    {formatCurrency(assignment.earnedWage)}
+                                  </td>
+                                </tr>
+                              ))}
                           </tbody>
                         </table>
                         <TablePagination
                           page={assignmentPages[employee.employeeId] || 1}
-                          totalPages={Math.ceil(employee.assignments.length / LIMIT)}
+                          totalPages={Math.ceil(
+                            employee.assignments.length / LIMIT,
+                          )}
                           total={employee.assignments.length}
                           onPage={(nextPage) =>
                             setAssignmentPages((current) => ({

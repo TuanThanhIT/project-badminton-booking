@@ -106,15 +106,30 @@ const getPostsService = async (data) => {
 
     const andConditions = [];
 
-    // Tìm kiếm theo tiêu đề hoặc nội dung
+    // Tìm kiếm theo tiêu đề / nội dung (nhiều từ → mỗi từ phải xuất hiện)
     if (search && typeof search === "string" && search.trim()) {
-      const term = `%${search.trim()}%`;
-      andConditions.push(
-        sequelize.or(
-          { title: { [Op.like]: term } },
-          { content: { [Op.like]: term } }
-        )
-      );
+      const raw = search.trim();
+      const tokens = raw.split(/\s+/).filter((t) => t.length >= 2);
+
+      if (tokens.length > 1) {
+        for (const token of tokens) {
+          const term = `%${token}%`;
+          andConditions.push(
+            sequelize.or(
+              { title: { [Op.like]: term } },
+              { content: { [Op.like]: term } },
+            ),
+          );
+        }
+      } else {
+        const term = `%${raw}%`;
+        andConditions.push(
+          sequelize.or(
+            { title: { [Op.like]: term } },
+            { content: { [Op.like]: term } },
+          ),
+        );
+      }
     }
     
 

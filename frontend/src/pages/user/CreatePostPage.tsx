@@ -20,13 +20,13 @@ const POST_TYPE_LABEL: Record<PostType, string> = {
   FIND_PLAYER: "Tìm người chơi cùng",
   TOURNAMENT: "Giải đấu",
   GROUP: "Nhóm",
-  FIND_COACH: "Tìm người dạy",
+  FIND_COACH: "Tìm người giảng dạy",
   CLASS: "Lớp học",
 };
 
 const POST_TYPE_DESC: Partial<Record<PostType, string>> = {
   FIND_PLAYER: "Tìm thêm người chơi cho buổi cầu lông",
-  FIND_COACH: "Tìm người dạy cầu lông phù hợp với mục tiêu tập luyện",
+  FIND_COACH: "Tìm người giảng dạy cầu lông phù hợp với mục tiêu tập luyện",
   CLASS: "Đăng lớp học hoặc khóa đào tạo",
   TOURNAMENT: "Thông báo giải đấu, hạng mục và lịch thi",
   GROUP: "Tạo nhóm chơi cố định theo khu vực",

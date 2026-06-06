@@ -48,6 +48,7 @@ var _inventoryRoute = _interopRequireDefault(require("./routes/manager/inventory
 var _feedbackRoute = _interopRequireDefault(require("./routes/user/feedbackRoute.js"));
 var _notificationRoute = _interopRequireDefault(require("./routes/user/notificationRoute.js"));
 var _homeRoute = _interopRequireDefault(require("./routes/user/homeRoute.js"));
+var _aiRoute = _interopRequireDefault(require("./routes/user/aiRoute.js"));
 var _userRoute = _interopRequireDefault(require("./routes/admin/userRoute.js"));
 var _branchRoute3 = _interopRequireDefault(require("./routes/admin/branchRoute.js"));
 var _managerRoute = _interopRequireDefault(require("./routes/admin/managerRoute.js"));
@@ -92,6 +93,7 @@ app.use((0, _cookieParser["default"])());
 
 // User
 (0, _homeRoute["default"])(app);
+(0, _aiRoute["default"])(app);
 (0, _authRoute["default"])(app);
 (0, _cateRoute["default"])(app);
 (0, _productRoute["default"])(app);

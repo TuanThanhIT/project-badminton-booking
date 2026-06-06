@@ -62,7 +62,7 @@ const getProductsByFilterService = async (data) => {
     throw new NotFoundError("Danh muc khong ton tai");
   }
 
-  // X? lý keyword
+  // X? lï¿½ keyword
   const kw = keyword && keyword !== "null" ? keyword : undefined;
 
   const whereCondition = {
@@ -110,15 +110,16 @@ const getProductsByFilterService = async (data) => {
           ...(sizes?.length > 0 && { size: { [Op.in]: sizes } }),
           ...(colors?.length > 0 && { color: { [Op.in]: colors } }),
           ...(materials?.length > 0 && { material: { [Op.in]: materials } }),
-          ...(branchIds?.length > 0 && {
-            branchId: { [Op.in]: branchIds },
-          }),
         },
         include: [
           {
             model: VariantStock,
             as: "stocks",
             attributes: [], // ?? QUAN TR?NG
+            ...(branchIds?.length > 0 && {
+              where: { branchId: { [Op.in]: branchIds } },
+              required: true,
+            }),
           },
         ],
         required: true,
@@ -185,8 +186,13 @@ const getProductDetailService = async (data) => {
   const { productId } = data;
 
   const product = await Product.findByPk(productId, {
-    attributes: ["id", "productName", "brand", "description"],
+    attributes: ["id", "productName", "brand", "description", "categoryId"],
     include: [
+      {
+        model: Category,
+        as: "category",
+        attributes: ["id", "cateName", "menuGroup"],
+      },
       {
         model: ProductVariant,
         as: "variants",
@@ -222,7 +228,7 @@ const getProductDetailService = async (data) => {
   });
 
   if (!product) {
-    throw new NotFoundError("S?n ph?m không t?n t?i");
+    throw new NotFoundError("S?n ph?m khï¿½ng t?n t?i");
   }
 
   const variantsFormatted = product.variants.map((v) => {
@@ -298,7 +304,7 @@ const getProductFeedbacksService = async (data) => {
     offset,
   });
 
-  // tính rating trung bình (toàn b? feedback c?a product)
+  // tï¿½nh rating trung bï¿½nh (toï¿½n b? feedback c?a product)
   const allFeedbacks = await Feedback.findAll({
     include: [
       {

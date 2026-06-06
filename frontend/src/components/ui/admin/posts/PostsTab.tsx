@@ -17,7 +17,7 @@ const POST_TYPE_LABEL: Record<string, string> = {
   FIND_PLAYER: "Tìm người chơi",
   TOURNAMENT: "Giải đấu",
   GROUP: "Nhóm",
-  FIND_COACH: "Tìm người dạy",
+  FIND_COACH: "Tìm người giảng dạy",
   CLASS: "Lớp học",
 };
 

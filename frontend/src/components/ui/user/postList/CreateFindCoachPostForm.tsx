@@ -34,7 +34,7 @@ const sectionClass =
 
 const CreateFindCoachPostForm = ({
   initialValues,
-  submitText = "Đăng bài tìm người dạy",
+  submitText = "Đăng bài tìm người giảng dạy",
   onSubmitForm,
   redirectOnSuccess = true,
 }: CreateFindCoachPostFormProps) => {
@@ -95,7 +95,7 @@ const CreateFindCoachPostForm = ({
     try {
       await dispatch(createPost({ data })).unwrap();
     } catch {
-      toast.error("Dang bai that bai. Vui long thu lai.");
+      toast.error("Đăng bài thất bại. Vui lòng thử lại.");
     }
   };
 
@@ -103,7 +103,7 @@ const CreateFindCoachPostForm = ({
     if (!redirectOnSuccess) return;
     if (lastCreatedPost?.type !== "FIND_COACH") return;
 
-    toast.success("Đã đăng bài tìm người dạy!");
+    toast.success("Đã đăng bài tìm người giảng dạy!");
     reset();
     const timer = setTimeout(() => {
       dispatch(clearLastCreatedPost());
@@ -116,21 +116,21 @@ const CreateFindCoachPostForm = ({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
-        <label className={labelClass}>Tieu de</label>
+        <label className={labelClass}>Tiêu đề</label>
         <input
           {...register("title")}
           className={inputClass}
-          placeholder="Cần tìm người dạy cầu lông buổi tối"
+          placeholder="Cần tìm người giảng dạy cầu lông buổi tối"
         />
         {errors.title && <p className={errorClass}>{errors.title.message}</p>}
       </div>
 
       <div>
-        <label className={labelClass}>Noi dung</label>
+        <label className={labelClass}>Nội dung</label>
         <textarea
           {...register("content")}
           className={`${inputClass} min-h-[110px] resize-none leading-relaxed`}
-          placeholder="Mo ta ngan ve nhu cau hoc, muc tieu va tinh trang hien tai..."
+          placeholder="Mô tả ngắn về nhu cầu học, mục tiêu và tình trạng hiện tại..."
         />
         {errors.content && <p className={errorClass}>{errors.content.message}</p>}
       </div>
@@ -138,13 +138,13 @@ const CreateFindCoachPostForm = ({
       <div className={sectionClass}>
         <div className="flex items-center gap-2">
           <MapPin size={19} className="text-sky-600" />
-          <h3 className="text-base font-bold text-slate-800">Dia diem mong muon</h3>
+          <h3 className="text-base font-bold text-slate-800">Địa điểm mong muốn</h3>
         </div>
         <select
           {...register("formData.location.branchId", { valueAsNumber: true })}
           className={inputClass}
         >
-          <option value={0}>-- Chon chi nhanh --</option>
+          <option value={0}>-- Chọn chi nhánh --</option>
           {branches.map((branch) => (
             <option key={branch.id} value={branch.id}>
               {[branch.branchName, branch.address, branch.districtName]
@@ -161,12 +161,12 @@ const CreateFindCoachPostForm = ({
       <div className={sectionClass}>
         <div className="flex items-center gap-2">
           <Target size={19} className="text-sky-600" />
-          <h3 className="text-base font-bold text-slate-800">Nhu cau hoc</h3>
+          <h3 className="text-base font-bold text-slate-800">Nhu cầu học</h3>
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <label className={labelClass}>Trinh do hien tai</label>
+            <label className={labelClass}>Trình độ hiện tại</label>
             <select {...register("formData.currentLevel")} className={inputClass}>
               {PLAYER_LEVEL_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -180,21 +180,21 @@ const CreateFindCoachPostForm = ({
           </div>
 
           <div>
-            <label className={labelClass}>Ngan sach</label>
+            <label className={labelClass}>Ngân sách</label>
             <input
               {...register("formData.budget")}
               className={inputClass}
-              placeholder="VD: 200k/buoi, 1tr/thang..."
+              placeholder="VD: 200k/buổi, 1tr/tháng..."
             />
           </div>
         </div>
 
         <div>
-          <label className={labelClass}>Muc tieu hoc</label>
+          <label className={labelClass}>Mục tiêu học</label>
           <input
             {...register("formData.goal")}
             className={inputClass}
-            placeholder="VD: sua ky thuat, tang the luc, hoc danh doi..."
+            placeholder="VD: sửa kỹ thuật, tăng thể lực, học đánh đôi..."
           />
           {errors.formData?.goal && (
             <p className={errorClass}>{errors.formData.goal.message}</p>
@@ -202,11 +202,11 @@ const CreateFindCoachPostForm = ({
         </div>
 
         <div>
-          <label className={labelClass}>Thoi gian co the hoc</label>
+          <label className={labelClass}>Thời gian có thể học</label>
           <input
             {...register("formData.scheduleNote")}
             className={inputClass}
-            placeholder="VD: toi 2-4-6 sau 19h"
+            placeholder="VD: tối 2-4-6, sau 19h"
           />
           {errors.formData?.scheduleNote && (
             <p className={errorClass}>{errors.formData.scheduleNote.message}</p>
@@ -217,7 +217,7 @@ const CreateFindCoachPostForm = ({
       <div className={sectionClass}>
         <div className="flex items-center gap-2">
           <MessageCircle size={19} className="text-sky-600" />
-          <h3 className="text-base font-bold text-slate-800">Lien he</h3>
+          <h3 className="text-base font-bold text-slate-800">Liên hệ</h3>
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -227,13 +227,13 @@ const CreateFindCoachPostForm = ({
               {...register("formData.contact.inApp")}
               className="h-4 w-4 accent-sky-600"
             />
-            Nhan tin tren web
+            Nhận tin trên web
           </label>
 
           <input
             {...register("formData.contact.phone")}
             className={inputClass}
-            placeholder="So dien thoai"
+            placeholder="Số điện thoại"
           />
           <input
             {...register("formData.contact.zalo")}
@@ -244,11 +244,11 @@ const CreateFindCoachPostForm = ({
       </div>
 
       <div>
-        <label className={labelClass}>Ghi chu</label>
+        <label className={labelClass}>Ghi chú</label>
         <textarea
           {...register("formData.notes")}
           className={`${inputClass} min-h-[90px] resize-none leading-relaxed`}
-          placeholder="Thong tin them neu can..."
+          placeholder="Thông tin thêm nếu cần..."
         />
       </div>
 

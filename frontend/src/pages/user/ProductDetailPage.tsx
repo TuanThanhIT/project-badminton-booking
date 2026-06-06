@@ -119,13 +119,33 @@ const ProductDetailPage: React.FC = () => {
   }, [dispatch, productId]);
 
   useEffect(() => {
+    const resolvedCateId =
+      cateId > 0
+        ? cateId
+        : productDetail?.categoryId || productDetail?.category?.id;
+    const resolvedGroupName =
+      groupName || productDetail?.category?.menuGroup || undefined;
+
+    if (!resolvedCateId && !resolvedGroupName) return;
+
     const data: ProductQueriesRequest = {
-      cateId,
       productId,
+      limit: 8,
+      ...(resolvedCateId
+        ? { cateId: resolvedCateId }
+        : { groupName: resolvedGroupName }),
     };
 
     dispatch(getProductsByFilter({ data }));
-  }, [dispatch, cateId, productId]);
+  }, [
+    dispatch,
+    cateId,
+    groupName,
+    productId,
+    productDetail?.categoryId,
+    productDetail?.category?.id,
+    productDetail?.category?.menuGroup,
+  ]);
 
   useEffect(() => {
     if (!productDetail) return;

@@ -5,6 +5,7 @@ import TournamentPost from "./TournamentPost";
 import ClassPost from "./ClassPost";
 import FindPlayerPost from "./FindPlayerPost";
 import GroupPost from "./GroupPost";
+import FindCoachPost from "./FindCoachPost";
 
 type BranchInfo = {
   branchName: string;
@@ -178,27 +179,27 @@ const LegacyFormDataSummary = ({
   if (post.type === "FIND_COACH") {
     const location = fd.location as { branchId?: number } | undefined;
     if (location?.branchId) {
-      left.push(`Dia diem: ${getBranchFullLocation(location.branchId)}`);
+      left.push(`Địa điểm: ${getBranchFullLocation(location.branchId)}`);
     }
 
     const currentLevel = fd.currentLevel as string | undefined;
     if (currentLevel) {
-      right.push(`Trinh do hien tai: ${PLAYER_LEVEL_LABEL[currentLevel] ?? currentLevel}`);
+      right.push(`Trình độ hiện tại: ${PLAYER_LEVEL_LABEL[currentLevel] ?? currentLevel}`);
     }
 
     const goal = fd.goal as string | undefined;
-    if (goal) left.push(`Muc tieu: ${goal}`);
+    if (goal) left.push(`Mục tiêu: ${goal}`);
 
     const scheduleNote = fd.scheduleNote as string | undefined;
-    if (scheduleNote) left.push(`Thoi gian: ${scheduleNote}`);
+    if (scheduleNote) left.push(`Thời gian: ${scheduleNote}`);
 
     const budget = fd.budget as string | undefined;
-    if (budget) right.push(`Ngan sach: ${budget}`);
+    if (budget) right.push(`Ngân sách: ${budget}`);
 
     const contact = fd.contact as
       | { phone?: string | null; zalo?: string | null }
       | undefined;
-    if (contact?.phone) right.push(`SDT: ${contact.phone}`);
+    if (contact?.phone) right.push(`SĐT: ${contact.phone}`);
     if (contact?.zalo) right.push(`Zalo: ${contact.zalo}`);
   }
 
@@ -245,7 +246,8 @@ const FormDataSummary = ({ post, branchInfoById, courtNameById }: Props) => {
 
     case "CLASS":
       return <ClassPost post={post} formData={fd} branchInfo={getBranchInfo} />;
-
+    case "FIND_COACH":
+      return <FindCoachPost post={post} formData={fd} branchInfo={getBranchInfo} />;
     case "FIND_PLAYER":
       return (
         <FindPlayerPost

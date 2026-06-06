@@ -12,6 +12,19 @@ export const idParams = (name = "id") =>
       "any.required": `${name} is required`,
     });
 
+/** Query param id — bỏ qua 0 / chuỗi rỗng (tránh lỗi khi URL thiếu cateId) */
+export const optionalIdQuery = (name = "id") =>
+  Joi.number()
+    .integer()
+    .positive()
+    .optional()
+    .empty([0, "0", "", null])
+    .messages({
+      "number.base": `${name} must be a number`,
+      "number.integer": `${name} must be an integer`,
+      "number.positive": `${name} must be a positive number`,
+    });
+
 export const quantityField = Joi.number().integer().min(1).required().messages({
   "number.base": "Quantity must be a number",
   "number.integer": "Quantity must be an integer",

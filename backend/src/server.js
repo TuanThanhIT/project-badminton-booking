@@ -48,6 +48,7 @@ import initInventoryRouteManager from "./routes/manager/inventoryRoute.js";
 import initFeedbackRoute from "./routes/user/feedbackRoute.js";
 import initNotificationRoute from "./routes/user/notificationRoute.js";
 import initHomeRoute from "./routes/user/homeRoute.js";
+import initAiRoute from "./routes/user/aiRoute.js";
 import initAdminUserRoute from "./routes/admin/userRoute.js";
 import initAdminBranchRoute from "./routes/admin/branchRoute.js";
 import initAdminManagerRoute from "./routes/admin/managerRoute.js";
@@ -74,6 +75,7 @@ const PORT = process.env.PORT || 8088;
 const allowedOrigins = [
   process.env.CLIENT_URL,
   "http://localhost:5173",
+  "http://localhost:3000",
   "http://127.0.0.1:5173",
 ].filter(Boolean);
 
@@ -96,6 +98,7 @@ app.use(cookieParser());
 
 // User
 initHomeRoute(app);
+initAiRoute(app);
 initAuthRoute(app);
 initCateRoute(app);
 initProductRoute(app);

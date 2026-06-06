@@ -72,27 +72,34 @@ const CoachApplicationManagementPage = () => {
   const [rejectReason, setRejectReason] = useState("");
   const [detailApp, setDetailApp] = useState<CoachApplication | null>(null);
 
-  const fetchApplications = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await adminCoachApplicationService.getApplicationsService({
-        page,
-        limit: LIMIT,
-        status: status || undefined,
-        search: appliedSearch || undefined,
-      });
-      const data = res.data.data;
-      setApplications(data.applications || []);
-      setTotal(data.pagination?.total || 0);
-      setPendingCount(data.pendingCount || 0);
-    } catch (err: any) {
-      setApplications([]);
-      setTotal(0);
-      toast.error(err?.response?.data?.message || "Không thể tải danh sách yêu cầu dạy cầu lông");
-    } finally {
-      setLoading(false);
-    }
-  }, [page, status, appliedSearch]);
+  const fetchApplications = useCallback(
+    async (overrides?: { page?: number; status?: string; search?: string }) => {
+      const p = overrides?.page ?? page;
+      const s = overrides?.status ?? status;
+      const search = overrides?.search ?? appliedSearch;
+
+      setLoading(true);
+      try {
+        const res = await adminCoachApplicationService.getApplicationsService({
+          page: p,
+          limit: LIMIT,
+          status: s || undefined,
+          search: search || undefined,
+        });
+        const data = res.data.data;
+        setApplications(data.applications || []);
+        setTotal(data.pagination?.total || 0);
+        setPendingCount(data.pendingCount || 0);
+      } catch (err: any) {
+        setApplications([]);
+        setTotal(0);
+        toast.error(err?.response?.data?.message || "Không thể tải danh sách yêu cầu dạy cầu lông");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [page, status, appliedSearch],
+  );
 
   useEffect(() => {
     fetchApplications();
@@ -122,7 +129,10 @@ const CoachApplicationManagementPage = () => {
       await adminCoachApplicationService.approveApplicationService(app.id);
       toast.success("Đã duyệt yêu cầu dạy cầu lông");
       setDetailApp(null);
-      fetchApplications();
+      // switch filter to "APPROVED" so admin sees approved items immediately
+      setStatus("APPROVED");
+      setPage(1);
+      fetchApplications({ page: 1, status: "APPROVED" });
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Không thể duyệt yêu cầu");
     } finally {

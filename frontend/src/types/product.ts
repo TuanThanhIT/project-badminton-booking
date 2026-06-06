@@ -63,6 +63,8 @@ export type ProductDetail = {
   productName: string;
   brand: string;
   description: string;
+  categoryId?: number;
+  category?: Category;
   variants: ProductVariant[];
   images: ProductImage[];
 };

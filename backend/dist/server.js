@@ -49,6 +49,7 @@ var _inventoryRoute = _interopRequireDefault(require("./routes/manager/inventory
 var _feedbackRoute = _interopRequireDefault(require("./routes/user/feedbackRoute.js"));
 var _notificationRoute = _interopRequireDefault(require("./routes/user/notificationRoute.js"));
 var _homeRoute = _interopRequireDefault(require("./routes/user/homeRoute.js"));
+var _aiRoute = _interopRequireDefault(require("./routes/user/aiRoute.js"));
 var _userRoute = _interopRequireDefault(require("./routes/admin/userRoute.js"));
 var _branchRoute3 = _interopRequireDefault(require("./routes/admin/branchRoute.js"));
 var _managerRoute = _interopRequireDefault(require("./routes/admin/managerRoute.js"));
@@ -75,7 +76,7 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
 _dotenv["default"].config();
 var app = (0, _express["default"])();
 var PORT = process.env.PORT || 8088;
-var allowedOrigins = [process.env.CLIENT_URL, "http://localhost:5173", "http://127.0.0.1:5173"].filter(Boolean);
+var allowedOrigins = [process.env.CLIENT_URL, "http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"].filter(Boolean);
 app.use(_express["default"].json());
 app.use(_express["default"].urlencoded({
   extended: true
@@ -93,6 +94,7 @@ app.use((0, _cookieParser["default"])());
 
 // User
 (0, _homeRoute["default"])(app);
+(0, _aiRoute["default"])(app);
 (0, _authRoute["default"])(app);
 (0, _cateRoute["default"])(app);
 (0, _productRoute["default"])(app);

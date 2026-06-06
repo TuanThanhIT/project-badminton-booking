@@ -1,5 +1,10 @@
 import Joi from "joi";
-import { idParams, priceField, stockField } from "./common/numberField.js";
+import {
+  idParams,
+  optionalIdQuery,
+  priceField,
+  stockField,
+} from "./common/numberField.js";
 import {
   branchIdField,
   brandField,
@@ -24,7 +29,7 @@ import { ratingField } from "./common/feedbackFields.js";
 
 export const getProductsByFilterSchema = {
   query: Joi.object({
-    cateId: idParams("cateId").optional(),
+    cateId: optionalIdQuery("cateId"),
     groupName: groupNameField,
     branchId: branchIdField,
     pricesRange: pricesField,

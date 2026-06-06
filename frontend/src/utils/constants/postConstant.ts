@@ -9,12 +9,13 @@ export const POST_TYPE_LABEL: Record<PostType, string> = {
   FIND_PLAYER: "Tìm người chơi cùng",
   TOURNAMENT: "Giải đấu",
   GROUP: "Nhóm",
-  FIND_COACH: "Tìm người dạy",
+  FIND_COACH: "Tìm người giảng dạy",
   CLASS: "Lớp học",
 };
 
 export const POST_TYPES: PostType[] = [
   "FIND_PLAYER",
+  "FIND_COACH",
   "CLASS",
   "TOURNAMENT",
   "GROUP",
@@ -149,6 +150,15 @@ export const GROUP_FILTERS: FilterField[] = [
 ];
 
 export const FIND_COACH_FILTERS: FilterField[] = [
+  {
+    key: "currentLevel",
+    label: "Trình độ",
+    type: "select",
+    options: PLAYER_LEVEL_OPTIONS.map((o) => ({
+      value: o.value,
+      label: o.label,
+    })),
+  },
   {
     key: "location.branchId",
     label: "Chi nhánh",

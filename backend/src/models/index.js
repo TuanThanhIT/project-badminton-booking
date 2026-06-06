@@ -69,6 +69,8 @@ import ClassEnrollment from "./classEnrollment.js";
 import ClassRoom from "./classRoom.js";
 import WithdrawRequest from "./withdrawRequest.js";
 import RefreshToken from "./refreshToken.js";
+import AiChatSession from "./aiChatSession.js";
+import AiChatMessage from "./aiChatMessage.js";
 
 import OrderGroup from "./orderGroup.js";
 import VariantStock from "./variantStock.js";
@@ -911,6 +913,22 @@ Branch.hasMany(Feedback, { foreignKey: "branchId", as: "feedbacks" });
 Feedback.belongsTo(Branch, { foreignKey: "branchId", as: "branch" });
 
 //////////////////////////////////////////////////////
+//////////////// AI CHAT /////////////////////////////
+//////////////////////////////////////////////////////
+
+User.hasMany(AiChatSession, { foreignKey: "userId", as: "aiChatSessions" });
+AiChatSession.belongsTo(User, { foreignKey: "userId", as: "user" });
+
+AiChatSession.hasMany(AiChatMessage, {
+  foreignKey: "sessionId",
+  as: "messages",
+});
+AiChatMessage.belongsTo(AiChatSession, {
+  foreignKey: "sessionId",
+  as: "session",
+});
+
+//////////////////////////////////////////////////////
 
 export {
   User,
@@ -971,4 +989,6 @@ export {
   StockTransaction,
   MonthlyBooking,
   RefreshToken,
+  AiChatSession,
+  AiChatMessage,
 };

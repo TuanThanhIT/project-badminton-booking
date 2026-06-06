@@ -7,6 +7,8 @@ import { useAppDispatch, useAppSelector } from "./redux/hook";
 import { getAccount, setAuthInitialized } from "./redux/slices/user/authSlice";
 import { getCategoriesGrouped } from "./redux/slices/user/cateSlice";
 import RealtimeProvider from "./components/contexts/providers/RealtimeProvider";
+import { AIChatProvider } from "./contexts/AIChatContext";
+import AIChatWidget from "./components/ai/AIChatWidget";
 
 const App = () => {
   const dispatch = useAppDispatch();
@@ -24,9 +26,12 @@ const App = () => {
 
   return (
     <Router>
-      <RealtimeProvider>
-        <AllRoute />
-      </RealtimeProvider>
+      <AIChatProvider>
+        <RealtimeProvider>
+          <AllRoute />
+          <AIChatWidget />
+        </RealtimeProvider>
+      </AIChatProvider>
 
       <ToastContainer
         position="top-right"

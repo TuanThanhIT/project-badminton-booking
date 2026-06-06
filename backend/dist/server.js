@@ -9,7 +9,6 @@ var _http = require("http");
 var _index = require("./socket/index.js");
 var _errorHandler = _interopRequireDefault(require("./middlewares/errorHandler.js"));
 require("./models/index.js");
-require("./workers/ghnWebhookWorker.js");
 var _authRoute = _interopRequireDefault(require("./routes/user/authRoute.js"));
 var _cateRoute = _interopRequireDefault(require("./routes/user/cateRoute.js"));
 var _productRoute = _interopRequireDefault(require("./routes/user/productRoute.js"));
@@ -74,7 +73,7 @@ function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.
 function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
 _dotenv["default"].config();
 var app = (0, _express["default"])();
-var PORT = process.env.PORT || 8088;
+var PORT = process.env.PORT || 8080;
 var allowedOrigins = [process.env.CLIENT_URL, "http://localhost:5173", "http://127.0.0.1:5173"].filter(Boolean);
 app.use(_express["default"].json());
 app.use(_express["default"].urlencoded({

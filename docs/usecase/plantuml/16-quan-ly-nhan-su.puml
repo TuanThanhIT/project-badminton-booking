@@ -1,0 +1,51 @@
+@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    ArrowColor #64748B
+    FontColor #1E293B
+}
+skinparam actor {
+    BorderColor #334155
+    FontColor #334155
+}
+
+actor "Quản lý chi nhánh" as Manager
+
+rectangle "HỆ THỐNG" {
+    usecase "Quản lý nhân viên" as UC_EMPLOYEE
+    usecase "Tạo nhân viên" as UC_CREATE_EMPLOYEE
+    usecase "Gán nhân viên vào chi nhánh" as UC_ASSIGN_EMPLOYEE
+    usecase "Phân công ca làm" as UC_WORK_SHIFT
+    usecase "Tạo ca làm" as UC_CREATE_SHIFT
+    usecase "Gán nhân viên vào ca" as UC_ASSIGN_SHIFT
+    usecase "Cập nhật ca làm" as UC_UPDATE_SHIFT
+    usecase "Xóa ca làm" as UC_DELETE_SHIFT
+    usecase "Xem lương nhân viên" as UC_SALARY
+}
+
+Manager -- UC_EMPLOYEE
+Manager -- UC_CREATE_EMPLOYEE
+Manager -- UC_ASSIGN_EMPLOYEE
+Manager -- UC_WORK_SHIFT
+Manager -- UC_CREATE_SHIFT
+Manager -- UC_ASSIGN_SHIFT
+Manager -- UC_UPDATE_SHIFT
+Manager -- UC_DELETE_SHIFT
+Manager -- UC_SALARY
+
+UC_CREATE_EMPLOYEE ..> UC_EMPLOYEE : <<extend>>
+UC_ASSIGN_EMPLOYEE ..> UC_EMPLOYEE : <<extend>>
+UC_CREATE_SHIFT ..> UC_WORK_SHIFT : <<extend>>
+UC_ASSIGN_SHIFT ..> UC_WORK_SHIFT : <<extend>>
+UC_UPDATE_SHIFT ..> UC_WORK_SHIFT : <<extend>>
+UC_DELETE_SHIFT ..> UC_WORK_SHIFT : <<extend>>
+UC_SALARY ..> UC_EMPLOYEE : <<extend>>
+
+@enduml

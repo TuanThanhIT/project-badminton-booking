@@ -1,0 +1,43 @@
+@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    ArrowColor #64748B
+    FontColor #1E293B
+}
+skinparam actor {
+    BorderColor #334155
+    FontColor #334155
+}
+
+actor "Quản lý chi nhánh" as Manager
+
+rectangle "HỆ THỐNG" {
+    usecase "Đăng nhập" as UC_LOGIN
+    usecase "Xem dashboard chi nhánh" as UC_DASHBOARD
+    usecase "Xem thông tin chi nhánh" as UC_BRANCH
+    usecase "Xem doanh thu chi nhánh" as UC_REVENUE
+    usecase "Xem báo cáo thống kê" as UC_REPORT
+    usecase "Xem sản phẩm bán chạy" as UC_TOP_PRODUCTS
+    usecase "Xem đồ uống bán chạy" as UC_TOP_BEVERAGES
+}
+
+Manager -- UC_LOGIN
+Manager -- UC_DASHBOARD
+Manager -- UC_BRANCH
+Manager -- UC_REVENUE
+Manager -- UC_REPORT
+Manager -- UC_TOP_PRODUCTS
+Manager -- UC_TOP_BEVERAGES
+
+UC_REPORT ..> UC_REVENUE : <<include>>
+UC_TOP_PRODUCTS ..> UC_REPORT : <<extend>>
+UC_TOP_BEVERAGES ..> UC_REPORT : <<extend>>
+
+@enduml

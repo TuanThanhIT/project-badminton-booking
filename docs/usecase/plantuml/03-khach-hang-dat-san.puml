@@ -1,0 +1,73 @@
+@startuml
+title 3.5.2 - KHÁCH HÀNG: ĐẶT SÂN
+
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    ArrowColor #64748B
+    FontColor #1E293B
+}
+skinparam actor {
+    BorderColor #334155
+    FontColor #334155
+}
+
+actor "Khách hàng" as Customer
+actor "Cổng thanh toán VNPay" as VNPay
+actor "Dịch vụ gửi email" as Email
+
+rectangle "HỆ THỐNG" {
+    usecase "Xem chi nhánh" as UC_BRANCH
+    usecase "Xem chi tiết chi nhánh" as UC_BRANCH_DETAIL
+    usecase "Xem sân" as UC_COURT
+    usecase "Xem lịch sân và khung giờ" as UC_SCHEDULE
+    usecase "Đặt sân" as UC_BOOKING
+    usecase "Thanh toán đặt sân" as UC_PAY_BOOKING
+    usecase "Thanh toán bằng ví" as UC_PAY_WALLET
+    usecase "Nhận callback VNPay" as UC_VNPAY_CALLBACK
+    usecase "Thanh toán lại bằng VNPay" as UC_RETRY_VNPAY
+    usecase "Xem lịch sử đặt sân" as UC_BOOKING_HISTORY
+    usecase "Xem chi tiết đặt sân" as UC_BOOKING_DETAIL
+    usecase "Yêu cầu hủy đặt sân" as UC_CANCEL_REQUEST
+    usecase "Hủy đặt sân" as UC_CANCEL
+    usecase "Đăng ký đặt sân theo tháng" as UC_MONTHLY_BOOKING
+    usecase "Thanh toán đặt sân theo tháng" as UC_MONTHLY_PAYMENT
+}
+
+Customer -- UC_BRANCH
+Customer -- UC_BRANCH_DETAIL
+Customer -- UC_COURT
+Customer -- UC_SCHEDULE
+Customer -- UC_BOOKING
+Customer -- UC_PAY_BOOKING
+Customer -- UC_PAY_WALLET
+Customer -- UC_RETRY_VNPAY
+Customer -- UC_BOOKING_HISTORY
+Customer -- UC_BOOKING_DETAIL
+Customer -- UC_CANCEL_REQUEST
+Customer -- UC_CANCEL
+Customer -- UC_MONTHLY_BOOKING
+Customer -- UC_MONTHLY_PAYMENT
+
+UC_BRANCH_DETAIL ..> UC_BRANCH : <<include>>
+UC_SCHEDULE ..> UC_COURT : <<include>>
+UC_BOOKING ..> UC_SCHEDULE : <<include>>
+UC_BOOKING ..> UC_PAY_BOOKING : <<include>>
+UC_PAY_WALLET ..> UC_PAY_BOOKING : <<extend>>
+UC_RETRY_VNPAY ..> UC_PAY_BOOKING : <<extend>>
+UC_CANCEL_REQUEST ..> UC_BOOKING_DETAIL : <<extend>>
+UC_CANCEL ..> UC_BOOKING_DETAIL : <<extend>>
+UC_MONTHLY_BOOKING ..> UC_MONTHLY_PAYMENT : <<include>>
+
+UC_PAY_BOOKING -- VNPay
+UC_VNPAY_CALLBACK -- VNPay
+UC_RETRY_VNPAY -- VNPay
+UC_BOOKING -- Email
+
+@enduml

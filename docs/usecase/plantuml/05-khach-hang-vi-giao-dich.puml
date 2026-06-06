@@ -1,0 +1,51 @@
+@startuml
+title 3.5.2 - KHÁCH HÀNG: VÍ VÀ GIAO DỊCH
+
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    ArrowColor #64748B
+    FontColor #1E293B
+}
+skinparam actor {
+    BorderColor #334155
+    FontColor #334155
+}
+
+actor "Khách hàng" as Customer
+actor "Cổng thanh toán VNPay" as VNPay
+actor "Dịch vụ gửi email" as Email
+
+rectangle "HỆ THỐNG" {
+    usecase "Quản lý ví" as UC_WALLET
+    usecase "Nạp tiền vào ví" as UC_DEPOSIT
+    usecase "Xác nhận nạp tiền VNPay" as UC_DEPOSIT_CALLBACK
+    usecase "Yêu cầu rút tiền" as UC_WITHDRAW
+    usecase "Xác thực OTP rút tiền" as UC_WITHDRAW_OTP
+    usecase "Xác nhận thanh toán bằng ví" as UC_CONFIRM_WALLET_PAYMENT
+    usecase "Xem lịch sử giao dịch" as UC_TRANSACTIONS
+}
+
+Customer -- UC_WALLET
+Customer -- UC_DEPOSIT
+Customer -- UC_WITHDRAW
+Customer -- UC_WITHDRAW_OTP
+Customer -- UC_CONFIRM_WALLET_PAYMENT
+Customer -- UC_TRANSACTIONS
+
+UC_DEPOSIT ..> UC_WALLET : <<include>>
+UC_DEPOSIT_CALLBACK ..> UC_DEPOSIT : <<extend>>
+UC_WITHDRAW ..> UC_WITHDRAW_OTP : <<include>>
+UC_TRANSACTIONS ..> UC_WALLET : <<include>>
+
+UC_DEPOSIT -- VNPay
+UC_DEPOSIT_CALLBACK -- VNPay
+UC_WITHDRAW_OTP -- Email
+
+@enduml

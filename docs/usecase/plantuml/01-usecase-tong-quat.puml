@@ -1,0 +1,75 @@
+@startuml
+title LƯỢC ĐỒ USE CASE TỔNG QUÁT HỆ THỐNG
+
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    ArrowColor #64748B
+    FontColor #1E293B
+}
+skinparam actor {
+    BorderColor #334155
+    FontColor #334155
+}
+
+actor "Khách vãng lai" as Guest
+actor "Khách hàng" as Customer
+actor "Huấn luyện viên" as Coach
+actor "Nhân viên" as Employee
+actor "Quản lý chi nhánh" as Manager
+actor "Admin" as Admin
+
+rectangle "HỆ THỐNG ĐẶT SÂN CẦU LÔNG" {
+    usecase "Thông tin công khai" as UC_PUBLIC
+    usecase "Quản lý tài khoản" as UC_ACCOUNT
+    usecase "Đặt sân" as UC_BOOKING
+    usecase "Mua hàng" as UC_ORDER
+    usecase "Thanh toán và ví" as UC_PAYMENT
+    usecase "Cộng đồng và nhắn tin" as UC_COMMUNITY
+    usecase "Huấn luyện và lớp học" as UC_COACHING
+    usecase "Vận hành chi nhánh" as UC_BRANCH_OPS
+    usecase "Quản lý nhân sự" as UC_STAFF
+    usecase "Quản lý kho và nhập hàng" as UC_INVENTORY
+    usecase "Doanh thu và báo cáo" as UC_REPORT
+    usecase "Quản trị hệ thống" as UC_ADMIN
+}
+
+Guest -- UC_PUBLIC
+Guest -- UC_ACCOUNT
+
+Customer -- UC_ACCOUNT
+Customer -- UC_BOOKING
+Customer -- UC_ORDER
+Customer -- UC_PAYMENT
+Customer -- UC_COMMUNITY
+Customer -- UC_COACHING
+
+Coach -- UC_ACCOUNT
+Coach -- UC_BOOKING
+Coach -- UC_ORDER
+Coach -- UC_PAYMENT
+Coach -- UC_COMMUNITY
+Coach -- UC_COACHING
+
+Employee -- UC_ACCOUNT
+Employee -- UC_BRANCH_OPS
+
+Manager -- UC_ACCOUNT
+Manager -- UC_BRANCH_OPS
+Manager -- UC_STAFF
+Manager -- UC_INVENTORY
+Manager -- UC_REPORT
+
+Admin -- UC_ACCOUNT
+Admin -- UC_STAFF
+Admin -- UC_INVENTORY
+Admin -- UC_REPORT
+Admin -- UC_ADMIN
+
+@enduml

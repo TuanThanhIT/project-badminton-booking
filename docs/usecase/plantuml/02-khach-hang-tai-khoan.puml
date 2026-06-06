@@ -1,0 +1,75 @@
+@startuml
+title USE CASE TÀI KHOẢN, HỒ SƠ VÀ THÔNG BÁO
+
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    ArrowColor #64748B
+    FontColor #1E293B
+}
+skinparam actor {
+    BorderColor #334155
+    FontColor #334155
+}
+
+actor "Khách vãng lai" as Guest
+actor "Khách hàng" as Customer
+actor "Dịch vụ gửi email" as Email
+
+rectangle "HỆ THỐNG" {
+    usecase "Xem trang chủ" as UC_HOME
+    usecase "Xem giới thiệu và liên hệ" as UC_PUBLIC_INFO
+    usecase "Đăng ký" as UC_REGISTER
+    usecase "Xác thực OTP đăng ký" as UC_VERIFY_OTP
+    usecase "Gửi lại OTP" as UC_RESEND_OTP
+    usecase "Đăng nhập" as UC_LOGIN
+    usecase "Làm mới token" as UC_REFRESH
+    usecase "Đăng xuất" as UC_LOGOUT
+    usecase "Quên mật khẩu" as UC_FORGOT
+    usecase "Xác thực OTP đặt lại mật khẩu" as UC_RESET_OTP
+    usecase "Đặt lại mật khẩu" as UC_RESET_PASSWORD
+    usecase "Lấy thông tin tài khoản" as UC_GET_ACCOUNT
+    usecase "Quản lý hồ sơ" as UC_PROFILE
+    usecase "Xem hồ sơ công khai" as UC_PUBLIC_PROFILE
+    usecase "Tìm kiếm người dùng" as UC_SEARCH_USER
+    usecase "Quản lý địa chỉ" as UC_ADDRESS
+    usecase "Xem thông báo" as UC_NOTIFICATIONS
+    usecase "Đánh dấu đã đọc thông báo" as UC_READ_NOTIFICATION
+}
+
+Guest -- UC_HOME
+Guest -- UC_PUBLIC_INFO
+Guest -- UC_REGISTER
+Guest -- UC_VERIFY_OTP
+Guest -- UC_RESEND_OTP
+Guest -- UC_LOGIN
+Guest -- UC_FORGOT
+Guest -- UC_RESET_OTP
+Guest -- UC_RESET_PASSWORD
+
+Customer -- UC_REFRESH
+Customer -- UC_LOGOUT
+Customer -- UC_GET_ACCOUNT
+Customer -- UC_PROFILE
+Customer -- UC_PUBLIC_PROFILE
+Customer -- UC_SEARCH_USER
+Customer -- UC_ADDRESS
+Customer -- UC_NOTIFICATIONS
+Customer -- UC_READ_NOTIFICATION
+
+UC_REGISTER ..> UC_VERIFY_OTP : <<include>>
+UC_FORGOT ..> UC_RESET_OTP : <<include>>
+UC_RESET_OTP ..> UC_RESET_PASSWORD : <<include>>
+UC_READ_NOTIFICATION ..> UC_NOTIFICATIONS : <<extend>>
+
+UC_REGISTER -- Email
+UC_RESEND_OTP -- Email
+UC_FORGOT -- Email
+
+@enduml

@@ -1,0 +1,58 @@
+@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    ArrowColor #64748B
+    FontColor #1E293B
+}
+skinparam actor {
+    BorderColor #334155
+    FontColor #334155
+}
+
+actor "Admin" as Admin
+
+rectangle "HỆ THỐNG" {
+    usecase "Đăng nhập" as UC_LOGIN
+    usecase "Xem dashboard toàn hệ thống" as UC_DASHBOARD
+    usecase "Xem doanh thu toàn hệ thống" as UC_REVENUE
+    usecase "Xem doanh thu theo chi nhánh" as UC_BRANCH_REVENUE
+    usecase "Xem doanh thu theo ngày tháng" as UC_TIME_REVENUE
+    usecase "Xem doanh thu sản phẩm và đồ uống" as UC_ITEM_REVENUE
+    usecase "Theo dõi tài chính" as UC_FINANCE
+    usecase "Theo dõi giao dịch ví" as UC_TRANSACTIONS
+    usecase "Theo dõi yêu cầu rút tiền" as UC_WITHDRAWS
+    usecase "Duyệt yêu cầu rút tiền" as UC_APPROVE_WITHDRAW
+    usecase "Từ chối yêu cầu rút tiền" as UC_REJECT_WITHDRAW
+    usecase "Quản lý trạng thái ví" as UC_WALLET_STATUS
+}
+
+Admin -- UC_LOGIN
+Admin -- UC_DASHBOARD
+Admin -- UC_REVENUE
+Admin -- UC_BRANCH_REVENUE
+Admin -- UC_TIME_REVENUE
+Admin -- UC_ITEM_REVENUE
+Admin -- UC_FINANCE
+Admin -- UC_TRANSACTIONS
+Admin -- UC_WITHDRAWS
+Admin -- UC_APPROVE_WITHDRAW
+Admin -- UC_REJECT_WITHDRAW
+Admin -- UC_WALLET_STATUS
+
+UC_BRANCH_REVENUE ..> UC_REVENUE : <<extend>>
+UC_TIME_REVENUE ..> UC_REVENUE : <<extend>>
+UC_ITEM_REVENUE ..> UC_REVENUE : <<extend>>
+UC_TRANSACTIONS ..> UC_FINANCE : <<include>>
+UC_WITHDRAWS ..> UC_FINANCE : <<include>>
+UC_APPROVE_WITHDRAW ..> UC_WITHDRAWS : <<extend>>
+UC_REJECT_WITHDRAW ..> UC_WITHDRAWS : <<extend>>
+UC_WALLET_STATUS ..> UC_FINANCE : <<extend>>
+
+@enduml

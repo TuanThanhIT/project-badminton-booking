@@ -1,0 +1,52 @@
+@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    ArrowColor #64748B
+    FontColor #1E293B
+}
+skinparam actor {
+    BorderColor #334155
+    FontColor #334155
+}
+
+actor "Quản lý chi nhánh" as Manager
+
+rectangle "HỆ THỐNG" {
+    usecase "Xem sản phẩm chi nhánh" as UC_PRODUCTS
+    usecase "Xem biến thể sản phẩm" as UC_VARIANTS
+    usecase "Xem đồ uống chi nhánh" as UC_BEVERAGES
+    usecase "Quản lý tồn kho sản phẩm" as UC_PRODUCT_STOCK
+    usecase "Quản lý tồn kho đồ uống" as UC_BEVERAGE_STOCK
+    usecase "Xem lịch sử tồn kho" as UC_STOCK_HISTORY
+    usecase "Quản lý phiếu nhập" as UC_RECEIPTS
+    usecase "Tạo phiếu nhập" as UC_CREATE_RECEIPT
+    usecase "Hủy phiếu nhập" as UC_CANCEL_RECEIPT
+    usecase "Xem nhà cung cấp" as UC_SUPPLIERS
+}
+
+Manager -- UC_PRODUCTS
+Manager -- UC_VARIANTS
+Manager -- UC_BEVERAGES
+Manager -- UC_PRODUCT_STOCK
+Manager -- UC_BEVERAGE_STOCK
+Manager -- UC_STOCK_HISTORY
+Manager -- UC_RECEIPTS
+Manager -- UC_CREATE_RECEIPT
+Manager -- UC_CANCEL_RECEIPT
+Manager -- UC_SUPPLIERS
+
+UC_VARIANTS ..> UC_PRODUCTS : <<include>>
+UC_STOCK_HISTORY ..> UC_PRODUCT_STOCK : <<extend>>
+UC_STOCK_HISTORY ..> UC_BEVERAGE_STOCK : <<extend>>
+UC_CREATE_RECEIPT ..> UC_RECEIPTS : <<extend>>
+UC_CANCEL_RECEIPT ..> UC_RECEIPTS : <<extend>>
+UC_RECEIPTS ..> UC_SUPPLIERS : <<include>>
+
+@enduml

@@ -1,0 +1,46 @@
+@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    ArrowColor #64748B
+    FontColor #1E293B
+}
+skinparam actor {
+    BorderColor #334155
+    FontColor #334155
+}
+
+actor "Admin" as Admin
+
+rectangle "HỆ THỐNG" {
+    usecase "Quản lý bài đăng" as UC_POSTS
+    usecase "Ẩn hoặc hiện bài đăng" as UC_TOGGLE_POST
+    usecase "Xóa bài đăng" as UC_DELETE_POST
+    usecase "Quản lý bình luận" as UC_COMMENTS
+    usecase "Xóa bình luận" as UC_DELETE_COMMENT
+    usecase "Quản lý phản hồi" as UC_FEEDBACKS
+    usecase "Xóa phản hồi" as UC_DELETE_FEEDBACK
+    usecase "Tải lên hình ảnh" as UC_UPLOAD
+}
+
+Admin -- UC_POSTS
+Admin -- UC_TOGGLE_POST
+Admin -- UC_DELETE_POST
+Admin -- UC_COMMENTS
+Admin -- UC_DELETE_COMMENT
+Admin -- UC_FEEDBACKS
+Admin -- UC_DELETE_FEEDBACK
+Admin -- UC_UPLOAD
+
+UC_TOGGLE_POST ..> UC_POSTS : <<extend>>
+UC_DELETE_POST ..> UC_POSTS : <<extend>>
+UC_DELETE_COMMENT ..> UC_COMMENTS : <<extend>>
+UC_DELETE_FEEDBACK ..> UC_FEEDBACKS : <<extend>>
+
+@enduml

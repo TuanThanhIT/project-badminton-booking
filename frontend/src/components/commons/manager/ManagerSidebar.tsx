@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   BadgeDollarSign,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { useAppDispatch, useAppSelector } from "../../../redux/hook";
+import { getMyBranch } from "../../../redux/slices/manager/branchSlice";
 import { logout, logoutLocal } from "../../../redux/slices/user/authSlice";
 
 interface Props {
@@ -120,10 +122,17 @@ const menuGroups: { group: string; items: MenuItem[] }[] = [
 const ManagerSidebar = ({ collapsed, setCollapsed }: Props) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { user } = useAppSelector((state) => state.auth);
+  const { user, accessToken } = useAppSelector((state) => state.auth);
+  const { branch } = useAppSelector((state) => state.managerBranch);
 
   const displayName = user?.username || "Manager";
   const initial = displayName.charAt(0).toUpperCase();
+  const branchName = branch?.branchName;
+
+  useEffect(() => {
+    if (!accessToken) return;
+    dispatch(getMyBranch());
+  }, [dispatch, accessToken]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -151,21 +160,42 @@ const ManagerSidebar = ({ collapsed, setCollapsed }: Props) => {
       </button>
 
       <div
-        className={`flex h-20 items-center border-b border-slate-200 ${
-          collapsed ? "justify-center" : "px-6"
+        className={`flex min-h-20 items-center border-b border-slate-200 py-3 ${
+          collapsed ? "justify-center px-2" : "px-6"
         }`}
       >
-        <div className="flex items-center gap-4">
-          <img
-            src="/img/logo_badminton.jpg"
-            alt="B-Hub"
-            className="h-12 w-12 shrink-0 rounded-2xl border border-slate-100 object-cover shadow-sm"
-          />
+        <div
+          className={`flex ${collapsed ? "flex-col items-center" : "items-start gap-4"}`}
+        >
+          <div
+            className={`flex flex-col ${collapsed ? "items-center" : "shrink-0"}`}
+          >
+            <img
+              src="/img/logo_badminton.jpg"
+              alt="B-Hub"
+              className="h-12 w-12 shrink-0 rounded-2xl border border-slate-100 object-cover shadow-sm"
+            />
+
+            {branchName && (
+              <p
+                className={`mt-1.5 text-center font-semibold text-sky-700 ${
+                  collapsed
+                    ? "max-w-[4.5rem] truncate text-[10px] leading-tight"
+                    : "max-w-24 line-clamp-2 text-xs leading-snug"
+                }`}
+                title={branchName}
+              >
+                {branchName}
+              </p>
+            )}
+          </div>
 
           {!collapsed && (
-            <div>
-              <h1 className="text-2xl font-semibold text-slate-900">B-Hub</h1>
-              <p className="text-sm font-normal text-slate-500">
+            <div className="flex h-12 flex-col justify-center">
+              <h1 className="text-2xl font-semibold leading-none text-slate-900">
+                B-Hub
+              </h1>
+              <p className="mt-1 text-sm font-normal leading-none text-slate-500">
                 Quản lý cửa hàng
               </p>
             </div>

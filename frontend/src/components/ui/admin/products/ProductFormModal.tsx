@@ -43,7 +43,8 @@ type VariantDraft = {
   color: string;
   size: string;
   material: string;
-  weight: number;
+  // allow empty string while editing to let user clear the field
+  weight: number | string;
 };
 
 const createDraftKey = () =>
@@ -60,7 +61,7 @@ const createEmptyVariant = (variant?: AdminProductVariant): VariantDraft => ({
   color: variant?.color || "",
   size: variant?.size || "",
   material: variant?.material || "",
-  weight: Number(variant?.weight || 0.5),
+  weight: variant?.weight !== undefined ? variant.weight : 0.5,
 });
 
 const createDetailImageDraft = (imageUrl = "", id?: number): DetailImageDraft => ({
@@ -78,12 +79,13 @@ const hasUsefulVariantInfo = (variant: VariantDraft) =>
 
 const toVariantPayload = (variant: VariantDraft): ProductVariantPayload => ({
   sku: variant.sku.trim(),
-  price: Number(variant.price || 0),
+  // ensure two decimal places
+  price: Number(parseFloat(String(variant.price || 0)).toFixed(2)),
   discount: Number(variant.discount || 0),
   color: variant.color.trim(),
   size: variant.size.trim(),
   material: variant.material.trim(),
-  weight: Number(variant.weight || 0.5),
+  weight: Number(variant.weight === "" || variant.weight === undefined ? 0.5 : variant.weight),
 });
 
 const ProductFormModal = ({
@@ -524,12 +526,14 @@ const ProductFormModal = ({
                         <input
                           type="number"
                           min={0}
+                          step={0.01}
+                          inputMode="decimal"
                           value={variant.price}
                           onChange={(event) =>
-                            updateVariant(variant.key, { price: Number(event.target.value) })
+                            updateVariant(variant.key, { price: parseFloat(event.target.value) || 0 })
                           }
                           className={`w-full ${adminInputClass}`}
-                          placeholder="Nhập giá bán"
+                          placeholder="Nhập giá bán (ví dụ: 0.01)"
                         />
                       </AdminField>
                       <AdminField label="Giảm giá (%)">
@@ -547,15 +551,19 @@ const ProductFormModal = ({
                       </AdminField>
                       <AdminField label="Khối lượng (kg)">
                         <input
-                          type="number"
-                          min={0}
-                          step={0.1}
-                          value={variant.weight}
-                          onChange={(event) =>
-                            updateVariant(variant.key, { weight: Number(event.target.value) })
-                          }
+                          type="text"
+                          inputMode="decimal"
+                          value={String(variant.weight ?? "")}
+                          onChange={(event) => {
+                            // keep the raw input as string so user can clear / type freely
+                            const raw = event.target.value;
+                            // normalize commas to dots for storage/parse
+                            const normalized = raw.replace(",", ".");
+                            // allow empty string while editing
+                            updateVariant(variant.key, { weight: normalized === "" ? "" : normalized });
+                          }}
                           className={`w-full ${adminInputClass}`}
-                          placeholder="Nhập khối lượng, ví dụ: 0.5"
+                          placeholder="Nhập khối lượng, ví dụ: 0.083"
                         />
                       </AdminField>
                       <AdminField label="Kích thước">

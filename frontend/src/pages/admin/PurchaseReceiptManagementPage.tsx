@@ -16,7 +16,7 @@ import type {
   Supplier,
 } from "../../types/inventory";
 import AdminPageHeader from "../../components/ui/admin/AdminPageHeader";
-import TablePagination from "../../components/ui/TablePagination";
+import TablePagination from "../../components/ui/user/pagination/TablePagination";
 
 const LIMIT = 10;
 type ReceiptStatusFilter = "ALL" | PurchaseReceiptStatus;
@@ -80,8 +80,7 @@ const PurchaseReceiptManagementPage = () => {
   const [loading, setLoading] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
-  const [statusFilter, setStatusFilter] =
-    useState<ReceiptStatusFilter>("ALL");
+  const [statusFilter, setStatusFilter] = useState<ReceiptStatusFilter>("ALL");
   const [supplierId, setSupplierId] = useState("ALL");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -291,7 +290,10 @@ const PurchaseReceiptManagementPage = () => {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {receipts.map((receipt, index) => (
-                  <tr key={receipt.id} className="transition hover:bg-sky-50/40">
+                  <tr
+                    key={receipt.id}
+                    className="transition hover:bg-sky-50/40"
+                  >
                     <td className="px-4 py-3 text-center text-slate-400">
                       {(page - 1) * LIMIT + index + 1}
                     </td>

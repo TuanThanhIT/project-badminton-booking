@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Boxes, Coffee, History, RefreshCcw } from "lucide-react";
 import adminInventoryService from "../../services/admin/inventoryService";
 import AdminPageHeader from "../../components/ui/admin/AdminPageHeader";
-import TablePagination from "../../components/ui/TablePagination";
+import TablePagination from "../../components/ui/user/pagination/TablePagination";
 import type {
   BeverageStock,
   StockTransaction,
@@ -106,10 +106,10 @@ const InventoryManagementPage = () => {
               <button
                 key={item.key}
                 type="button"
-              onClick={() => {
-                setTab(item.key as any);
-                setPage(1);
-              }}
+                onClick={() => {
+                  setTab(item.key as any);
+                  setPage(1);
+                }}
                 className={`inline-flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-bold ${
                   tab === item.key ? "bg-sky-600 text-white" : "text-gray-600"
                 }`}
@@ -166,7 +166,9 @@ const InventoryManagementPage = () => {
               <tbody className="divide-y divide-slate-100">
                 {transactions.map((item, index) => (
                   <tr key={item.id} className="transition hover:bg-sky-50/40">
-                    <td className="px-4 py-3 text-center text-slate-400">{(page - 1) * LIMIT + index + 1}</td>
+                    <td className="px-4 py-3 text-center text-slate-400">
+                      {(page - 1) * LIMIT + index + 1}
+                    </td>
                     <td className="px-4 py-3">
                       {new Date(item.createdAt).toLocaleString("vi-VN")}
                     </td>
@@ -189,7 +191,12 @@ const InventoryManagementPage = () => {
                 ) : null}
               </tbody>
             </table>
-            <TablePagination page={page} totalPages={totalPages} total={total} onPage={setPage} />
+            <TablePagination
+              page={page}
+              totalPages={totalPages}
+              total={total}
+              onPage={setPage}
+            />
           </div>
         ) : null}
       </div>
@@ -203,7 +210,13 @@ const StockTable = ({
   total,
   onPage,
 }: {
-  rows: { id: number; name: string; branch: string; stock: number; extra: string }[];
+  rows: {
+    id: number;
+    name: string;
+    branch: string;
+    stock: number;
+    extra: string;
+  }[];
   page: number;
   total: number;
   onPage: (page: number) => void;
@@ -225,7 +238,9 @@ const StockTable = ({
             <td className="px-4 py-3 text-center text-slate-400">
               {(page - 1) * LIMIT + index + 1}
             </td>
-            <td className="px-4 py-3 font-semibold text-slate-800">{row.name}</td>
+            <td className="px-4 py-3 font-semibold text-slate-800">
+              {row.name}
+            </td>
             <td className="px-4 py-3 text-slate-500">{row.extra || "-"}</td>
             <td className="px-4 py-3 text-slate-600">{row.branch}</td>
             <td className="px-4 py-3 text-right font-semibold text-sky-700">
@@ -238,7 +253,12 @@ const StockTable = ({
         ) : null}
       </tbody>
     </table>
-    <TablePagination page={page} totalPages={Math.ceil(total / LIMIT)} total={total} onPage={onPage} />
+    <TablePagination
+      page={page}
+      totalPages={Math.ceil(total / LIMIT)}
+      total={total}
+      onPage={onPage}
+    />
   </div>
 );
 

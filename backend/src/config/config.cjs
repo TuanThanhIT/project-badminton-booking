@@ -1,6 +1,4 @@
-import dotenv from "dotenv";
-
-dotenv.config();
+require("dotenv").config();
 
 const baseConfig = {
   username: process.env.DB_USER || "root",
@@ -12,7 +10,7 @@ const baseConfig = {
   timezone: "+07:00",
 };
 
-export default {
+module.exports = {
   development: {
     ...baseConfig,
   },

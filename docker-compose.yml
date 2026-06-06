@@ -1,0 +1,148 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: badminton_mysql
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-123456789}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-badminton_booking}
+      TZ: Asia/Ho_Chi_Minh
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - badminton_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: badminton_redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - badminton_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: badminton_backend:latest
+    container_name: badminton_backend
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    expose:
+      - "8080"
+    networks:
+      - badminton_network
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: badminton_backend:latest
+    container_name: badminton_worker
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    command: ["npm", "run", "worker"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - badminton_network
+
+  migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: badminton_backend:latest
+    container_name: badminton_migrate
+    env_file:
+      - .env.production
+    command: ["npm", "run", "migrate"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - badminton_network
+    profiles:
+      - tools
+
+  seed:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: badminton_backend:latest
+    container_name: badminton_seed
+    env_file:
+      - .env.production
+    command: ["npm", "run", "seed"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - badminton_network
+    profiles:
+      - tools
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_BACKEND_URL: ${VITE_BACKEND_URL:-/api}
+        VITE_SOCKET_URL: ${VITE_SOCKET_URL:-}
+    container_name: badminton_frontend
+    restart: unless-stopped
+    expose:
+      - "80"
+    depends_on:
+      - backend
+    networks:
+      - badminton_network
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: badminton_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/app.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - badminton_network
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  badminton_network:
+    driver: bridge

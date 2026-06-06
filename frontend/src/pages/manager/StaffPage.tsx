@@ -1,15 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Mail,
-  MapPin,
-  Phone,
-  Plus,
-  Search,
-  UserRound,
-  X,
-} from "lucide-react";
+import { Mail, MapPin, Phone, Plus, Search, UserRound, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 
@@ -33,7 +25,7 @@ import {
   managerPrimaryButtonClass,
   managerSecondaryButtonClass,
 } from "../../components/commons/manager/ManagerPage";
-import TablePagination from "../../components/ui/TablePagination";
+import TablePagination from "../../components/ui/user/pagination/TablePagination";
 
 const LIMIT = 10;
 const STATUS_OPTIONS = [
@@ -132,7 +124,10 @@ const StaffPage = () => {
     });
   }, [employees, keyword, statusFilter]);
   const totalPages = Math.ceil(filteredEmployees.length / LIMIT);
-  const paginatedEmployees = filteredEmployees.slice((page - 1) * LIMIT, page * LIMIT);
+  const paginatedEmployees = filteredEmployees.slice(
+    (page - 1) * LIMIT,
+    page * LIMIT,
+  );
 
   useEffect(() => {
     setPage(1);
@@ -310,7 +305,13 @@ const StaffPage = () => {
             </tbody>
           </table>
         </div>
-        <TablePagination page={page} totalPages={totalPages} total={filteredEmployees.length} onPage={setPage} unit="nhân viên" />
+        <TablePagination
+          page={page}
+          totalPages={totalPages}
+          total={filteredEmployees.length}
+          onPage={setPage}
+          unit="nhân viên"
+        />
       </div>
 
       {showForm && (

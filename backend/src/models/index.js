@@ -14,7 +14,7 @@ import CourtPrice from "./courtPrice.js";
 
 import Booking from "./booking.js";
 import BookingDetail from "./bookingDetail.js";
-import MonthlyBooking from "./monthlyBooking.js";
+import MonthlyBooking from "./MonthlyBooking.js";
 
 import Cart from "./cart.js";
 import CartItem from "./cartItem.js";

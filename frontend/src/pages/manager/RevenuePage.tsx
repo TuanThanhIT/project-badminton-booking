@@ -17,7 +17,7 @@ import {
   managerCardClass,
   managerInputClass,
 } from "../../components/commons/manager/ManagerPage";
-import TablePagination from "../../components/ui/TablePagination";
+import TablePagination from "../../components/ui/user/pagination/TablePagination";
 
 const LIMIT = 10;
 
@@ -387,7 +387,12 @@ const ReportTable = ({
           ) : null}
         </tbody>
       </table>
-      <TablePagination page={page} totalPages={totalPages} total={rows.length} onPage={setPage} />
+      <TablePagination
+        page={page}
+        totalPages={totalPages}
+        total={rows.length}
+        onPage={setPage}
+      />
     </div>
   );
 };

@@ -22,7 +22,7 @@ import type {
   ManagerProductVariant,
 } from "../../types/product";
 import type { ManagerBeverage } from "../../types/beverage";
-import TablePagination from "../../components/ui/TablePagination";
+import TablePagination from "../../components/ui/user/pagination/TablePagination";
 
 type ProductTab = "products" | "beverages";
 type StockStatus = "ALL" | "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK";
@@ -45,8 +45,7 @@ const stockOptions: { value: StockStatus; label: string }[] = [
   { value: "OUT_OF_STOCK", label: "Hết hàng" },
 ];
 
-const filterSelectClass =
-  `w-full ${managerInputClass}`;
+const filterSelectClass = `w-full ${managerInputClass}`;
 
 const filterLabelClass = "mb-1 block text-xs font-medium text-slate-600";
 

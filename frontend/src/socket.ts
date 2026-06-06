@@ -2,8 +2,12 @@ import { io, Socket } from "socket.io-client";
 
 // Đây là socket singleton. Nghĩa là toàn app cố gắng dùng chung 1 socket connection, tránh mỗi page mở một socket riêng.
 
-const URL =
-  (import.meta.env.VITE_BACKEND_URL as string) || "http://localhost:8088";
+const backendUrl = import.meta.env.VITE_BACKEND_URL as string | undefined;
+const socketUrl = import.meta.env.VITE_SOCKET_URL as string | undefined;
+const defaultSocketUrl = backendUrl?.startsWith("/")
+  ? undefined
+  : backendUrl || "http://localhost:8080";
+const URL = socketUrl || defaultSocketUrl;
 
 export let socket: Socket | null = null;
 let currentToken: string | null = null;

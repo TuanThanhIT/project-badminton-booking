@@ -46,7 +46,7 @@ import {
   managerPrimaryButtonClass,
   managerSecondaryButtonClass,
 } from "../../components/commons/manager/ManagerPage";
-import TablePagination from "../../components/ui/TablePagination";
+import TablePagination from "../../components/ui/user/pagination/TablePagination";
 
 const COURT_LIMIT = 9;
 

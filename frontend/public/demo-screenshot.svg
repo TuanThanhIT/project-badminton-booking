@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1">
+      <stop offset="0" stop-color="#06b6d4"/>
+      <stop offset="1" stop-color="#0ea5a4"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="360" rx="12" fill="url(#g)" />
+  <text x="60" y="120" fill="#fff" font-size="48" font-family="Arial">B‑Hub — Demo nhanh</text>
+  <text x="60" y="180" fill="#ecfeff" font-size="20" font-family="Arial">Đặt sân, lịch, thanh toán và quản lý — giao diện mẫu</text>
+</svg>

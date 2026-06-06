@@ -1,0 +1,68 @@
+@startuml
+title 3.5.2 - KHÁCH HÀNG: CỘNG ĐỒNG VÀ HUẤN LUYỆN
+
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    ArrowColor #64748B
+    FontColor #1E293B
+}
+skinparam actor {
+    BorderColor #334155
+    FontColor #334155
+}
+
+actor "Khách hàng" as Customer
+actor "Dịch vụ gửi email" as Email
+
+rectangle "HỆ THỐNG" {
+    usecase "Đăng bài" as UC_CREATE_POST
+    usecase "Xem danh sách bài đăng" as UC_POST_LIST
+    usecase "Xem chi tiết bài đăng" as UC_POST_DETAIL
+    usecase "Quản lý bài đăng" as UC_MANAGE_POST
+    usecase "Bình luận" as UC_COMMENT
+    usecase "Thích bài đăng" as UC_LIKE
+    usecase "Chia sẻ bài đăng" as UC_SHARE
+    usecase "Nhắn tin" as UC_MESSAGE
+    usecase "Quản lý nhóm chat" as UC_GROUP_CHAT
+    usecase "Gửi yêu cầu làm huấn luyện viên" as UC_COACH_APPLY
+    usecase "Tải chứng chỉ ứng tuyển" as UC_APPLY_CERT
+    usecase "Xem thông tin lớp học" as UC_CLASS_CONTEXT
+    usecase "Đăng ký lớp học" as UC_CLASS_ENROLL
+    usecase "Xem lớp đã đăng ký" as UC_MY_CLASSES
+    usecase "Hủy đăng ký lớp học" as UC_CANCEL_CLASS
+}
+
+Customer -- UC_CREATE_POST
+Customer -- UC_POST_LIST
+Customer -- UC_POST_DETAIL
+Customer -- UC_MANAGE_POST
+Customer -- UC_COMMENT
+Customer -- UC_LIKE
+Customer -- UC_SHARE
+Customer -- UC_MESSAGE
+Customer -- UC_GROUP_CHAT
+Customer -- UC_COACH_APPLY
+Customer -- UC_APPLY_CERT
+Customer -- UC_CLASS_CONTEXT
+Customer -- UC_CLASS_ENROLL
+Customer -- UC_MY_CLASSES
+Customer -- UC_CANCEL_CLASS
+
+UC_POST_DETAIL ..> UC_POST_LIST : <<include>>
+UC_COMMENT ..> UC_POST_DETAIL : <<extend>>
+UC_LIKE ..> UC_POST_DETAIL : <<extend>>
+UC_SHARE ..> UC_POST_DETAIL : <<extend>>
+UC_APPLY_CERT ..> UC_COACH_APPLY : <<include>>
+UC_CLASS_ENROLL ..> UC_CLASS_CONTEXT : <<include>>
+UC_CANCEL_CLASS ..> UC_MY_CLASSES : <<extend>>
+
+UC_COACH_APPLY -- Email
+
+@enduml

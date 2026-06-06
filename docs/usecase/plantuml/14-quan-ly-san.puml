@@ -1,0 +1,46 @@
+@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    ArrowColor #64748B
+    FontColor #1E293B
+}
+skinparam actor {
+    BorderColor #334155
+    FontColor #334155
+}
+
+actor "Quản lý chi nhánh" as Manager
+
+rectangle "HỆ THỐNG" {
+    usecase "Quản lý sân" as UC_COURTS
+    usecase "Tải ảnh sân" as UC_UPLOAD_IMAGE
+    usecase "Tạo sân" as UC_CREATE_COURT
+    usecase "Cập nhật sân" as UC_UPDATE_COURT
+    usecase "Quản lý giá sân" as UC_PRICE
+    usecase "Bảo trì sân" as UC_MAINTENANCE
+    usecase "Đóng sân" as UC_CLOSE
+}
+
+Manager -- UC_COURTS
+Manager -- UC_UPLOAD_IMAGE
+Manager -- UC_CREATE_COURT
+Manager -- UC_UPDATE_COURT
+Manager -- UC_PRICE
+Manager -- UC_MAINTENANCE
+Manager -- UC_CLOSE
+
+UC_UPLOAD_IMAGE ..> UC_COURTS : <<extend>>
+UC_CREATE_COURT ..> UC_COURTS : <<extend>>
+UC_UPDATE_COURT ..> UC_COURTS : <<extend>>
+UC_PRICE ..> UC_COURTS : <<include>>
+UC_MAINTENANCE ..> UC_COURTS : <<extend>>
+UC_CLOSE ..> UC_COURTS : <<extend>>
+
+@enduml

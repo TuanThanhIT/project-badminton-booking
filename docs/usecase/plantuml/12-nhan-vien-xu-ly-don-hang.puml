@@ -1,0 +1,61 @@
+@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    ArrowColor #64748B
+    FontColor #1E293B
+}
+skinparam actor {
+    BorderColor #334155
+    FontColor #334155
+}
+
+actor "Nhân viên" as Employee
+actor "Đơn vị vận chuyển GHN" as GHN
+
+rectangle "HỆ THỐNG" {
+    usecase "Xem danh sách đơn hàng" as UC_ORDERS
+    usecase "Xem chi tiết đơn hàng" as UC_ORDER_DETAIL
+    usecase "Xác nhận đơn hàng" as UC_CONFIRM
+    usecase "Chuẩn bị đơn hàng" as UC_PREPARE
+    usecase "Bàn giao đơn cho vận chuyển" as UC_READY_SHIP
+    usecase "Cập nhật giao hàng" as UC_SHIP
+    usecase "Duyệt hủy đơn hàng" as UC_APPROVE_CANCEL
+    usecase "Từ chối hủy đơn hàng" as UC_REJECT_CANCEL
+    usecase "Duyệt trả hàng" as UC_APPROVE_RETURN
+    usecase "Hoàn tất trả hàng" as UC_COMPLETE_RETURN
+    usecase "Yêu cầu GHN hoàn hàng" as UC_GHN_RETURN
+}
+
+Employee -- UC_ORDERS
+Employee -- UC_ORDER_DETAIL
+Employee -- UC_CONFIRM
+Employee -- UC_PREPARE
+Employee -- UC_READY_SHIP
+Employee -- UC_SHIP
+Employee -- UC_APPROVE_CANCEL
+Employee -- UC_REJECT_CANCEL
+Employee -- UC_APPROVE_RETURN
+Employee -- UC_COMPLETE_RETURN
+Employee -- UC_GHN_RETURN
+
+UC_ORDER_DETAIL ..> UC_ORDERS : <<include>>
+UC_CONFIRM ..> UC_ORDER_DETAIL : <<extend>>
+UC_PREPARE ..> UC_ORDER_DETAIL : <<extend>>
+UC_READY_SHIP ..> UC_ORDER_DETAIL : <<extend>>
+UC_SHIP ..> UC_ORDER_DETAIL : <<extend>>
+UC_APPROVE_CANCEL ..> UC_ORDER_DETAIL : <<extend>>
+UC_REJECT_CANCEL ..> UC_ORDER_DETAIL : <<extend>>
+UC_APPROVE_RETURN ..> UC_ORDER_DETAIL : <<extend>>
+UC_COMPLETE_RETURN ..> UC_ORDER_DETAIL : <<extend>>
+UC_GHN_RETURN ..> UC_ORDER_DETAIL : <<extend>>
+
+UC_GHN_RETURN -- GHN
+
+@enduml

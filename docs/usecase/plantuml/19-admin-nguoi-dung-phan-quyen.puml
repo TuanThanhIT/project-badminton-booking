@@ -1,0 +1,64 @@
+@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    ArrowColor #64748B
+    FontColor #1E293B
+}
+skinparam actor {
+    BorderColor #334155
+    FontColor #334155
+}
+
+actor "Admin" as Admin
+actor "Dịch vụ gửi email" as Email
+
+rectangle "HỆ THỐNG" {
+    usecase "Quản lý người dùng" as UC_USERS
+    usecase "Xem chi tiết người dùng" as UC_USER_DETAIL
+    usecase "Khóa hoặc mở khóa tài khoản" as UC_TOGGLE_USER
+    usecase "Xóa tài khoản" as UC_DELETE_USER
+    usecase "Tạo tài khoản quản lý" as UC_CREATE_MANAGER
+    usecase "Quản lý tài khoản quản lý chi nhánh" as UC_MANAGERS
+    usecase "Gán quản lý vào chi nhánh" as UC_ASSIGN_MANAGER
+    usecase "Thu hồi quản lý chi nhánh" as UC_REVOKE_MANAGER
+    usecase "Xem lịch sử quản lý chi nhánh" as UC_MANAGER_HISTORY
+    usecase "Cấp hoặc đổi vai trò" as UC_CHANGE_ROLE
+    usecase "Duyệt yêu cầu huấn luyện viên" as UC_COACH_APPLICATION
+    usecase "Từ chối yêu cầu huấn luyện viên" as UC_REJECT_COACH
+}
+
+Admin -- UC_USERS
+Admin -- UC_USER_DETAIL
+Admin -- UC_TOGGLE_USER
+Admin -- UC_DELETE_USER
+Admin -- UC_CREATE_MANAGER
+Admin -- UC_MANAGERS
+Admin -- UC_ASSIGN_MANAGER
+Admin -- UC_REVOKE_MANAGER
+Admin -- UC_MANAGER_HISTORY
+Admin -- UC_CHANGE_ROLE
+Admin -- UC_COACH_APPLICATION
+Admin -- UC_REJECT_COACH
+
+UC_USER_DETAIL ..> UC_USERS : <<include>>
+UC_TOGGLE_USER ..> UC_USERS : <<extend>>
+UC_DELETE_USER ..> UC_USERS : <<extend>>
+UC_CREATE_MANAGER ..> UC_USERS : <<extend>>
+UC_ASSIGN_MANAGER ..> UC_MANAGERS : <<extend>>
+UC_REVOKE_MANAGER ..> UC_MANAGERS : <<extend>>
+UC_MANAGER_HISTORY ..> UC_MANAGERS : <<include>>
+UC_CHANGE_ROLE ..> UC_USERS : <<extend>>
+UC_COACH_APPLICATION ..> UC_CHANGE_ROLE : <<extend>>
+UC_REJECT_COACH ..> UC_COACH_APPLICATION : <<extend>>
+
+UC_CREATE_MANAGER -- Email
+UC_COACH_APPLICATION -- Email
+
+@enduml

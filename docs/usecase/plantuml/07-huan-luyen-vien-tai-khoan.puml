@@ -1,0 +1,42 @@
+@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    ArrowColor #64748B
+    FontColor #1E293B
+}
+skinparam actor {
+    BorderColor #334155
+    FontColor #334155
+}
+
+actor "Huấn luyện viên" as Coach
+
+rectangle "HỆ THỐNG" {
+    usecase "Đăng nhập" as UC_LOGIN
+    usecase "Quản lý hồ sơ" as UC_PROFILE
+    usecase "Quản lý chứng chỉ" as UC_CERT
+    usecase "Tải ảnh chứng chỉ" as UC_UPLOAD_CERT
+    usecase "Xem thông báo" as UC_NOTIFICATION
+    usecase "Đánh dấu thông báo đã đọc" as UC_READ_NOTIFICATION
+    usecase "Xem dashboard huấn luyện" as UC_COACH_DASHBOARD
+}
+
+Coach -- UC_LOGIN
+Coach -- UC_PROFILE
+Coach -- UC_CERT
+Coach -- UC_UPLOAD_CERT
+Coach -- UC_NOTIFICATION
+Coach -- UC_READ_NOTIFICATION
+Coach -- UC_COACH_DASHBOARD
+
+UC_UPLOAD_CERT ..> UC_CERT : <<include>>
+UC_READ_NOTIFICATION ..> UC_NOTIFICATION : <<extend>>
+
+@enduml

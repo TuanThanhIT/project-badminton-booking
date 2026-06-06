@@ -1,0 +1,49 @@
+@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    ArrowColor #64748B
+    FontColor #1E293B
+}
+skinparam actor {
+    BorderColor #334155
+    FontColor #334155
+}
+
+actor "Nhân viên" as Employee
+
+rectangle "HỆ THỐNG" {
+    usecase "Xem danh sách đặt sân" as UC_BOOKINGS
+    usecase "Xem chi tiết đặt sân" as UC_BOOKING_DETAIL
+    usecase "Xác nhận đặt sân" as UC_CONFIRM
+    usecase "Tiếp nhận khách đến sân" as UC_RECEIVE
+    usecase "Hoàn tất đặt sân" as UC_COMPLETE
+    usecase "Duyệt yêu cầu hủy" as UC_APPROVE_CANCEL
+    usecase "Từ chối yêu cầu hủy" as UC_REJECT_CANCEL
+    usecase "Hủy do khách vắng" as UC_NO_SHOW_CANCEL
+}
+
+Employee -- UC_BOOKINGS
+Employee -- UC_BOOKING_DETAIL
+Employee -- UC_CONFIRM
+Employee -- UC_RECEIVE
+Employee -- UC_COMPLETE
+Employee -- UC_APPROVE_CANCEL
+Employee -- UC_REJECT_CANCEL
+Employee -- UC_NO_SHOW_CANCEL
+
+UC_BOOKING_DETAIL ..> UC_BOOKINGS : <<include>>
+UC_CONFIRM ..> UC_BOOKING_DETAIL : <<extend>>
+UC_RECEIVE ..> UC_BOOKING_DETAIL : <<extend>>
+UC_COMPLETE ..> UC_BOOKING_DETAIL : <<extend>>
+UC_APPROVE_CANCEL ..> UC_BOOKING_DETAIL : <<extend>>
+UC_REJECT_CANCEL ..> UC_BOOKING_DETAIL : <<extend>>
+UC_NO_SHOW_CANCEL ..> UC_BOOKING_DETAIL : <<extend>>
+
+@enduml

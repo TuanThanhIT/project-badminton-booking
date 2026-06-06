@@ -1,0 +1,50 @@
+@startuml
+title 3.5.3 - HUẤN LUYỆN VIÊN: QUẢN LÝ LỚP HỌC
+
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    ArrowColor #64748B
+    FontColor #1E293B
+}
+skinparam actor {
+    BorderColor #334155
+    FontColor #334155
+}
+
+actor "Huấn luyện viên" as Coach
+actor "Dịch vụ gửi email" as Email
+
+rectangle "HỆ THỐNG" {
+    usecase "Đăng bài lớp học" as UC_CREATE_CLASS_POST
+    usecase "Quản lý lớp học" as UC_MANAGE_CLASSES
+    usecase "Xem danh sách lớp" as UC_CLASS_LIST
+    usecase "Cập nhật bài lớp học" as UC_UPDATE_CLASS_POST
+    usecase "Cập nhật trạng thái lớp" as UC_UPDATE_STATUS
+    usecase "Gửi thông báo lớp học" as UC_NOTIFY_CLASS
+    usecase "Tạo hoặc mở nhóm chat lớp" as UC_CLASS_CHAT
+}
+
+Coach -- UC_CREATE_CLASS_POST
+Coach -- UC_MANAGE_CLASSES
+Coach -- UC_CLASS_LIST
+Coach -- UC_UPDATE_CLASS_POST
+Coach -- UC_UPDATE_STATUS
+Coach -- UC_NOTIFY_CLASS
+Coach -- UC_CLASS_CHAT
+
+UC_MANAGE_CLASSES ..> UC_CLASS_LIST : <<include>>
+UC_UPDATE_CLASS_POST ..> UC_MANAGE_CLASSES : <<extend>>
+UC_UPDATE_STATUS ..> UC_MANAGE_CLASSES : <<extend>>
+UC_NOTIFY_CLASS ..> UC_MANAGE_CLASSES : <<extend>>
+UC_CLASS_CHAT ..> UC_MANAGE_CLASSES : <<extend>>
+
+UC_NOTIFY_CLASS -- Email
+
+@enduml

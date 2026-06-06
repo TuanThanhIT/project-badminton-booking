@@ -1,0 +1,47 @@
+@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    ArrowColor #64748B
+    FontColor #1E293B
+}
+skinparam actor {
+    BorderColor #334155
+    FontColor #334155
+}
+
+actor "Quản lý chi nhánh" as Manager
+
+rectangle "HỆ THỐNG" {
+    usecase "Theo dõi đặt sân" as UC_BOOKINGS
+    usecase "Xem chi tiết đặt sân" as UC_BOOKING_DETAIL
+    usecase "Theo dõi đơn hàng" as UC_ORDERS
+    usecase "Xem chi tiết đơn hàng" as UC_ORDER_DETAIL
+    usecase "Nhắn tin với khách hàng" as UC_MESSAGE
+    usecase "Quản lý hội thoại" as UC_CONVERSATION
+    usecase "Gửi tin nhắn" as UC_SEND_MESSAGE
+    usecase "Quản lý thành viên hội thoại" as UC_MEMBERS
+}
+
+Manager -- UC_BOOKINGS
+Manager -- UC_BOOKING_DETAIL
+Manager -- UC_ORDERS
+Manager -- UC_ORDER_DETAIL
+Manager -- UC_MESSAGE
+Manager -- UC_CONVERSATION
+Manager -- UC_SEND_MESSAGE
+Manager -- UC_MEMBERS
+
+UC_BOOKING_DETAIL ..> UC_BOOKINGS : <<include>>
+UC_ORDER_DETAIL ..> UC_ORDERS : <<include>>
+UC_SEND_MESSAGE ..> UC_CONVERSATION : <<extend>>
+UC_MEMBERS ..> UC_CONVERSATION : <<extend>>
+UC_MESSAGE ..> UC_CONVERSATION : <<include>>
+
+@enduml

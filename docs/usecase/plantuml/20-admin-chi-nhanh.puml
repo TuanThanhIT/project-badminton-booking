@@ -1,0 +1,64 @@
+@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    ArrowColor #64748B
+    FontColor #1E293B
+}
+skinparam actor {
+    BorderColor #334155
+    FontColor #334155
+}
+
+actor "Admin" as Admin
+
+rectangle "HỆ THỐNG" {
+    usecase "Quản lý chi nhánh" as UC_BRANCHES
+    usecase "Tạo chi nhánh" as UC_CREATE_BRANCH
+    usecase "Cập nhật chi nhánh" as UC_UPDATE_BRANCH
+    usecase "Khóa hoặc mở chi nhánh" as UC_TOGGLE_BRANCH
+    usecase "Theo dõi chi tiết chi nhánh" as UC_BRANCH_DETAIL
+    usecase "Theo dõi sân chi nhánh" as UC_BRANCH_COURTS
+    usecase "Theo dõi nhân viên chi nhánh" as UC_BRANCH_EMPLOYEES
+    usecase "Theo dõi đặt sân chi nhánh" as UC_BRANCH_BOOKINGS
+    usecase "Theo dõi đơn hàng chi nhánh" as UC_BRANCH_ORDERS
+    usecase "Theo dõi tồn kho chi nhánh" as UC_BRANCH_INVENTORY
+    usecase "Theo dõi phiếu nhập chi nhánh" as UC_BRANCH_RECEIPTS
+    usecase "Theo dõi doanh thu chi nhánh" as UC_BRANCH_REVENUE
+    usecase "Quản lý hình ảnh chi nhánh" as UC_BRANCH_IMAGES
+}
+
+Admin -- UC_BRANCHES
+Admin -- UC_CREATE_BRANCH
+Admin -- UC_UPDATE_BRANCH
+Admin -- UC_TOGGLE_BRANCH
+Admin -- UC_BRANCH_DETAIL
+Admin -- UC_BRANCH_COURTS
+Admin -- UC_BRANCH_EMPLOYEES
+Admin -- UC_BRANCH_BOOKINGS
+Admin -- UC_BRANCH_ORDERS
+Admin -- UC_BRANCH_INVENTORY
+Admin -- UC_BRANCH_RECEIPTS
+Admin -- UC_BRANCH_REVENUE
+Admin -- UC_BRANCH_IMAGES
+
+UC_CREATE_BRANCH ..> UC_BRANCHES : <<extend>>
+UC_UPDATE_BRANCH ..> UC_BRANCHES : <<extend>>
+UC_TOGGLE_BRANCH ..> UC_BRANCHES : <<extend>>
+UC_BRANCH_DETAIL ..> UC_BRANCHES : <<include>>
+UC_BRANCH_COURTS ..> UC_BRANCH_DETAIL : <<extend>>
+UC_BRANCH_EMPLOYEES ..> UC_BRANCH_DETAIL : <<extend>>
+UC_BRANCH_BOOKINGS ..> UC_BRANCH_DETAIL : <<extend>>
+UC_BRANCH_ORDERS ..> UC_BRANCH_DETAIL : <<extend>>
+UC_BRANCH_INVENTORY ..> UC_BRANCH_DETAIL : <<extend>>
+UC_BRANCH_RECEIPTS ..> UC_BRANCH_DETAIL : <<extend>>
+UC_BRANCH_REVENUE ..> UC_BRANCH_DETAIL : <<extend>>
+UC_BRANCH_IMAGES ..> UC_BRANCHES : <<extend>>
+
+@enduml

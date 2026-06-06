@@ -1,0 +1,59 @@
+@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    ArrowColor #64748B
+    FontColor #1E293B
+}
+skinparam actor {
+    BorderColor #334155
+    FontColor #334155
+}
+
+actor "Admin" as Admin
+
+rectangle "HỆ THỐNG" {
+    usecase "Quản lý danh mục" as UC_CATEGORY
+    usecase "Quản lý sản phẩm" as UC_PRODUCTS
+    usecase "Quản lý hình ảnh sản phẩm" as UC_PRODUCT_IMAGES
+    usecase "Quản lý biến thể sản phẩm" as UC_VARIANTS
+    usecase "Quản lý đồ uống" as UC_BEVERAGES
+    usecase "Xem tồn đồ uống" as UC_BEVERAGE_STOCK
+    usecase "Quản lý mã giảm giá" as UC_DISCOUNTS
+    usecase "Bật hoặc tắt mã giảm giá" as UC_TOGGLE_DISCOUNT
+    usecase "Quản lý nhà cung cấp" as UC_SUPPLIERS
+    usecase "Duyệt phiếu nhập" as UC_RECEIPTS
+    usecase "Từ chối phiếu nhập" as UC_REJECT_RECEIPT
+    usecase "Theo dõi tồn kho" as UC_INVENTORY
+    usecase "Theo dõi lịch sử nhập xuất" as UC_STOCK_TRANSACTIONS
+}
+
+Admin -- UC_CATEGORY
+Admin -- UC_PRODUCTS
+Admin -- UC_PRODUCT_IMAGES
+Admin -- UC_VARIANTS
+Admin -- UC_BEVERAGES
+Admin -- UC_BEVERAGE_STOCK
+Admin -- UC_DISCOUNTS
+Admin -- UC_TOGGLE_DISCOUNT
+Admin -- UC_SUPPLIERS
+Admin -- UC_RECEIPTS
+Admin -- UC_REJECT_RECEIPT
+Admin -- UC_INVENTORY
+Admin -- UC_STOCK_TRANSACTIONS
+
+UC_PRODUCT_IMAGES ..> UC_PRODUCTS : <<extend>>
+UC_VARIANTS ..> UC_PRODUCTS : <<include>>
+UC_BEVERAGE_STOCK ..> UC_BEVERAGES : <<include>>
+UC_TOGGLE_DISCOUNT ..> UC_DISCOUNTS : <<extend>>
+UC_RECEIPTS ..> UC_INVENTORY : <<extend>>
+UC_REJECT_RECEIPT ..> UC_RECEIPTS : <<extend>>
+UC_STOCK_TRANSACTIONS ..> UC_INVENTORY : <<include>>
+
+@enduml

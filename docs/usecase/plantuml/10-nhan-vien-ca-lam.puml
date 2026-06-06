@@ -1,0 +1,51 @@
+@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    ArrowColor #64748B
+    FontColor #1E293B
+}
+skinparam actor {
+    BorderColor #334155
+    FontColor #334155
+}
+
+actor "Nhân viên" as Employee
+
+rectangle "HỆ THỐNG" {
+    usecase "Đăng nhập" as UC_LOGIN
+    usecase "Xem màn hình chính" as UC_HOME
+    usecase "Xem ca làm việc" as UC_SHIFTS
+    usecase "Xem ca hiện tại" as UC_CURRENT_SHIFT
+    usecase "Check-in ca làm" as UC_CHECKIN
+    usecase "Check-out ca làm" as UC_CHECKOUT
+    usecase "Quản lý tiền đầu ca" as UC_COUNTER
+    usecase "Mở ca thu ngân" as UC_OPEN_COUNTER
+    usecase "Đóng ca thu ngân" as UC_CLOSE_COUNTER
+    usecase "Xem thông báo" as UC_NOTIFICATION
+}
+
+Employee -- UC_LOGIN
+Employee -- UC_HOME
+Employee -- UC_SHIFTS
+Employee -- UC_CURRENT_SHIFT
+Employee -- UC_CHECKIN
+Employee -- UC_CHECKOUT
+Employee -- UC_COUNTER
+Employee -- UC_OPEN_COUNTER
+Employee -- UC_CLOSE_COUNTER
+Employee -- UC_NOTIFICATION
+
+UC_CURRENT_SHIFT ..> UC_SHIFTS : <<include>>
+UC_CHECKIN ..> UC_SHIFTS : <<extend>>
+UC_CHECKOUT ..> UC_SHIFTS : <<extend>>
+UC_OPEN_COUNTER ..> UC_COUNTER : <<extend>>
+UC_CLOSE_COUNTER ..> UC_COUNTER : <<extend>>
+
+@enduml

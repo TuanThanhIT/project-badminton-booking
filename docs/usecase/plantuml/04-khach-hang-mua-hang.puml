@@ -1,0 +1,87 @@
+@startuml
+title 3.5.2 - KHÁCH HÀNG: MUA HÀNG
+
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    ArrowColor #64748B
+    FontColor #1E293B
+}
+skinparam actor {
+    BorderColor #334155
+    FontColor #334155
+}
+
+actor "Khách hàng" as Customer
+actor "Cổng thanh toán VNPay" as VNPay
+actor "Đơn vị vận chuyển GHN" as GHN
+actor "Dịch vụ gửi email" as Email
+
+rectangle "HỆ THỐNG" {
+    usecase "Xem danh mục" as UC_CATEGORY
+    usecase "Xem sản phẩm và đồ uống" as UC_PRODUCT
+    usecase "Xem chi tiết sản phẩm" as UC_PRODUCT_DETAIL
+    usecase "Quản lý giỏ hàng" as UC_CART
+    usecase "Tính phí vận chuyển" as UC_SHIPPING
+    usecase "Xem trước đơn hàng" as UC_PREVIEW
+    usecase "Áp dụng mã giảm giá" as UC_DISCOUNT
+    usecase "Xóa phiên checkout" as UC_CLEAR_CHECKOUT
+    usecase "Đặt hàng" as UC_ORDER
+    usecase "Thanh toán đơn hàng" as UC_PAY_ORDER
+    usecase "Thanh toán bằng ví" as UC_PAY_WALLET
+    usecase "Nhận callback VNPay" as UC_VNPAY_CALLBACK
+    usecase "Thanh toán lại bằng VNPay" as UC_RETRY_VNPAY
+    usecase "Theo dõi đơn hàng" as UC_TRACKING
+    usecase "Xem tiến trình giao hàng" as UC_PROGRESS
+    usecase "Xem chi tiết đơn hàng" as UC_ORDER_DETAIL
+    usecase "Yêu cầu hủy đơn hàng" as UC_CANCEL_ORDER
+    usecase "Yêu cầu trả hàng" as UC_RETURN_ORDER
+    usecase "Đánh giá sản phẩm" as UC_FEEDBACK
+}
+
+Customer -- UC_CATEGORY
+Customer -- UC_PRODUCT
+Customer -- UC_PRODUCT_DETAIL
+Customer -- UC_CART
+Customer -- UC_SHIPPING
+Customer -- UC_PREVIEW
+Customer -- UC_DISCOUNT
+Customer -- UC_CLEAR_CHECKOUT
+Customer -- UC_ORDER
+Customer -- UC_PAY_ORDER
+Customer -- UC_PAY_WALLET
+Customer -- UC_RETRY_VNPAY
+Customer -- UC_TRACKING
+Customer -- UC_PROGRESS
+Customer -- UC_ORDER_DETAIL
+Customer -- UC_CANCEL_ORDER
+Customer -- UC_RETURN_ORDER
+Customer -- UC_FEEDBACK
+
+UC_PRODUCT_DETAIL ..> UC_PRODUCT : <<include>>
+UC_PREVIEW ..> UC_CART : <<include>>
+UC_PREVIEW ..> UC_SHIPPING : <<include>>
+UC_DISCOUNT ..> UC_PREVIEW : <<extend>>
+UC_ORDER ..> UC_PREVIEW : <<include>>
+UC_ORDER ..> UC_PAY_ORDER : <<include>>
+UC_PAY_WALLET ..> UC_PAY_ORDER : <<extend>>
+UC_RETRY_VNPAY ..> UC_PAY_ORDER : <<extend>>
+UC_PROGRESS ..> UC_TRACKING : <<include>>
+UC_CANCEL_ORDER ..> UC_ORDER_DETAIL : <<extend>>
+UC_RETURN_ORDER ..> UC_ORDER_DETAIL : <<extend>>
+UC_FEEDBACK ..> UC_ORDER_DETAIL : <<extend>>
+
+UC_PAY_ORDER -- VNPay
+UC_VNPAY_CALLBACK -- VNPay
+UC_RETRY_VNPAY -- VNPay
+UC_SHIPPING -- GHN
+UC_TRACKING -- GHN
+UC_ORDER -- Email
+
+@enduml

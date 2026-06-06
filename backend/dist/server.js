@@ -75,7 +75,7 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
 _dotenv["default"].config();
 var app = (0, _express["default"])();
 var PORT = process.env.PORT || 8080;
-var allowedOrigins = [process.env.CLIENT_URL, "http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"].filter(Boolean);
+var allowedOrigins = [process.env.CLIENT_URL, "http://localhost:5173", "http://127.0.0.1:5173"].filter(Boolean);
 app.use(_express["default"].json());
 app.use(_express["default"].urlencoded({
   extended: true

@@ -3,6 +3,7 @@ import type {
   CourtAvailable,
   CourtAvailableResponse,
   GetAvailableCourtsRequest,
+  GetMonthlyAvailableCourtsRequest,
   CourtInfo,
   CourtInfoResponse,
 } from "../../../types/court";
@@ -29,6 +30,19 @@ export const getAvailableCourts = createAsyncThunk<
 >("court/getAvailableCourts", async (params, { rejectWithValue }) => {
   try {
     const res = await courtService.getAvailableCourtsService(params);
+    return res.data;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
+export const getMonthlyAvailableCourts = createAsyncThunk<
+  CourtAvailableResponse,
+  GetMonthlyAvailableCourtsRequest,
+  { rejectValue: ApiErrorType }
+>("court/getMonthlyAvailableCourts", async (params, { rejectWithValue }) => {
+  try {
+    const res = await courtService.getMonthlyAvailableCourtsService(params);
     return res.data;
   } catch (error) {
     return rejectWithValue(error as ApiErrorType);
@@ -67,7 +81,12 @@ export const getAllCourts = createAsyncThunk<
 const courtSlice = createSlice({
   name: "court",
   initialState,
-  reducers: {},
+  reducers: {
+    clearAvailableCourts: (state) => {
+      state.availableCourts = [];
+      state.loading = false;
+    },
+  },
   extraReducers: (builder) => {
     builder
       // available courts
@@ -82,6 +101,18 @@ const courtSlice = createSlice({
         state.loading = false;
       })
 
+      .addCase(getMonthlyAvailableCourts.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getMonthlyAvailableCourts.fulfilled, (state, action) => {
+        state.availableCourts = action.payload.data;
+        state.loading = false;
+      })
+      .addCase(getMonthlyAvailableCourts.rejected, (state) => {
+        state.availableCourts = [];
+        state.loading = false;
+      })
+
       // courts by ids
       .addCase(getCourtsByIds.fulfilled, (state, action) => {
         state.courts = action.payload.data;
@@ -93,5 +124,7 @@ const courtSlice = createSlice({
       });
   },
 });
+
+export const { clearAvailableCourts } = courtSlice.actions;
 
 export default courtSlice.reducer;

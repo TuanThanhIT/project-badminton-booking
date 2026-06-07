@@ -2,6 +2,7 @@ import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
 import User from "./user.js";
 import Post from "./post.js";
+import { POST_REACTION } from "../constants/postConstant.js";
 
 const PostLike = sequelize.define(
   "PostLike",
@@ -9,6 +10,7 @@ const PostLike = sequelize.define(
     userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      primaryKey: true,
       references: { model: User, key: "id" },
       validate: {
         notNull: {
@@ -24,6 +26,7 @@ const PostLike = sequelize.define(
     postId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      primaryKey: true,
       references: { model: Post, key: "id" },
       validate: {
         notNull: {
@@ -33,6 +36,17 @@ const PostLike = sequelize.define(
         min: {
           args: [1],
           msg: "Post ID must be a positive number",
+        },
+      },
+    },
+    reactionType: {
+      type: DataTypes.ENUM(...Object.values(POST_REACTION)),
+      allowNull: false,
+      defaultValue: POST_REACTION.LIKE,
+      validate: {
+        isIn: {
+          args: [Object.values(POST_REACTION)],
+          msg: "Invalid reaction type",
         },
       },
     },

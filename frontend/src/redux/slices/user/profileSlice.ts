@@ -7,10 +7,11 @@ import type {
   UserProfileData,
 } from "../../../types/profile";
 import type { PostWithAuthor } from "../../../types/post";
-import type { GetPostsResponse } from "../../../types/post";
+import type { GetPostsResponse, PostCounts } from "../../../types/post";
 import profileService from "../../../services/user/profileService";
 import postService from "../../../services/user/postService";
 import { createComment, repostPost, toggleLike } from "./postSlice";
+import { login, logoutLocal } from "./authSlice";
 
 interface ProfileState {
   myProfile?: UserProfileData;
@@ -44,13 +45,7 @@ const patchAuthorProfileInPosts = (
 const patchPostCounts = (
   posts: PostWithAuthor[],
   postId: number,
-  counts: {
-    likesCount?: number;
-    commentsCount?: number;
-    sharesCount?: number;
-    likedByMe?: boolean;
-    sharedByMe?: boolean;
-  },
+  counts: PostCounts,
 ) => {
   const post = posts.find((item) => item.id === postId);
   if (!post) return;
@@ -60,6 +55,30 @@ const patchPostCounts = (
   if (counts.sharesCount !== undefined) post.sharesCount = counts.sharesCount;
   if (counts.likedByMe !== undefined) post.likedByMe = counts.likedByMe;
   if (counts.sharedByMe !== undefined) post.sharedByMe = counts.sharedByMe;
+  if (counts.reactionByMe !== undefined) {
+    post.reactionByMe = counts.reactionByMe ?? null;
+  }
+  if (counts.reactionSummary !== undefined) {
+    post.reactionSummary = counts.reactionSummary;
+  }
+};
+
+const rootPostIdOf = (post: PostWithAuthor) =>
+  post.repostOfPostId && post.repostOfPostId > 0 ? post.repostOfPostId : post.id;
+
+const patchRootShareCounts = (
+  posts: PostWithAuthor[],
+  fallbackPostId: number,
+  counts: PostCounts,
+) => {
+  const selectedPost = posts.find((item) => item.id === fallbackPostId);
+  const targetRootId = counts.targetPostId || (selectedPost ? rootPostIdOf(selectedPost) : fallbackPostId);
+
+  posts.forEach((post) => {
+    if (rootPostIdOf(post) !== targetRootId) return;
+    if (counts.sharesCount !== undefined) post.sharesCount = counts.sharesCount;
+    if (counts.sharedByMe !== undefined) post.sharedByMe = counts.sharedByMe;
+  });
 };
 
 const initialState: ProfileState = {
@@ -164,6 +183,10 @@ const profileSlice = createSlice({
   name: "profile",
   initialState,
   reducers: {
+    clearMyProfileState: (state) => {
+      state.myProfile = undefined;
+      state.myPosts = [];
+    },
     clearPublicProfileState: (state) => {
       state.publicProfile = undefined;
       state.publicPosts = [];
@@ -213,6 +236,14 @@ const profileSlice = createSlice({
       .addCase(getPublicPosts.fulfilled, (state, action) => {
         state.publicPosts = action.payload.data.data;
       })
+      .addCase(login.fulfilled, (state) => {
+        state.myProfile = undefined;
+        state.myPosts = [];
+      })
+      .addCase(logoutLocal, (state) => {
+        state.myProfile = undefined;
+        state.myPosts = [];
+      })
       .addCase(toggleLike.fulfilled, (state, action) => {
         const { postId } = action.meta.arg;
         const counts = action.payload.data;
@@ -239,11 +270,28 @@ const profileSlice = createSlice({
       .addCase(repostPost.fulfilled, (state, action) => {
         const { postId } = action.meta.arg;
         const counts = action.payload.data;
-        patchPostCounts(state.myPosts, postId, counts);
-        patchPostCounts(state.publicPosts, postId, counts);
+        patchRootShareCounts(state.myPosts, postId, counts);
+        patchRootShareCounts(state.publicPosts, postId, counts);
+
+        const repost = action.payload.data.repostPost as PostWithAuthor;
+        if (!repost) return;
+
+        if (
+          state.myProfile?.id === repost.authorId &&
+          !state.myPosts.some((post) => post.id === repost.id)
+        ) {
+          state.myPosts.unshift(repost);
+        }
+
+        if (
+          state.publicProfile?.id === repost.authorId &&
+          !state.publicPosts.some((post) => post.id === repost.id)
+        ) {
+          state.publicPosts.unshift(repost);
+        }
       });
   },
 });
 
-export const { clearPublicProfileState } = profileSlice.actions;
+export const { clearMyProfileState, clearPublicProfileState } = profileSlice.actions;
 export default profileSlice.reducer;

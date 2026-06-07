@@ -56,6 +56,7 @@ const Header = ({ cartRef }: HeaderProps) => {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const orderCount = userOrderPagination?.total || 0;
   const bookingCount = totalBookings || 0;
+  const activeProfile = myProfile?.id === user?.id ? myProfile : undefined;
 
   useEffect(() => {
     if (!cart) return;
@@ -63,9 +64,9 @@ const Header = ({ cartRef }: HeaderProps) => {
   }, [cart]);
 
   useEffect(() => {
-    if (!accessToken || !user?.id || myProfile?.id) return;
+    if (!accessToken || !user?.id || activeProfile?.id === user.id) return;
     dispatch(getMyProfile());
-  }, [dispatch, accessToken, user?.id, myProfile?.id]);
+  }, [dispatch, accessToken, user?.id, activeProfile?.id]);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -112,8 +113,8 @@ const Header = ({ cartRef }: HeaderProps) => {
   };
 
   const displayName =
-    myProfile?.profile?.fullName?.trim() || user?.username || "Tài khoản";
-  const avatarUrl = myProfile?.profile?.avatar || user?.profile?.avatar || "";
+    activeProfile?.profile?.fullName?.trim() || user?.username || "Tài khoản";
+  const avatarUrl = activeProfile?.profile?.avatar || user?.profile?.avatar || "";
   const avatarLetter = displayName.charAt(0).toUpperCase();
   const [avatarError, setAvatarError] = useState(false);
   useEffect(() => { setAvatarError(false); }, [avatarUrl]);

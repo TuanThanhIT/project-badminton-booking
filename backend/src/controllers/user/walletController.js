@@ -54,12 +54,27 @@ const walletWithdrawConfirmController = asyncHandler(async (req, res) => {
     );
 });
 
+const walletWithdrawCancelController = asyncHandler(async (req, res) => {
+  const data = { ...req.body, userId: req.user.id };
+  const withDrawRequest =
+    await walletService.walletWithdrawCancelService(data);
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse(
+        "Yêu cầu rút tiền đã thất bại do thoát xác thực OTP",
+        withDrawRequest,
+      ),
+    );
+});
+
 const walletController = {
   getWalletOverviewController,
   walletDepositController,
   walletCallbackController,
   walletWithdrawRequestController,
   walletWithdrawConfirmController,
+  walletWithdrawCancelController,
 };
 
 export default walletController;

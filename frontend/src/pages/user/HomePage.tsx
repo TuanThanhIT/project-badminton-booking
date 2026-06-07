@@ -1120,7 +1120,7 @@ const HomePage = () => {
                   </div>
 
                   <p className="line-clamp-4 text-sm leading-relaxed text-slate-600">
-                    {review.content}
+                    &ldquo;{review.content}&rdquo;
                   </p>
 
                   <div className="mt-5 rounded-2xl bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-500">

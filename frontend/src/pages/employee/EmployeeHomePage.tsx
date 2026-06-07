@@ -35,6 +35,7 @@ import type {
   CounterItem,
   CounterProduct,
 } from "../../types/employeeCounter";
+import { showConfirmDialog } from "../../utils/confirmDialog";
 
 const getToday = () =>
   new Date().toLocaleDateString("en-CA", {
@@ -275,14 +276,16 @@ const EmployeeHomePage = () => {
     setHasUnsavedChanges(false);
   };
 
-  const resetOrder = () => {
-    if (
-      hasUnsavedChanges &&
-      !window.confirm(
-        "Đơn hiện tại có thay đổi chưa lưu. Tạo đơn mới và bỏ qua thay đổi?",
-      )
-    ) {
-      return;
+  const resetOrder = async (skipConfirm = false) => {
+    if (hasUnsavedChanges && !skipConfirm) {
+      const confirmed = await showConfirmDialog(
+        "Tạo đơn mới?",
+        "Đơn hiện tại có thay đổi chưa lưu. Những thay đổi này sẽ bị bỏ qua.",
+        "Tạo đơn mới",
+        "Quay lại",
+        "warning",
+      );
+      if (!confirmed) return;
     }
 
     setSelectedDraftId(null);
@@ -294,14 +297,16 @@ const EmployeeHomePage = () => {
     setHasUnsavedChanges(false);
   };
 
-  const loadDraft = (draft: CounterDraft) => {
-    if (
-      hasUnsavedChanges &&
-      !window.confirm(
-        "Đơn hiện tại có thay đổi chưa lưu. Tải lại đơn và bỏ qua thay đổi?",
-      )
-    ) {
-      return;
+  const loadDraft = async (draft: CounterDraft) => {
+    if (hasUnsavedChanges) {
+      const confirmed = await showConfirmDialog(
+        "Tải đơn nháp này?",
+        "Đơn hiện tại có thay đổi chưa lưu. Những thay đổi này sẽ bị bỏ qua.",
+        "Tải đơn",
+        "Quay lại",
+        "warning",
+      );
+      if (!confirmed) return;
     }
 
     applyDraftToForm(draft);
@@ -503,6 +508,15 @@ const EmployeeHomePage = () => {
     if (!canOperate)
       return toast.warning("Chỉ nhân viên đứng quầy mới thanh toán.");
 
+    const confirmed = await showConfirmDialog(
+      "Hoàn tất đơn này?",
+      "Đơn sẽ được lưu và tiến hành thanh toán theo phương thức đã chọn.",
+      "Hoàn tất",
+      "Hủy",
+      "success",
+    );
+    if (!confirmed) return;
+
     try {
       const saved = await handleSaveDraft(true);
       if (!saved) return;
@@ -515,7 +529,7 @@ const EmployeeHomePage = () => {
       ).unwrap();
 
       toast.success(res.message);
-      resetOrder();
+      resetOrder(true);
       setHasUnsavedChanges(false);
       dispatch(getCounterDrafts());
       dispatch(getCounterCourtBoard({ date }));
@@ -526,6 +540,15 @@ const EmployeeHomePage = () => {
   };
 
   const handleDeleteDraft = async (draftId: number) => {
+    const confirmed = await showConfirmDialog(
+      "Xóa đơn tạm này?",
+      "Đơn tạm và các sản phẩm/sân đã chọn trong đơn sẽ bị xóa.",
+      "Xóa đơn",
+      "Hủy",
+      "danger",
+    );
+    if (!confirmed) return;
+
     try {
       await dispatch(deleteCounterDraft({ draftId })).unwrap();
 
@@ -829,7 +852,7 @@ const EmployeeHomePage = () => {
                   </div>
 
                   <button
-                    onClick={resetOrder}
+                    onClick={() => resetOrder()}
                     className="h-10 rounded-2xl border border-slate-200 px-4 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
                   >
                     Đơn mới

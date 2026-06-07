@@ -130,6 +130,23 @@ const ensureClassRoomRecord = async ({ post, transaction }) => {
   return room;
 };
 
+const lockClassIfFull = async ({ post, transaction }) => {
+  const maxStudents = getMaxStudents(post);
+  if (!maxStudents) return null;
+
+  const activeCount = await countActiveEnrollments(post.id, transaction);
+  if (activeCount < maxStudents) return null;
+
+  const room = await ensureClassRoomRecord({ post, transaction });
+  if (room.enrollmentStatus !== CLASS_ENROLLMENT_STATUS.OPEN) return room;
+
+  await room.update(
+    { enrollmentStatus: CLASS_ENROLLMENT_STATUS.LOCKED },
+    { transaction },
+  );
+  return room;
+};
+
 const addUserToClassConversation = async ({
   conversationId,
   userId,
@@ -482,21 +499,15 @@ const updateEnrollmentService = async ({
     await enrollment.update(payload, { transaction: t });
 
     if (status === ENROLLMENT_STATUS.ACTIVE) {
-      const conversationId = await syncStudentToClassChat({
-        post,
-        studentUserId: enrollment.studentUserId,
-        transaction: t,
-      });
+      await lockClassIfFull({ post, transaction: t });
 
       await sendUserNotification(
         enrollment.studentUserId,
         CLASS_NOTIFICATION_TYPE.ENROLLMENT_APPROVED,
         "Đăng ký lớp học được duyệt",
-        `Bạn đã được chấp nhận vào lớp "${post.title}". Hãy vào nhóm chat lớp để nhận thông báo.`,
+        `Bạn đã được chấp nhận vào lớp "${post.title}".`,
         { transaction: t },
       );
-
-      enrollment.conversationId = conversationId;
     }
 
     if (status === ENROLLMENT_STATUS.REJECTED) {
@@ -577,11 +588,7 @@ const addMemberManuallyService = async ({
       );
     }
 
-    const conversationId = await syncStudentToClassChat({
-      post,
-      studentUserId,
-      transaction: t,
-    });
+    await lockClassIfFull({ post, transaction: t });
 
     await sendUserNotification(
       studentUserId,
@@ -596,7 +603,7 @@ const addMemberManuallyService = async ({
       transaction: t,
     });
 
-    return { ...mapEnrollment(full), conversationId };
+    return mapEnrollment(full);
   });
 };
 
@@ -631,15 +638,9 @@ const getOrCreateClassConversationService = async ({ coachUserId, postId }) => {
       return { conversationId: room.conversationId };
     }
 
-    const activeStudents = await ClassEnrollment.findAll({
-      where: { postId, status: ENROLLMENT_STATUS.ACTIVE },
-      attributes: ["studentUserId"],
-      transaction: t,
-    });
-
     const conversation = await createClassGroupConversation({
       post,
-      memberUserIds: activeStudents.map((e) => e.studentUserId),
+      memberUserIds: [],
       transaction: t,
     });
 
@@ -687,17 +688,7 @@ const notifyClassMembersService = async ({
     let conversationId = null;
     if (alsoSendChat) {
       const room = await ensureClassRoomRecord({ post, transaction: t });
-      if (!room.conversationId && activeEnrollments.length > 0) {
-        const conversation = await createClassGroupConversation({
-          post,
-          memberUserIds: activeEnrollments.map((e) => e.studentUserId),
-          transaction: t,
-        });
-        await room.update({ conversationId: conversation.id }, { transaction: t });
-        conversationId = conversation.id;
-      } else {
-        conversationId = room.conversationId;
-      }
+      conversationId = room.conversationId;
 
       if (conversationId) {
         t.afterCommit(async () => {
@@ -740,6 +731,13 @@ const updateClassStatusService = async ({ coachUserId, postId, action }) => {
     } else if (action === "unlock") {
       if (current === CLASS_ENROLLMENT_STATUS.ENDED) {
         throw new BadRequestError("Lớp đã kết thúc, không thể mở lại đăng ký.");
+      }
+      const maxStudents = getMaxStudents(post);
+      if (maxStudents) {
+        const activeCount = await countActiveEnrollments(post.id, t);
+        if (activeCount >= maxStudents) {
+          throw new BadRequestError("Lớp học đã đủ số học viên, không thể mở đăng ký.");
+        }
       }
       nextStatus = CLASS_ENROLLMENT_STATUS.OPEN;
     } else if (action === "end") {

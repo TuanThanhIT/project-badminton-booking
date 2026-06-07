@@ -15,3 +15,12 @@ export const SHARE_TYPE = Object.freeze({
   SHARE: "SHARE",
   REPOST: "RE-POST",
 });
+
+export const POST_REACTION = Object.freeze({
+  LIKE: "LIKE",
+  LOVE: "LOVE",
+  HAHA: "HAHA",
+  WOW: "WOW",
+  SAD: "SAD",
+  ANGRY: "ANGRY",
+});

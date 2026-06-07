@@ -1,32 +1,48 @@
-import { GraduationCap, Heart, MessageCircle, FileText, Trophy } from "lucide-react";
+import {
+  FileText,
+  GraduationCap,
+  Heart,
+  MessageCircle,
+  Share2,
+  Trophy,
+} from "lucide-react";
 import type { ReactNode } from "react";
+
+type ReactionKey = "LIKE" | "LOVE" | "HAHA" | "WOW" | "SAD" | "ANGRY";
+
+type ProfileStats = {
+  likes: number;
+  comments: number;
+  shares: number;
+  reactions?: Partial<Record<ReactionKey, number>>;
+};
 
 type ProfileHeroBannerProps = {
   displayName: string;
   username: string;
   postCount: number;
-  /** Tổng like / comment trên các bài */
-  stats?: { likes: number; comments: number };
+  stats?: ProfileStats;
   avatarUrl: string;
   avatarLetter: string;
   avatarLoadError: boolean;
   onAvatarImgError: () => void;
-  /** Nút máy ảnh / đổi ảnh */
   avatarOverlay?: ReactNode;
-  /** Ví dụ nút Nhắn tin */
   trailingActions?: ReactNode;
-  /** Vòng quanh ảnh khi đang upload */
   avatarBusy?: boolean;
-  /** Trình độ cầu lông (User thường) */
   levelLabel?: string;
-  /** Hồ sơ dạy cầu lông */
   isCoach?: boolean;
   coachExperienceYears?: number;
 };
 
-/**
- * Banner + avatar đồng bộ giữa ProfilePage và PublicProfilePage.
- */
+const reactionMeta: Record<ReactionKey, { icon: string; label: string }> = {
+  LIKE: { icon: "\u{1F44D}", label: "Thích" },
+  LOVE: { icon: "\u2764\uFE0F", label: "Yêu thích" },
+  HAHA: { icon: "\u{1F606}", label: "Haha" },
+  WOW: { icon: "\u{1F62E}", label: "Wow" },
+  SAD: { icon: "\u{1F622}", label: "Buồn" },
+  ANGRY: { icon: "\u{1F621}", label: "Phẫn nộ" },
+};
+
 const ProfileHeroBanner = ({
   displayName,
   username,
@@ -43,9 +59,39 @@ const ProfileHeroBanner = ({
   isCoach = false,
   coachExperienceYears,
 }: ProfileHeroBannerProps) => {
+  const reactionEntries = Object.entries(stats?.reactions ?? {})
+    .filter((entry): entry is [ReactionKey, number] => Number(entry[1]) > 0)
+    .sort((a, b) => b[1] - a[1]);
+
+  const statCards = [
+    {
+      label: "Bài đăng",
+      value: postCount,
+      icon: FileText,
+      className: "border-sky-100 bg-sky-50 text-sky-700",
+    },
+    {
+      label: "Lượt thích",
+      value: stats?.likes ?? 0,
+      icon: Heart,
+      className: "border-rose-100 bg-rose-50 text-rose-700",
+    },
+    {
+      label: "Bình luận",
+      value: stats?.comments ?? 0,
+      icon: MessageCircle,
+      className: "border-cyan-100 bg-cyan-50 text-cyan-700",
+    },
+    {
+      label: "Chia sẻ",
+      value: stats?.shares ?? 0,
+      icon: Share2,
+      className: "border-emerald-100 bg-emerald-50 text-emerald-700",
+    },
+  ];
+
   return (
     <section className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_12px_35px_rgba(15,23,42,0.08)]">
-      {/* COVER */}
       <div
         className={`relative h-36 overflow-hidden sm:h-44 ${
           isCoach ? "bg-slate-950" : "bg-sky-900"
@@ -81,16 +127,14 @@ const ProfileHeroBanner = ({
         </div>
       </div>
 
-      {/* INFO CARD */}
       <div className="relative px-4 pb-5 sm:px-7 sm:pb-7">
         <div className="-mt-12 rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.10)] sm:-mt-14 sm:p-5">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:text-left">
-              {/* AVATAR */}
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_460px] lg:items-start">
+            <div className="flex min-w-0 flex-col items-center gap-4 sm:flex-row sm:items-start sm:text-left">
               <div className="relative shrink-0">
                 <div
-                  className={`h-28 w-28 overflow-hidden rounded-[1.5rem] border-4 border-white bg-sky-50 shadow-[0_10px_28px_rgba(15,23,42,0.16)] sm:h-32 sm:w-32 ${
-                    avatarBusy ? "opacity-80 ring-4 ring-sky-200" : ""
+                  className={`h-28 w-28 overflow-hidden rounded-[1.5rem] border border-slate-200 bg-sky-50 sm:h-32 sm:w-32 ${
+                    avatarBusy ? "opacity-80 ring-2 ring-sky-200" : ""
                   }`}
                 >
                   {avatarUrl.trim() && !avatarLoadError ? (
@@ -110,7 +154,6 @@ const ProfileHeroBanner = ({
                 {avatarOverlay}
               </div>
 
-              {/* TEXT */}
               <div className="min-w-0 text-center sm:text-left">
                 <h1 className="truncate text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
                   {displayName}
@@ -118,9 +161,7 @@ const ProfileHeroBanner = ({
 
                 <div className="mt-1.5 flex flex-wrap items-center justify-center gap-2 text-sm text-slate-600 sm:justify-start">
                   <span className="font-medium">@{username}</span>
-
                   <span className="h-1 w-1 rounded-full bg-slate-300" />
-
                   <span className="inline-flex items-center gap-1 font-medium text-sky-700">
                     <FileText size={14} />
                     {postCount} bài đăng
@@ -140,34 +181,53 @@ const ProfileHeroBanner = ({
                       🏸 {levelLabel}
                     </span>
                   )}
-
-                  {stats != null && (
-                    <>
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-medium text-rose-700">
-                        <Heart className="h-3.5 w-3.5" strokeWidth={2} />
-                        <span className="tabular-nums">{stats.likes}</span>
-                        lượt thích
-                      </span>
-
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-800">
-                        <MessageCircle
-                          className="h-3.5 w-3.5"
-                          strokeWidth={2}
-                        />
-                        <span className="tabular-nums">{stats.comments}</span>
-                        bình luận
-                      </span>
-                    </>
-                  )}
                 </div>
+
+                {reactionEntries.length > 0 && (
+                  <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-600 sm:justify-start">
+                    <span className="font-semibold text-slate-700">{"C\u1EA3m x\u00FAc:"}</span>
+                    {reactionEntries.slice(0, 6).map(([type, count]) => (
+                      <span
+                        key={type}
+                        className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 font-medium"
+                        title={reactionMeta[type].label}
+                      >
+                        <span>{reactionMeta[type].icon}</span>
+                        <span className="tabular-nums">{count}</span>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
-            {trailingActions ? (
-              <div className="flex justify-center sm:justify-end">
-                {trailingActions}
+            <div className="w-full">
+              <div className="grid grid-cols-2 gap-2">
+                {statCards.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div
+                      key={item.label}
+                      className={`rounded-2xl border px-3 py-2.5 ${item.className}`}
+                    >
+                      <div className="flex items-center gap-1.5 text-[11px] font-semibold">
+                        <Icon className="h-3.5 w-3.5" strokeWidth={2} />
+                        <span>{item.label}</span>
+                      </div>
+                      <div className="mt-1 text-lg font-bold tabular-nums">
+                        {item.value}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            ) : null}
+
+              {trailingActions ? (
+                <div className="mt-3 flex justify-start lg:justify-end">
+                  {trailingActions}
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>

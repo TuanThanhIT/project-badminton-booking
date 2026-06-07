@@ -3,6 +3,7 @@ import type { ApiResponse } from "./api";
 export type Category = {
   id: number;
   cateName: string;
+  menuGroup?: string | null;
 };
 
 export type CategoryGroup = {

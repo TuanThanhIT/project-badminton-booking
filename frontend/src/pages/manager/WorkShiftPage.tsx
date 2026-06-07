@@ -35,6 +35,7 @@ import {
   managerSecondaryButtonClass,
 } from "../../components/commons/manager/ManagerPage";
 import TablePagination from "../../components/ui/user/pagination/TablePagination";
+import { showConfirmDialog } from "../../utils/confirmDialog";
 
 const today = new Date().toISOString().slice(0, 10);
 const LIMIT = 10;
@@ -211,6 +212,15 @@ const WorkShiftPage = () => {
   };
 
   const handleRemove = async (assignmentId: number) => {
+    const confirmed = await showConfirmDialog(
+      "Xóa phân ca?",
+      "Nhân viên sẽ được gỡ khỏi ca làm này.",
+      "Xóa phân ca",
+      "Hủy",
+      "danger",
+    );
+    if (!confirmed) return;
+
     try {
       await dispatch(removeManagerShiftAssignment(assignmentId)).unwrap();
       toast.success("Đã xóa phân ca");

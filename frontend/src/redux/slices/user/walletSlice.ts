@@ -7,6 +7,7 @@ import type {
   WalletDepositResponse,
   WalletOverviewData,
   WalletOverviewResponse,
+  WalletWithdrawCancelRequest,
   WalletWithdrawConfirmRequest,
   WalletWithdrawRequest,
   WalletWithdrawResponse,
@@ -90,6 +91,19 @@ export const walletWithdrawConfirm = createAsyncThunk<
   }
 });
 
+export const walletWithdrawCancel = createAsyncThunk<
+  WalletWithdrawResponse,
+  { data: WalletWithdrawCancelRequest },
+  { rejectValue: ApiErrorType }
+>("wallet/walletWithdrawCancel", async ({ data }, { rejectWithValue }) => {
+  try {
+    const res = await walletService.walletWithdrawCancelService(data);
+    return res.data as WalletWithdrawResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
 const walletSlice = createSlice({
   name: "wallet",
   initialState,
@@ -107,9 +121,13 @@ const walletSlice = createSlice({
         state.paymentUrl = action.payload.data;
       });
 
-    builder.addCase(walletWithdrawRequest.fulfilled, (state, action) => {
-      state.withdrawRequestId = action.payload.data.id;
-    });
+    builder
+      .addCase(walletWithdrawRequest.fulfilled, (state, action) => {
+        state.withdrawRequestId = action.payload.data.id;
+      })
+      .addCase(walletWithdrawCancel.fulfilled, (state) => {
+        state.withdrawRequestId = undefined;
+      });
   },
 });
 

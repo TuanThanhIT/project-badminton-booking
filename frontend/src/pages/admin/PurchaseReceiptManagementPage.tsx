@@ -17,6 +17,7 @@ import type {
 } from "../../types/inventory";
 import AdminPageHeader from "../../components/ui/admin/AdminPageHeader";
 import TablePagination from "../../components/ui/user/pagination/TablePagination";
+import { showConfirmDialog } from "../../utils/confirmDialog";
 
 const LIMIT = 10;
 type ReceiptStatusFilter = "ALL" | PurchaseReceiptStatus;
@@ -84,6 +85,8 @@ const PurchaseReceiptManagementPage = () => {
   const [supplierId, setSupplierId] = useState("ALL");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [rejectTarget, setRejectTarget] = useState<PurchaseReceipt | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   const fetchReceipts = useCallback(async () => {
     setLoading(true);
@@ -138,6 +141,15 @@ const PurchaseReceiptManagementPage = () => {
   ).length;
 
   const handleApprove = async (receipt: PurchaseReceipt) => {
+    const confirmed = await showConfirmDialog(
+      "Duyệt phiếu nhập?",
+      "Hệ thống sẽ cộng tồn kho theo các mặt hàng trong phiếu này.",
+      "Duyệt phiếu",
+      "Hủy",
+      "success",
+    );
+    if (!confirmed) return;
+
     setLoading(true);
     try {
       await adminInventoryService.purchaseReceiptService.approve(receipt.id);
@@ -151,14 +163,22 @@ const PurchaseReceiptManagementPage = () => {
   };
 
   const handleReject = async (receipt: PurchaseReceipt) => {
-    const reason = window.prompt("Lý do từ chối phiếu nhập", "");
+    setRejectTarget(receipt);
+    setRejectReason("");
+  };
+
+  const submitReject = async () => {
+    if (!rejectTarget) return;
+
     setLoading(true);
     try {
       await adminInventoryService.purchaseReceiptService.reject(
-        receipt.id,
-        reason || undefined,
+        rejectTarget.id,
+        rejectReason.trim() || undefined,
       );
       toast.success("Đã từ chối phiếu nhập");
+      setRejectTarget(null);
+      setRejectReason("");
       fetchReceipts();
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Từ chối phiếu thất bại");
@@ -359,6 +379,61 @@ const PurchaseReceiptManagementPage = () => {
           />
         </div>
       </div>
+
+      {rejectTarget ? (
+        <div className="fixed inset-0 z-[9999] flex min-h-dvh w-screen items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
+              <div>
+                <h3 className="text-lg font-bold text-slate-950">
+                  Từ chối phiếu nhập?
+                </h3>
+                <p className="mt-1 text-xs text-slate-500">
+                  {rejectTarget.receiptCode}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRejectTarget(null)}
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+              >
+                <XCircle className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="px-6 py-5">
+              <label className="block text-sm font-semibold text-slate-700">
+                Lý do từ chối
+                <textarea
+                  value={rejectReason}
+                  onChange={(event) => setRejectReason(event.target.value)}
+                  className="mt-2 min-h-28 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                  placeholder="Nhập lý do để dễ theo dõi sau này..."
+                  autoFocus
+                />
+              </label>
+            </div>
+
+            <div className="flex flex-col-reverse gap-2 border-t border-slate-100 bg-slate-50/70 px-6 py-4 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setRejectTarget(null)}
+                className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={submitReject}
+                className="inline-flex h-11 items-center justify-center rounded-2xl bg-rose-500 px-5 text-sm font-semibold text-white transition hover:bg-rose-600 disabled:opacity-60"
+              >
+                Xác nhận từ chối
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };

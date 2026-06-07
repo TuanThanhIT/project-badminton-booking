@@ -10,7 +10,7 @@ interface EditProfileModalProps {
 }
 
 const inputClass =
-  "w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 hover:border-sky-300 focus:border-sky-500 focus:ring-4 focus:ring-sky-100";
+  "w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 hover:border-sky-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-100";
 
 const labelClass = "mb-1.5 block text-sm font-medium text-slate-700";
 

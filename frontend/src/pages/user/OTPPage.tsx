@@ -10,7 +10,10 @@ import {
   otpVerify,
   otpVerifyReset,
 } from "../../redux/slices/user/authSlice";
-import { walletWithdrawConfirm } from "../../redux/slices/user/walletSlice";
+import {
+  walletWithdrawCancel,
+  walletWithdrawConfirm,
+} from "../../redux/slices/user/walletSlice";
 import type { WalletWithdrawConfirmRequest } from "../../types/wallet";
 import { OTP_TYPE } from "../../utils/constants/otpType";
 import { showConfirmDialog } from "../../utils/confirmDialog";
@@ -102,12 +105,24 @@ const OTPPage = () => {
     );
 
     if (!confirmedExit) return;
-    clearOtpSession();
     if (type === OTP_TYPE.WITHDRAW_REQUEST) {
+      if (withdrawRequestId) {
+        try {
+          await dispatch(
+            walletWithdrawCancel({ data: { withdrawRequestId } }),
+          ).unwrap();
+          toast.info("Yêu cầu rút tiền đã được chuyển sang thất bại.");
+        } catch {
+          toast.error("Không thể hủy yêu cầu rút tiền. Vui lòng thử lại.");
+          return;
+        }
+      }
+      clearOtpSession();
       navigate("/wallet");
       return;
     }
 
+    clearOtpSession();
     if (type === OTP_TYPE.WALLET_PAYMENT) {
       navigate(bookingId ? "/bookings" : "/cart");
       return;

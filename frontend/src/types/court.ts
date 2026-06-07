@@ -10,6 +10,9 @@ export type CourtAvailable = {
   totalPrice: number;
   duration: string; // ⚠️ backend trả string
   status: CourtStatus;
+  totalSessions?: number;
+  unavailableDates?: string[];
+  conflictType?: "monthly" | "daily" | null;
 };
 
 export type CourtAvailableResponse = ApiResponse<CourtAvailable[]>;
@@ -19,6 +22,15 @@ export type GetAvailableCourtsRequest = {
   date: string; // "YYYY-MM-DD"
   startTime: string; // "HH:mm"
   endTime: string; // "HH:mm"
+};
+
+export type GetMonthlyAvailableCourtsRequest = {
+  branchId: number;
+  startDate: string;
+  endDate: string;
+  daysOfWeek: string[];
+  startTime: string;
+  endTime: string;
 };
 export type CourtInfo = {
   id: number;

@@ -110,6 +110,10 @@ export type WalletWithdrawConfirmRequest = {
   email: string;
 };
 
+export type WalletWithdrawCancelRequest = {
+  withdrawRequestId: number;
+};
+
 export type WalletWithdrawData = {
   id: 2;
   amount: number;

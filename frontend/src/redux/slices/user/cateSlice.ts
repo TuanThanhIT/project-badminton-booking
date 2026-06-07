@@ -20,6 +20,36 @@ const initialState: CateState = {
   otherCategories: [],
 };
 
+const normalizeMenuGroup = (menuGroup: string) =>
+  menuGroup.trim().replace(/\s+/g, " ").toLocaleLowerCase("vi-VN");
+
+const mergeCategoryGroups = (groups: CategoryGroup[]) => {
+  const groupMap = new Map<string, CategoryGroup>();
+
+  groups.forEach((group) => {
+    const key = normalizeMenuGroup(group.menuGroup);
+    const existingGroup = groupMap.get(key);
+
+    if (!existingGroup) {
+      groupMap.set(key, {
+        menuGroup: group.menuGroup,
+        items: [...group.items],
+      });
+      return;
+    }
+
+    const existingItemIds = new Set(existingGroup.items.map((item) => item.id));
+    group.items.forEach((item) => {
+      if (!existingItemIds.has(item.id)) {
+        existingGroup.items.push(item);
+        existingItemIds.add(item.id);
+      }
+    });
+  });
+
+  return Array.from(groupMap.values());
+};
+
 export const getCategoriesGrouped = createAsyncThunk<
   CategoriesGroupedResponse,
   void,
@@ -69,7 +99,7 @@ const cateSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(getCategoriesGrouped.fulfilled, (state, action) => {
-        state.categoriesGroup = action.payload.data;
+        state.categoriesGroup = mergeCategoryGroups(action.payload.data);
       })
 
       .addCase(getOtherCategoriesInSameGroup.fulfilled, (state, action) => {

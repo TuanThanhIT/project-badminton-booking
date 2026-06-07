@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { Globe2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import type { PostWithAuthor } from "../../../../types/post";
+import type { PostReactionType, PostWithAuthor } from "../../../../types/post";
 import { POST_TYPE_LABEL } from "../../../../utils/constants/postConstant";
 import { useAppSelector } from "../../../../redux/hook";
 import FormDataSummary from "./FormDataSummary";
@@ -29,6 +29,15 @@ type PostCardProps = {
   onOpenDetail?: () => void;
 };
 
+const REACTION_ICON: Record<PostReactionType, string> = {
+  LIKE: "\u{1F44D}",
+  LOVE: "\u2764\uFE0F",
+  HAHA: "\u{1F606}",
+  WOW: "\u{1F62E}",
+  SAD: "\u{1F622}",
+  ANGRY: "\u{1F621}",
+};
+
 const PostCard = ({
   post,
   branchInfoById,
@@ -44,7 +53,10 @@ const PostCard = ({
   useEffect(() => {
     if (!ownerMenuOpen) return;
     const close = (e: MouseEvent) => {
-      if (ownerMenuRef.current && !ownerMenuRef.current.contains(e.target as Node)) {
+      if (
+        ownerMenuRef.current &&
+        !ownerMenuRef.current.contains(e.target as Node)
+      ) {
         setOwnerMenuOpen(false);
       }
     };
@@ -56,7 +68,9 @@ const PostCard = ({
     post.author?.profile?.fullName || post.author?.username || "Ẩn danh";
   const avatar = post.author?.profile?.avatar;
   const [avatarError, setAvatarError] = useState(false);
-  useEffect(() => { setAvatarError(false); }, [avatar]);
+  useEffect(() => {
+    setAvatarError(false);
+  }, [avatar]);
   const repostOfPostId =
     post.repostOfPostId && post.repostOfPostId > 0 ? post.repostOfPostId : null;
   const isRepost = repostOfPostId != null;
@@ -69,14 +83,32 @@ const PostCard = ({
           "Ẩn danh",
       )
       .filter(Boolean) ?? [];
-  const uniqueCommentPreviewNames = Array.from(new Set(commentPreviewNames)).slice(0, 5);
+  const uniqueCommentPreviewNames = Array.from(
+    new Set(commentPreviewNames),
+  ).slice(0, 5);
+  const reactionEntries = Object.entries(post.reactionSummary ?? {})
+    .filter(
+      (entry): entry is [PostReactionType, number] => Number(entry[1]) > 0,
+    )
+    .sort((a, b) => b[1] - a[1]);
+  const reactionIcons = reactionEntries
+    .slice(0, 3)
+    .map(([type]) => REACTION_ICON[type]);
+  const likesCount = post.likesCount ?? 0;
+  const commentsCount = post.commentsCount ?? 0;
+  const sharesCount = post.sharesCount ?? 0;
 
   return (
-    <article className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm transition-colors duration-200 hover:border-slate-300 hover:bg-slate-50/40">
+    <article className="overflow-visible rounded-[2rem] border border-slate-200 bg-white shadow-sm transition-colors duration-200 hover:border-slate-300 hover:bg-slate-50/40">
       <div className="flex items-start gap-3 p-5">
-        <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-sky-100 ring-4 ring-sky-50">
+        <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-sky-100 ring-1 ring-sky-50">
           {avatar && !avatarError ? (
-            <img src={avatar} alt={authorName} className="h-full w-full object-cover" onError={() => setAvatarError(true)} />
+            <img
+              src={avatar}
+              alt={authorName}
+              className="h-full w-full object-cover"
+              onError={() => setAvatarError(true)}
+            />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-sky-700">
               {authorName.charAt(0).toUpperCase()}
@@ -203,37 +235,51 @@ const PostCard = ({
 
       <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3 text-sm text-slate-500">
         <span className="flex items-center gap-2">
-          <span className="font-medium">{post.likesCount ?? 0}</span>
-          lượt thích
-        </span>
-
-        <button
-          type="button"
-          onClick={onOpenDetail}
-          className={`${onOpenDetail ? "cursor-pointer hover:text-slate-700 hover:underline" : "cursor-default"} group/comment relative transition-colors`}
-        >
-          {post.commentsCount ?? 0} bình luận
-          {(post.commentsCount ?? 0) > 0 && (
-            <span className="pointer-events-none absolute right-0 top-full z-30 mt-2 hidden w-56 rounded-xl border border-slate-200 bg-white p-3 text-left text-xs text-slate-600 shadow-lg group-hover/comment:block">
-              <span className="mb-1 block font-semibold text-slate-800">
-                Người đã bình luận
-              </span>
-              {uniqueCommentPreviewNames.length > 0 ? (
-                uniqueCommentPreviewNames.map((name) => (
-                  <span key={name} className="block truncate py-0.5">
-                    {name}
-                  </span>
-                ))
-              ) : (
-                <span>Mở bài viết để xem chi tiết.</span>
-              )}
+          {reactionIcons.length > 0 && (
+            <span className="flex -space-x-1">
+              {reactionIcons.map((icon, index) => (
+                <span
+                  key={`${icon}-${index}`}
+                  className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-sm shadow-sm ring-1 ring-white"
+                >
+                  {icon}
+                </span>
+              ))}
             </span>
           )}
-        </button>
+          <span className="font-medium">{likesCount}</span>
+        </span>
+
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={onOpenDetail}
+            className={`${onOpenDetail ? "cursor-pointer hover:text-slate-700 hover:underline" : "cursor-default"} group/comment relative transition-colors`}
+          >
+            {commentsCount} bình luận
+            {commentsCount > 0 && (
+              <span className="pointer-events-none absolute right-0 top-full z-30 mt-2 hidden w-56 rounded-xl border border-slate-200 bg-white p-3 text-left text-xs text-slate-600 shadow-lg group-hover/comment:block">
+                <span className="mb-1 block font-semibold text-slate-800">
+                  Người đã bình luận
+                </span>
+                {uniqueCommentPreviewNames.length > 0 ? (
+                  uniqueCommentPreviewNames.map((name) => (
+                    <span key={name} className="block truncate py-0.5">
+                      {name}
+                    </span>
+                  ))
+                ) : (
+                  <span>Mở bài viết để xem chi tiết.</span>
+                )}
+              </span>
+            )}
+          </button>
+          <span>{sharesCount} chia sẻ</span>
+        </div>
       </div>
 
       <div className="border-t border-slate-100">
-        <PostActions post={post} />
+        <PostActions post={post} onOpenDetail={onOpenDetail} />
       </div>
     </article>
   );

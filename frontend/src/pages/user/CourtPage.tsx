@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   CalendarDays,
@@ -13,7 +13,11 @@ import {
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { getBranchOptions } from "../../redux/slices/user/branchSlice";
-import { getAvailableCourts } from "../../redux/slices/user/courtSlice";
+import {
+  clearAvailableCourts,
+  getAvailableCourts,
+  getMonthlyAvailableCourts,
+} from "../../redux/slices/user/courtSlice";
 import { calculateMonthlyBooking } from "../../redux/slices/user/monthlyBookingSlice";
 import type { BranchOptions } from "../../types/branch";
 import type { CourtAvailable } from "../../types/court";
@@ -37,6 +41,7 @@ const generateTimeOptions = () => {
 };
 
 const MIN_BOOKING_LEAD_MINUTES = 60;
+const COURTS_PER_PAGE = 10;
 const TIME_OPTIONS = generateTimeOptions();
 const formatDateInputValue = (date: Date) => {
   const year = date.getFullYear();
@@ -115,27 +120,49 @@ const CourtPage = () => {
   const [endTime, setEndTime] = useState("10:00");
   const [monthlyPrice, setMonthlyPrice] = useState(0);
   const [monthlySessions, setMonthlySessions] = useState(0);
+  const [courtPage, setCourtPage] = useState(1);
   const [nowTick, setNowTick] = useState(() => Date.now());
+  const branchIdQuery = searchParams.get("branchId") || "";
   const branchNameQuery = searchParams.get("branchName") || "";
+  const appliedBranchQueryRef = useRef("");
 
   useEffect(() => {
     dispatch(getBranchOptions());
   }, [dispatch]);
 
   useEffect(() => {
-    if (!branchNameQuery || branchOptions.length === 0) return;
+    const branchQueryKey = branchIdQuery || branchNameQuery;
+
+    if (!branchQueryKey) {
+      appliedBranchQueryRef.current = "";
+      return;
+    }
+
+    if (
+      branchOptions.length === 0 ||
+      appliedBranchQueryRef.current === branchQueryKey
+    ) {
+      return;
+    }
 
     const normalize = (value: string) =>
       value.trim().toLocaleLowerCase("vi-VN");
 
-    const matchedBranch = branchOptions.find(
-      (branch) => normalize(branch.branchName) === normalize(branchNameQuery),
-    );
+    const matchedBranch = branchIdQuery
+      ? branchOptions.find((branch) => branch.id === Number(branchIdQuery))
+      : branchOptions.find(
+          (branch) =>
+            normalize(branch.branchName) === normalize(branchNameQuery),
+        );
 
-    if (!matchedBranch || selectedBranch?.id === matchedBranch.id) return;
+    if (!matchedBranch) return;
 
-    setSelectedBranch(matchedBranch);
-  }, [branchNameQuery, branchOptions, selectedBranch?.id]);
+    appliedBranchQueryRef.current = branchQueryKey;
+
+    if (selectedBranch?.id !== matchedBranch.id) {
+      setSelectedBranch(matchedBranch);
+    }
+  }, [branchIdQuery, branchNameQuery, branchOptions, selectedBranch?.id]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNowTick(Date.now()), 60_000);
@@ -191,7 +218,23 @@ const CourtPage = () => {
     duration,
   ]);
 
-  const canSearchCourts = !scheduleWarning && duration > 0;
+  const canSearchCourts =
+    !scheduleWarning &&
+    duration > 0 &&
+    (mode === "daily" ||
+      Boolean(monthlyEndDate && daysOfWeek.length > 0));
+  const totalCourtPages = Math.max(
+    1,
+    Math.ceil(availableCourts.length / COURTS_PER_PAGE),
+  );
+  const paginatedCourts = useMemo(
+    () =>
+      availableCourts.slice(
+        (courtPage - 1) * COURTS_PER_PAGE,
+        courtPage * COURTS_PER_PAGE,
+      ),
+    [availableCourts, courtPage],
+  );
 
   const availableStartTimes = useMemo(
     () =>
@@ -232,17 +275,32 @@ const CourtPage = () => {
   useEffect(() => {
     if (!selectedBranch || !canSearchCourts) {
       setSelectedCourt(null);
+      dispatch(clearAvailableCourts());
       return;
     }
 
-    dispatch(
-      getAvailableCourts({
-        branchId: selectedBranch.id,
-        date: mode === "daily" ? bookingDate : monthlyStartDate || todayDate,
-        startTime,
-        endTime,
-      }),
-    );
+    if (mode === "monthly") {
+      dispatch(
+        getMonthlyAvailableCourts({
+          branchId: selectedBranch.id,
+          startDate: monthlyStartDate || todayDate,
+          endDate: monthlyEndDate,
+          daysOfWeek,
+          startTime,
+          endTime,
+        }),
+      );
+    } else {
+      dispatch(
+        getAvailableCourts({
+          branchId: selectedBranch.id,
+          date: bookingDate,
+          startTime,
+          endTime,
+        }),
+      );
+    }
+
     setSelectedCourt(null);
   }, [
     dispatch,
@@ -250,11 +308,32 @@ const CourtPage = () => {
     mode,
     bookingDate,
     monthlyStartDate,
+    monthlyEndDate,
+    daysOfWeek,
     todayDate,
     startTime,
     endTime,
     canSearchCourts,
   ]);
+
+  useEffect(() => {
+    setCourtPage(1);
+  }, [
+    selectedBranch?.id,
+    mode,
+    bookingDate,
+    monthlyStartDate,
+    monthlyEndDate,
+    daysOfWeek,
+    startTime,
+    endTime,
+  ]);
+
+  useEffect(() => {
+    if (courtPage > totalCourtPages) {
+      setCourtPage(totalCourtPages);
+    }
+  }, [courtPage, totalCourtPages]);
 
   useEffect(() => {
     const calculateMonthly = async () => {
@@ -700,10 +779,13 @@ const CourtPage = () => {
                   </p>
                 </div>
               ) : (
-                <div className="grid gap-4 md:grid-cols-2">
-                  {availableCourts.map((court: CourtAvailable) => {
+                <div className="space-y-5">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {paginatedCourts.map((court: CourtAvailable) => {
                     const booked = isCourtBooked(court);
                     const selected = selectedCourt?.id === court.id;
+                    const firstUnavailableDate = court.unavailableDates?.[0];
+                    const bookedByMonthly = court.conflictType === "monthly";
 
                     return (
                       <button
@@ -717,7 +799,7 @@ const CourtPage = () => {
                         className={`group overflow-hidden rounded-[1.75rem] border bg-white text-left shadow-sm transition-all ${
                           selected
                             ? "border-sky-300 bg-sky-50 shadow-[0_10px_24px_rgba(14,165,233,0.12)]"
-                            : "border-slate-200 hover:border-sky-200 hover:shadow-[0_14px_34px_rgba(14,165,233,0.1)]"
+                            : "border-slate-200 hover:border-sky-200 hover:shadow-[0_6px_16px_rgba(14,165,233,0.07)]"
                         } ${booked ? "cursor-not-allowed opacity-60" : ""}`}
                       >
                         <div className="relative aspect-[16/9] overflow-hidden bg-slate-100">
@@ -735,7 +817,11 @@ const CourtPage = () => {
                                 : "bg-emerald-50 text-emerald-700"
                             }`}
                           >
-                            {booked ? "Đã đặt" : "Còn trống"}
+                            {bookedByMonthly
+                              ? "Đã có lịch tháng"
+                              : booked
+                                ? "Đã đặt"
+                                : "Còn trống"}
                           </span>
                         </div>
 
@@ -746,7 +832,9 @@ const CourtPage = () => {
                                 {court.courtName}
                               </h3>
                               <p className="mt-1 truncate text-sm text-slate-500">
-                                {court.location || selectedBranch.branchName}
+                                {booked && firstUnavailableDate
+                                  ? `Trùng lịch ngày ${firstUnavailableDate}`
+                                  : court.location || selectedBranch.branchName}
                               </p>
                             </div>
                             {selected && (
@@ -763,6 +851,65 @@ const CourtPage = () => {
                       </button>
                     );
                   })}
+                  </div>
+
+                  {availableCourts.length > COURTS_PER_PAGE && (
+                    <div className="flex flex-col gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="text-sm text-slate-500">
+                        Hiển thị {(courtPage - 1) * COURTS_PER_PAGE + 1}-
+                        {Math.min(
+                          courtPage * COURTS_PER_PAGE,
+                          availableCourts.length,
+                        )}{" "}
+                        / {availableCourts.length} sân
+                      </p>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setCourtPage((page) => Math.max(1, page - 1))
+                          }
+                          disabled={courtPage === 1}
+                          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition-all hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Trước
+                        </button>
+
+                        {Array.from({ length: totalCourtPages }, (_, index) => {
+                          const page = index + 1;
+
+                          return (
+                            <button
+                              key={page}
+                              type="button"
+                              onClick={() => setCourtPage(page)}
+                              className={`h-9 w-9 rounded-xl border text-sm font-semibold transition-all ${
+                                courtPage === page
+                                  ? "border-sky-300 bg-sky-50 text-sky-700"
+                                  : "border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          );
+                        })}
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setCourtPage((page) =>
+                              Math.min(totalCourtPages, page + 1),
+                            )
+                          }
+                          disabled={courtPage === totalCourtPages}
+                          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition-all hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Sau
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

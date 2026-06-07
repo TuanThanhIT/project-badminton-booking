@@ -12,7 +12,7 @@ const CreatePostBar = () => {
       className="group block overflow-hidden rounded-[2rem] border border-sky-100 bg-gradient-to-br from-white to-sky-50/70 p-4 shadow-[0_10px_28px_rgba(14,165,233,0.08)] transition-all duration-300 hover:shadow-[0_14px_34px_rgba(14,165,233,0.12)] sm:hover:-translate-y-0.5"
     >
       <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sm font-semibold text-sky-700 ring-4 ring-white transition-transform group-hover:scale-105">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sm font-semibold text-sky-700 ring-1 ring-white transition-transform group-hover:scale-105">
           {displayName.charAt(0).toUpperCase()}
         </div>
 

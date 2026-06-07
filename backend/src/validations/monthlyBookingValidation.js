@@ -98,6 +98,35 @@ export const calculateMonthlyBookingSchema = {
   }),
 };
 
+export const monthlyAvailableCourtsSchema = {
+  body: Joi.object({
+    branchId: Joi.number().integer().positive().required(),
+
+    startDate: Joi.date().required(),
+
+    endDate: Joi.date().required(),
+
+    daysOfWeek: Joi.array()
+      .items(
+        Joi.string().valid(
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ),
+      )
+      .min(1)
+      .required(),
+
+    startTime: Joi.string().required(),
+
+    endTime: Joi.string().required(),
+  }),
+};
+
 // export const createMonthlyBookingSchema = {
 //   body: Joi.object({
 //     branchId: Joi.number().required(),

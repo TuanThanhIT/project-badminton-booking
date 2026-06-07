@@ -3,6 +3,12 @@ import type { ApiResponse } from "./api";
 export type ConversationType = "PRIVATE" | "GROUP";
 export type MessageType = "TEXT" | "IMAGE" | "FILE";
 
+export type PresencePayload = {
+  userId: number;
+  isOnline: boolean;
+  lastSeenAt: string | null;
+};
+
 export type ConversationParticipant = {
   userId: number;
   username: string;
@@ -10,6 +16,8 @@ export type ConversationParticipant = {
   avatar?: string | null;
   role: "ADMIN" | "MEMBER";
   joinedAt: string;
+  isOnline?: boolean;
+  lastSeenAt?: string | null;
 };
 
 export type ReplyToMessage = {
@@ -43,6 +51,16 @@ export type Conversation = {
   avatar?: string | null;
   updatedAt: string;
   participants: ConversationParticipant[];
+  otherParticipant?: {
+    id: number;
+    username?: string;
+    fullName?: string | null;
+    avatar?: string | null;
+    isOnline: boolean;
+    lastSeenAt?: string | null;
+  } | null;
+  membersCount?: number;
+  onlineMembersCount?: number;
   unreadCount: number;
   lastMessage?: ChatMessage | null;
 };

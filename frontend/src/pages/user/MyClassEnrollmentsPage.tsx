@@ -11,7 +11,11 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 import coachClassService from "../../services/user/coachClassService";
-import type { ClassEnrollmentItem, EnrollmentStatus } from "../../types/coachClass";
+import type {
+  ClassEnrollmentItem,
+  EnrollmentStatus,
+} from "../../types/coachClass";
+import { showConfirmDialog } from "../../utils/confirmDialog";
 
 const STATUS_OPTIONS: { value: "" | EnrollmentStatus; label: string }[] = [
   { value: "", label: "Tất cả" },
@@ -72,6 +76,15 @@ const MyClassEnrollmentsPage = () => {
   }, [statusFilter]);
 
   const handleCancel = async (id: number) => {
+    const confirmed = await showConfirmDialog(
+      "Hủy đăng ký lớp?",
+      "Yêu cầu hoặc lượt tham gia lớp học này sẽ được hủy.",
+      "Hủy đăng ký",
+      "Quay lại",
+      "danger",
+    );
+    if (!confirmed) return;
+
     setActingId(id);
     try {
       await coachClassService.cancelEnrollmentService(id);
@@ -100,7 +113,8 @@ const MyClassEnrollmentsPage = () => {
                 Lớp đã đăng ký
               </h1>
               <p className="mt-5 max-w-2xl text-lg leading-8 text-sky-50">
-                Theo dõi trạng thái đăng ký và các lớp đang tham gia trong một nơi.
+                Theo dõi trạng thái đăng ký và các lớp đang tham gia trong một
+                nơi.
               </p>
             </div>
 
@@ -114,7 +128,9 @@ const MyClassEnrollmentsPage = () => {
                   className="rounded-2xl border border-white/10 bg-white/10 px-5 py-4"
                 >
                   <GraduationCap size={18} className="text-sky-200" />
-                  <p className="mt-4 text-2xl font-bold leading-none">{item.value}</p>
+                  <p className="mt-4 text-2xl font-bold leading-none">
+                    {item.value}
+                  </p>
                   <p className="mt-2 text-sm text-sky-100">{item.label}</p>
                 </div>
               ))}
@@ -135,7 +151,7 @@ const MyClassEnrollmentsPage = () => {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="h-11 min-w-[180px] rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                  className="h-11 min-w-[180px] rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
                 >
                   {STATUS_OPTIONS.map((o) => (
                     <option key={o.value || "all"} value={o.value}>
@@ -164,7 +180,8 @@ const MyClassEnrollmentsPage = () => {
                     Chưa có lớp nào trong danh sách
                   </h2>
                   <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
-                    Khi bạn gửi yêu cầu tham gia lớp học, trạng thái và thông tin lớp sẽ xuất hiện tại đây.
+                    Khi bạn gửi yêu cầu tham gia lớp học, trạng thái và thông
+                    tin lớp sẽ xuất hiện tại đây.
                   </p>
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                     <Link
@@ -225,14 +242,18 @@ const MyClassEnrollmentsPage = () => {
                             </h2>
                             <span
                               className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
-                                STATUS_BADGE[item.status] || STATUS_BADGE.CANCELLED
+                                STATUS_BADGE[item.status] ||
+                                STATUS_BADGE.CANCELLED
                               }`}
                             >
                               {STATUS_LABEL[item.status] || item.status}
                             </span>
                           </div>
                           <p className="mt-1 text-xs text-slate-500">
-                            Đăng ký {new Date(item.createdAt).toLocaleDateString("vi-VN")}
+                            Đăng ký{" "}
+                            {new Date(item.createdAt).toLocaleDateString(
+                              "vi-VN",
+                            )}
                           </p>
                           {item.rejectReason ? (
                             <p className="mt-1 text-xs text-red-600">
@@ -248,7 +269,9 @@ const MyClassEnrollmentsPage = () => {
                             onClick={() => handleCancel(item.id)}
                             className="h-10 shrink-0 rounded-xl border border-slate-200 px-3 text-xs font-semibold text-slate-700 transition hover:bg-white disabled:opacity-50"
                           >
-                            {actingId === item.id ? "Đang xử lý..." : "Hủy đăng ký"}
+                            {actingId === item.id
+                              ? "Đang xử lý..."
+                              : "Hủy đăng ký"}
                           </button>
                         ) : null}
                       </div>

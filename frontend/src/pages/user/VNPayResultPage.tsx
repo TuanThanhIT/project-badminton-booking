@@ -101,6 +101,7 @@ const VNPayResultPage = () => {
     const key = `vnpay_${vnp_TxnRef}`;
 
     if (sessionStorage.getItem(key)) {
+      setCallbackSuccess(vnpSuccess);
       setCallbackDone(true);
       return;
     }
@@ -204,6 +205,14 @@ const VNPayResultPage = () => {
     vnp_TxnRef,
   ]);
 
+  useEffect(() => {
+    if (!callbackDone || !isBooking || !bookingIdFromOrderInfo) return;
+
+    navigate(`/booking-result?bookingId=${bookingIdFromOrderInfo}`, {
+      replace: true,
+    });
+  }, [bookingIdFromOrderInfo, callbackDone, isBooking, navigate]);
+
   if (!callbackDone) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
@@ -211,6 +220,19 @@ const VNPayResultPage = () => {
           <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
           <p className="text-sm font-medium text-slate-600">
             Đang xử lý thanh toán...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isBooking && bookingIdFromOrderInfo) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+        <div className="rounded-2xl border border-slate-200 bg-white px-6 py-5 text-center shadow-sm">
+          <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
+          <p className="text-sm font-medium text-slate-600">
+            Đang chuyển đến kết quả lịch sân...
           </p>
         </div>
       </div>

@@ -15,6 +15,7 @@ import {
   Wallet,
   WalletTransaction,
 } from "../../models/index.js";
+import { Op } from "sequelize";
 import {
   DISCOUNT_APPLY_TYPE,
   DISCOUNT_TYPE,
@@ -409,6 +410,10 @@ const createMonthlyBookingService = async (data) => {
         where: {
           courtId: item.courtId,
           playDate: item.playDate,
+          [Op.and]: [
+            { startTime: { [Op.lt]: item.endTime } },
+            { endTime: { [Op.gt]: item.startTime } },
+          ],
         },
         transaction: t,
         lock: t.LOCK.UPDATE,
@@ -509,6 +514,79 @@ const createMonthlyBookingService = async (data) => {
     throw error;
   }
 };
+
+const getMonthlyAvailableCourtsService = async (data) => {
+  const { branchId, startDate, endDate, daysOfWeek, startTime, endTime } = data;
+
+  const monthlyPrice = await calculateMonthlyAmount({
+    branchId,
+    startDate,
+    endDate,
+    daysOfWeek,
+    startTime,
+    endTime,
+  });
+
+  const playDates = monthlyPrice.details.map((item) => item.playDate);
+
+  const bookedDetails =
+    playDates.length > 0
+      ? await BookingDetail.findAll({
+          where: {
+            playDate: { [Op.in]: playDates },
+            [Op.and]: [
+              { startTime: { [Op.lt]: endTime } },
+              { endTime: { [Op.gt]: startTime } },
+            ],
+          },
+          attributes: ["courtId", "playDate", "monthlyBookingId"],
+        })
+      : [];
+
+  const conflictsByCourt = bookedDetails.reduce((acc, item) => {
+    if (!acc[item.courtId]) {
+      acc[item.courtId] = {
+        dates: new Set(),
+        conflictType: "daily",
+      };
+    }
+
+    acc[item.courtId].dates.add(item.playDate);
+
+    if (item.monthlyBookingId) {
+      acc[item.courtId].conflictType = "monthly";
+    }
+
+    return acc;
+  }, {});
+
+  const allCourts = await Court.findAll({
+    where: {
+      branchId,
+      courtStatus: "ACTIVE",
+    },
+    attributes: ["id", "courtName", "location", "thumbnailUrl"],
+  });
+
+  return allCourts.map((court) => {
+    const conflict = conflictsByCourt[court.id];
+    const unavailableDates = Array.from(conflict?.dates || []);
+
+    return {
+      id: court.id,
+      courtName: court.courtName,
+      location: court.location,
+      thumbnailUrl: court.thumbnailUrl,
+      totalPrice: monthlyPrice.totalAmount,
+      duration: monthlyPrice.duration.toFixed(1),
+      totalSessions: monthlyPrice.totalSessions,
+      unavailableDates,
+      conflictType: conflict?.conflictType || null,
+      status: unavailableDates.length > 0 ? "booked" : "ACTIVE",
+    };
+  });
+};
+
 const calculateMonthlyBookingService = async (data) => {
   const { branchId, startDate, endDate, daysOfWeek, startTime, endTime } = data;
 
@@ -582,5 +660,6 @@ const calculateMonthlyBookingService = async (data) => {
 
 export default {
   createMonthlyBookingService,
+  getMonthlyAvailableCourtsService,
   calculateMonthlyBookingService,
 };

@@ -77,6 +77,17 @@ const User = sequelize.define(
       defaultValue: true,
     },
 
+    isOnline: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+
+    lastSeenAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+
     roleId: {
       type: DataTypes.INTEGER,
       allowNull: false,

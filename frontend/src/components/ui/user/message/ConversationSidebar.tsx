@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { Edit3, MessageCircle, Plus, Search, Users, X } from "lucide-react";
+import { Edit3, Loader2, MessageCircle, Plus, Search, Users, X } from "lucide-react";
 import type { Conversation } from "../../../../types/message";
 import type { UserSearchHit } from "../../../../types/userSearch";
 import { formatRelativeTimeVi } from "../../../../utils/formatRelativeTimeVi";
+import { formatLastSeen } from "../../../../utils/formatLastSeen";
 
 export type SidebarTab = "all" | "unread" | "group";
 
 type ConversationSidebarProps = {
   conversations: Conversation[];
   selectedConversationId?: number;
+  loadingConversationId?: number | null;
   currentUserId?: number;
   starterUsers?: UserSearchHit[];
   loadingStarterUsers?: boolean;
@@ -19,7 +21,7 @@ type ConversationSidebarProps = {
   starterEmptyDescription?: string;
   searchUsers?: (q: string, limit?: number) => Promise<UserSearchHit[]>;
   directSearchTitle?: string;
-  onSelect: (id: number) => void;
+  onSelect: (id: number) => void | Promise<void>;
   onStartDirect?: (userId: number) => void;
   onCreateGroup: () => void;
 };
@@ -37,32 +39,35 @@ const ConvAvatar = ({
   name,
   url,
   isGroup,
+  isOnline,
 }: {
   name: string;
   url?: string | null;
   isGroup: boolean;
+  isOnline?: boolean;
 }) => {
   const [imgErr, setImgErr] = useState(false);
   const letter = (name || "?").trim().charAt(0).toUpperCase();
 
   return (
-    <div
-      className={`w-12 h-12 rounded-2xl flex items-center justify-center text-base font-bold shrink-0 overflow-hidden ${
-        isGroup
-          ? "bg-sky-100 text-sky-700 ring-1 ring-sky-200"
-          : "bg-sky-100 text-sky-700 ring-1 ring-sky-200"
-      }`}
-    >
-      {url && !imgErr ? (
-        <img
-          src={url}
-          alt=""
-          className="w-full h-full object-cover"
-          onError={() => setImgErr(true)}
-        />
-      ) : (
-        letter
-      )}
+    <div className="relative h-12 w-12 shrink-0">
+      <div
+        className={`h-12 w-12 overflow-hidden rounded-2xl flex items-center justify-center text-base font-bold bg-sky-100 text-sky-700 ring-1 ring-sky-200`}
+      >
+        {url && !imgErr ? (
+          <img
+            src={url}
+            alt=""
+            className="w-full h-full object-cover"
+            onError={() => setImgErr(true)}
+          />
+        ) : (
+          letter
+        )}
+      </div>
+      {!isGroup && isOnline ? (
+        <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500" />
+      ) : null}
     </div>
   );
 };
@@ -70,6 +75,7 @@ const ConvAvatar = ({
 const ConversationSidebar = ({
   conversations,
   selectedConversationId,
+  loadingConversationId,
   currentUserId,
   starterUsers = [],
   loadingStarterUsers = false,
@@ -393,7 +399,20 @@ const ConversationSidebar = ({
               const avatarUrl = !isGroup
                 ? otherParticipant?.avatar
                 : conversation.avatar;
+              const privatePresence = !isGroup
+                ? {
+                    isOnline:
+                      conversation.otherParticipant?.isOnline ??
+                      otherParticipant?.isOnline ??
+                      false,
+                    lastSeenAt:
+                      conversation.otherParticipant?.lastSeenAt ??
+                      otherParticipant?.lastSeenAt ??
+                      null,
+                  }
+                : null;
               const isSelected = selectedConversationId === conversation.id;
+              const isLoading = loadingConversationId === conversation.id;
               const preview = lastPreview(conversation);
               const lastMsgSender =
                 isGroup && conversation.lastMessage
@@ -406,26 +425,26 @@ const ConversationSidebar = ({
                 <button
                   key={conversation.id}
                   type="button"
+                  disabled={isLoading}
                   onClick={() => onSelect(conversation.id)}
-                  className={`group w-full text-left p-3 flex items-start gap-3 rounded-2xl border transition-all ${
+                  className={`group relative w-full overflow-hidden text-left p-3 flex items-start gap-3 rounded-2xl border transition-all ${
                     isSelected
-                      ? "bg-white border-sky-200"
-                      : "bg-white/80 border-transparent hover:bg-white hover:border-slate-200"
-                  }`}
+                      ? "border-sky-300 bg-white shadow-[0_2px_8px_rgba(15,23,42,0.04)]"
+                      : "border-transparent bg-white/80 hover:border-slate-200 hover:bg-white hover:shadow-sm"
+                  } ${isLoading ? "cursor-wait" : ""}`}
                 >
                   <div className="relative shrink-0">
                     <ConvAvatar
                       name={displayName}
                       url={avatarUrl}
                       isGroup={isGroup}
+                      isOnline={privatePresence?.isOnline}
                     />
                     {isGroup ? (
                       <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-sky-600 flex items-center justify-center border-2 border-white">
                         <Users className="w-2.5 h-2.5 text-white" />
                       </div>
-                    ) : (
-                      <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-white" />
-                    )}
+                    ) : null}
                   </div>
 
                   <div className="flex-1 min-w-0 pt-0.5">
@@ -439,13 +458,17 @@ const ConversationSidebar = ({
                       >
                         {displayName}
                       </p>
-                      <span className="text-[10px] text-slate-400 tabular-nums whitespace-nowrap pt-0.5">
-                        {conversation.lastMessage
-                          ? formatRelativeTimeVi(
-                              conversation.lastMessage.createdAt,
-                            )
-                          : ""}
-                      </span>
+                      {isLoading ? (
+                        <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-sky-500" />
+                      ) : (
+                        <span className="text-[10px] text-slate-400 tabular-nums whitespace-nowrap pt-0.5">
+                          {conversation.lastMessage
+                            ? formatRelativeTimeVi(
+                                conversation.lastMessage.createdAt,
+                              )
+                            : ""}
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -456,8 +479,11 @@ const ConversationSidebar = ({
                             : "text-slate-400"
                         }`}
                       >
-                        {lastMsgSender}
-                        {preview}
+                        {isGroup && (conversation.onlineMembersCount || 0) > 0
+                          ? `${conversation.onlineMembersCount} người đang hoạt động`
+                          : privatePresence?.isOnline
+                            ? formatLastSeen(true)
+                            : `${lastMsgSender}${preview}`}
                       </p>
                       {unread > 0 && (
                         <span className="min-w-[1.2rem] h-[1.2rem] px-1.5 flex items-center justify-center rounded-full bg-sky-600 text-white text-[9px] font-bold">

@@ -19,6 +19,11 @@ import ForbiddenError from "../../errors/ForbiddenError.js";
 import NotFoundError from "../../errors/NotFoundError.js";
 import { getIO } from "../../socket/index.js";
 import userMessageService from "../user/messageService.js";
+import {
+  countOnlineParticipants,
+  getPresenceForUser,
+  mapParticipantPresence,
+} from "../shared/presenceMapper.js";
 
 const getManagedBranchIds = async (managerId, transaction) => {
   const rows = await BranchManager.findAll({
@@ -155,6 +160,13 @@ const broadcastToConversation = (userIds, conversationId, event, payload) => {
   io.to(`conversation:${conversationId}`).emit(event, payload);
 };
 
+const leaveConversationRoomForUsers = (userIds, conversationId) => {
+  const io = getIO();
+  userIds.forEach((uid) => {
+    io.in(`user:${uid}`).socketsLeave(`conversation:${conversationId}`);
+  });
+};
+
 const mapConversation = async (conversation, currentUserId, transaction) => {
   const participants = await ConversationParticipant.findAll({
     where: { conversationId: conversation.id },
@@ -162,7 +174,7 @@ const mapConversation = async (conversation, currentUserId, transaction) => {
       {
         model: User,
         as: "user",
-        attributes: ["id", "username"],
+        attributes: ["id", "username", "isOnline", "lastSeenAt"],
         include: [{ model: Profile, as: "profile", attributes: ["fullName", "avatar"] }],
       },
     ],
@@ -195,6 +207,8 @@ const mapConversation = async (conversation, currentUserId, transaction) => {
 
   const otherParticipant = participants.find((p) => Number(p.userId) !== Number(currentUserId));
   const isPrivate = conversation.type === CONVERSATION_TYPE.PRIVATE;
+  const mappedParticipants = participants.map(mapParticipantPresence);
+  const otherPresence = otherParticipant ? getPresenceForUser(otherParticipant.user) : null;
 
   return {
     id: conversation.id,
@@ -204,14 +218,20 @@ const mapConversation = async (conversation, currentUserId, transaction) => {
       : conversation.conversationName,
     avatar: isPrivate ? otherParticipant?.user?.profile?.avatar || null : conversation.avatar,
     updatedAt: conversation.updatedAt,
-    participants: participants.map((p) => ({
-      userId: p.userId,
-      username: p.user?.username,
-      fullName: p.user?.profile?.fullName || null,
-      avatar: p.user?.profile?.avatar || null,
-      role: p.role,
-      joinedAt: p.joinedAt,
-    })),
+    participants: mappedParticipants,
+    otherParticipant:
+      isPrivate && otherParticipant
+        ? {
+            id: otherParticipant.userId,
+            username: otherParticipant.user?.username,
+            fullName: otherParticipant.user?.profile?.fullName || null,
+            avatar: otherParticipant.user?.profile?.avatar || null,
+            isOnline: otherPresence?.isOnline || false,
+            lastSeenAt: otherPresence?.lastSeenAt || null,
+          }
+        : null,
+    membersCount: participants.length,
+    onlineMembersCount: countOnlineParticipants(participants),
     unreadCount,
     lastMessage: lastMessage
       ? {
@@ -439,14 +459,40 @@ const removeMemberFromGroupService = async ({ managerId, conversationId, targetU
     const membership = await ensureConversationAllowed(managerId, conversationId, t);
     const conversation = await Conversation.findByPk(conversationId, { transaction: t });
     if (!conversation) throw new NotFoundError("Khong tim thay cuoc tro chuyen.");
-    ensureGroupAdmin(membership, conversation);
+    const isSelf = Number(targetUserId) === Number(managerId);
+    if (!isSelf || membership.role !== ROLE_CONVERSATION.ADMIN) {
+      ensureGroupAdmin(membership, conversation);
+    }
 
     const target = await ConversationParticipant.findOne({
       where: { conversationId, userId: targetUserId },
       transaction: t,
     });
     if (!target) throw new NotFoundError("Thanh vien khong thuoc nhom.");
+
+    if (isSelf && membership.role === ROLE_CONVERSATION.ADMIN) {
+      const participants = await ConversationParticipant.findAll({
+        where: { conversationId },
+        attributes: ["userId"],
+        transaction: t,
+      });
+      const ids = participants.map((p) => p.userId);
+
+      await Message.destroy({ where: { conversationId }, transaction: t });
+      await ConversationParticipant.destroy({ where: { conversationId }, transaction: t });
+      await conversation.destroy({ transaction: t });
+      leaveConversationRoomForUsers(ids, conversationId);
+
+      broadcastToConversation(ids, conversationId, "chat:conversation-updated", {
+        conversationId,
+        action: "deleted",
+      });
+
+      return { conversationId, deleted: true };
+    }
+
     await target.destroy({ transaction: t });
+    leaveConversationRoomForUsers([targetUserId], conversationId);
     await conversation.update({ updatedAt: new Date() }, { transaction: t });
 
     const participants = await ConversationParticipant.findAll({
@@ -484,6 +530,7 @@ const deleteGroupConversationService = async ({ managerId, conversationId }) => 
     await Message.destroy({ where: { conversationId }, transaction: t });
     await ConversationParticipant.destroy({ where: { conversationId }, transaction: t });
     await conversation.destroy({ transaction: t });
+    leaveConversationRoomForUsers(ids, conversationId);
 
     broadcastToConversation(ids, conversationId, "chat:conversation-updated", {
       conversationId,

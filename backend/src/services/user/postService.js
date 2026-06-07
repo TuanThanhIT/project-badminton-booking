@@ -1,11 +1,55 @@
 import sequelize from "../../config/db.js";
-import { Post, User, Profile, ClassRoom } from "../../models/index.js";
-import { POST_TYPE } from "../../constants/postConstant.js";
+import { Post, User, Profile, ClassRoom, PostLike } from "../../models/index.js";
+import { POST_REACTION, POST_TYPE } from "../../constants/postConstant.js";
 import { ROLE_NAME } from "../../constants/userConstant.js";
 import { CLASS_ENROLLMENT_STATUS } from "../../constants/classConstant.js";
 import ForbiddenError from "../../errors/ForbiddenError.js";
 import NotFoundError from "../../errors/NotFoundError.js";
 import { Op } from "sequelize";
+
+const emptyReactionSummary = () =>
+  Object.values(POST_REACTION).reduce((summary, reactionType) => {
+    summary[reactionType] = 0;
+    return summary;
+  }, {});
+
+const attachReactionSummaries = async (posts, transaction) => {
+  const list = Array.isArray(posts) ? posts : [posts].filter(Boolean);
+  if (list.length === 0) return;
+
+  const postIds = list.map((post) => post.id);
+  const rows = await PostLike.findAll({
+    attributes: [
+      "postId",
+      "reactionType",
+      [sequelize.fn("COUNT", sequelize.col("reactionType")), "count"],
+    ],
+    where: { postId: postIds },
+    group: ["postId", "reactionType"],
+    raw: true,
+    transaction,
+  });
+
+  const summaryByPostId = new Map(
+    postIds.map((postId) => [Number(postId), emptyReactionSummary()]),
+  );
+
+  rows.forEach((row) => {
+    const postId = Number(row.postId);
+    const summary = summaryByPostId.get(postId);
+    if (!summary || !Object.values(POST_REACTION).includes(row.reactionType)) {
+      return;
+    }
+    summary[row.reactionType] = Number(row.count || 0);
+  });
+
+  list.forEach((post) => {
+    post.setDataValue(
+      "reactionSummary",
+      summaryByPostId.get(Number(post.id)) || emptyReactionSummary(),
+    );
+  });
+};
 
 // Tạo bài đăng mới. Nếu type = Class thì chỉ Coach được đăng.
 const createPostService = async (data) => {
@@ -212,22 +256,28 @@ const getPostsService = async (data) => {
           ],
           [
             sequelize.literal(
-              `(SELECT COUNT(*) FROM Comments c WHERE c.postId = Post.id)`,
+              `(SELECT COUNT(*) FROM Comments c WHERE c.postId = Post.id AND c.isDeleted = false)`,
             ),
             "commentsCount",
           ],
           [
             sequelize.literal(
-              `(SELECT COUNT(*) FROM PostShares ps WHERE ps.postId = IFNULL(Post.repostOfPostId, Post.id))`,
+              `GREATEST(
+                (SELECT COUNT(*) FROM Posts rp WHERE rp.repostOfPostId = IFNULL(Post.repostOfPostId, Post.id) AND rp.isDeleted = false),
+                (SELECT COUNT(*) FROM PostShares ps WHERE ps.postId = IFNULL(Post.repostOfPostId, Post.id))
+              )`,
             ),
             "sharesCount",
           ],
           currentUserId
             ? [
                 sequelize.literal(
-                  `EXISTS (SELECT 1 FROM PostShares ps WHERE ps.postId = IFNULL(Post.repostOfPostId, Post.id) AND ps.userId = ${Number(
+                  `(EXISTS (SELECT 1 FROM PostShares ps WHERE ps.postId = IFNULL(Post.repostOfPostId, Post.id) AND ps.userId = ${Number(
                     currentUserId,
-                  )})`,
+                  )})
+                  OR EXISTS (SELECT 1 FROM Posts rp WHERE rp.repostOfPostId = IFNULL(Post.repostOfPostId, Post.id) AND rp.authorId = ${Number(
+                    currentUserId,
+                  )} AND rp.isDeleted = false))`,
                 ),
                 "sharedByMe",
               ]
@@ -247,6 +297,19 @@ const getPostsService = async (data) => {
             : [
                 sequelize.literal("false"),
                 "likedByMe",
+              ],
+          currentUserId
+            ? [
+                sequelize.literal(
+                  `(SELECT pl.reactionType FROM PostLikes pl WHERE pl.postId = Post.id AND pl.userId = ${Number(
+                    currentUserId,
+                  )} LIMIT 1)`,
+                ),
+                "reactionByMe",
+              ]
+            : [
+                sequelize.literal("NULL"),
+                "reactionByMe",
               ],
         ],
       },
@@ -273,6 +336,7 @@ const getPostsService = async (data) => {
       ],
     });
 
+    await attachReactionSummaries(result.rows, t);
     return { total: result.count, page, limit, data: result.rows };
   });
 };
@@ -282,8 +346,8 @@ const getPostsService = async (data) => {
 const getPostByIdService = async (data) => {
   return sequelize.transaction(async (t) => {
     const currentUserId = data.userId;
-    const post = await Post.findByPK(data.postId, {
-      where: {  isDeleted: false },
+    const post = await Post.findOne({
+      where: { id: data.postId, isDeleted: false },
       transaction: t,
       attributes: {
         include: [
@@ -295,22 +359,28 @@ const getPostByIdService = async (data) => {
           ],
           [
             sequelize.literal(
-              `(SELECT COUNT(*) FROM Comments c WHERE c.postId = Post.id)`,
+              `(SELECT COUNT(*) FROM Comments c WHERE c.postId = Post.id AND c.isDeleted = false)`,
             ),
             "commentsCount",
           ],
           [
             sequelize.literal(
-              `(SELECT COUNT(*) FROM PostShares ps WHERE ps.postId = IFNULL(Post.repostOfPostId, Post.id))`,
+              `GREATEST(
+                (SELECT COUNT(*) FROM Posts rp WHERE rp.repostOfPostId = IFNULL(Post.repostOfPostId, Post.id) AND rp.isDeleted = false),
+                (SELECT COUNT(*) FROM PostShares ps WHERE ps.postId = IFNULL(Post.repostOfPostId, Post.id))
+              )`,
             ),
             "sharesCount",
           ],
           currentUserId
             ? [
                 sequelize.literal(
-                  `EXISTS (SELECT 1 FROM PostShares ps WHERE ps.postId = IFNULL(Post.repostOfPostId, Post.id) AND ps.userId = ${Number(
+                  `(EXISTS (SELECT 1 FROM PostShares ps WHERE ps.postId = IFNULL(Post.repostOfPostId, Post.id) AND ps.userId = ${Number(
                     currentUserId,
-                  )})`,
+                  )})
+                  OR EXISTS (SELECT 1 FROM Posts rp WHERE rp.repostOfPostId = IFNULL(Post.repostOfPostId, Post.id) AND rp.authorId = ${Number(
+                    currentUserId,
+                  )} AND rp.isDeleted = false))`,
                 ),
                 "sharedByMe",
               ]
@@ -331,6 +401,19 @@ const getPostByIdService = async (data) => {
                 sequelize.literal("false"),
                 "likedByMe",
               ],
+          currentUserId
+            ? [
+                sequelize.literal(
+                  `(SELECT pl.reactionType FROM PostLikes pl WHERE pl.postId = Post.id AND pl.userId = ${Number(
+                    currentUserId,
+                  )} LIMIT 1)`,
+                ),
+                "reactionByMe",
+              ]
+            : [
+                sequelize.literal("NULL"),
+                "reactionByMe",
+              ],
         ],
       },
       include: [
@@ -350,6 +433,7 @@ const getPostByIdService = async (data) => {
     });
 
     if (!post) throw new NotFoundError("Không tìm thấy bài đăng.");
+    await attachReactionSummaries(post, t);
     return post;
   });
 };
@@ -358,8 +442,8 @@ const getPostByIdService = async (data) => {
 const updatePostService = async (data) => {
   const { title, content, formData } = data;
   return sequelize.transaction(async (t) => {
-    const post = await Post.findByPK(data.postId, {
-      where: { isDeleted: false },
+    const post = await Post.findOne({
+      where: { id: data.postId, isDeleted: false },
       transaction: t,
       lock: t.LOCK.UPDATE,
     });

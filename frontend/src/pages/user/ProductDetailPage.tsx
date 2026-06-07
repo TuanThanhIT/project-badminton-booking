@@ -369,7 +369,7 @@ const ProductDetailPage: React.FC = () => {
                       transition-all
                       ${
                         mainImage === img.imageUrl
-                          ? "border-sky-500 shadow-md ring-4 ring-sky-100"
+                          ? "border-sky-500 shadow-md ring-1 ring-sky-100"
                           : "border-slate-200 hover:border-sky-300"
                       }
                     `}
@@ -638,7 +638,7 @@ const ProductDetailPage: React.FC = () => {
                 rounded-2xl border bg-white transition-all
                 ${
                   isSelected
-                    ? "border-sky-500 shadow-md ring-4 ring-sky-100"
+                    ? "border-sky-500 shadow-md ring-1 ring-sky-100"
                     : "border-slate-200 hover:border-sky-300 hover:shadow-sm"
                 }
               `}

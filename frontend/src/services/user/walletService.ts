@@ -4,6 +4,7 @@ import type {
   WalletDepositRequest,
   WalletDepositResponse,
   WalletOverviewResponse,
+  WalletWithdrawCancelRequest,
   WalletWithdrawConfirmRequest,
   WalletWithdrawRequest,
   WalletWithdrawResponse,
@@ -25,12 +26,16 @@ const walletWithdrawRequestService = (data: WalletWithdrawRequest) =>
 const walletWithdrawConfirmService = (data: WalletWithdrawConfirmRequest) =>
   instance.patch<WalletWithdrawResponse>("/user/wallet/withdraw/confirm", data);
 
+const walletWithdrawCancelService = (data: WalletWithdrawCancelRequest) =>
+  instance.patch<WalletWithdrawResponse>("/user/wallet/withdraw/cancel", data);
+
 const walletService = {
   getWalletOverviewService,
   walletDepositService,
   walletCallbackService,
   walletWithdrawRequestService,
   walletWithdrawConfirmService,
+  walletWithdrawCancelService,
 };
 
 export default walletService;

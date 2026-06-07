@@ -15,13 +15,41 @@ import {
 
 dotenv.config();
 
+const GHN_BASE_URL =
+  process.env.GHN_BASE_URL ||
+  "https://dev-online-gateway.ghn.vn/shiip/public-api";
+
+const getGhnErrorMessage = (error) => {
+  const responseData = error.response?.data;
+
+  return (
+    responseData?.message ||
+    responseData?.code_message ||
+    responseData?.data?.message ||
+    error.message ||
+    "GHN rejected the shipping request"
+  );
+};
+
+const throwGhnRequestError = (error, context = {}) => {
+  if (!axios.isAxiosError(error)) {
+    throw error;
+  }
+
+  throw new BadRequestError(`GHN: ${getGhnErrorMessage(error)}`, {
+    status: error.response?.status || null,
+    ghn: error.response?.data || null,
+    context,
+  });
+};
+
 export const getAvailableServices = async ({
   fromDistrictId,
   toDistrictId,
   ghnShopId,
 }) => {
   const res = await axios.post(
-    `${process.env.GHN_BASE_URL}/v2/shipping-order/available-services`,
+    `${GHN_BASE_URL}/v2/shipping-order/available-services`,
     {
       from_district: fromDistrictId,
       to_district: toDistrictId,
@@ -46,7 +74,7 @@ export const getLeadtimeService = async ({
   ghnShopId,
 }) => {
   const res = await axios.post(
-    `${process.env.GHN_BASE_URL}/v2/shipping-order/leadtime`,
+    `${GHN_BASE_URL}/v2/shipping-order/leadtime`,
     {
       from_district_id: fromDistrictId,
       from_ward_code: fromWardCode,
@@ -74,12 +102,28 @@ export const getLeadtimeService = async ({
 export const createGHNOrderService = async (order) => {
   const branch = await Branch.findByPk(order.branchId);
   if (!branch) {
-    throw new NotFoundError("Cửa hàng không tồn tại");
+    throw new NotFoundError("Branch not found");
+  }
+
+  if (!process.env.GHN_TOKEN_DEV) {
+    throw new BadRequestError("GHN token is not configured");
+  }
+
+  if (!branch.ghnShopId) {
+    throw new BadRequestError("Branch has no GHN shop ID configured");
+  }
+
+  if (!branch.districtId || !branch.wardCode) {
+    throw new BadRequestError("Branch GHN address is incomplete");
+  }
+
+  if (!order.shippingDistrictId || !order.shippingWardCode) {
+    throw new BadRequestError("Shipping GHN address is incomplete");
   }
 
   const orderGroup = await OrderGroup.findByPk(order.orderGroupId);
   if (!orderGroup) {
-    throw new NotFoundError("Đơn hàng không tồn tại");
+    throw new NotFoundError("Order group not found");
   }
 
   const payment = await Payment.findOne({
@@ -101,60 +145,76 @@ export const createGHNOrderService = async (order) => {
   const items = itemsDb.map((i) => ({
     name: i.productName,
     code: String(i.variantId),
-    quantity: i.quantity,
-    price: i.unitPrice,
+    quantity: Number(i.quantity),
+    price: Number(i.unitPrice),
     weight: 200,
     length: 20,
     width: 20,
     height: 20,
   }));
 
-  const isCOD = payment.paymentMethod === PAYMENT_METHOD_STATUS.COD;
+  const isCOD = payment?.paymentMethod === PAYMENT_METHOD_STATUS.COD;
+  const shippingServiceId = Number(order.shippingServiceId || 0);
 
-  const res = await axios.post(
-    `${process.env.GHN_BASE_URL}/v2/shipping-order/create`,
-    {
-      payment_type_id: isCOD ? 2 : 1,
+  if (!shippingServiceId) {
+    throw new BadRequestError("Order has no GHN shipping service selected");
+  }
 
-      cod_amount: isCOD ? Number(order.totalAmount) : 0,
+  const payload = {
+    payment_type_id: isCOD ? 2 : 1,
+    cod_amount: isCOD ? Number(order.totalAmount) : 0,
+    required_note: "KHONGCHOXEMHANG",
+    content: `Order #${order.id}`,
 
-      required_note: "KHONGCHOXEMHANG",
-      content: `Order #${order.id}`, // 🔥 thêm cái này
+    from_name: branch.branchName,
+    from_phone: branch.phoneNumber,
+    from_address: branch.address,
+    from_district_id: Number(branch.districtId),
+    from_ward_code: String(branch.wardCode),
 
-      from_name: branch.branchName,
-      from_phone: branch.phoneNumber,
-      from_address: branch.address,
-      from_district_id: branch.districtId,
-      from_ward_code: branch.wardCode,
+    to_name: order.shippingName,
+    to_phone: order.shippingPhone,
+    to_address: order.shippingAddress,
+    to_district_id: Number(order.shippingDistrictId),
+    to_ward_code: String(order.shippingWardCode),
 
-      to_name: order.shippingName,
-      to_phone: order.shippingPhone,
-      to_address: order.shippingAddress,
-      to_district_id: Number(order.shippingDistrictId),
-      to_ward_code: String(order.shippingWardCode),
+    weight,
+    length: 20,
+    width: 20,
+    height: 20,
 
-      weight,
-      length: 20,
-      width: 20,
-      height: 20,
+    service_id: shippingServiceId,
+    items,
+  };
 
-      service_type_id: 2,
-      items,
-    },
-    {
-      headers: {
-        Token: process.env.GHN_TOKEN_DEV,
-        ShopId: branch.ghnShopId,
+  try {
+    const res = await axios.post(
+      `${GHN_BASE_URL}/v2/shipping-order/create`,
+      payload,
+      {
+        headers: {
+          Token: process.env.GHN_TOKEN_DEV,
+          ShopId: branch.ghnShopId,
+          "Content-Type": "application/json",
+        },
       },
-    },
-  );
+    );
 
-  return res.data.data;
+    return res.data.data;
+  } catch (error) {
+    throwGhnRequestError(error, {
+      orderId: order.id,
+      branchId: branch.id,
+      shopId: branch.ghnShopId,
+      serviceId: shippingServiceId,
+      fromDistrictId: Number(branch.districtId),
+      fromWardCode: String(branch.wardCode),
+      toDistrictId: Number(order.shippingDistrictId),
+      toWardCode: String(order.shippingWardCode),
+      weight,
+    });
+  }
 };
-
-const GHN_BASE_URL =
-  process.env.GHN_BASE_URL ||
-  "https://dev-online-gateway.ghn.vn/shiip/public-api";
 
 export const cancelGHNOrder = async ({ orderCode, shopId }) => {
   const res = await axios.post(
@@ -175,7 +235,7 @@ export const cancelGHNOrder = async ({ orderCode, shopId }) => {
 
   if (!result?.result) {
     throw new BadRequestError(
-      result?.message || "GHN không cho phép hủy vận đơn này",
+      result?.message || "GHN does not allow cancelling this order",
     );
   }
 
@@ -201,7 +261,7 @@ export const returnGHNOrder = async ({ orderCode, shopId }) => {
 
   if (!result?.result) {
     throw new BadRequestError(
-      result?.message || "GHN không cho phép yêu cầu hoàn vận đơn này",
+      result?.message || "GHN does not allow returning this order",
     );
   }
 

@@ -1,13 +1,18 @@
+import { UniqueConstraintError } from "sequelize";
 import { Order, OrderGroup, OrderShippingLog } from "../../models/index.js";
 import NotFoundError from "../../errors/NotFoundError.js";
 import {
   getDisplayStatus,
+  isKnownGHNStatus,
   mapGHNStatusToSystem,
 } from "../../utils/shippingMapper.js";
 import { syncOrderStatus } from "../../utils/orderMapper.js";
 import { SHIPPING_STATUS } from "../../constants/orderConstant.js";
 import { emitOrderShippingUpdated } from "../../socket/emitter.js";
-import { sendUserNotification } from "../../helpers/notification.js";
+import {
+  sendBranchStaffNotification,
+  sendUserNotification,
+} from "../../helpers/notification.js";
 
 const getShippingMessage = (shippingStatus) => {
   switch (shippingStatus) {
@@ -49,10 +54,45 @@ const getShippingMessage = (shippingStatus) => {
   }
 };
 
+const SHIPPING_STATUS_RANK = Object.freeze({
+  [SHIPPING_STATUS.PENDING]: 0,
+  [SHIPPING_STATUS.CREATED]: 1,
+  [SHIPPING_STATUS.PICKING]: 2,
+  [SHIPPING_STATUS.PICKED]: 3,
+  [SHIPPING_STATUS.IN_TRANSIT]: 4,
+  [SHIPPING_STATUS.DELIVERING]: 5,
+  [SHIPPING_STATUS.FAILED]: 6,
+  [SHIPPING_STATUS.RETURNING]: 7,
+  [SHIPPING_STATUS.RETURNED]: 8,
+  [SHIPPING_STATUS.CANCELLED]: 8,
+  [SHIPPING_STATUS.DELIVERED]: 9,
+});
+
+const shouldSkipStaleStatusUpdate = ({ currentStatus, nextStatus, latestLog, eventTime }) => {
+  if (!latestLog || !latestLog.eventTime) {
+    return false;
+  }
+
+  const latestTime = new Date(latestLog.eventTime).getTime();
+  if (Number.isNaN(latestTime) || latestTime <= eventTime.getTime()) {
+    return false;
+  }
+
+  return (
+    (SHIPPING_STATUS_RANK[nextStatus] ?? 0) <=
+    (SHIPPING_STATUS_RANK[currentStatus] ?? 0)
+  );
+};
+
 export const ghnWebhookService = async (data) => {
-  const shippingStatus = mapGHNStatusToSystem(data.Status);
+  const rawStatus = data.Status;
+  const shippingStatus = mapGHNStatusToSystem(rawStatus);
   const orderStatus = syncOrderStatus(shippingStatus);
-  const eventTime = data.Time ? new Date(data.Time) : new Date();
+  const parsedEventTime = data.Time ? new Date(data.Time) : null;
+  const eventTime =
+    parsedEventTime && !Number.isNaN(parsedEventTime.getTime())
+      ? parsedEventTime
+      : new Date();
 
   const order = await Order.findOne({
     where: { shippingOrderCode: data.OrderCode },
@@ -68,7 +108,34 @@ export const ghnWebhookService = async (data) => {
     throw new NotFoundError("Đơn hàng không tồn tại");
   }
 
-  const existed = await OrderShippingLog.findOne({
+  if (!isKnownGHNStatus(rawStatus)) {
+    try {
+      await OrderShippingLog.create({
+        orderId: order.id,
+        status: SHIPPING_STATUS.PENDING,
+        description: `Unknown GHN status: ${rawStatus}`,
+        eventTime,
+        rawData: data,
+      }, { skipOrderStatusSync: true });
+    } catch (error) {
+      if (!(error instanceof UniqueConstraintError)) {
+        throw error;
+      }
+    }
+
+    console.warn("Unknown GHN webhook status ignored:", order.id, rawStatus);
+    return;
+  }
+
+  const latestLog = await OrderShippingLog.findOne({
+    where: { orderId: order.id },
+    order: [
+      ["eventTime", "DESC"],
+      ["createdAt", "DESC"],
+    ],
+  });
+
+  let log = await OrderShippingLog.findOne({
     where: {
       orderId: order.id,
       status: shippingStatus,
@@ -76,8 +143,47 @@ export const ghnWebhookService = async (data) => {
     },
   });
 
-  if (existed) {
+  if (log && order.shippingStatus === shippingStatus) {
     console.log("Duplicate GHN webhook ignored:", order.id, shippingStatus);
+    return;
+  }
+
+  try {
+    if (!log) {
+      log = await OrderShippingLog.create({
+        orderId: order.id,
+        status: shippingStatus,
+        eventTime,
+        rawData: data,
+      });
+    }
+  } catch (error) {
+    if (error instanceof UniqueConstraintError) {
+      log = await OrderShippingLog.findOne({
+        where: {
+          orderId: order.id,
+          status: shippingStatus,
+          eventTime,
+        },
+      });
+    } else {
+      throw error;
+    }
+  }
+
+  if (
+    shouldSkipStaleStatusUpdate({
+      currentStatus: order.shippingStatus,
+      nextStatus: shippingStatus,
+      latestLog,
+      eventTime,
+    })
+  ) {
+    console.log(
+      "Stale GHN webhook logged without status update:",
+      order.id,
+      shippingStatus,
+    );
     return;
   }
 
@@ -86,41 +192,55 @@ export const ghnWebhookService = async (data) => {
     orderStatus: orderStatus || order.orderStatus,
     deliveredAt:
       shippingStatus === SHIPPING_STATUS.DELIVERED
-        ? new Date()
+        ? eventTime
         : order.deliveredAt,
-  });
-
-  const log = await OrderShippingLog.create({
-    orderId: order.id,
-    status: shippingStatus,
-    eventTime,
-    rawData: data,
   });
 
   const userId = order.orderGroup.userId;
   const message = getShippingMessage(shippingStatus);
 
-  emitOrderShippingUpdated(userId, {
-    orderId: order.id,
-    orderGroupId: order.orderGroupId,
-    orderStatus: order.orderStatus,
-    shippingStatus: order.shippingStatus,
-    displayStatus: getDisplayStatus(order),
-    deliveredAt: order.deliveredAt,
-    tracking: {
-      id: log.id,
-      status: log.status,
-      time: log.eventTime,
-    },
-    message,
-  });
+  try {
+    emitOrderShippingUpdated(userId, {
+      orderId: order.id,
+      orderGroupId: order.orderGroupId,
+      orderStatus: order.orderStatus,
+      shippingStatus: order.shippingStatus,
+      displayStatus: getDisplayStatus(order),
+      deliveredAt: order.deliveredAt,
+      tracking: {
+        id: log.id,
+        status: log.status,
+        time: log.eventTime,
+      },
+      message,
+    });
+  } catch (error) {
+    console.warn("Skip realtime GHN update:", error.message);
+  }
 
-  await sendUserNotification(
-    userId,
+  try {
+    await sendUserNotification(
+      userId,
     "order-shipping-updated",
     "Cập nhật giao hàng",
     message,
-  );
+    );
+  } catch (error) {
+    console.warn("Skip GHN notification:", error.message);
+  }
+
+  if (shippingStatus === SHIPPING_STATUS.DELIVERED) {
+    try {
+      await sendBranchStaffNotification(
+        order.branchId,
+        "order-delivered",
+        "Đơn hàng đã giao thành công",
+        `Đơn hàng #${order.id} đã được GHN giao thành công. Vui lòng theo dõi và hoàn tất xử lý nếu cần.`,
+      );
+    } catch (error) {
+      console.warn("Skip GHN staff notification:", error.message);
+    }
+  }
 
   console.log("Updated GHN shipping:", order.id, shippingStatus);
 };

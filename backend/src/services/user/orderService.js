@@ -142,7 +142,7 @@ const checkoutPreviewService = async (data) => {
       transaction: t,
     });
 
-    if (!cart) throw new NotFoundError("Gi? hàng không t?n t?i");
+    if (!cart) throw new NotFoundError("Gi? hï¿½ng khï¿½ng t?n t?i");
 
     let checkoutItems = [];
 
@@ -158,7 +158,7 @@ const checkoutPreviewService = async (data) => {
         transaction: t,
       });
 
-      if (!variant) throw new NotFoundError("S?n ph?m không t?n t?i");
+      if (!variant) throw new NotFoundError("S?n ph?m khï¿½ng t?n t?i");
 
       checkoutItems = [
         {
@@ -169,13 +169,11 @@ const checkoutPreviewService = async (data) => {
       ];
     } else {
       if (!cart.items.length)
-        throw new BadRequestError(
-          "Vui lòng ch?n s?n ph?m d? thanh toán",
-        );
+        throw new BadRequestError("Vui lï¿½ng ch?n s?n ph?m d? thanh toï¿½n");
 
       if (cart.items.length !== selectedCartItemIds.length) {
         throw new BadRequestError(
-          "M?t s? s?n ph?m dã ch?n không còn trong gi? hàng",
+          "M?t s? s?n ph?m dï¿½ ch?n khï¿½ng cï¿½n trong gi? hï¿½ng",
         );
       }
 
@@ -187,9 +185,9 @@ const checkoutPreviewService = async (data) => {
       transaction: t,
     });
 
-    if (!address) throw new NotFoundError("Ð?a ch? không t?n t?i");
+    if (!address) throw new NotFoundError("ï¿½?a ch? khï¿½ng t?n t?i");
     if (!address.latitude || !address.longitude) {
-      throw new BadRequestError("Ð?a ch? chua có t?a d?");
+      throw new BadRequestError("ï¿½?a ch? chua cï¿½ t?a d?");
     }
 
     const oldCartItemIds = normalizeCartItemIds(oldSession?.cartItemIds || []);
@@ -224,7 +222,7 @@ const checkoutPreviewService = async (data) => {
     });
 
     if (!branches.length) {
-      throw new NotFoundError("Không có chi nhánh nào ho?t d?ng");
+      throw new NotFoundError("Khï¿½ng cï¿½ chi nhï¿½nh nï¿½o ho?t d?ng");
     }
 
     const branchesWithDistance = branches
@@ -363,7 +361,7 @@ const checkoutPreviewService = async (data) => {
         }
 
         if (need > 0) {
-          throw new BadRequestError("Không d? hàng trong h? th?ng");
+          throw new BadRequestError("Khï¿½ng d? hï¿½ng trong h? th?ng");
         }
       }
 
@@ -384,6 +382,7 @@ const checkoutPreviewService = async (data) => {
         weight: o.weight,
 
         shippingFee: isSameAddress ? oldOrder?.shippingFee || null : null,
+        serviceId: isSameAddress ? oldOrder?.serviceId || null : null,
         leadtime: isSameAddress ? oldOrder?.leadtime || null : null,
         estimatedDelivery: isSameAddress
           ? oldOrder?.estimatedDelivery || { from: null, to: null }
@@ -493,7 +492,7 @@ const calculateShippingService = async (data) => {
       const selectedService = pickDefaultService(services);
 
       if (!selectedService) {
-        throw new BadRequestError("Không có d?ch v? GHN");
+        throw new BadRequestError("Khï¿½ng cï¿½ d?ch v? GHN");
       }
 
       serviceId = selectedService.service_id;
@@ -560,6 +559,7 @@ const calculateShippingService = async (data) => {
     updatedOrders.push({
       ...order,
       shippingFee,
+      serviceId,
       leadtime,
       estimatedDelivery,
     });
@@ -605,7 +605,7 @@ const activateOrderGroupForFulfillment = async ({
   });
 
   if (!orderGroup) {
-    throw new NotFoundError("Ðon hàng không t?n t?i");
+    throw new NotFoundError("ï¿½on hï¿½ng khï¿½ng t?n t?i");
   }
 
   if (orderGroup.status === ORDER_GROUP_STATUS.PAID) {
@@ -639,7 +639,7 @@ const activateOrderGroupForFulfillment = async ({
       });
 
       if (!stock || stock.stock < item.quantity) {
-        throw new BadRequestError("C?a hàng không d? s? lu?ng");
+        throw new BadRequestError("C?a hï¿½ng khï¿½ng d? s? lu?ng");
       }
 
       stock.stock -= item.quantity;
@@ -652,17 +652,14 @@ const activateOrderGroupForFulfillment = async ({
     await orderGroup.update({ isDiscountApplied: true }, { transaction });
   }
 
-  await orderGroup.update(
-    { status: ORDER_GROUP_STATUS.PAID },
-    { transaction },
-  );
+  await orderGroup.update({ status: ORDER_GROUP_STATUS.PAID }, { transaction });
 
   for (const order of orders) {
     await sendBranchStaffNotification(
       order.branchId,
       "order-created",
-      "Có don hàng m?i",
-      `${order.branch?.branchName || "Chi nhánh"}: don hàng ${formatOrderItemCode(order.id)} v?a du?c khách d?t và dang ch? x? lý.`,
+      "CÃ³ Ä‘Æ¡n hÃ ng má»›i",
+      `${order.branch?.branchName || "Chi nhÃ¡nh"}: Ä‘Æ¡n hÃ ng ${formatOrderItemCode(order.id)} vá»«a Ä‘Æ°á»£c khÃ¡ch Ä‘áº·t vÃ  Ä‘ang chá» xá»­ lÃ½.`,
       { transaction },
     );
   }
@@ -675,7 +672,7 @@ const PAYMENT_RETRY_WINDOW_MS = 15 * 60 * 1000;
 const assertRetryWindowOpen = (createdAt) => {
   const createdTime = new Date(createdAt).getTime();
   if (!createdTime || Date.now() - createdTime > PAYMENT_RETRY_WINDOW_MS) {
-    throw new BadRequestError("Ðã h?t th?i gian thanh toán l?i");
+    throw new BadRequestError("ï¿½ï¿½ h?t th?i gian thanh toï¿½n l?i");
   }
 };
 
@@ -723,13 +720,11 @@ const createOrderService = async (data) => {
           selectedCartItemIds.every((id) => previewCartItemIds.includes(id)));
 
     if (!isSameSelection) {
-      throw new BadRequestError(
-        "Danh sách s?n ph?m checkout dã thay d?i",
-      );
+      throw new BadRequestError("Danh sï¿½ch s?n ph?m checkout dï¿½ thay d?i");
     }
 
     const address = await UserAddress.findByPk(addressId, { transaction: t });
-    if (!address) throw new NotFoundError("Ð?a ch? không t?n t?i");
+    if (!address) throw new NotFoundError("ï¿½?a ch? khï¿½ng t?n t?i");
 
     // ================= ORDER GROUP =================
     const orderGroup = await OrderGroup.create(
@@ -765,7 +760,7 @@ const createOrderService = async (data) => {
           shippingWardCode: address.wardCode,
 
           shippingWeight: o.weight,
-          shippingServiceId: preview.group.serviceId,
+          shippingServiceId: o.serviceId || preview.group.serviceId,
           orderStatus: ORDER_STATUS.PENDING,
         },
         { transaction: t },
@@ -784,7 +779,6 @@ const createOrderService = async (data) => {
           { transaction: t },
         );
       }
-
     }
 
     // ================= PAYMENT =================
@@ -832,9 +826,9 @@ const createOrderService = async (data) => {
         lock: t.LOCK.UPDATE,
       });
 
-      if (!wallet) throw new NotFoundError("Ví không t?n t?i");
+      if (!wallet) throw new NotFoundError("Vï¿½ khï¿½ng t?n t?i");
 
-      // tính available
+      // tï¿½nh available
       const pendingAmount = await WalletTransaction.sum("amount", {
         where: {
           walletId: wallet.id,
@@ -846,7 +840,7 @@ const createOrderService = async (data) => {
       const available = Number(wallet.balance) - Number(pendingAmount || 0);
 
       if (available < orderGroup.finalAmount) {
-        throw new BadRequestError("S? du không d?");
+        throw new BadRequestError("S? du khï¿½ng d?");
       }
 
       const payment = await Payment.create(
@@ -869,7 +863,7 @@ const createOrderService = async (data) => {
           type: WALLET_TRANSACTION_TYPE.PAYMENT,
           status: WALLET_TRANSACTION_STATUS.PENDING,
           expiredAt: new Date(Date.now() + 10 * 60 * 1000),
-          description: `Thanh toán don #${orderGroup.id}`,
+          description: `Thanh toï¿½n don #${orderGroup.id}`,
         },
         { transaction: t },
       );
@@ -924,25 +918,25 @@ const createOrderService = async (data) => {
 };
 
 const orderCallbackService = async (data) => {
-  // 1. verify ngoài
+  // 1. verify ngoï¿½i
   const isValid = verifyVNPayURL(data);
   if (!isValid) {
-    throw new BadRequestError("Ch? ký không h?p l?");
+    throw new BadRequestError("Ch? kï¿½ khï¿½ng h?p l?");
   }
 
   const { vnp_TxnRef, vnp_ResponseCode, vnp_TransactionNo, vnp_Amount } = data;
 
   if (vnp_ResponseCode !== "00") {
-    throw new BadRequestError("Thanh toán th?t b?i");
+    throw new BadRequestError("Thanh toï¿½n th?t b?i");
   }
 
-  // 2. query tru?c (KHÔNG lock)
+  // 2. query tru?c (KHï¿½NG lock)
   const paymentRaw = await Payment.findOne({
     where: { externalId: vnp_TxnRef },
   });
 
   if (!paymentRaw) {
-    throw new NotFoundError("Thanh toán không t?n t?i");
+    throw new NotFoundError("Thanh toï¿½n khï¿½ng t?n t?i");
   }
 
   // idempotent s?m
@@ -954,7 +948,7 @@ const orderCallbackService = async (data) => {
   const expectedAmount = Math.round(Number(paymentRaw.paymentAmount));
 
   if (paidAmount !== expectedAmount) {
-    throw new BadRequestError("S? ti?n không h?p l?");
+    throw new BadRequestError("S? ti?n khï¿½ng h?p l?");
   }
 
   // 3. transaction
@@ -976,7 +970,7 @@ const orderCallbackService = async (data) => {
     });
 
     if (!orderGroup) {
-      throw new NotFoundError("Ðon hàng không t?n t?i");
+      throw new NotFoundError("ï¿½on hï¿½ng khï¿½ng t?n t?i");
     }
 
     await activateOrderGroupForFulfillment({
@@ -1012,11 +1006,11 @@ const walletOrderConfirmService = async (data) => {
   const { otpCode, email, orderGroupId } = data;
 
   const user = await User.findOne({ where: { email } });
-  if (!user) throw new NotFoundError("Ngu?i dùng không t?n t?i");
+  if (!user) throw new NotFoundError("Ngu?i dï¿½ng khï¿½ng t?n t?i");
 
   const otpCodeHash = crypto.createHash("sha256").update(otpCode).digest("hex");
 
-  // l?y OTP ngoài
+  // l?y OTP ngoï¿½i
   const userOtp = await UserOtp.findOne({
     where: {
       userId: user.id,
@@ -1026,7 +1020,7 @@ const walletOrderConfirmService = async (data) => {
     order: [["createdAt", "DESC"]],
   });
 
-  if (!userOtp) throw new BadRequestError("OTP không t?n t?i");
+  if (!userOtp) throw new BadRequestError("OTP khï¿½ng t?n t?i");
 
   if (userOtp.otpExpiry < new Date()) {
     throw new BadRequestError("OTP h?t h?n");
@@ -1043,7 +1037,7 @@ const walletOrderConfirmService = async (data) => {
       { where: { id: userOtp.id } },
     );
 
-    throw new BadRequestError("OTP không dúng");
+    throw new BadRequestError("OTP khï¿½ng dï¿½ng");
   }
 
   // transaction
@@ -1055,7 +1049,7 @@ const walletOrderConfirmService = async (data) => {
       lock: t.LOCK.UPDATE,
     });
 
-    if (!wallet) throw new NotFoundError("Ví không t?n t?i");
+    if (!wallet) throw new NotFoundError("Vï¿½ khï¿½ng t?n t?i");
 
     // 2. lock payment
     const payment = await Payment.findOne({
@@ -1068,7 +1062,7 @@ const walletOrderConfirmService = async (data) => {
       lock: t.LOCK.UPDATE,
     });
 
-    if (!payment) throw new NotFoundError("Thanh toán không t?n t?i");
+    if (!payment) throw new NotFoundError("Thanh toï¿½n khï¿½ng t?n t?i");
 
     // 3. lock orderGroup
     const orderGroup = await OrderGroup.findByPk(orderGroupId, {
@@ -1077,7 +1071,7 @@ const walletOrderConfirmService = async (data) => {
     });
 
     if (!orderGroup) {
-      throw new NotFoundError("Ðon hàng không t?n t?i");
+      throw new NotFoundError("ï¿½on hï¿½ng khï¿½ng t?n t?i");
     }
 
     // 4. lock transaction
@@ -1090,7 +1084,7 @@ const walletOrderConfirmService = async (data) => {
       lock: t.LOCK.UPDATE,
     });
 
-    if (!tx) throw new BadRequestError("Transaction không t?n t?i");
+    if (!tx) throw new BadRequestError("Transaction khï¿½ng t?n t?i");
 
     // expire
     if (tx.expiredAt && tx.expiredAt < new Date()) {
@@ -1098,12 +1092,12 @@ const walletOrderConfirmService = async (data) => {
         { status: WALLET_TRANSACTION_STATUS.FAILED },
         { transaction: t },
       );
-      throw new BadRequestError("Phiên thanh toán dã h?t h?n");
+      throw new BadRequestError("Phiï¿½n thanh toï¿½n dï¿½ h?t h?n");
     }
 
     // check balance
     if (Number(wallet.balance) < Number(tx.amount)) {
-      throw new BadRequestError("S? du không d?");
+      throw new BadRequestError("S? du khï¿½ng d?");
     }
 
     // 5. lock OTP cu?i
@@ -1113,7 +1107,7 @@ const walletOrderConfirmService = async (data) => {
     });
 
     if (!otp || otp.isUsed) {
-      throw new BadRequestError("OTP dã du?c s? d?ng");
+      throw new BadRequestError("OTP dï¿½ du?c s? d?ng");
     }
 
     await activateOrderGroupForFulfillment({
@@ -1166,18 +1160,18 @@ const getOrderGroupByIdService = async (data) => {
 
   const user = await User.findByPk(userId);
   if (!user) {
-    throw new NotFoundError("Ngu?i dùng không t?n t?i");
+    throw new NotFoundError("Ngu?i dï¿½ng khï¿½ng t?n t?i");
   }
 
   const orderGroup = await OrderGroup.findByPk(orderGroupId);
 
   if (!orderGroup) {
-    throw new NotFoundError("Ðon hàng không t?n t?i");
+    throw new NotFoundError("ï¿½on hï¿½ng khï¿½ng t?n t?i");
   }
 
   // ch?ng hack orderId
   if (orderGroup.userId !== user.id) {
-    throw new ForbiddenError("Không có quy?n truy c?p don hàng");
+    throw new ForbiddenError("Khï¿½ng cï¿½ quy?n truy c?p don hï¿½ng");
   }
 
   // l?y payment theo orderGroup
@@ -1195,7 +1189,7 @@ const getOrderGroupByIdService = async (data) => {
     paymentMethod = payment.paymentMethod;
 
     if (paymentMethod === PAYMENT_METHOD_STATUS.COD) {
-      // COD: luôn success
+      // COD: luï¿½n success
       isSuccess = true;
     } else {
       // WALLET / VNPAY
@@ -1225,16 +1219,16 @@ const getOrderGroupByIdService = async (data) => {
 
 const retryOrderVNPayService = async ({ orderGroupId, userId, ip }) => {
   const orderGroup = await OrderGroup.findByPk(orderGroupId);
-  if (!orderGroup) throw new NotFoundError("Ðon hàng không t?n t?i");
+  if (!orderGroup) throw new NotFoundError("ï¿½on hï¿½ng khï¿½ng t?n t?i");
 
   if (orderGroup.userId !== userId) {
-    throw new ForbiddenError("Không có quy?n truy c?p don hàng");
+    throw new ForbiddenError("Khï¿½ng cï¿½ quy?n truy c?p don hï¿½ng");
   }
 
   assertRetryWindowOpen(orderGroup.createdAt);
 
   if (orderGroup.status !== ORDER_GROUP_STATUS.PENDING_PAYMENT) {
-    throw new BadRequestError("Ðon hàng không còn ? tr?ng thái ch? thanh toán");
+    throw new BadRequestError("ï¿½on hï¿½ng khï¿½ng cï¿½n ? tr?ng thï¿½i ch? thanh toï¿½n");
   }
 
   const payment = await Payment.findOne({
@@ -1246,11 +1240,11 @@ const retryOrderVNPayService = async ({ orderGroupId, userId, ip }) => {
   });
 
   if (!payment) {
-    throw new NotFoundError("Thanh toán VNPay không t?n t?i");
+    throw new NotFoundError("Thanh toï¿½n VNPay khï¿½ng t?n t?i");
   }
 
   if (payment.paymentStatus === PAYMENT_STATUS.PAID) {
-    throw new BadRequestError("Ðon hàng dã thanh toán");
+    throw new BadRequestError("ï¿½on hï¿½ng dï¿½ thanh toï¿½n");
   }
 
   const txnRef = uuidv4();
@@ -1395,7 +1389,7 @@ const getOrderDetailService = async (data) => {
   });
 
   if (!order) {
-    throw new NotFoundError("Ðon hàng không t?n t?i");
+    throw new NotFoundError("ï¿½on hï¿½ng khï¿½ng t?n t?i");
   }
 
   // redis key review
@@ -1405,7 +1399,7 @@ const getOrderDetailService = async (data) => {
     order.details.map(async (i) => {
       const variantId = i.variantId;
 
-      // check dã review chua
+      // check dï¿½ review chua
       const isReviewed = await redisClient.sismember(reviewKey, variantId);
 
       const canReview = order.orderStatus === ORDER_STATUS.COMPLETED;
@@ -1484,7 +1478,7 @@ const getTrackingProgressService = async (data) => {
   const { orderId } = data;
   const order = await Order.findByPk(orderId);
 
-  if (!order) throw new NotFoundError("Ðon hàng không t?n t?i");
+  if (!order) throw new NotFoundError("ï¿½on hï¿½ng khï¿½ng t?n t?i");
 
   const currentIndex = TRACKING_STEPS.indexOf(order.shippingStatus);
 
@@ -1495,7 +1489,7 @@ const getTrackingProgressService = async (data) => {
   }));
 };
 
-// YÊU C?U H?Y ÐON VÀ HOÀN ÐON
+// Yï¿½U C?U H?Y ï¿½ON Vï¿½ HOï¿½N ï¿½ON
 const cancellableStatuses = [
   ORDER_STATUS.PENDING,
   ORDER_STATUS.CONFIRMED,
@@ -1553,10 +1547,10 @@ const refundOrderToWallet = async ({ order, orderGroup, transaction }) => {
   });
 
   if (!wallet) {
-    throw new NotFoundError("Ví ngu?i dùng không t?n t?i");
+    throw new NotFoundError("Vï¿½ ngu?i dï¿½ng khï¿½ng t?n t?i");
   }
 
-  const refundDescription = `Hoàn ti?n don ${formatOrderItemCode(order.id)} thu?c nhóm don #${orderGroup.id}`;
+  const refundDescription = `Hoï¿½n ti?n don ${formatOrderItemCode(order.id)} thu?c nhï¿½m don #${orderGroup.id}`;
 
   const existedRefund = await WalletTransaction.findOne({
     where: {
@@ -1668,16 +1662,15 @@ const getUserOrderForAction = async ({ orderId, userId, transaction }) => {
   });
 
   if (!order) {
-    throw new NotFoundError("Ðon hàng không t?n t?i");
+    throw new NotFoundError("ï¿½on hï¿½ng khï¿½ng t?n t?i");
   }
 
   if (order.orderGroup.userId !== userId) {
-    throw new ForbiddenError("Không có quy?n thao tác don hàng này");
+    throw new ForbiddenError("Khï¿½ng cï¿½ quy?n thao tï¿½c don hï¿½ng nï¿½y");
   }
 
   return order;
 };
-
 
 const requestCancelOrderService = async (data) => {
   const { orderId, userId, reason } = data;
@@ -1689,17 +1682,15 @@ const requestCancelOrderService = async (data) => {
     });
 
     if (order.orderStatus === ORDER_STATUS.CANCEL_REQUESTED) {
-      throw new BadRequestError(
-        "Ðon hàng dã du?c yêu c?u h?y tru?c dó",
-      );
+      throw new BadRequestError("ï¿½on hï¿½ng dï¿½ du?c yï¿½u c?u h?y tru?c dï¿½");
     }
 
     if (!cancellableStatuses.includes(order.orderStatus)) {
-      throw new BadRequestError("Ðon hàng hi?n không th? yêu c?u h?y");
+      throw new BadRequestError("ï¿½on hï¿½ng hi?n khï¿½ng th? yï¿½u c?u h?y");
     }
 
     if (order.orderStatus === ORDER_STATUS.COMPLETED) {
-      throw new BadRequestError("Ðon hàng dã hoàn thành, không th? h?y");
+      throw new BadRequestError("ï¿½on hï¿½ng dï¿½ hoï¿½n thï¿½nh, khï¿½ng th? h?y");
     }
 
     if (order.orderStatus === ORDER_STATUS.PENDING) {
@@ -1775,23 +1766,23 @@ const requestCancelOrderService = async (data) => {
     log: null,
     message:
       result.mode === "CANCELLED"
-        ? "Ðon hàng dã du?c h?y thành công"
-        : "Yêu c?u h?y don c?a b?n dã du?c g?i d?n nhân viên",
+        ? "ï¿½on hï¿½ng dï¿½ du?c h?y thï¿½nh cï¿½ng"
+        : "Yï¿½u c?u h?y don c?a b?n dï¿½ du?c g?i d?n nhï¿½n viï¿½n",
   });
 
   if (result.mode === "CANCELLED") {
     await sendBranchStaffNotification(
       result.order.branchId,
       "order-cancelled",
-      "Khách dã h?y don hàng",
-      `${result.order.branch?.branchName || "Chi nhánh"}: khách dã h?y don hàng ${formatOrderItemCode(result.order.id)}.`,
+      "Khï¿½ch dï¿½ h?y don hï¿½ng",
+      `${result.order.branch?.branchName || "Chi nhï¿½nh"}: khï¿½ch dï¿½ h?y don hï¿½ng ${formatOrderItemCode(result.order.id)}.`,
     );
   } else {
     await sendBranchStaffNotification(
       result.order.branchId,
       "order-cancel-requested",
-      "Khách yêu c?u h?y don hàng",
-      `${result.order.branch?.branchName || "Chi nhánh"}: don hàng ${formatOrderItemCode(result.order.id)} c?n nhân viên x? lý yêu c?u h?y.`,
+      "Khï¿½ch yï¿½u c?u h?y don hï¿½ng",
+      `${result.order.branch?.branchName || "Chi nhï¿½nh"}: don hï¿½ng ${formatOrderItemCode(result.order.id)} c?n nhï¿½n viï¿½n x? lï¿½ yï¿½u c?u h?y.`,
     );
   }
 
@@ -1815,13 +1806,13 @@ const requestReturnOrderService = async (data) => {
 
     if (!returnableStatuses.includes(order.orderStatus)) {
       throw new BadRequestError(
-        "Ch? có th? yêu c?u tr? hàng khi don dã giao thành công",
+        "Ch? cï¿½ th? yï¿½u c?u tr? hï¿½ng khi don dï¿½ giao thï¿½nh cï¿½ng",
       );
     }
 
     if (order.shippingStatus !== SHIPPING_STATUS.DELIVERED) {
       throw new BadRequestError(
-        "Ch? có th? yêu c?u tr? hàng khi don dã giao thành công",
+        "Ch? cï¿½ th? yï¿½u c?u tr? hï¿½ng khi don dï¿½ giao thï¿½nh cï¿½ng",
       );
     }
 
@@ -1840,8 +1831,7 @@ const requestReturnOrderService = async (data) => {
   await emitOrderActionRealtime({
     order: updatedOrder,
     log: null,
-    message:
-      "Yêu c?u tr? hàng c?a b?n dã du?c g?i d?n nhân viên",
+    message: "Yï¿½u c?u tr? hï¿½ng c?a b?n dï¿½ du?c g?i d?n nhï¿½n viï¿½n",
   });
 };
 

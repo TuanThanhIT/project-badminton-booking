@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import {
   addMembersToManagerGroup,
   appendManagerSocketMessage,
+  clearSelectedManagerConversation,
   clearManagerUnreadFromSocket,
   createOrGetManagerDirectConversation,
   createManagerGroupConversation,
@@ -16,6 +17,7 @@ import {
   getManagerMessages,
   leaveManagerGroup,
   markManagerMessageRecalled,
+  managerUserPresenceChanged,
   recallManagerMessage,
   removeManagerConversationLocal,
   removeMemberFromManagerGroup,
@@ -26,7 +28,7 @@ import {
 } from "../../redux/slices/manager/conversationSlice";
 import { store } from "../../redux/store";
 import { connectSocket, socket } from "../../socket";
-import type { ChatMessage } from "../../types/message";
+import type { ChatMessage, PresencePayload } from "../../types/message";
 import type { UserSearchHit } from "../../types/userSearch";
 import { showConfirmDialog } from "../../utils/confirmDialog";
 import { ManagerPageHeader } from "../../components/commons/manager/ManagerPage";
@@ -141,6 +143,8 @@ const ConversationPage = () => {
         }),
       );
       socket?.emit("chat:join", cid);
+    } else {
+      dispatch(clearSelectedManagerConversation());
     }
   }, [conversationId, dispatch]);
 
@@ -194,11 +198,20 @@ const ConversationPage = () => {
       },
     );
 
+    const handlePresence = (payload: PresencePayload) => {
+      dispatch(managerUserPresenceChanged(payload));
+    };
+
+    s.on("presence:user-online", handlePresence);
+    s.on("presence:user-offline", handlePresence);
+
     return () => {
       s.off("chat:new-message");
       s.off("chat:message-recalled");
       s.off("chat:messages-read");
       s.off("chat:conversation-updated");
+      s.off("presence:user-online", handlePresence);
+      s.off("presence:user-offline", handlePresence);
     };
   }, [dispatch, authUser?.id, navigate, accessToken]);
 
@@ -387,8 +400,10 @@ const ConversationPage = () => {
                 ? async () => {
                     if (!selectedConversationId) return;
                     const confirmed = await showConfirmDialog(
-                      "Rời nhóm này?",
-                      "Bạn sẽ không còn nhận tin nhắn mới từ nhóm này.",
+                      isGroupAdmin ? "Xóa nhóm này?" : "Rời nhóm này?",
+                      isGroupAdmin
+                        ? "Bạn là admin nhóm. Rời nhóm sẽ xóa nhóm này cho mọi thành viên."
+                        : "Bạn sẽ không còn nhận tin nhắn mới từ nhóm này.",
                       "Rời nhóm",
                       "Hủy",
                       "warning",

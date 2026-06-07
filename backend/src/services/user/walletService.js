@@ -673,12 +673,72 @@ const walletWithdrawConfirmService = async (data) => {
   });
 };
 
+const walletWithdrawCancelService = async (data) => {
+  const { withdrawRequestId, userId } = data;
+
+  return sequelize.transaction(async (t) => {
+    const wallet = await Wallet.findOne({
+      where: { userId },
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+
+    if (!wallet) throw new NotFoundError("Ví không tồn tại");
+
+    const withdrawRequest = await WithdrawRequest.findOne({
+      where: {
+        id: withdrawRequestId,
+        walletId: wallet.id,
+        status: WITHDRAW_REQUEST_STATUS.PENDING,
+      },
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+
+    if (!withdrawRequest) {
+      throw new BadRequestError("Yêu cầu rút tiền không thể hủy");
+    }
+
+    const tx = await WalletTransaction.findOne({
+      where: {
+        withdrawRequestId,
+        walletId: wallet.id,
+        type: WALLET_TRANSACTION_TYPE.WITHDRAW,
+        status: WALLET_TRANSACTION_STATUS.PENDING,
+      },
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+
+    if (!tx) throw new BadRequestError("Giao dịch rút tiền không thể hủy");
+
+    await withdrawRequest.update(
+      {
+        status: WITHDRAW_REQUEST_STATUS.FAILED,
+        processedAt: new Date(),
+      },
+      { transaction: t },
+    );
+
+    await tx.update(
+      {
+        status: WALLET_TRANSACTION_STATUS.FAILED,
+        description: `${tx.description || "Yêu cầu rút tiền"} - Đã hủy tại bước OTP`,
+      },
+      { transaction: t },
+    );
+
+    return withdrawRequest;
+  });
+};
+
 const walletService = {
   getWalletOverviewService,
   walletDepositService,
   walletCallbackService,
   walletWithdrawRequestService,
   walletWithdrawConfirmService,
+  walletWithdrawCancelService,
 };
 
 export default walletService;

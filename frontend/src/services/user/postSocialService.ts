@@ -1,6 +1,12 @@
 import instance from "../../utils/axiosCustomize";
 import type { ApiResponse } from "../../types/api";
-import type { PostComment, PostCounts, Post, CreateCommentRequest } from "../../types/post";
+import type {
+  CreateCommentRequest,
+  Post,
+  PostComment,
+  PostCounts,
+  PostReactionType,
+} from "../../types/post";
 
 type ToggleLikeResponse = ApiResponse<PostCounts>;
 
@@ -10,14 +16,20 @@ type CreateCommentResponse = ApiResponse<{
 
 type GetCommentsResponse = ApiResponse<{
   comments: PostComment[];
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
 }>;
 
 type CreateRepostResponse = ApiResponse<{
   repostPost: Post;
 } & PostCounts>;
 
-const toggleLikeService = (postId: number) =>
-  instance.post<ToggleLikeResponse>(`/user/posts/${postId}/like`);
+const toggleLikeService = (postId: number, reactionType: PostReactionType = "LIKE") =>
+  instance.post<ToggleLikeResponse>(`/user/posts/${postId}/like`, {
+    reactionType,
+  });
 
 const createCommentService = (
   postId: number,
@@ -27,8 +39,13 @@ const createCommentService = (
     `/user/posts/${postId}/comments`,data
   );
 
-const getCommentsService = (postId: number) =>
-  instance.get<GetCommentsResponse>(`/user/posts/${postId}/comments`);
+const getCommentsService = (
+  postId: number,
+  params?: { page?: number; limit?: number },
+) =>
+  instance.get<GetCommentsResponse>(`/user/posts/${postId}/comments`, {
+    params,
+  });
 
 const createRepostService = (postId: number, content?: string) =>
   instance.post<CreateRepostResponse>(`/user/posts/${postId}/repost`, {

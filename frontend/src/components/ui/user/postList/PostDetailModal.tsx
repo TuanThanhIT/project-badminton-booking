@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ThumbsUp, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Globe2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import type { PostWithAuthor } from "../../../../types/post";
+import type { PostReactionType, PostWithAuthor } from "../../../../types/post";
 import { POST_TYPE_LABEL } from "../../../../utils/constants/postConstant";
 import { formatRelativeTimeVi } from "../../../../utils/formatRelativeTimeVi";
 import FormDataSummary from "./FormDataSummary";
@@ -26,6 +26,15 @@ type Props = {
   courtNameById: Record<number, string>;
 };
 
+const REACTION_ICON: Record<PostReactionType, string> = {
+  LIKE: "\u{1F44D}",
+  LOVE: "\u2764\uFE0F",
+  HAHA: "\u{1F606}",
+  WOW: "\u{1F62E}",
+  SAD: "\u{1F622}",
+  ANGRY: "\u{1F621}",
+};
+
 const PostDetailModal = ({
   post,
   onClose,
@@ -44,21 +53,18 @@ const PostDetailModal = ({
       post
     );
   });
-  const rightPanelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!post) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
     };
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
   }, [post, onClose]);
 
   useEffect(() => {
-    if (post) {
-      document.body.style.overflow = "hidden";
-    }
+    if (post) document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = "";
     };
@@ -72,20 +78,6 @@ const PostDetailModal = ({
     setAvatarError(false);
   }, [avatar]);
 
-  const commentPreviewNames = useMemo(() => {
-    const names =
-      currentPost?.comments
-        ?.map(
-          (comment) =>
-            comment.author?.profile?.fullName ||
-            comment.author?.username ||
-            "Ẩn danh",
-        )
-        .filter(Boolean) ?? [];
-
-    return Array.from(new Set(names)).slice(0, 5);
-  }, [currentPost?.comments]);
-
   if (!currentPost) return null;
 
   const authorName =
@@ -96,6 +88,13 @@ const PostDetailModal = ({
   const isRepost = Boolean(
     currentPost.repostOfPostId && currentPost.repostOfPostId > 0,
   );
+  const reactionEntries = Object.entries(currentPost.reactionSummary ?? {})
+    .filter((entry): entry is [PostReactionType, number] => Number(entry[1]) > 0)
+    .sort((a, b) => b[1] - a[1]);
+  const reactionIcons = reactionEntries.slice(0, 3).map(([type]) => REACTION_ICON[type]);
+  const likesCount = currentPost.likesCount ?? 0;
+  const commentsCount = currentPost.commentsCount ?? 0;
+  const sharesCount = currentPost.sharesCount ?? 0;
 
   const handleNavigateToProfile = () => {
     const id = currentPost.author?.id;
@@ -105,40 +104,85 @@ const PostDetailModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex bg-slate-950/70 backdrop-blur-[2px]">
-      <section className="relative hidden min-w-0 flex-1 overflow-hidden md:block">
-        <div className="absolute left-5 top-5 z-20">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 px-2 py-4 backdrop-blur-[2px] sm:px-4"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <section
+        className="flex h-[min(94vh,900px)] w-full max-w-[740px] flex-col overflow-hidden rounded-lg bg-white shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+      >
+        <header className="relative flex h-14 shrink-0 items-center justify-center border-b border-slate-200 bg-white px-14">
+          <h2 className="max-w-full truncate text-base font-bold text-slate-900 sm:text-lg">
+            Bài viết của {authorName}
+          </h2>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-slate-900 shadow-lg transition-colors hover:bg-slate-100"
+            className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 hover:text-slate-900"
             aria-label="Đóng"
+            title="Đóng"
           >
-            <X size={26} />
+            <X className="h-5 w-5" />
           </button>
-        </div>
+        </header>
 
-        <div className="flex h-full w-full items-center justify-center overflow-y-auto px-16 py-10">
-          <div className="max-h-full w-full max-w-5xl overflow-y-auto rounded-md border border-white/70 bg-white text-slate-900 shadow-2xl">
-            <div className="border-b border-slate-200 bg-white px-7 py-6">
-              <span className="inline-flex items-center rounded-lg border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-semibold text-sky-700">
-                {POST_TYPE_LABEL[currentPost.type]}
-              </span>
-              <h2 className="mt-3 text-[28px] font-bold leading-snug text-slate-950">
-                {currentPost.title}
-              </h2>
-              {currentPost.content && !isRepost && (
-                <p className="mt-2 text-[15px] leading-relaxed text-slate-700">
-                  {currentPost.content}
-                </p>
-              )}
+        <div className="min-h-0 flex-1 overflow-y-auto bg-[#f0f2f5]">
+          <article className="bg-white">
+            <div className="flex items-start gap-3 px-4 pb-3 pt-4 sm:px-5">
+              <button
+                type="button"
+                onClick={handleNavigateToProfile}
+                className="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-sky-100 transition-opacity hover:opacity-90"
+                title={authorName}
+              >
+                {avatar && !avatarError ? (
+                  <img
+                    src={avatar}
+                    alt={authorName}
+                    className="h-full w-full object-cover"
+                    onError={() => setAvatarError(true)}
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-sky-600">
+                    {letter}
+                  </div>
+                )}
+              </button>
+
+              <div className="min-w-0 flex-1">
+                <button
+                  type="button"
+                  onClick={handleNavigateToProfile}
+                  className="block max-w-full truncate text-[15px] font-semibold leading-tight text-slate-900 hover:underline"
+                >
+                  {authorName}
+                </button>
+                <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
+                  <span>{formatRelativeTimeVi(currentPost.createdAt)}</span>
+                  <span>-</span>
+                  <Globe2 className="h-3.5 w-3.5" />
+                  <span>Công khai</span>
+                  {!isRepost && (
+                    <>
+                      <span>-</span>
+                      <span className="rounded-full bg-sky-50 px-2 py-0.5 font-semibold text-sky-700">
+                        {POST_TYPE_LABEL[currentPost.type]}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
 
-            <div className="bg-white p-6">
+            <div className="space-y-3 px-4 pb-4 sm:px-5">
               {isRepost ? (
-                <div className="space-y-3">
+                <>
                   {currentPost.content && (
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-800">
+                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-slate-900">
                       {currentPost.content}
                     </p>
                   )}
@@ -147,146 +191,61 @@ const PostDetailModal = ({
                     branchInfoById={branchInfoById}
                     courtNameById={courtNameById}
                   />
-                </div>
+                </>
               ) : (
-                <FormDataSummary
-                  post={currentPost}
-                  branchInfoById={branchInfoById}
-                  courtNameById={courtNameById}
-                />
+                <>
+                  <div>
+                    <h1 className="text-xl font-semibold leading-snug text-slate-950">
+                      {currentPost.title}
+                    </h1>
+                    {currentPost.content && (
+                      <p className="mt-2 whitespace-pre-wrap text-[15px] leading-relaxed text-slate-900">
+                        {currentPost.content}
+                      </p>
+                    )}
+                  </div>
+                  <FormDataSummary
+                    post={currentPost}
+                    branchInfoById={branchInfoById}
+                    courtNameById={courtNameById}
+                  />
+                </>
               )}
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <aside
-        ref={rightPanelRef}
-        className="flex h-screen w-full shrink-0 flex-col overflow-hidden bg-white md:w-[450px] xl:w-[480px]"
-      >
-        <div className="flex shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-5 py-4 md:hidden">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700 transition-colors hover:bg-slate-200"
-            aria-label="Đóng"
-          >
-            <X size={22} />
-          </button>
-          <span className="font-semibold text-slate-900">
-            Chi tiết bài viết
-          </span>
-        </div>
-
-        <div className="shrink-0 border-b border-slate-100 bg-white px-5 py-5">
-          <div className="flex items-start gap-3">
-            <button
-              type="button"
-              onClick={handleNavigateToProfile}
-              className="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-sky-100 transition-opacity hover:opacity-90"
-              title={authorName}
-            >
-              {avatar && !avatarError ? (
-                <img
-                  src={avatar}
-                  alt={authorName}
-                  className="h-full w-full object-cover"
-                  onError={() => setAvatarError(true)}
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-sky-600">
-                  {letter}
-                </div>
-              )}
-            </button>
-
-            <div className="min-w-0 flex-1">
-              <button
-                type="button"
-                onClick={handleNavigateToProfile}
-                className="block truncate text-[15px] font-semibold leading-tight text-slate-900 hover:underline"
-              >
-                {authorName}
-              </button>
-              <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
-                <span>{formatRelativeTimeVi(currentPost.createdAt)}</span>
-                <span>·</span>
-                <span>Công khai</span>
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="hidden shrink-0 rounded-xl p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 md:block"
-              title="Đóng (Esc)"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <div className="mt-4">
-            <span className="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-[10px] font-semibold text-sky-700">
-              {POST_TYPE_LABEL[currentPost.type]}
-            </span>
-            <div className="mt-2 flex items-start justify-between gap-3">
-              <h1 className="min-w-0 flex-1 text-lg font-semibold leading-snug text-slate-900">
-                {currentPost.title}
-              </h1>
               {currentPost.type === "CLASS" && (
-                <div className="shrink-0 md:hidden">
+                <div className="pt-1">
                   <ClassEnrollAction postId={currentPost.id} compact />
                 </div>
               )}
             </div>
-            {currentPost.content && (
-              <p className="mt-2 whitespace-pre-wrap text-[15px] leading-relaxed text-slate-700">
-                {currentPost.content}
-              </p>
-            )}
-          </div>
-        </div>
 
-        <div className="flex shrink-0 items-center justify-between border-b border-slate-100 bg-white px-5 py-3">
-          <div className="flex items-center gap-1.5">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-sky-600 text-white">
-              <ThumbsUp size={12} />
-            </span>
-            <span className="text-sm font-medium text-gray-600">
-              {currentPost.likesCount ?? 0}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3 text-sm text-slate-500">
-            <span className="group relative cursor-default underline-offset-2 hover:underline">
-              {currentPost.commentsCount ?? 0} bình luận
-              {(currentPost.commentsCount ?? 0) > 0 && (
-                <span className="pointer-events-none absolute right-0 top-full z-30 mt-2 hidden w-56 rounded-xl border border-slate-200 bg-white p-3 text-left text-xs text-slate-600 shadow-lg group-hover:block">
-                  <span className="mb-1 block font-semibold text-slate-800">
-                    Người đã bình luận
-                  </span>
-                  {commentPreviewNames.length > 0 ? (
-                    commentPreviewNames.map((name) => (
-                      <span key={name} className="block truncate py-0.5">
-                        {name}
+            <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3 text-sm text-slate-500 sm:px-5">
+              <span className="flex items-center gap-2">
+                {reactionIcons.length > 0 && (
+                  <span className="flex -space-x-1">
+                    {reactionIcons.map((icon, index) => (
+                      <span
+                        key={`${icon}-${index}`}
+                        className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-sm shadow-sm ring-1 ring-white"
+                      >
+                        {icon}
                       </span>
-                    ))
-                  ) : (
-                    <span>Mở bình luận để xem chi tiết.</span>
-                  )}
-                </span>
-              )}
-            </span>
-            {(currentPost.sharesCount ?? 0) > 0 && (
-              <span>{currentPost.sharesCount} chia sẻ</span>
-            )}
-          </div>
-        </div>
+                    ))}
+                  </span>
+                )}
+                <span className="font-medium">{likesCount}</span>
+              </span>
 
-        <div className="min-h-0 flex-1 overflow-y-auto bg-white">
-          <PostActions post={currentPost} alwaysShowComments />
+              <div className="flex items-center gap-4">
+                <span>{commentsCount} bình luận</span>
+                <span>{sharesCount} chia sẻ</span>
+              </div>
+            </div>
+
+            <PostActions post={currentPost} alwaysShowComments />
+          </article>
         </div>
-      </aside>
+      </section>
     </div>
   );
 };

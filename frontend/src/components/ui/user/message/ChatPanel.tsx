@@ -6,8 +6,8 @@ import {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import {
-  ChevronUp,
   CornerUpLeft,
   CornerUpRight,
   FileText,
@@ -28,12 +28,14 @@ import type {
 import type { UserSearchHit } from "../../../../types/userSearch";
 import MemberSearchPicker from "./MemberSearchPicker";
 import { formatRelativeTimeVi } from "../../../../utils/formatRelativeTimeVi";
+import { formatLastSeen } from "../../../../utils/formatLastSeen";
 import { ROLE_NAME } from "../../../../utils/constants/role";
 
 type ChatPanelProps = {
   conversation?: Conversation;
   conversations?: Conversation[];
   messages: ChatMessage[];
+  loadingMessages?: boolean;
   currentUserId?: number;
   isGroupAdmin?: boolean;
   onSend: (body: string, replyToId?: number) => Promise<void>;
@@ -63,28 +65,35 @@ const UserAvatar = ({
   url,
   sizeClass = "w-9 h-9",
   rounded = "rounded-2xl",
+  isOnline,
 }: {
   name: string;
   url?: string | null;
   sizeClass?: string;
   rounded?: string;
+  isOnline?: boolean;
 }) => {
   const [imgErr, setImgErr] = useState(false);
   const letter = (name || "?").trim().charAt(0).toUpperCase();
   return (
-    <div
-      className={`${sizeClass} ${rounded} shrink-0 overflow-hidden flex items-center justify-center bg-sky-100 text-sky-700 text-xs font-bold ring-1 ring-sky-200`}
-    >
-      {url && !imgErr ? (
-        <img
-          src={url}
-          alt=""
-          className="w-full h-full object-cover"
-          onError={() => setImgErr(true)}
-        />
-      ) : (
-        letter
-      )}
+    <div className={`relative shrink-0 ${sizeClass}`}>
+      <div
+        className={`${sizeClass} ${rounded} overflow-hidden flex items-center justify-center bg-sky-100 text-sky-700 text-xs font-bold ring-1 ring-sky-200`}
+      >
+        {url && !imgErr ? (
+          <img
+            src={url}
+            alt=""
+            className="w-full h-full object-cover"
+            onError={() => setImgErr(true)}
+          />
+        ) : (
+          letter
+        )}
+      </div>
+      {isOnline ? (
+        <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500" />
+      ) : null}
     </div>
   );
 };
@@ -237,6 +246,7 @@ const ChatPanel = ({
   conversation,
   conversations = [],
   messages,
+  loadingMessages = false,
   currentUserId,
   isGroupAdmin,
   onSend,
@@ -290,6 +300,21 @@ const ChatPanel = ({
         : undefined,
     [conversation, currentUserId],
   );
+
+  const privatePresence = useMemo(() => {
+    if (conversation?.type !== "PRIVATE") return null;
+
+    return {
+      isOnline:
+        conversation.otherParticipant?.isOnline ??
+        otherParticipant?.isOnline ??
+        false,
+      lastSeenAt:
+        conversation.otherParticipant?.lastSeenAt ??
+        otherParticipant?.lastSeenAt ??
+        null,
+    };
+  }, [conversation, otherParticipant]);
 
   const sorted = useMemo(
     () =>
@@ -359,6 +384,8 @@ const ChatPanel = ({
     e.target.style.height = `${Math.min(e.target.scrollHeight, 132)}px`;
   };
 
+  const showMessageSkeleton = loadingMessages && rows.length === 0;
+
   if (!conversation) {
     return (
       <div className="flex-1 bg-slate-50 flex flex-col items-center justify-center gap-5 text-slate-400 px-8">
@@ -393,6 +420,7 @@ const ChatPanel = ({
             name={headerDisplayName}
             url={isGroup ? conversation.avatar : otherParticipant?.avatar}
             sizeClass="w-12 h-12"
+            isOnline={!isGroup && privatePresence?.isOnline}
           />
           <div className="min-w-0">
             <h3 className="font-bold text-slate-950 truncate text-base">
@@ -400,20 +428,27 @@ const ChatPanel = ({
             </h3>
             {isGroup ? (
               <p className="text-xs text-slate-500 mt-0.5">
-                {conversation.participants.length} thành viên
+                {conversation.membersCount ?? conversation.participants.length} thành viên
+                {(conversation.onlineMembersCount || 0) > 0
+                  ? ` · ${conversation.onlineMembersCount} người đang hoạt động`
+                  : ""}
               </p>
-            ) : (
-              <p className="text-xs text-emerald-600 font-bold mt-0.5">
-                Đang hoạt động
+            ) : formatLastSeen(privatePresence?.isOnline, privatePresence?.lastSeenAt) ? (
+              <p
+                className={`text-xs font-bold mt-0.5 ${
+                  privatePresence?.isOnline ? "text-emerald-600" : "text-slate-500"
+                }`}
+              >
+                {formatLastSeen(privatePresence?.isOnline, privatePresence?.lastSeenAt)}
               </p>
-            )}
+            ) : null}
           </div>
         </div>
 
         {isGroup && (
           <button
             type="button"
-            onClick={() => setShowMembers((v) => !v)}
+            onClick={() => setShowMembers(true)}
             className={`h-10 px-3 rounded-2xl transition-colors shrink-0 flex items-center gap-2 text-sm font-bold ${
               showMembers
                 ? "bg-sky-50 text-sky-700 border border-sky-100"
@@ -421,113 +456,65 @@ const ChatPanel = ({
             }`}
             title="Thành viên nhóm"
           >
-            {showMembers ? (
-              <ChevronUp className="w-4 h-4" />
-            ) : (
-              <Users className="w-4 h-4" />
-            )}
+            <Users className="w-4 h-4" />
             Thành viên
           </button>
         )}
       </div>
 
-      {showMembers && isGroup && (
-        <div className="border-b border-slate-200 bg-white px-5 py-4 max-h-72 overflow-y-auto shrink-0">
-          <div className="grid md:grid-cols-2 gap-3">
-            {conversation.participants.map((p) => {
-              const displayName = p.fullName?.trim()
-                ? `${p.fullName} (${p.username})`
-                : p.username;
+      <div className="h-1 shrink-0 overflow-hidden bg-transparent">
+        {loadingMessages ? (
+          <div className="h-full w-full origin-left animate-pulse bg-gradient-to-r from-transparent via-sky-400 to-transparent" />
+        ) : null}
+      </div>
+
+      <div
+        ref={scrollAreaRef}
+        className={`flex-1 overflow-y-auto px-5 py-5 min-h-0 bg-slate-50 transition-opacity duration-200 ${
+          loadingMessages && rows.length > 0 ? "opacity-80" : "opacity-100"
+        }`}
+      >
+        {showMessageSkeleton ? (
+          <div className="flex min-h-full flex-col justify-end gap-4 opacity-100 transition-opacity duration-200">
+            {Array.from({ length: 7 }).map((_, idx) => {
+              const mine = idx % 3 === 1;
               return (
                 <div
-                  key={p.userId}
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-2"
+                  key={idx}
+                  className={`flex items-end gap-2 ${mine ? "flex-row-reverse" : "flex-row"}`}
                 >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <UserAvatar
-                      name={p.fullName || p.username}
-                      url={p.avatar}
-                      sizeClass="w-9 h-9"
-                    />
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-slate-800 truncate">
-                        {displayName}
-                      </p>
-                      {p.role === ROLE_NAME.ADMIN && (
-                        <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold">
-                          Admin
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  {isGroupAdmin && p.userId !== currentUserId && (
-                    <button
-                      type="button"
-                      className="text-xs text-rose-500 hover:text-rose-600 px-2 py-1 rounded-lg hover:bg-rose-50 transition-colors shrink-0"
-                      onClick={() => onRemoveMember?.(p.userId)}
-                    >
-                      Xóa
-                    </button>
+                  {!mine && (
+                    <div className="h-9 w-9 shrink-0 animate-pulse rounded-2xl bg-white ring-1 ring-slate-200" />
                   )}
+                  <div
+                    className={`space-y-2 ${mine ? "items-end" : "items-start"} flex max-w-[70%] flex-col`}
+                  >
+                    <div
+                      className={`h-10 animate-pulse rounded-2xl ${
+                        mine ? "w-52 bg-sky-100" : "w-64 bg-white"
+                      }`}
+                    />
+                    <div className="h-2.5 w-16 animate-pulse rounded-full bg-slate-200" />
+                  </div>
                 </div>
               );
             })}
           </div>
-
-          {isGroupAdmin && (
-            <div className="mt-4 pt-4 border-t border-slate-100 space-y-3">
-              <p className="text-xs text-slate-600 font-bold flex items-center gap-2">
-                <UserPlus className="w-4 h-4 text-sky-600" />
-                Thêm thành viên
+        ) : rows.length === 0 ? (
+          <div className="flex min-h-full items-center justify-center px-6 text-center">
+            <div>
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-200 bg-white text-sky-500">
+                <MessageCircle className="h-7 w-7" strokeWidth={1.6} />
+              </div>
+              <p className="mt-4 text-sm font-semibold text-slate-700">
+                Chưa có tin nhắn
               </p>
-              <MemberSearchPicker
-                excludeUserIds={participantIds}
-                selected={pendingAdds}
-                onSelectedChange={setPendingAdds}
-                searchUsers={searchUsers}
-                placeholder="Tìm người để thêm..."
-              />
-              <button
-                type="button"
-                className="text-xs px-4 py-2 rounded-2xl bg-sky-600 text-white hover:bg-sky-500 disabled:opacity-50 transition-colors font-bold"
-                disabled={pendingAdds.length === 0}
-                onClick={async () => {
-                  if (pendingAdds.length === 0) return;
-                  await onAddMembers?.(pendingAdds.map((u) => u.id));
-                  setPendingAdds([]);
-                }}
-              >
-                Thêm vào nhóm
-              </button>
+              <p className="mt-1 text-xs text-slate-400">
+                Gửi lời chào để bắt đầu cuộc trò chuyện.
+              </p>
             </div>
-          )}
-
-          <div className="flex gap-3 mt-4 pt-4 border-t border-slate-100">
-            <button
-              type="button"
-              className="text-xs font-bold text-slate-500 hover:text-slate-800"
-              onClick={() => onLeaveGroup?.()}
-            >
-              Rời nhóm
-            </button>
-            {isGroupAdmin && (
-              <button
-                type="button"
-                className="text-xs font-bold text-rose-500 hover:text-rose-600"
-                onClick={() => onDeleteGroup?.()}
-              >
-                Xóa nhóm
-              </button>
-            )}
           </div>
-        </div>
-      )}
-
-      <div
-        ref={scrollAreaRef}
-        className="flex-1 overflow-y-auto px-5 py-5 min-h-0 bg-slate-50"
-      >
-        {rows.map((row, idx) => {
+        ) : rows.map((row, idx) => {
           if (row.kind === "day") {
             return (
               <div key={`d-${idx}`} className="flex justify-center py-4">
@@ -682,28 +669,28 @@ const ChatPanel = ({
               </div>
 
               <div
-                className={`flex items-center gap-1 shrink-0 transition-opacity duration-100 ${
+                className={`flex shrink-0 items-center gap-0.5 rounded-full border border-slate-200 bg-white/95 p-0.5 shadow-sm transition-all duration-150 ${
                   hoveredMsgId === m.id
-                    ? "opacity-100"
-                    : "opacity-0 pointer-events-none"
+                    ? "translate-y-0 opacity-100"
+                    : "pointer-events-none translate-y-1 opacity-0"
                 } ${mine ? "flex-row-reverse" : "flex-row"}`}
               >
                 <button
                   type="button"
                   title="Trả lời"
                   onClick={() => setReplyTarget(m)}
-                  className="w-8 h-8 rounded-full text-slate-400 hover:text-sky-600 hover:bg-white transition-colors flex items-center justify-center"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-sky-50 hover:text-sky-700"
                 >
-                  <CornerUpLeft className="w-4 h-4" />
+                  <CornerUpLeft className="h-4 w-4" />
                 </button>
                 {onForward && (
                   <button
                     type="button"
                     title="Chuyển tiếp"
                     onClick={() => setForwardTarget(m)}
-                    className="w-8 h-8 rounded-full text-slate-400 hover:text-sky-600 hover:bg-white transition-colors flex items-center justify-center"
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-sky-50 hover:text-sky-700"
                   >
-                    <CornerUpRight className="w-4 h-4" />
+                    <CornerUpRight className="h-4 w-4" />
                   </button>
                 )}
                 {mine && (
@@ -711,9 +698,9 @@ const ChatPanel = ({
                     type="button"
                     title="Thu hồi tin nhắn"
                     onClick={() => onRecall(m.id)}
-                    className="w-8 h-8 rounded-full text-slate-400 hover:text-rose-500 hover:bg-white transition-colors flex items-center justify-center"
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-rose-500 transition-colors hover:bg-rose-50 hover:text-rose-600"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 )}
               </div>
@@ -792,6 +779,161 @@ const ChatPanel = ({
           <Send className="w-4 h-4" />
         </button>
       </form>
+
+      {showMembers &&
+        isGroup &&
+        createPortal(
+          (
+        <div
+          className="fixed inset-0 z-[9999] flex min-h-dvh w-screen items-center justify-center overflow-y-auto bg-slate-950/55 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="group-members-title"
+          onMouseDown={() => setShowMembers(false)}
+        >
+          <div
+            className="flex max-h-[86vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
+              <div className="min-w-0">
+                <h3
+                  id="group-members-title"
+                  className="text-base font-bold text-slate-950"
+                >
+                  Thành viên nhóm
+                </h3>
+                <p className="mt-1 text-xs text-slate-500">
+                  {conversation.conversationName} · {conversation.membersCount ?? conversation.participants.length} thành viên
+                  {(conversation.onlineMembersCount || 0) > 0
+                    ? ` · ${conversation.onlineMembersCount} người đang hoạt động`
+                    : ""}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMembers(false)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                title="Đóng"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto bg-slate-50/70 px-5 py-4">
+              <div className="grid gap-3 md:grid-cols-2">
+                {[...conversation.participants].sort((a, b) => {
+                  if (a.role !== b.role) return a.role === ROLE_NAME.ADMIN ? -1 : 1;
+                  if (Boolean(a.isOnline) !== Boolean(b.isOnline)) return a.isOnline ? -1 : 1;
+                  return (a.fullName || a.username || "").localeCompare(
+                    b.fullName || b.username || "",
+                    "vi",
+                  );
+                }).map((p) => {
+                  const displayName = p.fullName?.trim()
+                    ? `${p.fullName} (${p.username})`
+                    : p.username;
+                  const presenceText = formatLastSeen(p.isOnline, p.lastSeenAt);
+                  return (
+                    <div
+                      key={p.userId}
+                      className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white px-3 py-2.5"
+                    >
+                      <div className="flex min-w-0 items-center gap-2">
+                        <UserAvatar
+                          name={p.fullName || p.username}
+                          url={p.avatar}
+                          sizeClass="w-10 h-10"
+                          isOnline={p.isOnline}
+                        />
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-bold text-slate-800">
+                            {displayName}
+                          </p>
+                          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                            {p.role === ROLE_NAME.ADMIN && (
+                              <span className="inline-flex rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
+                                Admin
+                              </span>
+                            )}
+                            {presenceText ? (
+                              <span
+                                className={`truncate text-[10px] font-semibold ${
+                                  p.isOnline ? "text-emerald-600" : "text-slate-400"
+                                }`}
+                              >
+                                {presenceText}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                      {isGroupAdmin && p.userId !== currentUserId && (
+                        <button
+                          type="button"
+                          className="shrink-0 rounded-lg px-2 py-1 text-xs text-rose-500 transition-colors hover:bg-rose-50 hover:text-rose-600"
+                          onClick={() => onRemoveMember?.(p.userId)}
+                        >
+                          Xóa
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {isGroupAdmin && (
+                <div className="mt-5 space-y-3 rounded-2xl border border-slate-100 bg-white p-4">
+                  <p className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                    <UserPlus className="h-4 w-4 text-sky-600" />
+                    Thêm thành viên
+                  </p>
+                  <MemberSearchPicker
+                    excludeUserIds={participantIds}
+                    selected={pendingAdds}
+                    onSelectedChange={setPendingAdds}
+                    searchUsers={searchUsers}
+                    placeholder="Tìm người để thêm..."
+                  />
+                  <button
+                    type="button"
+                    className="rounded-2xl bg-sky-600 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-sky-500 disabled:opacity-50"
+                    disabled={pendingAdds.length === 0}
+                    onClick={async () => {
+                      if (pendingAdds.length === 0) return;
+                      await onAddMembers?.(pendingAdds.map((u) => u.id));
+                      setPendingAdds([]);
+                    }}
+                  >
+                    Thêm vào nhóm
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-3 border-t border-slate-100 px-5 py-4">
+              <button
+                type="button"
+                className="text-xs font-bold text-slate-500 hover:text-slate-800"
+                onClick={() => onLeaveGroup?.()}
+              >
+                Rời nhóm
+              </button>
+              {isGroupAdmin && (
+                <button
+                  type="button"
+                  className="text-xs font-bold text-rose-500 hover:text-rose-600"
+                  onClick={() => onDeleteGroup?.()}
+                >
+                  Xóa nhóm
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+          ),
+          document.body,
+        )}
 
       {forwardTarget && (
         <ForwardModal

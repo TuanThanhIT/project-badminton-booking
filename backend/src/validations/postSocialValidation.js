@@ -1,5 +1,6 @@
 import Joi from "joi";
 import { idParams } from "./common/numberField.js";
+import { POST_REACTION } from "../constants/postConstant.js";
 
 const postIdParamSchema = Joi.object({
   postId: idParams("postId"),
@@ -26,6 +27,12 @@ const repostContentField = Joi.string().trim().max(2000).allow("", null).optiona
 
 export const toggleLikeSchema = {
   params: postIdParamSchema,
+  body: Joi.object({
+    reactionType: Joi.string()
+      .valid(...Object.values(POST_REACTION))
+      .default(POST_REACTION.LIKE)
+      .optional(),
+  }),
 };
 
 export const createCommentSchema = {

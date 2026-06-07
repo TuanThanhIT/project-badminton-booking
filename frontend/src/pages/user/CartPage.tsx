@@ -32,7 +32,11 @@ import { normalizeColor } from "../../utils/color";
 import { COLOR_MAP } from "../../utils/constants/color";
 import { showConfirmDialog } from "../../utils/confirmDialog";
 
-const formatCurrency = (value: number) => `${value.toLocaleString()}₫`;
+const toMoneyNumber = (value: number | string | null | undefined) =>
+  Number(value || 0);
+
+const formatCurrency = (value: number | string | null | undefined) =>
+  `${toMoneyNumber(value).toLocaleString("vi-VN")}₫`;
 
 const getCartSelectionKey = (cartId: number) => `cartSelectedItemIds:${cartId}`;
 
@@ -99,12 +103,17 @@ const CartPage = () => {
   );
 
   const selectedTotalAmount = useMemo(
-    () => selectedItems.reduce((sum, item) => sum + item.subTotal, 0),
+    () =>
+      selectedItems.reduce(
+        (sum, item) => sum + toMoneyNumber(item.subTotal),
+        0,
+      ),
     [selectedItems],
   );
 
   const selectedTotalQuantity = useMemo(
-    () => selectedItems.reduce((sum, item) => sum + item.quantity, 0),
+    () =>
+      selectedItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0),
     [selectedItems],
   );
 
@@ -258,7 +267,7 @@ const CartPage = () => {
   }
 
   const totalItems = cart.cartItems.reduce(
-    (sum, item) => sum + item.quantity,
+    (sum, item) => sum + Number(item.quantity || 0),
     0,
   );
 
@@ -494,7 +503,10 @@ const CartPage = () => {
                         <div className="mt-2 border-t border-dashed border-slate-200 pt-2">
                           <p className="text-xs text-slate-400">Thành tiền</p>
                           <p className="mt-1 text-lg font-bold text-sky-600">
-                            {formatCurrency(item.price * item.quantity)}
+                            {formatCurrency(
+                              toMoneyNumber(item.price) *
+                                Number(item.quantity || 0),
+                            )}
                           </p>
                         </div>
                       </div>

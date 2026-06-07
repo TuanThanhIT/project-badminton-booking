@@ -1,40 +1,54 @@
 import { ORDER_STATUS, SHIPPING_STATUS } from "../constants/orderConstant.js";
 
+const normalizeGHNStatus = (ghnStatus) =>
+  String(ghnStatus || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+
+const GHN_STATUS_MAP = Object.freeze({
+  created: SHIPPING_STATUS.CREATED,
+  ready_to_pick: SHIPPING_STATUS.CREATED,
+
+  picking: SHIPPING_STATUS.PICKING,
+  money_collect_picking: SHIPPING_STATUS.PICKING,
+
+  picked: SHIPPING_STATUS.PICKED,
+
+  storing: SHIPPING_STATUS.IN_TRANSIT,
+  sorting: SHIPPING_STATUS.IN_TRANSIT,
+  transporting: SHIPPING_STATUS.IN_TRANSIT,
+  in_transit: SHIPPING_STATUS.IN_TRANSIT,
+
+  delivering: SHIPPING_STATUS.DELIVERING,
+  money_collect_delivering: SHIPPING_STATUS.DELIVERING,
+
+  delivered: SHIPPING_STATUS.DELIVERED,
+
+  delivery_fail: SHIPPING_STATUS.FAILED,
+  failed: SHIPPING_STATUS.FAILED,
+  return_fail: SHIPPING_STATUS.FAILED,
+  exception: SHIPPING_STATUS.FAILED,
+  damage: SHIPPING_STATUS.FAILED,
+  lost: SHIPPING_STATUS.FAILED,
+
+  waiting_to_return: SHIPPING_STATUS.RETURNING,
+  return: SHIPPING_STATUS.RETURNING,
+  returning: SHIPPING_STATUS.RETURNING,
+  return_transporting: SHIPPING_STATUS.RETURNING,
+  return_sorting: SHIPPING_STATUS.RETURNING,
+
+  returned: SHIPPING_STATUS.RETURNED,
+
+  cancel: SHIPPING_STATUS.CANCELLED,
+  cancelled: SHIPPING_STATUS.CANCELLED,
+});
+
+export const isKnownGHNStatus = (ghnStatus) =>
+  Boolean(GHN_STATUS_MAP[normalizeGHNStatus(ghnStatus)]);
+
 export const mapGHNStatusToSystem = (ghnStatus) => {
-  switch (ghnStatus) {
-    case "ready_to_pick":
-      return SHIPPING_STATUS.CREATED;
-
-    case "picking":
-      return SHIPPING_STATUS.PICKING;
-
-    case "picked":
-      return SHIPPING_STATUS.PICKED;
-
-    case "transporting":
-      return SHIPPING_STATUS.IN_TRANSIT;
-
-    case "delivering":
-      return SHIPPING_STATUS.DELIVERING;
-
-    case "delivered":
-      return SHIPPING_STATUS.DELIVERED;
-
-    case "delivery_fail":
-      return SHIPPING_STATUS.FAILED;
-
-    case "return":
-      return SHIPPING_STATUS.RETURNING;
-
-    case "returned":
-      return SHIPPING_STATUS.RETURNED;
-
-    case "cancel":
-      return SHIPPING_STATUS.CANCELLED;
-
-    default:
-      return SHIPPING_STATUS.PENDING;
-  }
+  return GHN_STATUS_MAP[normalizeGHNStatus(ghnStatus)] || SHIPPING_STATUS.PENDING;
 };
 
 export const getDisplayStatus = (order) => {

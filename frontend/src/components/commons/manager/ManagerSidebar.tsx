@@ -149,7 +149,7 @@ const ManagerSidebar = ({ collapsed, setCollapsed }: Props) => {
       <button
         type="button"
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-4 top-7 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
+        className="absolute -right-4 top-[2.15rem] z-10 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
         aria-label={collapsed ? "Mở rộng menu" : "Thu gọn menu"}
       >
         {collapsed ? (
@@ -160,7 +160,7 @@ const ManagerSidebar = ({ collapsed, setCollapsed }: Props) => {
       </button>
 
       <div
-        className={`flex min-h-20 items-center border-b border-slate-200 py-3 ${
+        className={`flex h-20 items-center border-b border-slate-200 ${
           collapsed ? "justify-center px-2" : "px-6"
         }`}
       >

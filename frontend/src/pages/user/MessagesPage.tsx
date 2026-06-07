@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MessageCircle, ShieldCheck, Users } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import {
   addMembersToGroup,
   appendSocketMessage,
+  clearSelectedConversation,
   clearUnreadFromSocket,
   createGroupConversation,
   createOrGetDirectConversation,
@@ -18,32 +19,32 @@ import {
   removeMemberFromGroup,
   selectConversation,
   sendMessage,
+  userPresenceChanged,
   uploadChatAttachment,
 } from "../../redux/slices/user/conversationSlice";
 import { store } from "../../redux/store";
 import { connectSocket, socket } from "../../socket";
-import type { ChatMessage } from "../../types/message";
+import type { ChatMessage, PresencePayload } from "../../types/message";
 import ChatPanel from "../../components/ui/user/message/ChatPanel";
 import ConversationSidebar from "../../components/ui/user/message/ConversationSidebar";
 import CreateGroupModal from "../../components/ui/user/message/CreateGroupModal";
 import userSearchService from "../../services/user/userSearchService";
 import type { UserSearchHit } from "../../types/userSearch";
+import { showConfirmDialog } from "../../utils/confirmDialog";
 
 const MessagesPage = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { conversationId } = useParams();
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
+  const [loadingConversationId, setLoadingConversationId] = useState<number | null>(null);
+  const prefetchedConversationRef = useRef<number | null>(null);
 
   const authUser = useAppSelector((state) => state.auth.user);
   const accessToken = useAppSelector((state) => state.auth.accessToken);
 
   const loadingConversations = useAppSelector((state) =>
     Boolean(state.ui.loadingMap["conversation/getConversations"]),
-  );
-
-  const loadingMessages = useAppSelector((state) =>
-    Boolean(state.ui.loadingMap["conversation/getMessages"]),
   );
 
   const sendingMessage = useAppSelector((state) =>
@@ -116,6 +117,12 @@ const MessagesPage = () => {
 
     if (cid && !Number.isNaN(cid)) {
       dispatch(selectConversation(cid));
+      if (prefetchedConversationRef.current === cid) {
+        prefetchedConversationRef.current = null;
+        socket?.emit("chat:join", cid);
+        return;
+      }
+      setLoadingConversationId(cid);
       dispatch(
         getMessages({
           conversationId: cid,
@@ -124,8 +131,12 @@ const MessagesPage = () => {
             limit: 100,
           },
         }),
-      );
+      ).finally(() => {
+        setLoadingConversationId((current) => (current === cid ? null : current));
+      });
       socket?.emit("chat:join", cid);
+    } else {
+      dispatch(clearSelectedConversation());
     }
   }, [conversationId, dispatch]);
 
@@ -191,16 +202,27 @@ const MessagesPage = () => {
       },
     );
 
+    const handlePresence = (payload: PresencePayload) => {
+      dispatch(userPresenceChanged(payload));
+    };
+
+    s.on("presence:user-online", handlePresence);
+    s.on("presence:user-offline", handlePresence);
+
     return () => {
       s.off("chat:new-message");
       s.off("chat:message-recalled");
       s.off("chat:messages-read");
       s.off("chat:conversation-updated");
+      s.off("presence:user-online", handlePresence);
+      s.off("presence:user-offline", handlePresence);
     };
   }, [dispatch, authUser?.id, navigate, accessToken]);
 
   const openConversation = (id: number) => {
-    dispatch(selectConversation(id));
+    if (id === selectedConversationId || loadingConversationId === id) return;
+
+    setLoadingConversationId(id);
     dispatch(
       getMessages({
         conversationId: id,
@@ -209,9 +231,17 @@ const MessagesPage = () => {
           limit: 100,
         },
       }),
-    );
-    socket?.emit("chat:join", id);
-    navigate(`/messages/${id}`);
+    )
+      .unwrap()
+      .then(() => {
+        prefetchedConversationRef.current = id;
+        dispatch(selectConversation(id));
+        socket?.emit("chat:join", id);
+        navigate(`/messages/${id}`);
+      })
+      .finally(() => {
+        setLoadingConversationId((current) => (current === id ? null : current));
+      });
   };
 
   const searchUsers = useCallback(
@@ -332,6 +362,7 @@ const MessagesPage = () => {
               <ConversationSidebar
                 conversations={conversations}
                 selectedConversationId={selectedConversationId}
+                loadingConversationId={loadingConversationId}
                 currentUserId={authUser?.id}
                 searchUsers={searchUsers}
                 directSearchTitle="Tìm người để nhắn"
@@ -345,6 +376,9 @@ const MessagesPage = () => {
               conversation={selectedConversation}
               conversations={conversations}
               messages={messages}
+              loadingMessages={
+                loadingConversationId === selectedConversationId
+              }
               currentUserId={authUser?.id}
               isGroupAdmin={isGroupAdmin}
               onSend={async (text, replyToId) => {
@@ -375,7 +409,14 @@ const MessagesPage = () => {
               }}
               onRecall={async (messageId) => {
                 if (!selectedConversationId) return;
-                if (!window.confirm("Thu hồi tin nhắn này?")) return;
+                const confirmed = await showConfirmDialog(
+                  "Thu hồi tin nhắn này?",
+                  "Tin nhắn sẽ được thu hồi trong cuộc trò chuyện.",
+                  "Thu hồi",
+                  "Hủy",
+                  "danger",
+                );
+                if (!confirmed) return;
 
                 await dispatch(
                   recallMessage({
@@ -388,12 +429,17 @@ const MessagesPage = () => {
               onLeaveGroup={
                 selectedConversation?.type === "GROUP"
                   ? async () => {
-                      if (
-                        !selectedConversationId ||
-                        !window.confirm("Rời nhóm này?")
-                      ) {
-                        return;
-                      }
+                      if (!selectedConversationId) return;
+                      const confirmed = await showConfirmDialog(
+                        isGroupAdmin ? "Rời và xóa nhóm?" : "Rời nhóm này?",
+                        isGroupAdmin
+                          ? "Bạn là admin nhóm. Rời nhóm sẽ xóa nhóm này cho mọi thành viên."
+                          : "Bạn sẽ không còn nhận tin nhắn từ nhóm này.",
+                        isGroupAdmin ? "Rời và xóa" : "Rời nhóm",
+                        "Hủy",
+                        "danger",
+                      );
+                      if (!confirmed) return;
 
                       await dispatch(
                         leaveGroup({
@@ -408,12 +454,15 @@ const MessagesPage = () => {
               onDeleteGroup={
                 selectedConversation?.type === "GROUP" && isGroupAdmin
                   ? async () => {
-                      if (
-                        !selectedConversationId ||
-                        !window.confirm("Xóa hẳn nhóm cho mọi thành viên?")
-                      ) {
-                        return;
-                      }
+                      if (!selectedConversationId) return;
+                      const confirmed = await showConfirmDialog(
+                        "Xóa nhóm này?",
+                        "Nhóm sẽ bị xóa hẳn cho mọi thành viên.",
+                        "Xóa nhóm",
+                        "Hủy",
+                        "danger",
+                      );
+                      if (!confirmed) return;
 
                       await dispatch(
                         deleteGroupConversation({
@@ -442,11 +491,18 @@ const MessagesPage = () => {
               onRemoveMember={
                 selectedConversation?.type === "GROUP" && isGroupAdmin
                   ? async (userId) => {
-                      if (!selectedConversationId) return;
-                      if (!window.confirm("Xóa thành viên khỏi nhóm?")) return;
+                    if (!selectedConversationId) return;
+                    const confirmed = await showConfirmDialog(
+                      "Xóa thành viên khỏi nhóm?",
+                      "Thành viên này sẽ không còn trong cuộc trò chuyện nhóm.",
+                      "Xóa thành viên",
+                      "Hủy",
+                      "danger",
+                    );
+                    if (!confirmed) return;
 
-                      await dispatch(
-                        removeMemberFromGroup({
+                    await dispatch(
+                      removeMemberFromGroup({
                           conversationId: selectedConversationId,
                           userId,
                         }),
@@ -459,13 +515,6 @@ const MessagesPage = () => {
         </section>
       </main>
 
-      {loadingMessages && messages.length === 0 && selectedConversationId ? (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/30 backdrop-blur-sm">
-          <div className="rounded-2xl border border-white/60 bg-white/95 px-5 py-3 text-sm font-medium text-slate-600 shadow-xl">
-            Đang tải tin nhắn...
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 };

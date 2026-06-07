@@ -7,6 +7,7 @@ import {
   clearUnreadFromSocket,
   getConversations,
   removeConversationLocal,
+  userPresenceChanged,
 } from "../../../redux/slices/user/conversationSlice";
 import { addLocalNotification } from "../../../redux/slices/user/notificationSlice";
 import {
@@ -21,6 +22,7 @@ import {
   appendManagerSocketMessage,
   clearManagerUnreadFromSocket,
   getManagerConversations,
+  managerUserPresenceChanged,
   removeManagerConversationLocal,
 } from "../../../redux/slices/manager/conversationSlice";
 
@@ -54,6 +56,7 @@ const RealtimeProvider = ({ children }: RealtimeProviderProps) => {
     chatMessage,
     chatMessagesRead,
     chatConversationUpdated,
+    presence,
   } = useRealtime(token);
 
   useEffect(() => {
@@ -147,6 +150,16 @@ const RealtimeProvider = ({ children }: RealtimeProviderProps) => {
 
     dispatch(role === "MANAGER" ? getManagerConversations() : getConversations());
   }, [dispatch, role, chatConversationUpdated]);
+
+  useEffect(() => {
+    if (!presence) return;
+
+    dispatch(
+      role === "MANAGER"
+        ? managerUserPresenceChanged(presence)
+        : userPresenceChanged(presence),
+    );
+  }, [dispatch, role, presence]);
 
   return <>{children}</>;
 };

@@ -636,9 +636,7 @@ const BranchDetailPage = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    navigate(
-                      `/courts?branchName=${encodeURIComponent(branchDetail.branchName)}`,
-                    );
+                    navigate(`/courts?branchId=${branchDetail.id}`);
                   }}
                   className="flex w-full items-center justify-center gap-2 rounded-2xl bg-sky-500 px-5 py-4 text-sm font-semibold text-white shadow-lg shadow-sky-100 transition-all hover:bg-sky-600 active:scale-[0.98]"
                 >

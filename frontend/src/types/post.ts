@@ -7,6 +7,16 @@ export type PostType =
   | "FIND_COACH"
   | "CLASS";
 
+export type PostReactionType =
+  | "LIKE"
+  | "LOVE"
+  | "HAHA"
+  | "WOW"
+  | "SAD"
+  | "ANGRY";
+
+export type ReactionSummary = Partial<Record<PostReactionType, number>>;
+
 export type FindPlayerFormData = {
   location: {
     branchId: number;
@@ -143,6 +153,8 @@ export type Post = {
   sharesCount?: number;
   // Đã like bởi người đang đăng nhập hay chưa
   likedByMe?: boolean | number;
+  reactionByMe?: PostReactionType | null;
+  reactionSummary?: ReactionSummary;
   // Đã share bài gốc tương ứng hay chưa
   sharedByMe?: boolean | number;
 };
@@ -208,6 +220,9 @@ export type PostCounts = {
   sharesCount: number;
   likedByMe: boolean;
   sharedByMe: boolean;
+  reactionByMe?: PostReactionType | null;
+  reactionSummary?: ReactionSummary;
+  targetPostId?: number;
 };
 
 export type CreateCommentPayload = {

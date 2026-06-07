@@ -24,9 +24,20 @@ const calculateMonthlyBookingController = asyncHandler(async (req, res) => {
     .status(200)
     .json(new SuccessResponse("Tính tiền thuê tháng thành công", result));
 });
+const getMonthlyAvailableCourtsController = asyncHandler(async (req, res) => {
+  const result = await monthlyBookingService.getMonthlyAvailableCourtsService(
+    req.body,
+  );
+
+  return res
+    .status(200)
+    .json(new SuccessResponse("Get monthly available courts successfully", result));
+});
+
 const monthlyBookingController = {
   createMonthlyBookingController,
   calculateMonthlyBookingController,
+  getMonthlyAvailableCourtsController,
 };
 
 export default monthlyBookingController;

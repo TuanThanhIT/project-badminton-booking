@@ -59,6 +59,7 @@ import initAdminUploadRoute from "./routes/admin/uploadRoute.js";
 import initAdminCoachApplicationRoute from "./routes/admin/coachApplicationRoute.js";
 import initCoachClassRoute from "./routes/user/coachClassRoute.js";
 import initCoachApplicationRoute from "./routes/user/coachApplicationRoute.js";
+import initAiRoute from "./routes/user/aiRoute.js";
 import initAdminSupplierRoute from "./routes/admin/supplierRoute.js";
 import initAdminPurchaseReceiptRoute from "./routes/admin/purchaseReceiptRoute.js";
 import initAdminInventoryRoute from "./routes/admin/inventoryRoute.js";
@@ -113,6 +114,7 @@ export const createApp = () => {
   initUserSearchRoute(app);
   initCoachClassRoute(app);
   initCoachApplicationRoute(app);
+  initAiRoute(app);
 
   initEmployeeOrderRoute(app);
   initEmployeeWorkShiftRoute(app);

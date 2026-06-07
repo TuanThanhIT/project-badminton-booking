@@ -3,7 +3,7 @@ import type { ApiResponse } from "./api";
 export type CartItem = {
   id: number;
   quantity: number;
-  subTotal: number;
+  subTotal: number | string;
   productName: string;
   thumbnailUrl: string;
   variantId: number;
@@ -11,12 +11,12 @@ export type CartItem = {
   color: string;
   size: string;
   material: string;
-  price: number;
+  price: number | string;
 };
 
 export type Cart = {
   id: number;
-  totalAmount: number;
+  totalAmount: number | string;
   cartItems: CartItem[];
 };
 
@@ -27,7 +27,7 @@ export type AddCartItemResponse = ApiResponse<CartItem>;
 export type UpdateCartItemData = {
   id: number;
   quantity: number;
-  subTotal: number;
+  subTotal: number | string;
   cartId: number;
   variantId: number;
 };

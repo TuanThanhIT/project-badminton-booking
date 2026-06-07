@@ -565,8 +565,7 @@ const EmployeeBookingsPage = () => {
                         {/* CODE + STATUS */}
                         <div className="flex min-w-0 flex-wrap items-center gap-2">
                           <p className="font-mono text-[14px] font-semibold leading-none text-sky-700">
-                            #
-                            {formatBookingCode(booking.id, booking.createdAt)}
+                            #{formatBookingCode(booking.id, booking.createdAt)}
                           </p>
 
                           <span
@@ -1225,7 +1224,7 @@ const EmployeeBookingsPage = () => {
                   w-full resize-none rounded-2xl border border-slate-200 bg-slate-50
                   px-4 py-3 text-sm leading-6 text-slate-700 outline-none transition
                   placeholder:text-slate-400
-                  focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100/70
+                  focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100/70
                 "
               />
 

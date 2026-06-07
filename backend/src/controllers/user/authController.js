@@ -103,7 +103,7 @@ const handleAdminLoginController = asyncHandler(async (req, res) => {
     .status(200)
     .cookie("refreshToken", refreshToken, refreshTokenCookieOptions)
     .json(
-      new SuccessResponse("ÄÄƒng nháº­p Admin thÃ nh cÃ´ng", {
+      new SuccessResponse("Đăng nhập Admin thành công", {
         accessToken,
         user,
       }),
@@ -118,7 +118,7 @@ const handleManagerLoginController = asyncHandler(async (req, res) => {
     .status(200)
     .cookie("refreshToken", refreshToken, refreshTokenCookieOptions)
     .json(
-      new SuccessResponse("ÄÄƒng nháº­p Quáº£n lÃ½ thÃ nh cÃ´ng", {
+      new SuccessResponse("Đăng nhập Quản lý thành công", {
         accessToken,
         user,
       }),
@@ -133,7 +133,7 @@ const handleEmployeeLoginController = asyncHandler(async (req, res) => {
     .status(200)
     .cookie("refreshToken", refreshToken, refreshTokenCookieOptions)
     .json(
-      new SuccessResponse("ÄÄƒng nháº­p NhÃ¢n viÃªn thÃ nh cÃ´ng", {
+      new SuccessResponse("Đăng nhập Nhân viên thành công", {
         accessToken,
         user,
       }),

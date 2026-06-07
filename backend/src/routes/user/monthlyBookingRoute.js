@@ -5,6 +5,7 @@ import monthlyBookingController from "../../controllers/user/monthlyBookingContr
 import {
   createMonthlyBookingSchema,
   calculateMonthlyBookingSchema,
+  monthlyAvailableCourtsSchema,
 } from "../../validations/monthlyBookingValidation.js";
 
 import auth from "../../middlewares/auth.js";
@@ -25,6 +26,14 @@ const initMonthlyBookingRoute = (app) => {
   );
 
   // 🔥 Tạo booking tháng
+  monthlyBookingRoute.post(
+    "/available-courts",
+    auth,
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
+    validate(monthlyAvailableCourtsSchema),
+    monthlyBookingController.getMonthlyAvailableCourtsController,
+  );
+
   monthlyBookingRoute.post(
     "/",
     auth,

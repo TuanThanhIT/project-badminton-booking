@@ -14,6 +14,7 @@ import {
   type CreateCommentPayload,
   type CreateCommentRequest,
   type PostFilterData,
+  type PostReactionType,
 } from "../../../types/post";
 import postService from "../../../services/user/postService";
 import postSocialService from "../../../services/user/postSocialService";
@@ -29,6 +30,19 @@ const initialState: PostState = {
   lastCreatedPost: undefined,
   lastGetPostsQuery: undefined,
 };
+
+const applyCountsToPost = (post: PostWithAuthor, counts: PostCounts) => {
+  post.likesCount = counts.likesCount;
+  post.commentsCount = counts.commentsCount;
+  post.sharesCount = counts.sharesCount;
+  post.likedByMe = counts.likedByMe;
+  post.sharedByMe = counts.sharedByMe;
+  post.reactionByMe = counts.reactionByMe ?? null;
+  post.reactionSummary = counts.reactionSummary ?? post.reactionSummary;
+};
+
+const rootPostIdOf = (post: PostWithAuthor) =>
+  post.repostOfPostId && post.repostOfPostId > 0 ? post.repostOfPostId : post.id;
 
 export const createPost = createAsyncThunk<
   CreatePostResponse,
@@ -60,11 +74,11 @@ type ToggleLikeResponse = ApiResponse<PostCounts>;
 
 export const toggleLike = createAsyncThunk<
   ToggleLikeResponse,
-  { postId: number },
+  { postId: number; reactionType?: PostReactionType },
   { rejectValue: ApiErrorType }
->("post/toggleLike", async ({ postId }, { rejectWithValue }) => {
+>("post/toggleLike", async ({ postId, reactionType }, { rejectWithValue }) => {
   try {
-    const res = await postSocialService.toggleLikeService(postId);
+    const res = await postSocialService.toggleLikeService(postId, reactionType);
     return res.data as ToggleLikeResponse;
   } catch (error) {
     return rejectWithValue(error as ApiErrorType);
@@ -91,6 +105,8 @@ export const createComment = createAsyncThunk<
         sharesCount: resData.sharesCount,
         likedByMe: resData.likedByMe,
         sharedByMe: resData.sharedByMe ?? false,
+        reactionByMe: resData.reactionByMe ?? null,
+        reactionSummary: resData.reactionSummary,
       };
 
       return { postId, comment: resData.comment, counts };
@@ -167,30 +183,42 @@ const postSlice = createSlice({
         const post = state.posts.posts.find((p) => p.id === postId);
         if (!post) return;
         const counts = action.payload.data;
-        post.likesCount = counts.likesCount;
-        post.commentsCount = counts.commentsCount;
-        post.sharesCount = counts.sharesCount;
-        post.likedByMe = counts.likedByMe;
-        post.sharedByMe = counts.sharedByMe;
+        applyCountsToPost(post, counts);
       })
       .addCase(createComment.fulfilled, (state, action) => {
         const { postId, comment, counts } = action.payload;
         const post = state.posts.posts.find((p) => p.id === postId);
         if (!post) return;
         post.commentsCount = counts.commentsCount;
+        post.reactionSummary = counts.reactionSummary ?? post.reactionSummary;
         if (!post.comments) post.comments = [];
         post.comments.push(comment);
       })
       .addCase(repostPost.fulfilled, (state, action) => {
         const { postId } = action.meta.arg;
         const post = state.posts.posts.find((p) => p.id === postId);
-        if (!post) return;
         const counts = action.payload.data;
-        post.likesCount = counts.likesCount;
-        post.commentsCount = counts.commentsCount;
-        post.sharesCount = counts.sharesCount;
-        post.likedByMe = counts.likedByMe;
-        post.sharedByMe = counts.sharedByMe;
+        if (post) {
+          const targetRootId = counts.targetPostId || rootPostIdOf(post);
+          state.posts.posts.forEach((item) => {
+            if (rootPostIdOf(item) === targetRootId) {
+              item.sharesCount = counts.sharesCount;
+              item.sharedByMe = counts.sharedByMe;
+            }
+          });
+        }
+
+        const repost = action.payload.data.repostPost as PostWithAuthor;
+        if (repost && !state.posts.posts.some((item) => item.id === repost.id)) {
+          repost.likesCount = repost.likesCount ?? 0;
+          repost.commentsCount = repost.commentsCount ?? 0;
+          repost.sharesCount = counts.sharesCount;
+          repost.sharedByMe = counts.sharedByMe;
+          repost.likedByMe = false;
+          repost.reactionByMe = null;
+          state.posts.posts.unshift(repost);
+          state.posts.total += 1;
+        }
       })
       .addCase(updatePost.fulfilled, (state, action) => {
         const updated = action.payload.data;

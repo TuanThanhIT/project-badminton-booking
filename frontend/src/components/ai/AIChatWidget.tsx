@@ -204,7 +204,12 @@ const AIChatWidget = () => {
             setStatusText(null);
             setIsLoading(false);
           },
-          onComplete: () => {
+          onComplete: ({ sessionId, guestToken }) => {
+            if (sessionId) setStoredSessionId(activeContext, sessionId);
+            if (guestToken) {
+              guestTokenRef.current = guestToken;
+              localStorage.setItem("bhub_ai_guest_token", guestToken);
+            }
             updateAssistantMessage(activeContext, assistantId, {
               isStreaming: false,
             });

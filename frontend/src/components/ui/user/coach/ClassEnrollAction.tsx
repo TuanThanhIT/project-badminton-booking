@@ -6,6 +6,7 @@ import coachClassService from "../../../../services/user/coachClassService";
 import type { PostEnrollmentContext } from "../../../../types/coachClass";
 import { useAppSelector } from "../../../../redux/hook";
 import { ROLE_NAME } from "../../../../utils/constants/role";
+import { showConfirmDialog } from "../../../../utils/confirmDialog";
 
 type ClassEnrollActionProps = {
   postId: number;
@@ -128,6 +129,15 @@ const ClassEnrollAction = ({ postId, compact = false }: ClassEnrollActionProps) 
 
   const handleCancel = async () => {
     if (!mine) return;
+    const confirmed = await showConfirmDialog(
+      "Hủy đăng ký lớp?",
+      "Yêu cầu hoặc lượt tham gia lớp học này sẽ được hủy.",
+      "Hủy đăng ký",
+      "Quay lại",
+      "danger",
+    );
+    if (!confirmed) return;
+
     setActing(true);
     try {
       await coachClassService.cancelEnrollmentService(mine.id);

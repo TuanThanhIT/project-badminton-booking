@@ -8,6 +8,7 @@ import type {
   ConversationResponse,
   GetMessagesResponse,
   LeaveOrRemoveResponse,
+  PresencePayload,
   SendMessageResponse,
 } from "../../../types/message";
 import type { UserSearchResponse } from "../../../types/userSearch";
@@ -36,6 +37,38 @@ const applyLastMessageFromSend = (state: ConversationState, cid: number, msg: Ch
     state.conversations[idx].lastMessage = msg;
     state.conversations[idx].updatedAt = msg.createdAt;
   }
+};
+
+const applyPresence = (state: ConversationState, presence: PresencePayload) => {
+  state.conversations.forEach((conversation) => {
+    let hasParticipant = false;
+
+    conversation.participants = conversation.participants.map((participant) => {
+      if (participant.userId !== presence.userId) return participant;
+      hasParticipant = true;
+      return {
+        ...participant,
+        isOnline: presence.isOnline,
+        lastSeenAt: presence.lastSeenAt,
+      };
+    });
+
+    if (conversation.otherParticipant?.id === presence.userId) {
+      conversation.otherParticipant = {
+        ...conversation.otherParticipant,
+        isOnline: presence.isOnline,
+        lastSeenAt: presence.lastSeenAt,
+      };
+    }
+
+    if (hasParticipant) {
+      conversation.onlineMembersCount = conversation.participants.reduce(
+        (count, participant) => count + (participant.isOnline ? 1 : 0),
+        0,
+      );
+      conversation.membersCount = conversation.participants.length;
+    }
+  });
 };
 
 export const getManagerConversations = createAsyncThunk<
@@ -210,6 +243,9 @@ const conversationSlice = createSlice({
     selectManagerConversation: (state, action: PayloadAction<number>) => {
       state.selectedConversationId = action.payload;
     },
+    clearSelectedManagerConversation: (state) => {
+      state.selectedConversationId = undefined;
+    },
     appendManagerSocketMessage: (
       state,
       action: PayloadAction<{ message: ChatMessage; currentUserId: number }>,
@@ -255,6 +291,9 @@ const conversationSlice = createSlice({
     },
     removeManagerConversationLocal: (state, action: PayloadAction<number>) => {
       removeConversation(state, action.payload);
+    },
+    managerUserPresenceChanged: (state, action: PayloadAction<PresencePayload>) => {
+      applyPresence(state, action.payload);
     },
   },
   extraReducers: (builder) => {
@@ -325,10 +364,12 @@ const conversationSlice = createSlice({
 
 export const {
   selectManagerConversation,
+  clearSelectedManagerConversation,
   appendManagerSocketMessage,
   markManagerMessageRecalled,
   clearManagerUnreadFromSocket,
   removeManagerConversationLocal,
+  managerUserPresenceChanged,
 } = conversationSlice.actions;
 
 export default conversationSlice.reducer;

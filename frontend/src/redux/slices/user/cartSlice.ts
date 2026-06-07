@@ -30,6 +30,12 @@ const initialState: CartState = {
   prevCartItem: undefined,
 };
 
+const toMoneyNumber = (value: number | string | null | undefined) =>
+  Number(value || 0);
+
+const getCartTotalAmount = (cartItems: CartItem[]) =>
+  cartItems.reduce((sum, item) => sum + toMoneyNumber(item.subTotal), 0);
+
 export const getCart = createAsyncThunk<
   CartResponse,
   void,
@@ -112,12 +118,10 @@ const cartSlice = createSlice({
         state.prevCartItem = { ...cart.cartItems[idx] };
         cart.cartItems[idx].quantity = action.payload.data.quantity;
         cart.cartItems[idx].subTotal =
-          cart.cartItems[idx].price * action.payload.data.quantity;
+          toMoneyNumber(cart.cartItems[idx].price) *
+          action.payload.data.quantity;
       }
-      cart.totalAmount = cart.cartItems.reduce(
-        (sum, item) => sum + item.subTotal,
-        0,
-      );
+      cart.totalAmount = getCartTotalAmount(cart.cartItems);
     },
     deleteCartItemLocal(
       state,
@@ -134,10 +138,7 @@ const cartSlice = createSlice({
       cart.cartItems = cart.cartItems.filter(
         (item) => item.id !== action.payload.data.cartItemId,
       );
-      cart.totalAmount = cart.cartItems.reduce(
-        (sum, item) => sum + item.subTotal,
-        0,
-      );
+      cart.totalAmount = getCartTotalAmount(cart.cartItems);
     },
   },
   extraReducers: (builder) => {
@@ -160,14 +161,12 @@ const cartSlice = createSlice({
         if (idx >= 0) {
           cart.cartItems[idx].quantity = action.payload.data.quantity;
           cart.cartItems[idx].subTotal =
-            cart.cartItems[idx].price * cart.cartItems[idx].quantity;
+            toMoneyNumber(cart.cartItems[idx].price) *
+            cart.cartItems[idx].quantity;
         } else {
           cart.cartItems.push(action.payload.data);
         }
-        cart.totalAmount = cart.cartItems.reduce(
-          (sum, item) => sum + item.subTotal,
-          0,
-        );
+        cart.totalAmount = getCartTotalAmount(cart.cartItems);
       })
 
       .addCase(updateCartItem.fulfilled, (state) => {
@@ -180,10 +179,7 @@ const cartSlice = createSlice({
         );
         if (idx >= 0) {
           state.cart.cartItems[idx] = state.prevCartItem;
-          state.cart.totalAmount = state.cart.cartItems.reduce(
-            (sum, item) => sum + item.subTotal,
-            0,
-          );
+          state.cart.totalAmount = getCartTotalAmount(state.cart.cartItems);
         }
         state.prevCartItem = undefined;
       })
@@ -194,10 +190,7 @@ const cartSlice = createSlice({
       .addCase(deleteCartItem.rejected, (state) => {
         if (!state.prevCartItem || !state.cart) return;
         state.cart.cartItems.push(state.prevCartItem);
-        state.cart.totalAmount = state.cart.cartItems.reduce(
-          (sum, item) => sum + item.subTotal,
-          0,
-        );
+        state.cart.totalAmount = getCartTotalAmount(state.cart.cartItems);
         state.prevCartItem = undefined;
       });
   },

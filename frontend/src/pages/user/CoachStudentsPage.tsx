@@ -28,6 +28,7 @@ import type {
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { getAllBranches } from "../../redux/slices/user/branchSlice";
 import { ROLE_NAME } from "../../utils/constants/role";
+import { showConfirmDialog } from "../../utils/confirmDialog";
 
 type Tab = "students" | "classes";
 
@@ -82,7 +83,7 @@ const STATUS_META: Record<
 };
 
 const modalInputClass =
-  "w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100";
+  "w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100";
 
 const CoachStudentsPage = () => {
   const dispatch = useAppDispatch();
@@ -125,7 +126,10 @@ const CoachStudentsPage = () => {
   const [notifyMessage, setNotifyMessage] = useState("");
   const [alsoSendChat, setAlsoSendChat] = useState(true);
 
-  const [rejectModal, setRejectModal] = useState<{ id: number; reason: string } | null>(null);
+  const [rejectModal, setRejectModal] = useState<{
+    id: number;
+    reason: string;
+  } | null>(null);
   const [statusUpdatingId, setStatusUpdatingId] = useState<number | null>(null);
 
   const branchById = useMemo(
@@ -133,7 +137,12 @@ const CoachStudentsPage = () => {
       branches.reduce<
         Record<
           number,
-          { branchName: string; address?: string; district?: string; province?: string }
+          {
+            branchName: string;
+            address?: string;
+            district?: string;
+            province?: string;
+          }
         >
       >((acc, b) => {
         acc[b.id] = {
@@ -197,7 +206,9 @@ const CoachStudentsPage = () => {
 
       setUserSearching(true);
       try {
-        const res = await userSearchService.searchUsersService(userSearchQ.trim());
+        const res = await userSearchService.searchUsersService(
+          userSearchQ.trim(),
+        );
         setUserSearchResults((res.data as any).data || []);
       } catch {
         setUserSearchResults([]);
@@ -239,6 +250,15 @@ const CoachStudentsPage = () => {
   const selectedNotifyClass = classes.find((cls) => cls.id === notifyPostId);
 
   const handleApprove = async (id: number) => {
+    const confirmed = await showConfirmDialog(
+      "Duyệt học viên này?",
+      "Học viên sẽ được thêm vào danh sách đang học của lớp.",
+      "Duyệt",
+      "Hủy",
+      "success",
+    );
+    if (!confirmed) return;
+
     try {
       await coachClassService.updateEnrollmentService(id, { status: "ACTIVE" });
       toast.success("Đã duyệt học viên");
@@ -266,8 +286,19 @@ const CoachStudentsPage = () => {
   };
 
   const handleComplete = async (id: number) => {
+    const confirmed = await showConfirmDialog(
+      "Đánh dấu hoàn thành?",
+      "Trạng thái học viên sẽ chuyển sang hoàn thành lớp học.",
+      "Hoàn thành",
+      "Hủy",
+      "success",
+    );
+    if (!confirmed) return;
+
     try {
-      await coachClassService.updateEnrollmentService(id, { status: "COMPLETED" });
+      await coachClassService.updateEnrollmentService(id, {
+        status: "COMPLETED",
+      });
       toast.success("Đã đánh dấu hoàn thành");
       fetchEnrollments();
       fetchClasses();
@@ -278,7 +309,10 @@ const CoachStudentsPage = () => {
 
   const handleChat = async (studentUserId: number) => {
     try {
-      const res = await conversationService.createOrGetDirectConversationService(studentUserId);
+      const res =
+        await conversationService.createOrGetDirectConversationService(
+          studentUserId,
+        );
       navigate(`/messages/${res.data.data.id}`);
     } catch {
       toast.error("Không thể mở chat");
@@ -287,7 +321,8 @@ const CoachStudentsPage = () => {
 
   const handleOpenClassChat = async (postId: number) => {
     try {
-      const res = await coachClassService.getOrCreateClassConversationService(postId);
+      const res =
+        await coachClassService.getOrCreateClassConversationService(postId);
       navigate(`/messages/${res.data.data.conversationId}`);
     } catch (err: any) {
       toast.error(err?.message || "Không thể mở nhóm chat lớp");
@@ -315,7 +350,10 @@ const CoachStudentsPage = () => {
     }
 
     try {
-      await coachClassService.addMemberManuallyService(addMemberPostId, studentUserId);
+      await coachClassService.addMemberManuallyService(
+        addMemberPostId,
+        studentUserId,
+      );
       toast.success("Đã thêm học viên vào lớp");
       closeAddMember();
       fetchEnrollments();
@@ -329,12 +367,17 @@ const CoachStudentsPage = () => {
     if (!notifyPostId || !notifyMessage.trim()) return;
 
     try {
-      const res = await coachClassService.notifyClassMembersService(notifyPostId, {
-        title: notifyTitle.trim() || undefined,
-        message: notifyMessage.trim(),
-        alsoSendChat,
-      });
-      toast.success(`Đã gửi thông báo tới ${res.data.data.notifiedCount} học viên`);
+      const res = await coachClassService.notifyClassMembersService(
+        notifyPostId,
+        {
+          title: notifyTitle.trim() || undefined,
+          message: notifyMessage.trim(),
+          alsoSendChat,
+        },
+      );
+      toast.success(
+        `Đã gửi thông báo tới ${res.data.data.notifiedCount} học viên`,
+      );
       setNotifyPostId(null);
       setNotifyTitle("");
       setNotifyMessage("");
@@ -352,7 +395,14 @@ const CoachStudentsPage = () => {
       unlock: "Mở lại đăng ký cho lớp này?",
       end: "Kết thúc lớp này?",
     };
-    if (!window.confirm(messages[action])) return;
+    const confirmed = await showConfirmDialog(
+      messages[action],
+      "Vui lòng xác nhận trước khi tiếp tục thao tác này.",
+      "Xác nhận",
+      "Hủy",
+      action === "end" ? "danger" : "warning",
+    );
+    if (!confirmed) return;
 
     setStatusUpdatingId(postId);
     try {
@@ -373,8 +423,9 @@ const CoachStudentsPage = () => {
   };
 
   const getBranchForClass = (cls: CoachClassSummary) => {
-    const branchId = (cls.formData as { location?: { branchId?: number } } | null)?.location
-      ?.branchId;
+    const branchId = (
+      cls.formData as { location?: { branchId?: number } } | null
+    )?.location?.branchId;
     return branchId ? branchById[branchId] : null;
   };
 
@@ -397,71 +448,97 @@ const CoachStudentsPage = () => {
   }
 
   const renderEnrollmentRow = (item: ClassEnrollmentItem) => {
-    const name = item.student?.profile?.fullName || item.student?.username || "Học viên";
+    const name =
+      item.student?.profile?.fullName || item.student?.username || "Học viên";
     const avatar = item.student?.profile?.avatar;
     const letter = name.charAt(0).toUpperCase();
     const meta = STATUS_META[item.status] || STATUS_META.CANCELLED;
+    const classTitle = item.post?.title || `#${item.postId}`;
+    const username = item.student?.username;
+    const phoneNumber = item.student?.profile?.phoneNumber;
+    const registeredAt = new Date(item.createdAt).toLocaleDateString("vi-VN");
 
     return (
       <article
         key={item.id}
-        className="rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-sky-200 hover:bg-slate-50"
+        className="group overflow-hidden rounded-[1.35rem] border border-sky-100 bg-gradient-to-br from-white via-white to-sky-50/60 p-4 shadow-sm transition-colors hover:border-sky-200 sm:p-5"
       >
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex min-w-0 gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-sky-100 text-sm font-bold text-sky-700">
-              {avatar ? <img src={avatar} alt={name} className="h-full w-full object-cover" /> : letter}
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 items-center gap-4">
+            <div className="flex h-[68px] w-[68px] shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-sky-100 text-base font-semibold text-sky-700 ring-4 ring-white">
+              {avatar ? (
+                <img
+                  src={avatar}
+                  alt={name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                letter
+              )}
             </div>
 
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="font-semibold text-slate-950">{name}</p>
+                <p className="text-[15px] font-semibold leading-5 text-slate-950 sm:text-base">
+                  {name}
+                </p>
                 <span
-                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${meta.badge}`}
+                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-[2px] text-[10.5px] font-semibold ${meta.badge}`}
                 >
                   <span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />
                   {meta.label}
                 </span>
               </div>
 
-              <p className="mt-1 text-sm text-slate-600">
-                Lớp:{" "}
-                <span className="font-medium text-slate-800">
-                  {item.post?.title || `#${item.postId}`}
+              <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[12.5px] text-slate-600 sm:text-[13px]">
+                <GraduationCap className="h-3.5 w-3.5 shrink-0 text-sky-500" />
+                <span className="shrink-0 text-slate-400">Lớp:</span>
+                <span className="truncate font-medium text-slate-800">
+                  {classTitle}
                 </span>
-              </p>
+              </div>
 
-              <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-slate-500">
-                {item.student?.username ? <span>@{item.student.username}</span> : null}
-                {item.student?.profile?.phoneNumber ? (
-                  <span>SĐT: {item.student.profile.phoneNumber}</span>
+              <div className="mt-2.5 flex flex-wrap gap-2 text-[11px]">
+                {username ? (
+                  <span className="rounded-full border border-slate-200 bg-white/90 px-2.5 py-[3px] font-medium text-slate-500 shadow-sm">
+                    @{username}
+                  </span>
                 ) : null}
-                <span>ĐK: {new Date(item.createdAt).toLocaleDateString("vi-VN")}</span>
+                {phoneNumber ? (
+                  <span className="rounded-full border border-slate-200 bg-white/90 px-2.5 py-[3px] font-medium text-slate-500 shadow-sm">
+                    SĐT: {phoneNumber}
+                  </span>
+                ) : null}
+                <span className="rounded-full border border-slate-200 bg-white/90 px-2.5 py-[3px] font-medium text-slate-500 shadow-sm">
+                  ĐK: {registeredAt}
+                </span>
               </div>
 
               {item.rejectReason ? (
-                <p className="mt-1.5 text-xs text-red-600">Lý do từ chối: {item.rejectReason}</p>
+                <p className="mt-3 rounded-2xl border border-red-100 bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
+                  Lý do từ chối: {item.rejectReason}
+                </p>
               ) : null}
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 sm:justify-end">
+          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
             {item.status === "PENDING" ? (
               <>
                 <button
                   type="button"
                   onClick={() => handleApprove(item.id)}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-emerald-600 px-3 text-xs font-semibold text-white transition hover:bg-emerald-700"
+                  className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700"
                 >
-                  <Check className="h-3.5 w-3.5" />
+                  <Check className="h-4 w-4" />
                   Duyệt
                 </button>
                 <button
                   type="button"
                   onClick={() => setRejectModal({ id: item.id, reason: "" })}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 text-xs font-semibold text-red-700 transition hover:bg-red-100"
+                  className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3.5 text-xs font-semibold text-red-700 transition hover:bg-red-100"
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <X className="h-4 w-4" />
                   Từ chối
                 </button>
               </>
@@ -471,20 +548,20 @@ const CoachStudentsPage = () => {
               <button
                 type="button"
                 onClick={() => handleComplete(item.id)}
-                className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-sky-200 bg-sky-50 px-3 text-xs font-semibold text-sky-700 transition hover:bg-sky-100"
+                className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-sky-200 bg-sky-50 px-3.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-100"
               >
-                <CheckCircle2 className="h-3.5 w-3.5" />
+                <CheckCircle2 className="h-4 w-4" />
                 Hoàn thành
               </button>
             ) : null}
 
-            {item.studentUserId ? (
+            {item.studentUserId && item.status !== "PENDING" ? (
               <button
                 type="button"
                 onClick={() => handleChat(item.studentUserId)}
-                className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 px-3 text-xs font-semibold text-slate-700 transition hover:bg-white"
+                className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-600 shadow-sm transition hover:border-sky-200 hover:text-sky-700"
               >
-                <MessageCircle className="h-3.5 w-3.5" />
+                <MessageCircle className="h-4 w-4" />
                 Chat
               </button>
             ) : null}
@@ -508,22 +585,33 @@ const CoachStudentsPage = () => {
                 Quản lý lớp học
               </h1>
               <p className="mt-5 max-w-2xl text-lg leading-8 text-sky-50">
-                Duyệt đăng ký, theo dõi học viên, chat và gửi thông báo cho từng lớp.
+                Duyệt đăng ký, theo dõi học viên, chat và gửi thông báo cho từng
+                lớp.
               </p>
             </div>
 
             <div className="grid grid-cols-3 gap-3 sm:min-w-[480px]">
               {[
                 { value: summary.pending, label: "Chờ duyệt", icon: Users },
-                { value: summary.active, label: "Đang học", icon: CheckCircle2 },
-                { value: summary.classCount, label: "Lớp mở", icon: GraduationCap },
+                {
+                  value: summary.active,
+                  label: "Đang học",
+                  icon: CheckCircle2,
+                },
+                {
+                  value: summary.classCount,
+                  label: "Lớp mở",
+                  icon: GraduationCap,
+                },
               ].map((item) => (
                 <div
                   key={item.label}
                   className="rounded-2xl border border-white/10 bg-white/10 px-5 py-4"
                 >
                   <item.icon size={18} className="text-sky-200" />
-                  <p className="mt-4 text-2xl font-bold leading-none">{item.value}</p>
+                  <p className="mt-4 text-2xl font-bold leading-none">
+                    {item.value}
+                  </p>
                   <p className="mt-2 text-sm text-sky-100">{item.label}</p>
                 </div>
               ))}
@@ -570,14 +658,14 @@ const CoachStudentsPage = () => {
                       value={studentSearch}
                       onChange={(e) => setStudentSearch(e.target.value)}
                       placeholder="Tìm tên, username, SĐT hoặc tên lớp..."
-                      className="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-3 text-sm outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                      className="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-3 text-sm outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
                     />
                   </div>
 
                   <select
                     value={classFilter}
                     onChange={(e) => setClassFilter(e.target.value)}
-                    className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                    className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
                   >
                     <option value="">Tất cả lớp</option>
                     {classes.map((c) => (
@@ -633,12 +721,19 @@ const CoachStudentsPage = () => {
                     {STATUS_OPTIONS.filter((o) => o.value).map((o) => {
                       const meta = STATUS_META[o.value as EnrollmentStatus];
                       return (
-                        <div key={o.value} className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
+                        <div
+                          key={o.value}
+                          className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2"
+                        >
                           <p className="flex items-center gap-2 text-xs font-semibold text-slate-800">
-                            <span className={`h-2 w-2 rounded-full ${meta.dot}`} />
+                            <span
+                              className={`h-2 w-2 rounded-full ${meta.dot}`}
+                            />
                             {meta.label}
                           </p>
-                          <p className="mt-1 text-xs leading-5 text-slate-600">{meta.desc}</p>
+                          <p className="mt-1 text-xs leading-5 text-slate-600">
+                            {meta.desc}
+                          </p>
                         </div>
                       );
                     })}
@@ -656,7 +751,9 @@ const CoachStudentsPage = () => {
                   <div className="flex min-h-[300px] flex-col items-center justify-center text-center">
                     <Users className="h-12 w-12 text-slate-300" />
                     <p className="mt-4 text-sm font-medium text-slate-700">
-                      {studentSearch ? "Không tìm thấy học viên phù hợp" : "Chưa có học viên nào"}
+                      {studentSearch
+                        ? "Không tìm thấy học viên phù hợp"
+                        : "Chưa có học viên nào"}
                     </p>
                     {!studentSearch ? (
                       <button
@@ -670,7 +767,9 @@ const CoachStudentsPage = () => {
                     ) : null}
                   </div>
                 ) : (
-                  <div className="space-y-3">{filteredEnrollments.map(renderEnrollmentRow)}</div>
+                  <div className="space-y-3">
+                    {filteredEnrollments.map(renderEnrollmentRow)}
+                  </div>
                 )}
               </div>
             </>
@@ -681,7 +780,9 @@ const CoachStudentsPage = () => {
               {classes.length === 0 ? (
                 <div className="flex min-h-[300px] flex-col items-center justify-center text-center">
                   <GraduationCap className="h-12 w-12 text-slate-300" />
-                  <p className="mt-4 text-sm text-slate-600">Chưa có lớp học nào.</p>
+                  <p className="mt-4 text-sm text-slate-600">
+                    Chưa có lớp học nào.
+                  </p>
                   <Link
                     to="/create-post?type=CLASS"
                     className="mt-4 inline-flex h-11 items-center gap-2 rounded-xl bg-sky-600 px-4 text-sm font-semibold text-white transition hover:bg-sky-700"
@@ -724,8 +825,12 @@ const CoachStudentsPage = () => {
           <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-lg font-bold text-slate-950">Thêm học viên</h3>
-                <p className="mt-1 text-xs text-slate-500">Chọn lớp và tìm user cần thêm.</p>
+                <h3 className="text-lg font-bold text-slate-950">
+                  Thêm học viên
+                </h3>
+                <p className="mt-1 text-xs text-slate-500">
+                  Chọn lớp và tìm user cần thêm.
+                </p>
               </div>
               <button
                 type="button"
@@ -740,7 +845,11 @@ const CoachStudentsPage = () => {
               Chọn lớp
               <select
                 value={addMemberPostId ?? ""}
-                onChange={(e) => setAddMemberPostId(e.target.value ? Number(e.target.value) : null)}
+                onChange={(e) =>
+                  setAddMemberPostId(
+                    e.target.value ? Number(e.target.value) : null,
+                  )
+                }
                 className={`${modalInputClass} mt-1.5`}
               >
                 <option value="">-- Chọn lớp --</option>
@@ -765,13 +874,22 @@ const CoachStudentsPage = () => {
 
             <div className="mt-3 max-h-60 space-y-2 overflow-y-auto">
               {!addMemberPostId ? (
-                <p className="py-4 text-center text-sm text-slate-500">Chọn lớp trước khi tìm học viên</p>
+                <p className="py-4 text-center text-sm text-slate-500">
+                  Chọn lớp trước khi tìm học viên
+                </p>
               ) : null}
               {addMemberPostId && userSearching ? (
-                <p className="py-2 text-center text-sm text-slate-500">Đang tìm...</p>
+                <p className="py-2 text-center text-sm text-slate-500">
+                  Đang tìm...
+                </p>
               ) : null}
-              {addMemberPostId && !userSearching && userSearchQ.trim() && userSearchResults.length === 0 ? (
-                <p className="py-2 text-center text-sm text-slate-500">Không tìm thấy user</p>
+              {addMemberPostId &&
+              !userSearching &&
+              userSearchQ.trim() &&
+              userSearchResults.length === 0 ? (
+                <p className="py-2 text-center text-sm text-slate-500">
+                  Không tìm thấy user
+                </p>
               ) : null}
 
               {userSearchResults.map((u) => (
@@ -783,13 +901,19 @@ const CoachStudentsPage = () => {
                 >
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-sky-100 text-xs font-bold text-sky-700">
                     {u.avatar ? (
-                      <img src={u.avatar} alt="" className="h-full w-full object-cover" />
+                      <img
+                        src={u.avatar}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
                     ) : (
                       (u.fullName || u.username).charAt(0).toUpperCase()
                     )}
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate font-medium text-slate-800">{u.fullName || u.username}</p>
+                    <p className="truncate font-medium text-slate-800">
+                      {u.fullName || u.username}
+                    </p>
                     <p className="text-xs text-slate-500">@{u.username}</p>
                   </div>
                   <UserPlus className="ml-auto h-4 w-4 shrink-0 text-emerald-600" />
@@ -805,8 +929,12 @@ const CoachStudentsPage = () => {
           <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-lg font-bold text-slate-950">Gửi thông báo</h3>
-                <p className="mt-1 text-xs text-slate-500">{selectedNotifyClass?.title}</p>
+                <h3 className="text-lg font-bold text-slate-950">
+                  Gửi thông báo
+                </h3>
+                <p className="mt-1 text-xs text-slate-500">
+                  {selectedNotifyClass?.title}
+                </p>
               </div>
               <button
                 type="button"
@@ -861,12 +989,16 @@ const CoachStudentsPage = () => {
       {rejectModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
           <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
-            <h3 className="text-lg font-bold text-slate-950">Từ chối đăng ký</h3>
+            <h3 className="text-lg font-bold text-slate-950">
+              Từ chối đăng ký
+            </h3>
             <textarea
               className={`${modalInputClass} mt-4 min-h-[100px]`}
               placeholder="Lý do từ chối..."
               value={rejectModal.reason}
-              onChange={(e) => setRejectModal({ ...rejectModal, reason: e.target.value })}
+              onChange={(e) =>
+                setRejectModal({ ...rejectModal, reason: e.target.value })
+              }
             />
             <div className="mt-4 flex gap-2">
               <button

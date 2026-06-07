@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { connectSocket, disconnectSocket } from "../socket";
-import type { ChatMessage } from "../types/message";
+import type { ChatMessage, PresencePayload } from "../types/message";
 import type { NotificationResponse } from "../types/notification";
 import type { OrderShippingRealtimePayload } from "../types/order";
 
@@ -11,6 +11,8 @@ const SOCKET_EVENTS = {
   CHAT_NEW_MESSAGE: "chat:new-message",
   CHAT_MESSAGES_READ: "chat:messages-read",
   CHAT_CONVERSATION_UPDATED: "chat:conversation-updated",
+  PRESENCE_USER_ONLINE: "presence:user-online",
+  PRESENCE_USER_OFFLINE: "presence:user-offline",
 } as const;
 
 export const useRealtime = (token: string) => {
@@ -26,6 +28,7 @@ export const useRealtime = (token: string) => {
     conversationId: number;
     action?: string;
   }>();
+  const [presence, setPresence] = useState<PresencePayload>();
 
   useEffect(() => {
     if (!token) return;
@@ -71,12 +74,21 @@ export const useRealtime = (token: string) => {
       },
     );
 
+    const handlePresence = (data: PresencePayload) => {
+      setPresence(data);
+    };
+
+    socket.on(SOCKET_EVENTS.PRESENCE_USER_ONLINE, handlePresence);
+    socket.on(SOCKET_EVENTS.PRESENCE_USER_OFFLINE, handlePresence);
+
     return () => {
       socket.off(SOCKET_EVENTS.NOTIFICATION_NEW);
       socket.off(SOCKET_EVENTS.ORDER_SHIPPING_UPDATED);
       socket.off(SOCKET_EVENTS.CHAT_NEW_MESSAGE);
       socket.off(SOCKET_EVENTS.CHAT_MESSAGES_READ);
       socket.off(SOCKET_EVENTS.CHAT_CONVERSATION_UPDATED);
+      socket.off(SOCKET_EVENTS.PRESENCE_USER_ONLINE, handlePresence);
+      socket.off(SOCKET_EVENTS.PRESENCE_USER_OFFLINE, handlePresence);
       socket.off("connect");
       socket.off("disconnect");
       disconnectSocket();
@@ -89,5 +101,6 @@ export const useRealtime = (token: string) => {
     chatMessage,
     chatMessagesRead,
     chatConversationUpdated,
+    presence,
   };
 };

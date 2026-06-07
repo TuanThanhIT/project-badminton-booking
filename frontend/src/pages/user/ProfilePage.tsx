@@ -15,9 +15,11 @@ import {
   Sparkles,
   Wallet,
   GraduationCap,
+  Search,
+  SlidersHorizontal,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
-import type { PostWithAuthor } from "../../types/post";
+import type { PostReactionType, PostType, PostWithAuthor } from "../../types/post";
 import PostCard from "../../components/ui/user/postList/PostCard";
 import ProfileHeroBanner from "../../components/ui/user/profile/ProfileHeroBanner";
 import { getCourtsByIds } from "../../redux/slices/user/courtSlice";
@@ -38,6 +40,8 @@ import {
 } from "../../utils/constants/profileConstant";
 import WalletPanel from "../../components/ui/user/wallet/WalletPanel";
 import { ROLE_NAME } from "../../utils/constants/role";
+import { POST_TYPE_LABEL, POST_TYPES } from "../../utils/constants/postConstant";
+import { showConfirmDialog } from "../../utils/confirmDialog";
 
 type EditTarget = {
   id: number;
@@ -90,6 +94,13 @@ const ProfilePage = () => {
   const [detailPost, setDetailPost] = useState<PostWithAuthor | null>(null);
   const [tab, setTab] = useState<ProfileTab>("profile");
   const [avatarLoadError, setAvatarLoadError] = useState(false);
+  const [postSearch, setPostSearch] = useState("");
+  const [selectedPostType, setSelectedPostType] = useState<PostType | "">("");
+  const [hideReposts, setHideReposts] = useState(false);
+  const [postSortBy, setPostSortBy] = useState<"latest" | "likes" | "comments">(
+    "latest",
+  );
+  const [currentPostPage, setCurrentPostPage] = useState(1);
   const avatarFileRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
@@ -117,8 +128,22 @@ const ProfilePage = () => {
         (acc, p) => ({
           likes: acc.likes + (p.likesCount ?? 0),
           comments: acc.comments + (p.commentsCount ?? 0),
+          shares: acc.shares + (p.sharesCount ?? 0),
+          reactions: Object.entries(p.reactionSummary ?? {}).reduce(
+            (reactionAcc, [type, count]) => {
+              const key = type as PostReactionType;
+              reactionAcc[key] = (reactionAcc[key] ?? 0) + Number(count ?? 0);
+              return reactionAcc;
+            },
+            acc.reactions,
+          ),
         }),
-        { likes: 0, comments: 0 },
+        {
+          likes: 0,
+          comments: 0,
+          shares: 0,
+          reactions: {} as Partial<Record<PostReactionType, number>>,
+        },
       ),
     [posts],
   );
@@ -259,7 +284,14 @@ const ProfilePage = () => {
   };
 
   const handleDeletePost = async (postId: number) => {
-    if (!window.confirm("Bạn chắc chắn muốn xóa bài đăng này?")) return;
+    const confirmed = await showConfirmDialog(
+      "Xóa bài đăng này?",
+      "Bài đăng sẽ bị xóa khỏi hồ sơ của bạn và không thể khôi phục từ giao diện.",
+      "Xóa bài",
+      "Hủy",
+      "danger",
+    );
+    if (!confirmed) return;
 
     try {
       await dispatch(deletePost({ postId })).unwrap();
@@ -308,6 +340,62 @@ const ProfilePage = () => {
     [courts],
   );
 
+  const filteredPosts = useMemo(() => {
+    const keyword = postSearch.trim().toLowerCase();
+
+    return posts.filter((post) => {
+      if (selectedPostType && post.type !== selectedPostType) return false;
+      if (hideReposts && post.repostOfPostId) return false;
+      if (!keyword) return true;
+
+      const authorName =
+        post.author?.profile?.fullName ||
+        post.author?.username ||
+        profile?.username ||
+        "";
+      const haystack = [
+        post.title,
+        post.content,
+        POST_TYPE_LABEL[post.type],
+        authorName,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(keyword);
+    });
+  }, [hideReposts, postSearch, posts, profile?.username, selectedPostType]);
+
+  const sortedPosts = useMemo(() => {
+    const list = [...filteredPosts];
+    if (postSortBy === "likes") {
+      return list.sort((a, b) => (b.likesCount ?? 0) - (a.likesCount ?? 0));
+    }
+    if (postSortBy === "comments") {
+      return list.sort((a, b) => (b.commentsCount ?? 0) - (a.commentsCount ?? 0));
+    }
+    return list.sort(
+      (a, b) => +new Date(b.createdAt) - +new Date(a.createdAt),
+    );
+  }, [filteredPosts, postSortBy]);
+
+  const postsPageSize = 10;
+  const totalPostPages = Math.max(1, Math.ceil(sortedPosts.length / postsPageSize));
+  const visiblePosts = useMemo(() => {
+    const safePage = Math.min(currentPostPage, totalPostPages);
+    const start = (safePage - 1) * postsPageSize;
+    return sortedPosts.slice(start, start + postsPageSize);
+  }, [currentPostPage, sortedPosts, totalPostPages]);
+
+  useEffect(() => {
+    setCurrentPostPage(1);
+  }, [hideReposts, postSearch, selectedPostType, postSortBy]);
+
+  useEffect(() => {
+    if (currentPostPage > totalPostPages) setCurrentPostPage(totalPostPages);
+  }, [currentPostPage, totalPostPages]);
+
   if (loading) {
     return (
       <div className="flex min-h-[70vh] flex-col items-center justify-center gap-3 bg-[#f8fafc] text-slate-600">
@@ -354,7 +442,7 @@ const ProfilePage = () => {
               type="button"
               disabled={uploadingAvatar}
               onClick={() => avatarFileRef.current?.click()}
-              className="absolute -bottom-2 -right-2 flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-300 bg-white text-sky-700 shadow-lg transition-all hover:border-sky-300 hover:bg-sky-50 disabled:opacity-50"
+              className="absolute -bottom-2 -right-2 flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-sky-700 transition-colors hover:border-sky-300 hover:bg-sky-50 disabled:opacity-50"
               title="Chọn ảnh từ máy"
             >
               {uploadingAvatar ? (
@@ -470,6 +558,7 @@ const ProfilePage = () => {
                       </p>
                     </div>
                   </div>
+
                 </div>
 
                 <div className="bg-slate-100/60 p-3 sm:p-5">
@@ -668,9 +757,9 @@ const ProfilePage = () => {
             )}
 
             {tab === "posts" && (
-              <section className="space-y-5">
-                <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_12px_35px_rgba(15,23,42,0.08)]">
-                  <div className="flex items-center justify-between gap-4 border-b border-slate-200 bg-white p-5 sm:p-6">
+              <section className="overflow-visible rounded-[2rem] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.08)]">
+                <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-sky-100 bg-sky-50 text-sky-600">
                         <FileText size={21} />
@@ -686,19 +775,97 @@ const ProfilePage = () => {
                       </div>
                     </div>
 
-                    <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-sm font-medium text-sky-800">
-                      {posts.length} bài
+                    <span className="w-fit rounded-full bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700">
+                      {filteredPosts.length}/{posts.length} bài
                     </span>
+                  </div>
+
+                  <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px_auto]">
+                    <div className="relative rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2">
+                      <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="text"
+                        value={postSearch}
+                        onChange={(event) => setPostSearch(event.target.value)}
+                        placeholder="Tìm bài theo tiêu đề, nội dung, loại bài..."
+                        className="w-full bg-transparent py-2.5 pl-10 pr-4 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
+                      />
+                    </div>
+
+                    <select
+                      value={postSortBy}
+                      onChange={(event) =>
+                        setPostSortBy(
+                          event.target.value as "latest" | "likes" | "comments",
+                        )
+                      }
+                      className="min-h-[48px] rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-600 outline-none transition-colors focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
+                    >
+                      <option value="latest">Mới nhất</option>
+                      <option value="likes">Nhiều lượt thích</option>
+                      <option value="comments">Nhiều bình luận</option>
+                    </select>
+
+                    <label className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-600">
+                      <input
+                        type="checkbox"
+                        checked={hideReposts}
+                        onChange={(event) => setHideReposts(event.target.checked)}
+                        className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                      />
+                      Ẩn bài chia sẻ
+                    </label>
+                  </div>
+
+                  <div className="mt-4">
+                    <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      <SlidersHorizontal className="h-4 w-4" />
+                      Lọc loại bài
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPostType("")}
+                        className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                          selectedPostType === ""
+                            ? "border-sky-500 bg-sky-50 text-sky-700"
+                            : "border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50"
+                        }`}
+                      >
+                        Tất cả
+                      </button>
+                      {POST_TYPES.map((type) => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => setSelectedPostType(type)}
+                          className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                            selectedPostType === type
+                              ? "border-sky-500 bg-sky-50 text-sky-700"
+                              : "border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50"
+                          }`}
+                        >
+                          {POST_TYPE_LABEL[type]}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                {posts.length === 0 ? (
+                <div className="space-y-5 bg-slate-50/70 p-4 sm:p-5">
+                {posts.length === 0 && (
                   <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-600 shadow-sm">
                     Bạn chưa có bài đăng nào. Hãy tạo bài mới từ mục đăng bài.
                   </div>
-                ) : (
+                )}
+                  {posts.length > 0 && filteredPosts.length === 0 && (
+                    <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-14 text-center text-sm text-slate-500">
+                      Không tìm thấy bài đăng phù hợp.
+                    </div>
+                  )}
+                  {filteredPosts.length > 0 && (
                   <div className="space-y-5">
-                    {posts.map((post) => (
+                    {visiblePosts.map((post) => (
                       <PostCard
                         key={post.id}
                         post={post}
@@ -718,6 +885,37 @@ const ProfilePage = () => {
                         }}
                       />
                     ))}
+                  </div>
+                )}
+                </div>
+
+                {sortedPosts.length > postsPageSize && (
+                  <div className="flex items-center justify-center gap-3 border-t border-slate-100 bg-white px-5 py-4">
+                    <button
+                      type="button"
+                      disabled={currentPostPage <= 1}
+                      onClick={() =>
+                        setCurrentPostPage((page) => Math.max(1, page - 1))
+                      }
+                      className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-200 disabled:pointer-events-none disabled:opacity-50"
+                    >
+                      Trước
+                    </button>
+                    <span className="px-3 py-2 text-sm font-medium text-slate-500">
+                      {currentPostPage} / {totalPostPages}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={currentPostPage >= totalPostPages}
+                      onClick={() =>
+                        setCurrentPostPage((page) =>
+                          Math.min(totalPostPages, page + 1),
+                        )
+                      }
+                      className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-200 disabled:pointer-events-none disabled:opacity-50"
+                    >
+                      Sau
+                    </button>
                   </div>
                 )}
               </section>

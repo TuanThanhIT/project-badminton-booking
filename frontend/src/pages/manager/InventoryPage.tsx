@@ -29,6 +29,7 @@ import type {
 import type { ManagerProduct } from "../../types/product";
 import type { ManagerBeverage } from "../../types/beverage";
 import TablePagination from "../../components/ui/user/pagination/TablePagination";
+import { showConfirmDialog } from "../../utils/confirmDialog";
 
 const LIMIT = 10;
 
@@ -291,6 +292,15 @@ const InventoryPage = () => {
   };
 
   const handleCancel = async (id: number) => {
+    const confirmed = await showConfirmDialog(
+      "Hủy phiếu nhập?",
+      "Phiếu nhập này sẽ chuyển sang trạng thái đã hủy và không thể gửi duyệt tiếp.",
+      "Hủy phiếu",
+      "Quay lại",
+      "danger",
+    );
+    if (!confirmed) return;
+
     setLoading(true);
     try {
       await managerInventoryService.purchaseReceiptService.cancel(id);

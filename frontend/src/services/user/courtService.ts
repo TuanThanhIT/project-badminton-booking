@@ -1,6 +1,7 @@
 import instance from "../../utils/axiosCustomize";
 import type {
   GetAvailableCourtsRequest,
+  GetMonthlyAvailableCourtsRequest,
   CourtAvailableResponse,
 } from "../../types/court";
 const getAllCourtsService = () => {
@@ -19,10 +20,18 @@ const getAvailableCourtsService = (params: GetAvailableCourtsRequest) =>
   instance.get<CourtAvailableResponse>("/user/courts/available", {
     params,
   });
+const getMonthlyAvailableCourtsService = (
+  data: GetMonthlyAvailableCourtsRequest,
+) =>
+  instance.post<CourtAvailableResponse>(
+    "/user/monthly-bookings/available-courts",
+    data,
+  );
 const courtService = {
   getAllCourtsService,
   getCourtsByIdsService,
   getAvailableCourtsService,
+  getMonthlyAvailableCourtsService,
 };
 
 export default courtService;

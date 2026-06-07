@@ -103,3 +103,9 @@ export const walletWithdrawConfirmSchema = {
     email: emailField,
   }),
 };
+
+export const walletWithdrawCancelSchema = {
+  body: Joi.object({
+    withdrawRequestId: idParams("withdrawRequestId"),
+  }),
+};

@@ -10,6 +10,7 @@ const PostShare = sequelize.define(
     userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      primaryKey: true,
       references: { model: User, key: "id" },
       validate: {
         notNull: {
@@ -25,6 +26,7 @@ const PostShare = sequelize.define(
     postId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      primaryKey: true,
       references: { model: Post, key: "id" },
       validate: {
         notNull: {

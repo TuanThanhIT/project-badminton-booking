@@ -81,6 +81,10 @@ const ProductPage = () => {
     return savedBranch ? JSON.parse(savedBranch) : [];
   });
 
+  useEffect(() => {
+    setPage(1);
+  }, [cateId, groupName]);
+
   const debouncedSearch = useMemo(
     () =>
       debounce((val: string) => {

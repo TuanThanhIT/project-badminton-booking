@@ -1,58 +1,36 @@
 import type { District, Province, Ward } from "../../types/address";
-
-const GHN_TOKEN = import.meta.env.VITE_GHN_TOKEN_DEV;
+import type { ApiResponse } from "../../types/api";
+import instance from "../../utils/axiosCustomize";
 
 const getProvincesService = async (): Promise<Province[]> => {
-  const res = await fetch(
-    "https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/province",
-    {
-      method: "GET",
-      headers: {
-        Token: GHN_TOKEN,
-        "Content-Type": "application/json",
-      },
-    },
-  );
-  if (!res.ok) throw new Error("Failed to fetch provinces");
-  const data = await res.json();
-  return data.data;
+  const response =
+    await instance.get<ApiResponse<Province[]>>("/user/locations/provinces");
+
+  return response.data.data;
 };
 
 export const getDistrictsService = async (
   provinceId: number,
 ): Promise<District[]> => {
-  const res = await fetch(
-    "https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/district",
+  const response = await instance.get<ApiResponse<District[]>>(
+    "/user/locations/districts",
     {
-      method: "POST",
-      headers: {
-        Token: GHN_TOKEN,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        province_id: provinceId,
-      }),
+      params: { provinceId },
     },
   );
-  if (!res.ok) throw new Error("Failed to fetch districts");
-  const data = await res.json();
-  return data.data;
+
+  return response.data.data;
 };
 
 export const getWardsService = async (districtId: number): Promise<Ward[]> => {
-  const res = await fetch(
-    `https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/ward?district_id=${districtId}`,
+  const response = await instance.get<ApiResponse<Ward[]>>(
+    "/user/locations/wards",
     {
-      headers: {
-        Token: GHN_TOKEN,
-      },
+      params: { districtId },
     },
   );
-  if (!res.ok) {
-    throw new Error("Failed to fetch wards");
-  }
-  const json = await res.json();
-  return json.data;
+
+  return response.data.data;
 };
 
 const locationService = {

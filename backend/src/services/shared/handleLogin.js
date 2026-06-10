@@ -1,4 +1,4 @@
-import { Branch, Role, User } from "../../models/index.js";
+import { Branch, BranchManager, Role, User } from "../../models/index.js";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import sequelize from "../../config/db.js";
@@ -8,6 +8,16 @@ import { generateAccessToken, generateRefreshToken } from "../../utils/jwt.js";
 import { getEmployeeBranchIds } from "../employee/branchAccessService.js";
 import { ROLE_NAME } from "../../constants/userConstant.js";
 dotenv.config();
+
+const getManagerBranchIds = async (managerId, transaction) => {
+  const branchManagers = await BranchManager.findAll({
+    where: { managerId, isActive: true },
+    attributes: ["branchId"],
+    transaction,
+  });
+
+  return branchManagers.map((item) => Number(item.branchId));
+};
 
 export const handleLogin = async (username, password, expectedRoles) => {
   if (!username || !password) {
@@ -66,7 +76,9 @@ export const handleLogin = async (username, password, expectedRoles) => {
     const branchIds =
       userRole === ROLE_NAME.EMPLOYEE
         ? await getEmployeeBranchIds(user.id, t)
-        : [];
+        : userRole === ROLE_NAME.MANAGER
+          ? await getManagerBranchIds(user.id, t)
+          : [];
 
     const payloadAccessToken = {
       id: user.id,

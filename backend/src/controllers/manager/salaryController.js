@@ -10,7 +10,7 @@ const getMonthlySalary = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Get monthly salary successfully", result));
+    .json(new SuccessResponse("Lay luong thang thanh cong", result));
 });
 
 export default {

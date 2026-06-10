@@ -159,7 +159,9 @@ const DiscountManagementPage = () => {
 
   const totalPages = Math.max(Math.ceil(total / LIMIT), 1);
   const activeCount = discounts.filter((discount) => discount.isActive).length;
-  const inactiveCount = discounts.filter((discount) => !discount.isActive).length;
+  const inactiveCount = discounts.filter(
+    (discount) => !discount.isActive,
+  ).length;
   const percentCount = discounts.filter(
     (discount) => discount.type === "PERCENT",
   ).length;
@@ -168,7 +170,7 @@ const DiscountManagementPage = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="space-y-6 rounded-2xl border border-gray-200 bg-white p-8">
         <AdminPageHeader
-          title="Quản lý Khuyến mãi"
+          title="Quản lý khuyến mãi"
           subtitle="Kiểm soát mã giảm giá, phạm vi áp dụng và trạng thái hoạt động."
           action={
             <button
@@ -222,7 +224,7 @@ const DiscountManagementPage = () => {
                   setSearchInput(event.target.value.toUpperCase())
                 }
                 placeholder="Nhập mã..."
-                className="h-11 w-full rounded-xl border border-gray-300 bg-white pl-9 pr-3 text-sm uppercase outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="h-11 w-full rounded-xl border border-gray-300 pl-9 pr-3 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
               />
             </div>
           </div>
@@ -343,7 +345,9 @@ const DiscountManagementPage = () => {
                       </td>
                       <td className="px-3 py-3 text-center text-gray-600">
                         {discount.usageCount}{" "}
-                        {discount.usageLimit ? `/ ${discount.usageLimit}` : "/ ∞"}
+                        {discount.usageLimit
+                          ? `/ ${discount.usageLimit}`
+                          : "/ ∞"}
                       </td>
                       <td className="whitespace-nowrap px-3 py-3 text-center text-xs text-gray-500">
                         {new Date(discount.startDate).toLocaleDateString(

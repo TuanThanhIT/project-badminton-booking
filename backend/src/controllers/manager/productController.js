@@ -8,7 +8,7 @@ const getProductsController = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Get manager products successfully", result));
+    .json(new SuccessResponse("Lay danh sach san pham cua quan ly thanh cong", result));
 });
 
 const getProductCategoriesController = asyncHandler(async (req, res) => {
@@ -16,7 +16,7 @@ const getProductCategoriesController = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Get manager product categories successfully", result));
+    .json(new SuccessResponse("Lay danh muc san pham cua quan ly thanh cong", result));
 });
 
 const getProductDetailController = asyncHandler(async (req, res) => {
@@ -28,7 +28,7 @@ const getProductDetailController = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Get manager product detail successfully", result));
+    .json(new SuccessResponse("Lay chi tiet san pham cua quan ly thanh cong", result));
 });
 
 export default {

@@ -31,7 +31,7 @@ const getMonthlyAvailableCourtsController = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Get monthly available courts successfully", result));
+    .json(new SuccessResponse("Lấy danh sách sân trống theo tháng thành công", result));
 });
 
 const monthlyBookingController = {

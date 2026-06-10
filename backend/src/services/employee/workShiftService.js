@@ -30,6 +30,21 @@ const normalizeTime = (time) => {
 const buildDateTime = (date, time) =>
   new Date(`${date}T${normalizeTime(time)}`);
 
+const CHECKOUT_EARLY_MINUTES = 5;
+
+const getCheckoutWindowStart = (workShift) => {
+  const shiftStartDate = buildDateTime(workShift.workDate, workShift.startTime);
+  const shiftEndDate = buildDateTime(workShift.workDate, workShift.endTime);
+
+  if (shiftEndDate <= shiftStartDate) {
+    shiftEndDate.setDate(shiftEndDate.getDate() + 1);
+  }
+
+  return new Date(
+    shiftEndDate.getTime() - CHECKOUT_EARLY_MINUTES * 60 * 1000,
+  );
+};
+
 const markShiftInProgress = async (workShiftId, transaction) => {
   await WorkShift.update(
     { shiftStatus: WORK_SHIFT_STATUS.INPROGRESS },
@@ -454,6 +469,16 @@ const updateCheckoutAndCashRegisterService = async ({
       throw new BadRequestError("Thời gian check-out phải lớn hơn check-in!");
     }
 
+    if (assignment.roleInShift === ROLE_IN_SHIFT.CASHIER) {
+      const checkoutWindowStart = getCheckoutWindowStart(workShift);
+
+      if (checkOutDate < checkoutWindowStart) {
+        throw new BadRequestError(
+          `Chỉ có thể checkout trong vòng ${CHECKOUT_EARLY_MINUTES} phút trước khi ca kết thúc!`,
+        );
+      }
+    }
+
     const { completionRate, earnedWage } = calculateWageByShiftProgress(
       checkInDate,
       checkOutDate,
@@ -468,7 +493,6 @@ const updateCheckoutAndCashRegisterService = async ({
         where: {
           workShiftId,
           id: { [Op.ne]: assignment.id },
-          checkIn: { [Op.ne]: null },
           checkOut: null,
         },
         transaction: t,

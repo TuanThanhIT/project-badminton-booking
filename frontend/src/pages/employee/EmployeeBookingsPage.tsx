@@ -454,9 +454,9 @@ const EmployeeBookingsPage = () => {
           {/* HEADER */}
           <div className="mb-3 flex shrink-0 flex-col justify-between gap-2 lg:flex-row lg:items-center">
             <div>
-              <p className="text-sm font-bold text-sky-700">Vận hành đặt sân</p>
+              <p className="text-sm font-semibold text-sky-700">Vận hành đặt sân</p>
 
-              <h2 className="mt-1 text-2xl font-extrabold text-slate-800">
+              <h2 className="mt-1 text-2xl font-bold text-slate-800">
                 Lịch đặt sân
               </h2>
 
@@ -714,7 +714,7 @@ const EmployeeBookingsPage = () => {
                 <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-start">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="font-mono text-2xl font-bold text-sky-700">
+                      <h2 className="text-xl font-bold text-sky-700">
                         #
                         {formatBookingCode(
                           selectedBooking.id,
@@ -766,11 +766,11 @@ const EmployeeBookingsPage = () => {
                   </div>
 
                   <div className="rounded-3xl bg-white px-5 py-4 shadow-sm lg:text-right">
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    <p className="text-xs font-medium text-slate-500">
                       Tổng thanh toán
                     </p>
 
-                    <p className="mt-1 text-3xl font-bold text-sky-700">
+                    <p className="mt-1 text-xl font-bold text-sky-700">
                       {formatCurrency(selectedBooking.totalAmount)}
                     </p>
                   </div>
@@ -923,7 +923,7 @@ const EmployeeBookingsPage = () => {
                           {selectedBooking.user?.email || "--"}
                         </p>
 
-                        <p className="mt-0.5 truncate text-xs font-medium text-sky-700">
+                        <p className="mt-0.5 truncate text-xs text-slate-500">
                           {selectedBooking.customer?.phoneNumber ||
                             selectedBooking.user?.profile?.phoneNumber ||
                             "Chưa có số điện thoại"}
@@ -936,7 +936,7 @@ const EmployeeBookingsPage = () => {
                         Ghi chú
                       </p>
 
-                      <p className="truncate font-sans text-[13px] font-medium tracking-tight text-sky-700">
+                      <p className="truncate font-sans text-[13px] font-medium tracking-tight text-slate-700">
                         {selectedBooking.note || "--"}
                       </p>
                     </div>
@@ -957,7 +957,7 @@ const EmployeeBookingsPage = () => {
                         Phương thức
                       </span>
 
-                      <span className="truncate font-sans text-[13px] font-medium tracking-tight text-sky-700">
+                      <span className="truncate font-sans text-[13px] font-medium tracking-tight text-slate-800">
                         {PAYMENT_LABEL[
                           selectedBooking.payment?.paymentMethod || "COD"
                         ] ||
@@ -971,7 +971,7 @@ const EmployeeBookingsPage = () => {
                         Trạng thái
                       </span>
 
-                      <span className="truncate font-sans text-[13px] font-medium tracking-tight text-sky-700">
+                      <span className="truncate font-sans text-[13px] font-medium tracking-tight text-slate-800">
                         {PAYMENT_LABEL[
                           selectedBooking.payment?.paymentStatus || "PENDING"
                         ] ||
@@ -981,11 +981,11 @@ const EmployeeBookingsPage = () => {
                     </div>
 
                     <div className="mt-3 flex items-center justify-between gap-4 rounded-xl bg-sky-50 px-3 py-2.5">
-                      <span className="text-sm font-medium text-sky-700">
+                      <span className="text-sm font-medium text-slate-700">
                         Tổng tiền
                       </span>
 
-                      <span className="text-base font-bold text-sky-700">
+                      <span className="text-base font-bold text-slate-800">
                         {formatCurrency(selectedBooking.totalAmount)}
                       </span>
                     </div>
@@ -994,7 +994,7 @@ const EmployeeBookingsPage = () => {
                   {selectedBooking.bookingStatus === "CHECKED_IN" &&
                     selectedBooking.payment?.paymentStatus !== "PAID" && (
                       <div className="mt-4 border-t border-slate-100 pt-4">
-                        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        <p className="mb-2 text-xs font-semibold text-slate-500">
                           Phương thức thanh toán
                         </p>
 
@@ -1182,7 +1182,7 @@ const EmployeeBookingsPage = () => {
                       Từ chối yêu cầu hủy lịch
                     </p>
 
-                    <h3 className="mt-1 truncate font-mono text-xl font-extrabold text-sky-700">
+                    <h3 className="mt-1 truncate text-lg font-bold text-sky-700">
                       #
                       {formatBookingCode(
                         rejectingBooking.id,

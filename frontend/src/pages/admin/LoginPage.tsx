@@ -15,6 +15,7 @@ import {
 } from "../../redux/slices/user/authSlice";
 import type { LoginRequest } from "../../types/auth";
 import LoadingButton from "../../components/ui/common/LoadingButton";
+import PasswordInput from "../../components/ui/common/PasswordInput";
 import { ROLE_NAME } from "../../utils/constants/role";
 
 const inputClass =
@@ -165,18 +166,12 @@ const LoginPage = () => {
                     {errors.password?.message || ""}
                   </span>
                 </div>
-                <div className="relative">
-                  <Lock
-                    size={17}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                  />
-                  <input
-                    type="password"
-                    {...register("password")}
-                    placeholder="Nhập mật khẩu"
-                    className={inputClass}
-                  />
-                </div>
+                <PasswordInput
+                  registration={register("password")}
+                  placeholder="Nhập mật khẩu"
+                  leftIcon={<Lock size={17} />}
+                  className={inputClass}
+                />
               </label>
 
               <label className="inline-flex items-center gap-2 text-sm text-slate-600">

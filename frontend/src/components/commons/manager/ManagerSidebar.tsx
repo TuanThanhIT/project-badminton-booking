@@ -123,11 +123,9 @@ const ManagerSidebar = ({ collapsed, setCollapsed }: Props) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { user, accessToken } = useAppSelector((state) => state.auth);
-  const { branch } = useAppSelector((state) => state.managerBranch);
 
   const displayName = user?.username || "Manager";
   const initial = displayName.charAt(0).toUpperCase();
-  const branchName = branch?.branchName;
 
   useEffect(() => {
     if (!accessToken) return;
@@ -149,7 +147,7 @@ const ManagerSidebar = ({ collapsed, setCollapsed }: Props) => {
       <button
         type="button"
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-4 top-[2.15rem] z-10 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
+        className="absolute -right-4 top-10 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
         aria-label={collapsed ? "Mở rộng menu" : "Thu gọn menu"}
       >
         {collapsed ? (
@@ -160,38 +158,23 @@ const ManagerSidebar = ({ collapsed, setCollapsed }: Props) => {
       </button>
 
       <div
-        className={`flex h-20 items-center border-b border-slate-200 ${
-          collapsed ? "justify-center px-2" : "px-6"
+        className={`flex border-b border-slate-200 ${
+          collapsed ? "h-20 items-center justify-center px-2" : "h-20 items-center px-6 pr-9"
         }`}
       >
         <div
-          className={`flex ${collapsed ? "flex-col items-center" : "items-start gap-4"}`}
+          className={`flex w-full ${collapsed ? "flex-col items-center" : "items-center gap-4"}`}
         >
-          <div
-            className={`flex flex-col ${collapsed ? "items-center" : "shrink-0"}`}
-          >
+          <div className="shrink-0">
             <img
               src="/img/logo_badminton.jpg"
               alt="B-Hub"
-              className="h-12 w-12 shrink-0 rounded-2xl border border-slate-100 object-cover shadow-sm"
+              className="h-12 w-12 shrink-0 rounded-2xl border border-slate-100 bg-white object-cover shadow-sm"
             />
-
-            {branchName && (
-              <p
-                className={`mt-1.5 text-center font-semibold text-sky-700 ${
-                  collapsed
-                    ? "max-w-[4.5rem] truncate text-[10px] leading-tight"
-                    : "max-w-24 line-clamp-2 text-xs leading-snug"
-                }`}
-                title={branchName}
-              >
-                {branchName}
-              </p>
-            )}
           </div>
 
           {!collapsed && (
-            <div className="flex h-12 flex-col justify-center">
+            <div className="min-w-0 flex-1">
               <h1 className="text-2xl font-semibold leading-none text-slate-900">
                 B-Hub
               </h1>

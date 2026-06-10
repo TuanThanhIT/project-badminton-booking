@@ -16,6 +16,7 @@ const ManagerHeader = () => {
   const notificationRef = useRef<HTMLDivElement | null>(null);
 
   const { user, accessToken } = useAppSelector((state) => state.auth);
+  const { branch } = useAppSelector((state) => state.managerBranch);
   const {
     notifications,
     unreadCount,
@@ -68,6 +69,7 @@ const ManagerHeader = () => {
 
   const displayName = user?.username || "Manager";
   const initial = displayName.charAt(0).toUpperCase();
+  const branchName = branch?.branchName || "Quản lý cửa hàng";
 
   return (
     <header className="flex h-20 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6 lg:px-8">
@@ -212,17 +214,20 @@ const ManagerHeader = () => {
           )}
         </div>
 
-        <div className="hidden items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 lg:flex">
+        <div className="hidden h-12 min-w-[210px] items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 lg:flex">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-600 font-semibold text-white">
             {initial}
           </div>
 
-          <div>
-            <p className="text-sm font-semibold text-slate-900">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold leading-5 text-slate-900">
               {displayName}
             </p>
-            <p className="text-xs font-medium text-slate-500">
-              Quản lý cửa hàng
+            <p
+              className="truncate text-xs font-medium leading-4 text-sky-700"
+              title={branchName}
+            >
+              {branchName}
             </p>
           </div>
         </div>

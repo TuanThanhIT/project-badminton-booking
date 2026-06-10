@@ -90,16 +90,39 @@ const makeBranchSelect = (branchId, alias = "b") =>
     ? "SELECT id, branchName FROM Branches WHERE id = :branchId"
     : `SELECT ${alias}.id, ${alias}.branchName FROM Branches ${alias}`;
 
-const getCostJoin = (itemType, fieldName) => `
+const getCostJoin = (itemType, fieldName, targetExpression) => `
   LEFT JOIN (
-    SELECT d.${fieldName}, SUM(d.totalPrice) / NULLIF(SUM(d.quantity), 0) AS avgCost
+    SELECT d.${fieldName},
+           COALESCE(
+             SUM(
+               CASE
+                 WHEN pr.status = '${PURCHASE_RECEIPT_STATUS.APPROVED}' THEN
+                   CASE
+                     WHEN COALESCE(d.totalPrice, 0) > 0 THEN d.totalPrice
+                     ELSE COALESCE(d.importPrice, 0) * COALESCE(d.quantity, 0)
+                   END
+                 ELSE 0
+               END
+             ) / NULLIF(SUM(CASE WHEN pr.status = '${PURCHASE_RECEIPT_STATUS.APPROVED}' THEN d.quantity ELSE 0 END), 0),
+             SUM(
+               CASE
+                 WHEN pr.status NOT IN ('${PURCHASE_RECEIPT_STATUS.REJECTED}', '${PURCHASE_RECEIPT_STATUS.CANCELLED}') THEN
+                   CASE
+                     WHEN COALESCE(d.totalPrice, 0) > 0 THEN d.totalPrice
+                     ELSE COALESCE(d.importPrice, 0) * COALESCE(d.quantity, 0)
+                   END
+                 ELSE 0
+               END
+             ) / NULLIF(SUM(CASE WHEN pr.status NOT IN ('${PURCHASE_RECEIPT_STATUS.REJECTED}', '${PURCHASE_RECEIPT_STATUS.CANCELLED}') THEN d.quantity ELSE 0 END), 0),
+             0
+           ) AS avgCost
     FROM PurchaseReceiptDetails d
     INNER JOIN PurchaseReceipts pr ON pr.id = d.purchaseReceiptId
-    WHERE pr.status = '${PURCHASE_RECEIPT_STATUS.APPROVED}'
+    WHERE pr.status NOT IN ('${PURCHASE_RECEIPT_STATUS.REJECTED}', '${PURCHASE_RECEIPT_STATUS.CANCELLED}')
       AND d.itemType = '${itemType}'
       AND d.${fieldName} IS NOT NULL
     GROUP BY d.${fieldName}
-  ) cost ON cost.${fieldName} = sales.${fieldName}
+  ) cost ON cost.${fieldName} = ${targetExpression}
 `;
 
 const emptySummary = () => ({
@@ -361,11 +384,7 @@ const buildRevenueReport = async ({
              SUM(od.quantity * COALESCE(cost.avgCost, 0)) AS cost
       FROM Orders o
       INNER JOIN OrderDetails od ON od.orderId = o.id
-      INNER JOIN (
-        SELECT od2.orderId, od2.variantId
-        FROM OrderDetails od2
-      ) sales ON sales.orderId = od.orderId AND sales.variantId = od.variantId
-      ${getCostJoin(STOCK_ITEM_TYPE.PRODUCT_VARIANT, "variantId")}
+      ${getCostJoin(STOCK_ITEM_TYPE.PRODUCT_VARIANT, "variantId", "od.variantId")}
       WHERE o.orderStatus IN (:paidOrderStatuses)
         AND DATE(o.createdAt) BETWEEN :startDate AND :endDate
         ${orderBranchFilter}
@@ -384,11 +403,7 @@ const buildRevenueReport = async ({
       FROM OfflineBookings ob
       INNER JOIN DraftBookings db ON db.id = ob.draftId
       INNER JOIN DraftProductItems dpi ON dpi.draftId = db.id
-      INNER JOIN (
-        SELECT dpi2.draftId, dpi2.productVariantId AS variantId
-        FROM DraftProductItems dpi2
-      ) sales ON sales.draftId = dpi.draftId AND sales.variantId = dpi.productVariantId
-      ${getCostJoin(STOCK_ITEM_TYPE.PRODUCT_VARIANT, "variantId")}
+      ${getCostJoin(STOCK_ITEM_TYPE.PRODUCT_VARIANT, "variantId", "dpi.productVariantId")}
       WHERE ob.paymentStatus = :paidStatus
         AND DATE(COALESCE(ob.paidAt, ob.createdAt)) BETWEEN :startDate AND :endDate
         ${draftBranchFilter}
@@ -407,11 +422,7 @@ const buildRevenueReport = async ({
       FROM OfflineBookings ob
       INNER JOIN DraftBookings db ON db.id = ob.draftId
       INNER JOIN DraftBeverageItems dbi ON dbi.draftId = db.id
-      INNER JOIN (
-        SELECT dbi2.draftId, dbi2.beverageId
-        FROM DraftBeverageItems dbi2
-      ) sales ON sales.draftId = dbi.draftId AND sales.beverageId = dbi.beverageId
-      ${getCostJoin(STOCK_ITEM_TYPE.BEVERAGE, "beverageId")}
+      ${getCostJoin(STOCK_ITEM_TYPE.BEVERAGE, "beverageId", "dbi.beverageId")}
       WHERE ob.paymentStatus = :paidStatus
         AND DATE(COALESCE(ob.paidAt, ob.createdAt)) BETWEEN :startDate AND :endDate
         ${draftBranchFilter}
@@ -433,9 +444,7 @@ const buildRevenueReport = async ({
                SUM(od.subTotal) AS revenue, SUM(od.quantity * COALESCE(cost.avgCost, 0)) AS cost
         FROM Orders o
         INNER JOIN OrderDetails od ON od.orderId = o.id
-        INNER JOIN (SELECT od2.orderId, od2.variantId FROM OrderDetails od2) sales
-          ON sales.orderId = od.orderId AND sales.variantId = od.variantId
-        ${getCostJoin(STOCK_ITEM_TYPE.PRODUCT_VARIANT, "variantId")}
+        ${getCostJoin(STOCK_ITEM_TYPE.PRODUCT_VARIANT, "variantId", "od.variantId")}
         WHERE o.orderStatus IN (:paidOrderStatuses)
           AND DATE(o.createdAt) BETWEEN :startDate AND :endDate
           ${orderBranchFilter}
@@ -446,9 +455,7 @@ const buildRevenueReport = async ({
         FROM OfflineBookings ob
         INNER JOIN DraftBookings db ON db.id = ob.draftId
         INNER JOIN DraftProductItems dpi ON dpi.draftId = db.id
-        INNER JOIN (SELECT dpi2.draftId, dpi2.productVariantId AS variantId FROM DraftProductItems dpi2) sales
-          ON sales.draftId = dpi.draftId AND sales.variantId = dpi.productVariantId
-        ${getCostJoin(STOCK_ITEM_TYPE.PRODUCT_VARIANT, "variantId")}
+        ${getCostJoin(STOCK_ITEM_TYPE.PRODUCT_VARIANT, "variantId", "dpi.productVariantId")}
         WHERE ob.paymentStatus = :paidStatus
           AND DATE(COALESCE(ob.paidAt, ob.createdAt)) BETWEEN :startDate AND :endDate
           ${draftBranchFilter}
@@ -472,9 +479,7 @@ const buildRevenueReport = async ({
       FROM OfflineBookings ob
       INNER JOIN DraftBookings db ON db.id = ob.draftId
       INNER JOIN DraftBeverageItems dbi ON dbi.draftId = db.id
-      INNER JOIN (SELECT dbi2.draftId, dbi2.beverageId FROM DraftBeverageItems dbi2) sales
-        ON sales.draftId = dbi.draftId AND sales.beverageId = dbi.beverageId
-      ${getCostJoin(STOCK_ITEM_TYPE.BEVERAGE, "beverageId")}
+      ${getCostJoin(STOCK_ITEM_TYPE.BEVERAGE, "beverageId", "dbi.beverageId")}
       LEFT JOIN Beverages b ON b.id = dbi.beverageId
       WHERE ob.paymentStatus = :paidStatus
         AND DATE(COALESCE(ob.paidAt, ob.createdAt)) BETWEEN :startDate AND :endDate

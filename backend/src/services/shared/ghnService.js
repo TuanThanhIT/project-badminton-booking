@@ -8,6 +8,7 @@ import {
 } from "../../models/index.js";
 import NotFoundError from "../../errors/NotFoundError.js";
 import BadRequestError from "../../errors/BadRequestError.js";
+import InternalServerError from "../../errors/InternalServerError.js";
 import {
   PAYMENT_METHOD_STATUS,
   TARGET_PAYMENT_TYPE,
@@ -19,6 +20,57 @@ const GHN_BASE_URL =
   process.env.GHN_BASE_URL ||
   "https://dev-online-gateway.ghn.vn/shiip/public-api";
 
+const ghnClient = axios.create({
+  baseURL: GHN_BASE_URL,
+  timeout: 10000,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+ghnClient.interceptors.request.use((config) => {
+  const token = process.env.GHN_TOKEN_DEV;
+  if (token) {
+    config.headers.Token = token;
+  }
+  return config;
+});
+
+const ensureGhnToken = () => {
+  if (!process.env.GHN_TOKEN_DEV) {
+    throw new InternalServerError("GHN token is not configured");
+  }
+};
+
+const ensureGhnDataArray = (response, label) => {
+  const data = response.data?.data;
+
+  if (!Array.isArray(data)) {
+    throw new InternalServerError(`GHN ${label} response is invalid`);
+  }
+
+  return data;
+};
+
+const throwGhnMasterDataError = (error, label) => {
+  if (!axios.isAxiosError(error)) {
+    throw error;
+  }
+
+  if (error.code === "ECONNABORTED") {
+    throw new InternalServerError(`GHN ${label} request timed out`);
+  }
+
+  if (!error.response) {
+    throw new InternalServerError(`Unable to connect to GHN ${label} service`);
+  }
+
+  throw new BadRequestError(`GHN: ${getGhnErrorMessage(error)}`, {
+    status: error.response.status,
+    service: label,
+  });
+};
+
 const getGhnErrorMessage = (error) => {
   const responseData = error.response?.data;
 
@@ -29,6 +81,57 @@ const getGhnErrorMessage = (error) => {
     error.message ||
     "GHN rejected the shipping request"
   );
+};
+
+const toPositiveInteger = (value, fieldName) => {
+  const numberValue = Number(value);
+
+  if (!Number.isInteger(numberValue) || numberValue <= 0) {
+    throw new BadRequestError(`${fieldName} is invalid`);
+  }
+
+  return numberValue;
+};
+
+export const getGhnProvinces = async () => {
+  ensureGhnToken();
+
+  try {
+    const response = await ghnClient.get("/master-data/province");
+    return ensureGhnDataArray(response, "province");
+  } catch (error) {
+    throwGhnMasterDataError(error, "province");
+  }
+};
+
+export const getGhnDistricts = async (provinceId) => {
+  ensureGhnToken();
+  const normalizedProvinceId = toPositiveInteger(provinceId, "provinceId");
+
+  try {
+    const response = await ghnClient.post("/master-data/district", {
+      province_id: normalizedProvinceId,
+    });
+    return ensureGhnDataArray(response, "district");
+  } catch (error) {
+    throwGhnMasterDataError(error, "district");
+  }
+};
+
+export const getGhnWards = async (districtId) => {
+  ensureGhnToken();
+  const normalizedDistrictId = toPositiveInteger(districtId, "districtId");
+
+  try {
+    const response = await ghnClient.get("/master-data/ward", {
+      params: {
+        district_id: normalizedDistrictId,
+      },
+    });
+    return ensureGhnDataArray(response, "ward");
+  } catch (error) {
+    throwGhnMasterDataError(error, "ward");
+  }
 };
 
 const throwGhnRequestError = (error, context = {}) => {

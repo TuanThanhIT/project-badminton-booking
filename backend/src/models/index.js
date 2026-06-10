@@ -631,7 +631,7 @@ OfflineBooking.belongsTo(DraftBooking, {
 //////////////////////////////////////////////////////
 //////////////// MONTHLY BOOKING /////////////////////
 //////////////////////////////////////////////////////
-// Quan h? cho �?t s�n th�ng
+// Quan hệ cho đặt sân tháng
 User.hasMany(MonthlyBooking, { foreignKey: "userId", as: "monthlyBookings" });
 MonthlyBooking.belongsTo(User, { foreignKey: "userId", as: "user" });
 
@@ -644,7 +644,7 @@ MonthlyBooking.belongsTo(Branch, { foreignKey: "branchId", as: "branch" });
 Court.hasMany(MonthlyBooking, { foreignKey: "courtId", as: "monthlyBookings" });
 MonthlyBooking.belongsTo(Court, { foreignKey: "courtId", as: "court" });
 
-// Quan h? k?t n?i G�i th�ng v?i c�c Bu?i t?p chi ti?t
+// Quan hệ kết nối Gói tháng với các Buổi tập chi tiết
 MonthlyBooking.hasMany(BookingDetail, {
   foreignKey: "monthlyBookingId",
   as: "details",

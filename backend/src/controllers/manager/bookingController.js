@@ -7,7 +7,7 @@ const getBookings = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Get manager bookings successfully", result));
+    .json(new SuccessResponse("Lay danh sach lich dat san cua quan ly thanh cong", result));
 });
 
 const getBookingDetail = asyncHandler(async (req, res) => {
@@ -18,7 +18,7 @@ const getBookingDetail = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Get manager booking detail successfully", result));
+    .json(new SuccessResponse("Lay chi tiet lich dat san cua quan ly thanh cong", result));
 });
 
 export default {

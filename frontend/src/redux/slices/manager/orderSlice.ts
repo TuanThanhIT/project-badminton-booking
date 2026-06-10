@@ -28,7 +28,7 @@ const initialState: ManagerOrderState = {
   summary: {},
   pagination: {
     page: 1,
-    limit: 12,
+    limit: 10,
     total: 0,
     totalPages: 0,
   },

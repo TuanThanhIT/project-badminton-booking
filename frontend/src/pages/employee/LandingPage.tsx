@@ -8,16 +8,16 @@ import {
 
 const LandingPage = () => {
   return (
-    <section className="min-h-full bg-slate-50 text-slate-700">
-      <div className="mx-auto grid min-h-full w-full max-w-7xl items-center px-4 py-4 sm:px-6 lg:px-10">
-        <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
+    <section className="flex min-h-full w-full flex-1 items-center justify-center bg-slate-50 text-slate-700">
+      <div className="mx-auto grid w-full max-w-6xl items-center px-4 py-8 sm:px-6 lg:px-8">
+        <div className="grid items-center justify-center gap-8 lg:grid-cols-2 lg:gap-12">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-sky-700 shadow-sm sm:text-sm">
               <ShieldCheck className="h-4 w-4" />
               Employee Secure System
             </div>
 
-            <h1 className="mt-4 text-3xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
+            <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl">
               Hệ thống nhân viên
               <span className="block text-sky-700">B-Hub Employee</span>
             </h1>
@@ -70,7 +70,7 @@ const LandingPage = () => {
                     <ChevronRight className="h-4 w-4" />
                     Employee Workspace
                   </div>
-                  <h2 className="mt-4 text-2xl font-extrabold sm:text-3xl">
+                  <h2 className="mt-4 text-2xl font-bold">
                     Welcome Employee
                   </h2>
                   <p className="mt-2 text-sm leading-relaxed text-sky-100 sm:text-base">

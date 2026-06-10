@@ -155,7 +155,7 @@ const BeverageManagementPage = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="space-y-6 rounded-2xl border border-gray-200 bg-white p-8">
         <AdminPageHeader
-          title="Quản lý Đồ uống"
+          title="Quản lý đồ uống"
           subtitle="Theo dõi đồ uống bán tại quầy, giá bán và tồn kho theo chi nhánh."
           action={
             <button
@@ -278,7 +278,8 @@ const BeverageManagementPage = () => {
                           alt={beverage.beverageName}
                           className="h-10 w-10 shrink-0 rounded-lg border border-gray-200 object-cover"
                           onError={(event) => {
-                            (event.target as HTMLImageElement).src = DEFAULT_THUMB;
+                            (event.target as HTMLImageElement).src =
+                              DEFAULT_THUMB;
                           }}
                         />
                         <span className="font-semibold text-gray-800">
@@ -352,7 +353,6 @@ const BeverageManagementPage = () => {
           }}
         />
       )}
-
     </div>
   );
 };

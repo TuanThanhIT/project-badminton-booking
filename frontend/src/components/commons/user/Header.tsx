@@ -114,10 +114,13 @@ const Header = ({ cartRef }: HeaderProps) => {
 
   const displayName =
     activeProfile?.profile?.fullName?.trim() || user?.username || "Tài khoản";
-  const avatarUrl = activeProfile?.profile?.avatar || user?.profile?.avatar || "";
+  const avatarUrl =
+    activeProfile?.profile?.avatar || user?.profile?.avatar || "";
   const avatarLetter = displayName.charAt(0).toUpperCase();
   const [avatarError, setAvatarError] = useState(false);
-  useEffect(() => { setAvatarError(false); }, [avatarUrl]);
+  useEffect(() => {
+    setAvatarError(false);
+  }, [avatarUrl]);
 
   const actionLinkClass = ({ isActive }: { isActive: boolean }) =>
     `relative flex h-11 items-center gap-2 rounded-full border px-3.5 text-sm font-medium transition-all ${

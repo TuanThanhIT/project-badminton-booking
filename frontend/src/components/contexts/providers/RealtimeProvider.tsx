@@ -66,7 +66,7 @@ const RealtimeProvider = ({ children }: RealtimeProviderProps) => {
 
     if (role === "MANAGER") {
       if (notification.type?.startsWith("order-")) {
-        dispatch(getManagerOrders({ page: 1, limit: 12 }));
+        dispatch(getManagerOrders({ page: 1, limit: 10 }));
       }
       return;
     }

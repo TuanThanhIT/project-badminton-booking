@@ -4,6 +4,7 @@ import {
   CalendarDays,
   CheckCircle,
   Clock,
+  Download,
   Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -12,6 +13,7 @@ import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { getManagerMonthlySalary } from "../../redux/slices/manager/salarySlice";
 import { ManagerPageHeader } from "../../components/commons/manager/ManagerPage";
 import TablePagination from "../../components/ui/user/pagination/TablePagination";
+import { exportExcel } from "../../utils/exportExcel";
 
 const now = new Date();
 const LIMIT = 10;
@@ -100,6 +102,72 @@ const SalaryPage = () => {
     };
   }, [data]);
 
+  const handleExportExcel = () => {
+    const employees = data?.employees || [];
+    exportExcel(`bang-luong-manager-${month}-${year}.xls`, [
+      {
+        title: `Tong hop luong thang ${month}/${year}`,
+        headers: ["Chi tieu", "Gia tri"],
+        rows: [
+          ["Nhan vien", stats.employeeCount],
+          ["Tong ca", stats.totalShiftCount],
+          ["Ca hoan thanh", stats.completedShiftCount],
+          ["Tong luong", stats.totalSalary],
+        ],
+      },
+      {
+        title: "Bang luong nhan vien",
+        headers: [
+          "Nhan vien",
+          "Username",
+          "Email",
+          "So ca",
+          "Ca hoan thanh",
+          "Ty le trung binh",
+          "Tong luong",
+        ],
+        rows: employees.map((employee) => [
+          employee.fullName || employee.username,
+          employee.username,
+          employee.email,
+          employee.shiftCount,
+          employee.completedShiftCount,
+          `${Math.round(Number(employee.averageCompletionRate || 0) * 100)}%`,
+          employee.totalEarnedWage,
+        ]),
+      },
+      {
+        title: "Chi tiet ca lam",
+        headers: [
+          "Nhan vien",
+          "Ca",
+          "Ngay",
+          "Bat dau",
+          "Ket thuc",
+          "Vai tro",
+          "Check-in",
+          "Check-out",
+          "Ty le",
+          "Luong",
+        ],
+        rows: employees.flatMap((employee) =>
+          employee.assignments.map((assignment) => [
+            employee.fullName || employee.username,
+            assignment.workShift.shiftName,
+            assignment.workShift.workDate,
+            timeShort(assignment.workShift.startTime),
+            timeShort(assignment.workShift.endTime),
+            assignment.roleInShift === "CASHIER" ? "Thu ngan" : "Nhan vien",
+            formatDateTime(assignment.checkIn),
+            formatDateTime(assignment.checkOut),
+            `${Math.round(Number(assignment.completionRate || 0) * 100)}%`,
+            assignment.earnedWage,
+          ]),
+        ),
+      },
+    ]);
+  };
+
   return (
     <div className="space-y-6">
       <ManagerPageHeader
@@ -135,6 +203,15 @@ const SalaryPage = () => {
                 </option>
               ))}
             </select>
+            <button
+              type="button"
+              onClick={handleExportExcel}
+              disabled={!data}
+              className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 text-sm font-bold text-white hover:bg-white/20 disabled:opacity-50"
+            >
+              <Download className="h-4 w-4" />
+              Xuất Excel
+            </button>
           </div>
         }
       />

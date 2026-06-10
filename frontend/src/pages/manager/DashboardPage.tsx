@@ -28,6 +28,10 @@ import {
   managerCardClass,
 } from "../../components/commons/manager/ManagerPage";
 import TablePagination from "../../components/ui/user/pagination/TablePagination";
+import {
+  stockItemTypeLabel,
+  stockTransactionTypeLabel,
+} from "../../utils/inventoryLabels";
 
 const LIMIT = 10;
 
@@ -185,7 +189,7 @@ const DashboardPage = () => {
       <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
         <section className={`${managerCardClass} p-5`}>
           <h2 className="text-lg font-bold text-slate-900">
-            Doanh thu nhanh của branch
+            Doanh thu nhanh của chi nhánh
           </h2>
           <p className="text-sm text-slate-500">
             Theo khoảng dashboard đã chọn.
@@ -234,7 +238,7 @@ const DashboardPage = () => {
 
         <section className={`${managerCardClass} p-5`}>
           <h2 className="text-lg font-bold text-slate-900">
-            Cơ cấu doanh thu branch
+            Cơ cấu doanh thu chi nhánh
           </h2>
           <div className="mt-4 h-80">
             {pie.length ? (
@@ -283,7 +287,7 @@ const DashboardPage = () => {
             <ListItem
               key={`${item.itemType}-${item.itemId}`}
               title={item.itemName}
-              subtitle={item.itemType}
+              subtitle={stockItemTypeLabel(item.itemType)}
               right={`${item.stock}/${item.threshold}`}
             />
           ))}
@@ -340,7 +344,9 @@ const DashboardPage = () => {
                   <td className="px-4 py-3 font-bold text-slate-800">
                     {item.itemName}
                   </td>
-                  <td className="px-4 py-3">{item.type}</td>
+                  <td className="px-4 py-3">
+                    {stockTransactionTypeLabel(item.type)}
+                  </td>
                   <td className="px-4 py-3 font-bold">{item.quantity}</td>
                   <td className="px-4 py-3">{item.afterStock}</td>
                   <td className="px-4 py-3">{item.note || "-"}</td>

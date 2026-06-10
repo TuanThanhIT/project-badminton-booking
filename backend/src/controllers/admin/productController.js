@@ -34,47 +34,47 @@ const getCategoriesController = asyncHandler(async (req, res) => {
 
 const getProductImagesController = asyncHandler(async (req, res) => {
   const result = await adminProductService.getAdminProductImagesService(req.params.productId);
-  return res.status(200).json(new SuccessResponse("Lay danh sach hinh anh san pham thanh cong", result));
+  return res.status(200).json(new SuccessResponse("Lấy danh sách hình ảnh sản phẩm thành công", result));
 });
 
 const createProductImagesController = asyncHandler(async (req, res) => {
   const result = await adminProductService.createAdminProductImagesService(req.params.productId, req.body);
-  return res.status(201).json(new SuccessResponse("Them hinh anh san pham thanh cong", result));
+  return res.status(201).json(new SuccessResponse("Thêm hình ảnh sản phẩm thành công", result));
 });
 
 const updateProductImageController = asyncHandler(async (req, res) => {
   const result = await adminProductService.updateAdminProductImageService(req.params.imageId, req.body);
-  return res.status(200).json(new SuccessResponse("Cap nhat hinh anh san pham thanh cong", result));
+  return res.status(200).json(new SuccessResponse("Cập nhật hình ảnh sản phẩm thành công", result));
 });
 
 const deleteProductImageController = asyncHandler(async (req, res) => {
   const result = await adminProductService.deleteAdminProductImageService(req.params.imageId);
-  return res.status(200).json(new SuccessResponse("Xoa hinh anh san pham thanh cong", result));
+  return res.status(200).json(new SuccessResponse("Xóa hình ảnh sản phẩm thành công", result));
 });
 
 const getProductVariantsController = asyncHandler(async (req, res) => {
   const result = await adminProductService.getAdminProductVariantsService(req.params.productId);
-  return res.status(200).json(new SuccessResponse("Lay danh sach bien the san pham thanh cong", result));
+  return res.status(200).json(new SuccessResponse("Lấy danh sách biến thể sản phẩm thành công", result));
 });
 
 const createProductVariantController = asyncHandler(async (req, res) => {
   const result = await adminProductService.createAdminProductVariantService(req.params.productId, req.body);
-  return res.status(201).json(new SuccessResponse("Them bien the san pham thanh cong", result));
+  return res.status(201).json(new SuccessResponse("Thêm biến thể sản phẩm thành công", result));
 });
 
 const updateProductVariantController = asyncHandler(async (req, res) => {
   const result = await adminProductService.updateAdminProductVariantService(req.params.variantId, req.body);
-  return res.status(200).json(new SuccessResponse("Cap nhat bien the san pham thanh cong", result));
+  return res.status(200).json(new SuccessResponse("Cập nhật biến thể sản phẩm thành công", result));
 });
 
 const deleteProductVariantController = asyncHandler(async (req, res) => {
   const result = await adminProductService.deleteAdminProductVariantService(req.params.variantId);
-  return res.status(200).json(new SuccessResponse("Xoa bien the san pham thanh cong", result));
+  return res.status(200).json(new SuccessResponse("Xóa biến thể sản phẩm thành công", result));
 });
 
 const getStockBranchesController = asyncHandler(async (req, res) => {
   const result = await adminProductService.getAdminProductStockBranchesService();
-  return res.status(200).json(new SuccessResponse("Lay danh sach chi nhanh ton kho thanh cong", result));
+  return res.status(200).json(new SuccessResponse("Lấy danh sách chi nhánh tồn kho thành công", result));
 });
 
 const adminProductController = {

@@ -186,7 +186,7 @@ const BookingSchedulePage = () => {
     <div className="space-y-5">
       <ManagerPageHeader
         eyebrow="Manager bookings"
-        title="Lịch sân"
+        title="Quản lý lịch sân"
         description="Theo dõi lịch đặt sân theo trạng thái và xem nhanh chi tiết từng lịch."
         metrics={[
           { label: "Tổng lịch", value: pagination.total },
@@ -332,6 +332,7 @@ const BookingSchedulePage = () => {
             onPage={setPage}
             unit="lịch"
             alwaysShow
+            compact
           />
         </section>
 
@@ -365,7 +366,7 @@ const BookingDetailPanel = ({
     <div className="flex flex-wrap items-start justify-between gap-4 rounded-2xl bg-slate-50 p-4">
       <div>
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="font-mono text-2xl font-bold text-sky-700">
+          <h2 className="text-xl font-bold text-sky-700">
             {formatBookingCode(booking.id, booking.createdAt)}
           </h2>
           <span
@@ -376,7 +377,7 @@ const BookingDetailPanel = ({
             {BOOKING_LABEL[booking.bookingStatus]}
           </span>
         </div>
-        <p className="mt-2 text-sm font-semibold text-slate-500">
+        <p className="mt-2 text-sm font-medium text-slate-500">
           Tạo lúc {formatDateTime(booking.createdAt)}
         </p>
         {detailLoading ? (
@@ -386,10 +387,8 @@ const BookingDetailPanel = ({
         ) : null}
       </div>
       <div className="text-left lg:text-right">
-        <p className="text-xs font-bold uppercase text-slate-500">
-          Tổng thanh toán
-        </p>
-        <p className="text-2xl font-bold text-slate-900">
+        <p className="text-xs font-semibold text-slate-500">Tổng thanh toán</p>
+        <p className="text-xl font-bold text-slate-900">
           {formatCurrency(booking.totalAmount)}
         </p>
       </div>
@@ -491,7 +490,7 @@ const InfoPanel = ({
       <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-50 text-sky-700">
         <Icon className="h-4 w-4" />
       </span>
-      <h3 className="font-bold text-slate-900">{title}</h3>
+      <h3 className="text-sm font-bold text-slate-900">{title}</h3>
     </div>
     <div className="space-y-3">{children}</div>
   </section>
@@ -499,8 +498,10 @@ const InfoPanel = ({
 
 const InfoRow = ({ label, value }: { label: string; value: ReactNode }) => (
   <div>
-    <p className="text-xs font-bold uppercase text-slate-500">{label}</p>
-    <p className="mt-1 break-words font-semibold text-slate-800">{value}</p>
+    <p className="text-xs font-semibold text-slate-500">{label}</p>
+    <p className="mt-1 break-words text-sm font-semibold text-slate-800">
+      {value}
+    </p>
   </div>
 );
 

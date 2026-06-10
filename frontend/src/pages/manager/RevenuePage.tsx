@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import {
   Bar,
   BarChart,
@@ -9,7 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { CalendarDays, Coffee, Package, RefreshCw, Trophy } from "lucide-react";
+import { CalendarDays, Coffee, Download, Package, Trophy } from "lucide-react";
 import managerRevenueService from "../../services/manager/revenueService";
 import {
   ManagerEmptyState,
@@ -18,6 +19,9 @@ import {
   managerInputClass,
 } from "../../components/commons/manager/ManagerPage";
 import TablePagination from "../../components/ui/user/pagination/TablePagination";
+import { exportExcel } from "../../utils/exportExcel";
+import { ORDER_STATUS_COLOR } from "../../utils/constants/color";
+import { ORDER_STATUS_LABEL } from "../../utils/constants/orderLabel";
 
 const LIMIT = 10;
 
@@ -40,6 +44,20 @@ const compactCurrency = (value: number) =>
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(value || 0);
+
+const OrderStatusBadge = ({ status }: { status?: string }) => {
+  const statusKey = status || "UNKNOWN";
+
+  return (
+    <span
+      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${
+        ORDER_STATUS_COLOR[statusKey] || "bg-slate-100 text-slate-600"
+      }`}
+    >
+      {ORDER_STATUS_LABEL[statusKey] || statusKey}
+    </span>
+  );
+};
 
 const RevenuePage = () => {
   const [startDate, setStartDate] = useState(daysAgo(30));
@@ -68,7 +86,7 @@ const RevenuePage = () => {
 
   useEffect(() => {
     fetchReport();
-  }, []);
+  }, [startDate, endDate, revenueType, itemType]);
 
   const summary = report?.summary || {};
   const chart = report?.revenueChart || [];
@@ -77,9 +95,86 @@ const RevenuePage = () => {
   const beverageItems = report?.beverageRevenueItems || [];
   const recentOrders = report?.recentRevenueOrders || [];
 
+  const handleExportExcel = () => {
+    exportExcel(`bao-cao-doanh-thu-manager-${startDate}_${endDate}.xls`, [
+      {
+        title: "Tong quan doanh thu",
+        headers: ["Chi tieu", "Gia tri"],
+        rows: [
+          ["Tong doanh thu", summary.totalRevenue || 0],
+          ["Doanh thu dat san", summary.bookingRevenue || 0],
+          ["Doanh thu san pham", summary.productRevenue || 0],
+          ["Doanh thu do uong", summary.beverageRevenue || 0],
+          ["So luot dat san", summary.bookingCount || 0],
+          ["So don hang", summary.orderCount || 0],
+        ],
+      },
+      {
+        title: "Doanh thu theo thoi gian",
+        headers: ["Ngay", "Nhan", "Dat san", "San pham", "Do uong", "Tong"],
+        rows: chart.map((item: any) => [
+          item.date,
+          item.label,
+          item.bookingRevenue || 0,
+          item.productRevenue || 0,
+          item.beverageRevenue || 0,
+          item.totalRevenue || 0,
+        ]),
+      },
+      {
+        title: "Doanh thu theo loai",
+        headers: ["Loai", "So luong", "Doanh thu"],
+        rows: revenueByType.map((item: any) => [
+          item.label,
+          item.transactionCount || 0,
+          item.revenue || 0,
+        ]),
+      },
+      {
+        title: "Top san pham",
+        headers: ["Ten", "Variant", "SKU", "So luong", "Doanh thu"],
+        rows: productItems.map((item: any) => [
+          item.productName,
+          item.variant || "",
+          item.sku || "",
+          item.quantitySold || 0,
+          item.revenue || 0,
+        ]),
+      },
+      {
+        title: "Top do uong",
+        headers: ["Ten", "So luong", "Doanh thu"],
+        rows: beverageItems.map((item: any) => [
+          item.beverageName,
+          item.quantitySold || 0,
+          item.revenue || 0,
+        ]),
+      },
+      {
+        title: "Don hang tao doanh thu",
+        headers: [
+          "Ma don",
+          "Khach hang",
+          "Tong tien",
+          "Trang thai",
+          "Thoi gian",
+        ],
+        rows: recentOrders.map((item: any) => [
+          item.code,
+          item.customerName || "",
+          item.amount || 0,
+          item.status || "",
+          item.createdAt
+            ? new Date(item.createdAt).toLocaleString("vi-VN")
+            : "",
+        ]),
+      },
+    ]);
+  };
+
   const cards = [
     {
-      label: "Tổng doanh thu branch",
+      label: "Tổng doanh thu",
       value: fmtCurrency(summary.totalRevenue),
       hint: "Không bao gồm báo cáo lợi nhuận",
       icon: Trophy,
@@ -112,7 +207,6 @@ const RevenuePage = () => {
         description="Manager chỉ xem doanh thu của branch mình quản lý, không hiển thị giá vốn hoặc lợi nhuận."
         metrics={[
           { label: "Tổng doanh thu", value: fmtCurrency(summary.totalRevenue) },
-          { label: "Bán hàng", value: fmtCurrency(summary.salesRevenue) },
         ]}
       />
 
@@ -172,12 +266,12 @@ const RevenuePage = () => {
         </label>
         <button
           type="button"
-          onClick={fetchReport}
-          disabled={loading}
-          className="inline-flex h-11 items-center justify-center gap-2 self-end rounded-xl bg-sky-600 px-3 text-sm font-bold text-white disabled:bg-slate-300"
+          onClick={handleExportExcel}
+          disabled={!report || loading}
+          className="inline-flex h-11 items-center justify-center gap-2 self-end rounded-xl bg-emerald-600 px-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:bg-slate-300 disabled:shadow-none"
         >
-          <RefreshCw className="h-4 w-4" />
-          Cập nhật
+          <Download className="h-4 w-4" />
+          Xuất Excel
         </button>
       </section>
 
@@ -322,7 +416,7 @@ const RevenuePage = () => {
             item.code,
             item.customerName || "-",
             fmtCurrency(item.amount),
-            item.status,
+            <OrderStatusBadge status={item.status} />,
             item.createdAt
               ? new Date(item.createdAt).toLocaleString("vi-VN")
               : "-",
@@ -339,7 +433,7 @@ const ReportTable = ({
   empty,
 }: {
   headers: string[];
-  rows: Array<Array<string | number>>;
+  rows: Array<Array<ReactNode>>;
   empty: string;
 }) => {
   const [page, setPage] = useState(1);

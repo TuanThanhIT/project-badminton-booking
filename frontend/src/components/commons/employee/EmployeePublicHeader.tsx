@@ -12,7 +12,7 @@ const EmployeePublicHeader = () => {
             className="h-11 w-11 rounded-2xl border border-sky-100 object-cover shadow-sm"
           />
           <div className="min-w-0">
-            <p className="text-xl font-extrabold leading-none tracking-tight text-slate-900 sm:text-2xl">
+            <p className="text-xl font-bold leading-none tracking-tight text-slate-900 sm:text-2xl">
               B-Hub Employee
             </p>
             <p className="mt-1 hidden text-xs font-medium leading-snug text-slate-500 sm:block">

@@ -14,16 +14,17 @@ import {
   Building2,
   CalendarDays,
   Coffee,
+  Download,
   Package,
-  RefreshCw,
   Search,
   TrendingUp,
   Wallet,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import AdminPageHeader from "../../components/ui/admin/AdminPageHeader";
-import { adminPrimaryButtonClass } from "../../components/ui/admin/AdminModal";
+import AdminPagination from "../../components/ui/admin/AdminPagination";
 import adminRevenueService from "../../services/admin/revenueService";
+import { exportExcel } from "../../utils/exportExcel";
 import type {
   AdminBeverageRevenue,
   AdminBranchRevenue,
@@ -34,6 +35,8 @@ import type {
 type RevenueType = "ALL" | "BOOKING" | "PRODUCT" | "BEVERAGE";
 type ItemType = "ALL" | "PRODUCT_VARIANT" | "BEVERAGE";
 type GroupBy = "day" | "month";
+
+const ITEM_TABLE_LIMIT = 5;
 
 type RevenueSummary = {
   totalRevenue: number;
@@ -178,6 +181,8 @@ const RevenueManagementPage = () => {
   const [itemType, setItemType] = useState<ItemType>("ALL");
   const [groupBy, setGroupBy] = useState<GroupBy>("day");
   const [branchSearch, setBranchSearch] = useState("");
+  const [productPage, setProductPage] = useState(1);
+  const [beveragePage, setBeveragePage] = useState(1);
 
   const [report, setReport] = useState<RevenueReport | null>(null);
   const [branchOptions, setBranchOptions] = useState<AdminBranchRevenue[]>([]);
@@ -249,12 +254,157 @@ const RevenueManagementPage = () => {
     [groupBy, report],
   );
 
+  const handleExportExcel = () => {
+    if (!report?.summary) return;
+
+    const summary = report.summary;
+    exportExcel(`bao-cao-doanh-thu-admin-${applied.start}_${applied.end}.xls`, [
+      {
+        title: "Tong quan doanh thu",
+        headers: ["Chi tieu", "Gia tri"],
+        rows: [
+          ["Tong doanh thu", summary.totalRevenue || 0],
+          ["Doanh thu dat san", summary.bookingRevenue || 0],
+          ["Doanh thu san pham", summary.productRevenue || 0],
+          ["Doanh thu do uong", summary.beverageRevenue || 0],
+          ["Doanh thu ban hang", summary.salesRevenue || 0],
+          ["Gia von ban hang", summary.salesCost || 0],
+          ["Loi nhuan gop", summary.grossProfit || 0],
+          ["Bien loi nhuan (%)", summary.grossMargin || 0],
+          ["So luot dat san", summary.bookingCount || 0],
+          ["So don hang", summary.orderCount || 0],
+        ],
+      },
+      {
+        title: "Doanh thu theo thoi gian",
+        headers: ["Ky", "Dat san", "San pham", "Do uong", "Don hang", "Tong"],
+        rows: chartData.map((item: any) => [
+          item.label || item.date || item.month || item.revenueKey || "",
+          item.bookingRevenue || 0,
+          item.productRevenue || 0,
+          item.beverageRevenue || 0,
+          item.orderRevenue || 0,
+          item.totalRevenue || 0,
+        ]),
+      },
+      {
+        title: "Doanh thu theo loai",
+        headers: ["Loai", "So giao dich", "So luong", "Doanh thu"],
+        rows: report.revenueByType.map((item) => [
+          item.label,
+          item.transactionCount || 0,
+          item.quantity || 0,
+          item.revenue || 0,
+        ]),
+      },
+      {
+        title: "Doanh thu theo chi nhanh",
+        headers: [
+          "Chi nhanh",
+          "Dat san",
+          "San pham",
+          "Do uong",
+          "Don hang",
+          "Tong",
+          "Ty trong (%)",
+        ],
+        rows: report.revenueByBranch.map((item) => [
+          item.branchName,
+          item.bookingRevenue || 0,
+          item.productRevenue || 0,
+          item.beverageRevenue || 0,
+          item.orderRevenue || 0,
+          item.totalRevenue || 0,
+          item.contributionRate || 0,
+        ]),
+      },
+      {
+        title: "Top san pham",
+        headers: [
+          "Ten",
+          "Variant",
+          "SKU",
+          "So luong",
+          "Doanh thu",
+          "Gia von",
+          "Loi nhuan gop",
+        ],
+        rows: report.productRevenueItems.map((item) => [
+          item.productName,
+          item.variantInfo || "",
+          item.sku || "",
+          item.totalQuantity || 0,
+          item.totalRevenue || 0,
+          item.totalCost || 0,
+          item.grossProfit || 0,
+        ]),
+      },
+      {
+        title: "Top do uong",
+        headers: ["Ten", "So luong", "So don", "Doanh thu", "Gia von", "Loi nhuan gop"],
+        rows: report.beverageRevenueItems.map((item) => [
+          item.beverageName,
+          item.totalQuantity || 0,
+          item.orderCount || 0,
+          item.totalRevenue || 0,
+          item.totalCost || 0,
+          item.grossProfit || 0,
+        ]),
+      },
+      {
+        title: "Loi nhuan ban hang",
+        headers: ["Nhom", "Doanh thu", "Gia von", "Loi nhuan gop"],
+        rows: [
+          [
+            "San pham",
+            report.profitSummary?.productSales?.revenue || 0,
+            report.profitSummary?.productSales?.cost || 0,
+            report.profitSummary?.productSales?.grossProfit || 0,
+          ],
+          [
+            "Do uong",
+            report.profitSummary?.beverageSales?.revenue || 0,
+            report.profitSummary?.beverageSales?.cost || 0,
+            report.profitSummary?.beverageSales?.grossProfit || 0,
+          ],
+        ],
+      },
+    ]);
+  };
+
   const filteredBranches = useMemo(() => {
     const keyword = branchSearch.trim().toLowerCase();
     return (report?.revenueByBranch || []).filter((branch) =>
       branch.branchName.toLowerCase().includes(keyword),
     );
   }, [branchSearch, report]);
+
+  const productItems = report?.productRevenueItems || [];
+  const beverageItems = report?.beverageRevenueItems || [];
+  const productTotalPages = Math.max(
+    1,
+    Math.ceil(productItems.length / ITEM_TABLE_LIMIT),
+  );
+  const beverageTotalPages = Math.max(
+    1,
+    Math.ceil(beverageItems.length / ITEM_TABLE_LIMIT),
+  );
+  const paginatedProductItems = productItems.slice(
+    (productPage - 1) * ITEM_TABLE_LIMIT,
+    productPage * ITEM_TABLE_LIMIT,
+  );
+  const paginatedBeverageItems = beverageItems.slice(
+    (beveragePage - 1) * ITEM_TABLE_LIMIT,
+    beveragePage * ITEM_TABLE_LIMIT,
+  );
+
+  useEffect(() => {
+    setProductPage((page) => Math.min(page, productTotalPages));
+  }, [productTotalPages]);
+
+  useEffect(() => {
+    setBeveragePage((page) => Math.min(page, beverageTotalPages));
+  }, [beverageTotalPages]);
 
   const summaryCards = summary
     ? [
@@ -304,16 +454,12 @@ const RevenueManagementPage = () => {
         action={
           <button
             type="button"
-            onClick={fetchReport}
-            disabled={loading}
-            className={adminPrimaryButtonClass}
+            onClick={handleExportExcel}
+            disabled={!report || loading}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
           >
-            {loading ? (
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-sky-600 border-t-transparent" />
-            ) : (
-              <RefreshCw className="h-4 w-4" />
-            )}
-            Cập nhật
+            <Download className="h-4 w-4" />
+            Xuất Excel
           </button>
         }
       />
@@ -626,7 +772,7 @@ const RevenueManagementPage = () => {
             </div>
           </section>
 
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <div className="space-y-6">
             <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
               <div className="mb-5 flex items-center gap-3">
                 <Package className="h-5 w-5 text-emerald-500" />
@@ -657,7 +803,7 @@ const RevenueManagementPage = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {report.productRevenueItems.length === 0 ? (
+                    {productItems.length === 0 ? (
                       <tr>
                         <td
                           colSpan={7}
@@ -667,13 +813,13 @@ const RevenueManagementPage = () => {
                         </td>
                       </tr>
                     ) : (
-                      report.productRevenueItems.map((item, index) => (
+                      paginatedProductItems.map((item, index) => (
                         <tr
                           key={item.productVariantId}
                           className="hover:bg-sky-50"
                         >
                           <td className="px-4 py-3 text-center text-slate-400">
-                            {index + 1}
+                            {(productPage - 1) * ITEM_TABLE_LIMIT + index + 1}
                           </td>
                           <td className="px-4 py-3">
                             <p className="font-semibold text-slate-800">
@@ -700,6 +846,15 @@ const RevenueManagementPage = () => {
                   </tbody>
                 </table>
               </div>
+              <AdminPagination
+                page={productPage}
+                totalPages={productTotalPages}
+                total={productItems.length}
+                onPage={setProductPage}
+                unit="sản phẩm"
+                alwaysShow
+                compact
+              />
             </section>
 
             <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
@@ -729,7 +884,7 @@ const RevenueManagementPage = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {report.beverageRevenueItems.length === 0 ? (
+                    {beverageItems.length === 0 ? (
                       <tr>
                         <td
                           colSpan={6}
@@ -739,10 +894,10 @@ const RevenueManagementPage = () => {
                         </td>
                       </tr>
                     ) : (
-                      report.beverageRevenueItems.map((item, index) => (
+                      paginatedBeverageItems.map((item, index) => (
                         <tr key={item.beverageId} className="hover:bg-sky-50">
                           <td className="px-4 py-3 text-center text-slate-400">
-                            {index + 1}
+                            {(beveragePage - 1) * ITEM_TABLE_LIMIT + index + 1}
                           </td>
                           <td className="px-4 py-3 font-semibold text-slate-800">
                             {item.beverageName}
@@ -763,6 +918,15 @@ const RevenueManagementPage = () => {
                   </tbody>
                 </table>
               </div>
+              <AdminPagination
+                page={beveragePage}
+                totalPages={beverageTotalPages}
+                total={beverageItems.length}
+                onPage={setBeveragePage}
+                unit="đồ uống"
+                alwaysShow
+                compact
+              />
             </section>
           </div>
 

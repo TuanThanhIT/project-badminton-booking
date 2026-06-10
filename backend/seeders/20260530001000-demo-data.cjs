@@ -355,7 +355,7 @@ const buildDemoAccounts = async () => {
 
 const buildAdminUser = async () => {
   const password = await bcrypt.hash(
-    process.env.ADMIN_PASSWORD || process.env.DEMO_PASSWORD || "@Tuanthanh0708",
+    process.env.ADMIN_PASSWORD || process.env.DEMO_PASSWORD || "@Admin123456",
     10,
   );
 
@@ -374,11 +374,11 @@ const buildAdminUser = async () => {
 
 const buildAdminProfile = (adminUserId) => ({
   id: 1,
-  fullName: process.env.ADMIN_FULL_NAME || "Admin",
+  fullName: "Admin",
   dob: "1995-07-08T00:00:00",
   gender: "other",
   address: "Badminton booking system",
-  phoneNumber: process.env.ADMIN_PHONE || "0901000001",
+  phoneNumber: "0901000001",
   avatar: avatarUrls.admin,
   level: "BEGINNER",
   userId: adminUserId,

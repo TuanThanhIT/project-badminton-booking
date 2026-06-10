@@ -7,7 +7,7 @@ const getVariantStocksController = asyncHandler(async (req, res) => {
     req.user.id,
     req.query,
   );
-  return res.json(new SuccessResponse("Get variant stocks successfully", result));
+  return res.status(200).json(new SuccessResponse("Lấy danh sách tồn kho sản phẩm thành công", result));
 });
 
 const getBeverageStocksController = asyncHandler(async (req, res) => {
@@ -15,7 +15,7 @@ const getBeverageStocksController = asyncHandler(async (req, res) => {
     req.user.id,
     req.query,
   );
-  return res.json(new SuccessResponse("Get beverage stocks successfully", result));
+  return res.status(200).json(new SuccessResponse("Lấy danh sách tồn kho đồ uống thành công", result));
 });
 
 const getStockTransactionsController = asyncHandler(async (req, res) => {
@@ -23,7 +23,7 @@ const getStockTransactionsController = asyncHandler(async (req, res) => {
     req.user.id,
     req.query,
   );
-  return res.json(new SuccessResponse("Get stock transactions successfully", result));
+  return res.status(200).json(new SuccessResponse("Lấy lịch sử giao dịch kho thành công", result));
 });
 
 const getVariantStockHistoryController = asyncHandler(async (req, res) => {
@@ -32,7 +32,7 @@ const getVariantStockHistoryController = asyncHandler(async (req, res) => {
     req.params.variantId,
     req.query,
   );
-  return res.json(new SuccessResponse("Get variant stock history successfully", result));
+  return res.status(200).json(new SuccessResponse("Lấy lịch sử tồn kho sản phẩm thành công", result));
 });
 
 const getBeverageStockHistoryController = asyncHandler(async (req, res) => {
@@ -41,7 +41,7 @@ const getBeverageStockHistoryController = asyncHandler(async (req, res) => {
     req.params.beverageId,
     req.query,
   );
-  return res.json(new SuccessResponse("Get beverage stock history successfully", result));
+  return res.status(200).json(new SuccessResponse("Lấy lịch sử tồn kho đồ uống thành công", result));
 });
 
 export default {

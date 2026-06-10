@@ -7,7 +7,7 @@ const getOrders = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Get manager orders successfully", result));
+    .json(new SuccessResponse("Lay danh sach don hang cua quan ly thanh cong", result));
 });
 
 const getOrderDetail = asyncHandler(async (req, res) => {
@@ -18,7 +18,7 @@ const getOrderDetail = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Get manager order detail successfully", result));
+    .json(new SuccessResponse("Lay chi tiet don hang cua quan ly thanh cong", result));
 });
 
 const getMonthlyHighlights = asyncHandler(async (req, res) => {
@@ -29,7 +29,7 @@ const getMonthlyHighlights = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Get manager monthly highlights successfully", result));
+    .json(new SuccessResponse("Lay diem noi bat trong thang cua quan ly thanh cong", result));
 });
 
 export default {

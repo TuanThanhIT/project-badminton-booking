@@ -13,6 +13,7 @@ import {
 } from "../../redux/slices/user/authSlice";
 import type { LoginRequest } from "../../types/auth";
 import LoadingButton from "../../components/ui/common/LoadingButton";
+import PasswordInput from "../../components/ui/common/PasswordInput";
 import { ROLE_NAME } from "../../utils/constants/role";
 
 const inputClass =
@@ -105,7 +106,7 @@ const LoginPage = () => {
                 <UserRoundCheck size={16} />
                 Employee Portal
               </div>
-              <h1 className="mt-4 max-w-lg text-2xl font-extrabold leading-tight tracking-tight">
+              <h1 className="mt-4 max-w-lg text-2xl font-bold leading-tight tracking-tight">
                 Không gian nhân viên B-Hub
               </h1>
               <p className="mt-2 max-w-lg text-sm leading-relaxed text-sky-100">
@@ -124,7 +125,7 @@ const LoginPage = () => {
                 <p className="text-sm font-semibold text-sky-700">
                   Secure Employee Access
                 </p>
-                <h2 className="mt-1.5 text-2xl font-extrabold text-slate-900">
+                <h2 className="mt-1.5 text-2xl font-bold text-slate-900">
                   Đăng nhập Employee
                 </h2>
                 <p className="mt-1.5 text-sm leading-6 text-slate-500">
@@ -163,18 +164,12 @@ const LoginPage = () => {
                     {errors.password?.message || ""}
                   </span>
                 </div>
-                <div className="relative">
-                  <Lock
-                    size={17}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                  />
-                  <input
-                    type="password"
-                    {...register("password")}
-                    placeholder="Nhập mật khẩu"
-                    className={inputClass}
-                  />
-                </div>
+                <PasswordInput
+                  registration={register("password")}
+                  placeholder="Nhập mật khẩu"
+                  leftIcon={<Lock size={17} />}
+                  className={inputClass}
+                />
               </label>
 
               <label className="inline-flex items-center gap-2 text-sm text-slate-600">

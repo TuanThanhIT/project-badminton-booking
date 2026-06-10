@@ -6,9 +6,11 @@ import {
   LogOut,
   MapPin,
   UserRound,
+  WalletCards,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../redux/hook";
+import { logout, logoutLocal } from "../../../redux/slices/user/authSlice";
 import {
   getNotifications,
   markAllNotificationsRead,
@@ -72,6 +74,12 @@ const EmployeeHeader = () => {
     dispatch(markAllNotificationsRead());
   };
 
+  const handleLogout = () => {
+    dispatch(logout());
+    dispatch(logoutLocal());
+    navigate("/employee/login");
+  };
+
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur sm:px-6">
       <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4">
@@ -83,7 +91,7 @@ const EmployeeHeader = () => {
           />
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="text-lg font-extrabold text-slate-950">B-Hub</h1>
+              <h1 className="text-lg font-bold text-slate-950">B-Hub</h1>
               <span className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-bold text-sky-700">
                 {session?.roleInShift || "EMPLOYEE"}
               </span>
@@ -262,9 +270,9 @@ const EmployeeHeader = () => {
                               {notification.message}
                             </p>
                             <p className="mt-2 text-xs text-slate-400">
-                              {new Date(
-                                notification.createdAt,
-                              ).toLocaleString("vi-VN")}
+                              {new Date(notification.createdAt).toLocaleString(
+                                "vi-VN",
+                              )}
                             </p>
                           </div>
                         </div>
@@ -283,8 +291,17 @@ const EmployeeHeader = () => {
             onClick={() => navigate("/employee/cash-register")}
             className="inline-flex h-10 items-center gap-2 rounded-2xl bg-sky-600 px-3 text-sm font-semibold text-white transition hover:bg-sky-700"
           >
-            <LogOut className="h-4 w-4" />
+            <WalletCards className="h-4 w-4" />
             <span className="hidden sm:inline">Checkout</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleLogout}
+            title="Đăng xuất"
+            aria-label="Đăng xuất"
+            className="grid h-10 w-10 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+          >
+            <LogOut className="h-4 w-4" />
           </button>
         </div>
       </div>

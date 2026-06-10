@@ -135,9 +135,12 @@ const finalizeRevenueRow = (row) => ({
   productRevenue: row.onlineProductRevenue + row.offlineProductRevenue,
   productOrderCount: row.onlineProductOrderCount + row.offlineProductOrderCount,
   productQuantity: row.onlineProductQuantity + row.offlineProductQuantity,
-  orderRevenue: row.onlineProductRevenue + row.offlineProductRevenue + row.beverageRevenue,
+  orderRevenue:
+    row.onlineProductRevenue + row.offlineProductRevenue + row.beverageRevenue,
   orderCount:
-    row.onlineProductOrderCount + row.offlineProductOrderCount + row.beverageOrderCount,
+    row.onlineProductOrderCount +
+    row.offlineProductOrderCount +
+    row.beverageOrderCount,
   totalRevenue:
     row.onlineBookingRevenue +
     row.offlineBookingRevenue +
@@ -196,13 +199,16 @@ const getGroupedRevenue = async ({
     STOCK_ITEM_TYPE.PRODUCT_VARIANT,
     STOCK_ITEM_TYPE.BEVERAGE,
   ]);
-  const includeBooking = normalizedRevenueType === "ALL" || normalizedRevenueType === "BOOKING";
+  const includeBooking =
+    normalizedRevenueType === "ALL" || normalizedRevenueType === "BOOKING";
   const includeProduct =
     (normalizedRevenueType === "ALL" || normalizedRevenueType === "PRODUCT") &&
-    (normalizedItemType === "ALL" || normalizedItemType === STOCK_ITEM_TYPE.PRODUCT_VARIANT);
+    (normalizedItemType === "ALL" ||
+      normalizedItemType === STOCK_ITEM_TYPE.PRODUCT_VARIANT);
   const includeBeverage =
     (normalizedRevenueType === "ALL" || normalizedRevenueType === "BEVERAGE") &&
-    (normalizedItemType === "ALL" || normalizedItemType === STOCK_ITEM_TYPE.BEVERAGE);
+    (normalizedItemType === "ALL" ||
+      normalizedItemType === STOCK_ITEM_TYPE.BEVERAGE);
 
   const onlineBookingGroup = getGroupParts({
     groupBy,
@@ -228,13 +234,14 @@ const getGroupedRevenue = async ({
     offlineProducts,
     offlineBeverages,
   ] = await Promise.all([
-    includeBooking ? runRevenueQuery({
-      startDate,
-      endDate,
-      branchId,
-      dateExpression: "b.createdAt",
-      branchExpression: "b.branchId",
-      sql: (dateSql, branchSql) => `
+    includeBooking
+      ? runRevenueQuery({
+          startDate,
+          endDate,
+          branchId,
+          dateExpression: "b.createdAt",
+          branchExpression: "b.branchId",
+          sql: (dateSql, branchSql) => `
         SELECT ${onlineBookingGroup.select},
                COALESCE(SUM(b.totalAmount), 0) AS revenue,
                COUNT(b.id) AS count
@@ -245,14 +252,16 @@ const getGroupedRevenue = async ({
         ${onlineBookingGroup.group}
         ${onlineBookingGroup.order}
       `,
-    }) : empty,
-    includeBooking ? runRevenueQuery({
-      startDate,
-      endDate,
-      branchId,
-      dateExpression: "COALESCE(ob.paidAt, ob.createdAt)",
-      branchExpression: "db.branchId",
-      sql: (dateSql, branchSql) => `
+        })
+      : empty,
+    includeBooking
+      ? runRevenueQuery({
+          startDate,
+          endDate,
+          branchId,
+          dateExpression: "COALESCE(ob.paidAt, ob.createdAt)",
+          branchExpression: "db.branchId",
+          sql: (dateSql, branchSql) => `
         SELECT ${offlineGroup.select},
                COALESCE(SUM(dbi.price), 0) AS revenue,
                COUNT(DISTINCT ob.id) AS count,
@@ -266,14 +275,16 @@ const getGroupedRevenue = async ({
         ${offlineGroup.group}
         ${offlineGroup.order}
       `,
-    }) : empty,
-    includeProduct ? runRevenueQuery({
-      startDate,
-      endDate,
-      branchId,
-      dateExpression: "o.createdAt",
-      branchExpression: "o.branchId",
-      sql: (dateSql, branchSql) => `
+        })
+      : empty,
+    includeProduct
+      ? runRevenueQuery({
+          startDate,
+          endDate,
+          branchId,
+          dateExpression: "o.createdAt",
+          branchExpression: "o.branchId",
+          sql: (dateSql, branchSql) => `
         SELECT ${onlineProductGroup.select},
                COALESCE(SUM(od.subTotal), 0) AS revenue,
                COUNT(DISTINCT o.id) AS count,
@@ -286,14 +297,16 @@ const getGroupedRevenue = async ({
         ${onlineProductGroup.group}
         ${onlineProductGroup.order}
       `,
-    }) : empty,
-    includeProduct ? runRevenueQuery({
-      startDate,
-      endDate,
-      branchId,
-      dateExpression: "COALESCE(ob.paidAt, ob.createdAt)",
-      branchExpression: "db.branchId",
-      sql: (dateSql, branchSql) => `
+        })
+      : empty,
+    includeProduct
+      ? runRevenueQuery({
+          startDate,
+          endDate,
+          branchId,
+          dateExpression: "COALESCE(ob.paidAt, ob.createdAt)",
+          branchExpression: "db.branchId",
+          sql: (dateSql, branchSql) => `
         SELECT ${offlineGroup.select},
                COALESCE(SUM(dpi.subTotal), 0) AS revenue,
                COUNT(DISTINCT ob.id) AS count,
@@ -307,14 +320,16 @@ const getGroupedRevenue = async ({
         ${offlineGroup.group}
         ${offlineGroup.order}
       `,
-    }) : empty,
-    includeBeverage ? runRevenueQuery({
-      startDate,
-      endDate,
-      branchId,
-      dateExpression: "COALESCE(ob.paidAt, ob.createdAt)",
-      branchExpression: "db.branchId",
-      sql: (dateSql, branchSql) => `
+        })
+      : empty,
+    includeBeverage
+      ? runRevenueQuery({
+          startDate,
+          endDate,
+          branchId,
+          dateExpression: "COALESCE(ob.paidAt, ob.createdAt)",
+          branchExpression: "db.branchId",
+          sql: (dateSql, branchSql) => `
         SELECT ${offlineGroup.select},
                COALESCE(SUM(dbi.subTotal), 0) AS revenue,
                COUNT(DISTINCT ob.id) AS count,
@@ -328,7 +343,8 @@ const getGroupedRevenue = async ({
         ${offlineGroup.group}
         ${offlineGroup.order}
       `,
-    }) : empty,
+        })
+      : empty,
   ]);
 
   const revenueMap = new Map();
@@ -397,11 +413,15 @@ const getRevenueByBranchService = async (startDate, endDate, filters = {}) => {
     }),
   ]);
 
-  const revenueMap = new Map(revenueRows.map((row) => [String(row.revenueKey), row]));
+  const revenueMap = new Map(
+    revenueRows.map((row) => [String(row.revenueKey), row]),
+  );
 
   return branches
     .map((branch) => {
-      const row = revenueMap.get(String(branch.id)) || finalizeRevenueRow(createRevenueRow(branch.id));
+      const row =
+        revenueMap.get(String(branch.id)) ||
+        finalizeRevenueRow(createRevenueRow(branch.id));
       return {
         ...row,
         branchId: branch.id,
@@ -445,7 +465,11 @@ const getRevenueByMonthService = async (startDate, endDate, filters = {}) => {
     .sort((a, b) => a.month.localeCompare(b.month));
 };
 
-const getRevenueByBranchDetailService = async (branchId, startDate, endDate) => {
+const getRevenueByBranchDetailService = async (
+  branchId,
+  startDate,
+  endDate,
+) => {
   const revenueRows = await getGroupedRevenue({
     startDate,
     endDate,
@@ -461,11 +485,20 @@ const getRevenueByBranchDetailService = async (branchId, startDate, endDate) => 
     .sort((a, b) => a.date.localeCompare(b.date));
 };
 
-const getRevenueProductsService = async (startDate, endDate, limit = 12, filters = {}) => {
+const getRevenueProductsService = async (
+  startDate,
+  endDate,
+  limit = 12,
+  filters = {},
+) => {
   const parsedLimit = Math.min(Math.max(Number(limit) || 12, 1), 50);
   const branchId = parseOptionalId(filters.branchId);
   const orderDateFilter = buildDateSql("o.createdAt", startDate, endDate);
-  const offlineDateFilter = buildDateSql("COALESCE(ob.paidAt, ob.createdAt)", startDate, endDate);
+  const offlineDateFilter = buildDateSql(
+    "COALESCE(ob.paidAt, ob.createdAt)",
+    startDate,
+    endDate,
+  );
   const onlineBranchFilter = branchId ? " AND o.branchId = :branchId" : "";
   const offlineBranchFilter = branchId ? " AND db.branchId = :branchId" : "";
 
@@ -527,10 +560,32 @@ const getRevenueProductsService = async (startDate, endDate, limit = 12, filters
     sequelize.query(
       `
         SELECT prd.variantId AS productVariantId,
-               COALESCE(SUM(prd.totalPrice) / NULLIF(SUM(prd.quantity), 0), 0) AS avgCost
+               COALESCE(
+                 SUM(
+                   CASE
+                     WHEN pr.status = :approvedStatus THEN
+                       CASE
+                         WHEN COALESCE(prd.totalPrice, 0) > 0 THEN prd.totalPrice
+                         ELSE COALESCE(prd.importPrice, 0) * COALESCE(prd.quantity, 0)
+                       END
+                     ELSE 0
+                   END
+                 ) / NULLIF(SUM(CASE WHEN pr.status = :approvedStatus THEN prd.quantity ELSE 0 END), 0),
+                 SUM(
+                   CASE
+                     WHEN pr.status NOT IN (:excludedStatuses) THEN
+                       CASE
+                         WHEN COALESCE(prd.totalPrice, 0) > 0 THEN prd.totalPrice
+                         ELSE COALESCE(prd.importPrice, 0) * COALESCE(prd.quantity, 0)
+                       END
+                     ELSE 0
+                   END
+                 ) / NULLIF(SUM(CASE WHEN pr.status NOT IN (:excludedStatuses) THEN prd.quantity ELSE 0 END), 0),
+                 0
+               ) AS avgCost
         FROM PurchaseReceiptDetails prd
         INNER JOIN PurchaseReceipts pr ON prd.purchaseReceiptId = pr.id
-        WHERE pr.status = :approvedStatus
+        WHERE pr.status NOT IN (:excludedStatuses)
           AND prd.itemType = :productType
           AND prd.variantId IS NOT NULL
           ${branchId ? "AND pr.branchId = :branchId" : ""}
@@ -539,6 +594,10 @@ const getRevenueProductsService = async (startDate, endDate, limit = 12, filters
       {
         replacements: {
           approvedStatus: PURCHASE_RECEIPT_STATUS.APPROVED,
+          excludedStatuses: [
+            PURCHASE_RECEIPT_STATUS.REJECTED,
+            PURCHASE_RECEIPT_STATUS.CANCELLED,
+          ],
           productType: STOCK_ITEM_TYPE.PRODUCT_VARIANT,
           branchId,
         },
@@ -548,7 +607,10 @@ const getRevenueProductsService = async (startDate, endDate, limit = 12, filters
   ]);
 
   const costMap = new Map(
-    costRows.map((row) => [String(row.productVariantId), toNumber(row.avgCost)]),
+    costRows.map((row) => [
+      String(row.productVariantId),
+      toNumber(row.avgCost),
+    ]),
   );
 
   const productMap = new Map();
@@ -606,10 +668,19 @@ const getRevenueProductsService = async (startDate, endDate, limit = 12, filters
     .slice(0, parsedLimit);
 };
 
-const getRevenueBeveragesService = async (startDate, endDate, limit = 12, filters = {}) => {
+const getRevenueBeveragesService = async (
+  startDate,
+  endDate,
+  limit = 12,
+  filters = {},
+) => {
   const parsedLimit = Math.min(Math.max(Number(limit) || 12, 1), 50);
   const branchId = parseOptionalId(filters.branchId);
-  const offlineDateFilter = buildDateSql("COALESCE(ob.paidAt, ob.createdAt)", startDate, endDate);
+  const offlineDateFilter = buildDateSql(
+    "COALESCE(ob.paidAt, ob.createdAt)",
+    startDate,
+    endDate,
+  );
   const branchFilter = branchId ? " AND db.branchId = :branchId" : "";
 
   const [beverages, costRows] = await Promise.all([
@@ -641,10 +712,32 @@ const getRevenueBeveragesService = async (startDate, endDate, limit = 12, filter
     sequelize.query(
       `
         SELECT prd.beverageId AS beverageId,
-               COALESCE(SUM(prd.totalPrice) / NULLIF(SUM(prd.quantity), 0), 0) AS avgCost
+               COALESCE(
+                 SUM(
+                   CASE
+                     WHEN pr.status = :approvedStatus THEN
+                       CASE
+                         WHEN COALESCE(prd.totalPrice, 0) > 0 THEN prd.totalPrice
+                         ELSE COALESCE(prd.importPrice, 0) * COALESCE(prd.quantity, 0)
+                       END
+                     ELSE 0
+                   END
+                 ) / NULLIF(SUM(CASE WHEN pr.status = :approvedStatus THEN prd.quantity ELSE 0 END), 0),
+                 SUM(
+                   CASE
+                     WHEN pr.status NOT IN (:excludedStatuses) THEN
+                       CASE
+                         WHEN COALESCE(prd.totalPrice, 0) > 0 THEN prd.totalPrice
+                         ELSE COALESCE(prd.importPrice, 0) * COALESCE(prd.quantity, 0)
+                       END
+                     ELSE 0
+                   END
+                 ) / NULLIF(SUM(CASE WHEN pr.status NOT IN (:excludedStatuses) THEN prd.quantity ELSE 0 END), 0),
+                 0
+               ) AS avgCost
         FROM PurchaseReceiptDetails prd
         INNER JOIN PurchaseReceipts pr ON prd.purchaseReceiptId = pr.id
-        WHERE pr.status = :approvedStatus
+        WHERE pr.status NOT IN (:excludedStatuses)
           AND prd.itemType = :beverageType
           AND prd.beverageId IS NOT NULL
           ${branchId ? "AND pr.branchId = :branchId" : ""}
@@ -653,6 +746,10 @@ const getRevenueBeveragesService = async (startDate, endDate, limit = 12, filter
       {
         replacements: {
           approvedStatus: PURCHASE_RECEIPT_STATUS.APPROVED,
+          excludedStatuses: [
+            PURCHASE_RECEIPT_STATUS.REJECTED,
+            PURCHASE_RECEIPT_STATUS.CANCELLED,
+          ],
           beverageType: STOCK_ITEM_TYPE.BEVERAGE,
           branchId,
         },
@@ -710,7 +807,11 @@ const getDateRangeByPreset = (range = "month") => {
   return { start, end };
 };
 
-const getDashboardOperationSummary = async ({ startDate, endDate, branchId }) => {
+const getDashboardOperationSummary = async ({
+  startDate,
+  endDate,
+  branchId,
+}) => {
   const dateFilter = buildDateSql("bd.playDate", startDate, endDate);
   const branchFilter = branchId ? " AND b.branchId = :branchId" : "";
   const nowTime = new Date().toTimeString().slice(0, 8);
@@ -779,7 +880,10 @@ const getDashboardOperationSummary = async ({ startDate, endDate, branchId }) =>
   const totalCourtCount = toNumber(courtRows[0]?.count);
 
   return {
-    totalBookingCount: Object.values(byStatus).reduce((sum, value) => sum + value, 0),
+    totalBookingCount: Object.values(byStatus).reduce(
+      (sum, value) => sum + value,
+      0,
+    ),
     pendingBookingCount: byStatus[BOOKING_STATUS.PENDING] || 0,
     confirmedBookingCount: byStatus[BOOKING_STATUS.CONFIRMED] || 0,
     checkedInBookingCount: byStatus[BOOKING_STATUS.CHECKED_IN] || 0,
@@ -788,7 +892,9 @@ const getDashboardOperationSummary = async ({ startDate, endDate, branchId }) =>
     playingCourtCount,
     totalCourtCount,
     occupancyRate:
-      totalCourtCount > 0 ? Math.round((playingCourtCount / totalCourtCount) * 100) : 0,
+      totalCourtCount > 0
+        ? Math.round((playingCourtCount / totalCourtCount) * 100)
+        : 0,
   };
 };
 
@@ -844,11 +950,23 @@ const getLowStockItemsService = async ({ branchId, limit = 10 } = {}) => {
 const getDashboardService = async (query = {}) => {
   const now = new Date();
   const branchId = parseOptionalId(query.branchId);
-  const range = normalizeFilter(query.range, ["TODAY", "7DAYS", "30DAYS", "MONTH"], "MONTH").toLowerCase();
+  const range = normalizeFilter(
+    query.range,
+    ["TODAY", "7DAYS", "30DAYS", "MONTH"],
+    "MONTH",
+  ).toLowerCase();
   const { start: rangeStart, end: rangeEnd } = getDateRangeByPreset(range);
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  const lastMonthEnd = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    0,
+    23,
+    59,
+    59,
+    999,
+  );
   const sevenDaysAgo = new Date(now);
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
   sevenDaysAgo.setHours(0, 0, 0, 0);
@@ -879,13 +997,24 @@ const getDashboardService = async (query = {}) => {
     getRevenueOverviewService(lastMonthStart, lastMonthEnd, { branchId }),
     getRevenueOverviewService(todayStart, today, { branchId }),
     User.count({
-      include: [{ model: Role, as: "role", where: { roleName: ROLE_NAME.USER }, required: true }],
+      include: [
+        {
+          model: Role,
+          as: "role",
+          where: { roleName: ROLE_NAME.USER },
+          required: true,
+        },
+      ],
     }),
     getRevenueByDateService(sevenDaysAgo, today, { branchId }),
     getRevenueByBranchService(thisMonthStart, today, { branchId }),
     getRevenueProductsService(thisMonthStart, today, 5, { branchId }),
     getRevenueBeveragesService(thisMonthStart, today, 5, { branchId }),
-    getDashboardOperationSummary({ startDate: todayStart, endDate: today, branchId }),
+    getDashboardOperationSummary({
+      startDate: todayStart,
+      endDate: today,
+      branchId,
+    }),
     PurchaseReceipt.count({
       where: {
         status: PURCHASE_RECEIPT_STATUS.PENDING,
@@ -928,7 +1057,18 @@ const getDashboardService = async (query = {}) => {
       attributes: ["id", "bookingStatus", "totalAmount", "createdAt"],
       where: branchId ? { branchId } : undefined,
       include: [
-        { model: User, as: "user", attributes: ["id", "username", "email"], include: [{ model: Profile, as: "profile", attributes: ["fullName", "avatar"] }] },
+        {
+          model: User,
+          as: "user",
+          attributes: ["id", "username", "email"],
+          include: [
+            {
+              model: Profile,
+              as: "profile",
+              attributes: ["fullName", "avatar"],
+            },
+          ],
+        },
         { model: Branch, as: "branch", attributes: ["id", "branchName"] },
       ],
       order: [["createdAt", "DESC"]],
@@ -939,7 +1079,25 @@ const getDashboardService = async (query = {}) => {
       where: branchId ? { branchId } : undefined,
       include: [
         { model: Branch, as: "branch", attributes: ["id", "branchName"] },
-        { model: OrderGroup, as: "orderGroup", attributes: ["id", "userId"], include: [{ model: User, as: "user", attributes: ["id", "username", "email"], include: [{ model: Profile, as: "profile", attributes: ["fullName", "avatar"] }] }] },
+        {
+          model: OrderGroup,
+          as: "orderGroup",
+          attributes: ["id", "userId"],
+          include: [
+            {
+              model: User,
+              as: "user",
+              attributes: ["id", "username", "email"],
+              include: [
+                {
+                  model: Profile,
+                  as: "profile",
+                  attributes: ["fullName", "avatar"],
+                },
+              ],
+            },
+          ],
+        },
       ],
       order: [["createdAt", "DESC"]],
       limit: 5,
@@ -958,7 +1116,10 @@ const getDashboardService = async (query = {}) => {
     const item = chartMap[key] || {};
     return {
       date: key,
-      label: d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" }),
+      label: d.toLocaleDateString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+      }),
       bookingRevenue: toNumber(item.bookingRevenue),
       productRevenue: toNumber(item.productRevenue),
       beverageRevenue: toNumber(item.beverageRevenue),
@@ -980,7 +1141,8 @@ const getDashboardService = async (query = {}) => {
     summary: {
       todayRevenue: todayOverview.totalRevenue,
       todayBookingRevenue: todayOverview.bookingRevenue,
-      todaySalesRevenue: todayOverview.productRevenue + todayOverview.beverageRevenue,
+      todaySalesRevenue:
+        todayOverview.productRevenue + todayOverview.beverageRevenue,
       todayBookingCount: todayOverview.bookingCount,
       todayOrderCount: todayOverview.orderCount,
       pendingBookingCount: operationSummary.pendingBookingCount,
@@ -991,11 +1153,17 @@ const getDashboardService = async (query = {}) => {
     },
     stats: {
       totalRevenue: thisOverview.totalRevenue,
-      revenueGrowth: calcGrowth(thisOverview.totalRevenue, lastOverview.totalRevenue),
+      revenueGrowth: calcGrowth(
+        thisOverview.totalRevenue,
+        lastOverview.totalRevenue,
+      ),
       orderCount: thisOverview.orderCount,
       orderGrowth: calcGrowth(thisOverview.orderCount, lastOverview.orderCount),
       bookingCount: thisOverview.bookingCount,
-      bookingGrowth: calcGrowth(thisOverview.bookingCount, lastOverview.bookingCount),
+      bookingGrowth: calcGrowth(
+        thisOverview.bookingCount,
+        lastOverview.bookingCount,
+      ),
       userCount: totalUsers,
     },
     overview: thisOverview,
@@ -1031,11 +1199,31 @@ const getDashboardService = async (query = {}) => {
     })),
     recentBookings: recentBookings.map((b) => {
       const bj = b.toJSON();
-      return { id: bj.id, status: bj.bookingStatus, amount: Number(bj.totalAmount), createdAt: bj.createdAt, branchName: bj.branch?.branchName, fullName: bj.user?.profile?.fullName, username: bj.user?.username, avatar: bj.user?.profile?.avatar, email: bj.user?.email };
+      return {
+        id: bj.id,
+        status: bj.bookingStatus,
+        amount: Number(bj.totalAmount),
+        createdAt: bj.createdAt,
+        branchName: bj.branch?.branchName,
+        fullName: bj.user?.profile?.fullName,
+        username: bj.user?.username,
+        avatar: bj.user?.profile?.avatar,
+        email: bj.user?.email,
+      };
     }),
     recentOrders: recentOrders.map((o) => {
       const oj = o.toJSON();
-      return { id: oj.id, status: oj.orderStatus, amount: Number(oj.totalAmount), createdAt: oj.createdAt, branchName: oj.branch?.branchName, fullName: oj.orderGroup?.user?.profile?.fullName, username: oj.orderGroup?.user?.username, avatar: oj.orderGroup?.user?.profile?.avatar, email: oj.orderGroup?.user?.email };
+      return {
+        id: oj.id,
+        status: oj.orderStatus,
+        amount: Number(oj.totalAmount),
+        createdAt: oj.createdAt,
+        branchName: oj.branch?.branchName,
+        fullName: oj.orderGroup?.user?.profile?.fullName,
+        username: oj.orderGroup?.user?.username,
+        avatar: oj.orderGroup?.user?.profile?.avatar,
+        email: oj.orderGroup?.user?.email,
+      };
     }),
   };
 };
@@ -1069,21 +1257,34 @@ const getRevenueReportService = async (query = {}) => {
   ]);
 
   const includeProducts =
-    normalizeFilter(itemType, ["ALL", STOCK_ITEM_TYPE.PRODUCT_VARIANT, STOCK_ITEM_TYPE.BEVERAGE]) !==
-    STOCK_ITEM_TYPE.BEVERAGE;
+    normalizeFilter(itemType, [
+      "ALL",
+      STOCK_ITEM_TYPE.PRODUCT_VARIANT,
+      STOCK_ITEM_TYPE.BEVERAGE,
+    ]) !== STOCK_ITEM_TYPE.BEVERAGE;
   const includeBeverages =
-    normalizeFilter(itemType, ["ALL", STOCK_ITEM_TYPE.PRODUCT_VARIANT, STOCK_ITEM_TYPE.BEVERAGE]) !==
-    STOCK_ITEM_TYPE.PRODUCT_VARIANT;
+    normalizeFilter(itemType, [
+      "ALL",
+      STOCK_ITEM_TYPE.PRODUCT_VARIANT,
+      STOCK_ITEM_TYPE.BEVERAGE,
+    ]) !== STOCK_ITEM_TYPE.PRODUCT_VARIANT;
   const productCost = includeProducts
-    ? productRevenueItems.reduce((sum, item) => sum + toNumber(item.totalCost), 0)
+    ? productRevenueItems.reduce(
+        (sum, item) => sum + toNumber(item.totalCost),
+        0,
+      )
     : 0;
   const beverageCost = includeBeverages
-    ? beverageRevenueItems.reduce((sum, item) => sum + toNumber(item.totalCost), 0)
+    ? beverageRevenueItems.reduce(
+        (sum, item) => sum + toNumber(item.totalCost),
+        0,
+      )
     : 0;
   const salesRevenue = overview.productRevenue + overview.beverageRevenue;
   const salesCost = productCost + beverageCost;
   const grossProfit = salesRevenue - salesCost;
-  const grossMargin = salesRevenue > 0 ? Math.round((grossProfit / salesRevenue) * 100) : 0;
+  const grossMargin =
+    salesRevenue > 0 ? Math.round((grossProfit / salesRevenue) * 100) : 0;
 
   const decorateBranch = (branch) => ({
     ...branch,
@@ -1096,20 +1297,20 @@ const getRevenueReportService = async (query = {}) => {
   const revenueByType = [
     {
       type: "BOOKING",
-      label: "Dat san",
+      label: "Đặt sân",
       transactionCount: overview.bookingCount,
       revenue: overview.bookingRevenue,
     },
     {
       type: "PRODUCT",
-      label: "San pham cau long",
+      label: "Sản phẩm cầu lông",
       transactionCount: overview.productOrderCount,
       quantity: overview.productQuantity,
       revenue: overview.productRevenue,
     },
     {
       type: "BEVERAGE",
-      label: "Do uong",
+      label: "Đồ uống",
       transactionCount: overview.beverageOrderCount,
       quantity: overview.beverageQuantity,
       revenue: overview.beverageRevenue,
@@ -1121,7 +1322,9 @@ const getRevenueReportService = async (query = {}) => {
       "PRODUCT",
       "BEVERAGE",
     ]);
-    return normalizedRevenueType === "ALL" || normalizedRevenueType === item.type;
+    return (
+      normalizedRevenueType === "ALL" || normalizedRevenueType === item.type
+    );
   });
 
   return {
@@ -1129,7 +1332,12 @@ const getRevenueReportService = async (query = {}) => {
     endDate: endDate || null,
     filters: {
       branchId: parseOptionalId(branchId),
-      revenueType: normalizeFilter(revenueType, ["ALL", "BOOKING", "PRODUCT", "BEVERAGE"]),
+      revenueType: normalizeFilter(revenueType, [
+        "ALL",
+        "BOOKING",
+        "PRODUCT",
+        "BEVERAGE",
+      ]),
       itemType: normalizeFilter(itemType, [
         "ALL",
         STOCK_ITEM_TYPE.PRODUCT_VARIANT,

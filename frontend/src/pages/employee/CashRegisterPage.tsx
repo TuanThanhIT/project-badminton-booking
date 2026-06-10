@@ -19,6 +19,10 @@ import {
   getShiftAssignments,
 } from "../../redux/slices/employee/workShiftSlice";
 import type { EmployeeWorkShift } from "../../types/workShift";
+import {
+  isShiftCheckoutWindowOpen,
+  SHIFT_CHECKOUT_EARLY_MINUTES,
+} from "../../utils/workShift";
 
 const getToday = () =>
   new Date().toLocaleDateString("en-CA", {
@@ -170,16 +174,22 @@ const CashRegisterPage = () => {
       return;
     }
 
+    if (!isShiftCheckoutWindowOpen(currentWorkShift.workShift)) {
+      toast.warning(
+        `Chỉ có thể checkout trong vòng ${SHIFT_CHECKOUT_EARLY_MINUTES} phút trước khi ca kết thúc.`,
+      );
+      return;
+    }
+
     const openStaff = shiftAssignments.filter(
       (item) =>
         item.assignmentId !== currentWorkShift.assignmentId &&
-        item.checkIn &&
         !item.checkOut,
     );
 
     if (openStaff.length) {
       toast.error(
-        "Vui lòng nhập checkout cho tất cả nhân viên trong ca trước.",
+        "Vui lòng nhập và lưu checkout cho tất cả nhân viên trong ca trước.",
       );
       navigate("/employee/shifts");
       return;
@@ -223,7 +233,7 @@ const CashRegisterPage = () => {
                 Cash Register
               </div>
 
-              <h1 className="mt-4 max-w-lg text-3xl font-extrabold leading-tight">
+              <h1 className="mt-4 max-w-lg text-2xl font-bold leading-tight sm:text-3xl">
                 {hasCheckedIn
                   ? "Chốt tiền mặt cuối ca"
                   : "Kiểm soát tiền mặt đầu ca"}
@@ -248,11 +258,11 @@ const CashRegisterPage = () => {
               <div className="mx-auto w-full max-w-xl pb-4">
                 {/* HEADER */}
                 <div className="mb-5">
-                  <p className="text-sm font-bold text-sky-700">
+                  <p className="text-sm font-semibold text-sky-700">
                     Vận hành ca làm
                   </p>
 
-                  <h2 className="mt-1 text-2xl font-extrabold text-slate-800">
+                  <h2 className="mt-1 text-2xl font-bold text-slate-800">
                     Quầy thu ngân
                   </h2>
 
@@ -269,11 +279,11 @@ const CashRegisterPage = () => {
                     <div className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm">
                       <div className="mb-4 flex items-start justify-between gap-4">
                         <div>
-                          <p className="text-xs font-bold uppercase tracking-wide text-sky-600">
+                          <p className="text-xs font-semibold text-sky-600">
                             Ca hiện tại
                           </p>
 
-                          <h3 className="mt-1 text-xl font-extrabold text-slate-800">
+                          <h3 className="mt-1 text-xl font-bold text-slate-800">
                             {currentWorkShift.workShift.shiftName}
                           </h3>
                         </div>
@@ -383,11 +393,11 @@ const CashRegisterPage = () => {
                       >
                         <div className="mb-4 grid gap-3 sm:grid-cols-2">
                           <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            <p className="text-xs font-semibold text-slate-500">
                               Tiền dự kiến
                             </p>
 
-                            <p className="mt-1 text-lg font-extrabold text-slate-800">
+                            <p className="mt-1 text-lg font-bold text-slate-800">
                               {formatCurrency(
                                 currentWorkShift.cashRegister?.expectedCash ||
                                   0,
@@ -398,7 +408,7 @@ const CashRegisterPage = () => {
                           <button
                             type="button"
                             onClick={() => navigate("/employee/shifts")}
-                            className="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-left text-sm font-bold text-sky-700 transition hover:bg-sky-100 active:scale-[0.98]"
+                            className="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-left text-sm font-semibold text-sky-700 transition hover:bg-sky-100 active:scale-[0.98]"
                           >
                             Kiểm tra giờ nhân viên
                           </button>

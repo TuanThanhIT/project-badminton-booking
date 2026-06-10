@@ -43,7 +43,7 @@ const getProductsByFilterService = async (data) => {
   if (cateId) {
     const category = await Category.findByPk(cateId);
     if (!category) {
-      throw new NotFoundError("Danh muc khong ton tai");
+      throw new NotFoundError("Danh mục không tồn tại");
     }
     categoryIds = [Number(cateId)];
   } else if (groupName) {
@@ -56,13 +56,13 @@ const getProductsByFilterService = async (data) => {
     categoryIds = categories.map((category) => category.id);
 
     if (categoryIds.length === 0) {
-      throw new NotFoundError("Nhom danh muc khong ton tai");
+      throw new NotFoundError("Nhóm danh mục không tồn tại");
     }
   } else {
-    throw new NotFoundError("Danh muc khong ton tai");
+    throw new NotFoundError("Danh mục không tồn tại");
   }
 
-  // X? l� keyword
+  // Xử lý keyword
   const kw = keyword && keyword !== "null" ? keyword : undefined;
 
   const whereCondition = {
@@ -96,7 +96,7 @@ const getProductsByFilterService = async (data) => {
       "thumbnailUrl",
       "createdAt",
       [fn("MIN", col("variants.price")), "minPrice"],
-      [fn("SUM", col("variants->stocks.stock")), "totalStock"], // ?? t?ng stock
+      [fn("SUM", col("variants->stocks.stock")), "totalStock"],
     ],
     include: [
       {
@@ -115,7 +115,7 @@ const getProductsByFilterService = async (data) => {
           {
             model: VariantStock,
             as: "stocks",
-            attributes: [], // ?? QUAN TR?NG
+            attributes: [],
             ...(branchIds?.length > 0 && {
               where: { branchId: { [Op.in]: branchIds } },
               required: true,
@@ -228,7 +228,7 @@ const getProductDetailService = async (data) => {
   });
 
   if (!product) {
-    throw new NotFoundError("S?n ph?m kh�ng t?n t?i");
+    throw new NotFoundError("Sản phẩm không tồn tại");
   }
 
   const variantsFormatted = product.variants.map((v) => {
@@ -237,10 +237,8 @@ const getProductDetailService = async (data) => {
     const discountPrice =
       variant.price - (variant.price * variant.discount) / 100;
 
-    // t?ng stock
     const totalStock = variant.stocks.reduce((total, s) => total + s.stock, 0);
 
-    // chuy?n stocks -> branches
     const branches = variant.stocks.map((s) => ({
       id: s.branch.id,
       branchName: s.branch.branchName,
@@ -304,7 +302,7 @@ const getProductFeedbacksService = async (data) => {
     offset,
   });
 
-  // t�nh rating trung b�nh (to�n b? feedback c?a product)
+  // Tính rating trung bình của toàn bộ đánh giá sản phẩm.
   const allFeedbacks = await Feedback.findAll({
     include: [
       {
@@ -362,4 +360,3 @@ const productService = {
 };
 
 export default productService;
-

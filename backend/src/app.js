@@ -44,6 +44,7 @@ import initInventoryRouteManager from "./routes/manager/inventoryRoute.js";
 import initFeedbackRoute from "./routes/user/feedbackRoute.js";
 import initNotificationRoute from "./routes/user/notificationRoute.js";
 import initHomeRoute from "./routes/user/homeRoute.js";
+import initLocationRoute from "./routes/user/locationRoute.js";
 import initAdminUserRoute from "./routes/admin/userRoute.js";
 import initAdminBranchRoute from "./routes/admin/branchRoute.js";
 import initAdminManagerRoute from "./routes/admin/managerRoute.js";
@@ -74,6 +75,8 @@ export const createApp = () => {
     "http://127.0.0.1:5173",
   ].filter(Boolean);
 
+  app.set("trust proxy", 1);
+
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   app.use(
@@ -90,7 +93,15 @@ export const createApp = () => {
   );
   app.use(cookieParser());
 
+  app.get("/health", (req, res) => {
+    res.status(200).json({
+      status: "ok",
+      timestamp: new Date().toISOString(),
+    });
+  });
+
   initHomeRoute(app);
+  initLocationRoute(app);
   initAuthRoute(app);
   initCateRoute(app);
   initProductRoute(app);

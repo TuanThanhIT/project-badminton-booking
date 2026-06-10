@@ -70,6 +70,10 @@ const productSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      .addCase(getProductsByFilter.pending, (state) => {
+        state.products = undefined;
+      })
+
       .addCase(getProductsByFilter.fulfilled, (state, action) => {
         state.products = action.payload.data;
       })

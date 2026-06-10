@@ -2,6 +2,8 @@ node_modules
 dist
 .env
 .env.*
+.git
+.gitignore
 npm-debug.log
 coverage
 .DS_Store

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+﻿import { useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,6 +10,7 @@ import { login } from "../../redux/slices/user/authSlice";
 import type { LoginRequest } from "../../types/auth";
 import LoadingButton from "../../components/ui/common/LoadingButton";
 import AuthShell from "../../components/ui/user/auth/AuthShell";
+import PasswordInput from "../../components/ui/common/PasswordInput";
 
 const inputClass =
   "h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 pl-11 text-sm outline-none transition-all hover:border-sky-200 hover:bg-white focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100";
@@ -116,14 +117,10 @@ const LoginPage = () => {
             </span>
           </div>
           <div className="relative">
-            <Lock
-              size={17}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-            <input
-              type="password"
-              {...register("password")}
+            <PasswordInput
+              registration={register("password")}
               placeholder="Nhập mật khẩu"
+              leftIcon={<Lock size={17} />}
               className={inputClass}
             />
           </div>
@@ -166,3 +163,4 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+

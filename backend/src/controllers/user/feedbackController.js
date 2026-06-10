@@ -43,7 +43,7 @@ const upsertFeedbackBranchController = asyncHandler(async (req, res) => {
   const feedback = await feedbackService.upsertFeedbackBranchService(data);
   return res
     .status(200)
-    .json(new SuccessResponse("Danh gia chi nhanh thanh cong", feedback));
+    .json(new SuccessResponse("Đánh giá chi nhánh thành công", feedback));
 });
 
 const getFeedbackBranchDetailController = asyncHandler(async (req, res) => {
@@ -51,7 +51,7 @@ const getFeedbackBranchDetailController = asyncHandler(async (req, res) => {
   const feedback = await feedbackService.getFeedbackBranchDetailService(data);
   return res
     .status(200)
-    .json(new SuccessResponse("Lay danh gia chi nhanh thanh cong", feedback));
+    .json(new SuccessResponse("Lấy đánh giá chi nhánh thành công", feedback));
 });
 
 const feedbackController = {

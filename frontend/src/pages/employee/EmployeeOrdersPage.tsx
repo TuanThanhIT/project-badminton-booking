@@ -437,10 +437,10 @@ const EmployeeOrdersPage = () => {
         <section className="flex min-h-[620px] min-w-0 flex-col rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 xl:h-full xl:min-h-0">
           <div className="mb-3 flex shrink-0 flex-col justify-between gap-2 lg:flex-row lg:items-center">
             <div>
-              <p className="text-sm font-bold text-sky-700">
+              <p className="text-sm font-semibold text-sky-700">
                 Vận hành đơn hàng
               </p>
-              <h2 className="mt-1 text-2xl font-extrabold text-slate-800">
+              <h2 className="mt-1 text-2xl font-bold text-slate-800">
                 Đơn hàng cần xử lý
               </h2>
               <p className="mt-1 text-sm text-slate-500">
@@ -674,7 +674,7 @@ const EmployeeOrdersPage = () => {
                 <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-start">
                   <div className="min-w-0">
                     <div className="flex min-w-0 flex-wrap items-center gap-2">
-                      <h2 className="font-mono text-2xl font-bold text-sky-700">
+                      <h2 className="text-xl font-bold text-sky-700">
                         {formatOrderItemCode(selectedOrder.id)}
                       </h2>
 
@@ -720,11 +720,11 @@ const EmployeeOrdersPage = () => {
                   </div>
 
                   <div className="rounded-3xl bg-white px-5 py-4 shadow-sm lg:text-right">
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    <p className="text-xs font-medium text-slate-500">
                       Tổng thanh toán
                     </p>
 
-                    <p className="mt-1 text-3xl font-bold text-sky-700">
+                    <p className="mt-1 text-xl font-bold text-sky-700">
                       {formatCurrency(selectedOrder.totalAmount)}
                     </p>
                   </div>
@@ -815,7 +815,7 @@ const EmployeeOrdersPage = () => {
                         Tên khách hàng
                       </p>
 
-                      <p className="truncate font-sans text-[13px] font-medium tracking-tight text-sky-700">
+                      <p className="truncate font-sans text-[13px] font-medium tracking-tight text-slate-800">
                         {selectedOrder.shippingName}
                       </p>
                     </div>
@@ -824,7 +824,7 @@ const EmployeeOrdersPage = () => {
                       <p className="mb-1 text-xs font-medium text-slate-500">
                         Số điện thoại
                       </p>
-                      <p className="truncate font-sans text-[13px] font-medium tracking-tight text-sky-700">
+                      <p className="truncate font-sans text-[13px] font-medium tracking-tight text-slate-800">
                         {selectedOrder.shippingPhone}
                       </p>
                     </div>
@@ -833,7 +833,7 @@ const EmployeeOrdersPage = () => {
                       <p className="mb-1 text-xs font-medium text-slate-500">
                         Địa chỉ nhận hàng
                       </p>
-                      <p className="truncate font-sans text-[13px] font-medium tracking-tight text-sky-700">
+                      <p className="truncate font-sans text-[13px] font-medium tracking-tight text-slate-700">
                         {selectedOrder.shippingAddress}
                       </p>
                     </div>
@@ -853,7 +853,7 @@ const EmployeeOrdersPage = () => {
                       <p className="mb-1 text-xs font-medium text-slate-500">
                         Mã vận đơn GHN
                       </p>
-                      <p className="truncate font-sans text-[13px] font-medium tracking-tight text-sky-700">
+                      <p className="truncate font-sans text-[13px] font-medium tracking-tight text-slate-800">
                         {selectedOrder.shippingOrderCode || "Chưa tạo vận đơn"}
                       </p>
                     </div>
@@ -861,7 +861,7 @@ const EmployeeOrdersPage = () => {
                       <p className="mb-1 text-xs font-medium text-slate-500">
                         Trạng thái giao hàng
                       </p>
-                      <p className="truncate font-sans text-[13px] font-medium tracking-tight text-sky-700">
+                      <p className="truncate font-sans text-[13px] font-medium tracking-tight text-slate-800">
                         {SHIPPING_LABEL[selectedOrder.shippingStatus]}
                       </p>
                     </div>
@@ -870,7 +870,7 @@ const EmployeeOrdersPage = () => {
                       <p className="mb-1 text-xs font-medium text-slate-500">
                         Thanh toán
                       </p>
-                      <p className="truncate font-sans text-[13px] font-medium tracking-tight text-sky-700">
+                      <p className="truncate font-sans text-[13px] font-medium tracking-tight text-slate-800">
                         {PAYMENT_LABEL[selectedPaymentMethod] ||
                           selectedPaymentMethod}
                         <span className="mx-1.5 text-slate-300">•</span>
@@ -1003,7 +1003,7 @@ const EmployeeOrdersPage = () => {
                       Từ chối yêu cầu hủy
                     </p>
 
-                    <h3 className="mt-1 truncate text-xl font-extrabold text-slate-900">
+                    <h3 className="mt-1 truncate text-xl font-bold text-slate-900">
                       {formatOrderItemCode(rejectingOrder.id)}
                     </h3>
 

@@ -7,7 +7,7 @@ const getAllManagersController = asyncHandler(async (req, res) => {
   const result = await managerService.getAllManagersService(data);
   return res
     .status(200)
-    .json(new SuccessResponse("Lấy danh sách manager thành công", result));
+    .json(new SuccessResponse("Lấy danh sách quản lý thành công", result));
 });
 
 const getBranchManagersController = asyncHandler(async (req, res) => {
@@ -15,7 +15,7 @@ const getBranchManagersController = asyncHandler(async (req, res) => {
   const result = await managerService.getBranchManagersService(branchId);
   return res
     .status(200)
-    .json(new SuccessResponse("Lấy danh sách manager chi nhánh thành công", result));
+    .json(new SuccessResponse("Lấy danh sách quản lý chi nhánh thành công", result));
 });
 
 const getBranchManagerHistoryController = asyncHandler(async (req, res) => {
@@ -23,7 +23,7 @@ const getBranchManagerHistoryController = asyncHandler(async (req, res) => {
   const result = await managerService.getBranchManagerHistoryService(branchId);
   return res
     .status(200)
-    .json(new SuccessResponse("Lấy lịch sử manager chi nhánh thành công", result));
+    .json(new SuccessResponse("Lấy lịch sử quản lý chi nhánh thành công", result));
 });
 
 const assignManagerController = asyncHandler(async (req, res) => {
@@ -32,7 +32,7 @@ const assignManagerController = asyncHandler(async (req, res) => {
   const result = await managerService.assignManagerToBranchService(data);
   return res
     .status(201)
-    .json(new SuccessResponse("Gán manager cho chi nhánh thành công", result));
+    .json(new SuccessResponse("Gán quản lý cho chi nhánh thành công", result));
 });
 
 const revokeManagerController = asyncHandler(async (req, res) => {
@@ -41,7 +41,7 @@ const revokeManagerController = asyncHandler(async (req, res) => {
   const result = await managerService.revokeBranchManagerService(data);
   return res
     .status(200)
-    .json(new SuccessResponse("Thu hồi quyền manager thành công", result));
+    .json(new SuccessResponse("Thu hồi quyền quản lý thành công", result));
 });
 
 const changeUserRoleController = asyncHandler(async (req, res) => {
@@ -50,7 +50,7 @@ const changeUserRoleController = asyncHandler(async (req, res) => {
   const result = await managerService.changeUserRoleService(data);
   return res
     .status(200)
-    .json(new SuccessResponse("Thay đổi role người dùng thành công", result));
+    .json(new SuccessResponse("Thay đổi vai trò người dùng thành công", result));
 });
 
 const adminManagerController = {

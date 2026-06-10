@@ -7,6 +7,7 @@ type AdminPaginationProps = {
   onPage: (page: number) => void;
   unit?: string;
   alwaysShow?: boolean;
+  compact?: boolean;
 };
 
 const AdminPagination = (props: AdminPaginationProps) => (

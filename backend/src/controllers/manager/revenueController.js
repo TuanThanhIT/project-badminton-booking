@@ -10,7 +10,7 @@ const getRevenue = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Get manager revenue successfully", result));
+    .json(new SuccessResponse("Lay doanh thu cua quan ly thanh cong", result));
 });
 
 const getDashboard = asyncHandler(async (req, res) => {
@@ -21,7 +21,7 @@ const getDashboard = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Get manager dashboard successfully", result));
+    .json(new SuccessResponse("Lay du lieu dashboard cua quan ly thanh cong", result));
 });
 
 const getRevenueReport = asyncHandler(async (req, res) => {
@@ -32,7 +32,7 @@ const getRevenueReport = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Get manager revenue report successfully", result));
+    .json(new SuccessResponse("Lay bao cao doanh thu cua quan ly thanh cong", result));
 });
 
 export default {

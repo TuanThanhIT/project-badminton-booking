@@ -4,7 +4,7 @@ import supplierService from "../../services/manager/supplierService.js";
 
 const getSuppliersController = asyncHandler(async (req, res) => {
   const result = await supplierService.getSuppliersService(req.query);
-  return res.json(new SuccessResponse("Get suppliers successfully", result));
+  return res.status(200).json(new SuccessResponse("Lấy danh sách nhà cung cấp thành công", result));
 });
 
 export default {

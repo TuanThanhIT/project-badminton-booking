@@ -20,6 +20,10 @@ import {
   updateShiftAssignment,
 } from "../../redux/slices/employee/workShiftSlice";
 import type { ShiftAssignment } from "../../types/workShift";
+import {
+  isShiftCheckoutWindowOpen,
+  SHIFT_CHECKOUT_EARLY_MINUTES,
+} from "../../utils/workShift";
 
 const getToday = () =>
   new Date().toLocaleDateString("en-CA", {
@@ -66,6 +70,11 @@ const toTimeInput = (value?: string | null) => {
 type AssignmentForm = {
   checkInTime: string;
   checkOutTime: string;
+};
+
+const ROLE_LABEL: Record<string, string> = {
+  CASHIER: "Thu ngân",
+  STAFF: "Nhân viên",
 };
 
 const buildForms = (assignments: ShiftAssignment[]) =>
@@ -171,15 +180,23 @@ const EmployeeShiftsPage = () => {
       return;
     }
 
+    if (!isShiftCheckoutWindowOpen(currentWorkShift.workShift)) {
+      toast.warning(
+        `Chỉ có thể checkout trong vòng ${SHIFT_CHECKOUT_EARLY_MINUTES} phút trước khi ca kết thúc.`,
+      );
+      return;
+    }
+
     const openStaff = shiftAssignments.filter(
       (item) =>
         item.assignmentId !== currentWorkShift.assignmentId &&
-        item.checkIn &&
         !item.checkOut,
     );
 
     if (openStaff.length) {
-      toast.error("Vui lòng nhập checkout cho tất cả nhân viên đã check-in.");
+      toast.error(
+        "Vui lòng nhập và lưu checkout cho tất cả nhân viên đã check-in.",
+      );
       return;
     }
 
@@ -213,10 +230,10 @@ const EmployeeShiftsPage = () => {
           <div className="shrink-0 border-b border-slate-100 p-5 sm:p-6">
             <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
               <div>
-                <p className="text-sm font-bold text-sky-700">
+                <p className="text-sm font-semibold text-sky-700">
                   Vận hành ca làm
                 </p>
-                <h2 className="mt-1 text-2xl font-extrabold text-slate-800">
+                <h2 className="mt-1 text-2xl font-bold text-slate-800">
                   Nhân sự trong ca
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
@@ -226,7 +243,7 @@ const EmployeeShiftsPage = () => {
 
               <button
                 onClick={loadShift}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-slate-200 px-4 text-sm font-bold text-slate-800 hover:bg-slate-50"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-slate-200 px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50"
               >
                 <RefreshCw className="h-4 w-4" />
                 Làm mới
@@ -235,39 +252,39 @@ const EmployeeShiftsPage = () => {
 
             {currentWorkShift && (
               <div className="mt-5 grid gap-4 md:grid-cols-4">
-                <div className="rounded-2xl bg-slate-50 p-5">
-                  <p className="text-xs font-bold uppercase text-slate-500">
+                <div className="rounded-2xl border border-sky-100 bg-sky-50 p-5">
+                  <p className="text-xs font-semibold text-slate-500">
                     Ca hiện tại
                   </p>
-                  <p className="mt-1 font-extrabold text-slate-800">
+                  <p className="mt-1 font-bold text-slate-900">
                     {currentWorkShift.workShift.shiftName}
                   </p>
                 </div>
 
-                <div className="rounded-2xl bg-slate-50 p-5">
-                  <p className="text-xs font-bold uppercase text-slate-500">
+                <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-5">
+                  <p className="text-xs font-semibold text-slate-500">
                     Ngày làm
                   </p>
-                  <p className="mt-1 font-extrabold text-slate-800">
+                  <p className="mt-1 font-bold text-slate-900">
                     {currentWorkShift.workShift.workDate}
                   </p>
                 </div>
 
-                <div className="rounded-2xl bg-slate-50 p-5">
-                  <p className="text-xs font-bold uppercase text-slate-500">
+                <div className="rounded-2xl border border-amber-100 bg-amber-50 p-5">
+                  <p className="text-xs font-semibold text-slate-500">
                     Khung giờ
                   </p>
-                  <p className="mt-1 font-extrabold text-slate-800">
+                  <p className="mt-1 font-bold text-slate-900">
                     {currentWorkShift.workShift.startTime} -{" "}
                     {currentWorkShift.workShift.endTime}
                   </p>
                 </div>
 
-                <div className="rounded-2xl bg-slate-50 p-5">
-                  <p className="text-xs font-bold uppercase text-slate-500">
+                <div className="rounded-2xl border border-violet-100 bg-violet-50 p-5">
+                  <p className="text-xs font-semibold text-slate-500">
                     Thu ngân check-in
                   </p>
-                  <p className="mt-1 font-extrabold text-slate-800">
+                  <p className="mt-1 font-bold text-slate-900">
                     {formatDateTime(currentWorkShift.checkIn)}
                   </p>
                 </div>
@@ -314,6 +331,8 @@ const EmployeeShiftsPage = () => {
                     <tbody className="divide-y divide-slate-100">
                       {shiftAssignments.map((assignment) => {
                         const form = forms[assignment.assignmentId];
+                        const isCashierAssignment =
+                          assignment.roleInShift === "CASHIER";
 
                         return (
                           <tr
@@ -346,7 +365,8 @@ const EmployeeShiftsPage = () => {
                                     : "bg-slate-100 text-slate-800"
                                 }`}
                               >
-                                {assignment.roleInShift}
+                                {ROLE_LABEL[assignment.roleInShift] ||
+                                  assignment.roleInShift}
                               </span>
                             </td>
 
@@ -354,6 +374,7 @@ const EmployeeShiftsPage = () => {
                               <input
                                 type="time"
                                 value={form?.checkInTime || ""}
+                                disabled={isCashierAssignment}
                                 onChange={(event) =>
                                   setFormValue(
                                     assignment.assignmentId,
@@ -361,7 +382,7 @@ const EmployeeShiftsPage = () => {
                                     event.target.value,
                                   )
                                 }
-                                className="h-10 w-32 rounded-xl border border-slate-200 px-3 font-semibold outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
+                                className="h-10 w-32 rounded-xl border border-slate-200 px-3 font-semibold outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500"
                               />
                             </td>
 
@@ -369,6 +390,7 @@ const EmployeeShiftsPage = () => {
                               <input
                                 type="time"
                                 value={form?.checkOutTime || ""}
+                                disabled={isCashierAssignment}
                                 onChange={(event) =>
                                   setFormValue(
                                     assignment.assignmentId,
@@ -376,7 +398,7 @@ const EmployeeShiftsPage = () => {
                                     event.target.value,
                                   )
                                 }
-                                className="h-10 w-32 rounded-xl border border-slate-200 px-3 font-semibold outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
+                                className="h-10 w-32 rounded-xl border border-slate-200 px-3 font-semibold outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500"
                               />
                             </td>
 
@@ -389,24 +411,30 @@ const EmployeeShiftsPage = () => {
                             </td>
 
                             <td className="px-5 py-4">
-                              <p className="font-extrabold text-slate-800">
+                              <p className="font-bold text-slate-800">
                                 {formatCurrency(assignment.earnedWage)}
                               </p>
                             </td>
 
                             <td className="px-5 py-4 text-right">
-                              <button
-                                onClick={() => saveAssignment(assignment)}
-                                disabled={updateLoading}
-                                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-sky-600 px-3 text-xs font-bold text-white hover:bg-sky-700 disabled:bg-slate-300"
-                              >
-                                {updateLoading ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <Save className="h-4 w-4" />
-                                )}
-                                Lưu
-                              </button>
+                              {isCashierAssignment ? (
+                                <span className="inline-flex h-10 items-center justify-center rounded-xl bg-slate-50 px-3 text-xs font-semibold text-slate-500">
+                                  Theo ca
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={() => saveAssignment(assignment)}
+                                  disabled={updateLoading}
+                                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-sky-600 px-3 text-xs font-bold text-white hover:bg-sky-700 disabled:bg-slate-300"
+                                >
+                                  {updateLoading ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Save className="h-4 w-4" />
+                                  )}
+                                  Lưu
+                                </button>
+                              )}
                             </td>
                           </tr>
                         );
@@ -439,7 +467,7 @@ const EmployeeShiftsPage = () => {
                     className="grid gap-5 lg:grid-cols-[1fr_220px_170px]"
                   >
                     <div>
-                      <h3 className="flex items-center gap-2 text-lg font-extrabold text-slate-800">
+                      <h3 className="flex items-center gap-2 text-lg font-bold text-slate-800">
                         <WalletCards className="h-5 w-5 text-sky-600" />
                         Chốt ca thu ngân
                       </h3>
@@ -520,7 +548,7 @@ const EmployeeShiftsPage = () => {
                     className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
                   >
                     <item.icon className="h-5 w-5 text-sky-600" />
-                    <p className="mt-3 text-2xl font-extrabold text-slate-800">
+                    <p className="mt-3 text-2xl font-bold text-slate-800">
                       {item.value}
                     </p>
                     <p className="mt-1 text-sm font-semibold text-slate-500">

@@ -29,6 +29,7 @@ import {
   managerInputClass,
   managerSecondaryButtonClass,
 } from "../../components/commons/manager/ManagerPage";
+import TablePagination from "../../components/ui/user/pagination/TablePagination";
 
 const ORDER_TABS: { value: OrderStatus | "ALL"; label: string }[] = [
   { value: "ALL", label: "Tất cả" },
@@ -72,6 +73,24 @@ const SHIPPING_LABEL: Record<ShippingStatus, string> = {
   RETURNING: "Đang hoàn",
   RETURNED: "Đã hoàn",
   CANCELLED: "Đã hủy giao hàng",
+};
+
+const PAYMENT_METHOD_LABEL: Record<string, string> = {
+  COD: "Thanh toán khi nhận hàng",
+  CASH: "Tiền mặt",
+  BANK: "Chuyển khoản",
+  VNPAY: "VNPay",
+  WALLET: "Ví B-Hub",
+};
+
+const PAYMENT_STATUS_LABEL: Record<string, string> = {
+  UNPAID: "Chưa thanh toán",
+  PENDING: "Chờ thanh toán",
+  PAID: "Đã thanh toán",
+  FAILED: "Thanh toán thất bại",
+  REFUNDED: "Đã hoàn tiền",
+  PARTIALLY_REFUNDED: "Hoàn tiền một phần",
+  CANCELLED: "Đã hủy",
 };
 
 const statusClass: Record<OrderStatus, string> = {
@@ -147,7 +166,8 @@ const OrderPage = () => {
   }, [dispatch, orders, selectedOrder]);
 
   const totalVisibleAmount = useMemo(
-    () => orders.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0),
+    () =>
+      orders.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0),
     [orders],
   );
   const selectedDetails = selectedOrder?.details || [];
@@ -165,7 +185,10 @@ const OrderPage = () => {
         description="Theo dõi đơn hàng online, thanh toán và vận chuyển của chi nhánh."
         metrics={[
           { label: "Tổng đơn", value: summary.totalOrders || pagination.total },
-          { label: "Giá trị đang xem", value: formatCurrency(totalVisibleAmount) },
+          {
+            label: "Giá trị đang xem",
+            value: formatCurrency(totalVisibleAmount),
+          },
         ]}
       />
 
@@ -293,25 +316,14 @@ const OrderPage = () => {
             )}
           </div>
 
-          <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 text-sm">
-            <button
-              disabled={page <= 1}
-              onClick={() => setPage((current) => Math.max(1, current - 1))}
-              className="rounded-lg border border-slate-200 px-3 py-2 font-bold disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Trước
-            </button>
-            <span className="font-semibold text-slate-500">
-              Trang {pagination.page}/{pagination.totalPages || 1}
-            </span>
-            <button
-              disabled={page >= (pagination.totalPages || 1)}
-              onClick={() => setPage((current) => current + 1)}
-              className="rounded-lg border border-slate-200 px-3 py-2 font-bold disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Sau
-            </button>
-          </div>
+          <TablePagination
+            page={pagination.page || page}
+            totalPages={pagination.totalPages || 1}
+            total={pagination.total || orders.length}
+            onPage={setPage}
+            unit="đơn"
+            compact
+          />
         </section>
 
         <section className={`min-h-[560px] p-5 ${managerCardClass}`}>
@@ -336,7 +348,7 @@ const OrderPage = () => {
                   </p>
                 </div>
                 <div className="text-left lg:text-right">
-                  <p className="text-xs font-bold uppercase text-slate-500">
+                  <p className="text-xs font-bold text-slate-500">
                     Tổng thanh toán
                   </p>
                   <p className="text-2xl font-bold text-slate-900">
@@ -347,9 +359,18 @@ const OrderPage = () => {
 
               <div className="grid gap-4 lg:grid-cols-2">
                 <InfoPanel icon={UserRound} title="Người nhận">
-                  <InfoRow label="Tên khách" value={selectedOrder.shippingName} />
-                  <InfoRow label="Số điện thoại" value={selectedOrder.shippingPhone} />
-                  <InfoRow label="Địa chỉ" value={selectedOrder.shippingAddress} />
+                  <InfoRow
+                    label="Tên khách"
+                    value={selectedOrder.shippingName}
+                  />
+                  <InfoRow
+                    label="Số điện thoại"
+                    value={selectedOrder.shippingPhone}
+                  />
+                  <InfoRow
+                    label="Địa chỉ"
+                    value={selectedOrder.shippingAddress}
+                  />
                 </InfoPanel>
 
                 <InfoPanel icon={Truck} title="Vận chuyển">
@@ -394,8 +415,8 @@ const OrderPage = () => {
               <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
                 <InfoPanel icon={Clock3} title="Nhật ký vận chuyển">
                   <div className="max-h-52 space-y-3 overflow-y-auto">
-                  {selectedShippingLogs.length ? (
-                    selectedShippingLogs.map((log) => (
+                    {selectedShippingLogs.length ? (
+                      selectedShippingLogs.map((log) => (
                         <div key={log.id} className="flex gap-3 text-sm">
                           <span className="mt-1.5 h-2 w-2 rounded-full bg-sky-500" />
                           <div>
@@ -416,17 +437,35 @@ const OrderPage = () => {
                   </div>
                 </InfoPanel>
 
-                <InfoPanel icon={CreditCard} title="Thanh toan">
+                <InfoPanel icon={CreditCard} title="Thanh toán">
                   <InfoRow
                     label="Phương thức"
-                    value={selectedOrder.payment?.paymentMethod || "--"}
+                    value={
+                      PAYMENT_METHOD_LABEL[
+                        selectedOrder.payment?.paymentMethod || ""
+                      ] ||
+                      selectedOrder.payment?.paymentMethod ||
+                      "--"
+                    }
                   />
                   <InfoRow
                     label="Trạng thái"
-                    value={selectedOrder.payment?.paymentStatus || "UNPAID"}
+                    value={
+                      PAYMENT_STATUS_LABEL[
+                        selectedOrder.payment?.paymentStatus || "UNPAID"
+                      ] ||
+                      selectedOrder.payment?.paymentStatus ||
+                      "Chưa thanh toán"
+                    }
                   />
-                  <InfoRow label="Tạm tính" value={formatCurrency(selectedOrder.subtotal)} />
-                  <InfoRow label="Phí giao" value={formatCurrency(selectedOrder.shippingFee)} />
+                  <InfoRow
+                    label="Tạm tính"
+                    value={formatCurrency(selectedOrder.subtotal)}
+                  />
+                  <InfoRow
+                    label="Phí giao"
+                    value={formatCurrency(selectedOrder.shippingFee)}
+                  />
                 </InfoPanel>
               </div>
             </div>
@@ -463,7 +502,7 @@ const InfoPanel = ({ icon: Icon, title, children }: PanelProps) => (
 
 const InfoRow = ({ label, value }: { label: string; value: string }) => (
   <div className="mb-2 rounded-xl bg-slate-50 px-3 py-2 text-sm last:mb-0">
-    <p className="text-xs font-bold uppercase text-slate-500">{label}</p>
+    <p className="text-xs font-bold text-slate-500">{label}</p>
     <p className="mt-1 break-words font-semibold text-slate-800">{value}</p>
   </div>
 );

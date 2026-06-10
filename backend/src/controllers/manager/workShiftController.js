@@ -10,7 +10,7 @@ const getWorkShifts = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Get manager work shifts successfully", result));
+    .json(new SuccessResponse("Lấy danh sách ca làm của quản lý thành công", result));
 });
 
 const createWorkShift = asyncHandler(async (req, res) => {
@@ -21,7 +21,7 @@ const createWorkShift = asyncHandler(async (req, res) => {
 
   return res
     .status(201)
-    .json(new SuccessResponse("Create manager work shift successfully", result));
+    .json(new SuccessResponse("Tạo ca làm của quản lý thành công", result));
 });
 
 const assignEmployeeToShift = asyncHandler(async (req, res) => {
@@ -32,7 +32,7 @@ const assignEmployeeToShift = asyncHandler(async (req, res) => {
 
   return res
     .status(201)
-    .json(new SuccessResponse("Assign employee to shift successfully", result));
+    .json(new SuccessResponse("Gán nhân viên vào ca thành công", result));
 });
 
 const updateShiftAssignment = asyncHandler(async (req, res) => {
@@ -44,7 +44,7 @@ const updateShiftAssignment = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Update shift assignment successfully", result));
+    .json(new SuccessResponse("Cập nhật phân công ca thành công", result));
 });
 
 const removeShiftAssignment = asyncHandler(async (req, res) => {
@@ -55,7 +55,7 @@ const removeShiftAssignment = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Remove shift assignment successfully", result));
+    .json(new SuccessResponse("Xóa phân công ca thành công", result));
 });
 
 export default {

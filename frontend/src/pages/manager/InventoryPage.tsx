@@ -30,6 +30,7 @@ import type { ManagerProduct } from "../../types/product";
 import type { ManagerBeverage } from "../../types/beverage";
 import TablePagination from "../../components/ui/user/pagination/TablePagination";
 import { showConfirmDialog } from "../../utils/confirmDialog";
+import { stockTransactionTypeLabel } from "../../utils/inventoryLabels";
 
 const LIMIT = 10;
 
@@ -61,6 +62,13 @@ const statusClass: Record<string, string> = {
   APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
   REJECTED: "bg-rose-50 text-rose-700 border-rose-200",
   CANCELLED: "bg-slate-100 text-slate-600 border-slate-200",
+};
+
+const statusLabel: Record<string, string> = {
+  PENDING: "Chờ duyệt",
+  APPROVED: "Đã duyệt",
+  REJECTED: "Từ chối",
+  CANCELLED: "Đã hủy",
 };
 
 const InventoryPage = () => {
@@ -326,7 +334,7 @@ const InventoryPage = () => {
     <div className="space-y-6">
       <ManagerPageHeader
         eyebrow="Manager inventory"
-        title="Kho hàng"
+        title="Quản lý kho hàng"
         description="Tạo phiếu nhập, xem tồn kho và theo dõi lịch sử thay đổi tại branch đang quản lý."
         metrics={[
           { label: "Phiếu nhập", value: receipts.length },
@@ -592,7 +600,7 @@ const InventoryPage = () => {
                     <span
                       className={`rounded-full border px-2.5 py-1 text-xs font-bold ${statusClass[receipt.status]}`}
                     >
-                      {receipt.status}
+                      {statusLabel[receipt.status] || receipt.status}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center">
@@ -693,7 +701,9 @@ const InventoryPage = () => {
                   <td className="px-4 py-3">
                     {new Date(item.createdAt).toLocaleString("vi-VN")}
                   </td>
-                  <td className="px-4 py-3 font-bold">{item.type}</td>
+                  <td className="px-4 py-3 font-bold">
+                    {stockTransactionTypeLabel(item.type)}
+                  </td>
                   <td
                     className={`px-4 py-3 text-right font-bold ${
                       item.quantity > 0 ? "text-emerald-600" : "text-rose-600"

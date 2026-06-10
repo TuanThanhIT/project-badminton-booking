@@ -123,7 +123,7 @@ const StaffPage = () => {
         .some((value) => value!.toLowerCase().includes(normalizedKeyword));
     });
   }, [employees, keyword, statusFilter]);
-  const totalPages = Math.ceil(filteredEmployees.length / LIMIT);
+  const totalPages = Math.max(1, Math.ceil(filteredEmployees.length / LIMIT));
   const paginatedEmployees = filteredEmployees.slice(
     (page - 1) * LIMIT,
     page * LIMIT,
@@ -132,6 +132,10 @@ const StaffPage = () => {
   useEffect(() => {
     setPage(1);
   }, [keyword, statusFilter]);
+
+  useEffect(() => {
+    setPage((currentPage) => Math.min(currentPage, totalPages));
+  }, [totalPages]);
 
   const closeForm = () => {
     setShowForm(false);
@@ -311,6 +315,7 @@ const StaffPage = () => {
           total={filteredEmployees.length}
           onPage={setPage}
           unit="nhân viên"
+          alwaysShow
         />
       </div>
 

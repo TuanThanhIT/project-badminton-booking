@@ -6,6 +6,7 @@ import {
   UserOtp,
   RefreshToken,
   Branch,
+  BranchManager,
 } from "../../models/index.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
@@ -33,6 +34,16 @@ import { ROLE_NAME } from "../../constants/userConstant.js";
 dotenv.config();
 
 const saltRounds = 10;
+
+const getManagerBranchIds = async (managerId, transaction) => {
+  const branchManagers = await BranchManager.findAll({
+    where: { managerId, isActive: true },
+    attributes: ["branchId"],
+    transaction,
+  });
+
+  return branchManagers.map((item) => Number(item.branchId));
+};
 
 const handleRegisterService = async (data) => {
   const { username, email, password } = data;
@@ -400,9 +411,11 @@ const refreshTokenService = async (data) => {
     });
 
     const branchIds =
-      user.role.roleName === "EMPLOYEE"
+      user.role.roleName === ROLE_NAME.EMPLOYEE
         ? await getEmployeeBranchIds(user.id, t)
-        : [];
+        : user.role.roleName === ROLE_NAME.MANAGER
+          ? await getManagerBranchIds(user.id, t)
+          : [];
 
     const payloadAccessToken = {
       id: user.id,

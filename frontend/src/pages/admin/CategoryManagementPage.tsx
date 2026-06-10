@@ -65,7 +65,9 @@ const CategoryManagementPage = () => {
     currentPageCount: 0,
   });
 
-  const [formCat, setFormCat] = useState<AdminCategory | null | undefined>(undefined);
+  const [formCat, setFormCat] = useState<AdminCategory | null | undefined>(
+    undefined,
+  );
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -91,9 +93,11 @@ const CategoryManagementPage = () => {
       setTotal(data.pagination?.total || 0);
       setMenuGroups(data.menuGroups || []);
       setStats({
-        totalCategories: data.stats?.totalCategories || data.pagination?.total || 0,
+        totalCategories:
+          data.stats?.totalCategories || data.pagination?.total || 0,
         totalGroups: data.stats?.totalGroups || 0,
-        currentPageCount: data.stats?.currentPageCount || data.categories?.length || 0,
+        currentPageCount:
+          data.stats?.currentPageCount || data.categories?.length || 0,
       });
     } catch {
       setCategories([]);
@@ -161,7 +165,7 @@ const CategoryManagementPage = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="space-y-6 rounded-2xl border border-gray-200 bg-white p-8">
         <AdminPageHeader
-          title="Quản lý Danh mục"
+          title="Quản lý danh mục"
           subtitle="Tổ chức nhóm sản phẩm, đồ uống và nội dung hiển thị trong cửa hàng."
           action={
             <button
@@ -236,15 +240,26 @@ const CategoryManagementPage = () => {
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
                   <th className="px-4 py-3 text-center font-semibold">#</th>
-                  <th className="px-4 py-3 text-left font-semibold">Tên danh mục</th>
-                  <th className="px-4 py-3 text-center font-semibold">Nhóm danh mục</th>
-                  <th className="px-4 py-3 text-center font-semibold">Ngày tạo</th>
-                  <th className="px-4 py-3 text-center font-semibold">Thao tác</th>
+                  <th className="px-4 py-3 text-left font-semibold">
+                    Tên danh mục
+                  </th>
+                  <th className="px-4 py-3 text-center font-semibold">
+                    Nhóm danh mục
+                  </th>
+                  <th className="px-4 py-3 text-center font-semibold">
+                    Ngày tạo
+                  </th>
+                  <th className="px-4 py-3 text-center font-semibold">
+                    Thao tác
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 [&_td]:align-middle">
                 {categories.map((category, index) => (
-                  <tr key={category.id} className="transition-colors hover:bg-gray-50">
+                  <tr
+                    key={category.id}
+                    className="transition-colors hover:bg-gray-50"
+                  >
                     <td className="px-4 py-3 text-center text-gray-400">
                       {(page - 1) * LIMIT + index + 1}
                     </td>
@@ -265,7 +280,9 @@ const CategoryManagementPage = () => {
                     </td>
                     <td className="px-4 py-3 text-center text-xs text-gray-500">
                       {category.createdAt
-                        ? new Date(category.createdAt).toLocaleDateString("vi-VN")
+                        ? new Date(category.createdAt).toLocaleDateString(
+                            "vi-VN",
+                          )
                         : "-"}
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -294,7 +311,12 @@ const CategoryManagementPage = () => {
               </tbody>
             </table>
           )}
-          <AdminPagination page={page} totalPages={totalPages} total={total} onPage={setPage} />
+          <AdminPagination
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            onPage={setPage}
+          />
         </div>
       </div>
 
@@ -309,7 +331,6 @@ const CategoryManagementPage = () => {
           }}
         />
       )}
-
     </div>
   );
 };

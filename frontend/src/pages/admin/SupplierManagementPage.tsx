@@ -41,16 +41,17 @@ const statusOptions: { value: SupplierStatusFilter; label: string }[] = [
   { value: "INACTIVE", label: "Ngừng hoạt động" },
 ];
 
-const statusMeta: Record<SupplierStatus, { label: string; className: string }> = {
-  ACTIVE: {
-    label: "Đang hoạt động",
-    className: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  },
-  INACTIVE: {
-    label: "Ngừng hoạt động",
-    className: "border-slate-200 bg-slate-100 text-slate-600",
-  },
-};
+const statusMeta: Record<SupplierStatus, { label: string; className: string }> =
+  {
+    ACTIVE: {
+      label: "Đang hoạt động",
+      className: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    },
+    INACTIVE: {
+      label: "Ngừng hoạt động",
+      className: "border-slate-200 bg-slate-100 text-slate-600",
+    },
+  };
 
 const StatCard = ({
   label,
@@ -83,9 +84,9 @@ const SupplierManagementPage = () => {
   const [searchInput, setSearchInput] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<SupplierStatusFilter>("ALL");
-  const [formSupplier, setFormSupplier] = useState<
-    Supplier | null | undefined
-  >(undefined);
+  const [formSupplier, setFormSupplier] = useState<Supplier | null | undefined>(
+    undefined,
+  );
   const [deleting, setDeleting] = useState(false);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -132,7 +133,10 @@ const SupplierManagementPage = () => {
     setSaving(true);
     try {
       if (formSupplier) {
-        await adminInventoryService.supplierService.update(formSupplier.id, form);
+        await adminInventoryService.supplierService.update(
+          formSupplier.id,
+          form,
+        );
         toast.success("Đã cập nhật nhà cung cấp");
       } else {
         await adminInventoryService.supplierService.create(form);
@@ -141,7 +145,9 @@ const SupplierManagementPage = () => {
       setFormSupplier(undefined);
       fetchSuppliers();
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Lưu nhà cung cấp thất bại");
+      toast.error(
+        error?.response?.data?.message || "Lưu nhà cung cấp thất bại",
+      );
     } finally {
       setSaving(false);
     }
@@ -181,7 +187,7 @@ const SupplierManagementPage = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="space-y-6 rounded-2xl border border-gray-200 bg-white p-8">
         <AdminPageHeader
-          title="Quản lý Nhà cung cấp"
+          title="Quản lý nhà cung cấp"
           subtitle="Quản lý nhà cung cấp dùng cho phiếu nhập sản phẩm và đồ uống."
           action={
             <button
@@ -263,20 +269,30 @@ const SupplierManagementPage = () => {
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                   <th className="px-4 py-3 text-center font-semibold">#</th>
-                  <th className="px-4 py-3 text-left font-semibold">Nhà cung cấp</th>
+                  <th className="px-4 py-3 text-left font-semibold">
+                    Nhà cung cấp
+                  </th>
                   <th className="px-4 py-3 text-left font-semibold">Liên hệ</th>
                   <th className="px-4 py-3 text-left font-semibold">Địa chỉ</th>
-                  <th className="px-4 py-3 text-center font-semibold">Trạng thái</th>
-                  <th className="px-4 py-3 text-center font-semibold">Thao tác</th>
+                  <th className="px-4 py-3 text-center font-semibold">
+                    Trạng thái
+                  </th>
+                  <th className="px-4 py-3 text-center font-semibold">
+                    Thao tác
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {suppliers.map((supplier, index) => {
                   const meta =
-                    statusMeta[supplier.status || "ACTIVE"] || statusMeta.ACTIVE;
+                    statusMeta[supplier.status || "ACTIVE"] ||
+                    statusMeta.ACTIVE;
 
                   return (
-                    <tr key={supplier.id} className="transition hover:bg-sky-50/40">
+                    <tr
+                      key={supplier.id}
+                      className="transition hover:bg-sky-50/40"
+                    >
                       <td className="px-4 py-3 text-center text-slate-400">
                         {(page - 1) * LIMIT + index + 1}
                       </td>
@@ -354,7 +370,6 @@ const SupplierManagementPage = () => {
           onSave={handleSave}
         />
       ) : null}
-
     </div>
   );
 };
@@ -429,7 +444,10 @@ const SupplierFormModal = ({
             <input
               value={form.email}
               onChange={(event) =>
-                setForm((current) => ({ ...current, email: event.target.value }))
+                setForm((current) => ({
+                  ...current,
+                  email: event.target.value,
+                }))
               }
               className={`w-full ${adminInputClass}`}
               placeholder="Nhập email"
@@ -441,7 +459,10 @@ const SupplierFormModal = ({
           <input
             value={form.address}
             onChange={(event) =>
-              setForm((current) => ({ ...current, address: event.target.value }))
+              setForm((current) => ({
+                ...current,
+                address: event.target.value,
+              }))
             }
             className={`w-full ${adminInputClass}`}
             placeholder="Nhập địa chỉ"

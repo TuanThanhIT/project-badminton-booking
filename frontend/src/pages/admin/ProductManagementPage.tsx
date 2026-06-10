@@ -59,7 +59,8 @@ const variantLabel = (variant: AdminProductVariant) =>
   [variant.size, variant.color].filter(Boolean).join(" / ") || "Mặc định";
 
 const variantStockTotal = (variant: AdminProductVariant) =>
-  variant.stocks?.reduce((sum, stock) => sum + Number(stock.stock || 0), 0) || 0;
+  variant.stocks?.reduce((sum, stock) => sum + Number(stock.stock || 0), 0) ||
+  0;
 
 const ProductManagementPage = () => {
   const [products, setProducts] = useState<AdminProduct[]>([]);
@@ -72,11 +73,13 @@ const ProductManagementPage = () => {
   const [appliedSearch, setAppliedSearch] = useState("");
   const [menuGroupFilter, setMenuGroupFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
-  const [expandedProductId, setExpandedProductId] = useState<number | null>(null);
-
-  const [formProduct, setFormProduct] = useState<AdminProduct | null | undefined>(
-    undefined,
+  const [expandedProductId, setExpandedProductId] = useState<number | null>(
+    null,
   );
+
+  const [formProduct, setFormProduct] = useState<
+    AdminProduct | null | undefined
+  >(undefined);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -144,23 +147,31 @@ const ProductManagementPage = () => {
 
   const menuGroups = useMemo(
     () =>
-      [...new Set(categories.map((category) => category.menuGroup).filter(Boolean))].sort(
-        (a, b) => a.localeCompare(b, "vi"),
-      ),
+      [
+        ...new Set(
+          categories.map((category) => category.menuGroup).filter(Boolean),
+        ),
+      ].sort((a, b) => a.localeCompare(b, "vi")),
     [categories],
   );
 
   const filteredCategories = useMemo(
     () =>
       menuGroupFilter
-        ? categories.filter((category) => category.menuGroup === menuGroupFilter)
+        ? categories.filter(
+            (category) => category.menuGroup === menuGroupFilter,
+          )
         : categories,
     [categories, menuGroupFilter],
   );
 
   const totalPages = Math.max(Math.ceil(total / LIMIT), 1);
-  const inStockCount = products.filter((product) => product.totalStock > 0).length;
-  const outOfStockCount = products.filter((product) => product.totalStock === 0).length;
+  const inStockCount = products.filter(
+    (product) => product.totalStock > 0,
+  ).length;
+  const outOfStockCount = products.filter(
+    (product) => product.totalStock === 0,
+  ).length;
   const totalStock = products.reduce(
     (sum, product) => sum + Number(product.totalStock || 0),
     0,
@@ -170,7 +181,7 @@ const ProductManagementPage = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="space-y-6 rounded-2xl border border-gray-200 bg-white p-8">
         <AdminPageHeader
-          title="Quản lý Sản phẩm"
+          title="Quản lý sản phẩm"
           subtitle="Theo dõi danh mục, biến thể và tồn kho sản phẩm trong cửa hàng."
           action={
             <button
@@ -293,7 +304,10 @@ const ProductManagementPage = () => {
                     "Tồn kho",
                     "Thao tác",
                   ].map((header) => (
-                    <th key={header} className="px-4 py-3 text-center font-semibold">
+                    <th
+                      key={header}
+                      className="px-4 py-3 text-center font-semibold"
+                    >
                       {header}
                     </th>
                   ))}
@@ -315,7 +329,8 @@ const ProductManagementPage = () => {
                               alt={product.productName}
                               className="h-10 w-10 shrink-0 rounded-lg border border-gray-200 object-cover"
                               onError={(event) => {
-                                (event.target as HTMLImageElement).src = DEFAULT_THUMB;
+                                (event.target as HTMLImageElement).src =
+                                  DEFAULT_THUMB;
                               }}
                             />
                             <div>
@@ -324,7 +339,9 @@ const ProductManagementPage = () => {
                               </p>
                               <p className="text-xs text-gray-400">
                                 {product.createdDate
-                                  ? new Date(product.createdDate).toLocaleDateString("vi-VN")
+                                  ? new Date(
+                                      product.createdDate,
+                                    ).toLocaleDateString("vi-VN")
                                   : "-"}
                               </p>
                             </div>
@@ -342,7 +359,9 @@ const ProductManagementPage = () => {
                           <button
                             type="button"
                             onClick={() =>
-                              setExpandedProductId(isExpanded ? null : product.id)
+                              setExpandedProductId(
+                                isExpanded ? null : product.id,
+                              )
                             }
                             className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-100"
                           >
@@ -401,7 +420,10 @@ const ProductManagementPage = () => {
                                         "Chất liệu",
                                         "Tồn kho",
                                       ].map((header) => (
-                                        <th key={header} className="px-4 py-3 text-left font-semibold">
+                                        <th
+                                          key={header}
+                                          className="px-4 py-3 text-left font-semibold"
+                                        >
                                           {header}
                                         </th>
                                       ))}
@@ -422,7 +444,9 @@ const ProductManagementPage = () => {
                                           </p>
                                         </td>
                                         <td className="px-4 py-3 font-semibold text-sky-700">
-                                          {fmtCurrency(Number(variant.price || 0))}
+                                          {fmtCurrency(
+                                            Number(variant.price || 0),
+                                          )}
                                         </td>
                                         <td className="px-4 py-3 text-slate-600">
                                           {Number(variant.discount || 0)}%
@@ -432,17 +456,24 @@ const ProductManagementPage = () => {
                                         </td>
                                         <td className="px-4 py-3">
                                           <div className="flex flex-wrap gap-2">
-                                            {(variant.stocks || []).length === 0 ? (
-                                              <span className="text-xs text-slate-400">0</span>
+                                            {(variant.stocks || []).length ===
+                                            0 ? (
+                                              <span className="text-xs text-slate-400">
+                                                0
+                                              </span>
                                             ) : (
-                                              (variant.stocks || []).map((stock) => (
-                                                <span
-                                                  key={stock.branchId}
-                                                  className="rounded-lg bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600"
-                                                >
-                                                  {stock.branch?.branchName || `CN ${stock.branchId}`}: {stock.stock}
-                                                </span>
-                                              ))
+                                              (variant.stocks || []).map(
+                                                (stock) => (
+                                                  <span
+                                                    key={stock.branchId}
+                                                    className="rounded-lg bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600"
+                                                  >
+                                                    {stock.branch?.branchName ||
+                                                      `CN ${stock.branchId}`}
+                                                    : {stock.stock}
+                                                  </span>
+                                                ),
+                                              )
                                             )}
                                             <span className="rounded-lg bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700">
                                               Tổng {variantStockTotal(variant)}
@@ -486,7 +517,6 @@ const ProductManagementPage = () => {
           }}
         />
       )}
-
     </div>
   );
 };

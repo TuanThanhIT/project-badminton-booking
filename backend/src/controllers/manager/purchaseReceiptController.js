@@ -7,7 +7,7 @@ const getPurchaseReceiptsController = asyncHandler(async (req, res) => {
     req.user.id,
     req.query,
   );
-  return res.json(new SuccessResponse("Get purchase receipts successfully", result));
+  return res.status(200).json(new SuccessResponse("Lấy danh sách phiếu nhập thành công", result));
 });
 
 const createPurchaseReceiptController = asyncHandler(async (req, res) => {
@@ -15,7 +15,7 @@ const createPurchaseReceiptController = asyncHandler(async (req, res) => {
     req.user.id,
     req.body,
   );
-  return res.status(201).json(new SuccessResponse("Create purchase receipt successfully", result));
+  return res.status(201).json(new SuccessResponse("Tạo phiếu nhập thành công", result));
 });
 
 const getPurchaseReceiptDetailController = asyncHandler(async (req, res) => {
@@ -23,7 +23,7 @@ const getPurchaseReceiptDetailController = asyncHandler(async (req, res) => {
     req.user.id,
     req.params.receiptId,
   );
-  return res.json(new SuccessResponse("Get purchase receipt detail successfully", result));
+  return res.status(200).json(new SuccessResponse("Lấy chi tiết phiếu nhập thành công", result));
 });
 
 const cancelPurchaseReceiptController = asyncHandler(async (req, res) => {
@@ -31,7 +31,7 @@ const cancelPurchaseReceiptController = asyncHandler(async (req, res) => {
     req.user.id,
     req.params.receiptId,
   );
-  return res.json(new SuccessResponse("Cancel purchase receipt successfully", result));
+  return res.status(200).json(new SuccessResponse("Hủy phiếu nhập thành công", result));
 });
 
 export default {

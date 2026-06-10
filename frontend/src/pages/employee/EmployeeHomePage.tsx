@@ -588,11 +588,11 @@ const EmployeeHomePage = () => {
           <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
               <div>
-                <p className="text-sm font-bold text-sky-700">
+                <p className="text-sm font-semibold text-sky-700">
                   Vận hành tại quầy
                 </p>
 
-                <h2 className="mt-1 text-2xl font-extrabold text-slate-800">
+                <h2 className="mt-1 text-2xl font-bold text-slate-800">
                   {session?.branch?.branchName || "Chi nhánh hiện tại"}
                 </h2>
 
@@ -608,7 +608,7 @@ const EmployeeHomePage = () => {
                   <p className="text-xs font-semibold text-slate-500">
                     Tiền dự kiến
                   </p>
-                  <p className="mt-1 text-lg font-extrabold text-slate-800">
+                  <p className="mt-1 text-lg font-bold text-slate-800">
                     {formatCurrency(session?.cashRegister?.expectedCash || 0)}
                   </p>
                 </div>
@@ -617,7 +617,7 @@ const EmployeeHomePage = () => {
                   <p className="text-xs font-semibold text-emerald-700">
                     Quyền thao tác
                   </p>
-                  <p className="mt-1 text-lg font-extrabold text-emerald-800">
+                  <p className="mt-1 text-lg font-bold text-emerald-800">
                     {session?.canOperateCounter ? "Quầy" : "Hỗ trợ"}
                   </p>
                 </div>
@@ -1211,7 +1211,7 @@ const EmployeeHomePage = () => {
                 </div>
 
                 <div className="mt-3 rounded-2xl bg-white px-4 py-3">
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  <p className="text-xs font-medium text-slate-500">
                     Tổng thanh toán
                   </p>
 
@@ -1340,7 +1340,7 @@ const EmployeeHomePage = () => {
           <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
               <div>
-                <h3 className="text-lg font-extrabold text-slate-800">
+                <h3 className="text-lg font-bold text-slate-800">
                   Sơ đồ sân theo chi nhánh
                 </h3>
                 <p className="mt-1 text-sm text-slate-500">
@@ -1367,14 +1367,14 @@ const EmployeeHomePage = () => {
                     }, 150px)`,
                   }}
                 >
-                  <div className="sticky left-0 z-10 flex h-16 items-center border-b border-r border-slate-200 bg-slate-100 px-4 text-sm font-extrabold">
+                  <div className="sticky left-0 z-10 flex h-16 items-center border-b border-r border-slate-200 bg-slate-100 px-4 text-sm font-bold">
                     Sân / Giờ
                   </div>
 
                   {courtBoard?.timeSlots.map((slot) => (
                     <div
                       key={`${slot.startTime}-${slot.endTime}`}
-                      className="flex h-16 flex-col items-center justify-center border-b border-r border-slate-200 px-3 text-center text-xs font-extrabold text-slate-600"
+                      className="flex h-16 flex-col items-center justify-center border-b border-r border-slate-200 px-3 text-center text-xs font-bold text-slate-600"
                     >
                       <p>{timeShort(slot.startTime)}</p>
                       <p className="mt-0.5 text-[10px] font-semibold text-slate-500">
@@ -1385,7 +1385,7 @@ const EmployeeHomePage = () => {
 
                   {courtBoard?.courts.map((court) => (
                     <div key={court.id} className="contents">
-                      <div className="sticky left-0 z-10 flex h-24 items-center border-b border-r border-slate-200 bg-white px-4 text-sm font-extrabold text-slate-800">
+                      <div className="sticky left-0 z-10 flex h-24 items-center border-b border-r border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800">
                         {court.courtName}
                       </div>
 
@@ -1428,7 +1428,7 @@ const EmployeeHomePage = () => {
                                 <div className="flex h-full flex-col items-center justify-center gap-1">
                                   <div className="min-w-0">
                                     <p
-                                      className="line-clamp-2 font-extrabold leading-tight"
+                                      className="line-clamp-2 font-bold leading-tight"
                                       title={
                                         slot.booking?.customerDisplay ||
                                         slot.booking?.customerName ||
@@ -1459,7 +1459,7 @@ const EmployeeHomePage = () => {
                                 </div>
                               ) : (
                                 <div className="flex h-full flex-col items-center justify-center">
-                                  <p className="font-extrabold">Trống</p>
+                                  <p className="font-bold">Trống</p>
                                   <p className="mt-1">
                                     {formatCurrency(slot.price)}
                                   </p>
@@ -1488,7 +1488,7 @@ const EmployeeHomePage = () => {
             <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <p className="text-sm font-extrabold text-slate-800">
+                  <p className="text-sm font-semibold text-slate-800">
                     Chú thích sơ đồ sân
                   </p>
                   <p className="mt-1 text-xs font-medium text-slate-500">
@@ -1503,7 +1503,7 @@ const EmployeeHomePage = () => {
                   {SLOT_PAYMENT_LEGEND.map((item) => (
                     <div
                       key={item.status}
-                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700"
+                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700"
                     >
                       <span
                         className={`h-3 w-3 rounded-full border ${item.className}`}
@@ -1511,11 +1511,11 @@ const EmployeeHomePage = () => {
                       {item.label}
                     </div>
                   ))}
-                  <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
                     <span className="h-3 w-3 rounded-full border border-sky-400 bg-sky-600" />
                     Đang chọn
                   </div>
-                  <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
                     <span className="h-3 w-3 rounded-full border border-slate-300 bg-slate-200" />
                     Đã qua giờ
                   </div>

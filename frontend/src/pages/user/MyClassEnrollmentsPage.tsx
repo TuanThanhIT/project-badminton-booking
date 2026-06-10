@@ -176,7 +176,7 @@ const MyClassEnrollmentsPage = () => {
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-700">
                     <GraduationCap className="h-6 w-6" />
                   </div>
-                  <h2 className="mt-5 text-2xl font-bold text-slate-950">
+                  <h2 className="mt-5 text-2xl font-semibold text-slate-950">
                     Chưa có lớp nào trong danh sách
                   </h2>
                   <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
@@ -203,14 +203,14 @@ const MyClassEnrollmentsPage = () => {
 
                 <div className="mt-8 border-t border-slate-200 pt-6 lg:mt-0 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                    <p className="text-xs font-semibold uppercase text-slate-400">
+                    <p className="text-xs font-medium uppercase text-slate-400">
                       Tiến trình
                     </p>
                     <div className="mt-5 space-y-4">
                       {["Gửi yêu cầu", "Chờ HLV duyệt", "Tham gia lớp"].map(
                         (label, index) => (
                           <div key={label} className="flex items-center gap-3">
-                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-sky-100 text-xs font-bold text-sky-700">
+                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-sky-100 text-xs font-medium text-sky-700">
                               {index + 1}
                             </span>
                             <span className="text-sm font-medium text-slate-700">
@@ -241,7 +241,7 @@ const MyClassEnrollmentsPage = () => {
                               {item.post?.title || `Lớp #${item.postId}`}
                             </h2>
                             <span
-                              className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
+                              className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${
                                 STATUS_BADGE[item.status] ||
                                 STATUS_BADGE.CANCELLED
                               }`}
@@ -267,7 +267,7 @@ const MyClassEnrollmentsPage = () => {
                             type="button"
                             disabled={actingId === item.id}
                             onClick={() => handleCancel(item.id)}
-                            className="h-10 shrink-0 rounded-xl border border-slate-200 px-3 text-xs font-semibold text-slate-700 transition hover:bg-white disabled:opacity-50"
+                            className="h-10 shrink-0 rounded-xl border border-slate-200 px-3 text-xs font-medium text-slate-700 transition hover:bg-white disabled:opacity-50"
                           >
                             {actingId === item.id
                               ? "Đang xử lý..."

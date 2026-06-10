@@ -143,7 +143,7 @@ function CommentItem({
               onError={() => setAvatarError(true)}
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-xs font-semibold text-gray-600">
+            <div className="flex h-full w-full items-center justify-center text-xs font-medium text-gray-600">
               {initial}
             </div>
           )}
@@ -409,7 +409,7 @@ const PostCommentsSection = ({ postId, open }: Props) => {
                   type="button"
                   onClick={handleLoadMore}
                   disabled={loadingMore}
-                  className="mt-3 text-[13px] font-semibold text-slate-600 hover:underline disabled:opacity-50"
+                  className="mt-3 text-[13px] font-medium text-slate-600 hover:underline disabled:opacity-50"
                 >
                   {loadingMore ? "Đang tải..." : "Xem thêm bình luận"}
                 </button>

@@ -677,7 +677,7 @@ const ProfilePage = () => {
                               <GraduationCap size={20} />
                             </div>
                             <div>
-                              <h3 className="text-sm font-bold text-slate-900">Hồ sơ dạy cầu lông</h3>
+                              <h3 className="text-sm font-semibold text-slate-900">Hồ sơ dạy cầu lông</h3>
                               <p className="text-xs text-slate-500">
                                 Các thông tin này sẽ hiển thị công khai trên trang cá nhân của bạn.
                               </p>
@@ -818,7 +818,7 @@ const ProfilePage = () => {
                   </div>
 
                   <div className="mt-4">
-                    <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-500">
                       <SlidersHorizontal className="h-4 w-4" />
                       Lọc loại bài
                     </div>
@@ -826,7 +826,7 @@ const ProfilePage = () => {
                       <button
                         type="button"
                         onClick={() => setSelectedPostType("")}
-                        className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                        className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
                           selectedPostType === ""
                             ? "border-sky-500 bg-sky-50 text-sky-700"
                             : "border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50"
@@ -839,7 +839,7 @@ const ProfilePage = () => {
                           key={type}
                           type="button"
                           onClick={() => setSelectedPostType(type)}
-                          className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                          className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
                             selectedPostType === type
                               ? "border-sky-500 bg-sky-50 text-sky-700"
                               : "border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50"

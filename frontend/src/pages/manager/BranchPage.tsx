@@ -192,11 +192,22 @@ const BranchPage = () => {
   // Helper cho trạng thái sân
   const getStatusBadge = (status: string) => {
     const styles: any = {
+      ACTIVE: "bg-green-100 text-green-700 border-green-200",
       AVAILABLE: "bg-green-100 text-green-700 border-green-200",
       MAINTENANCE: "bg-yellow-100 text-yellow-700 border-yellow-200",
       CLOSED: "bg-red-100 text-red-700 border-red-200",
     };
     return styles[status] || "bg-gray-100 text-gray-700";
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      ACTIVE: "Hoạt động",
+      AVAILABLE: "Hoạt động",
+      MAINTENANCE: "Bảo trì",
+      CLOSED: "Đã đóng",
+    };
+    return labels[status] || status;
   };
 
   return (
@@ -519,7 +530,7 @@ const BranchPage = () => {
                     <span
                       className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-sm ${getStatusBadge(court.courtStatus)}`}
                     >
-                      {court.courtStatus}
+                      {getStatusLabel(court.courtStatus)}
                     </span>
                   </div>
                 </div>

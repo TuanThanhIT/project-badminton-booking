@@ -52,7 +52,7 @@ const ConvAvatar = ({
   return (
     <div className="relative h-12 w-12 shrink-0">
       <div
-        className={`h-12 w-12 overflow-hidden rounded-2xl flex items-center justify-center text-base font-bold bg-sky-100 text-sky-700 ring-1 ring-sky-200`}
+        className={`h-12 w-12 overflow-hidden rounded-2xl flex items-center justify-center text-base font-semibold bg-sky-100 text-sky-700 ring-1 ring-sky-200`}
       >
         {url && !imgErr ? (
           <img
@@ -176,11 +176,11 @@ const ConversationSidebar = ({
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-bold text-xl text-slate-950">
+              <h2 className="font-semibold text-xl text-slate-950">
                 Tin nhắn
               </h2>
               {totalUnread > 0 && (
-                <span className="min-w-5 h-5 px-1.5 flex items-center justify-center rounded-full bg-rose-500 text-white text-[10px] font-bold">
+                <span className="min-w-5 h-5 px-1.5 flex items-center justify-center rounded-full bg-rose-500 text-white text-[10px] font-medium">
                   {totalUnread > 99 ? "99+" : totalUnread}
                 </span>
               )}
@@ -221,7 +221,7 @@ const ConversationSidebar = ({
           {searchUsers && onStartDirect && query.trim() ? (
             <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-30 rounded-2xl border border-slate-200 bg-white p-2 shadow-md">
               <div className="mb-1 flex items-center justify-between gap-3 px-2">
-                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
                   {directSearchTitle}
                 </p>
                 {directLoading ? (
@@ -259,7 +259,7 @@ const ConversationSidebar = ({
                             {detail}
                           </span>
                         </span>
-                        <span className="shrink-0 rounded-full bg-sky-50 px-3 py-1 text-[11px] font-bold text-sky-700">
+                        <span className="shrink-0 rounded-full bg-sky-50 px-3 py-1 text-[11px] font-medium text-sky-700">
                           Chat
                         </span>
                       </button>
@@ -287,7 +287,7 @@ const ConversationSidebar = ({
               key={key}
               type="button"
               onClick={() => setTab(key)}
-              className={`h-9 rounded-xl text-xs font-bold transition-all ${
+              className={`h-9 rounded-xl text-xs font-medium transition-all ${
                 tab === key
                   ? "bg-white text-sky-700"
                   : "text-slate-500 hover:text-slate-800"
@@ -309,7 +309,7 @@ const ConversationSidebar = ({
                   <MessageCircle className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-900">
+                  <p className="text-sm font-semibold text-slate-900">
                     {startTitle}
                   </p>
                   <p className="mt-1 text-xs text-slate-500 leading-relaxed">
@@ -328,7 +328,7 @@ const ConversationSidebar = ({
                 <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 text-slate-300 flex items-center justify-center">
                   <Edit3 className="w-7 h-7" strokeWidth={1.5} />
                 </div>
-                <p className="text-sm font-semibold text-slate-600">
+                <p className="text-sm font-medium text-slate-600">
                   {starterEmptyTitle}
                 </p>
                 <p className="text-xs text-slate-400 leading-relaxed">
@@ -353,14 +353,14 @@ const ConversationSidebar = ({
                         isGroup={false}
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-slate-800 truncate">
+                        <p className="text-sm font-semibold text-slate-800 truncate">
                           {displayName}
                         </p>
                         <p className="text-xs text-slate-400 truncate">
                           @{user.username}
                         </p>
                       </div>
-                      <span className="text-[11px] font-bold text-sky-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-[11px] font-medium text-sky-600 opacity-0 group-hover:opacity-100 transition-opacity">
                         Chat
                       </span>
                     </button>
@@ -374,7 +374,7 @@ const ConversationSidebar = ({
             <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 text-slate-300 flex items-center justify-center">
               <Edit3 className="w-7 h-7" strokeWidth={1.5} />
             </div>
-            <p className="text-sm font-semibold text-slate-600">
+            <p className="text-sm font-medium text-slate-600">
               {query ? "Không tìm thấy hội thoại" : "Chưa có hội thoại nào"}
             </p>
             <p className="text-xs text-slate-400 leading-relaxed">
@@ -452,8 +452,8 @@ const ConversationSidebar = ({
                       <p
                         className={`text-sm truncate ${
                           unread > 0
-                            ? "font-bold text-slate-950"
-                            : "font-bold text-slate-800"
+                            ? "font-semibold text-slate-950"
+                            : "font-semibold text-slate-800"
                         }`}
                       >
                         {displayName}
@@ -486,7 +486,7 @@ const ConversationSidebar = ({
                             : `${lastMsgSender}${preview}`}
                       </p>
                       {unread > 0 && (
-                        <span className="min-w-[1.2rem] h-[1.2rem] px-1.5 flex items-center justify-center rounded-full bg-sky-600 text-white text-[9px] font-bold">
+                        <span className="min-w-[1.2rem] h-[1.2rem] px-1.5 flex items-center justify-center rounded-full bg-sky-600 text-white text-[9px] font-medium">
                           {unread > 99 ? "99+" : unread}
                         </span>
                       )}

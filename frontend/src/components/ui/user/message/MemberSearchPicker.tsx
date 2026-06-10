@@ -123,12 +123,12 @@ const MemberSearchPicker = ({
           {selected.map((u) => (
             <span
               key={u.id}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 border border-sky-100 text-sky-800 text-xs font-semibold"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 border border-sky-100 text-sky-800 text-xs font-medium"
             >
               {formatUserLabel(u)}
               <button
                 type="button"
-                className="hover:text-rose-600 font-bold leading-none"
+                className="hover:text-rose-600 font-semibold leading-none"
                 aria-label={`Bỏ ${u.username}`}
                 onClick={() => removeOne(u.id)}
               >

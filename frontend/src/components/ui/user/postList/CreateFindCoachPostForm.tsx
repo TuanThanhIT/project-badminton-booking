@@ -27,7 +27,7 @@ type CreateFindCoachPostFormProps = {
 
 const inputClass =
   "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-[15px] text-slate-800 outline-none transition-all placeholder:text-slate-400 shadow-sm hover:border-sky-200 hover:bg-sky-50/20 focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100/70";
-const labelClass = "block text-[13px] font-semibold text-slate-600 mb-1.5";
+const labelClass = "block text-[13px] font-medium text-slate-600 mb-1.5";
 const errorClass = "text-red-500 text-xs font-medium mt-1.5";
 const sectionClass =
   "rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-5 space-y-4 shadow-[0_8px_28px_rgba(15,23,42,0.04)]";
@@ -138,7 +138,7 @@ const CreateFindCoachPostForm = ({
       <div className={sectionClass}>
         <div className="flex items-center gap-2">
           <MapPin size={19} className="text-sky-600" />
-          <h3 className="text-base font-bold text-slate-800">Địa điểm mong muốn</h3>
+          <h3 className="text-base font-semibold text-slate-800">Địa điểm mong muốn</h3>
         </div>
         <select
           {...register("formData.location.branchId", { valueAsNumber: true })}
@@ -161,7 +161,7 @@ const CreateFindCoachPostForm = ({
       <div className={sectionClass}>
         <div className="flex items-center gap-2">
           <Target size={19} className="text-sky-600" />
-          <h3 className="text-base font-bold text-slate-800">Nhu cầu học</h3>
+          <h3 className="text-base font-semibold text-slate-800">Nhu cầu học</h3>
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -217,7 +217,7 @@ const CreateFindCoachPostForm = ({
       <div className={sectionClass}>
         <div className="flex items-center gap-2">
           <MessageCircle size={19} className="text-sky-600" />
-          <h3 className="text-base font-bold text-slate-800">Liên hệ</h3>
+          <h3 className="text-base font-semibold text-slate-800">Liên hệ</h3>
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">

@@ -776,9 +776,12 @@ const RevenueManagementPage = () => {
             <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
               <div className="mb-5 flex items-center gap-3">
                 <Package className="h-5 w-5 text-emerald-500" />
+                <div>
                 <h2 className="text-lg font-bold text-slate-900">
                   Sản phẩm cầu lông
                 </h2>
+                  <p className="mt-1 text-sm text-slate-500">Theo dõi doanh thu, số lượng bán và lợi nhuận gộp theo từng biến thể</p>
+                </div>
               </div>
               <div className="overflow-x-auto rounded-lg border border-slate-100">
                 <table className="w-full min-w-[860px] text-sm">
@@ -860,7 +863,10 @@ const RevenueManagementPage = () => {
             <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
               <div className="mb-5 flex items-center gap-3">
                 <Coffee className="h-5 w-5 text-amber-500" />
-                <h2 className="text-lg font-bold text-slate-900">Đồ uống</h2>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">Đồ uống</h2>
+                  <p className="mt-1 text-sm text-slate-500">Tổng hợp mặt hàng đồ uống bán chạy, doanh thu và biên lợi nhuận</p>
+                </div>
               </div>
               <div className="overflow-x-auto rounded-lg border border-slate-100">
                 <table className="w-full min-w-[680px] text-sm">
@@ -933,9 +939,12 @@ const RevenueManagementPage = () => {
           <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
             <div className="mb-5 flex items-center gap-3">
               <Building2 className="h-5 w-5 text-sky-500" />
+              <div>
               <h2 className="text-lg font-bold text-slate-900">
                 Doanh thu theo loại
               </h2>
+                <p className="mt-1 text-sm text-slate-500">Tách doanh thu đặt sân, sản phẩm cầu lông và đồ uống trong kỳ</p>
+              </div>
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {report.revenueByType.map((item) => (

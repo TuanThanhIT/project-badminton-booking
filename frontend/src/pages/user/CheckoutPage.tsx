@@ -382,7 +382,7 @@ const CheckoutPage = () => {
                     <span>B-Hub Checkout</span>
                   </div>
                 </div>
-                <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
+                <h1 className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
                   Thanh toán đơn hàng
                 </h1>
                 <p className="mt-4 max-w-2xl text-sm leading-relaxed text-sky-100 sm:text-base">

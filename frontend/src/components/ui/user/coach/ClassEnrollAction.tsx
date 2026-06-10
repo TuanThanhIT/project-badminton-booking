@@ -31,7 +31,7 @@ const STATUS_LABEL_FULL: Record<string, string> = {
 
 const btnPrimary = (compact: boolean) =>
   compact
-    ? "inline-flex shrink-0 items-center gap-1 rounded-xl bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-sky-700 disabled:opacity-50"
+    ? "inline-flex shrink-0 items-center gap-1 rounded-xl bg-sky-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-sky-700 disabled:opacity-50"
     : "inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 disabled:opacity-50";
 
 const ClassEnrollAction = ({ postId, compact = false }: ClassEnrollActionProps) => {
@@ -101,7 +101,7 @@ const ClassEnrollAction = ({ postId, compact = false }: ClassEnrollActionProps) 
       <button
         type="button"
         onClick={fetchContext}
-        className="shrink-0 text-xs font-semibold text-red-600 hover:underline"
+        className="shrink-0 text-xs font-medium text-red-600 hover:underline"
       >
         Thử lại
       </button>
@@ -156,7 +156,7 @@ const ClassEnrollAction = ({ postId, compact = false }: ClassEnrollActionProps) 
     if (compact) {
       return (
         <div className="flex shrink-0 items-center gap-1.5">
-          <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700">
+          <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700">
             {statusLabels[mine.status] || mine.status}
           </span>
           {canCancel && (
@@ -186,7 +186,7 @@ const ClassEnrollAction = ({ postId, compact = false }: ClassEnrollActionProps) 
             type="button"
             disabled={acting}
             onClick={handleCancel}
-            className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
           >
             Hủy đăng ký
           </button>
@@ -198,7 +198,7 @@ const ClassEnrollAction = ({ postId, compact = false }: ClassEnrollActionProps) 
   if (full) {
     if (compact) {
       return (
-        <span className="shrink-0 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+        <span className="shrink-0 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
           Đã đủ chỗ
         </span>
       );
@@ -213,7 +213,7 @@ const ClassEnrollAction = ({ postId, compact = false }: ClassEnrollActionProps) 
   if (ctx.enrollmentStatus === "ENDED") {
     if (compact) {
       return (
-        <span className="shrink-0 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+        <span className="shrink-0 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
           Đã kết thúc
         </span>
       );
@@ -228,7 +228,7 @@ const ClassEnrollAction = ({ postId, compact = false }: ClassEnrollActionProps) 
   if (ctx.enrollmentStatus === "LOCKED") {
     if (compact) {
       return (
-        <span className="shrink-0 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+        <span className="shrink-0 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
           Tạm khóa
         </span>
       );

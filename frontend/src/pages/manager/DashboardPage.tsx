@@ -48,6 +48,13 @@ const compactCurrency = (value: number) =>
     maximumFractionDigits: 1,
   }).format(value || 0);
 
+const fmtDate = (value: Date) =>
+  value.toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+
 const DashboardPage = () => {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -64,6 +71,7 @@ const DashboardPage = () => {
   const summary = data?.summary || {};
   const chart = data?.quickRevenueChart || [];
   const structure = data?.revenueStructure || {};
+  const todayLabel = fmtDate(new Date());
   const operation = data?.operationSummary || {};
   const recentStockTransactions = data?.recentStockTransactions || [];
   const paginatedStockTransactions = recentStockTransactions.slice(
@@ -238,8 +246,11 @@ const DashboardPage = () => {
 
         <section className={`${managerCardClass} p-5`}>
           <h2 className="text-lg font-bold text-slate-900">
-            Cơ cấu doanh thu chi nhánh
+            Cơ cấu doanh thu chi nhánh hôm nay
           </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Dữ liệu ngày {todayLabel}
+          </p>
           <div className="mt-4 h-80">
             {pie.length ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -272,7 +283,11 @@ const DashboardPage = () => {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-3">
-        <ListPanel title="Đơn hàng gần đây" empty="Không có đơn hàng">
+        <ListPanel
+          title="Đơn hàng gần đây"
+          empty="Không có đơn hàng"
+          subtitle="Theo dõi các đơn hàng mới phát sinh tại chi nhánh"
+        >
           {(data?.recentOrders || []).map((item: any) => (
             <ListItem
               key={item.id}
@@ -282,7 +297,11 @@ const DashboardPage = () => {
             />
           ))}
         </ListPanel>
-        <ListPanel title="Tồn kho sắp hết" empty="Không có cảnh báo tồn kho">
+        <ListPanel
+          title="Tồn kho sắp hết"
+          empty="Không có cảnh báo tồn kho"
+          subtitle="Các mặt hàng cần nhập bổ sung để tránh gián đoạn bán hàng"
+        >
           {(data?.lowStockItems || []).map((item: any) => (
             <ListItem
               key={`${item.itemType}-${item.itemId}`}
@@ -292,7 +311,11 @@ const DashboardPage = () => {
             />
           ))}
         </ListPanel>
-        <ListPanel title="Phiếu nhập gần đây" empty="Không có phiếu nhập">
+        <ListPanel
+          title="Phiếu nhập gần đây"
+          empty="Không có phiếu nhập"
+          subtitle="Cập nhật nhanh các phiếu nhập kho mới nhất"
+        >
           {(data?.recentPurchaseReceipts || []).map((item: any) => (
             <ListItem
               key={item.id}
@@ -307,9 +330,14 @@ const DashboardPage = () => {
       <section className={`${managerCardClass} p-5`}>
         <div className="mb-4 flex items-center gap-2">
           <History className="h-5 w-5 text-sky-600" />
-          <h2 className="text-lg font-bold text-slate-900">
-            Hoạt động kho gần đây
-          </h2>
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">
+              Hoạt động kho gần đây
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Lịch sử nhập xuất và điều chỉnh tồn kho mới nhất tại chi nhánh
+            </p>
+          </div>
         </div>
         <div className="overflow-hidden rounded-lg border border-slate-200">
           <table className="w-full text-sm">
@@ -377,17 +405,20 @@ const DashboardPage = () => {
         <h2 className="text-lg font-bold text-slate-900">
           Vận hành sân hôm nay
         </h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Theo dõi nhanh trạng thái booking và tình hình sử dụng sân trong ngày
+        </p>
         <div className="mt-4 grid gap-3 md:grid-cols-3 xl:grid-cols-6">
           {[
-            ["Tổng booking", operation.todayBookingCount],
-            ["Chờ xác nhận", operation.pendingBookingCount],
-            ["Đã xác nhận", operation.confirmedBookingCount],
-            ["Đang chơi", operation.playingBookingCount],
-            ["Hoàn thành", operation.completedBookingCount],
-            ["Đã hủy", operation.cancelledBookingCount],
-          ].map(([label, value]) => (
-            <div key={label} className="rounded-lg bg-slate-50 p-4">
-              <p className="text-xs font-bold uppercase text-slate-500">
+            ["Tổng booking", operation.todayBookingCount, "border-sky-100 bg-sky-50/70 text-sky-700"],
+            ["Chờ xác nhận", operation.pendingBookingCount, "border-amber-100 bg-amber-50/70 text-amber-700"],
+            ["Đã xác nhận", operation.confirmedBookingCount, "border-indigo-100 bg-indigo-50/70 text-indigo-700"],
+            ["Đang chơi", operation.playingBookingCount, "border-emerald-100 bg-emerald-50/70 text-emerald-700"],
+            ["Hoàn thành", operation.completedBookingCount, "border-teal-100 bg-teal-50/70 text-teal-700"],
+            ["Đã hủy", operation.cancelledBookingCount, "border-rose-100 bg-rose-50/70 text-rose-700"],
+          ].map(([label, value, tone]) => (
+            <div key={label} className={`rounded-lg border p-4 ${tone}`}>
+              <p className="text-xs font-bold uppercase opacity-75">
                 {label}
               </p>
               <p className="mt-2 text-2xl font-bold text-slate-900">
@@ -404,15 +435,20 @@ const DashboardPage = () => {
 const ListPanel = ({
   title,
   empty,
+  subtitle,
   children,
 }: {
   title: string;
   empty: string;
+  subtitle?: string;
   children: ReactNode[];
 }) => (
-  <section className={`${managerCardClass} p-5`}>
+  <section className={`${managerCardClass} flex flex-col p-5`}>
     <h2 className="text-lg font-bold text-slate-900">{title}</h2>
-    <div className="mt-4 space-y-3">
+    {subtitle ? (
+      <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
+    ) : null}
+    <div className="mt-4 max-h-[388px] space-y-3 overflow-y-auto pr-1">
       {children.length ? (
         children
       ) : (
@@ -433,7 +469,7 @@ const ListItem = ({
   subtitle?: string;
   right?: string;
 }) => (
-  <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 p-3">
+  <div className="flex min-h-[68px] items-center justify-between gap-3 rounded-lg bg-slate-50 p-3">
     <div className="min-w-0">
       <p className="truncate text-sm font-bold text-slate-900">{title}</p>
       {subtitle ? (

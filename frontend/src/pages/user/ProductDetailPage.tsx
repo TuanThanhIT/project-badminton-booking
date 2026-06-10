@@ -49,7 +49,7 @@ import { flyToCart } from "../../utils/flyToCart";
 import type { BranchStock } from "../../types/branch";
 
 import ReviewList from "../../components/ui/user/product/ReviewList";
-import PaginatedItems from "../../components/ui/user/pagination/PaginatedItems";
+import TablePagination from "../../components/ui/user/pagination/TablePagination";
 
 const formatPrice = (n: number) =>
   n.toLocaleString("vi-VN", {
@@ -333,7 +333,7 @@ const ProductDetailPage: React.FC = () => {
                       className="
                         absolute left-5 top-5 z-10 rounded-full
                         bg-red-500 px-4 py-1.5
-                        text-sm font-bold text-white shadow
+                        text-sm font-semibold text-white shadow
                       "
                     >
                       -{selectedVariant.discount}%
@@ -391,7 +391,7 @@ const ProductDetailPage: React.FC = () => {
                 <span
                   className="
                     rounded-full bg-sky-50 px-3 py-1
-                    text-xs font-bold uppercase tracking-wide text-sky-700
+                    text-xs font-medium uppercase tracking-wide text-sky-700
                   "
                 >
                   {productDetail?.brand}
@@ -401,7 +401,7 @@ const ProductDetailPage: React.FC = () => {
                   className="
                     inline-flex items-center gap-1 rounded-full
                     bg-emerald-50 px-3 py-1
-                    text-xs font-semibold text-emerald-700
+                    text-xs font-medium text-emerald-700
                   "
                 >
                   <CheckCircle2 size={13} />
@@ -412,7 +412,7 @@ const ProductDetailPage: React.FC = () => {
               {/* TITLE */}
               <h1
                 className="
-                  text-3xl font-extrabold leading-tight
+                  text-3xl font-bold leading-tight
                   tracking-tight text-slate-950
                   xl:text-[38px]
                 "
@@ -437,7 +437,7 @@ const ProductDetailPage: React.FC = () => {
                     ))}
                   </div>
 
-                  <span className="text-sm font-bold text-slate-800">
+                  <span className="text-sm font-semibold text-slate-800">
                     {productFeedback.averageRating}/5
                   </span>
 
@@ -458,7 +458,7 @@ const ProductDetailPage: React.FC = () => {
                   "
                 >
                   <div className="flex flex-wrap items-end gap-3">
-                    <div className="text-4xl font-extrabold tracking-tight text-sky-700">
+                    <div className="text-4xl font-bold tracking-tight text-sky-700">
                       {formatPrice(selectedVariant.discountPrice)}
                     </div>
 
@@ -468,7 +468,7 @@ const ProductDetailPage: React.FC = () => {
                           {formatPrice(selectedVariant.price)}
                         </div>
 
-                        <span className="rounded-full bg-red-500 px-3 py-1 text-sm font-bold text-white">
+                        <span className="rounded-full bg-red-500 px-3 py-1 text-sm font-semibold text-white">
                           -{selectedVariant.discount}%
                         </span>
                       </>
@@ -498,7 +498,7 @@ const ProductDetailPage: React.FC = () => {
                 >
                   <Truck size={22} className="text-sky-600" />
 
-                  <p className="mt-3 text-sm font-bold text-slate-900">
+                  <p className="mt-3 text-sm font-semibold text-slate-900">
                     Giao hàng nhanh
                   </p>
 
@@ -515,7 +515,7 @@ const ProductDetailPage: React.FC = () => {
                 >
                   <ShieldCheck size={22} className="text-sky-600" />
 
-                  <p className="mt-3 text-sm font-bold text-slate-900">
+                  <p className="mt-3 text-sm font-semibold text-slate-900">
                     Hàng chính hãng
                   </p>
 
@@ -532,7 +532,7 @@ const ProductDetailPage: React.FC = () => {
                 >
                   <RotateCcw size={22} className="text-sky-600" />
 
-                  <p className="mt-3 text-sm font-bold text-slate-900">
+                  <p className="mt-3 text-sm font-semibold text-slate-900">
                     Đổi trả dễ dàng
                   </p>
 
@@ -556,7 +556,7 @@ const ProductDetailPage: React.FC = () => {
                   <div className="p-5">
                     <div className="mb-4 flex items-center justify-between gap-3">
                       <div>
-                        <h4 className="text-sm font-bold text-slate-900">
+                        <h4 className="text-sm font-semibold text-slate-900">
                           Kích thước
                         </h4>
                         <p className="mt-1 text-xs text-slate-500">
@@ -568,7 +568,7 @@ const ProductDetailPage: React.FC = () => {
                         <span
                           className="
               rounded-full bg-sky-50 px-3 py-1
-              text-xs font-bold text-sky-700
+              text-xs font-medium text-sky-700
             "
                         >
                           {selectedSize}
@@ -584,7 +584,7 @@ const ProductDetailPage: React.FC = () => {
                           className={`
               flex h-11 min-w-12 items-center justify-center
               rounded-2xl border px-4
-              text-sm font-bold transition-all
+              text-sm font-semibold transition-all
               ${
                 selectedSize === sz
                   ? "border-sky-600 bg-sky-600 text-white shadow-md shadow-sky-100"
@@ -602,7 +602,7 @@ const ProductDetailPage: React.FC = () => {
                   <div className="p-5">
                     <div className="mb-4 flex items-center justify-between gap-3">
                       <div>
-                        <h4 className="text-sm font-bold text-slate-900">
+                        <h4 className="text-sm font-semibold text-slate-900">
                           Màu sắc
                         </h4>
                         <p className="mt-1 text-xs text-slate-500">
@@ -614,7 +614,7 @@ const ProductDetailPage: React.FC = () => {
                         <span
                           className="
               rounded-full bg-slate-100 px-3 py-1
-              text-xs font-bold text-slate-700
+              text-xs font-medium text-slate-700
             "
                         >
                           {selectedColor}
@@ -671,7 +671,7 @@ const ProductDetailPage: React.FC = () => {
                   {/* QUANTITY */}
                   <div className="mb-4">
                     <div className="flex items-center gap-4">
-                      <h4 className="shrink-0 text-sm font-bold text-slate-900">
+                      <h4 className="shrink-0 text-sm font-semibold text-slate-900">
                         Số lượng
                       </h4>
 
@@ -704,7 +704,7 @@ const ProductDetailPage: React.FC = () => {
                           }
                           className="
           h-full w-full border-x border-slate-200
-          bg-white text-center text-sm font-extrabold text-slate-900
+          bg-white text-center text-sm font-semibold text-slate-900
           outline-none
         "
                         />
@@ -731,7 +731,7 @@ const ProductDetailPage: React.FC = () => {
                       className="
         flex h-[52px] items-center justify-center gap-2
         rounded-2xl bg-sky-600 px-6
-        text-sm font-bold text-white
+        text-sm font-semibold text-white
         shadow-lg shadow-sky-100
         transition-all duration-200
         hover:-translate-y-0.5 hover:bg-sky-700 hover:shadow-xl
@@ -747,7 +747,7 @@ const ProductDetailPage: React.FC = () => {
                       className="
         h-[52px] rounded-2xl border border-sky-600
         bg-white px-6
-        text-sm font-bold text-sky-700
+        text-sm font-semibold text-sky-700
         transition-all duration-200
         hover:-translate-y-0.5 hover:bg-sky-50 hover:shadow-md
         active:scale-[0.98]
@@ -764,7 +764,7 @@ const ProductDetailPage: React.FC = () => {
 
         {/* DESCRIPTION */}
         <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-6 text-2xl font-bold text-slate-900">
+          <h2 className="mb-6 text-2xl font-semibold text-slate-900">
             Mô tả sản phẩm
           </h2>
 
@@ -819,7 +819,7 @@ const ProductDetailPage: React.FC = () => {
         <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">
+              <h2 className="text-2xl font-semibold text-slate-900">
                 Đánh giá sản phẩm
               </h2>
 
@@ -905,12 +905,16 @@ const ProductDetailPage: React.FC = () => {
           <ReviewList productFeedbacks={productFeedback} />
 
           {productFeedback && productFeedback.totalPages > 1 && (
-            <PaginatedItems
-              total={productFeedback.totalFeedbacks}
-              limit={productFeedback.limit}
-              page={productFeedback.page}
-              onPageChange={(p) => setReviewPage(p)}
-            />
+            <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <TablePagination
+                page={productFeedback.page}
+                totalPages={productFeedback.totalPages}
+                total={productFeedback.totalFeedbacks}
+                unit="đánh giá"
+                compact
+                onPage={setReviewPage}
+              />
+            </div>
           )}
         </div>
 

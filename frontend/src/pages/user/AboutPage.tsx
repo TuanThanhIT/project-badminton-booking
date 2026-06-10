@@ -105,7 +105,7 @@ const AboutPage = () => {
                 Nền tảng thể thao All-in-one
               </div>
 
-              <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight leading-tight">
+              <h1 className="text-4xl md:text-6xl font-semibold text-white mb-6 tracking-tight leading-tight">
                 Nâng Tầm Trải Nghiệm{" "}
                 <span className="text-sky-400">Cầu Lông</span>
               </h1>
@@ -117,7 +117,7 @@ const AboutPage = () => {
               </p>
 
               <div className="mt-9 flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
-                <button className="group bg-sky-500 hover:bg-sky-400 text-white px-8 py-4 rounded-full font-bold transition-all shadow-xl shadow-sky-900/30 flex items-center justify-center gap-2">
+                <button className="group bg-sky-500 hover:bg-sky-400 text-white px-8 py-4 rounded-full font-semibold transition-all shadow-xl shadow-sky-900/30 flex items-center justify-center gap-2">
                   Khám phá ngay
                   <ArrowRight
                     size={18}
@@ -125,7 +125,7 @@ const AboutPage = () => {
                   />
                 </button>
 
-                <button className="bg-white/10 border border-white/20 text-sky-50 hover:bg-white/15 px-8 py-4 rounded-full font-bold transition-all">
+                <button className="bg-white/10 border border-white/20 text-sky-50 hover:bg-white/15 px-8 py-4 rounded-full font-semibold transition-all">
                   Tìm hiểu thêm
                 </button>
               </div>
@@ -140,7 +140,7 @@ const AboutPage = () => {
                     key={label}
                     className="bg-white/10 border border-white/10 rounded-2xl p-4 backdrop-blur-sm"
                   >
-                    <p className="text-2xl font-extrabold text-white">{num}</p>
+                    <p className="text-2xl font-semibold text-white">{num}</p>
                     <p className="text-xs text-sky-200 mt-1">{label}</p>
                   </div>
                 ))}
@@ -167,7 +167,7 @@ const AboutPage = () => {
                         <p className="text-sm text-slate-500 font-medium">
                           Real-time Booking
                         </p>
-                        <p className="text-lg font-extrabold text-slate-900">
+                        <p className="text-lg font-semibold text-slate-900">
                           Cập nhật nhanh chóng
                         </p>
                       </div>
@@ -175,7 +175,7 @@ const AboutPage = () => {
 
                     <div className="flex items-center gap-1 text-amber-400">
                       <Star size={18} fill="currentColor" />
-                      <span className="font-bold text-slate-800">4.9</span>
+                      <span className="font-semibold text-slate-800">4.9</span>
                     </div>
                   </div>
                 </div>
@@ -188,7 +188,7 @@ const AboutPage = () => {
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Trạng thái</p>
-                    <p className="text-sm font-bold text-slate-800">
+                    <p className="text-sm font-semibold text-slate-800">
                       Sân còn trống
                     </p>
                   </div>
@@ -222,7 +222,7 @@ const AboutPage = () => {
                   </div>
                   <div>
                     <p className="text-sm text-slate-500">Mục tiêu</p>
-                    <p className="font-extrabold text-slate-900">
+                    <p className="font-semibold text-slate-900">
                       Chơi dễ hơn mỗi ngày
                     </p>
                   </div>
@@ -235,11 +235,11 @@ const AboutPage = () => {
           </div>
 
           <div>
-            <p className="text-sm font-bold text-sky-600 mb-3 uppercase tracking-widest">
+            <p className="text-sm font-semibold text-sky-600 mb-3 uppercase tracking-widest">
               Câu chuyện B-Hub
             </p>
 
-            <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-6 leading-tight">
+            <h2 className="text-3xl md:text-4xl font-semibold text-slate-900 mb-6 leading-tight">
               Giải pháp chuyển đổi số toàn diện cho cộng đồng cầu lông
             </h2>
 
@@ -283,10 +283,10 @@ const AboutPage = () => {
 
         <div className="relative max-w-7xl mx-auto px-6">
           <div className="text-center mb-14">
-            <p className="text-sm font-bold text-sky-600 uppercase tracking-widest mb-3">
+            <p className="text-sm font-semibold text-sky-600 uppercase tracking-widest mb-3">
               Định hướng phát triển
             </p>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900">
+            <h2 className="text-3xl md:text-4xl font-semibold text-slate-900">
               Điều B-Hub theo đuổi
             </h2>
           </div>
@@ -325,7 +325,7 @@ const AboutPage = () => {
                   {React.cloneElement(item.icon, { size: 32 })}
                 </div>
 
-                <h3 className="text-xl font-extrabold mb-4 text-slate-900">
+                <h3 className="text-xl font-semibold mb-4 text-slate-900">
                   {item.title}
                 </h3>
 
@@ -340,11 +340,11 @@ const AboutPage = () => {
       <section className="py-24 max-w-7xl mx-auto px-6">
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-14">
           <div>
-            <p className="text-sm font-bold text-sky-600 uppercase tracking-widest mb-3">
+            <p className="text-sm font-semibold text-sky-600 uppercase tracking-widest mb-3">
               Tính năng nổi bật
             </p>
 
-            <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900">
+            <h2 className="text-3xl md:text-4xl font-semibold text-slate-900">
               Mọi dịch vụ trong một nền tảng
             </h2>
           </div>
@@ -389,7 +389,7 @@ const AboutPage = () => {
                   {React.cloneElement(service.icon, { size: 30 })}
                 </div>
 
-                <h3 className="text-lg font-extrabold mb-3 text-slate-900 group-hover:text-white transition-colors">
+                <h3 className="text-lg font-semibold mb-3 text-slate-900 group-hover:text-white transition-colors">
                   {service.title}
                 </h3>
 
@@ -407,10 +407,10 @@ const AboutPage = () => {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-14">
             <div>
-              <p className="text-sm font-bold text-sky-600 uppercase tracking-widest mb-3">
+              <p className="text-sm font-semibold text-sky-600 uppercase tracking-widest mb-3">
                 Chính sách dịch vụ BHub
               </p>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 leading-tight">
+              <h2 className="text-3xl md:text-4xl font-semibold text-slate-900 leading-tight">
                 Đặt sân, đặt hàng, hủy đơn và hoàn tiền minh bạch
               </h2>
             </div>
@@ -433,7 +433,7 @@ const AboutPage = () => {
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
                     {React.cloneElement(policy.icon, { size: 26 })}
                   </div>
-                  <h3 className="text-xl font-extrabold text-slate-900">
+                  <h3 className="text-xl font-semibold text-slate-900">
                     {policy.title}
                   </h3>
                 </div>
@@ -465,7 +465,7 @@ const AboutPage = () => {
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
                     {React.cloneElement(policy.icon, { size: 26 })}
                   </div>
-                  <h3 className="text-xl font-extrabold text-slate-900">
+                  <h3 className="text-xl font-semibold text-slate-900">
                     {policy.title}
                   </h3>
                 </div>
@@ -493,10 +493,10 @@ const AboutPage = () => {
                 <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-sky-200">
                   <WalletCards size={28} />
                 </div>
-                <p className="text-sm font-bold uppercase tracking-widest text-sky-200">
+                <p className="text-sm font-semibold uppercase tracking-widest text-sky-200">
                   Chính sách hoàn tiền
                 </p>
-                <h3 className="mt-3 text-2xl font-extrabold leading-tight">
+                <h3 className="mt-3 text-2xl font-bold leading-tight">
                   Tiền hoàn được cộng về ví BHub khi đủ điều kiện
                 </h3>
                 <p className="mt-4 text-sm leading-relaxed text-sky-100">
@@ -512,7 +512,7 @@ const AboutPage = () => {
                     key={note}
                     className="rounded-2xl border border-slate-100 bg-slate-50 p-4"
                   >
-                    <div className="mb-3 flex items-center gap-2 text-sm font-bold text-slate-800">
+                    <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800">
                       {index === 0 && <WalletCards size={18} />}
                       {index === 1 && <ClipboardCheck size={18} />}
                       {index === 2 && <Clock3 size={18} />}
@@ -547,10 +547,10 @@ const AboutPage = () => {
                 key={label}
                 className="bg-white/10 border border-white/10 rounded-3xl p-6 backdrop-blur-sm"
               >
-                <p className="text-4xl font-extrabold mb-2 text-sky-300">
+                <p className="text-4xl font-bold mb-2 text-sky-300">
                   {num}
                 </p>
-                <p className="text-sky-100 uppercase tracking-widest text-xs font-bold">
+                <p className="text-sky-100 uppercase tracking-widest text-xs font-medium">
                   {label}
                 </p>
               </div>
@@ -567,7 +567,7 @@ const AboutPage = () => {
               <Users size={32} />
             </div>
 
-            <h2 className="text-3xl md:text-4xl font-extrabold mb-5 text-slate-900">
+            <h2 className="text-3xl md:text-4xl font-bold mb-5 text-slate-900">
               Bạn đã sẵn sàng ra sân chưa?
             </h2>
 
@@ -577,11 +577,11 @@ const AboutPage = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <button className="bg-sky-600 text-white px-10 py-4 rounded-full font-bold shadow-xl shadow-sky-100 hover:bg-sky-700 transition-all hover:-translate-y-1">
+              <button className="bg-sky-600 text-white px-10 py-4 rounded-full font-semibold shadow-xl shadow-sky-100 hover:bg-sky-700 transition-all hover:-translate-y-1">
                 Đặt sân ngay bây giờ
               </button>
 
-              <button className="bg-slate-900 text-white px-10 py-4 rounded-full font-bold shadow-xl hover:bg-slate-800 transition-all hover:-translate-y-1 flex items-center justify-center gap-2">
+              <button className="bg-slate-900 text-white px-10 py-4 rounded-full font-semibold shadow-xl hover:bg-slate-800 transition-all hover:-translate-y-1 flex items-center justify-center gap-2">
                 <Users size={20} />
                 Tìm đối giao lưu
               </button>

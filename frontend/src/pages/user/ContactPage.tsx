@@ -112,7 +112,7 @@ const ContactPage = () => {
                 Trung tâm hỗ trợ B-Hub
               </span>
 
-              <h1 className="mb-6 text-4xl font-extrabold leading-tight tracking-tight text-white md:text-6xl">
+              <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight text-white md:text-6xl">
                 Kết nối với <span className="text-sky-300">B-Hub</span>
               </h1>
 

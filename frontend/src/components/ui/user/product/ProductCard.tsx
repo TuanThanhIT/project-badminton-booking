@@ -58,7 +58,7 @@ const ProductCard = ({
                 className="
                   w-fit rounded-full bg-red-500
                   px-2 py-0.5
-                  text-[10px] font-bold text-white shadow
+                  text-[10px] font-medium text-white shadow
                 "
               >
                 -{product.discount}%
@@ -71,7 +71,7 @@ const ProductCard = ({
                   inline-flex w-fit items-center gap-1
                   rounded-full bg-emerald-500
                   px-2 py-0.5
-                  text-[10px] font-bold text-white shadow
+                  text-[10px] font-medium text-white shadow
                 "
               >
                 <Zap size={10} />
@@ -83,7 +83,7 @@ const ProductCard = ({
 
         {/* CONTENT */}
         <div className="p-3">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-sky-600">
+          <p className="text-[10px] font-medium uppercase tracking-wide text-sky-600">
             {product.brand}
           </p>
 
@@ -100,7 +100,7 @@ const ProductCard = ({
           </h3>
 
           <div className="mt-2 flex flex-col gap-0.5">
-            <span className="text-base font-extrabold text-sky-700">
+            <span className="text-base font-semibold text-sky-700">
               {product.minDiscountedPrice.toLocaleString("vi-VN")}₫
             </span>
 
@@ -121,7 +121,7 @@ const ProductCard = ({
               mt-2 flex w-full items-center justify-center gap-1.5
               rounded-xl border border-sky-100
               bg-sky-50 px-3 py-2
-              text-xs font-bold text-sky-700
+              text-xs font-medium text-sky-700
               transition-all
               hover:border-sky-600 hover:bg-sky-600 hover:text-white
               active:scale-[0.98]
@@ -161,13 +161,13 @@ const ProductCard = ({
 
         <div className="absolute left-3 top-3 flex flex-col gap-2">
           {product.discount > 0 && (
-            <span className="rounded-full bg-red-500 px-2.5 py-1 text-xs font-semibold text-white shadow">
+            <span className="rounded-full bg-red-500 px-2.5 py-1 text-xs font-medium text-white shadow">
               -{product.discount}%
             </span>
           )}
 
           {product.isNew && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2.5 py-1 text-xs font-semibold text-white shadow">
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2.5 py-1 text-xs font-medium text-white shadow">
               <Zap size={12} />
               Mới
             </span>
@@ -177,14 +177,14 @@ const ProductCard = ({
 
       {/* CONTENT */}
       <div className="p-[18px]">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-sky-600">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-sky-600">
           {product.brand}
         </p>
 
         <h3
           className="
     mt-1.5 line-clamp-2 min-h-[58px]
-    text-[18px] font-extrabold leading-snug
+    text-[18px] font-semibold leading-snug
     text-slate-700 transition
     group-hover:text-sky-700
   "
@@ -194,7 +194,7 @@ const ProductCard = ({
         </h3>
 
         <div className="mt-2 flex flex-wrap items-baseline gap-2">
-          <span className="text-[19px] font-extrabold tracking-tight text-sky-700">
+          <span className="text-[19px] font-semibold tracking-tight text-sky-700">
             {product.minDiscountedPrice.toLocaleString("vi-VN")}₫
           </span>
 

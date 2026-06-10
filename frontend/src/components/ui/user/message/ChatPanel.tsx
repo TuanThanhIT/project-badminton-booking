@@ -78,7 +78,7 @@ const UserAvatar = ({
   return (
     <div className={`relative shrink-0 ${sizeClass}`}>
       <div
-        className={`${sizeClass} ${rounded} overflow-hidden flex items-center justify-center bg-sky-100 text-sky-700 text-xs font-bold ring-1 ring-sky-200`}
+        className={`${sizeClass} ${rounded} overflow-hidden flex items-center justify-center bg-sky-100 text-sky-700 text-xs font-medium ring-1 ring-sky-200`}
       >
         {url && !imgErr ? (
           <img
@@ -168,7 +168,7 @@ const ForwardModal = ({
       <div className="flex max-h-[82vh] w-full max-w-md flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl">
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
           <div>
-            <h3 className="font-bold text-slate-950">
+            <h3 className="font-semibold text-slate-950">
               Chuyển tiếp tin nhắn
             </h3>
             <p className="text-xs text-slate-500 mt-1 line-clamp-1">
@@ -224,7 +224,7 @@ const ForwardModal = ({
                 >
                   <UserAvatar name={name} url={avatar} sizeClass="w-11 h-11" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold text-slate-900 truncate">
+                    <p className="text-sm font-semibold text-slate-900 truncate">
                       {name}
                     </p>
                     <p className="text-xs text-slate-400">{sub}</p>
@@ -393,7 +393,7 @@ const ChatPanel = ({
           <MessageCircle className="w-12 h-12 text-sky-400" strokeWidth={1.5} />
         </div>
         <div className="text-center max-w-sm">
-          <p className="text-lg font-bold text-slate-800">
+          <p className="text-lg font-semibold text-slate-800">
             Chào mừng đến B-Hub Chat
           </p>
           <p className="text-sm text-slate-500 mt-2 leading-relaxed">
@@ -423,7 +423,7 @@ const ChatPanel = ({
             isOnline={!isGroup && privatePresence?.isOnline}
           />
           <div className="min-w-0">
-            <h3 className="font-bold text-slate-950 truncate text-base">
+            <h3 className="font-semibold text-slate-950 truncate text-base">
               {headerDisplayName}
             </h3>
             {isGroup ? (
@@ -435,7 +435,7 @@ const ChatPanel = ({
               </p>
             ) : formatLastSeen(privatePresence?.isOnline, privatePresence?.lastSeenAt) ? (
               <p
-                className={`text-xs font-bold mt-0.5 ${
+                className={`text-xs font-medium mt-0.5 ${
                   privatePresence?.isOnline ? "text-emerald-600" : "text-slate-500"
                 }`}
               >
@@ -449,7 +449,7 @@ const ChatPanel = ({
           <button
             type="button"
             onClick={() => setShowMembers(true)}
-            className={`h-10 px-3 rounded-2xl transition-colors shrink-0 flex items-center gap-2 text-sm font-bold ${
+            className={`h-10 px-3 rounded-2xl transition-colors shrink-0 flex items-center gap-2 text-sm font-semibold ${
               showMembers
                 ? "bg-sky-50 text-sky-700 border border-sky-100"
                 : "text-slate-500 hover:bg-slate-100 border border-transparent"
@@ -558,7 +558,7 @@ const ChatPanel = ({
                 className={`max-w-[70%] flex flex-col ${mine ? "items-end" : "items-start"}`}
               >
                 {!mine && isGroup && row.showMeta && (
-                  <span className="text-[11px] font-bold text-slate-500 mb-1 ml-1">
+                  <span className="text-[11px] font-medium text-slate-500 mb-1 ml-1">
                     {m.senderName}
                   </span>
                 )}
@@ -596,7 +596,7 @@ const ChatPanel = ({
                         )}
                       <div className="min-w-0 flex-1">
                         <p
-                          className={`text-[11px] font-bold truncate ${mine ? "text-sky-100" : "text-sky-700"}`}
+                          className={`text-[11px] font-medium truncate ${mine ? "text-sky-100" : "text-sky-700"}`}
                         >
                           {m.replyTo.senderName}
                         </p>
@@ -641,7 +641,7 @@ const ChatPanel = ({
                             href={m.mediaUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className={`flex items-center gap-2 rounded-2xl px-3 py-2 mb-1 text-sm font-bold ${
+                            className={`flex items-center gap-2 rounded-2xl px-3 py-2 mb-1 text-sm font-semibold ${
                               mine
                                 ? "bg-white/10 text-white"
                                 : "bg-slate-50 text-sky-700"
@@ -713,7 +713,7 @@ const ChatPanel = ({
         <div className="px-5 py-3 border-t border-slate-200 bg-sky-50 flex items-center gap-3 shrink-0">
           <CornerUpLeft className="w-4 h-4 text-sky-600 shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-sky-800">
+            <p className="text-xs font-medium text-sky-800">
               Đang trả lời {replyTarget.senderName}
             </p>
             <p className="text-xs text-slate-500 truncate">
@@ -799,7 +799,7 @@ const ChatPanel = ({
               <div className="min-w-0">
                 <h3
                   id="group-members-title"
-                  className="text-base font-bold text-slate-950"
+                  className="text-base font-semibold text-slate-950"
                 >
                   Thành viên nhóm
                 </h3>
@@ -847,18 +847,18 @@ const ChatPanel = ({
                           isOnline={p.isOnline}
                         />
                         <div className="min-w-0">
-                          <p className="truncate text-xs font-bold text-slate-800">
+                          <p className="truncate text-xs font-medium text-slate-800">
                             {displayName}
                           </p>
                           <div className="mt-1 flex flex-wrap items-center gap-1.5">
                             {p.role === ROLE_NAME.ADMIN && (
-                              <span className="inline-flex rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
+                              <span className="inline-flex rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
                                 Admin
                               </span>
                             )}
                             {presenceText ? (
                               <span
-                                className={`truncate text-[10px] font-semibold ${
+                                className={`truncate text-[10px] font-medium ${
                                   p.isOnline ? "text-emerald-600" : "text-slate-400"
                                 }`}
                               >
@@ -884,7 +884,7 @@ const ChatPanel = ({
 
               {isGroupAdmin && (
                 <div className="mt-5 space-y-3 rounded-2xl border border-slate-100 bg-white p-4">
-                  <p className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                  <p className="flex items-center gap-2 text-xs font-medium text-slate-600">
                     <UserPlus className="h-4 w-4 text-sky-600" />
                     Thêm thành viên
                   </p>
@@ -897,7 +897,7 @@ const ChatPanel = ({
                   />
                   <button
                     type="button"
-                    className="rounded-2xl bg-sky-600 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-sky-500 disabled:opacity-50"
+                    className="rounded-2xl bg-sky-600 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-sky-500 disabled:opacity-50"
                     disabled={pendingAdds.length === 0}
                     onClick={async () => {
                       if (pendingAdds.length === 0) return;
@@ -914,7 +914,7 @@ const ChatPanel = ({
             <div className="flex flex-wrap gap-3 border-t border-slate-100 px-5 py-4">
               <button
                 type="button"
-                className="text-xs font-bold text-slate-500 hover:text-slate-800"
+                className="text-xs font-medium text-slate-500 hover:text-slate-800"
                 onClick={() => onLeaveGroup?.()}
               >
                 Rời nhóm
@@ -922,7 +922,7 @@ const ChatPanel = ({
               {isGroupAdmin && (
                 <button
                   type="button"
-                  className="text-xs font-bold text-rose-500 hover:text-rose-600"
+                  className="text-xs font-medium text-rose-500 hover:text-rose-600"
                   onClick={() => onDeleteGroup?.()}
                 >
                   Xóa nhóm

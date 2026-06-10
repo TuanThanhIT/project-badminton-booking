@@ -176,7 +176,7 @@ const BookingPage = () => {
                 Trung tâm lịch sân
               </div>
 
-              <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
+              <h1 className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
                 Lịch đặt sân của tôi
               </h1>
 
@@ -428,7 +428,7 @@ const BookingPage = () => {
                           <div className="w-full lg:w-[340px] lg:justify-self-end">
                             <div className="grid grid-cols-2 gap-2">
                               <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm text-center">
-                                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                                <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
                                   Thanh toán
                                 </p>
 
@@ -442,11 +442,11 @@ const BookingPage = () => {
                               </div>
 
                               <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-center shadow-sm">
-                                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                                <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500">
                                   Tổng tiền
                                 </p>
 
-                                <p className="mt-1 text-lg font-bold leading-none text-sky-700">
+                                <p className="mt-1 text-lg font-semibold leading-none text-sky-700">
                                   {Number(booking.totalAmount).toLocaleString()}
                                   đ
                                 </p>
@@ -487,7 +487,7 @@ const BookingPage = () => {
                               </div>
 
                               {isMonthlyBooking && (
-                                <span className="inline-flex w-fit shrink-0 items-center rounded-full border border-sky-100 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700">
+                                <span className="inline-flex w-fit shrink-0 items-center rounded-full border border-sky-100 bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-700">
                                   Lịch tháng
                                 </span>
                               )}
@@ -508,7 +508,7 @@ const BookingPage = () => {
                                       {firstDetail?.endTime || "--"}
                                     </p>
 
-                                    <p className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                                    <p className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
                                       {details.length} buổi
                                     </p>
                                   </div>
@@ -522,14 +522,14 @@ const BookingPage = () => {
                                     {visibleDetails.map((detail, index) => (
                                       <span
                                         key={`${booking.bookingId}-${index}`}
-                                        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700"
+                                        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700"
                                       >
                                         {detail.playDate}
                                       </span>
                                     ))}
 
                                     {hiddenDetailCount > 0 && (
-                                      <span className="rounded-full bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700">
+                                      <span className="rounded-full bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-700">
                                         +{hiddenDetailCount} buổi
                                       </span>
                                     )}

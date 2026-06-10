@@ -108,7 +108,7 @@ const CreateGroupModal = ({
               </div>
 
               <div>
-                <h3 className="text-lg font-bold text-slate-900">
+                <h3 className="text-lg font-semibold text-slate-900">
                   Tạo nhóm mới
                 </h3>
                 <p className="mt-1 text-sm text-slate-500">
@@ -136,7 +136,7 @@ const CreateGroupModal = ({
 
         <form onSubmit={handleSubmit} className="space-y-5 p-6">
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-slate-700">
+            <label className="block text-sm font-semibold text-slate-700">
               Tên nhóm
             </label>
 
@@ -155,7 +155,7 @@ const CreateGroupModal = ({
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-slate-700">
+            <label className="block text-sm font-semibold text-slate-700">
               Thành viên
             </label>
 
@@ -181,7 +181,7 @@ const CreateGroupModal = ({
               disabled={loading}
               className="
                 rounded-2xl border border-slate-200 px-5 py-2.5
-                text-sm font-bold text-slate-700 transition-colors
+                text-sm font-semibold text-slate-700 transition-colors
                 hover:bg-slate-50
                 disabled:cursor-not-allowed disabled:opacity-60
               "
@@ -194,7 +194,7 @@ const CreateGroupModal = ({
               disabled={loading}
               className="
                 rounded-2xl bg-sky-600 px-5 py-2.5
-                text-sm font-bold text-white transition-colors
+                text-sm font-semibold text-white transition-colors
                 hover:bg-sky-500
                 disabled:cursor-not-allowed disabled:opacity-50
               "

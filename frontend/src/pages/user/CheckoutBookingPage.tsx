@@ -113,7 +113,7 @@ const CheckoutBookingPage = () => {
               <AlertTriangle size={30} />
             </div>
 
-            <h1 className="mt-5 text-2xl font-bold text-slate-900">
+            <h1 className="mt-5 text-2xl font-semibold text-slate-900">
               Không có thông tin thanh toán
             </h1>
 
@@ -503,7 +503,7 @@ const CheckoutBookingPage = () => {
                       Tổng cộng
                     </span>
 
-                    <span className="text-2xl font-bold text-sky-700">
+                    <span className="text-2xl font-semibold text-sky-700">
                       {formatPrice(finalAmount)}
                     </span>
                   </div>

@@ -4,7 +4,10 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   Legend,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -24,6 +27,8 @@ import { ORDER_STATUS_COLOR } from "../../utils/constants/color";
 import { ORDER_STATUS_LABEL } from "../../utils/constants/orderLabel";
 
 const LIMIT = 10;
+
+const REVENUE_TYPE_COLORS = ["#0ea5e9", "#22c55e", "#f59e0b"];
 
 const today = () => new Date().toISOString().slice(0, 10);
 const daysAgo = (days: number) => {
@@ -57,6 +62,33 @@ const OrderStatusBadge = ({ status }: { status?: string }) => {
       {ORDER_STATUS_LABEL[statusKey] || statusKey}
     </span>
   );
+};
+
+type BranchTopRankingType = "product" | "beverage";
+
+type BranchTopRankingItem = {
+  productName?: string | null;
+  beverageName?: string | null;
+  variant?: string | null;
+  sku?: string | null;
+  quantitySold?: number | string | null;
+  revenue?: number | string | null;
+};
+
+type BranchTopRankingProps = {
+  title: string;
+  items: BranchTopRankingItem[];
+  type: BranchTopRankingType;
+};
+
+const fmtRankingCurrency = (value: number | string | null | undefined) =>
+  `${Number(value || 0).toLocaleString("vi-VN")} đ`;
+
+const rankBadgeClass = (index: number) => {
+  if (index === 0) return "bg-amber-100 text-amber-700";
+  if (index === 1) return "bg-slate-200 text-slate-700";
+  if (index === 2) return "bg-orange-100 text-orange-700";
+  return "bg-slate-50 text-slate-500";
 };
 
 const RevenuePage = () => {
@@ -94,6 +126,13 @@ const RevenuePage = () => {
   const productItems = report?.productRevenueItems || [];
   const beverageItems = report?.beverageRevenueItems || [];
   const recentOrders = report?.recentRevenueOrders || [];
+  const revenueTypePie = revenueByType
+    .map((item: any, index: number) => ({
+      name: item.label,
+      value: Number(item.revenue || 0),
+      fill: REVENUE_TYPE_COLORS[index % REVENUE_TYPE_COLORS.length],
+    }))
+    .filter((item: any) => item.value > 0);
 
   const handleExportExcel = () => {
     exportExcel(`bao-cao-doanh-thu-manager-${startDate}_${endDate}.xls`, [
@@ -355,6 +394,39 @@ const RevenuePage = () => {
         <h2 className="text-lg font-bold text-slate-900">
           Doanh thu theo loại
         </h2>
+        <p className="text-sm text-slate-500">
+          Tách doanh thu đặt sân, sản phẩm và đồ uống tại chi nhánh.
+        </p>
+        <div className="mt-4 h-80 rounded-lg border border-slate-200 p-3">
+          {revenueTypePie.length ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={revenueTypePie}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={64}
+                  outerRadius={104}
+                  paddingAngle={2}
+                >
+                  {revenueTypePie.map((item: any) => (
+                    <Cell key={item.name} fill={item.fill} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value: number) => fmtCurrency(Number(value))}
+                />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <ManagerEmptyState
+              icon={Trophy}
+              title="KhÃ´ng cÃ³ dá»¯ liá»‡u theo loáº¡i"
+              description="Biá»ƒu Ä‘á»“ sáº½ hiá»ƒn thá»‹ khi cÃ³ doanh thu trong khoáº£ng Ä‘Ã£ chá»n."
+            />
+          )}
+        </div>
         <ReportTable
           headers={["Loại", "Số lượng", "Doanh thu"]}
           empty="Không có dữ liệu theo loại"
@@ -366,43 +438,26 @@ const RevenuePage = () => {
         />
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <section className={`${managerCardClass} p-5`}>
-          <h2 className="text-lg font-bold text-slate-900">
-            Top sản phẩm tại chi nhánh
-          </h2>
-          <ReportTable
-            headers={["Tên", "Variant", "SKU", "SL", "Doanh thu"]}
-            empty="Không có sản phẩm bán chạy"
-            rows={productItems.map((item: any) => [
-              item.productName,
-              item.variant || "-",
-              item.sku || "-",
-              item.quantitySold,
-              fmtCurrency(item.revenue),
-            ])}
-          />
-        </section>
-        <section className={`${managerCardClass} p-5`}>
-          <h2 className="text-lg font-bold text-slate-900">
-            Top đồ uống tại chi nhánh
-          </h2>
-          <ReportTable
-            headers={["Tên", "SL", "Doanh thu"]}
-            empty="Không có đồ uống bán chạy"
-            rows={beverageItems.map((item: any) => [
-              item.beverageName,
-              item.quantitySold,
-              fmtCurrency(item.revenue),
-            ])}
-          />
-        </section>
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <BranchTopRanking
+          title="Top sản phẩm tại chi nhánh"
+          items={productItems}
+          type="product"
+        />
+        <BranchTopRanking
+          title="Top đồ uống tại chi nhánh"
+          items={beverageItems}
+          type="beverage"
+        />
       </div>
 
       <section className={`${managerCardClass} p-5`}>
         <h2 className="text-lg font-bold text-slate-900">
           Đơn hàng tạo doanh thu
         </h2>
+        <p className="text-sm text-slate-500">
+          Danh sách đơn hàng phát sinh doanh thu trong khoảng thời gian đã chọn.
+        </p>
         <ReportTable
           headers={[
             "Mã đơn",
@@ -424,6 +479,121 @@ const RevenuePage = () => {
         />
       </section>
     </div>
+  );
+};
+
+const BranchTopRanking = ({ title, items, type }: BranchTopRankingProps) => {
+  const normalizedItems = (items || []).slice(0, 10).map((item) => ({
+    ...item,
+    name:
+      type === "product"
+        ? item.productName || "Sản phẩm"
+        : item.beverageName || "Đồ uống",
+    quantitySold: Number(item.quantitySold || 0),
+    revenue: Number(item.revenue || 0),
+  }));
+  const maxRevenue = Math.max(
+    ...normalizedItems.map((item) => item.revenue),
+    0,
+  );
+  const EmptyIcon = type === "product" ? Package : Coffee;
+
+  return (
+    <section
+      className={`${managerCardClass} flex flex-col p-5`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-lg font-bold text-slate-900">{title}</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Xếp hạng theo doanh thu tại chi nhánh
+          </p>
+        </div>
+        <span className="shrink-0 rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-600">
+          Top 10
+        </span>
+      </div>
+
+      <div className="dashboard-short-scrollbar mt-5 max-h-[568px] space-y-3 overflow-y-auto pr-1">
+        {normalizedItems.length ? (
+          normalizedItems.map((item, index) => {
+            const percentage = maxRevenue
+              ? (Number(item.revenue || 0) / maxRevenue) * 100
+              : 0;
+            const variant = item.variant || "";
+            const sku = item.sku || "";
+            const productMeta = [variant, sku ? `SKU: ${sku}` : ""]
+              .filter(Boolean)
+              .join(" · ");
+
+            return (
+              <div
+                key={`${type}-${index}-${item.name}-${sku}`}
+                className="min-h-[104px] rounded-xl border border-slate-200 bg-white p-4"
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${rankBadgeClass(
+                      index,
+                    )}`}
+                  >
+                    {index + 1}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                      <p
+                        className="min-w-0 overflow-hidden text-sm font-semibold text-slate-900 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"
+                        title={item.name}
+                      >
+                        {item.name}
+                      </p>
+                      <p className="shrink-0 text-sm font-bold text-sky-700">
+                        {fmtRankingCurrency(item.revenue)}
+                      </p>
+                    </div>
+
+                    <div className="mt-1 flex flex-col gap-1 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+                      {type === "product" ? (
+                        <p className="min-w-0 truncate" title={productMeta}>
+                          {productMeta || "-"}
+                        </p>
+                      ) : (
+                        <p className="min-w-0 truncate">Đồ uống tại chi nhánh</p>
+                      )}
+                      <p className="shrink-0 font-semibold text-slate-600">
+                        Đã bán {Number(item.quantitySold || 0)}
+                      </p>
+                    </div>
+
+                    <div className="mt-3 h-2 rounded-full bg-slate-200">
+                      <div
+                        className="h-2 rounded-full bg-sky-500"
+                        style={{
+                          width: `${Math.max(percentage, percentage > 0 ? 4 : 0)}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className="flex h-full min-h-80 items-center justify-center rounded-xl border border-dashed border-slate-200">
+            <ManagerEmptyState
+              icon={EmptyIcon}
+              title={
+                type === "product"
+                  ? "Không có sản phẩm bán chạy"
+                  : "Không có đồ uống bán chạy"
+              }
+              description="Dữ liệu sẽ hiển thị khi chi nhánh có doanh thu trong khoảng đã chọn."
+            />
+          </div>
+        )}
+      </div>
+    </section>
   );
 };
 

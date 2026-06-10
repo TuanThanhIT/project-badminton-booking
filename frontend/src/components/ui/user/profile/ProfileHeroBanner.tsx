@@ -170,7 +170,7 @@ const ProfileHeroBanner = ({
 
                 <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
                   {isCoach && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-800">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-medium text-cyan-800">
                       <GraduationCap className="h-3.5 w-3.5" />
                       Dạy cầu lông · {coachExperienceYears ?? 0} năm kinh nghiệm
                     </span>
@@ -210,11 +210,11 @@ const ProfileHeroBanner = ({
                       key={item.label}
                       className={`rounded-2xl border px-3 py-2.5 ${item.className}`}
                     >
-                      <div className="flex items-center gap-1.5 text-[11px] font-semibold">
+                      <div className="flex items-center gap-1.5 text-[11px] font-medium">
                         <Icon className="h-3.5 w-3.5" strokeWidth={2} />
                         <span>{item.label}</span>
                       </div>
-                      <div className="mt-1 text-lg font-bold tabular-nums">
+                      <div className="mt-1 text-lg font-semibold tabular-nums">
                         {item.value}
                       </div>
                     </div>

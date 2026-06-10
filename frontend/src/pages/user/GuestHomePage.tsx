@@ -140,7 +140,7 @@ const GuestHomePage = () => {
               <button
                 type="button"
                 onClick={() => navigate("/login")}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-sky-500 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-sky-950/30 transition hover:bg-sky-400"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-sky-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-sky-950/30 transition hover:bg-sky-400"
               >
                 Bắt đầu khám phá
                 <ArrowRight size={18} />
@@ -148,7 +148,7 @@ const GuestHomePage = () => {
               <button
                 type="button"
                 onClick={() => navigate("/register")}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/10 px-6 py-3.5 text-sm font-bold text-white backdrop-blur transition hover:bg-white/15"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/10 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/15"
               >
                 Tạo tài khoản miễn phí
               </button>
@@ -172,7 +172,7 @@ const GuestHomePage = () => {
             <p className="text-sm font-semibold uppercase tracking-wide text-sky-700">
               Tìm nhanh
             </p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-950">
+            <h2 className="mt-2 text-2xl font-semibold text-slate-950">
               Bạn muốn làm gì hôm nay?
             </h2>
 
@@ -207,7 +207,7 @@ const GuestHomePage = () => {
                     <item.icon size={21} />
                   </span>
                   <span>
-                    <span className="block font-bold text-slate-950">
+                    <span className="block font-semibold text-slate-950">
                       {item.title}
                     </span>
                     <span className="mt-1 block text-sm leading-relaxed text-slate-600">
@@ -260,7 +260,7 @@ const GuestHomePage = () => {
             >
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-3xl font-bold text-slate-950">
+                  <p className="text-3xl font-semibold text-slate-950">
                     {stat.value}+
                   </p>
                   <p className="mt-1 text-sm font-medium text-slate-500">
@@ -279,17 +279,17 @@ const GuestHomePage = () => {
       <section className="mx-auto max-w-[1280px] px-4 py-14 sm:px-6">
         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.3em] text-sky-700">
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-700">
               Ưu đãi nổi bật
             </p>
-            <h2 className="mt-2 text-3xl font-bold text-slate-950">
+            <h2 className="mt-2 text-3xl font-semibold text-slate-950">
               Mã giảm giá đang hoạt động
             </h2>
           </div>
           <button
             type="button"
             onClick={() => navigate("/login")}
-            className="inline-flex items-center gap-2 text-sm font-bold text-sky-700 transition hover:text-sky-800"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-sky-700 transition hover:text-sky-800"
           >
             Đăng nhập để nhận ưu đãi
             <ArrowRight size={18} />
@@ -319,7 +319,7 @@ const GuestHomePage = () => {
                   <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
                     Mã giảm giá
                   </p>
-                  <h3 className="mt-3 text-2xl font-bold text-slate-950">
+                  <h3 className="mt-3 text-2xl font-semibold text-slate-950">
                     {discount.code}
                   </h3>
                   <p className="mt-3 text-sm leading-relaxed text-slate-600">
@@ -343,17 +343,17 @@ const GuestHomePage = () => {
       <section className="mx-auto max-w-[1280px] px-4 pb-14 sm:px-6">
         <div className="mb-6 flex items-end justify-between gap-4">
           <div>
-            <p className="text-sm font-bold uppercase tracking-wide text-sky-700">
+            <p className="text-sm font-semibold uppercase tracking-wide text-sky-700">
               Danh mục nổi bật
             </p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-950 sm:text-3xl">
+            <h2 className="mt-2 text-2xl font-semibold text-slate-950 sm:text-3xl">
               Chọn nhóm sản phẩm bạn cần
             </h2>
           </div>
           <button
             type="button"
             onClick={() => navigate("/login")}
-            className="hidden text-sm font-bold text-sky-700 hover:text-sky-800 sm:inline-flex"
+            className="hidden text-sm font-semibold text-sky-700 hover:text-sky-800 sm:inline-flex"
           >
             Đăng nhập để xem tất cả
           </button>
@@ -384,7 +384,7 @@ const GuestHomePage = () => {
                 className="h-36 w-full object-cover"
               />
               <div className="p-4">
-                <h3 className="line-clamp-2 font-bold text-slate-950">
+                <h3 className="line-clamp-2 font-semibold text-slate-950">
                   {group.menuGroup}
                 </h3>
                 <p className="mt-1 text-sm text-slate-500">
@@ -400,10 +400,10 @@ const GuestHomePage = () => {
         <div className="mx-auto max-w-[1280px] px-4 sm:px-6">
           <div className="mb-6 flex items-end justify-between gap-4">
             <div>
-              <p className="text-sm font-bold uppercase tracking-wide text-sky-700">
+              <p className="text-sm font-semibold uppercase tracking-wide text-sky-700">
                 Sản phẩm gợi ý
               </p>
-              <h2 className="mt-2 text-2xl font-bold text-slate-950 sm:text-3xl">
+              <h2 className="mt-2 text-2xl font-semibold text-slate-950 sm:text-3xl">
                 Bắt đầu với những món để mua
               </h2>
             </div>
@@ -421,13 +421,13 @@ const GuestHomePage = () => {
                   loading="lazy"
                   className="h-44 w-full rounded-xl bg-slate-50 object-contain"
                 />
-                <p className="mt-4 text-xs font-bold uppercase tracking-wide text-sky-700">
+                <p className="mt-4 text-xs font-medium uppercase tracking-wide text-sky-700">
                   {product.category?.cateName}
                 </p>
-                <h3 className="mt-1 line-clamp-2 min-h-12 font-bold text-slate-950">
+                <h3 className="mt-1 line-clamp-2 min-h-12 font-semibold text-slate-950">
                   {product.productName}
                 </h3>
-                <p className="mt-2 font-bold text-sky-700">
+                <p className="mt-2 font-semibold text-sky-700">
                   {formatPrice(product.minPrice)}
                 </p>
               </article>
@@ -440,7 +440,7 @@ const GuestHomePage = () => {
         <div className="rounded-[2rem] bg-slate-950 p-6 text-white sm:p-10">
           <div className="grid items-center gap-8 lg:grid-cols-[1fr_360px]">
             <div>
-              <p className="text-sm font-bold uppercase tracking-wide text-sky-300">
+              <p className="text-sm font-semibold uppercase tracking-wide text-sky-300">
                 Sẵn sàng trải nghiệm?
               </p>
               <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
@@ -451,14 +451,14 @@ const GuestHomePage = () => {
               <button
                 type="button"
                 onClick={() => navigate("/login")}
-                className="rounded-2xl bg-sky-500 px-6 py-3.5 text-sm font-bold text-white transition hover:bg-sky-400"
+                className="rounded-2xl bg-sky-500 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-sky-400"
               >
                 Đăng nhập
               </button>
               <button
                 type="button"
                 onClick={() => navigate("/register")}
-                className="rounded-2xl border border-white/20 bg-white/10 px-6 py-3.5 text-sm font-bold text-white transition hover:bg-white/15"
+                className="rounded-2xl border border-white/20 bg-white/10 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-white/15"
               >
                 Tao tai khoan
               </button>

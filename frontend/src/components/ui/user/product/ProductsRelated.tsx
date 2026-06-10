@@ -38,7 +38,7 @@ const ProductsRelated = ({
             <PackageSearch size={28} />
           </div>
 
-          <p className="text-base font-bold text-slate-800">
+          <p className="text-base font-semibold text-slate-800">
             Không tìm thấy sản phẩm liên quan
           </p>
 
@@ -68,12 +68,12 @@ const ProductsRelated = ({
         "
       >
         <div>
-          <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-sky-600">
+          <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-sky-600">
             <Sparkles size={14} />
             Gợi ý sản phẩm
           </div>
 
-          <h3 className="text-xl font-extrabold text-slate-900">
+          <h3 className="text-xl font-semibold text-slate-900">
             Sản phẩm liên quan
           </h3>
 
@@ -86,7 +86,7 @@ const ProductsRelated = ({
           className="
             flex w-fit items-center gap-2 rounded-full
             bg-sky-600 px-4 py-2
-            text-xs font-bold text-white shadow-sm
+            text-xs font-medium text-white shadow-sm
           "
         >
           {safeProductsRelated.length} sản phẩm

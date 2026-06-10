@@ -1,4 +1,4 @@
-import { QueryTypes } from "sequelize";
+import { Op, QueryTypes, literal } from "sequelize";
 import sequelize from "../../config/db.js";
 import {
   Booking,
@@ -10,6 +10,11 @@ import {
   OrderGroup,
   PurchaseReceipt,
   Supplier,
+  Post,
+  Comment,
+  Feedback,
+  ProductVariant,
+  Product,
 } from "../../models/index.js";
 import { BOOKING_STATUS } from "../../constants/bookingConstant.js";
 import { ORDER_STATUS } from "../../constants/orderConstant.js";
@@ -37,6 +42,14 @@ const PAID_ORDER_STATUSES = [
 const toNumber = (value) => Number(value || 0);
 
 const LOW_STOCK_THRESHOLD = 5;
+
+const POST_TYPE_LABEL = {
+  FIND_PLAYER: "Tìm người chơi",
+  FIND_COACH: "Tìm người giảng dạy",
+  CLASS: "Lớp học",
+  TOURNAMENT: "Giải đấu",
+  GROUP: "Nhóm chơi",
+};
 
 const normalizeFilter = (value, allowed, fallback = "ALL") =>
   allowed.includes(String(value || "").toUpperCase())
@@ -947,6 +960,262 @@ const getLowStockItemsService = async ({ branchId, limit = 10 } = {}) => {
   );
 };
 
+const getDashboardPostOverview = async ({
+  monthStart,
+  now,
+  recentLimit = 5,
+}) => {
+  const postWhere = { isDeleted: false };
+  const commentWhere = { isDeleted: false };
+
+  const [
+    totalPosts,
+    newPostsThisMonth,
+    totalComments,
+    commentsThisMonth,
+    postsByTypeRows,
+    recentRows,
+  ] = await Promise.all([
+    Post.count({ where: postWhere }),
+    Post.count({
+      where: {
+        ...postWhere,
+        createdAt: { [Op.between]: [monthStart, now] },
+      },
+    }),
+    Comment.count({ where: commentWhere }),
+    Comment.count({
+      where: {
+        ...commentWhere,
+        createdAt: { [Op.between]: [monthStart, now] },
+      },
+    }),
+    sequelize.query(
+      `
+        SELECT type, COUNT(*) AS count
+        FROM Posts
+        WHERE isDeleted = false
+        GROUP BY type
+      `,
+      { type: QueryTypes.SELECT },
+    ),
+    Post.findAll({
+      attributes: [
+        "id",
+        "title",
+        "content",
+        "type",
+        "isActive",
+        "isDeleted",
+        "createdAt",
+        [
+          literal(
+            "(SELECT COUNT(*) FROM Comments c WHERE c.postId = Post.id AND c.isDeleted = false)",
+          ),
+          "commentCount",
+        ],
+      ],
+      where: postWhere,
+      include: [
+        {
+          model: User,
+          as: "author",
+          attributes: ["id", "username"],
+          include: [
+            {
+              model: Profile,
+              as: "profile",
+              attributes: ["fullName", "avatar"],
+            },
+          ],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+      limit: recentLimit,
+    }),
+  ]);
+
+  const countByType = postsByTypeRows.reduce((acc, row) => {
+    acc[row.type] = toNumber(row.count);
+    return acc;
+  }, {});
+
+  const postsByType = Object.entries(POST_TYPE_LABEL)
+    .map(([type, label]) => {
+      const count = countByType[type] || 0;
+      return {
+        type,
+        label,
+        count,
+        percentage: totalPosts > 0 ? Math.round((count / totalPosts) * 100) : 0,
+      };
+    })
+    .sort((a, b) => b.count - a.count);
+
+  const recentPosts = recentRows.map((row) => {
+    const post = row.toJSON();
+    return {
+      id: post.id,
+      title: post.title,
+      content: post.content,
+      type: post.type,
+      label: POST_TYPE_LABEL[post.type] || post.type,
+      status: post.isActive ? "ACTIVE" : "LOCKED",
+      commentCount: toNumber(post.commentCount),
+      createdDate: post.createdAt,
+      author: {
+        id: post.author?.id,
+        username: post.author?.username,
+        fullName: post.author?.profile?.fullName,
+        avatar: post.author?.profile?.avatar,
+      },
+    };
+  });
+
+  return {
+    totalPosts,
+    newPostsThisMonth,
+    totalComments,
+    commentsThisMonth,
+    postsByType,
+    recentPosts,
+  };
+};
+
+const getDashboardFeedbackOverview = async ({ recentLimit = 5 }) => {
+  const [summaryRows, ratingsRows, recentRows] = await Promise.all([
+    sequelize.query(
+      `
+        SELECT COUNT(*) AS totalFeedbacks,
+               AVG(rating) AS averageRating,
+               SUM(CASE WHEN rating <= 2 THEN 1 ELSE 0 END) AS lowRatingCount
+        FROM Feedbacks
+      `,
+      { type: QueryTypes.SELECT },
+    ),
+    sequelize.query(
+      `
+        SELECT rating AS star, COUNT(*) AS count
+        FROM Feedbacks
+        GROUP BY rating
+      `,
+      { type: QueryTypes.SELECT },
+    ),
+    Feedback.findAll({
+      attributes: [
+        "id",
+        "content",
+        "rating",
+        "branchId",
+        "variantId",
+        "createdAt",
+      ],
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["id", "username"],
+          include: [
+            {
+              model: Profile,
+              as: "profile",
+              attributes: ["fullName", "avatar"],
+            },
+          ],
+        },
+        {
+          model: Branch,
+          as: "branch",
+          attributes: ["id", "branchName"],
+          required: false,
+        },
+        {
+          model: ProductVariant,
+          as: "variant",
+          attributes: ["id", "color", "size"],
+          required: false,
+          include: [
+            {
+              model: Product,
+              as: "product",
+              attributes: ["id", "productName", "thumbnailUrl"],
+            },
+          ],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+      limit: recentLimit,
+    }),
+  ]);
+
+  const summary = summaryRows[0] || {};
+  const totalFeedbacks = toNumber(summary.totalFeedbacks);
+  const averageRating = totalFeedbacks
+    ? Math.round(toNumber(summary.averageRating) * 10) / 10
+    : 0;
+  const countByStar = ratingsRows.reduce((acc, row) => {
+    acc[toNumber(row.star)] = toNumber(row.count);
+    return acc;
+  }, {});
+
+  const ratingsByStar = [5, 4, 3, 2, 1].map((star) => {
+    const count = countByStar[star] || 0;
+    return {
+      star,
+      count,
+      percentage:
+        totalFeedbacks > 0
+          ? Math.round((count / totalFeedbacks) * 1000) / 10
+          : 0,
+    };
+  });
+
+  const recentFeedbacks = recentRows.map((row) => {
+    const feedback = row.toJSON();
+    const targetName =
+      feedback.branch?.branchName ||
+      feedback.variant?.product?.productName ||
+      "Đối tượng đánh giá";
+    const variantInfo = feedback.variant
+      ? [feedback.variant.color, feedback.variant.size].filter(Boolean).join(" / ")
+      : null;
+
+    return {
+      id: feedback.id,
+      content: feedback.content,
+      rating: toNumber(feedback.rating),
+      type: feedback.branchId ? "BRANCH" : "PRODUCT",
+      createdDate: feedback.createdAt,
+      user: {
+        id: feedback.user?.id,
+        username: feedback.user?.username,
+        fullName: feedback.user?.profile?.fullName,
+        avatar: feedback.user?.profile?.avatar,
+      },
+      target: {
+        id: feedback.branch?.id || feedback.variant?.product?.id || feedback.variantId,
+        name: targetName,
+        thumbnailUrl: feedback.variant?.product?.thumbnailUrl,
+        variantInfo,
+      },
+      branch: feedback.branch
+        ? {
+            id: feedback.branch.id,
+            branchName: feedback.branch.branchName,
+          }
+        : null,
+    };
+  });
+
+  return {
+    totalFeedbacks,
+    averageRating,
+    lowRatingCount: toNumber(summary.lowRatingCount),
+    ratingsByStar,
+    recentFeedbacks,
+  };
+};
+
 const getDashboardService = async (query = {}) => {
   const now = new Date();
   const branchId = parseOptionalId(query.branchId);
@@ -992,6 +1261,8 @@ const getDashboardService = async (query = {}) => {
     lowStockCountRows,
     recentBookings,
     recentOrders,
+    postOverview,
+    feedbackOverview,
   ] = await Promise.all([
     getRevenueOverviewService(thisMonthStart, today, { branchId }),
     getRevenueOverviewService(lastMonthStart, lastMonthEnd, { branchId }),
@@ -1102,6 +1373,12 @@ const getDashboardService = async (query = {}) => {
       order: [["createdAt", "DESC"]],
       limit: 5,
     }),
+    getDashboardPostOverview({
+      monthStart: thisMonthStart,
+      now: today,
+      recentLimit: 5,
+    }),
+    getDashboardFeedbackOverview({ recentLimit: 5 }),
   ]);
 
   const chartMap = {};
@@ -1225,6 +1502,8 @@ const getDashboardService = async (query = {}) => {
         email: oj.orderGroup?.user?.email,
       };
     }),
+    postOverview,
+    feedbackOverview,
   };
 };
 

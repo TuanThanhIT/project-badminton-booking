@@ -112,7 +112,7 @@ const ProductCard = ({
   const imageClass =
     "h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110";
   const actionBtnClass =
-    "mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm font-bold text-sky-700 transition-all duration-300 hover:border-sky-600 hover:bg-sky-600 hover:text-white hover:shadow-lg hover:shadow-sky-100 active:scale-[0.98]";
+    "mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700 transition-all duration-300 hover:border-sky-600 hover:bg-sky-600 hover:text-white hover:shadow-lg hover:shadow-sky-100 active:scale-[0.98]";
 
   return (
     <article onClick={onClick} className={cardClass}>
@@ -132,13 +132,13 @@ const ProductCard = ({
 
             <div className="absolute left-3 top-3 flex flex-col gap-2">
               {(product?.discount ?? 0) > 0 && (
-                <span className="w-fit rounded-full bg-red-500 px-2.5 py-1 text-xs font-bold text-white shadow">
+                <span className="w-fit rounded-full bg-red-500 px-2.5 py-1 text-xs font-medium text-white shadow">
                   -{product?.discount}%
                 </span>
               )}
 
               {product?.isNew && !badge && (
-                <span className="inline-flex w-fit items-center gap-1 rounded-full bg-emerald-500 px-2.5 py-1 text-xs font-bold text-white shadow">
+                <span className="inline-flex w-fit items-center gap-1 rounded-full bg-emerald-500 px-2.5 py-1 text-xs font-medium text-white shadow">
                   <Sparkles size={12} />
                   Mới
                 </span>
@@ -146,7 +146,7 @@ const ProductCard = ({
 
               {badge && (
                 <span
-                  className={`inline-flex w-fit items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold text-white shadow ${badgeClassName}`}
+                  className={`inline-flex w-fit items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-white shadow ${badgeClassName}`}
                 >
                   {badge}
                 </span>
@@ -158,12 +158,12 @@ const ProductCard = ({
 
       <div className="p-[18px]">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <p className="line-clamp-1 text-[11px] font-bold uppercase tracking-wide text-sky-600">
+          <p className="line-clamp-1 text-[11px] font-medium uppercase tracking-wide text-sky-600">
             {loading ? "..." : product?.brand}
           </p>
 
           {!loading && product?.category?.cateName && (
-            <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-600">
+            <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
               {product.category.cateName}
             </span>
           )}
@@ -172,7 +172,7 @@ const ProductCard = ({
         <h3
           className="
     mt-1.5 line-clamp-2 min-h-[56px]
-    text-[17px] font-extrabold leading-snug
+    text-[17px] font-semibold leading-snug
     text-slate-700 transition
     group-hover:text-sky-700
   "
@@ -182,7 +182,7 @@ const ProductCard = ({
         </h3>
 
         <div className="mt-2 flex flex-wrap items-baseline gap-2">
-          <span className="text-[19px] font-extrabold tracking-tight text-sky-700">
+          <span className="text-[19px] font-semibold tracking-tight text-sky-700">
             {loading
               ? "--"
               : formatPrice(
@@ -198,7 +198,7 @@ const ProductCard = ({
         </div>
 
         {!loading && (
-          <div className="mt-2 flex flex-wrap gap-2 text-xs font-semibold text-slate-500">
+          <div className="mt-2 flex flex-wrap gap-2 text-xs font-medium text-slate-500">
             {product?.soldCount ? (
               <span className="rounded-full bg-orange-50 px-2.5 py-1 text-orange-600">
                 Đã bán {formatNumber(product.soldCount)}
@@ -254,7 +254,7 @@ const BranchCard = ({
     "h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110";
 
   const actionBtnClass =
-    "mt-5 flex w-full items-center justify-center gap-2 rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm font-bold text-sky-700 transition-all duration-300 hover:border-sky-600 hover:bg-sky-600 hover:text-white hover:shadow-lg hover:shadow-sky-100 active:scale-[0.98]";
+    "mt-5 flex w-full items-center justify-center gap-2 rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700 transition-all duration-300 hover:border-sky-600 hover:bg-sky-600 hover:text-white hover:shadow-lg hover:shadow-sky-100 active:scale-[0.98]";
 
   return (
     <article onClick={onClick} className={cardClass}>
@@ -273,12 +273,12 @@ const BranchCard = ({
 
             <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-slate-950/70 via-slate-950/25 to-transparent" />
 
-            <div className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-sky-700 shadow-sm">
+            <div className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1.5 text-xs font-medium text-sky-700 shadow-sm">
               {badge}
             </div>
 
             {branch?.avgRating ? (
-              <div className="absolute bottom-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-amber-600 shadow-sm">
+              <div className="absolute bottom-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-medium text-amber-600 shadow-sm">
                 <Star size={14} className="fill-amber-500 text-amber-500" />
                 {branch.avgRating}
                 <span className="text-slate-500">({branch.reviewCount})</span>
@@ -290,7 +290,7 @@ const BranchCard = ({
 
       {/* CONTENT */}
       <div className="p-5">
-        <h3 className="line-clamp-1 text-xl font-extrabold text-slate-950 transition group-hover:text-sky-700">
+        <h3 className="line-clamp-1 text-xl font-semibold text-slate-950 transition group-hover:text-sky-700">
           {loading ? "Đang tải..." : branch?.branchName}
         </h3>
 
@@ -302,7 +302,7 @@ const BranchCard = ({
         </div>
 
         {!loading && (
-          <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
+          <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium">
             <div className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1.5 text-sky-700">
               <CalendarDays size={14} />
               <span>{formatNumber(branch?.bookingCount || 0)}</span>
@@ -409,9 +409,9 @@ const HomePage = () => {
   const softSectionClass =
     "home-reveal bg-gradient-to-b from-slate-50 to-sky-50/70 py-7 lg:py-9";
   const titleBadgeClass =
-    "inline-flex items-center gap-2 rounded-full border border-sky-100 bg-white px-4 py-2 text-sm font-bold text-sky-700 shadow-sm";
+    "inline-flex items-center gap-2 rounded-full border border-sky-100 bg-white px-4 py-2 text-sm font-semibold text-sky-700 shadow-sm";
   const viewMoreBtnClass =
-    "group inline-flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-sky-300 hover:bg-sky-50 hover:text-sky-700 hover:shadow-md";
+    "group inline-flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-sky-300 hover:bg-sky-50 hover:text-sky-700 hover:shadow-md";
 
   const goToProductDetail = (product: HomeProduct) => {
     navigate(
@@ -449,7 +449,7 @@ const HomePage = () => {
           {badge}
         </div>
 
-        <h2 className="mt-3 text-2xl font-extrabold leading-tight text-slate-950 sm:text-3xl">
+        <h2 className="mt-3 text-2xl font-bold leading-tight text-slate-950 sm:text-3xl">
           {title}
         </h2>
 
@@ -497,7 +497,7 @@ const HomePage = () => {
               Trang chủ B-Hub - Đam mê cầu lông bắt đầu ở đây
             </div>
 
-            <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
+            <h1 className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
               {currentBanner.title}
             </h1>
 
@@ -579,7 +579,7 @@ const HomePage = () => {
               Dữ liệu nổi bật
             </p>
 
-            <h2 className="mt-4 text-3xl font-bold text-white">
+            <h2 className="mt-4 text-3xl font-semibold text-white">
               B-Hub trong hôm nay
             </h2>
 
@@ -605,11 +605,11 @@ const HomePage = () => {
                   key={item.title}
                   className="rounded-3xl border border-slate-800/80 bg-slate-900/80 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-400/40 hover:bg-slate-900"
                 >
-                  <span className="inline-flex rounded-full bg-sky-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-200">
+                  <span className="inline-flex rounded-full bg-sky-500/15 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-sky-200">
                     {item.tag}
                   </span>
 
-                  <h3 className="mt-4 text-xl font-bold text-white">
+                  <h3 className="mt-4 text-xl font-semibold text-white">
                     {item.title}
                   </h3>
 
@@ -649,7 +649,7 @@ const HomePage = () => {
                 Tổng quan B-Hub
               </div>
 
-              <h2 className="mt-4 text-2xl font-extrabold leading-tight text-slate-950 sm:text-3xl">
+              <h2 className="mt-4 text-2xl font-bold leading-tight text-slate-950 sm:text-3xl">
                 Đầy đủ sân chơi, sản phẩm và dịch vụ cầu lông
               </h2>
             </div>
@@ -695,11 +695,11 @@ const HomePage = () => {
                   <stat.icon size={22} />
                 </div>
 
-                <p className="text-3xl font-extrabold tracking-tight text-slate-950">
+                <p className="text-3xl font-bold tracking-tight text-slate-950">
                   {formatNumber(stat.value)}
                 </p>
 
-                <p className="mt-2 text-sm font-bold text-slate-800">
+                <p className="mt-2 text-sm font-semibold text-slate-800">
                   {stat.label}
                 </p>
 
@@ -746,7 +746,7 @@ const HomePage = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-white/10" />
 
                     <div className="absolute inset-x-4 bottom-4">
-                      <div className="inline-flex items-center gap-2 rounded-2xl bg-white/95 px-4 py-2 text-sm font-extrabold text-sky-700 shadow-sm transition group-hover:bg-sky-600 group-hover:text-white">
+                      <div className="inline-flex items-center gap-2 rounded-2xl bg-white/95 px-4 py-2 text-sm font-semibold text-sky-700 shadow-sm transition group-hover:bg-sky-600 group-hover:text-white">
                         {category.title}
                         <ArrowRight
                           size={16}
@@ -796,7 +796,7 @@ const HomePage = () => {
                   key={group.menuGroup}
                   type="button"
                   onClick={() => setActiveNewGroup(group.menuGroup)}
-                  className={`rounded-full px-5 py-2.5 text-sm font-bold transition-all duration-300 ${
+                  className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 ${
                     activeNewGroup === group.menuGroup
                       ? "bg-sky-600 text-white shadow-lg shadow-sky-100"
                       : "bg-sky-50 text-sky-700 hover:bg-sky-100"
@@ -843,7 +843,7 @@ const HomePage = () => {
           ) : (
             <div className="flex min-h-[220px] flex-col items-center justify-center rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 text-center">
               <Boxes size={42} className="text-slate-300" />
-              <p className="mt-3 text-sm font-semibold text-slate-500">
+              <p className="mt-3 text-sm font-medium text-slate-500">
                 Nhóm này chưa có sản phẩm mới.
               </p>
             </div>
@@ -937,7 +937,7 @@ const HomePage = () => {
               key={tab.key}
               type="button"
               onClick={() => setActiveDiscountType(tab.key as any)}
-              className={`rounded-full px-5 py-2.5 text-sm font-bold transition-all duration-300 ${
+              className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 ${
                 activeDiscountType === tab.key
                   ? "bg-sky-600 text-white shadow-lg shadow-sky-100"
                   : "bg-white text-sky-700 shadow-sm hover:bg-sky-50"
@@ -966,29 +966,29 @@ const HomePage = () => {
                       <TicketPercent size={22} />
                     </div>
 
-                    <span className="rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700">
+                    <span className="rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700">
                       {getDiscountApplyLabel(discount.applyType)}
                     </span>
                   </div>
 
-                  <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
                     Mã giảm giá
                   </p>
 
-                  <h3 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-950">
+                  <h3 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">
                     {discount.code}
                   </h3>
 
                   <div className="mt-4 rounded-2xl border border-dashed border-sky-200 bg-sky-50/70 px-4 py-3 transition group-hover:bg-sky-50">
                     <p className="text-sm font-medium text-slate-600">Giảm</p>
-                    <p className="mt-1 text-xl font-extrabold text-sky-700">
+                    <p className="mt-1 text-xl font-semibold text-sky-700">
                       {getDiscountValue(discount)}
                     </p>
                   </div>
 
                   <p className="mt-4 text-sm leading-relaxed text-slate-600">
                     Áp dụng cho đơn từ{" "}
-                    <span className="font-bold text-slate-900">
+                    <span className="font-semibold text-slate-900">
                       {discount.minAmount.toLocaleString("vi-VN")}d
                     </span>
                     .
@@ -997,7 +997,7 @@ const HomePage = () => {
                   <div className="mt-5 border-t border-slate-100 pt-4">
                     <p className="text-xs font-medium text-slate-500">
                       Hạn sử dụng:{" "}
-                      <span className="font-bold text-slate-700">
+                      <span className="font-semibold text-slate-700">
                         {formatDate(discount.endDate)}
                       </span>
                     </p>
@@ -1007,7 +1007,7 @@ const HomePage = () => {
             ))}
           </div>
         ) : (
-          <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-white py-14 text-center text-sm font-semibold text-slate-500">
+          <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-white py-14 text-center text-sm font-medium text-slate-500">
             Chưa có mã giảm giá cho nhóm này.
           </div>
         )}
@@ -1092,7 +1092,7 @@ const HomePage = () => {
                 >
                   <div className="mb-4 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-sky-50 text-sm font-extrabold text-sky-700">
+                      <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-sky-50 text-sm font-semibold text-sky-700">
                         {review.user.avatar ? (
                           <img
                             src={review.user.avatar}
@@ -1105,16 +1105,16 @@ const HomePage = () => {
                       </div>
 
                       <div>
-                        <p className="line-clamp-1 text-sm font-bold text-slate-900">
+                        <p className="line-clamp-1 text-sm font-semibold text-slate-900">
                           {review.user.fullName}
                         </p>
-                        <p className="text-xs font-semibold text-slate-400">
+                        <p className="text-xs font-medium text-slate-400">
                           {formatDate(review.createdAt)}
                         </p>
                       </div>
                     </div>
 
-                    <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-600">
+                    <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-600">
                       ★ {review.rating}
                     </span>
                   </div>
@@ -1123,7 +1123,7 @@ const HomePage = () => {
                     &ldquo;{review.content}&rdquo;
                   </p>
 
-                  <div className="mt-5 rounded-2xl bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-500">
+                  <div className="mt-5 rounded-2xl bg-slate-50 px-4 py-3 text-xs font-medium text-slate-500">
                     {review.targetType === "BRANCH" && review.branch
                       ? `Chi nhánh: ${review.branch.branchName}`
                       : review.product
@@ -1148,7 +1148,7 @@ const HomePage = () => {
               Bắt đầu ngay
             </div>
 
-            <h2 className="mt-5 text-3xl font-extrabold leading-tight text-slate-950 sm:text-4xl">
+            <h2 className="mt-5 text-3xl font-bold leading-tight text-slate-950 sm:text-4xl">
               Sẵn sàng cho buổi chơi cầu lông tiếp theo?
             </h2>
 
@@ -1161,7 +1161,7 @@ const HomePage = () => {
               <button
                 type="button"
                 onClick={() => navigate("/courts")}
-                className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-sky-600 px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-sky-100 transition-all duration-300 hover:-translate-y-0.5 hover:bg-sky-700 hover:shadow-xl active:scale-[0.98] sm:w-auto"
+                className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-sky-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-sky-100 transition-all duration-300 hover:-translate-y-0.5 hover:bg-sky-700 hover:shadow-xl active:scale-[0.98] sm:w-auto"
               >
                 Đặt sân ngay
                 <ArrowRight
@@ -1173,7 +1173,7 @@ const HomePage = () => {
               <button
                 type="button"
                 onClick={() => navigate("/products")}
-                className="group inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-7 py-3.5 text-sm font-bold text-slate-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700 hover:shadow-md active:scale-[0.98] sm:w-auto"
+                className="group inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-7 py-3.5 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700 hover:shadow-md active:scale-[0.98] sm:w-auto"
               >
                 Mua sắm ngay
                 <ArrowRight

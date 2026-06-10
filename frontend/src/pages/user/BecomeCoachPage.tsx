@@ -258,7 +258,7 @@ const BecomeCoachPage = () => {
                 <p className="text-sm font-semibold uppercase tracking-wide text-sky-700">
                   Quy trình đăng ký và mở lớp
                 </p>
-                <h2 className="mt-1 text-xl font-bold text-slate-950">
+                <h2 className="mt-1 text-xl font-semibold text-slate-950">
                   Từ hồ sơ HLV đến lớp học đầu tiên
                 </h2>
                 <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
@@ -286,11 +286,11 @@ const BecomeCoachPage = () => {
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
                       <Icon className="h-5 w-5" />
                     </div>
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-500">
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
                       {index + 1}
                     </span>
                   </div>
-                  <h3 className="mt-4 text-sm font-bold text-slate-950">
+                  <h3 className="mt-4 text-sm font-semibold text-slate-950">
                     {step.title}
                   </h3>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -501,7 +501,7 @@ const BecomeCoachPage = () => {
               </div>
 
               <aside className="border-t border-slate-200 bg-slate-50 p-5 sm:p-6 lg:border-l lg:border-t-0">
-                <p className="text-sm font-bold text-slate-950">Hồ sơ gồm</p>
+                <p className="text-sm font-semibold text-slate-950">Hồ sơ gồm</p>
                 <div className="mt-5 space-y-4">
                   {[
                     "Kinh nghiệm dạy",
@@ -513,7 +513,7 @@ const BecomeCoachPage = () => {
                       key={item}
                       className="flex items-center gap-3 text-sm text-slate-700"
                     >
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-100 text-xs font-bold text-sky-700">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-100 text-xs font-medium text-sky-700">
                         {index + 1}
                       </span>
                       <span className="font-medium">{item}</span>
@@ -522,7 +522,7 @@ const BecomeCoachPage = () => {
                 </div>
 
                 <div className="mt-6 rounded-2xl border border-sky-100 bg-white p-4">
-                  <p className="text-sm font-bold text-slate-950">
+                  <p className="text-sm font-semibold text-slate-950">
                     Sau khi được duyệt
                   </p>
                   <div className="mt-3 space-y-3 text-sm leading-6 text-slate-600">

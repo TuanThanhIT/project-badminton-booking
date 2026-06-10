@@ -93,12 +93,12 @@ const BranchPage = () => {
           {/* LEFT TEXT */}
           <div className="max-w-2xl">
             <div className="flex items-center gap-3 mb-3">
-              <span className="px-3 py-1 text-xs font-bold bg-sky-500/20 text-sky-200 rounded-full border border-sky-400/30">
+              <span className="px-3 py-1 text-xs font-medium bg-sky-500/20 text-sky-200 rounded-full border border-sky-400/30">
                 Hệ thống sân cầu lông
               </span>
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-extrabold leading-tight">
+            <h1 className="text-4xl md:text-5xl font-bold leading-tight">
               Hệ thống chi nhánh{" "}
               <span className="text-sky-300 drop-shadow-lg">B-Hub</span>
             </h1>
@@ -150,7 +150,7 @@ const BranchPage = () => {
                 className="
       absolute -bottom-4 left-4 z-20
       bg-white text-sky-700
-      px-3 py-1 rounded-full text-xs font-bold shadow-lg
+      px-3 py-1 rounded-full text-xs font-medium shadow-lg
       backdrop-blur-md
     "
               >
@@ -169,7 +169,7 @@ const BranchPage = () => {
             {/* FILTER CARD */}
 
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <div className="flex items-center gap-2 mb-4 text-gray-800 font-bold">
+              <div className="flex items-center gap-2 mb-4 text-gray-800 font-semibold">
                 <Filter size={18} className="text-sky-600" />
                 <span>Bộ lọc tìm kiếm</span>
               </div>
@@ -178,7 +178,7 @@ const BranchPage = () => {
                 {/* CITY */}
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-500 ml-1">
+                  <label className="text-xs font-medium text-gray-500 ml-1">
                     Thành phố
                   </label>
 
@@ -210,7 +210,7 @@ const BranchPage = () => {
                 {/* DISTRICT */}
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-500 ml-1">
+                  <label className="text-xs font-medium text-gray-500 ml-1">
                     Quận / Huyện
                   </label>
 
@@ -260,7 +260,7 @@ const BranchPage = () => {
 
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-4 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">
-                <span className="font-bold text-gray-700 text-sm">
+                <span className="font-medium text-gray-700 text-sm">
                   Kết quả ({branches.length})
                 </span>
               </div>
@@ -288,7 +288,7 @@ const BranchPage = () => {
                       }`}
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-bold text-sky-900 group-hover:text-sky-600 transition-colors">
+                        <h3 className="font-semibold text-sky-900 group-hover:text-sky-600 transition-colors">
                           {branch.branchName}
                         </h3>
 
@@ -326,7 +326,7 @@ const BranchPage = () => {
                       </div>
 
                       {selectedBranch?.id === branch.id && (
-                        <div className="mt-3 flex items-center gap-1 text-xs font-bold text-sky-600 uppercase tracking-wider">
+                        <div className="mt-3 flex items-center gap-1 text-xs font-medium text-sky-600 uppercase tracking-wider">
                           <Navigation2 size={12} fill="currentColor" /> Đang
                           hiển thị trên bản đồ
                         </div>
@@ -345,18 +345,18 @@ const BranchPage = () => {
               {selectedBranch && (
                 <div className="absolute top-6 left-6 right-6 z-10 bg-white/90 backdrop-blur-md p-4 rounded-2xl shadow-lg border border-sky-100 flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-bold text-sky-600 uppercase mb-1">
+                    <p className="text-xs font-medium text-sky-600 uppercase mb-1">
                       Đang xem vị trí:
                     </p>
 
-                    <h4 className="font-bold text-gray-900">
+                    <h4 className="font-semibold text-gray-900">
                       {selectedBranch.branchName}
                     </h4>
                   </div>
 
                   <button
                     onClick={() => navigate(`/branches/${selectedBranch.id}`)}
-                    className="bg-sky-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-sky-700 transition"
+                    className="bg-sky-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-sky-700 transition"
                   >
                     Đặt sân tại đây
                   </button>

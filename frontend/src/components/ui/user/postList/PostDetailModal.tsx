@@ -116,7 +116,7 @@ const PostDetailModal = ({
         aria-modal="true"
       >
         <header className="relative flex h-14 shrink-0 items-center justify-center border-b border-slate-200 bg-white px-14">
-          <h2 className="max-w-full truncate text-base font-bold text-slate-900 sm:text-lg">
+          <h2 className="max-w-full truncate text-base font-semibold text-slate-900 sm:text-lg">
             Bài viết của {authorName}
           </h2>
           <button

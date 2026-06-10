@@ -267,7 +267,7 @@ const VNPayResultPage = () => {
             Kết quả giao dịch VNPay
           </div>
 
-          <h1 className="mt-5 text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
+          <h1 className="mt-5 text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
             {title}
           </h1>
 

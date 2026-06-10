@@ -323,7 +323,7 @@ const PublicProfilePage = () => {
             </div>
 
             <div className="mt-4">
-              <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-500">
                 <SlidersHorizontal className="h-4 w-4" />
                 Lọc loại bài
               </div>
@@ -331,7 +331,7 @@ const PublicProfilePage = () => {
                 <button
                   type="button"
                   onClick={() => setSelectedType("")}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
                     selectedType === ""
                       ? "border-sky-500 bg-sky-50 text-sky-700"
                       : "border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50"
@@ -344,7 +344,7 @@ const PublicProfilePage = () => {
                     key={type}
                     type="button"
                     onClick={() => setSelectedType(type)}
-                    className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
                       selectedType === type
                         ? "border-sky-500 bg-sky-50 text-sky-700"
                         : "border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50"
@@ -427,7 +427,7 @@ const PublicProfilePage = () => {
                 <div className="min-w-0">
                   <h2
                     id="coach-profile-title"
-                    className="text-lg font-bold text-slate-900"
+                    className="text-lg font-semibold text-slate-900"
                   >
                     Hồ sơ dạy cầu lông
                   </h2>

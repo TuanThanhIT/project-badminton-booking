@@ -132,7 +132,7 @@ const PostListPage = () => {
                 B-Hub Community
               </div>
 
-              <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
+              <h1 className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
                 Cộng đồng bài đăng
               </h1>
 

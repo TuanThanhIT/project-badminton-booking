@@ -354,7 +354,7 @@ const ProductPage = () => {
                   </p>
                 </div>
 
-                <h2 className="mt-2 text-3xl font-bold text-slate-900">
+                <h2 className="mt-2 text-3xl font-semibold text-slate-900">
                   {cateName || groupName || "Sản phẩm cầu lông"}
                 </h2>
 
@@ -460,7 +460,7 @@ const ProductPage = () => {
             <div className="fixed inset-y-0 right-0 z-50 flex h-screen w-full max-w-md flex-col bg-white shadow-xl">
               <div className="flex items-center justify-between border-b border-slate-200 p-5">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">
+                  <h3 className="text-lg font-semibold text-slate-900">
                     Bộ lọc sản phẩm
                   </h3>
 

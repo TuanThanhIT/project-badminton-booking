@@ -25,6 +25,9 @@ import { getBranchDetail } from "../../redux/slices/user/branchSlice";
 import { upsertBranchFeedback } from "../../redux/slices/user/feedbackSlice";
 import type { FeedbackRating } from "../../types/feedback";
 import { toast } from "react-toastify";
+import TablePagination from "../../components/ui/user/pagination/TablePagination";
+
+const BRANCH_REVIEW_LIMIT = 5;
 
 const BranchDetailPage = () => {
   const { branchId } = useParams();
@@ -36,6 +39,7 @@ const BranchDetailPage = () => {
   const [reviewRating, setReviewRating] = useState<FeedbackRating>(5);
   const [reviewContent, setReviewContent] = useState("");
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewPage, setReviewPage] = useState(1);
 
   useEffect(() => {
     if (branchId) {
@@ -59,6 +63,10 @@ const BranchDetailPage = () => {
       setReviewContent("");
     }
   }, [branchDetail?.myFeedback]);
+
+  useEffect(() => {
+    setReviewPage(1);
+  }, [branchId]);
 
   const renderStars = (rating: number, size = 18) =>
     Array.from({ length: 5 }, (_, index) => {
@@ -133,6 +141,16 @@ const BranchDetailPage = () => {
 
   const images = branchDetail.images || [];
   const displayImage = activeImage || images[0]?.imageUrl || "";
+  const branchFeedbacks = branchDetail.feedbacks || [];
+  const reviewTotalPages = Math.max(
+    1,
+    Math.ceil(branchFeedbacks.length / BRANCH_REVIEW_LIMIT),
+  );
+  const currentReviewPage = Math.min(reviewPage, reviewTotalPages);
+  const paginatedBranchFeedbacks = branchFeedbacks.slice(
+    (currentReviewPage - 1) * BRANCH_REVIEW_LIMIT,
+    currentReviewPage * BRANCH_REVIEW_LIMIT,
+  );
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-16">
@@ -484,8 +502,8 @@ const BranchDetailPage = () => {
                 </div>
 
                 <div className="space-y-3">
-                  {branchDetail.feedbacks?.length ? (
-                    branchDetail.feedbacks.map((feedback) => (
+                  {branchFeedbacks.length ? (
+                    paginatedBranchFeedbacks.map((feedback) => (
                       <div
                         key={feedback.id}
                         className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm"
@@ -525,6 +543,19 @@ const BranchDetailPage = () => {
                   ) : (
                     <div className="rounded-3xl border border-slate-200 bg-white p-5 text-center text-sm text-slate-500 shadow-sm">
                       Chưa có đánh giá nào cho chi nhánh này.
+                    </div>
+                  )}
+
+                  {branchFeedbacks.length > BRANCH_REVIEW_LIMIT && (
+                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                      <TablePagination
+                        page={currentReviewPage}
+                        totalPages={reviewTotalPages}
+                        total={branchFeedbacks.length}
+                        unit="đánh giá"
+                        compact
+                        onPage={setReviewPage}
+                      />
                     </div>
                   )}
                 </div>

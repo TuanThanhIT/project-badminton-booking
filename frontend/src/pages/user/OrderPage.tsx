@@ -134,7 +134,7 @@ const OrderPage = () => {
                 Trung tâm đơn hàng
               </div>
 
-              <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
+              <h1 className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
                 Đơn hàng của tôi
               </h1>
 
@@ -421,7 +421,7 @@ const OrderPage = () => {
                               {/* HEADER ĐƠN CON */}
                               <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                                 <span
-                                  className={`inline-flex rounded-full px-3.5 py-1.5 text-sm font-bold ${ORDER_STATUS_COLOR[order.orderStatus]}`}
+                                  className={`inline-flex rounded-full px-3.5 py-1.5 text-sm font-semibold ${ORDER_STATUS_COLOR[order.orderStatus]}`}
                                 >
                                   {ORDER_STATUS_LABEL[order.orderStatus]}
                                 </span>
@@ -448,19 +448,19 @@ const OrderPage = () => {
                                     />
 
                                     <div className="min-w-0">
-                                      <p className="line-clamp-2 text-base font-bold leading-snug text-slate-800">
+                                      <p className="line-clamp-2 text-base font-semibold leading-snug text-slate-800">
                                         {item.name}
                                       </p>
 
                                       <div className="mt-2 flex flex-wrap items-center gap-2">
-                                        <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-slate-600">
+                                        <span className="rounded-full bg-white px-3 py-1 text-sm font-medium text-slate-600">
                                           x{item.quantity}
                                         </span>
                                       </div>
                                     </div>
 
                                     <div className="shrink-0 text-right">
-                                      <p className="text-base font-extrabold text-sky-700">
+                                      <p className="text-base font-semibold text-sky-700">
                                         {Number(item.price).toLocaleString()}đ
                                       </p>
                                     </div>
@@ -469,14 +469,14 @@ const OrderPage = () => {
                               </div>
 
                               {order.items.length > 2 && (
-                                <p className="mt-3 text-sm font-semibold text-slate-500">
+                                <p className="mt-3 text-sm font-medium text-slate-500">
                                   +{order.items.length - 2} sản phẩm khác
                                 </p>
                               )}
 
                               {/* FOOTER */}
                               <div className="mt-3 flex items-center justify-end border-t border-slate-100 pt-3">
-                                <div className="flex items-center gap-1.5 text-sm font-bold text-sky-600">
+                                <div className="flex items-center gap-1.5 text-sm font-semibold text-sky-600">
                                   <span>Xem chi tiết</span>
 
                                   <ArrowRight
@@ -497,7 +497,7 @@ const OrderPage = () => {
                             </div>
 
                             <div>
-                              <p className="text-sm font-bold text-slate-800">
+                              <p className="text-sm font-semibold text-slate-800">
                                 Tổng thanh toán
                               </p>
 
@@ -513,7 +513,7 @@ const OrderPage = () => {
                                 Tiền hàng
                               </span>
 
-                              <span className="text-sm font-bold text-slate-800">
+                              <span className="text-sm font-semibold text-slate-800">
                                 {Number(group.totalAmount).toLocaleString()}đ
                               </span>
                             </div>
@@ -523,7 +523,7 @@ const OrderPage = () => {
                                 Phí ship
                               </span>
 
-                              <span className="text-sm font-bold text-slate-800">
+                              <span className="text-sm font-semibold text-slate-800">
                                 {Number(
                                   group.totalShippingFee,
                                 ).toLocaleString()}
@@ -532,11 +532,11 @@ const OrderPage = () => {
                             </div>
 
                             <div className="flex items-center justify-between rounded-2xl bg-sky-50 px-4 py-3">
-                              <span className="text-sm font-bold text-sky-700">
+                              <span className="text-sm font-semibold text-sky-700">
                                 Tổng
                               </span>
 
-                              <span className="text-lg font-extrabold text-sky-700">
+                              <span className="text-lg font-semibold text-sky-700">
                                 {Number(group.finalAmount).toLocaleString()}đ
                               </span>
                             </div>

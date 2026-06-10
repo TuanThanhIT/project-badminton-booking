@@ -152,7 +152,7 @@ const PostActions = ({ post, alwaysShowComments = false, onOpenDetail }: Props) 
           onClick={() => {
             if (!alwaysShowComments) onOpenDetail?.();
           }}
-          className={`flex min-h-10 items-center justify-center gap-2 rounded-md px-3 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800 ${
+          className={`flex min-h-10 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800 ${
             alwaysShowComments ? "cursor-default" : ""
           }`}
         >

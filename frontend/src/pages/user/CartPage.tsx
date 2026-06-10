@@ -284,7 +284,7 @@ const CartPage = () => {
                 Giỏ hàng B-Hub
               </div>
 
-              <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
+              <h1 className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
                 Kiểm tra lại <span className="text-sky-300">sản phẩm</span>{" "}
                 trước khi thanh toán
               </h1>
@@ -348,7 +348,7 @@ const CartPage = () => {
                   )}
                 </button>
                 <div>
-                  <h2 className="text-xl font-bold text-slate-800">
+                  <h2 className="text-xl font-semibold text-slate-800">
                     Sản phẩm trong giỏ
                   </h2>
                   <p className="mt-1 text-sm text-slate-500">
@@ -502,7 +502,7 @@ const CartPage = () => {
 
                         <div className="mt-2 border-t border-dashed border-slate-200 pt-2">
                           <p className="text-xs text-slate-400">Thành tiền</p>
-                          <p className="mt-1 text-lg font-bold text-sky-600">
+                          <p className="mt-1 text-lg font-semibold text-sky-600">
                             {formatCurrency(
                               toMoneyNumber(item.price) *
                                 Number(item.quantity || 0),
@@ -538,7 +538,7 @@ const CartPage = () => {
               </div>
 
               <div>
-                <h2 className="text-lg font-bold text-slate-800">
+                <h2 className="text-lg font-semibold text-slate-800">
                   Tóm tắt đơn hàng
                 </h2>
                 <p className="text-sm text-slate-500">Thông tin thanh toán</p>
@@ -572,7 +572,7 @@ const CartPage = () => {
 
             <div className="flex items-center justify-between">
               <span className="font-semibold text-slate-700">Tổng cộng</span>
-              <span className="text-xl font-bold text-sky-600">
+              <span className="text-xl font-semibold text-sky-600">
                 {formatCurrency(selectedTotalAmount)}
               </span>
             </div>

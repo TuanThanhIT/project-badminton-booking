@@ -130,7 +130,7 @@ const Header = ({ cartRef }: HeaderProps) => {
     }`;
 
   const badgeClass =
-    "absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-400 px-1 text-[10px] font-bold text-white shadow";
+    "absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-400 px-1 text-[10px] font-medium text-white shadow";
 
   return (
     <header className="border-b border-slate-200/80 bg-white/95 backdrop-blur-xl">
@@ -146,7 +146,7 @@ const Header = ({ cartRef }: HeaderProps) => {
             className="h-[52px] w-[52px] rounded-2xl border border-sky-100 object-cover shadow-sm"
           />
           <div className="min-w-0">
-            <p className="text-[1.55rem] font-extrabold leading-none tracking-tight text-slate-900 sm:text-[1.65rem]">
+            <p className="text-[1.55rem] font-bold leading-none tracking-tight text-slate-900 sm:text-[1.65rem]">
               B-Hub
             </p>
             <p className="mt-1.5 hidden text-[13px] font-medium leading-snug text-slate-500 sm:block">
@@ -370,7 +370,7 @@ const Header = ({ cartRef }: HeaderProps) => {
                                     {notification.title}
                                   </p>
                                   {!notification.isRead && (
-                                    <span className="shrink-0 rounded-full bg-white px-2 py-1 text-[10px] font-semibold text-sky-700 ring-1 ring-sky-100">
+                                    <span className="shrink-0 rounded-full bg-white px-2 py-1 text-[10px] font-medium text-sky-700 ring-1 ring-sky-100">
                                       Mới
                                     </span>
                                   )}

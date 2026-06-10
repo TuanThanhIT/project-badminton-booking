@@ -207,7 +207,7 @@ const SalaryPage = () => {
               type="button"
               onClick={handleExportExcel}
               disabled={!data}
-              className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 text-sm font-bold text-white hover:bg-white/20 disabled:opacity-50"
+              className="inline-flex h-11 items-center gap-2 rounded-xl border border-emerald-300/40 bg-emerald-600 px-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50"
             >
               <Download className="h-4 w-4" />
               Xuất Excel

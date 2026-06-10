@@ -461,6 +461,77 @@ export interface AdminDashboardRecentItem {
   email?: string;
 }
 
+export interface AdminDashboardPostTypeItem {
+  type: string;
+  label: string;
+  count: number;
+  percentage: number;
+}
+
+export interface AdminDashboardRecentPost {
+  id: number;
+  title: string;
+  content?: string;
+  type: string;
+  label?: string;
+  status: "ACTIVE" | "LOCKED" | string;
+  commentCount: number;
+  createdDate: string;
+  author?: {
+    id?: number;
+    username?: string;
+    fullName?: string;
+    avatar?: string;
+  };
+}
+
+export interface AdminDashboardPostOverview {
+  totalPosts: number;
+  newPostsThisMonth: number;
+  totalComments: number;
+  commentsThisMonth: number;
+  postsByType: AdminDashboardPostTypeItem[];
+  recentPosts: AdminDashboardRecentPost[];
+}
+
+export interface AdminDashboardRatingStarItem {
+  star: number;
+  count: number;
+  percentage: number;
+}
+
+export interface AdminDashboardRecentFeedback {
+  id: number;
+  content: string;
+  rating: number;
+  type: "BRANCH" | "PRODUCT" | string;
+  createdDate: string;
+  user?: {
+    id?: number;
+    username?: string;
+    fullName?: string;
+    avatar?: string;
+  };
+  target?: {
+    id?: number;
+    name?: string;
+    thumbnailUrl?: string;
+    variantInfo?: string | null;
+  };
+  branch?: {
+    id?: number;
+    branchName?: string;
+  } | null;
+}
+
+export interface AdminDashboardFeedbackOverview {
+  totalFeedbacks: number;
+  averageRating: number;
+  lowRatingCount: number;
+  ratingsByStar: AdminDashboardRatingStarItem[];
+  recentFeedbacks: AdminDashboardRecentFeedback[];
+}
+
 export interface AdminDashboardData {
   summary?: {
     todayRevenue: number;
@@ -521,4 +592,6 @@ export interface AdminDashboardData {
   }[];
   recentBookings: AdminDashboardRecentItem[];
   recentOrders: AdminDashboardRecentItem[];
+  postOverview?: AdminDashboardPostOverview;
+  feedbackOverview?: AdminDashboardFeedbackOverview;
 }

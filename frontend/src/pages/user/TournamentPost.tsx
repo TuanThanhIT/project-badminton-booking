@@ -32,8 +32,8 @@ const TournamentPost = () => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-bold text-gray-900">Nguyễn Văn A</h3>
-              <span className="bg-sky-100 text-sky-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+              <h3 className="font-semibold text-gray-900">Nguyễn Văn A</h3>
+              <span className="bg-sky-100 text-sky-600 text-[10px] font-medium px-2 py-0.5 rounded-full uppercase tracking-wider">
                 Giải đấu
               </span>
             </div>
@@ -59,7 +59,7 @@ const TournamentPost = () => {
           <div className="inline-block px-4 py-1 rounded-full border border-amber-500/30 text-amber-700 bg-amber-50 text-sm font-semibold mb-4">
             Giải phong trào Thủ Đức Open 2026
           </div>
-          <h2 className="text-2xl font-black text-gray-800 leading-tight mb-2">
+          <h2 className="text-2xl font-semibold text-gray-800 leading-tight mb-2">
             Thể lệ, hạng mục, phí đăng ký xem trong <br />
             nội dung hoặc chi tiết giải.
           </h2>
@@ -84,7 +84,7 @@ const TournamentPost = () => {
       <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Cột 1: Ban tổ chức */}
         <div className="bg-sky-50/50 p-5 rounded-[2rem] border border-sky-100/50">
-          <h4 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <Users size={18} className="text-sky-600" /> Ban tổ chức & Liên hệ
           </h4>
           <div className="space-y-3 text-sm">
@@ -111,25 +111,25 @@ const TournamentPost = () => {
 
         {/* Cột 2: Timeline */}
         <div className="bg-green-50/30 p-5 rounded-[2rem] border border-green-100/50">
-          <h4 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <Clock size={18} className="text-green-600" /> Timeline Sự Kiện
           </h4>
           <div className="relative pl-6 space-y-6 before:content-[''] before:absolute before:left-[7px] before:top-2 before:bottom-2 before:w-0.5 before:bg-green-200">
             <div>
               <div className="absolute left-0 w-4 h-4 bg-white border-2 border-green-500 rounded-full z-10"></div>
-              <p className="text-xs font-bold text-green-600 uppercase">
+              <p className="text-xs font-medium text-green-600 uppercase">
                 Đăng ký:
               </p>
               <div className="flex items-center gap-1 text-sm text-gray-700 font-medium">
                 <Calendar size={14} /> 1-15 Mar 2026
               </div>
-              <span className="inline-block mt-1 px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded">
+              <span className="inline-block mt-1 px-2 py-0.5 bg-green-500 text-white text-[10px] font-medium rounded">
                 OPEN
               </span>
             </div>
             <div>
               <div className="absolute left-0 w-4 h-4 bg-white border-2 border-gray-300 rounded-full z-10"></div>
-              <p className="text-xs font-bold text-gray-500 uppercase">
+              <p className="text-xs font-medium text-gray-500 uppercase">
                 Ngày sự kiện:
               </p>
               <div className="flex items-center gap-1 text-sm text-gray-700 font-medium">
@@ -141,31 +141,31 @@ const TournamentPost = () => {
 
         {/* Cột 3: Thông tin chi tiết */}
         <div className="bg-amber-50/30 p-5 rounded-[2rem] border border-amber-100/50">
-          <h4 className="font-bold text-gray-800 mb-4 flex items-center gap-2 text-sm uppercase tracking-tight">
+          <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2 text-sm uppercase tracking-tight">
             <Info size={18} className="text-amber-600" /> Thông tin Chi tiết
           </h4>
           <div className="grid grid-cols-2 gap-4 text-xs mb-4">
             <div>
-              <p className="text-gray-400 font-bold mb-1">Thể lệ Phí</p>
-              <p className="font-bold text-gray-700">đăng ký</p>
+              <p className="text-gray-400 font-medium mb-1">Thể lệ Phí</p>
+              <p className="font-medium text-gray-700">đăng ký</p>
             </div>
             <div>
-              <p className="text-gray-400 font-bold mb-1">Hạng mục</p>
-              <ul className="list-disc list-inside font-bold text-gray-700">
+              <p className="text-gray-400 font-medium mb-1">Hạng mục</p>
+              <ul className="list-disc list-inside font-medium text-gray-700">
                 <li>Đơn nam</li>
                 <li>Đôi nam nữ</li>
               </ul>
             </div>
           </div>
           <div className="pt-3 border-t border-amber-100">
-            <p className="text-xs font-bold text-gray-400 mb-2 uppercase">
+            <p className="text-xs font-medium text-gray-400 mb-2 uppercase">
               Hình thức thanh toán
             </p>
             <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-xs font-bold text-green-600">
+              <div className="flex items-center gap-2 text-xs font-medium text-green-600">
                 <CheckCircle2 size={14} /> Online/Offline
               </div>
-              <div className="flex items-center gap-2 text-xs font-bold text-sky-600">
+              <div className="flex items-center gap-2 text-xs font-medium text-sky-600">
                 <Smartphone size={14} /> Liên hệ trong app
               </div>
             </div>
@@ -175,7 +175,7 @@ const TournamentPost = () => {
 
       {/* 4. Đăng ký Ngay Button */}
       <div className="px-4 pb-4">
-        <button className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all transform active:scale-95 shadow-lg shadow-green-200">
+        <button className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 transition-all transform active:scale-95 shadow-lg shadow-green-200">
           <Trophy size={20} />
           ĐĂNG KÝ NGAY
         </button>

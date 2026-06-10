@@ -103,7 +103,7 @@ const CreatePostPage = () => {
                 Tạo bài đăng mới
               </div>
 
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-white leading-tight">
                 Chia sẻ với cộng đồng{" "}
                 <span className="text-sky-300">B-Hub</span>
               </h1>
@@ -123,7 +123,7 @@ const CreatePostPage = () => {
                     <ActiveIcon size={30} />
                   </div>
 
-                  <p className="text-white font-extrabold text-lg">
+                  <p className="text-white font-bold text-lg">
                     {POST_TYPE_LABEL[selectedType]}
                   </p>
 
@@ -168,7 +168,7 @@ const CreatePostPage = () => {
                       <Icon size={21} />
                     </div>
 
-                    <p className="text-sm font-extrabold leading-snug">
+                    <p className="text-sm font-semibold leading-snug">
                       {POST_TYPE_LABEL[type]}
                     </p>
 

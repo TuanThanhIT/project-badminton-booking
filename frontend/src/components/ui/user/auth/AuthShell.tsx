@@ -42,7 +42,7 @@ const AuthShell = ({
                 <div className="inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-sky-100 backdrop-blur-sm">
                   {eyebrow}
                 </div>
-                <h1 className="mt-5 max-w-lg text-4xl font-extrabold leading-tight tracking-tight">
+                <h1 className="mt-5 max-w-lg text-4xl font-bold leading-tight tracking-tight">
                   {title}
                 </h1>
                 <p className="mt-4 max-w-lg text-base leading-relaxed text-sky-100">

@@ -58,7 +58,7 @@ const TablePagination = ({
         Trang <b className="font-semibold text-slate-800">{currentPage}</b> /{" "}
         {displayTotalPages}
         <span className="px-1 text-slate-400">·</span>
-        Tổng <b className="font-bold text-sky-600">{total}</b>
+        Tổng <b className="font-semibold text-sky-600">{total}</b>
         {unit ? ` ${unit}` : ""}
       </p>
       <div

@@ -65,7 +65,7 @@ const RegisterPage = () => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <p className="text-sm font-semibold text-sky-700">Đăng ký</p>
-          <h2 className="mt-2 text-3xl font-extrabold text-slate-900">
+          <h2 className="mt-2 text-3xl font-semibold text-slate-900">
             Bắt đầu với B-Hub
           </h2>
           <p className="mt-2 text-sm leading-6 text-slate-500">

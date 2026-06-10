@@ -91,7 +91,7 @@ const ReviewList = ({ productFeedbacks }: ReviewListProps) => {
                       className="
                         rounded-full bg-sky-50
                         px-2 py-0.5
-                        text-[10px] font-semibold
+                        text-[10px] font-medium
                         text-sky-700
                       "
                     >

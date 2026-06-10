@@ -7,7 +7,7 @@ import { useRef } from "react";
 const UserPrivateLayout = () => {
   const cartRef = useRef<HTMLDivElement | null>(null);
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className="user-typography h-screen flex flex-col overflow-hidden">
       <div className="sticky top-0 z-40 bg-white shadow-sm">
         <Header cartRef={cartRef} />
       </div>

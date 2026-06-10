@@ -495,7 +495,7 @@ const CourtPage = () => {
                 Trung tâm đặt sân
               </div>
 
-              <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
+              <h1 className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
                 Đặt sân cầu lông
               </h1>
 

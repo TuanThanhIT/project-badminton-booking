@@ -311,7 +311,7 @@ const OTPPage = () => {
 
         <div className="pr-12">
           <p className="text-sm font-semibold text-sky-700">Mã OTP</p>
-          <h2 className="mt-2 text-3xl font-extrabold text-slate-900">
+          <h2 className="mt-2 text-3xl font-semibold text-slate-900">
             Nhập mã xác thực
           </h2>
           <p className="mt-2 text-sm leading-6 text-slate-500">
@@ -333,7 +333,7 @@ const OTPPage = () => {
               value={digit}
               onChange={(event) => handleChange(event.target.value, index)}
               onKeyDown={(event) => handleKeyDown(event, index)}
-              className="h-14 rounded-2xl border border-slate-200 bg-slate-50 text-center text-xl font-bold text-slate-900 outline-none transition-all focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100"
+              className="h-14 rounded-2xl border border-slate-200 bg-slate-50 text-center text-xl font-semibold text-slate-900 outline-none transition-all focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100"
             />
           ))}
         </div>

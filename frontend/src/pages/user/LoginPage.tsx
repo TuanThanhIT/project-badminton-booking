@@ -1,4 +1,4 @@
-﻿import { useEffect } from "react";
+import { useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -79,7 +79,7 @@ const LoginPage = () => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div>
           <p className="text-sm font-semibold text-sky-700">Đăng nhập</p>
-          <h2 className="mt-2 text-3xl font-extrabold text-slate-900">
+          <h2 className="mt-2 text-3xl font-semibold text-slate-900">
             Vào tài khoản
           </h2>
           <p className="mt-2 text-sm leading-6 text-slate-500">

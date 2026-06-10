@@ -154,7 +154,7 @@ const OrderResultPage = () => {
             <ReceiptText size={16} className="text-sky-300" />
             Kết quả đơn hàng
           </div>
-          <h1 className="mt-5 text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
+          <h1 className="mt-5 text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
             {title}
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-sky-100 sm:text-base">

@@ -57,7 +57,7 @@ type CoachClassCardProps = {
 };
 
 const actionClass =
-  "inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50";
 
 const CoachClassCard = ({
   cls,
@@ -108,7 +108,7 @@ const CoachClassCard = ({
       <div className="border-b border-slate-100 px-4 py-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="line-clamp-2 text-base font-bold leading-snug text-slate-950">
+            <h3 className="line-clamp-2 text-base font-semibold leading-snug text-slate-950">
               {cls.title}
             </h3>
             <p className="mt-1 text-xs text-slate-500">
@@ -116,14 +116,14 @@ const CoachClassCard = ({
             </p>
           </div>
           <span
-            className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-bold ${statusMeta.badge}`}
+            className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-medium ${statusMeta.badge}`}
           >
             {statusMeta.label}
           </span>
         </div>
 
         {fd.inputLevel ? (
-          <p className="mt-3 inline-flex rounded-full bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700">
+          <p className="mt-3 inline-flex rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700">
             {PLAYER_LEVEL_LABEL[fd.inputLevel] ?? fd.inputLevel}
           </p>
         ) : null}
@@ -169,7 +169,7 @@ const CoachClassCard = ({
               {max != null ? ` / ${max}` : ""} đang học
             </span>
             {cls.stats.pending > 0 ? (
-              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
                 {cls.stats.pending} chờ duyệt
               </span>
             ) : null}

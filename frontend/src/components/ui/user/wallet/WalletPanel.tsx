@@ -1,10 +1,12 @@
 import {
+  AlertTriangle,
   ArrowDownCircle,
   ArrowUpCircle,
   CreditCard,
   Lock,
   RefreshCcw,
   Search,
+  ShieldCheck,
   Wallet,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -113,6 +115,29 @@ const statusClass: Record<string, string> = {
   SUCCESS: "bg-emerald-50 text-emerald-700",
   FAILED: "bg-rose-50 text-rose-700",
   CANCELLED: "bg-slate-100 text-slate-600",
+};
+
+const walletStatusMeta: Record<
+  string,
+  {
+    label: string;
+    description: string;
+    className: string;
+    icon: typeof ShieldCheck;
+  }
+> = {
+  ACTIVE: {
+    label: "Hoạt động",
+    description: "Ví đang sẵn sàng để nạp tiền, rút tiền và thanh toán.",
+    className: "border-emerald-100 bg-emerald-50 text-emerald-700",
+    icon: ShieldCheck,
+  },
+  LOCKED: {
+    label: "Đã khóa",
+    description: "Ví đang bị khóa, các thao tác giao dịch có thể bị hạn chế.",
+    className: "border-rose-100 bg-rose-50 text-rose-700",
+    icon: AlertTriangle,
+  },
 };
 
 const WalletPanel = () => {
@@ -249,6 +274,15 @@ const WalletPanel = () => {
     },
   ];
 
+  const currentWalletStatus = overview?.wallet.status || "ACTIVE";
+  const walletStatus = walletStatusMeta[currentWalletStatus] || {
+    label: currentWalletStatus,
+    description: "Trạng thái ví được đồng bộ từ hệ thống.",
+    className: "border-slate-200 bg-slate-50 text-slate-700",
+    icon: ShieldCheck,
+  };
+  const WalletStatusIcon = walletStatus.icon;
+
   return (
     <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_12px_35px_rgba(15,23,42,0.08)]">
       <div className="border-b border-slate-200 p-5 sm:p-6">
@@ -300,6 +334,19 @@ const WalletPanel = () => {
               Khả dụng: {formatCurrency(overview?.wallet.availableBalance)}
             </p>
 
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${walletStatus.className}`}
+                title={walletStatus.description}
+              >
+                <WalletStatusIcon className="h-4 w-4" />
+                {loading ? "..." : walletStatus.label}
+              </span>
+              <span className="inline-flex rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700">
+                Chờ rút: {formatCurrency(overview?.wallet.pendingWithdrawAmount)}
+              </span>
+            </div>
+
             <div className="mt-5 grid gap-3">
               {statCards.map((item) => (
                 <div
@@ -329,9 +376,12 @@ const WalletPanel = () => {
               </div>
             </div>
 
-            <div className="h-64">
+            <div className="h-[340px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={overview?.chart || []}>
+                <LineChart
+                  data={overview?.chart || []}
+                  margin={{ top: 16, right: 8, bottom: 8, left: 0 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis
                     dataKey="label"

@@ -231,6 +231,45 @@ const ProductPage = () => {
         <aside className="w-full shrink-0 xl:w-[340px]">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex flex-col gap-9">
+              {/* CATEGORY */}
+              <div>
+                <h3 className="mb-5 flex items-center gap-2.5 border-b border-slate-200 pb-4 text-sm font-semibold uppercase tracking-wide text-slate-900">
+                  <Folder size={19} className="text-sky-600" />
+                  Danh mục
+                </h3>
+
+                <ul className="flex flex-col gap-2">
+                  {otherCategories.map((cate) => {
+                    const active = Number(cate.id) === Number(cateId);
+
+                    return (
+                      <li
+                        key={cate.id}
+                        onClick={() =>
+                          navigate(
+                            `/products?cateId=${
+                              cate.id
+                            }&cateName=${encodeURIComponent(
+                              cate.cateName,
+                            )}&groupName=${encodeURIComponent(groupName)}`,
+                          )
+                        }
+                        className={`
+                          cursor-pointer rounded-2xl px-4 py-3
+                          text-[15px] transition-all
+                          ${
+                            active
+                              ? "border border-sky-200 bg-gradient-to-r from-sky-50 to-cyan-50 font-semibold text-sky-700"
+                              : "text-slate-700 hover:bg-slate-50 hover:text-sky-700"
+                          }
+                        `}
+                      >
+                        {cate.cateName}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
               {/* BRANCH */}
               <div>
                 <h3 className="mb-5 flex items-center gap-2.5 border-b border-slate-200 pb-4 text-sm font-semibold uppercase tracking-wide text-slate-900">
@@ -294,46 +333,6 @@ const ProductPage = () => {
                         </li>
                       );
                     })}
-                </ul>
-              </div>
-
-              {/* CATEGORY */}
-              <div>
-                <h3 className="mb-5 flex items-center gap-2.5 border-b border-slate-200 pb-4 text-sm font-semibold uppercase tracking-wide text-slate-900">
-                  <Folder size={19} className="text-sky-600" />
-                  Danh mục
-                </h3>
-
-                <ul className="flex flex-col gap-2">
-                  {otherCategories.map((cate) => {
-                    const active = Number(cate.id) === Number(cateId);
-
-                    return (
-                      <li
-                        key={cate.id}
-                        onClick={() =>
-                          navigate(
-                            `/products?cateId=${
-                              cate.id
-                            }&cateName=${encodeURIComponent(
-                              cate.cateName,
-                            )}&groupName=${encodeURIComponent(groupName)}`,
-                          )
-                        }
-                        className={`
-                          cursor-pointer rounded-2xl px-4 py-3
-                          text-[15px] transition-all
-                          ${
-                            active
-                              ? "border border-sky-200 bg-gradient-to-r from-sky-50 to-cyan-50 font-semibold text-sky-700"
-                              : "text-slate-700 hover:bg-slate-50 hover:text-sky-700"
-                          }
-                        `}
-                      >
-                        {cate.cateName}
-                      </li>
-                    );
-                  })}
                 </ul>
               </div>
             </div>

@@ -19,7 +19,7 @@ jobs:
           script: |
             set -e
 
-            cd /home/deploy/project-badminton-booking
+            cd /home/tuanthanh123/apps/project-badminton-booking
 
             git fetch origin main
             git reset --hard origin/main

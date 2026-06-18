@@ -33,7 +33,7 @@ const AuthShell = ({
               <div className="absolute inset-0 bg-gradient-to-br from-slate-950/70 via-sky-950/35 to-slate-900/10" />
               <div className="absolute inset-x-0 bottom-0 p-10 text-white">
                 <Link
-                  to="/home"
+                  to="/"
                   className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-sky-100 backdrop-blur-sm transition hover:bg-white/15"
                 >
                   <ChevronLeft size={16} />

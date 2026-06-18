@@ -398,7 +398,7 @@ const VNPayResultPage = () => {
 
           {/* ACTION */}
           <div className="flex flex-col gap-3 border-t border-slate-100 p-5 sm:flex-row sm:justify-between sm:p-6">
-            <ActionButton onClick={() => navigate("/home")}>
+            <ActionButton onClick={() => navigate("/")}>
               <Home size={18} />
               Trang chủ
             </ActionButton>

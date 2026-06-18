@@ -236,7 +236,7 @@ const CartPage = () => {
                 <ArrowRight size={18} />
               </button>
               <button
-                onClick={() => navigate("/home")}
+                onClick={() => navigate("/")}
                 className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
               >
                 Về trang chủ
@@ -595,7 +595,7 @@ const CartPage = () => {
             </button>
 
             <button
-              onClick={() => navigate("/home")}
+              onClick={() => navigate("/")}
               className="mt-3 w-full rounded-xl border border-slate-200 px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
             >
               Tiếp tục mua sắm

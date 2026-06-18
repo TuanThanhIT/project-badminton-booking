@@ -50,7 +50,7 @@ const Navbar = () => {
           } flex-col gap-2 pb-3 lg:flex lg:min-h-[58px] lg:flex-row lg:items-center lg:justify-center lg:gap-3 lg:pb-0`}
         >
           <li>
-            <NavLink to="/home" className={linkClass} onClick={closeMenu}>
+            <NavLink to="/" className={linkClass} onClick={closeMenu}>
               {({ isActive }) => (
                 <>
                   <Home className={iconClass({ isActive })} />

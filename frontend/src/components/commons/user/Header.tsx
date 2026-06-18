@@ -138,7 +138,7 @@ const Header = ({ cartRef }: HeaderProps) => {
         <button
           type="button"
           className="flex shrink-0 items-center gap-3 text-left"
-          onClick={() => navigate(accessToken ? "/home" : "/")}
+          onClick={() => navigate("/")}
         >
           <img
             src="/img/logo_badminton.jpg"

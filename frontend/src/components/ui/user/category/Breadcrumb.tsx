@@ -25,7 +25,7 @@ const Breadcrumb = ({
         "
       >
         <NavLink
-          to="/home"
+          to="/"
           className="
             inline-flex shrink-0 items-center gap-1.5
             rounded-lg px-2 py-1

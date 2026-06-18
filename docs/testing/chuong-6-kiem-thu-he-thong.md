@@ -47,7 +47,7 @@ Các chiến lược được áp dụng:
 
 | Mã TC | Chức năng | Dữ liệu kiểm thử | Kết quả mong đợi | Kết quả thực tế | Trạng thái |
 | --- | --- | --- | --- | --- | --- |
-| TC01 | Xem trang chủ | Truy cập `/home` | Trang chủ hiển thị banner, dữ liệu giới thiệu và nội dung tổng quan | Thành công | Pass |
+| TC01 | Xem trang chủ | Truy cập `/` | Trang chủ hiển thị banner, dữ liệu giới thiệu và nội dung tổng quan | Thành công | Pass |
 | TC02 | Đăng ký | Tên đăng nhập, email, mật khẩu hợp lệ | Hệ thống tạo tài khoản chờ xác thực và gửi OTP | Thành công | Pass |
 | TC03 | Xác thực OTP | Email và OTP hợp lệ | Tài khoản được xác thực thành công | Thành công | Pass |
 | TC04 | Đăng nhập khách hàng | Tài khoản `USER`, mật khẩu đúng | Đăng nhập thành công và vào khu vực khách hàng | Thành công | Pass |

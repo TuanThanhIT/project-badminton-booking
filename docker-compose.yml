@@ -51,6 +51,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      TZ: ${TZ:-Asia/Ho_Chi_Minh}
       PORT: ${PORT:-8080}
       CLIENT_URL: ${CLIENT_URL:?CLIENT_URL is required}
       CORS_ORIGIN: ${CORS_ORIGIN:-}
@@ -76,6 +77,7 @@ services:
       VNP_URL: ${VNP_URL:?VNP_URL is required}
       VNP_RETURN_URL: ${VNP_RETURN_URL:?VNP_RETURN_URL is required}
       VNP_IPN_URL: ${VNP_IPN_URL:-}
+      VNP_DEBUG: ${VNP_DEBUG:-false}
       GHN_BASE_URL: ${GHN_BASE_URL:?GHN_BASE_URL is required}
       GHN_TOKEN_DEV: ${GHN_TOKEN_DEV:?GHN_TOKEN_DEV is required}
       OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}

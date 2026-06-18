@@ -53,6 +53,7 @@ services:
       NODE_ENV: production
       PORT: ${PORT:-8080}
       CLIENT_URL: ${CLIENT_URL:?CLIENT_URL is required}
+      CORS_ORIGIN: ${CORS_ORIGIN:-}
       DB_HOST: mysql
       DB_PORT: 3306
       DB_USER: ${DB_USER:?DB_USER is required}

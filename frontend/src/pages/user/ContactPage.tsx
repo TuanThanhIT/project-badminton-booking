@@ -19,7 +19,7 @@ import { getPagedBranches } from "../../redux/slices/user/branchSlice";
 import type { Branch } from "../../types/branch";
 
 const inputClass =
-  "w-full rounded-2xl border border-slate-200 bg-white py-4 pl-12 pr-5 text-slate-800 shadow-sm outline-none transition-all duration-300 placeholder:text-slate-400 hover:border-sky-200 focus:border-sky-400 focus:ring-1 focus:ring-sky-100";
+  "w-full rounded-xl border border-slate-200/90 bg-white py-2.5 pl-11 pr-4 text-sm text-slate-800 outline-none transition-colors placeholder:text-slate-400 hover:border-slate-300 focus:border-sky-400 focus:ring-2 focus:ring-sky-100/70";
 
 const labelClass = "text-sm font-semibold text-slate-700";
 
@@ -101,14 +101,12 @@ const ContactPage = () => {
 
   return (
     <div className="bg-white font-sans text-slate-800">
-      <section className="relative overflow-hidden bg-sky-950 py-20 sm:py-24">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.22),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.14),transparent_35%)]" />
-        <div className="absolute right-0 top-0 h-full w-1/3 translate-x-20 skew-x-12 bg-sky-800/30" />
-
+      <section className="user-hero-surface py-20 sm:py-24">
         <div className="relative z-10 mx-auto max-w-7xl px-4 text-center sm:px-6 lg:text-left">
           <div className="flex flex-col items-center justify-between gap-12 lg:flex-row">
             <div className="lg:w-1/2">
-              <span className="mb-5 inline-block rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-sky-100">
+              <span className="user-hero-badge mb-5">
+                <HeadphonesIcon />
                 Trung tâm hỗ trợ B-Hub
               </span>
 
@@ -214,9 +212,9 @@ const ContactPage = () => {
                       </div>
                     </div>
 
-                    <form className="space-y-5">
-                      <div className="grid gap-5 md:grid-cols-2">
-                        <div className="space-y-2">
+                    <form className="space-y-4">
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="space-y-1.5">
                           <label className={labelClass}>Họ và tên</label>
                           <div className="relative">
                             <User
@@ -231,7 +229,7 @@ const ContactPage = () => {
                           </div>
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <label className={labelClass}>Số điện thoại</label>
                           <div className="relative">
                             <Phone
@@ -247,7 +245,7 @@ const ContactPage = () => {
                         </div>
                       </div>
 
-                      <div className="space-y-2">
+                      <div className="space-y-1.5">
                         <label className={labelClass}>Email</label>
                         <div className="relative">
                           <Mail
@@ -262,7 +260,7 @@ const ContactPage = () => {
                         </div>
                       </div>
 
-                      <div className="space-y-2">
+                      <div className="space-y-1.5">
                         <label className={labelClass}>Vấn đề cần hỗ trợ</label>
                         <div className="relative">
                           <MessageSquare
@@ -285,15 +283,15 @@ const ContactPage = () => {
                         </div>
                       </div>
 
-                      <div className="space-y-2">
+                      <div className="space-y-1.5">
                         <label className={labelClass}>Nội dung chi tiết</label>
                         <div className="relative">
                           <FileText
                             size={18}
-                            className="absolute left-4 top-5 text-slate-400"
+                            className="absolute left-4 top-3.5 text-slate-400"
                           />
                           <textarea
-                            rows={5}
+                            rows={4}
                             placeholder="Nhập nội dung bạn cần hỗ trợ..."
                             className={`${inputClass} resize-none leading-relaxed`}
                           />
@@ -302,7 +300,7 @@ const ContactPage = () => {
 
                       <button
                         type="button"
-                        className="group flex w-full items-center justify-center gap-3 rounded-2xl bg-sky-500 py-4 font-semibold text-white shadow-lg shadow-sky-100 transition-all duration-300 hover:bg-sky-600 hover:shadow-sky-200 active:scale-[0.98]"
+                        className="group flex w-full items-center justify-center gap-2.5 rounded-xl bg-sky-500 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:bg-sky-600 active:scale-[0.98]"
                       >
                         <Send
                           size={20}

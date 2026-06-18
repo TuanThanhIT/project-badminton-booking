@@ -34,6 +34,8 @@ const App = () => {
       </AIChatProvider>
 
       <ToastContainer
+        className="app-toast-container"
+        toastClassName="app-toast"
         position="top-right"
         autoClose={2000}
         hideProgressBar={false}
@@ -41,6 +43,7 @@ const App = () => {
         draggable
         pauseOnHover
         theme="colored"
+        limit={3}
       />
     </Router>
   );

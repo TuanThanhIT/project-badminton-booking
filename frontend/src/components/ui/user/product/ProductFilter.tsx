@@ -118,7 +118,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
     return config.map((filter) => (
       <div
         key={filter.key}
-        className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm"
+        className="rounded-lg border border-gray-200 bg-white p-3.5 shadow-sm"
       >
         <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">
           {filter.label}
@@ -207,14 +207,14 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden gap-4">
+    <div className="flex h-full flex-col gap-3 overflow-hidden">
       {/* Filters */}
-      <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+      <div className="flex-1 space-y-3 overflow-y-auto pr-1">
         {renderFilters()}
       </div>
 
       {/* Sort */}
-      <div className="shrink-0 border-t pt-4">
+      <div className="shrink-0 border-t pt-3">
         <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">
           Sắp xếp
         </h3>
@@ -233,7 +233,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
       </div>
 
       {/* Buttons */}
-      <div className="flex flex-col gap-3 shrink-0 border-t pt-4">
+      <div className="flex shrink-0 flex-col gap-2.5 border-t pt-3">
         <button
           onClick={viewResults}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-semibold shadow-sm transition"

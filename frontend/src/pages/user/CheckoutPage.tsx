@@ -361,8 +361,7 @@ const CheckoutPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-700">
-      <section className="relative overflow-hidden bg-sky-950 py-12 sm:py-14 lg:py-16">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.24),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.16),transparent_35%)]" />
+      <section className="user-hero-surface py-12 sm:py-14 lg:py-16">
         <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="flex items-start gap-4">
@@ -377,8 +376,8 @@ const CheckoutPage = () => {
                     <ArrowLeft size={21} />
                   </button>
 
-                  <div className="inline-flex h-10 items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-medium text-sky-100 backdrop-blur-sm">
-                    <Receipt size={16} className="text-sky-300" />
+                  <div className="user-hero-badge">
+                    <Receipt />
                     <span>B-Hub Checkout</span>
                   </div>
                 </div>

@@ -101,12 +101,12 @@ const MyClassEnrollmentsPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-700">
-      <section className="bg-[#0b3f56] text-white">
+      <section className="user-hero-surface text-white">
         <div className="mx-auto max-w-7xl px-4 pb-28 pt-14 sm:px-6 lg:pt-16">
           <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
             <div className="max-w-3xl">
-              <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-sky-100">
-                <CalendarCheck size={16} className="text-sky-200" />
+              <div className="user-hero-badge mb-8">
+                <CalendarCheck />
                 Lớp học của tôi
               </div>
               <h1 className="text-4xl font-bold leading-tight sm:text-5xl">
@@ -116,6 +116,17 @@ const MyClassEnrollmentsPage = () => {
                 Theo dõi trạng thái đăng ký và các lớp đang tham gia trong một
                 nơi.
               </p>
+
+              <div className="mt-6 flex flex-wrap gap-3 text-sm text-sky-100">
+                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2">
+                  <CalendarCheck size={16} />
+                  Theo dõi trạng thái lớp
+                </div>
+                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2">
+                  <Search size={16} />
+                  Khám phá lớp phù hợp
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3 sm:min-w-[360px]">

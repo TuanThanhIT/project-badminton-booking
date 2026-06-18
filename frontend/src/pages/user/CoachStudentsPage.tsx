@@ -598,12 +598,12 @@ const CoachStudentsPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-700">
-      <section className="bg-[#0b3f56] text-white">
+      <section className="user-hero-surface text-white">
         <div className="mx-auto max-w-7xl px-4 pb-28 pt-14 sm:px-6 lg:pt-16">
           <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
             <div className="max-w-3xl">
-              <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-sky-100">
-                <GraduationCap size={16} className="text-sky-200" />
+              <div className="user-hero-badge mb-8">
+                <GraduationCap />
                 Khu vực huấn luyện viên
               </div>
               <h1 className="text-4xl font-bold leading-tight sm:text-5xl">
@@ -613,6 +613,17 @@ const CoachStudentsPage = () => {
                 Duyệt đăng ký, theo dõi học viên, chat và gửi thông báo cho từng
                 lớp.
               </p>
+
+              <div className="mt-6 flex flex-wrap gap-3 text-sm text-sky-100">
+                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2">
+                  <Users size={16} />
+                  Quản lý học viên
+                </div>
+                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2">
+                  <MessageCircle size={16} />
+                  Chat và thông báo
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-3 gap-3 sm:min-w-[480px]">

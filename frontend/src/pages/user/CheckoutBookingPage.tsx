@@ -105,7 +105,7 @@ const CheckoutBookingPage = () => {
   if (!state) {
     return (
       <div className="min-h-screen bg-slate-50 text-slate-700">
-        <section className="h-36 bg-sky-950" />
+        <section className="user-hero-surface h-36" />
 
         <main className="mx-auto -mt-20 flex max-w-7xl justify-center px-4 pb-16 sm:px-6">
           <div className="w-full max-w-xl rounded-[2rem] border border-slate-200 bg-white p-8 text-center shadow-[0_18px_46px_rgba(15,23,42,0.1)]">
@@ -303,8 +303,7 @@ const CheckoutBookingPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-12 text-slate-700">
-      <section className="relative h-44 overflow-hidden bg-sky-950">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.22),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.14),transparent_32%)]" />
+      <section className="user-hero-surface h-44">
       </section>
 
       <main className="relative z-10 mx-auto -mt-28 max-w-[1360px] px-4 sm:px-6 xl:px-8">

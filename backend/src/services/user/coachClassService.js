@@ -44,7 +44,21 @@ const studentInclude = {
 const postInclude = {
   model: Post,
   as: "post",
-  attributes: ["id", "title", "type", "formData", "authorId"],
+  attributes: ["id", "title", "content", "type", "formData", "authorId", "createdAt"],
+  include: [
+    {
+      model: User,
+      as: "author",
+      attributes: ["id", "username"],
+      include: [
+        {
+          model: Profile,
+          as: "profile",
+          attributes: ["fullName", "avatar", "level"],
+        },
+      ],
+    },
+  ],
 };
 
 const assertClassPost = async (postId, transaction) => {
@@ -89,7 +103,18 @@ const mapEnrollment = (row) => ({
     ? {
         id: row.post.id,
         title: row.post.title,
+        content: row.post.content,
         formData: row.post.formData,
+        createdAt: row.post.createdAt,
+        coach: row.post.author
+          ? {
+              id: row.post.author.id,
+              username: row.post.author.username,
+              fullName: row.post.author.profile?.fullName || row.post.author.username,
+              avatar: row.post.author.profile?.avatar || null,
+              level: row.post.author.profile?.level || null,
+            }
+          : null,
       }
     : null,
 });

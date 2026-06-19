@@ -1,9 +1,10 @@
 -- Verification queries for [DEMO-SEED-3M] data.
--- Scope: 2026-03-10 00:00:00 to 2026-06-10 23:59:59, Asia/Ho_Chi_Minh.
+-- Scope: 2026-03-10 00:00:00 to 2026-06-30 23:59:59, Asia/Ho_Chi_Minh.
 
 SET @demo_marker = '%[DEMO-SEED-3M]%';
 SET @demo_start = '2026-03-10 00:00:00';
-SET @demo_end = '2026-06-10 23:59:59';
+SET @demo_end = '2026-06-30 23:59:59';
+SET @feedback_end = '2026-06-30 23:59:59';
 
 -- 1) Demo user totals by role.
 SELECT r.name AS roleName, COUNT(*) AS total
@@ -84,7 +85,36 @@ HAVING ABS(og.totalAmount - COALESCE(SUM(o.subtotal), 0)) > 1
 
 SELECT trackingCode, COUNT(*) AS total FROM Orders WHERE trackingCode LIKE 'BH-DEMO-%' GROUP BY trackingCode HAVING COUNT(*) > 1;
 
--- 8) Shipping logs with status not matching latest order state.
+-- 8) Feedback coverage through the end of June 2026.
+SELECT DATE(createdAt) AS feedbackDate,
+       COUNT(*) AS total,
+       SUM(variantId IS NOT NULL) AS productFeedbacks,
+       SUM(branchId IS NOT NULL) AS branchFeedbacks,
+       ROUND(AVG(rating), 2) AS averageRating
+FROM Feedbacks
+WHERE content LIKE @demo_marker
+GROUP BY DATE(createdAt)
+ORDER BY feedbackDate;
+
+SELECT MIN(createdAt) AS firstFeedbackAt,
+       MAX(createdAt) AS lastFeedbackAt,
+       COUNT(*) AS total
+FROM Feedbacks
+WHERE content LIKE @demo_marker;
+
+SELECT *
+FROM Feedbacks
+WHERE content LIKE @demo_marker
+  AND createdAt > @feedback_end;
+
+SELECT f.id, f.userId, f.orderId, f.variantId, o.orderStatus
+FROM Feedbacks f
+JOIN Orders o ON o.id = f.orderId
+WHERE f.content LIKE @demo_marker
+  AND f.variantId IS NOT NULL
+  AND o.orderStatus <> 'COMPLETED';
+
+-- 9) Shipping logs with status not matching latest order state.
 SELECT o.id, o.shippingStatus, MAX(osl.eventTime) AS latestEventTime
 FROM Orders o
 LEFT JOIN OrderShippingLogs osl ON osl.orderId = o.id
@@ -92,7 +122,7 @@ WHERE o.trackingCode LIKE 'BH-DEMO-%'
 GROUP BY o.id, o.shippingStatus
 HAVING latestEventTime IS NULL;
 
--- 9) Payment distribution, orphan targets, and invalid refunds.
+-- 10) Payment distribution, orphan targets, and invalid refunds.
 SELECT paymentMethod, paymentStatus, targetPaymentType, COUNT(*) AS total, SUM(paymentAmount) AS amount
 FROM Payments
 WHERE externalId LIKE 'DEMO-EXT-%'
@@ -112,7 +142,7 @@ FROM Payments
 WHERE externalId LIKE 'DEMO-EXT-%'
   AND ((paymentStatus <> 'REFUNDED' AND refundAmount IS NOT NULL) OR (paymentStatus = 'REFUNDED' AND (refundAmount IS NULL OR refundAt IS NULL)));
 
--- 10) Work shift consistency.
+-- 11) Work shift consistency.
 SELECT wse.*
 FROM WorkShiftEmployees wse
 JOIN WorkShifts ws ON ws.id = wse.workShiftId
@@ -122,7 +152,7 @@ WHERE ws.shiftName LIKE @demo_marker AND be.branchId <> ws.branchId;
 SELECT * FROM WorkShiftEmployees WHERE checkInTime IS NOT NULL AND checkOutTime IS NOT NULL AND checkInTime > checkOutTime;
 SELECT * FROM WorkShifts WHERE shiftName LIKE @demo_marker AND status = 'CANCELLED' AND actualWorkingHours > 0;
 
--- 11) Coach/class consistency.
+-- 12) Coach/class consistency.
 SELECT cr.*
 FROM ClassRooms cr
 LEFT JOIN CoachProfiles cp ON cp.id = cr.coachProfileId
@@ -133,7 +163,7 @@ FROM ClassEnrollments
 GROUP BY classId, userId
 HAVING COUNT(*) > 1;
 
--- 12) Social and chat consistency.
+-- 13) Social and chat consistency.
 SELECT userId, postId, COUNT(*) AS total
 FROM PostLikes
 GROUP BY userId, postId
@@ -149,14 +179,14 @@ FROM Messages m
 LEFT JOIN ConversationParticipants cp ON cp.conversationId = m.conversationId AND cp.userId = m.senderId
 WHERE m.body LIKE @demo_marker AND cp.id IS NULL;
 
--- 13) Revenue by day/month/branch/source/method.
-SELECT DATE(p.createdAt) AS dayKey, p.paymentMethod, p.targetPaymentType, COUNT(*) AS payments, SUM(p.paymentAmount) AS amount
+-- 14) Revenue by day/month/branch/source/method.
+SELECT DATE(p.paidAt) AS dayKey, p.paymentMethod, p.targetPaymentType, COUNT(*) AS payments, SUM(p.paymentAmount) AS amount
 FROM Payments p
-WHERE p.externalId LIKE 'DEMO-EXT-%' AND p.paymentStatus = 'PAID'
-GROUP BY DATE(p.createdAt), p.paymentMethod, p.targetPaymentType
+WHERE p.externalId LIKE 'DEMO-EXT-%' AND p.paymentStatus = 'PAID' AND p.paidAt IS NOT NULL
+GROUP BY DATE(p.paidAt), p.paymentMethod, p.targetPaymentType
 ORDER BY dayKey, p.targetPaymentType, p.paymentMethod;
 
-SELECT DATE_FORMAT(p.createdAt, '%Y-%m') AS monthKey,
+SELECT DATE_FORMAT(p.paidAt, '%Y-%m') AS monthKey,
        COALESCE(b.branchId, o.branchId) AS branchId,
        p.targetPaymentType,
        p.paymentMethod,
@@ -166,6 +196,6 @@ FROM Payments p
 LEFT JOIN Bookings b ON p.targetPaymentType = 'BOOKING' AND p.targetPaymentId = b.id
 LEFT JOIN OrderGroups og ON p.targetPaymentType = 'ORDER' AND p.targetPaymentId = og.id
 LEFT JOIN Orders o ON o.orderGroupId = og.id
-WHERE p.externalId LIKE 'DEMO-EXT-%' AND p.paymentStatus = 'PAID'
-GROUP BY DATE_FORMAT(p.createdAt, '%Y-%m'), COALESCE(b.branchId, o.branchId), p.targetPaymentType, p.paymentMethod
+WHERE p.externalId LIKE 'DEMO-EXT-%' AND p.paymentStatus = 'PAID' AND p.paidAt IS NOT NULL
+GROUP BY DATE_FORMAT(p.paidAt, '%Y-%m'), COALESCE(b.branchId, o.branchId), p.targetPaymentType, p.paymentMethod
 ORDER BY monthKey, branchId, p.targetPaymentType, p.paymentMethod;

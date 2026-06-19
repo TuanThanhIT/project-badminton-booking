@@ -32,8 +32,13 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
 }) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const minPrice = filterConfig[groupName]?.[0]?.min || 0;
-  const maxPrice = filterConfig[groupName]?.[0]?.max || 10000000;
+  const normalizedGroupName = groupName.trim().toLocaleUpperCase("vi-VN");
+  const groupFilters: FilterOption[] = filterConfig[normalizedGroupName] || [];
+  const priceFilter = groupFilters.find(
+    (filter) => filter.key === "pricesRange" && filter.type === "range",
+  );
+  const minPrice = priceFilter?.min ?? 0;
+  const maxPrice = priceFilter?.max ?? 10000000;
 
   const [filters, setFilters] = useState<Filters>({
     pricesRange: [minPrice, maxPrice],
@@ -113,9 +118,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
   };
 
   const renderFilters = () => {
-    const config: FilterOption[] = filterConfig[groupName] || [];
-
-    return config.map((filter) => (
+    return groupFilters.map((filter) => (
       <div
         key={filter.key}
         className="rounded-lg border border-gray-200 bg-white p-3.5 shadow-sm"

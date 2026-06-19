@@ -1,13 +1,20 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
+  Banknote,
+  BookOpenCheck,
+  CalendarDays,
   CalendarCheck,
   ChevronLeft,
   ChevronRight,
+  Clock3,
   Filter,
   GraduationCap,
   Loader2,
+  MapPin,
   Search,
+  UserRound,
+  UsersRound,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import coachClassService from "../../services/user/coachClassService";
@@ -43,6 +50,266 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const LIMIT = 10;
+const WEEKDAYS = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+
+const formatDate = (value?: string | null) =>
+  value ? new Date(value).toLocaleDateString("vi-VN") : null;
+
+const cleanClassText = (value?: string | null) =>
+  String(value || "")
+    .replace(/\[DEMO-SEED-3M\]\s*/gi, "")
+    .replace(/\bLop cau long demo\b/gi, "Lớp cầu lông")
+    .replace(/\bLop huong dan ky thuat co ban, danh doi va phan xa cho hoc vien demo\.?/gi, "Lớp hướng dẫn kỹ thuật cơ bản, đánh đôi và rèn luyện phản xạ dành cho học viên.")
+    .trim();
+
+const formatMoney = (value?: string | number | null) => {
+  if (value === null || value === undefined || value === "") return null;
+  const numeric = Number(String(value).replace(/[^\d.-]/g, ""));
+  return Number.isFinite(numeric)
+    ? new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
+        maximumFractionDigits: 0,
+      }).format(numeric)
+    : String(value);
+};
+
+type EnrollmentCardProps = {
+  item: ClassEnrollmentItem;
+  acting: boolean;
+  onCancel: () => void;
+};
+
+const EnrollmentCard = ({
+  item,
+  acting,
+  onCancel,
+}: EnrollmentCardProps) => {
+  const canCancel = item.status === "PENDING" || item.status === "ACTIVE";
+  const formData = (item.post?.formData || {}) as {
+    imageUrl?: string;
+    images?: string[];
+    inputLevel?: string;
+    maxStudents?: number;
+    capacity?: number;
+    tuitionFee?: string | number;
+    fee?: string | number;
+    startDate?: string;
+    schedule?: {
+      weekdays?: number[];
+      startDate?: string;
+      startTime?: string;
+      endTime?: string;
+    };
+    location?: {
+      branchName?: string;
+      address?: string;
+      district?: string;
+      province?: string;
+      branchId?: number;
+    };
+  };
+
+  const imageUrl = formData.imageUrl || formData.images?.[0];
+  const classTitle =
+    cleanClassText(item.post?.title) || `Lớp #${item.postId}`;
+  const classContent = cleanClassText(item.post?.content);
+  const startDate = formData.schedule?.startDate || formData.startDate;
+  const tuitionFee = formatMoney(formData.tuitionFee ?? formData.fee);
+  const capacity = formData.maxStudents ?? formData.capacity;
+  const weekdays = formData.schedule?.weekdays
+    ?.map((day) => WEEKDAYS[day])
+    .join(", ");
+  const time =
+    formData.schedule?.startTime && formData.schedule?.endTime
+      ? `${formData.schedule.startTime} - ${formData.schedule.endTime}`
+      : null;
+  const location =
+    [
+      formData.location?.branchName,
+      formData.location?.address,
+      formData.location?.district,
+      formData.location?.province,
+    ]
+      .filter(Boolean)
+      .join(", ") ||
+    (formData.location?.branchId
+      ? `Chi nhánh #${formData.location.branchId}`
+      : null);
+
+  return (
+    <article className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-md">
+      <div className="grid md:grid-cols-[220px_minmax(0,1fr)]">
+        <div className="relative min-h-44 overflow-hidden bg-gradient-to-br from-sky-600 via-cyan-600 to-indigo-700">
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt={classTitle}
+              className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            />
+          ) : (
+            <>
+              <div className="absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/10" />
+              <div className="absolute -bottom-12 -left-8 h-40 w-40 rounded-full bg-cyan-300/15" />
+              <div className="relative flex h-full min-h-44 flex-col items-center justify-center px-5 text-center text-white">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/20 bg-white/15 backdrop-blur">
+                  <GraduationCap className="h-8 w-8" />
+                </div>
+                <p className="mt-4 text-sm font-semibold">Lớp cầu lông B-Hub</p>
+                <p className="mt-1 text-xs text-sky-100">
+                  Luyện tập · Kết nối · Tiến bộ
+                </p>
+              </div>
+            </>
+          )}
+
+          <span
+            className={`absolute left-3 top-3 rounded-full border px-2.5 py-1 text-xs font-semibold shadow-sm ${
+              STATUS_BADGE[item.status] || STATUS_BADGE.CANCELLED
+            }`}
+          >
+            {STATUS_LABEL[item.status] || item.status}
+          </span>
+        </div>
+
+        <div className="flex min-w-0 flex-col p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-sky-600">
+                <BookOpenCheck className="h-3.5 w-3.5" />
+                Thông tin lớp học
+              </p>
+              <h2 className="mt-2 line-clamp-2 text-lg font-bold leading-snug text-slate-950">
+                {classTitle}
+              </h2>
+              {classContent ? (
+                <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-500">
+                  {classContent}
+                </p>
+              ) : null}
+            </div>
+
+            {canCancel ? (
+              <button
+                type="button"
+                disabled={acting}
+                onClick={onCancel}
+                className="h-10 shrink-0 rounded-xl border border-red-100 bg-red-50 px-3 text-xs font-semibold text-red-600 transition hover:border-red-200 hover:bg-red-100 disabled:opacity-50"
+              >
+                {acting ? "Đang xử lý..." : "Hủy đăng ký"}
+              </button>
+            ) : null}
+          </div>
+
+          <div className="mt-4 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+            {item.post?.coach ? (
+              <div className="flex items-center gap-2.5 rounded-xl bg-slate-50 px-3 py-2.5">
+                {item.post.coach.avatar ? (
+                  <img
+                    src={item.post.coach.avatar}
+                    alt={item.post.coach.fullName}
+                    className="h-8 w-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <UserRound className="h-4 w-4 text-indigo-500" />
+                )}
+                <div className="min-w-0">
+                  <p className="text-[11px] text-slate-400">Huấn luyện viên</p>
+                  <p className="truncate text-sm font-semibold text-slate-700">
+                    {item.post.coach.fullName}
+                  </p>
+                </div>
+              </div>
+            ) : null}
+
+            {startDate ? (
+              <InfoTile
+                icon={<CalendarDays className="h-4 w-4 text-sky-600" />}
+                label="Ngày bắt đầu"
+                value={formatDate(startDate) || ""}
+              />
+            ) : null}
+            {time || weekdays ? (
+              <InfoTile
+                icon={<Clock3 className="h-4 w-4 text-amber-600" />}
+                label="Lịch học"
+                value={[weekdays, time].filter(Boolean).join(" · ")}
+              />
+            ) : null}
+            {location ? (
+              <InfoTile
+                icon={<MapPin className="h-4 w-4 text-rose-500" />}
+                label="Địa điểm"
+                value={location}
+              />
+            ) : null}
+            {tuitionFee ? (
+              <InfoTile
+                icon={<Banknote className="h-4 w-4 text-emerald-600" />}
+                label="Học phí"
+                value={tuitionFee}
+                valueClassName="text-emerald-700"
+              />
+            ) : null}
+            {capacity ? (
+              <InfoTile
+                icon={<UsersRound className="h-4 w-4 text-violet-600" />}
+                label="Quy mô lớp"
+                value={`Tối đa ${capacity} học viên`}
+              />
+            ) : null}
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-slate-100 pt-3 text-xs text-slate-500">
+            <span className="inline-flex items-center gap-1.5">
+              <CalendarCheck className="h-3.5 w-3.5 text-sky-600" />
+              Đăng ký {formatDate(item.createdAt)}
+            </span>
+            {formData.inputLevel ? (
+              <span className="inline-flex items-center gap-1.5">
+                <GraduationCap className="h-3.5 w-3.5 text-indigo-500" />
+                Trình độ: {formData.inputLevel}
+              </span>
+            ) : null}
+          </div>
+
+          {item.coachNote ? (
+            <p className="mt-3 rounded-xl bg-sky-50 px-3 py-2 text-xs text-sky-700">
+              Ghi chú HLV: {item.coachNote}
+            </p>
+          ) : null}
+          {item.rejectReason ? (
+            <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-600">
+              Lý do: {item.rejectReason}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </article>
+  );
+};
+
+const InfoTile = ({
+  icon,
+  label,
+  value,
+  valueClassName = "text-slate-700",
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+  valueClassName?: string;
+}) => (
+  <div className="flex min-w-0 items-center gap-2.5 rounded-xl bg-slate-50 px-3 py-2.5">
+    <span className="shrink-0">{icon}</span>
+    <div className="min-w-0">
+      <p className="text-[11px] text-slate-400">{label}</p>
+      <p className={`truncate text-sm font-semibold ${valueClassName}`} title={value}>
+        {value}
+      </p>
+    </div>
+  </div>
+);
 
 const MyClassEnrollmentsPage = () => {
   const [enrollments, setEnrollments] = useState<ClassEnrollmentItem[]>([]);
@@ -237,56 +504,13 @@ const MyClassEnrollmentsPage = () => {
             ) : (
               <div className="space-y-3">
                 {enrollments.map((item) => {
-                  const canCancel =
-                    item.status === "PENDING" || item.status === "ACTIVE";
-
                   return (
-                    <article
+                    <EnrollmentCard
                       key={item.id}
-                      className="rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-sky-200 hover:bg-slate-50"
-                    >
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h2 className="font-semibold text-slate-950">
-                              {item.post?.title || `Lớp #${item.postId}`}
-                            </h2>
-                            <span
-                              className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${
-                                STATUS_BADGE[item.status] ||
-                                STATUS_BADGE.CANCELLED
-                              }`}
-                            >
-                              {STATUS_LABEL[item.status] || item.status}
-                            </span>
-                          </div>
-                          <p className="mt-1 text-xs text-slate-500">
-                            Đăng ký{" "}
-                            {new Date(item.createdAt).toLocaleDateString(
-                              "vi-VN",
-                            )}
-                          </p>
-                          {item.rejectReason ? (
-                            <p className="mt-1 text-xs text-red-600">
-                              Lý do: {item.rejectReason}
-                            </p>
-                          ) : null}
-                        </div>
-
-                        {canCancel ? (
-                          <button
-                            type="button"
-                            disabled={actingId === item.id}
-                            onClick={() => handleCancel(item.id)}
-                            className="h-10 shrink-0 rounded-xl border border-slate-200 px-3 text-xs font-medium text-slate-700 transition hover:bg-white disabled:opacity-50"
-                          >
-                            {actingId === item.id
-                              ? "Đang xử lý..."
-                              : "Hủy đăng ký"}
-                          </button>
-                        ) : null}
-                      </div>
-                    </article>
+                      item={item}
+                      acting={actingId === item.id}
+                      onCancel={() => handleCancel(item.id)}
+                    />
                   );
                 })}
               </div>

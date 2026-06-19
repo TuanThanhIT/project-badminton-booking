@@ -108,11 +108,11 @@ const ProductCard = ({
   onClick,
 }: ProductCardProps) => {
   const cardClass =
-    "group relative h-full cursor-pointer overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-sky-300 hover:shadow-lg";
+    "group relative h-fit self-start cursor-pointer overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-sky-300 hover:shadow-lg";
   const imageClass =
     "h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105";
   const actionBtnClass =
-    "mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700 transition-all duration-300 hover:border-sky-600 hover:bg-sky-600 hover:text-white active:scale-[0.98]";
+    "flex w-full items-center justify-center gap-2 rounded-2xl border border-sky-100 bg-sky-50 px-4 py-2.5 text-sm font-semibold text-sky-700 transition-all duration-300 hover:border-sky-600 hover:bg-sky-600 hover:text-white active:scale-[0.98]";
 
   return (
     <article onClick={onClick} className={cardClass}>
@@ -156,62 +156,62 @@ const ProductCard = ({
         )}
       </div>
 
-      <div className="p-[18px]">
+      <div className="flex flex-col p-[18px]">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <p className="line-clamp-1 text-[11px] font-medium uppercase tracking-wide text-sky-600">
+          <p className="min-w-0 flex-1 truncate text-[11px] font-medium uppercase tracking-wide text-sky-600">
             {loading ? "..." : product?.brand}
           </p>
 
           {!loading && product?.category?.cateName && (
-            <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
+            <span
+              className="max-w-[58%] shrink-0 truncate rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600"
+              title={product.category.cateName}
+            >
               {product.category.cateName}
             </span>
           )}
         </div>
 
         <h3
-          className="
-    mt-1.5 line-clamp-2 min-h-[56px]
-    text-[17px] font-semibold leading-snug
-    text-slate-700 transition
-    group-hover:text-sky-700
-  "
+          className="mt-1.5 line-clamp-2 h-12 max-h-12 shrink-0 overflow-hidden text-[17px] font-semibold leading-6 text-slate-700 transition group-hover:text-sky-700"
           title={loading ? "Đang tải sản phẩm..." : product?.productName}
         >
           {loading ? "Đang tải sản phẩm..." : product?.productName}
         </h3>
 
-        <div className="mt-2 flex flex-wrap items-baseline gap-2">
-          <span className="text-[19px] font-semibold tracking-tight text-sky-700">
-            {loading
-              ? "--"
-              : formatPrice(
-                  product?.minDiscountedPrice || product?.minPrice || 0,
-                )}
-          </span>
-
-          {!loading && product && product.discount > 0 && (
-            <span className="text-[13px] text-slate-400 line-through">
-              {formatPrice(product.minPrice)}
+        <div className="mt-3 flex min-h-8 shrink-0 items-center justify-between gap-2">
+          <div className="flex min-w-0 items-baseline gap-1.5">
+            <span className="whitespace-nowrap text-[19px] font-semibold tracking-tight text-sky-700">
+              {loading
+                ? "--"
+                : formatPrice(
+                    product?.minDiscountedPrice || product?.minPrice || 0,
+                  )}
             </span>
+
+            {!loading && product && product.discount > 0 && (
+              <span className="hidden whitespace-nowrap text-[11px] text-slate-400 line-through 2xl:inline">
+                {formatPrice(product.minPrice)}
+              </span>
+            )}
+          </div>
+
+          {!loading && (
+            <div className="flex shrink-0 items-center gap-1 text-[11px] font-medium">
+              {product?.reviewCount ? (
+                <span className="whitespace-nowrap rounded-full bg-amber-50 px-2 py-1 text-amber-600">
+                  ★ {product.avgRating} ({product.reviewCount})
+                </span>
+              ) : null}
+
+              {product?.soldCount ? (
+                <span className="whitespace-nowrap rounded-full bg-orange-50 px-2 py-1 text-orange-600">
+                  Đã bán {formatNumber(product.soldCount)}
+                </span>
+              ) : null}
+            </div>
           )}
         </div>
-
-        {!loading && (
-          <div className="mt-2 flex flex-wrap gap-2 text-xs font-medium text-slate-500">
-            {product?.soldCount ? (
-              <span className="rounded-full bg-orange-50 px-2.5 py-1 text-orange-600">
-                Đã bán {formatNumber(product.soldCount)}
-              </span>
-            ) : null}
-
-            {product?.reviewCount ? (
-              <span className="rounded-full bg-amber-50 px-2.5 py-1 text-amber-600">
-                ★ {product.avgRating} ({product.reviewCount})
-              </span>
-            ) : null}
-          </div>
-        )}
 
         {!loading && (
           <button
@@ -220,7 +220,7 @@ const ProductCard = ({
               event.stopPropagation();
               onClick?.();
             }}
-            className={actionBtnClass}
+            className={`${actionBtnClass} mt-3`}
           >
             Xem chi tiết
             <ArrowRight

@@ -241,43 +241,6 @@ const BranchDetailPage = () => {
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_420px]">
           {/* LEFT */}
           <div className="min-w-0 space-y-6">
-            {/* QUICK INFO */}
-            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_8px_26px_rgba(15,23,42,0.05)]">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-sky-100 bg-sky-50 text-sky-600">
-                    <MapPin size={21} />
-                  </div>
-
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-500">
-                      Địa chỉ
-                    </p>
-                    <p className="mt-1 text-sm font-medium leading-relaxed text-slate-800">
-                      {branchDetail.fullAddress}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_8px_26px_rgba(15,23,42,0.05)]">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-emerald-100 bg-emerald-50 text-emerald-600">
-                    <Phone size={21} />
-                  </div>
-
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-500">
-                      Điện thoại
-                    </p>
-                    <p className="mt-1 text-sm font-medium text-slate-800">
-                      {branchDetail.phoneNumber}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </section>
-
             {/* MANAGERS */}
             {branchDetail.managers?.length > 0 && (
               <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_12px_35px_rgba(15,23,42,0.08)]">

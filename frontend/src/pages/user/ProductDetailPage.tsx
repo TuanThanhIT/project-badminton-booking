@@ -35,6 +35,7 @@ import {
 
 import Breadcrumb from "../../components/ui/user/category/Breadcrumb";
 import ProductsRelated from "../../components/ui/user/product/ProductsRelated";
+import ProductRecommendationWidget from "../../components/ui/user/product/ProductRecommendationWidget";
 
 import type { AddCartItemRequest } from "../../types/cart";
 
@@ -918,9 +919,19 @@ const ProductDetailPage: React.FC = () => {
           )}
         </div>
 
+        {/* AI: THƯỜNG ĐƯỢC MUA KÈM */}
+        <div className="mt-8">
+          <ProductRecommendationWidget mode="related" productId={productId} />
+        </div>
+
         {/* RELATED */}
         <div className="mt-10">
           <ProductsRelated productsRelated={products} groupName={groupName} />
+        </div>
+
+        {/* AI: GỢI Ý CHO BẠN */}
+        <div className="mt-8">
+          <ProductRecommendationWidget mode="user" />
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@ import {
   AI_CONTEXT,
   AI_HISTORY_LIMIT,
   AI_MESSAGE_ROLE,
+  AI_PROMPT_HISTORY_LIMIT,
   AI_TOOL_NAMES,
   OPENAI_DEFAULTS,
 } from "../../constants/aiConstant.js";
@@ -21,17 +22,58 @@ import {
   getToolStatusMessage,
   loadUserAiProfile,
 } from "./aiToolsService.js";
+import aiRecommendationService from "../aiRecommendationService.js";
 
 dotenv.config();
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const AI_CARDS_PREFIX = "<<AI_CARDS>>";
+const AI_CARDS_SUFFIX = "<<END_AI_CARDS>>";
 
-const escapeJsonString = (value) =>
-  String(value ?? "")
-    .replace(/\\/g, "\\\\")
-    .replace(/"/g, '\\"')
-    .replace(/\n/g, "\\n")
-    .replace(/\r/g, "\\r");
+const extractToolCards = (toolName, result) => {
+  if (!result || typeof result !== "object" || result.error) return [];
+
+  if (toolName === AI_TOOL_NAMES.SEARCH_PRODUCTS && Array.isArray(result.products)) {
+    return result.products.slice(0, 4).map((p) => ({
+      type: "product",
+      id: p.id,
+      name: p.name,
+      price: p.minPrice,
+      image: p.thumbnailUrl || null,
+      url: p.url || `/product/${p.id}`,
+    }));
+  }
+
+  if (
+    toolName === AI_TOOL_NAMES.SEARCH_AVAILABLE_COURTS &&
+    Array.isArray(result.availableCourts)
+  ) {
+    return result.availableCourts.slice(0, 4).map((c) => ({
+      type: "court",
+      id: c.id,
+      name: c.name,
+      price: c.estimatedPrice,
+      branchName: result.branch?.name,
+      url: result.bookingUrl || `/branches/${result.branch?.id || ""}`,
+    }));
+  }
+
+  return [];
+};
+
+const appendAiCards = (text, cards) => {
+  if (!cards.length) return text;
+  const unique = [];
+  const seen = new Set();
+  for (const card of cards) {
+    const key = `${card.type}-${card.id || card.name}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(card);
+  }
+  return `${text}\n${AI_CARDS_PREFIX}${JSON.stringify(unique)}${AI_CARDS_SUFFIX}`;
+};
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const getOpenAiConfig = () => ({
   apiKey: process.env.OPENAI_API_KEY?.trim(),
@@ -157,6 +199,15 @@ const OPENAI_TOOLS = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: AI_TOOL_NAMES.GET_BOOKING_RECOMMENDATIONS,
+      description:
+        "Gợi ý chi nhánh và khung giờ đặt sân dựa trên lịch sử đặt (LightGBM). BẮT BUỘC gọi khi user hỏi gợi ý sân, gợi ý giờ, sân quen, sân phổ biến, khuyến mãi đặt sân.",
+      parameters: { type: "object", properties: {}, additionalProperties: false },
+    },
+  },
 ];
 
 const getToolsForContext = (context) => {
@@ -166,6 +217,7 @@ const getToolsForContext = (context) => {
         [
           AI_TOOL_NAMES.LIST_BRANCHES,
           AI_TOOL_NAMES.SEARCH_AVAILABLE_COURTS,
+          AI_TOOL_NAMES.GET_BOOKING_RECOMMENDATIONS,
         ].includes(t.function.name),
       );
     case AI_CONTEXT.SHOPPING:
@@ -228,10 +280,39 @@ const sanitizeApiMessage = (message) => {
   return rest;
 };
 
+const stripDiacritics = (s) =>
+  String(s || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .toLowerCase();
+
+// Nhận diện chi nhánh user nhắc tới trong câu (vd "thủ đức" -> BHub Thủ Đức)
+const detectBranchFromText = async (text) => {
+  if (!text || !text.trim()) return null;
+  const norm = stripDiacritics(text);
+  const branches = await Branch.findAll({
+    where: { isActive: true },
+    attributes: ["id", "branchName"],
+  });
+  let best = null;
+  for (const b of branches) {
+    const core = stripDiacritics(b.branchName)
+      .replace(/^b\s*-?\s*hub\s*/, "")
+      .trim();
+    if (core && norm.includes(core) && (!best || core.length > best.coreLen)) {
+      best = { id: b.id, name: b.branchName, coreLen: core.length };
+    }
+  }
+  return best ? { id: best.id, name: best.name } : null;
+};
+
 const buildSystemPrompt = async ({
   context,
   userProfile,
   pageContext,
+  detectedBranch,
 }) => {
   const contextBlocks = {
     [AI_CONTEXT.GENERAL]: `
@@ -242,10 +323,15 @@ Dùng knowledge base và công cụ tra cứu khi cần dữ liệu thực tế.
 Bạn đang ở chế độ **Đặt sân**: tra cứu sân trống, hướng dẫn đặt sân.
 
 Luồng tra sân trống (bắt buộc theo thứ tự):
-1. User hỏi còn sân/giờ/ngày NHƯNG chưa nói chi nhánh → chỉ gọi list_branches, liệt kê tên (và địa chỉ ngắn), hỏi "Bạn muốn tra cứu chi nhánh nào?". KHÔNG gọi search_available_courts, KHÔNG liệt kê sân.
-2. User chọn/nói tên chi nhánh (hoặc đang ở trang có branchId) → gọi search_available_courts MỘT lần cho chi nhánh đó.
-3. Thiếu ngày → mặc định mai; thiếu giờ → dùng giờ user đã nói hoặc hỏi 1 câu.
-4. Trả lời sân: bullet (• Sân XX — giá ₫) + [Đặt sân tại đây](/branches/{branchId}).
+1. User hỏi còn sân/giờ/ngày NHƯNG HOÀN TOÀN chưa nói chi nhánh nào → chỉ gọi list_branches, liệt kê tên (và địa chỉ ngắn), hỏi "Bạn muốn tra cứu chi nhánh nào?". KHÔNG gọi search_available_courts, KHÔNG liệt kê sân.
+2. User ĐÃ nói tên chi nhánh (kể cả một phần như "Thủ Đức", "Quận 1") trong tin nhắn này HOẶC trong lịch sử, hoặc đang ở trang có branchId, hoặc hệ thống đã xác định chi nhánh ở trên → gọi search_available_courts NGAY với branchName/branchId đó. TUYỆT ĐỐI KHÔNG gọi list_branches và KHÔNG hỏi lại chi nhánh trong trường hợp này.
+3. Nếu user CÓ nói ngày (kể cả dạng "16/6", "hôm nay", "mai", "ngày kia") → BẮT BUỘC truyền tham số date đúng theo ngày đó (định dạng YYYY-MM-DD, suy ra năm theo "Hôm nay" ở đầu prompt). VÍ DỤ: "18h ngày 16/6" → date là ngày 16 tháng 6 của năm hiện tại, startTime=18:00. CHỈ mặc định mai khi user hoàn toàn không nói ngày. Thiếu giờ → dùng giờ user đã nói hoặc hỏi 1 câu.
+4. Trả lời sân: nêu RÕ ngày + khung giờ đã tra (vd: "ngày 16/06, 18:00–19:00"), rồi bullet (• Sân XX — giá ₫) + [Đặt sân tại đây](/branches/{branchId}).
+5. Nếu kết quả công cụ có "doNotChangeDate" hoặc báo giờ đã quá hạn/quá khứ → nói ĐÚNG lý do đó cho user và HỎI họ chọn khung giờ/ngày khác. TUYỆT ĐỐI KHÔNG tự đổi sang ngày/giờ khác rồi trả lời như thể còn sân.
+
+Luồng gợi ý đặt sân (AI Recommendation):
+- User hỏi gợi ý sân, gợi ý giờ, sân quen, sân phổ biến → gọi get_booking_recommendations.
+- Trả lời từ kết quả: chi nhánh gợi ý + khung giờ + khuyến mãi (nếu có) + link đặt sân.
 `,
     [AI_CONTEXT.SHOPPING]: `
 Bạn đang ở chế độ **Mua sắm**: tư vấn vợt, giày, phụ kiện theo trình độ và ngân sách.
@@ -283,11 +369,23 @@ Người dùng chưa đăng nhập — chỉ hỗ trợ thông tin chung; nhắc
       ? `\nNgữ cảnh trang hiện tại:\n${JSON.stringify(pageContext, null, 2)}\n`
       : "";
 
+  const relatedBlock =
+    pageContext?.relatedProducts?.length
+      ? `\nSản phẩm thường mua kèm (có thể gợi ý chủ động nếu user hỏi mua kèm):\n${pageContext.relatedProducts
+          .map((p) => `- ${p.productName} (${p.minPrice ?? "?"}₫) → /product/${p.productId}`)
+          .join("\n")}\n`
+      : "";
+
   const today = getTodayInVietnam();
+
+  const branchNote = detectedBranch
+    ? `\nChi nhánh user đang nhắc tới: **${detectedBranch.name}** (branchId=${detectedBranch.id}). BẮT BUỘC dùng branchId này để gọi search_available_courts NGAY — KHÔNG gọi list_branches, KHÔNG hỏi lại chi nhánh.\n`
+    : "";
 
   return `Bạn là **B-Hub Assistant** — trợ lý AI của hệ thống đặt sân và mua dụng cụ cầu lông B-Hub.
 
 Hôm nay: ${today} (múi giờ Việt Nam). "Hôm nay"/"mai"/"ngày kia" tính theo ngày này.
+${branchNote}
 
 Quy tắc trả lời:
 - **Tiếng Việt**, thân thiện, **ngắn gọn đúng trọng tâm**: tối đa 3–5 câu hoặc 5 bullet; không mở đầu dài, không lặp lại câu hỏi.
@@ -305,6 +403,7 @@ Quy tắc trả lời:
 ${contextBlocks[context] || contextBlocks[AI_CONTEXT.GENERAL]}
 ${userBlock}
 ${pageBlock}
+${relatedBlock}
 
 ## Knowledge base
 ${B_HUB_KNOWLEDGE_BASE}
@@ -342,8 +441,8 @@ const callOpenAI = async ({ messages, tools, toolChoice = "auto" }) => {
   const data = await response.json();
 
   if (!response.ok) {
-    const errMsg =
-      data?.error?.message || `OpenAI API error (${response.status})`;
+    const rawErr = data?.error?.message || `OpenAI API error (${response.status})`;
+    console.error("OpenAI API error:", response.status, rawErr);
     if (response.status === 401) {
       throw new BadRequestError(
         "API key OpenAI không hợp lệ. Kiểm tra OPENAI_API_KEY.",
@@ -351,10 +450,12 @@ const callOpenAI = async ({ messages, tools, toolChoice = "auto" }) => {
     }
     if (response.status === 429) {
       throw new BadRequestError(
-        "OpenAI đang giới hạn tần suất. Vui lòng thử lại sau.",
+        "Trợ lý AI đang quá tải, vui lòng thử lại sau ít phút.",
       );
     }
-    throw new BadRequestError(errMsg);
+    throw new BadRequestError(
+      "Trợ lý AI tạm thời gặp sự cố. Vui lòng thử lại sau giây lát.",
+    );
   }
 
   const choice = data?.choices?.[0];
@@ -382,11 +483,13 @@ const runToolLoop = async ({
   playerLevel,
   defaultBranchId,
   userMessage,
+  userId,
   onStatus,
 }) => {
   const workingMessages = [...messages];
   let rounds = 0;
   let courtsSearchUsed = false;
+  const collectedCards = [];
   while (rounds < OPENAI_DEFAULTS.MAX_TOOL_ROUNDS) {
     rounds += 1;
     const assistantMessage = await callOpenAI({ messages: workingMessages, tools });
@@ -401,7 +504,8 @@ const runToolLoop = async ({
       (assistantMessage._rawChoice && assistantMessage._rawChoice.finish_reason === "function_call" ? [assistantMessage._rawChoice.message?.function_call] : null);
 
     if (!toolCalls || !toolCalls.length) {
-      return assistantMessage.content?.trim() || "";
+      const text = assistantMessage.content?.trim() || "";
+      return appendAiCards(text, collectedCards);
     }
 
     for (const toolCall of toolCalls) {
@@ -423,6 +527,14 @@ const runToolLoop = async ({
         const parsed = parseNaturalDate(args.date);
         if (parsed) args.date = parsed;
       }
+      if (args.startTime != null) {
+        const nt = normalizeTime(args.startTime);
+        if (nt) args.startTime = nt;
+      }
+      if (args.endTime != null) {
+        const nt = normalizeTime(args.endTime);
+        if (nt) args.endTime = nt;
+      }
 
       let result;
       if (name === AI_TOOL_NAMES.SEARCH_AVAILABLE_COURTS && courtsSearchUsed) {
@@ -436,6 +548,7 @@ const runToolLoop = async ({
             playerLevel,
             defaultBranchId,
             userMessage,
+            userId,
           });
           if (name === AI_TOOL_NAMES.SEARCH_AVAILABLE_COURTS) {
             courtsSearchUsed = true;
@@ -445,7 +558,7 @@ const runToolLoop = async ({
         }
       }
 
-      console.debug("Tool result for", name, result && typeof result === 'object' ? Object.keys(result) : String(result));
+      collectedCards.push(...extractToolCards(name, result));
 
       const toolContent = JSON.stringify(result);
       if (toolCall.id) {
@@ -465,48 +578,86 @@ const runToolLoop = async ({
   }
 
   const final = await callOpenAI({ messages: workingMessages, tools: undefined });
-  return final.content?.trim() || "Xin lỗi, tôi không thể hoàn tất yêu cầu.";
+  const text =
+    final.content?.trim() || "Xin lỗi, tôi không thể hoàn tất yêu cầu.";
+  return appendAiCards(text, collectedCards);
 };
 
-// Very small VN natural date parser: returns YYYY-MM-DD or null
+// Cộng n ngày vào chuỗi YYYY-MM-DD (dùng UTC để không bị lệch múi giờ)
+const addDaysToYmd = (ymd, n) => {
+  const [y, m, d] = ymd.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  dt.setUTCDate(dt.getUTCDate() + n);
+  return dt.toISOString().split("T")[0];
+};
+
+// VN natural date parser: returns YYYY-MM-DD or null
 const parseNaturalDate = (text) => {
   if (!text) return null;
   const t = String(text).toLowerCase().trim();
-  const isoRegex = /^(\d{4})-(\d{2})-(\d{2})$/;
-  const dmyRegex = /^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/;
-  const ymdMatch = t.match(isoRegex);
-  if (ymdMatch) return t;
-  const dmyMatch = t.match(dmyRegex);
+
+  // Đã đúng ISO YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t;
+
+  const todayStr = getTodayInVietnam(); // YYYY-MM-DD theo giờ VN
+  const [todayYear, todayMonth, todayDay] = todayStr.split("-").map(Number);
+
+  // d/m/yyyy hoặc d-m-yyyy
+  const dmyMatch = t.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
   if (dmyMatch) {
     const day = String(dmyMatch[1]).padStart(2, "0");
     const month = String(dmyMatch[2]).padStart(2, "0");
-    const year = dmyMatch[3];
-    return `${year}-${month}-${day}`;
+    return `${dmyMatch[3]}-${month}-${day}`;
   }
 
-  const now = new Date();
-  const todayYmd = () => {
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, "0");
-    const d = String(now.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  };
-
-  if (t.includes("hôm nay") || t === "hôm nay" || t === "nay") return todayYmd();
-  if (t.includes("mai") || t === "mai") {
-    const d = new Date(now);
-    d.setDate(d.getDate() + 1);
-    return d.toISOString().split("T")[0];
-  }
-  if (t.includes("ngày kia") || t.includes("kia")) {
-    const d = new Date(now);
-    d.setDate(d.getDate() + 2);
-    return d.toISOString().split("T")[0];
+  // d/m (không có năm) -> suy ra năm theo hôm nay (VN); nếu đã qua trong năm nay thì sang năm sau
+  const dmMatch = t.match(/^(\d{1,2})[\/.-](\d{1,2})$/);
+  if (dmMatch) {
+    const day = Number(dmMatch[1]);
+    const month = Number(dmMatch[2]);
+    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+      let year = todayYear;
+      const alreadyPassed =
+        month < todayMonth || (month === todayMonth && day < todayDay);
+      if (alreadyPassed) year += 1;
+      return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    }
   }
 
-  // try parse yyyy/mm/dd loosely
-  const loose = new Date(t);
-  if (!Number.isNaN(loose.getTime())) return loose.toISOString().split("T")[0];
+  if (t.includes("hôm nay") || t === "nay") return todayStr;
+  if (t.includes("ngày kia") || t.includes("kia")) return addDaysToYmd(todayStr, 2);
+  if (t.includes("mai")) return addDaysToYmd(todayStr, 1);
+
+  return null;
+};
+
+// Chuẩn hoá giờ về dạng HH:mm. Hỗ trợ "18:00", "18h", "18h30", "18g", "6pm", "18".
+const normalizeTime = (text) => {
+  if (text == null) return null;
+  const t = String(text).trim().toLowerCase();
+  if (!t) return null;
+
+  const build = (h, m) =>
+    h >= 0 && h <= 23 && m >= 0 && m <= 59
+      ? `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
+      : null;
+
+  let m = t.match(/^(\d{1,2}):(\d{2})$/);
+  if (m) return build(Number(m[1]), Number(m[2]));
+
+  m = t.match(/^(\d{1,2})\s*(am|pm)$/);
+  if (m) {
+    let h = Number(m[1]) % 12;
+    if (m[2] === "pm") h += 12;
+    return build(h, 0);
+  }
+
+  m = t.match(/^(\d{1,2})\s*(?:h|g|giờ|gio)\s*(\d{1,2})?$/);
+  if (m) return build(Number(m[1]), m[2] ? Number(m[2]) : 0);
+
+  m = t.match(/^(\d{1,2})$/);
+  if (m) return build(Number(m[1]), 0);
+
   return null;
 };
 
@@ -558,17 +709,50 @@ const chatService = async (payload, onStatus) => {
         }))
         .filter((h) => h.content.trim())
     : [];
-  const promptHistory =
-    storedHistory.length > 0 ? storedHistory : clientHistory;
+  const promptHistory = (
+    storedHistory.length > 0 ? storedHistory : clientHistory
+  ).slice(-AI_PROMPT_HISTORY_LIMIT);
 
   await appendSessionMessage(session.id, AI_MESSAGE_ROLE.USER, trimmedMessage);
 
   const userProfile = await loadUserAiProfile(userId);
   const pageContext = await loadPageContext({ branchId, courtId, productId });
+
+  if (productId && (context === AI_CONTEXT.SHOPPING || context === AI_CONTEXT.GENERAL)) {
+    try {
+      const related = await aiRecommendationService.getProductRecommendationService({
+        mode: "related",
+        productId: Number(productId),
+        userId,
+        topK: 3,
+      });
+      pageContext.relatedProducts = related.recommendations?.items || [];
+      pageContext.relatedStrategy = related.recommendations?.strategy;
+    } catch {
+      /* optional enrichment */
+    }
+  }
+
+  // Nhận diện chi nhánh từ câu hiện tại + vài tin gần nhất (để không hỏi lại khi user đã nói tên)
+  let detectedBranch = null;
+  if (context === AI_CONTEXT.BOOKING && !branchId) {
+    detectedBranch = await detectBranchFromText(trimmedMessage);
+    if (!detectedBranch) {
+      const recentUserText = promptHistory
+        .filter((h) => h.role === AI_MESSAGE_ROLE.USER)
+        .slice(-3)
+        .map((h) => h.content)
+        .join(" ");
+      detectedBranch = await detectBranchFromText(recentUserText);
+    }
+  }
+  const effectiveBranchId = branchId || detectedBranch?.id || null;
+
   const systemPrompt = await buildSystemPrompt({
     context,
     userProfile,
     pageContext,
+    detectedBranch,
   });
 
   const tools = getToolsForContext(context);
@@ -584,8 +768,9 @@ const chatService = async (payload, onStatus) => {
     messages,
     tools,
     playerLevel: userProfile?.playerLevel,
-    defaultBranchId: branchId,
+    defaultBranchId: effectiveBranchId,
     userMessage: trimmedMessage,
+    userId,
     onStatus,
   });
 
@@ -638,5 +823,4 @@ export default {
   chatService,
   chatSyncService,
   streamChatService,
-  escapeJsonString,
 };

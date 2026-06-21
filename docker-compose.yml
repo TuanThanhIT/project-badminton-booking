@@ -82,10 +82,14 @@ services:
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
       OPENAI_TEMPERATURE: ${OPENAI_TEMPERATURE:-0.7}
       OPENAI_MAX_TOKENS: ${OPENAI_MAX_TOKENS:-2048}
+      AI_SERVICE_URL: ${AI_SERVICE_URL:-http://ai-service:8000}
+      AI_SERVICE_TIMEOUT_MS: ${AI_SERVICE_TIMEOUT_MS:-30000}
     depends_on:
       mysql:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      ai-service:
         condition: service_healthy
     expose:
       - "8080"
@@ -117,10 +121,15 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_URL: redis://redis:6379
+      AI_SERVICE_URL: ${AI_SERVICE_URL:-http://ai-service:8000}
+      AI_SERVICE_TIMEOUT_MS: ${AI_SERVICE_TIMEOUT_MS:-30000}
+      AI_TRAINING_CRON: ${AI_TRAINING_CRON:-0 3 * * *}
     depends_on:
       mysql:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      ai-service:
         condition: service_healthy
     healthcheck:
       disable: true
@@ -206,9 +215,34 @@ services:
     networks:
       - badminton_network
 
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    image: badminton_ai_service:latest
+    container_name: badminton_ai_service
+    restart: unless-stopped
+    volumes:
+      - ai_models:/app/models
+    expose:
+      - "8000"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\"",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - badminton_network
+
 volumes:
   mysql_data:
   redis_data:
+  ai_models:
 
 networks:
   badminton_network:

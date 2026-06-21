@@ -419,6 +419,586 @@ const downBookings = async (qi) => u.phaseTransaction(qi, async (transaction) =>
   await u.deleteBookings(qi, transaction);
 });
 
+// ============================================================
+// AI PATTERN BOOKINGS
+// Tạo vài "user có thói quen mạnh" (luôn đặt 1 chi nhánh + 1 khung giờ
+// cố định, lặp lại nhiều tuần) để demo gợi ý CÁ NHÂN HÓA của LightGBM
+// rõ ràng. Idempotent: tự xóa theo marker riêng "AI-PATTERN-" trước khi chèn.
+// ============================================================
+const AI_PATTERN_TAG = `${u.MARKER} AI-PATTERN-`;
+
+const HABITS = [
+  { hour: 19, duration: 1, weekdays: [1, 3, 5] }, // tối T2/T4/T6
+  { hour: 6, duration: 1, weekdays: [6, 0] }, // sáng cuối tuần
+  { hour: 20, duration: 1, weekdays: [2, 4] }, // tối T3/T5
+  { hour: 17, duration: 2, weekdays: [1, 5] }, // chiều T2/T6
+  { hour: 18, duration: 1, weekdays: [0, 3] }, // tối CN/T4
+  { hour: 21, duration: 1, weekdays: [2, 6] }, // khuya T3/T7
+];
+
+const deleteAiPatternBookings = async (qi, Sequelize, transaction) => {
+  const rows = await u.q(
+    qi,
+    Sequelize,
+    "SELECT id FROM Bookings WHERE note LIKE :note",
+    { note: `${AI_PATTERN_TAG}%` },
+    transaction,
+  );
+  const ids = rows.map((r) => Number(r.id));
+  if (ids.length) {
+    await u.del(qi, "BookingDetails", { bookingId: ids }, transaction);
+    await u.del(qi, "Bookings", { id: ids }, transaction);
+  }
+};
+
+const seedAiPatternBookings = async (qi, Sequelize) =>
+  u.phaseTransaction(qi, async (transaction) => {
+    await deleteAiPatternBookings(qi, Sequelize, transaction);
+
+    const base = await getBase(qi, Sequelize, transaction);
+    const users = (await u.getDemoUsers(qi, Sequelize, transaction)).filter(
+      (row) => row.roleName === "USER",
+    );
+    if (!users.length || !base.branches.length) return;
+
+    const courtsByBranch = base.courts.reduce((acc, court) => {
+      (acc[court.branchId] = acc[court.branchId] || []).push(court);
+      return acc;
+    }, {});
+
+    const patternUsers = users.slice(0, 6);
+    const bookings = [];
+    const detailsMeta = [];
+    let seq = 0;
+
+    patternUsers.forEach((user, idx) => {
+      const branch = base.branches[idx % base.branches.length];
+      const courts = courtsByBranch[branch.id] || base.courts;
+      if (!courts.length) return;
+      const court = courts[idx % courts.length];
+      const habit = HABITS[idx % HABITS.length];
+
+      for (let w = 0; w < 12; w += 1) {
+        const weekday = habit.weekdays[w % habit.weekdays.length];
+        const anchor = u.addDays(u.END, -(w * 7 + 1));
+        const d = new Date(anchor);
+        const diff = (d.getDay() - weekday + 7) % 7;
+        d.setDate(d.getDate() - diff);
+        if (d < u.START) continue;
+
+        seq += 1;
+        const price = priceFor(
+          base.prices,
+          branch.id,
+          d,
+          habit.hour,
+          habit.hour + habit.duration,
+        );
+        const createdAt = u.addDays(
+          u.dateTime(d, Math.max(6, habit.hour - 5), 0),
+          -2,
+        );
+        const marker = `AI-PATTERN-${u.pad(idx + 1, 2)}-${u.pad(seq, 3)}`;
+        bookings.push({
+          bookingStatus: "COMPLETED",
+          previousBookingStatus: null,
+          totalAmount: price,
+          branchId: branch.id,
+          userId: user.id,
+          discountId: null,
+          note: `${u.MARKER} ${marker}`,
+          cancelledBy: null,
+          cancelReason: null,
+          cancelRejectReason: null,
+          cancelRequestedAt: null,
+          cancelHandledAt: null,
+          cancelledAt: null,
+          createdAt,
+          updatedAt: u.addMinutes(createdAt, 60),
+        });
+        detailsMeta.push({
+          marker,
+          courtId: court.id,
+          playDate: u.dateOnly(d),
+          startTime: u.time(habit.hour),
+          endTime: u.time(habit.hour + habit.duration),
+          price,
+        });
+      }
+    });
+
+    await u.insert(qi, "Bookings", bookings, transaction);
+    const dbBookings = await u.q(
+      qi,
+      Sequelize,
+      "SELECT id, note FROM Bookings WHERE note LIKE :note",
+      { note: `${AI_PATTERN_TAG}%` },
+      transaction,
+    );
+    const byMarker = new Map(
+      dbBookings.map((b) => [
+        String(b.note).match(/AI-PATTERN-\d+-\d+/)?.[0],
+        b,
+      ]),
+    );
+    await u.insert(
+      qi,
+      "BookingDetails",
+      detailsMeta
+        .map((d) => ({
+          bookingId: byMarker.get(d.marker)?.id,
+          monthlyBookingId: null,
+          courtId: d.courtId,
+          playDate: d.playDate,
+          startTime: d.startTime,
+          endTime: d.endTime,
+          price: d.price,
+        }))
+        .filter((d) => d.bookingId),
+      transaction,
+    );
+  });
+
+const downAiPatternBookings = async (qi, Sequelize) =>
+  u.phaseTransaction(qi, async (transaction) => {
+    await deleteAiPatternBookings(qi, Sequelize, transaction);
+  });
+
+// ============================================================
+// AI demo: basket mua kèm có chủ đích + occupancy lệch cho Admin
+// ============================================================
+const AI_PRODUCT_TAG = `${u.MARKER} AI-PRODUCT-PATTERN`;
+const AI_OCCUPANCY_TAG = `${u.MARKER} AI-OCCUPANCY-SKEW`;
+
+const findProductVariant = async (qi, Sequelize, transaction, nameLike, branchId) => {
+  const rows = await u.q(
+    qi,
+    Sequelize,
+    `
+      SELECT pv.id AS variantId, pv.productId, pv.price, pv.discount, pv.sku, pv.color, pv.size,
+             p.productName, p.thumbnailUrl
+      FROM Products p
+      INNER JOIN ProductVariants pv ON pv.productId = p.id
+      INNER JOIN VariantStocks vs ON vs.variantId = pv.id AND vs.branchId = :branchId
+      WHERE p.productName LIKE :nameLike AND vs.stock > 0
+      ORDER BY pv.id
+      LIMIT 1
+    `,
+    { nameLike, branchId },
+    transaction,
+  );
+  return rows[0] || null;
+};
+
+const deleteAiProductPatternOrders = async (qi, Sequelize, transaction) => {
+  await paymentPrefix(qi, "AI-PRODUCT-PAY-", transaction);
+  const groups = await u.q(
+    qi,
+    Sequelize,
+    "SELECT id FROM OrderGroups WHERE note LIKE :note",
+    { note: `${AI_PRODUCT_TAG}%` },
+    transaction,
+  );
+  const groupIds = groups.map((r) => Number(r.id));
+  if (!groupIds.length) return;
+  const orders = await u.q(
+    qi,
+    Sequelize,
+    "SELECT id FROM Orders WHERE orderGroupId IN (:ids)",
+    { ids: groupIds },
+    transaction,
+  );
+  const orderIds = orders.map((r) => Number(r.id));
+  if (orderIds.length) {
+    await u.del(qi, "OrderShippingLogs", { orderId: orderIds }, transaction);
+    await u.del(qi, "OrderDetails", { orderId: orderIds }, transaction);
+    await u.del(qi, "Orders", { id: orderIds }, transaction);
+  }
+  await u.del(qi, "OrderGroups", { id: groupIds }, transaction);
+};
+
+const insertAiPaidOrder = async (
+  qi,
+  Sequelize,
+  transaction,
+  { user, branch, variants, groupNote, createdAt, paySeq },
+) => {
+  if (!variants.length) return;
+
+  const subtotal = variants.reduce((sum, v) => sum + Number(v.subTotal || 0), 0);
+  const shippingFee = 30000;
+  const finalAmount = subtotal + shippingFee;
+  const created = createdAt || u.dateTime(u.randomDate(), u.publicHour(), u.int(0, 59));
+
+  await u.insert(
+    qi,
+    "OrderGroups",
+    [
+      {
+        totalAmount: subtotal,
+        totalShippingFee: shippingFee,
+        discountId: null,
+        discountAmount: 0,
+        isDiscountApplied: false,
+        finalAmount,
+        status: "PAID",
+        note: groupNote,
+        userId: user.id,
+        createdAt: created,
+        updatedAt: u.addMinutes(created, 30),
+      },
+    ],
+    transaction,
+  );
+
+  const [group] = await u.q(
+    qi,
+    Sequelize,
+    "SELECT id FROM OrderGroups WHERE note = :note ORDER BY id DESC LIMIT 1",
+    { note: groupNote },
+    transaction,
+  );
+  if (!group) return;
+
+  const orderMarker = `${groupNote}-ORD`;
+  await u.insert(
+    qi,
+    "Orders",
+    [
+      {
+        orderStatus: "COMPLETED",
+        previousOrderStatus: null,
+        subtotal,
+        shippingFee,
+        totalAmount: finalAmount,
+        shippingName: user.fullName || user.username,
+        shippingPhone: user.phoneNumber || "0977000000",
+        shippingAddress: u.addresses[0].address,
+        shippingDistrictId: u.addresses[0].districtId,
+        shippingWardCode: u.addresses[0].wardCode,
+        shippingWeight: 1.2,
+        shippingServiceId: 53320,
+        shippingFeeReal: shippingFee,
+        shippingStatus: "DELIVERED",
+        deliveredAt: u.addDays(created, 3),
+        trackingCode: orderMarker,
+        shippingOrderCode: `AI-GHN-${u.pad(paySeq, 5)}`,
+        estimatedDelivery: u.addDays(created, 4),
+        branchId: branch.id,
+        orderGroupId: group.id,
+        cancelledBy: null,
+        cancelReason: null,
+        cancelRequestedAt: null,
+        cancelHandledAt: null,
+        cancelRejectReason: null,
+        returnReason: null,
+        returnRequestedAt: null,
+        returnHandledAt: null,
+        cancelledAt: null,
+        returnedAt: null,
+        createdAt: created,
+        updatedAt: u.addDays(created, 1),
+      },
+    ],
+    transaction,
+  );
+
+  const [order] = await u.q(
+    qi,
+    Sequelize,
+    "SELECT id FROM Orders WHERE trackingCode = :marker LIMIT 1",
+    { marker: orderMarker },
+    transaction,
+  );
+  if (!order) return;
+
+  await u.insert(
+    qi,
+    "OrderDetails",
+    variants.map((v) => ({
+      quantity: v.quantity,
+      unitPrice: v.unitPrice,
+      subTotal: v.subTotal,
+      productName: v.productName,
+      variantInfo: v.variantInfo,
+      orderId: order.id,
+      variantId: v.variantId,
+    })),
+    transaction,
+  );
+
+  await u.insert(
+    qi,
+    "Payments",
+    [
+      {
+        paymentAmount: finalAmount,
+        paymentMethod: "VNPAY",
+        paymentStatus: "PAID",
+        transId: `AI-PRODUCT-TXN-${u.pad(paySeq, 5)}`,
+        externalId: `AI-PRODUCT-PAY-${u.pad(paySeq, 5)}`,
+        paidAt: u.addMinutes(created, 20),
+        refundAmount: null,
+        refundAt: null,
+        targetPaymentType: "ORDER",
+        targetPaymentId: group.id,
+      },
+    ],
+    transaction,
+  );
+};
+
+const buildVariantLine = (variant, quantity = 1) => {
+  const unitPrice = u.money(
+    Number(variant.price) * (1 - Number(variant.discount || 0) / 100),
+  );
+  return {
+    variantId: variant.variantId,
+    productName: variant.productName,
+    variantInfo: [variant.sku, variant.color, variant.size].filter(Boolean).join(" / "),
+    quantity,
+    unitPrice,
+    subTotal: unitPrice * quantity,
+  };
+};
+
+const seedAiProductPatterns = async (qi, Sequelize) =>
+  u.phaseTransaction(qi, async (transaction) => {
+    await deleteAiProductPatternOrders(qi, Sequelize, transaction);
+
+    const base = await getBase(qi, Sequelize, transaction);
+    const users = (await u.getDemoUsers(qi, Sequelize, transaction)).filter(
+      (row) => row.roleName === "USER",
+    );
+    if (!users.length || !base.branches.length) return;
+
+    const branch = base.branches[0];
+    const resolve = (like) =>
+      findProductVariant(qi, Sequelize, transaction, like, branch.id);
+
+    const racket = await resolve("%Nanoflare Skill%");
+    const shuttle = await resolve("%Cước đan vợt%");
+    const bag = await resolve("%Balo cầu lông Yonex%");
+    const shoes = await resolve("%Giày cầu lông Yonex%");
+    const socks = await resolve("%Tất cầu lông%");
+
+    if (!racket || !shuttle) return;
+
+    let paySeq = 0;
+    const persona = (username) => users.find((row) => row.username === username);
+
+    // Combo "bộ người mới": vợt + cước + balo (lặp 45 đơn → co-occurrence rõ)
+    const beginnerKit = [racket, shuttle, bag].filter(Boolean);
+    for (let i = 0; i < 45; i += 1) {
+      paySeq += 1;
+      const buyer = users[i % users.length];
+      const lines = beginnerKit.map((v) => buildVariantLine(v, 1));
+      await insertAiPaidOrder(qi, Sequelize, transaction, {
+        user: buyer,
+        branch,
+        variants: lines,
+        groupNote: `${AI_PRODUCT_TAG} BEGINNER-KIT-${u.pad(i + 1, 3)}`,
+        createdAt: u.addDays(u.END, -u.int(1, 60)),
+        paySeq,
+      });
+    }
+
+    // Combo giày + tất
+    if (shoes && socks) {
+      for (let i = 0; i < 30; i += 1) {
+        paySeq += 1;
+        const buyer = users[(i + 5) % users.length];
+        await insertAiPaidOrder(qi, Sequelize, transaction, {
+          user: buyer,
+          branch,
+          variants: [shoes, socks].map((v) => buildVariantLine(v, 1)),
+          groupNote: `${AI_PRODUCT_TAG} SHOE-KIT-${u.pad(i + 1, 3)}`,
+          createdAt: u.addDays(u.END, -u.int(1, 45)),
+          paySeq,
+        });
+      }
+    }
+
+    // Persona demo_customer_001: chỉ mua vợt → gợi ý cước/balo
+    const user001 = persona("demo_customer_001");
+    if (user001) {
+      for (let i = 0; i < 6; i += 1) {
+        paySeq += 1;
+        await insertAiPaidOrder(qi, Sequelize, transaction, {
+          user: user001,
+          branch,
+          variants: [buildVariantLine(racket, 1)],
+          groupNote: `${AI_PRODUCT_TAG} PERSONA-001-${u.pad(i + 1, 2)}`,
+          createdAt: u.addDays(u.END, -u.int(5, 40)),
+          paySeq,
+        });
+      }
+    }
+
+    // Persona demo_customer_002: vợt + cước nhiều lần
+    const user002 = persona("demo_customer_002");
+    if (user002) {
+      for (let i = 0; i < 10; i += 1) {
+        paySeq += 1;
+        await insertAiPaidOrder(qi, Sequelize, transaction, {
+          user: user002,
+          branch,
+          variants: [racket, shuttle].map((v) => buildVariantLine(v, 1)),
+          groupNote: `${AI_PRODUCT_TAG} PERSONA-002-${u.pad(i + 1, 2)}`,
+          createdAt: u.addDays(u.END, -u.int(3, 35)),
+          paySeq,
+        });
+      }
+    }
+  });
+
+const downAiProductPatterns = async (qi, Sequelize) =>
+  u.phaseTransaction(qi, async (transaction) => {
+    await deleteAiProductPatternOrders(qi, Sequelize, transaction);
+  });
+
+const deleteAiOccupancySkewBookings = async (qi, Sequelize, transaction) => {
+  const rows = await u.q(
+    qi,
+    Sequelize,
+    "SELECT id FROM Bookings WHERE note LIKE :note",
+    { note: `${AI_OCCUPANCY_TAG}%` },
+    transaction,
+  );
+  const ids = rows.map((r) => Number(r.id));
+  if (!ids.length) return;
+  await u.del(qi, "BookingDetails", { bookingId: ids }, transaction);
+  await u.del(qi, "Bookings", { id: ids }, transaction);
+};
+
+const seedAdminOccupancySkew = async (qi, Sequelize) =>
+  u.phaseTransaction(qi, async (transaction) => {
+    await deleteAiOccupancySkewBookings(qi, Sequelize, transaction);
+
+    const base = await getBase(qi, Sequelize, transaction);
+    const users = (await u.getDemoUsers(qi, Sequelize, transaction)).filter(
+      (row) => row.roleName === "USER",
+    );
+    if (!users.length || !base.branches.length) return;
+
+    const skewBranch =
+      base.branches.find((b) => /thu\s*duc/i.test(String(b.branchName || ""))) ||
+      base.branches[0];
+    const courts = base.courts.filter(
+      (c) => Number(c.branchId) === Number(skewBranch.id),
+    );
+    if (!courts.length) return;
+
+    const bookings = [];
+    const detailsMeta = [];
+    let seq = 0;
+
+    const pushBooking = (user, court, playDate, hour, markerSuffix) => {
+      seq += 1;
+      const price = priceFor(base.prices, skewBranch.id, playDate, hour, hour + 1);
+      const createdAt = u.addDays(u.dateTime(playDate, Math.max(6, hour - 4), 0), -1);
+      const marker = `AI-OCC-SKEW-${markerSuffix}-${u.pad(seq, 4)}`;
+      bookings.push({
+        bookingStatus: "COMPLETED",
+        previousBookingStatus: null,
+        totalAmount: price,
+        branchId: skewBranch.id,
+        userId: user.id,
+        discountId: null,
+        note: `${AI_OCCUPANCY_TAG} ${marker}`,
+        cancelledBy: null,
+        cancelReason: null,
+        cancelRejectReason: null,
+        cancelRequestedAt: null,
+        cancelHandledAt: null,
+        cancelledAt: null,
+        createdAt,
+        updatedAt: u.addMinutes(createdAt, 45),
+      });
+      detailsMeta.push({
+        marker,
+        courtId: court.id,
+        playDate: u.dateOnly(playDate),
+        startTime: u.time(hour),
+        endTime: u.time(hour + 1),
+        price,
+      });
+    };
+
+    // Giờ cao điểm 18–21: nhiều booking trong 30 ngày
+    for (let day = 1; day <= 30; day += 1) {
+      for (const hour of [18, 19, 20, 21]) {
+        const playDate = u.addDays(u.END, -day);
+        const user = users[day % users.length];
+        const court = courts[(day + hour) % courts.length];
+        pushBooking(user, court, playDate, hour, "PEAK");
+      }
+    }
+
+    // Giờ thấp điểm 7–8: ít booking
+    for (let day = 2; day <= 30; day += 3) {
+      for (const hour of [7, 8]) {
+        const playDate = u.addDays(u.END, -day);
+        const user = users[(day + hour) % users.length];
+        const court = courts[day % courts.length];
+        pushBooking(user, court, playDate, hour, "LOW");
+      }
+    }
+
+    // Khách churn: đặt 3 lần nhưng lần cuối >25 ngày trước
+    const churnUsers = users.slice(10, 15);
+    churnUsers.forEach((user, idx) => {
+      const court = courts[idx % courts.length];
+      for (let i = 0; i < 3; i += 1) {
+        const daysAgo = i === 2 ? 28 + idx : 60 + i * 20;
+        pushBooking(
+          user,
+          court,
+          u.addDays(u.END, -daysAgo),
+          19,
+          `CHURN-${idx + 1}`,
+        );
+      }
+    });
+
+    await u.insert(qi, "Bookings", bookings, transaction);
+    const dbBookings = await u.q(
+      qi,
+      Sequelize,
+      "SELECT id, note FROM Bookings WHERE note LIKE :note",
+      { note: `${AI_OCCUPANCY_TAG}%` },
+      transaction,
+    );
+    const byMarker = new Map(
+      dbBookings.map((b) => {
+        const parts = String(b.note).trim().split(/\s+/);
+        const marker = parts[parts.length - 1];
+        return [marker, b];
+      }),
+    );
+    await u.insert(
+      qi,
+      "BookingDetails",
+      detailsMeta
+        .map((d) => ({
+          bookingId: byMarker.get(d.marker)?.id,
+          monthlyBookingId: null,
+          courtId: d.courtId,
+          playDate: d.playDate,
+          startTime: d.startTime,
+          endTime: d.endTime,
+          price: d.price,
+        }))
+        .filter((d) => d.bookingId),
+      transaction,
+    );
+  });
+
+const downAdminOccupancySkew = async (qi, Sequelize) =>
+  u.phaseTransaction(qi, async (transaction) => {
+    await deleteAiOccupancySkewBookings(qi, Sequelize, transaction);
+  });
+
 const seedCounter = async (qi, Sequelize) => u.phaseTransaction(qi, async (transaction) => {
   await paymentPrefix(qi, "DEMO-EXT-COUNTER-", transaction);
   await u.deleteCounter(qi, transaction);
@@ -802,6 +1382,9 @@ module.exports = {
   seedUsers, downUsers, seedWalletAddress, downWalletAddress,
   seedWorkShifts, downWorkShifts,
   seedBookings, downBookings, seedCounter, downCounter,
+  seedAiPatternBookings, downAiPatternBookings,
+  seedAiProductPatterns, downAiProductPatterns,
+  seedAdminOccupancySkew, downAdminOccupancySkew,
   seedOrders, downOrders, seedFeedbacks, downFeedbacks,
   seedCoachClasses, downCoachClasses, seedSocial, downSocial,
   seedChatNotificationsAi, downChatNotificationsAi,

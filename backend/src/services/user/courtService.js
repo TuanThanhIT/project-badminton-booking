@@ -22,7 +22,7 @@ const dateTimeFromDateAndTime = (date, time) => {
 const assertBookableStartTime = ({ date, startTime }) => {
   const today = getTodayDate();
   if (date < today) {
-    throw new BadRequestError("Khong the dat san cho ngay trong qua khu");
+    throw new BadRequestError("Không thể đặt sân cho ngày trong quá khứ");
   }
 
   const now = new Date();
@@ -32,7 +32,7 @@ const assertBookableStartTime = ({ date, startTime }) => {
 
   if (date === today && dateTimeFromDateAndTime(date, startTime) < earliest) {
     throw new BadRequestError(
-      "Gio bat dau phai sau thoi diem hien tai it nhat 1 tieng",
+      "Giờ bắt đầu phải sau thời điểm hiện tại ít nhất 1 tiếng",
     );
   }
 };
@@ -48,7 +48,7 @@ const getAvailableCourtsService = async (data) => {
   const startNum = timeToNum(startTime);
   const endNum = timeToNum(endTime);
   if (endNum <= startNum) {
-    throw new BadRequestError("Gio ket thuc phai sau gio bat dau");
+    throw new BadRequestError("Giờ kết thúc phải sau giờ bắt đầu");
   }
 
   assertBookableStartTime({ date, startTime });

@@ -1,0 +1,50 @@
+{
+  "marker": "[DEMO-SEED-3M] AI-BULK-TRAIN",
+  "seeder": "20260619100000-seed-ai-bulk-training-data.cjs",
+  "run": "cd backend && npx sequelize-cli db:seed --seed 20260619100000-seed-ai-bulk-training-data.cjs",
+  "undo": "cd backend && npx sequelize-cli db:seed:undo --seed 20260619100000-seed-ai-bulk-training-data.cjs",
+  "afterSeed": [
+    "Admin → Huấn luyện mô hình (booking + product)",
+    "Đảm bảo ai-service đang chạy"
+  ],
+  "branches": {
+    "note": "5 chi nhánh id 1–5 từ data.sql",
+    "habits": [
+      { "branchId": 1, "pattern": "19h T2/T4/T6" },
+      { "branchId": 2, "pattern": "6h T7/CN" },
+      { "branchId": 3, "pattern": "20h T3/T5" },
+      { "branchId": 4, "pattern": "17–19h T2/T6" },
+      { "branchId": 5, "pattern": "18h CN/T4" }
+    ],
+    "occupancy": "Mỗi chi nhánh: nhiều booking 18–21h, ít 7–8h (28 ngày gần nhất)"
+  },
+  "testAccounts": {
+    "password": "@Demo123456",
+    "bookingRec": [
+      { "username": "demo_customer_001", "branchId": 1, "expect": "Gợi ý 19h + chi nhánh 1" },
+      { "username": "demo_customer_006", "branchId": 2, "expect": "Gợi ý 6h sáng + chi nhánh 2" },
+      { "username": "demo_customer_011", "branchId": 3, "expect": "Gợi ý 20h + chi nhánh 3" }
+    ],
+    "productPersona": [
+      { "username": "demo_customer_001", "persona": "RACKET", "expect": "Gợi ý SP chưa mua (cước, balo…)" },
+      { "username": "demo_customer_002", "persona": "COMBO", "expect": "Đã mua vợt+cước → gợi ý balo/giày" },
+      { "username": "demo_customer_003", "persona": "BAG", "expect": "Hay mua balo → gợi ý khác balo" }
+    ]
+  },
+  "productCombos": {
+    "boughtTogether": {
+      "anchor": "Yonex Nanoflare Skill Vợt (productId ~10000)",
+      "kem": ["Cước đan vợt Yonex BG65 (~918)", "Balo Yonex Pro Tour 30L (~914)"],
+      "ordersPerBranch": 24
+    },
+    "shoeKit": {
+      "items": ["Giày cầu lông Yonex (~911)", "Balo (~914)"],
+      "ordersPerBranch": 12
+    }
+  },
+  "verifySql": [
+    "SELECT COUNT(*) FROM Bookings WHERE note LIKE '%AI-BULK-TRAIN%';",
+    "SELECT COUNT(*) FROM OrderGroups WHERE note LIKE '%AI-BULK-TRAIN%' AND status='PAID';",
+    "SELECT b.branchId, HOUR(bd.startTime) AS hour, COUNT(*) AS cnt FROM BookingDetails bd JOIN Bookings b ON b.id=bd.bookingId WHERE b.note LIKE '%AI-BULK-TRAIN%' AND bd.playDate >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) GROUP BY b.branchId, hour ORDER BY b.branchId, hour;"
+  ]
+}

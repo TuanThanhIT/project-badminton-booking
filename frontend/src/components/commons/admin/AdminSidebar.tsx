@@ -18,6 +18,7 @@ import {
   GraduationCap,
   PackageCheck,
   Warehouse,
+  BrainCircuit,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../../redux/hook";
 import { logout, logoutLocal } from "../../../redux/slices/user/authSlice";
@@ -50,6 +51,7 @@ const AdminSidebar = ({ collapsed, setCollapsed }: Props) => {
       group: "Tổng quan",
       items: [
         { title: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard", description: "Tổng quan hệ thống" },
+        { title: "Phân tích AI", icon: BrainCircuit, path: "/admin/ai-insights", description: "Gợi ý & dự báo lấp đầy" },
         { title: "Doanh thu", icon: TrendingUp, path: "/admin/revenue", description: "Báo cáo kinh doanh" },
         { title: "Tài chính", icon: Wallet, path: "/admin/finance", description: "Ví và giao dịch" },
       ],

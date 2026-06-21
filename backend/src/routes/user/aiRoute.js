@@ -1,6 +1,9 @@
 import express from "express";
 import aiController from "../../controllers/user/aiController.js";
+import aiRecommendationController from "../../controllers/user/aiRecommendationController.js";
+import productRecommendationController from "../../controllers/user/productRecommendationController.js";
 import optionalAuth from "../../middlewares/optionalAuth.js";
+import auth from "../../middlewares/auth.js";
 import validate from "../../middlewares/validate.js";
 import {
   chatSchema,
@@ -8,6 +11,11 @@ import {
   listSessionsQuerySchema,
   sessionIdParamSchema,
 } from "../../validations/aiValidation.js";
+import {
+  userRecommendationQuerySchema,
+  productRecommendationQuerySchema,
+  relatedProductQuerySchema,
+} from "../../validations/aiRecommendationValidation.js";
 
 const aiRoute = express.Router();
 
@@ -52,6 +60,34 @@ const initAiRoute = (app) => {
     optionalAuth,
     validate(sessionIdParamSchema),
     aiController.deleteSessionController,
+  );
+
+  aiRoute.get(
+    "/recommendations",
+    auth,
+    validate(userRecommendationQuerySchema),
+    aiRecommendationController.getUserRecommendationsController,
+  );
+
+  aiRoute.get(
+    "/recommendations/public",
+    optionalAuth,
+    validate(userRecommendationQuerySchema),
+    aiRecommendationController.getPublicRecommendationsController,
+  );
+
+  aiRoute.get(
+    "/product-recommendations",
+    optionalAuth,
+    validate(productRecommendationQuerySchema),
+    productRecommendationController.getProductRecommendationsController,
+  );
+
+  aiRoute.get(
+    "/product-recommendations/related",
+    optionalAuth,
+    validate(relatedProductQuerySchema),
+    productRecommendationController.getRelatedProductsController,
   );
 
   app.use("/user/ai", aiRoute);

@@ -14,6 +14,7 @@ import productService from "./productService.js";
 import postService from "./postService.js";
 import BadRequestError from "../../errors/BadRequestError.js";
 import { AI_TOOL_NAMES } from "../../constants/aiConstant.js";
+import aiRecommendationService from "../aiRecommendationService.js";
 
 const PLAYER_LEVEL_LABELS = {
   [PLAYER_LEVEL.BEGINNER]: "Mới bắt đầu",
@@ -40,6 +41,14 @@ const getTomorrowDate = () => {
   const d = new Date();
   d.setDate(d.getDate() + 1);
   return d.toISOString().split("T")[0];
+};
+
+// Cộng 1 giờ vào "HH:mm" (chặn trần 23:59) để mặc định khung 1 tiếng khi thiếu endTime
+const addOneHour = (hhmm) => {
+  const [h, m] = String(hhmm).split(":").map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return hhmm;
+  const total = Math.min(h * 60 + m + 60, 23 * 60 + 59);
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 };
 
 const MENU_GROUP_BY_KEYWORD = [
@@ -189,6 +198,7 @@ const mapProductSearchResults = (products) =>
       brand: p.brand,
       minPrice,
       description: p.description?.slice(0, 220) || null,
+      thumbnailUrl: p.thumbnailUrl || null,
       url: `/product/${p.id}`,
     };
   });
@@ -256,12 +266,22 @@ const searchAvailableCourtsTool = async (args) => {
       bookingUrl: `/branches/${branchId}`,
     };
   } catch (err) {
+    const msg = err.message || "Không tra cứu được lịch sân.";
+    const isTimingError = /quá khứ|ít nhất 1 tiếng|quá hạn/i.test(msg);
     return {
       branch: { id: branch.id, name: branch.branchName },
       date,
       timeSlot: { startTime, endTime },
-      error: err.message || "Không tra cứu được lịch sân.",
-      suggestion: "Thử khung giờ khác hoặc ngày khác (định dạng YYYY-MM-DD).",
+      error: msg,
+      ...(isTimingError
+        ? {
+            doNotChangeDate: true,
+            instruction:
+              "Khung giờ/ngày này không đặt được vì lý do trên. TUYỆT ĐỐI KHÔNG tự đổi sang ngày hoặc giờ khác rồi trả lời như thật. Hãy báo đúng lý do cho user và HỎI họ muốn chọn khung giờ khác (hoặc ngày khác).",
+          }
+        : {
+            suggestion: "Thử khung giờ khác hoặc ngày khác (định dạng YYYY-MM-DD).",
+          }),
     };
   }
 };
@@ -464,6 +484,23 @@ const searchClassPostsTool = async (args, options = {}) => {
   };
 };
 
+const getBookingRecommendationsTool = async (options = {}) => {
+  const result = await aiRecommendationService.getUserRecommendationService({
+    userId: options.userId ?? null,
+    topK: 5,
+    naturalLanguage: false,
+  });
+
+  const rec = result.recommendations || {};
+  return {
+    ...rec,
+    meta: result.meta,
+    hint: rec.isNewUser
+      ? "User mới — gợi ý sân phổ biến và khuyến mãi đang có."
+      : "Gợi ý dựa trên lịch sử đặt sân (LightGBM/heuristic).",
+  };
+};
+
 const resolveBranchIdByName = async (branchName) => {
   if (!branchName?.trim()) return null;
   const branch = await Branch.findOne({
@@ -492,6 +529,9 @@ export const executeAiTool = async (toolName, rawArgs, options = {}) => {
         args.branchId = Number(options.defaultBranchId);
       }
       if (!args.date) args.date = getTomorrowDate();
+      if (args.startTime && !args.endTime) {
+        args.endTime = addOneHour(args.startTime);
+      }
       if (!args.branchId) {
         return {
           needsBranchSelection: true,
@@ -517,6 +557,9 @@ export const executeAiTool = async (toolName, rawArgs, options = {}) => {
     case AI_TOOL_NAMES.SEARCH_CLASS_POSTS:
       return searchClassPostsTool(args, options);
 
+    case AI_TOOL_NAMES.GET_BOOKING_RECOMMENDATIONS:
+      return getBookingRecommendationsTool(options);
+
     default:
       return { error: `Công cụ không hỗ trợ: ${toolName}` };
   }
@@ -529,6 +572,8 @@ export const getToolStatusMessage = (toolName) => {
     [AI_TOOL_NAMES.SEARCH_PRODUCTS]: "Đang tìm sản phẩm phù hợp...",
     [AI_TOOL_NAMES.GET_PRODUCT_DETAIL]: "Đang xem chi tiết sản phẩm...",
     [AI_TOOL_NAMES.SEARCH_CLASS_POSTS]: "Đang tìm lớp học / HLV...",
+    [AI_TOOL_NAMES.GET_BOOKING_RECOMMENDATIONS]:
+      "Đang phân tích gợi ý đặt sân (AI)...",
   };
   return messages[toolName] || "Đang tra cứu dữ liệu...";
 };

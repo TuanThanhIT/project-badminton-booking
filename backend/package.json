@@ -18,7 +18,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "start": "node src/server.js",
-    "worker": "node src/workers/ghnWebhookWorker.js",
+    "worker": "node src/workers/index.js",
     "build": "babel src/server.js -d dist",
     "dev": "npm run build && nodemon src/server.js",
     "migrate": "sequelize-cli db:migrate",

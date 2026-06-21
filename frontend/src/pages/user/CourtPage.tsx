@@ -23,6 +23,7 @@ import type { BranchOptions } from "../../types/branch";
 import type { CourtAvailable } from "../../types/court";
 import { toast } from "react-toastify";
 import { showConfirmDialog } from "../../utils/confirmDialog";
+import BookingRecommendationWidget from "../../components/ui/user/BookingRecommendationWidget";
 
 const generateTimeOptions = () => {
   const options: string[] = [];
@@ -400,6 +401,20 @@ const CourtPage = () => {
     );
   };
 
+  const handleRecommendBranch = (branchId: number) => {
+    const branch = branchOptions.find((item) => item.id === branchId);
+    if (branch) setSelectedBranch(branch);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleRecommendTimeSlot = (hour: number) => {
+    const safeStart = Math.min(Math.max(hour, 6), 22);
+    const startValue = `${String(safeStart).padStart(2, "0")}:00`;
+    const endValue = `${String(Math.min(safeStart + 1, 23)).padStart(2, "0")}:00`;
+    setStartTime(startValue);
+    setEndTime(endValue);
+  };
+
   const handleBooking = async () => {
     if (!selectedBranch) {
       toast.warning("Vui lòng chọn chi nhánh");
@@ -539,7 +554,15 @@ const CourtPage = () => {
         </div>
       </section>
 
-      <main className="relative z-10 mx-auto -mt-6 grid max-w-[1220px] gap-6 px-4 pb-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="relative z-10 mx-auto -mt-6 max-w-[1220px] px-4 sm:px-6">
+        <BookingRecommendationWidget
+          layout="horizontal"
+          onSelectBranch={handleRecommendBranch}
+          onSelectTimeSlot={handleRecommendTimeSlot}
+        />
+      </div>
+
+      <main className="relative z-10 mx-auto mt-6 grid max-w-[1220px] gap-6 px-4 pb-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_380px]">
         <section className="space-y-6">
           <div className="overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.08)]">
             <div className="flex items-center gap-3 border-b border-slate-100 p-5">

@@ -123,14 +123,12 @@ const OrderPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-700">
-      <section className="relative overflow-hidden bg-sky-950">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.22),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.14),transparent_32%)]" />
-
+      <section className="user-hero-surface">
         <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:py-12">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-sky-100">
-                <ReceiptText size={16} className="text-sky-300" />
+              <div className="user-hero-badge mb-5">
+                <ReceiptText />
                 Trung tâm đơn hàng
               </div>
 
@@ -142,6 +140,17 @@ const OrderPage = () => {
                 Theo dõi thanh toán, vận chuyển và xem chi tiết từng đơn hàng đã
                 đặt tại B-Hub.
               </p>
+
+              <div className="mt-6 flex flex-wrap gap-3 text-sm text-sky-100">
+                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2">
+                  <PackageSearch size={16} />
+                  Theo dõi đơn hàng
+                </div>
+                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2">
+                  <Truck size={16} />
+                  Cập nhật vận chuyển
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-3 gap-3 lg:min-w-[420px]">

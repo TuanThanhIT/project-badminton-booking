@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 import CoachClassCard from "../../components/ui/user/coach/CoachClassCard";
+import TablePagination from "../../components/ui/user/pagination/TablePagination";
 import coachClassService from "../../services/user/coachClassService";
 import userSearchService from "../../services/user/userSearchService";
 import conversationService from "../../services/user/conversationService";
@@ -85,6 +86,8 @@ const STATUS_META: Record<
 const modalInputClass =
   "w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100";
 
+const STUDENT_PAGE_SIZE = 5;
+
 const CoachStudentsPage = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -110,6 +113,7 @@ const CoachStudentsPage = () => {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [classFilter, setClassFilter] = useState<string>(initialPostId || "");
   const [studentSearch, setStudentSearch] = useState("");
+  const [studentPage, setStudentPage] = useState(1);
 
   const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [addMemberPostId, setAddMemberPostId] = useState<number | null>(
@@ -246,6 +250,27 @@ const CoachStudentsPage = () => {
       );
     });
   }, [enrollments, studentSearch]);
+
+  const studentTotalPages = Math.max(
+    1,
+    Math.ceil(filteredEnrollments.length / STUDENT_PAGE_SIZE),
+  );
+
+  const pagedEnrollments = useMemo(() => {
+    const safePage = Math.min(Math.max(studentPage, 1), studentTotalPages);
+    const start = (safePage - 1) * STUDENT_PAGE_SIZE;
+    return filteredEnrollments.slice(start, start + STUDENT_PAGE_SIZE);
+  }, [filteredEnrollments, studentPage, studentTotalPages]);
+
+  useEffect(() => {
+    setStudentPage(1);
+  }, [studentSearch, statusFilter, classFilter]);
+
+  useEffect(() => {
+    if (studentPage > studentTotalPages) {
+      setStudentPage(studentTotalPages);
+    }
+  }, [studentPage, studentTotalPages]);
 
   const selectedNotifyClass = classes.find((cls) => cls.id === notifyPostId);
 
@@ -573,12 +598,12 @@ const CoachStudentsPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-700">
-      <section className="bg-[#0b3f56] text-white">
+      <section className="user-hero-surface text-white">
         <div className="mx-auto max-w-7xl px-4 pb-28 pt-14 sm:px-6 lg:pt-16">
           <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
             <div className="max-w-3xl">
-              <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-sky-100">
-                <GraduationCap size={16} className="text-sky-200" />
+              <div className="user-hero-badge mb-8">
+                <GraduationCap />
                 Khu vực huấn luyện viên
               </div>
               <h1 className="text-4xl font-bold leading-tight sm:text-5xl">
@@ -588,6 +613,17 @@ const CoachStudentsPage = () => {
                 Duyệt đăng ký, theo dõi học viên, chat và gửi thông báo cho từng
                 lớp.
               </p>
+
+              <div className="mt-6 flex flex-wrap gap-3 text-sm text-sky-100">
+                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2">
+                  <Users size={16} />
+                  Quản lý học viên
+                </div>
+                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2">
+                  <MessageCircle size={16} />
+                  Chat và thông báo
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-3 gap-3 sm:min-w-[480px]">
@@ -768,7 +804,15 @@ const CoachStudentsPage = () => {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {filteredEnrollments.map(renderEnrollmentRow)}
+                    {pagedEnrollments.map(renderEnrollmentRow)}
+                    <TablePagination
+                      page={studentPage}
+                      totalPages={studentTotalPages}
+                      total={filteredEnrollments.length}
+                      onPage={setStudentPage}
+                      unit="học viên"
+                      alwaysShow
+                    />
                   </div>
                 )}
               </div>

@@ -3,7 +3,6 @@ import {
   Clock,
   Home,
   PackageCheck,
-  ReceiptText,
   RotateCcw,
   Truck,
   Wallet,
@@ -258,12 +257,10 @@ const VNPayResultPage = () => {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-700">
       {/* HERO */}
-      <section className="relative overflow-hidden bg-sky-950 py-12 sm:py-14 lg:py-16">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.24),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.16),transparent_35%)]" />
-
+      <section className="user-hero-surface py-12 sm:py-14 lg:py-16">
         <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-sky-100">
-            <ReceiptText size={16} className="text-sky-300" />
+          <div className="user-hero-badge">
+            <Wallet />
             Kết quả giao dịch VNPay
           </div>
 
@@ -398,7 +395,7 @@ const VNPayResultPage = () => {
 
           {/* ACTION */}
           <div className="flex flex-col gap-3 border-t border-slate-100 p-5 sm:flex-row sm:justify-between sm:p-6">
-            <ActionButton onClick={() => navigate("/home")}>
+            <ActionButton onClick={() => navigate("/")}>
               <Home size={18} />
               Trang chủ
             </ActionButton>

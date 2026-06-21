@@ -20,6 +20,7 @@ import {
 } from "../AdminModal";
 import AdminModal from "../AdminModal";
 import { AdminProductFormSchema } from "../../../../schemas/AdminFormSchemas";
+import { createRandomId } from "../../../../utils/randomId";
 
 type ProductFormModalProps = {
   product: AdminProduct | null;
@@ -47,10 +48,7 @@ type VariantDraft = {
   weight: number | string;
 };
 
-const createDraftKey = () =>
-  typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random()}`;
+const createDraftKey = () => createRandomId();
 
 const createEmptyVariant = (variant?: AdminProductVariant): VariantDraft => ({
   key: createDraftKey(),

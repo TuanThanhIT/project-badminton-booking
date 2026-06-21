@@ -210,9 +210,9 @@ const CartPage = () => {
 
   if (!cart || cart.cartItems.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-50 px-4 py-12 sm:py-16">
-        <div className="mx-auto grid max-w-6xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="flex flex-col justify-center p-8 sm:p-12">
+      <div className="min-h-screen bg-slate-50 px-4 py-10 sm:py-12">
+        <div className="mx-auto grid max-w-5xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="flex flex-col justify-center p-7 sm:p-9">
             <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
               <ShoppingCart size={34} />
             </div>
@@ -227,7 +227,7 @@ const CartPage = () => {
               đây để kiểm tra trước khi thanh toán.
             </p>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-6 flex flex-col gap-2.5 sm:flex-row">
               <button
                 onClick={() => navigate("/products")}
                 className="inline-flex items-center justify-center gap-2 rounded-2xl bg-sky-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-sky-700"
@@ -236,7 +236,7 @@ const CartPage = () => {
                 <ArrowRight size={18} />
               </button>
               <button
-                onClick={() => navigate("/home")}
+                onClick={() => navigate("/")}
                 className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
               >
                 Về trang chủ
@@ -244,8 +244,8 @@ const CartPage = () => {
             </div>
           </div>
 
-          <div className="hidden bg-slate-100 p-8 lg:block">
-            <div className="h-full rounded-[1.5rem] border border-white bg-white/70 p-6">
+          <div className="hidden bg-slate-100 p-6 lg:block">
+            <div className="h-full rounded-2xl border border-white bg-white/70 p-5">
               <div className="grid h-full place-items-center rounded-[1.25rem] border border-dashed border-slate-300 bg-slate-50">
                 <div className="text-center">
                   <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-[2rem] bg-white text-sky-600 shadow-sm">
@@ -273,14 +273,12 @@ const CartPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <section className="relative overflow-hidden bg-sky-950 py-14 sm:py-16 lg:py-20">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.24),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.16),transparent_35%)]" />
-
+      <section className="user-hero-surface py-11 sm:py-12 lg:py-14">
         <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="grid gap-8 lg:grid-cols-[1fr_360px] lg:items-center">
+          <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-center">
             <div>
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-medium text-sky-100 sm:text-sm">
-                <ShoppingCart size={16} className="text-sky-300" />
+              <div className="user-hero-badge mb-4">
+                <ShoppingCart />
                 Giỏ hàng B-Hub
               </div>
 
@@ -289,12 +287,12 @@ const CartPage = () => {
                 trước khi thanh toán
               </h1>
 
-              <p className="mt-4 max-w-2xl text-sm leading-relaxed text-sky-100 sm:text-base">
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-sky-100 sm:text-base">
                 Xem lại số lượng, thuộc tính sản phẩm và tổng tiền để hoàn tất
                 đơn hàng nhanh chóng.
               </p>
 
-              <div className="mt-6 flex flex-wrap gap-3 text-xs text-sky-100 sm:text-sm">
+              <div className="mt-5 flex flex-wrap gap-2.5 text-xs text-sky-100 sm:text-sm">
                 <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-2 sm:px-4">
                   <PackageCheck size={16} />
                   {selectedItems.length} sản phẩm đã chọn
@@ -308,7 +306,7 @@ const CartPage = () => {
             </div>
 
             <div className="hidden lg:block">
-              <div className="rounded-[2rem] border border-white/15 bg-white/10 p-5 shadow-2xl backdrop-blur-md">
+              <div className="rounded-3xl border border-white/15 bg-white/10 p-4 shadow-2xl backdrop-blur-md">
                 <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-sky-200">
                   <Wallet size={30} />
                 </div>
@@ -328,12 +326,12 @@ const CartPage = () => {
         </div>
       </section>
 
-      <main className="relative z-20 mx-auto -mt-8 max-w-7xl px-4 pb-14">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
+      <main className="relative z-20 mx-auto -mt-7 max-w-7xl px-4 pb-10">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_310px]">
           {/* LEFT */}
           <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             {/* HEADER */}
-            <div className="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 border-b border-slate-100 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-3">
                 <button
                   type="button"
@@ -378,13 +376,13 @@ const CartPage = () => {
                   <article
                     key={item.id}
                     className={`
-          grid grid-cols-1 gap-4 px-5 py-4 transition hover:bg-slate-50/60
+          grid grid-cols-1 gap-3 px-4 py-3.5 transition hover:bg-slate-50/60
           lg:grid-cols-[1fr_165px]
           ${!isLast ? "border-b border-slate-200" : ""}
         `}
                   >
                     {/* LEFT */}
-                    <div className="flex min-w-0 items-center gap-4">
+                    <div className="flex min-w-0 items-center gap-3">
                       <button
                         type="button"
                         onClick={() => toggleSelectItem(item.id)}
@@ -402,7 +400,7 @@ const CartPage = () => {
                         )}
                       </button>
                       {/* IMAGE */}
-                      <div className="flex h-36 w-36 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white p-2">
+                      <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white p-2 sm:h-32 sm:w-32">
                         <img
                           src={item.thumbnailUrl}
                           alt={item.productName}
@@ -416,7 +414,7 @@ const CartPage = () => {
                           {item.productName}
                         </h3>
 
-                        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-500">
+                        <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-slate-500">
                           <span>
                             Size:{" "}
                             <b className="font-semibold text-slate-700">
@@ -440,7 +438,7 @@ const CartPage = () => {
                           </span>
                         </div>
 
-                        <div className="mt-4 flex flex-wrap items-center gap-3">
+                        <div className="mt-3 flex flex-wrap items-center gap-2.5">
                           <div className="flex items-center overflow-hidden rounded-xl border border-slate-200 bg-white">
                             <button
                               type="button"
@@ -531,8 +529,8 @@ const CartPage = () => {
           </section>
 
           {/* RIGHT */}
-          <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-20">
-            <div className="mb-5 flex items-center gap-3">
+          <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-16">
+            <div className="mb-4 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
                 <Wallet size={20} />
               </div>
@@ -584,7 +582,7 @@ const CartPage = () => {
             <button
               onClick={handleCheckout}
               disabled={!selectedItemIds.length}
-              className={`mt-5 flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition ${
+              className={`mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
                 selectedItemIds.length
                   ? "bg-sky-600 text-white hover:bg-sky-700"
                   : "cursor-not-allowed bg-slate-200 text-slate-500"
@@ -595,8 +593,8 @@ const CartPage = () => {
             </button>
 
             <button
-              onClick={() => navigate("/home")}
-              className="mt-3 w-full rounded-xl border border-slate-200 px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              onClick={() => navigate("/")}
+              className="mt-2.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
             >
               Tiếp tục mua sắm
             </button>

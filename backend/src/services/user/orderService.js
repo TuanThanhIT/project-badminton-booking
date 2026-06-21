@@ -42,7 +42,11 @@ import {
 } from "../../constants/paymentConstant.js";
 import { verifyVNPayURL } from "../../utils/handleVNPayURL.js";
 import { formatOrderItemCode } from "../../utils/displayCode.js";
-import { VnpLocale, dateFormat, VNPay } from "vnpay";
+import { VnpLocale, VNPay } from "vnpay";
+import {
+  createVNPayDateRange,
+  logVNPayDiagnostics,
+} from "../../utils/vnpayDate.js";
 import { OTP_TYPE } from "../../constants/userConstant.js";
 import {
   getAvailableServices,
@@ -685,9 +689,11 @@ const buildOrderVNPayUrl = ({ orderGroup, payment, ip }) => {
     hashAlgorithm: "SHA512",
   });
 
-  const expireDate = new Date(Date.now() + PAYMENT_RETRY_WINDOW_MS);
+  const { createDate, expireDate } = createVNPayDateRange({
+    expiresInMs: PAYMENT_RETRY_WINDOW_MS,
+  });
 
-  return vnpay.buildPaymentUrl({
+  const paymentUrl = vnpay.buildPaymentUrl({
     vnp_Amount: payment.paymentAmount,
     vnp_IpAddr: ip,
     vnp_TxnRef: payment.externalId,
@@ -695,9 +701,18 @@ const buildOrderVNPayUrl = ({ orderGroup, payment, ip }) => {
     vnp_OrderType: "order",
     vnp_ReturnUrl: process.env.VNP_RETURN_URL,
     vnp_Locale: VnpLocale.VN,
-    vnp_CreateDate: dateFormat(new Date()),
-    vnp_ExpireDate: dateFormat(expireDate),
+    vnp_CreateDate: createDate,
+    vnp_ExpireDate: expireDate,
   });
+
+  logVNPayDiagnostics({
+    context: "order",
+    createDate,
+    expireDate,
+    paymentUrl,
+  });
+
+  return paymentUrl;
 };
 
 const createOrderService = async (data) => {

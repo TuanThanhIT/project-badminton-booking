@@ -12,7 +12,6 @@ import {
   CalendarCheck2,
   ArrowRight,
   Star,
-  Sparkles,
   Trophy,
   RotateCcw,
   WalletCards,
@@ -91,8 +90,7 @@ const AboutPage = () => {
   return (
     <div className="bg-white text-slate-800 font-sans overflow-hidden">
       {/* HERO */}
-      <section className="relative bg-sky-950 py-24 lg:py-28 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.25),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.18),transparent_35%)]" />
+      <section className="user-hero-surface py-24 lg:py-28">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute bottom-10 right-20 w-72 h-72 border border-white rounded-full" />
         </div>
@@ -100,8 +98,8 @@ const AboutPage = () => {
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid lg:grid-cols-2 gap-14 items-center">
             <div className="text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/15 text-sky-100 text-sm font-semibold mb-6">
-                <Sparkles size={16} className="text-sky-300" />
+              <div className="user-hero-badge mb-6">
+                <Target />
                 Nền tảng thể thao All-in-one
               </div>
 

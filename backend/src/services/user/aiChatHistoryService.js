@@ -1,4 +1,3 @@
-import crypto from "crypto";
 import {
   AI_HISTORY_LIMIT,
   AI_MESSAGE_ROLE,
@@ -6,6 +5,7 @@ import {
 import BadRequestError from "../../errors/BadRequestError.js";
 import ForbiddenError from "../../errors/ForbiddenError.js";
 import { AiChatMessage, AiChatSession } from "../../models/index.js";
+import { createRandomId } from "../../utils/randomId.js";
 
 const truncateTitle = (text, max = 100) => {
   const trimmed = String(text || "").trim();
@@ -47,7 +47,7 @@ export const resolveSession = async ({
     return { session, guestToken: session.guestToken };
   }
 
-  const token = userId ? null : guestToken || crypto.randomUUID();
+  const token = userId ? null : guestToken || createRandomId();
   const session = await AiChatSession.create({
     userId: userId || null,
     guestToken: token,

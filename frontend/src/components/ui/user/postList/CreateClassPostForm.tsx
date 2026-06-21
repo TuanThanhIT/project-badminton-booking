@@ -28,7 +28,7 @@ type CreateClassPostFormProps = {
 };
 
 const inputClass =
-  "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-[15px] text-slate-800 outline-none transition-all placeholder:text-slate-400 shadow-sm hover:border-sky-200 hover:bg-sky-50/20 focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100/70";
+  "w-full rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-colors placeholder:text-slate-400 hover:border-slate-300 focus:border-sky-400 focus:ring-2 focus:ring-sky-100/70";
 
 const labelClass = "block text-[13px] font-medium text-slate-600 mb-1.5";
 
@@ -176,7 +176,7 @@ const CreateClassPostForm = ({
         <label className={labelClass}>Nội dung</label>
         <textarea
           {...register("content")}
-          className={`${inputClass} min-h-[120px] resize-none leading-relaxed`}
+          className={`${inputClass} min-h-[104px] resize-none leading-relaxed`}
           placeholder="Nội dung học, mục tiêu, yêu cầu..."
         />
         {errors.content && (
@@ -368,7 +368,7 @@ const CreateClassPostForm = ({
         <label className={labelClass}>Học phí</label>
         <textarea
           {...register("formData.tuitionFee")}
-          className={`${inputClass} min-h-[100px] resize-none leading-relaxed`}
+          className={`${inputClass} min-h-[88px] resize-none leading-relaxed`}
           placeholder="VD: 2 triệu/khóa, 500k/tháng × 3 tháng, đóng đầu kỳ…"
         />
 
@@ -417,7 +417,7 @@ const CreateClassPostForm = ({
         <label className={labelClass}>Ghi chú</label>
         <textarea
           {...register("formData.notes")}
-          className={`${inputClass} min-h-[100px] resize-none leading-relaxed`}
+          className={`${inputClass} min-h-[88px] resize-none leading-relaxed`}
           placeholder="Thông tin thêm nếu cần…"
         />
       </div>

@@ -43,7 +43,7 @@ const CategoryMenu = () => {
     }
   }, [isOpen, isMobile]);
 
-  const buttonClass = `group relative flex h-12 items-center gap-2 rounded-full px-5 text-[15px] font-medium leading-none transition-all whitespace-nowrap cursor-pointer select-none after:absolute after:left-5 after:right-5 after:bottom-2.5 after:h-[2px] after:rounded-full after:transition-all ${
+  const buttonClass = `group relative flex h-11 cursor-pointer select-none items-center gap-2 whitespace-nowrap rounded-full px-[18px] text-[15px] font-medium leading-none transition-all after:absolute after:left-[18px] after:right-[18px] after:bottom-2.5 after:h-[2px] after:rounded-full after:transition-all ${
     isActive
       ? "text-yellow-200 after:bg-yellow-200"
       : "text-white after:bg-transparent hover:text-yellow-100"

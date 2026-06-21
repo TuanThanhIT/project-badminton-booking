@@ -4,6 +4,7 @@ import type {
   AiStoredMessage,
   AiStreamCallbacks,
 } from "../../types/ai";
+import { createRandomId } from "../../utils/randomId";
 
 const getBackendUrl = () =>
   import.meta.env.VITE_BACKEND_URL || "http://localhost:8080";
@@ -13,7 +14,7 @@ const GUEST_TOKEN_KEY = "bhub_ai_guest_token";
 export const getAiGuestToken = () => {
   let token = localStorage.getItem(GUEST_TOKEN_KEY);
   if (!token) {
-    token = crypto.randomUUID();
+    token = createRandomId();
     localStorage.setItem(GUEST_TOKEN_KEY, token);
   }
   return token;

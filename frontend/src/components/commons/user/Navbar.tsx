@@ -16,7 +16,7 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
-    `group relative flex h-12 items-center gap-2 rounded-full px-5 text-[15px] font-medium leading-none transition-all whitespace-nowrap after:absolute after:left-5 after:right-5 after:bottom-2.5 after:h-[2px] after:rounded-full after:transition-all ${
+    `group relative flex h-11 items-center gap-2 rounded-full px-[18px] text-[15px] font-medium leading-none transition-all whitespace-nowrap after:absolute after:left-[18px] after:right-[18px] after:bottom-2.5 after:h-[2px] after:rounded-full after:transition-all ${
       isActive
         ? "text-yellow-200 after:bg-yellow-200"
         : "text-white after:bg-transparent hover:text-yellow-100"
@@ -30,14 +30,14 @@ const Navbar = () => {
   const closeMenu = () => setIsOpen(false);
 
   return (
-    <nav className="border-t border-sky-600 bg-sky-700">
-      <div className="w-full px-4 sm:px-6 lg:px-10 2xl:px-14">
+    <nav className="max-w-full overflow-x-hidden border-t border-sky-600 bg-sky-700">
+      <div className="w-full px-3 sm:px-5 lg:px-8 2xl:px-12">
         <div className="flex items-center justify-between py-2 lg:hidden">
-          <span className="text-sm font-medium text-white">Menu</span>
+          <span className="text-sm font-semibold text-white">Menu</span>
           <button
             type="button"
             onClick={() => setIsOpen((prev) => !prev)}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition-all hover:bg-white/15"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition-all hover:bg-white/15"
             title="Mở menu"
           >
             {isOpen ? <X size={20} /> : <Menu size={20} />}
@@ -47,10 +47,10 @@ const Navbar = () => {
         <ul
           className={`${
             isOpen ? "flex" : "hidden"
-          } flex-col gap-2 pb-3 lg:flex lg:min-h-[58px] lg:flex-row lg:items-center lg:justify-center lg:gap-3 lg:pb-0`}
+          } max-w-full flex-col gap-1 pb-2.5 lg:flex lg:min-h-[54px] lg:flex-row lg:items-center lg:justify-center lg:gap-2.5 lg:pb-0`}
         >
           <li>
-            <NavLink to="/home" className={linkClass} onClick={closeMenu}>
+            <NavLink to="/" className={linkClass} onClick={closeMenu}>
               {({ isActive }) => (
                 <>
                   <Home className={iconClass({ isActive })} />

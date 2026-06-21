@@ -280,12 +280,12 @@ const MessagesPage = () => {
 
   return (
     <div className="min-h-[calc(100vh-84px)] bg-slate-50 text-slate-800">
-      <section className="bg-[#0b3f56] text-white">
+      <section className="user-hero-surface text-white">
         <div className="mx-auto max-w-7xl px-4 pb-28 pt-14 sm:px-6 lg:pt-16">
           <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
             <div className="max-w-3xl">
-              <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-sky-100">
-                <MessageCircle size={16} className="text-sky-200" />
+              <div className="user-hero-badge mb-8">
+                <MessageCircle />
                 B-Hub Chat
               </div>
 
@@ -297,6 +297,17 @@ const MessagesPage = () => {
                 Tìm theo username, email hoặc số điện thoại để bắt đầu trò
                 chuyện nhanh với bạn chơi và cộng đồng B-Hub.
               </p>
+
+              <div className="mt-6 flex flex-wrap gap-3 text-sm text-sky-100">
+                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2">
+                  <MessageCircle size={16} />
+                  Trò chuyện trực tiếp
+                </div>
+                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2">
+                  <Users size={16} />
+                  Tạo nhóm kết nối
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-3 gap-3 sm:min-w-[480px]">

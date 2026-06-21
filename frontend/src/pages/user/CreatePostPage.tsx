@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import {
-  ArrowLeft,
   GraduationCap,
   Trophy,
   Users,
   UserPlus,
 } from "lucide-react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import type { PostType } from "../../types/post";
 import CreateFindPlayerPostForm from "../../components/ui/user/postList/CreateFindPlayerPostForm";
 import CreateClassPostForm from "../../components/ui/user/postList/CreateClassPostForm";
@@ -83,23 +82,12 @@ const CreatePostPage = () => {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* HERO */}
-      <section className="relative bg-sky-950 py-14 sm:py-16 lg:py-20 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.24),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.16),transparent_35%)]" />
-        <div className="absolute top-0 right-0 w-1/3 h-full bg-sky-800/30 skew-x-12 translate-x-20" />
-
+      <section className="user-hero-surface py-14 sm:py-16 lg:py-20">
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6">
-          <Link
-            to="/posts"
-            className="inline-flex items-center gap-2 text-sky-100 hover:text-white text-sm font-semibold mb-6 transition"
-          >
-            <ArrowLeft size={18} />
-            Quay lại cộng đồng
-          </Link>
-
           <div className="grid lg:grid-cols-[1fr_340px] gap-8 items-center">
             <div>
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/15 text-sky-100 text-xs sm:text-sm font-semibold mb-5">
-                <ActiveIcon size={16} className="text-sky-300" />
+              <div className="user-hero-badge mb-5">
+                <ActiveIcon />
                 Tạo bài đăng mới
               </div>
 
@@ -112,6 +100,17 @@ const CreatePostPage = () => {
                 Tạo bài viết tìm người chơi, mở lớp, đăng giải đấu hoặc lập nhóm
                 giao lưu cầu lông một cách nhanh chóng.
               </p>
+
+              <div className="mt-6 flex flex-wrap gap-3 text-sm text-sky-100">
+                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2">
+                  <UserPlus size={16} />
+                  Nhiều loại bài đăng
+                </div>
+                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2">
+                  <Users size={16} />
+                  Kết nối cộng đồng
+                </div>
+              </div>
             </div>
 
             <div className="hidden lg:block">

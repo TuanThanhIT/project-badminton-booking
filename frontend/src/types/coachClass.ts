@@ -35,7 +35,16 @@ export type ClassEnrollmentItem = {
   post?: {
     id: number;
     title: string;
+    content?: string | null;
     formData?: Record<string, unknown> | null;
+    createdAt?: string;
+    coach?: {
+      id: number;
+      username: string;
+      fullName: string;
+      avatar?: string | null;
+      level?: string | null;
+    } | null;
   } | null;
 };
 

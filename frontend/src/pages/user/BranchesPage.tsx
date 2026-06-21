@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import type { BranchesRequest } from "../../types/branch";
 import { useNavigate } from "react-router-dom";
 import {
+  Building2,
   MapPin,
   Phone,
   Search,
@@ -80,19 +81,14 @@ const BranchPage = () => {
 
   return (
     <div className="min-h-screen pb-20">
-      <div className="relative overflow-hidden bg-gradient-to-r from-sky-950 via-sky-900 to-sky-800 text-white py-16 mb-10">
-        {/* DECOR BACKGROUND */}
-        <div className="absolute inset-0">
-          <div className="absolute -top-20 -right-20 w-80 h-80 bg-sky-500/20 blur-3xl rounded-full animate-pulse" />
-          <div className="absolute bottom-0 left-20 w-72 h-72 bg-cyan-400/10 blur-3xl rounded-full animate-pulse" />
-        </div>
-
+      <div className="user-hero-surface mb-10 py-16 text-white">
         {/* CONTENT */}
         <div className="relative w-11/12 mx-auto flex items-center justify-between gap-10">
           {/* LEFT TEXT */}
           <div className="max-w-2xl">
-            <div className="flex items-center gap-3 mb-3">
-              <span className="px-3 py-1 text-xs font-medium bg-sky-500/20 text-sky-200 rounded-full border border-sky-400/30">
+            <div className="mb-5">
+              <span className="user-hero-badge">
+                <Building2 />
                 Hệ thống sân cầu lông
               </span>
             </div>

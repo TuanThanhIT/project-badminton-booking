@@ -1,7 +1,11 @@
 import sequelize from "../../config/db.js";
 import BadRequestError from "../../errors/BadRequestError.js";
 import { v4 as uuidv4 } from "uuid";
-import { dateFormat, VNPay, VnpLocale } from "vnpay";
+import { VNPay, VnpLocale } from "vnpay";
+import {
+  createVNPayDateRange,
+  logVNPayDiagnostics,
+} from "../../utils/vnpayDate.js";
 
 import {
   MonthlyBooking,
@@ -66,10 +70,9 @@ const createVNPayUrl = async ({ booking, amount, ip, transaction }) => {
     hashAlgorithm: "SHA512",
   });
 
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  const { createDate, expireDate } = createVNPayDateRange();
 
-  return vnpay.buildPaymentUrl({
+  const paymentUrl = vnpay.buildPaymentUrl({
     vnp_Amount: amount,
     vnp_IpAddr: ip,
     vnp_TxnRef: txnRef,
@@ -77,9 +80,18 @@ const createVNPayUrl = async ({ booking, amount, ip, transaction }) => {
     vnp_OrderType: "booking",
     vnp_ReturnUrl: process.env.VNP_RETURN_URL,
     vnp_Locale: VnpLocale.VN,
-    vnp_CreateDate: dateFormat(new Date()),
-    vnp_ExpireDate: dateFormat(tomorrow),
+    vnp_CreateDate: createDate,
+    vnp_ExpireDate: expireDate,
   });
+
+  logVNPayDiagnostics({
+    context: "monthly-booking",
+    createDate,
+    expireDate,
+    paymentUrl,
+  });
+
+  return paymentUrl;
 };
 
 const timeToNumber = (time) => {

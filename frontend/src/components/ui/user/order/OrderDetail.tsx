@@ -194,7 +194,7 @@ const OrderDetail = () => {
             </div>
 
             <div className="rounded-3xl border border-sky-100 bg-sky-50/70 p-4">
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-xs font-medium text-sky-600">
                     Tổng thanh toán
@@ -204,18 +204,13 @@ const OrderDetail = () => {
                   </p>
                 </div>
 
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-sky-600 shadow-sm">
-                  <CreditCard size={22} />
-                </div>
-              </div>
-
-              {(canRequestCancel || canRequestReturn) && (
-                <div className="mt-4 flex flex-wrap gap-2 border-t border-sky-100 pt-4">
+                {(canRequestCancel || canRequestReturn) && (
+                  <div className="flex flex-wrap gap-2 sm:justify-end">
                   {canRequestCancel && (
                     <button
                       type="button"
                       onClick={() => setOpenCancelModal(true)}
-                      className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl border border-red-100 bg-white px-4 text-sm font-medium text-red-600 shadow-sm transition-all hover:border-red-200 hover:bg-red-50"
+                      className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3.5 text-sm font-semibold text-red-600 transition-colors hover:border-red-300 hover:bg-red-100"
                     >
                       <Ban size={15} />
                       {orderDetailData.status === ORDER_STATUS.PENDING
@@ -228,14 +223,15 @@ const OrderDetail = () => {
                     <button
                       type="button"
                       onClick={() => setOpenReturnModal(true)}
-                      className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl border border-orange-100 bg-white px-4 text-sm font-medium text-orange-600 shadow-sm transition-all hover:border-orange-200 hover:bg-orange-50"
+                      className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-3.5 text-sm font-semibold text-orange-600 transition-colors hover:border-orange-300 hover:bg-orange-100"
                     >
                       <RotateCcw size={15} />
                       Yêu cầu trả
                     </button>
                   )}
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

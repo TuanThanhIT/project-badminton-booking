@@ -138,7 +138,7 @@ const filterConfig: Record<string, any[]> = {
     {
       key: "pricesRange",
       label: "Khoảng giá",
-      type: "ranges",
+      type: "range",
       min: 100000,
       max: 10000000,
     },

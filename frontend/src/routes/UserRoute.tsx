@@ -39,7 +39,7 @@ const UserRoute = () => {
     <Routes>
       {/* Public */}
       <Route element={<UserPublicLayout />}>
-        <Route path="home" element={<HomePage />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="contact" element={<ContactPage />} />
         <Route path="about" element={<AboutPage />} />
         <Route path="login" element={<LoginPage />} />
@@ -72,11 +72,17 @@ const UserRoute = () => {
           <Route path="branches/:branchId" element={<BranchDetailPage />} />
           <Route path="courts" element={<CourtPage />} />
           <Route path="order-result" element={<OrderResultPage />} />
-          <Route path="/checkout/booking" element={<CheckoutBookingPage />} />
+          <Route path="checkout/booking" element={<CheckoutBookingPage />} />
           <Route path="my-classes" element={<MyClassEnrollmentsPage />} />
           <Route path="become-coach" element={<BecomeCoachPage />} />
-          <Route path="coach/classes" element={<Navigate to="/coach/students" replace />} />
-          <Route path="coach/student" element={<Navigate to="/coach/students" replace />} />
+          <Route
+            path="coach/classes"
+            element={<Navigate to="/coach/students" replace />}
+          />
+          <Route
+            path="coach/student"
+            element={<Navigate to="/coach/students" replace />}
+          />
           <Route path="coach/students" element={<CoachStudentsPage />} />
         </Route>
       </Route>

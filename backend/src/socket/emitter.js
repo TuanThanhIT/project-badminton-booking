@@ -29,3 +29,7 @@ export const emitNotificationToRole = (role, data) => {
 export const emitOrderShippingUpdated = (userId, data) => {
   emitToUser(userId, SOCKET_EVENTS.ORDER_SHIPPING_UPDATED, data);
 };
+
+export const emitAccountLocked = (userId, data) => {
+  emitToUser(userId, SOCKET_EVENTS.ACCOUNT_LOCKED, data);
+};

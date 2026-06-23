@@ -11,6 +11,11 @@ export interface AdminUser {
   role?: string;
   isVerified: boolean;
   isActive: boolean;
+  accountStatus?: AccountStatus;
+  suspendedUntil?: string | null;
+  suspensionReason?: string | null;
+  violationCount?: number;
+  lastViolationAt?: string | null;
   createdDate: string;
   assignedBranches?: AdminEmployeeBranch[];
 }
@@ -269,6 +274,12 @@ export interface AdminPost {
   isActive: boolean;
   isDeleted: boolean;
   isRepost: boolean;
+  moderationStatus?: ModerationStatus;
+  moderationLabel?: ModerationLabel | null;
+  moderationConfidence?: number | null;
+  moderationAction?: ModerationAction | null;
+  moderationReason?: string | null;
+  moderatedAt?: string | null;
   commentCount: number;
   createdAt: string;
   authorId?: number;
@@ -459,6 +470,65 @@ export interface AdminDashboardRecentItem {
   username?: string;
   avatar?: string;
   email?: string;
+}
+
+export type AccountStatus = "ACTIVE" | "WARNING" | "SUSPENDED" | "BANNED";
+export type ModerationStatus =
+  | "PENDING"
+  | "APPROVED"
+  | "REVIEW_REQUIRED"
+  | "REJECTED";
+export type ModerationLabel =
+  | "normal"
+  | "spam"
+  | "unauthorized_ad"
+  | "offensive";
+export type ModerationAction = "ALLOW" | "REVIEW" | "BLOCK";
+
+export interface AdminModerationAuthor {
+  id: number;
+  username: string;
+  email: string;
+  accountStatus: AccountStatus;
+  violationCount: number;
+  lastViolationAt?: string | null;
+  suspendedUntil?: string | null;
+  suspensionReason?: string | null;
+  profile?: {
+    fullName?: string;
+    avatar?: string;
+  };
+}
+
+export interface AdminModerationPost {
+  id: number;
+  title: string;
+  content?: string | null;
+  type: string;
+  formData?: Record<string, unknown> | null;
+  moderationStatus: ModerationStatus;
+  moderationLabel?: ModerationLabel | null;
+  moderationConfidence?: number | null;
+  moderationAction?: ModerationAction | null;
+  moderationReason?: string | null;
+  moderationText?: string | null;
+  moderatedAt?: string | null;
+  createdAt: string;
+  author?: AdminModerationAuthor;
+}
+
+export interface AdminModerationViolation {
+  id: number;
+  userId: number;
+  postId?: number | null;
+  targetType: "POST" | "COMMENT";
+  targetId?: number | null;
+  label: Exclude<ModerationLabel, "normal">;
+  action: "BLOCK" | "REVIEW_REJECTED" | "ADMIN_REJECTED";
+  confidence?: number | null;
+  reason?: string | null;
+  source: "AI" | "ADMIN";
+  createdAt: string;
 }
 
 export interface AdminDashboardPostTypeItem {

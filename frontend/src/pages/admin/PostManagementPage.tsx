@@ -4,22 +4,25 @@ import {
   FileText,
   MessageCircle,
   MessagesSquare,
+  ShieldAlert,
   Type,
   type LucideIcon,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import PostsTab from "../../components/ui/admin/posts/PostsTab";
 import CommentsTab from "../../components/ui/admin/posts/CommentsTab";
+import ModerationTab from "../../components/ui/admin/posts/ModerationTab";
 import AdminPageHeader from "../../components/ui/admin/AdminPageHeader";
 import adminPostService from "../../services/admin/postService";
 
-type TabType = "posts" | "comments";
+type TabType = "posts" | "moderation" | "comments";
 
 type PostManagementStats = {
   totalPosts: number;
   activePosts: number;
   totalComments: number;
   replyComments: number;
+  pendingModeration: number;
 };
 
 const StatCard = ({
@@ -53,11 +56,12 @@ const PostManagementPage = () => {
     activePosts: 0,
     totalComments: 0,
     replyComments: 0,
+    pendingModeration: 0,
   });
 
   const fetchStats = useCallback(async () => {
     try {
-      const [postsRes, activePostsRes, commentsRes, repliesRes] =
+      const [postsRes, activePostsRes, commentsRes, repliesRes, pendingRes] =
         await Promise.all([
           adminPostService.getPostsService({
             page: 1,
@@ -76,6 +80,10 @@ const PostManagementPage = () => {
             limit: 1,
             commentType: "REPLY",
           }),
+          adminPostService.getPendingModerationPostsService({
+            page: 1,
+            limit: 1,
+          }),
         ]);
 
       setStats({
@@ -83,6 +91,8 @@ const PostManagementPage = () => {
         activePosts: (activePostsRes.data as any).data?.pagination?.total || 0,
         totalComments: (commentsRes.data as any).data?.pagination?.total || 0,
         replyComments: (repliesRes.data as any).data?.pagination?.total || 0,
+        pendingModeration:
+          (pendingRes.data as any).data?.pagination?.total || 0,
       });
     } catch {
       toast.error("Không thể tải thống kê bài đăng");
@@ -95,6 +105,11 @@ const PostManagementPage = () => {
 
   const tabs: { key: TabType; label: string; icon: typeof FileText }[] = [
     { key: "posts", label: "Bài đăng", icon: FileText },
+    {
+      key: "moderation",
+      label: `Chờ kiểm duyệt (${stats.pendingModeration})`,
+      icon: ShieldAlert,
+    },
     { key: "comments", label: "Bình luận", icon: MessageCircle },
   ];
 
@@ -161,6 +176,8 @@ const PostManagementPage = () => {
 
         {activeTab === "posts" ? (
           <PostsTab onStatsChange={fetchStats} />
+        ) : activeTab === "moderation" ? (
+          <ModerationTab onStatsChange={fetchStats} />
         ) : (
           <CommentsTab onStatsChange={fetchStats} />
         )}

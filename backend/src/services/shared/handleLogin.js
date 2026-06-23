@@ -7,6 +7,9 @@ import RefreshToken from "../../models/refreshToken.js";
 import { generateAccessToken, generateRefreshToken } from "../../utils/jwt.js";
 import { getEmployeeBranchIds } from "../employee/branchAccessService.js";
 import { ROLE_NAME } from "../../constants/userConstant.js";
+import { ACCOUNT_STATUS } from "../../constants/moderationConstant.js";
+import ForbiddenError from "../../errors/ForbiddenError.js";
+import { reactivateUserIfSuspensionExpired } from "../moderationViolationService.js";
 dotenv.config();
 
 const getManagerBranchIds = async (managerId, transaction) => {
@@ -17,6 +20,35 @@ const getManagerBranchIds = async (managerId, transaction) => {
   });
 
   return branchManagers.map((item) => Number(item.branchId));
+};
+
+const toAccountLockData = (user) => ({
+  accountStatus: user.accountStatus,
+  suspendedUntil: user.suspendedUntil,
+  suspensionReason: user.suspensionReason,
+  violationCount: user.violationCount,
+  forceLogout: true,
+});
+
+const assertCanLogin = (user) => {
+  if (user.accountStatus === ACCOUNT_STATUS.BANNED) {
+    throw new ForbiddenError(
+      "Tài khoản của bạn đang bị khóa do vi phạm quy định cộng đồng.",
+      toAccountLockData(user),
+    );
+  }
+
+  const suspensionIsActive =
+    user.accountStatus === ACCOUNT_STATUS.SUSPENDED &&
+    user.suspendedUntil &&
+    new Date(user.suspendedUntil).getTime() > Date.now();
+
+  if (suspensionIsActive) {
+    throw new ForbiddenError(
+      "Tài khoản của bạn đang bị khóa do vi phạm quy định cộng đồng.",
+      toAccountLockData(user),
+    );
+  }
 };
 
 export const handleLogin = async (username, password, expectedRoles) => {
@@ -53,6 +85,9 @@ export const handleLogin = async (username, password, expectedRoles) => {
         "Tài khoản hiện không thể đăng nhập. Vui lòng liên hệ hỗ trợ!",
       );
     }
+
+    await reactivateUserIfSuspensionExpired(user, t);
+    assertCanLogin(user);
 
     const isMatchPassword = await bcrypt.compare(password, user.password);
     if (!isMatchPassword) {

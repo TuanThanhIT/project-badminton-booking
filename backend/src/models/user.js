@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
+import { ACCOUNT_STATUS } from "../constants/moderationConstant.js";
 import Role from "./role.js";
 
 const User = sequelize.define(
@@ -84,6 +85,36 @@ const User = sequelize.define(
     },
 
     lastSeenAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+
+    accountStatus: {
+      type: DataTypes.ENUM(...Object.values(ACCOUNT_STATUS)),
+      allowNull: false,
+      defaultValue: ACCOUNT_STATUS.ACTIVE,
+    },
+
+    suspendedUntil: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+
+    suspensionReason: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+
+    violationCount: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      validate: {
+        min: 0,
+      },
+    },
+
+    lastViolationAt: {
       type: DataTypes.DATE,
       allowNull: true,
     },

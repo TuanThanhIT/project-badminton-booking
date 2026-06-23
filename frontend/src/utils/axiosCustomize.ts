@@ -2,6 +2,10 @@ import axios from "axios";
 import { getStore } from "../redux/storeRef";
 import { refreshTokenThunk } from "../redux/slices/user/authSlice";
 import type { ApiErrorType } from "../types/error";
+import {
+  forceLogoutUser,
+  isAccountLockPayload,
+} from "./forceLogout";
 
 const instance = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL,
@@ -33,6 +37,32 @@ instance.interceptors.response.use(
     const originalRequest: any = error.config;
     const statusCode = error.response?.status ?? 500;
     const data = error.response?.data;
+    const accountLockPayload = {
+      forceLogout: data?.forceLogout ?? data?.data?.forceLogout,
+      accountStatus: data?.accountStatus ?? data?.data?.accountStatus,
+      suspendedUntil: data?.suspendedUntil ?? data?.data?.suspendedUntil,
+      suspensionReason:
+        data?.suspensionReason ?? data?.data?.suspensionReason,
+      violationCount: data?.data?.violationCount,
+      message: data?.message,
+    };
+
+    if (
+      [403, 423].includes(statusCode) &&
+      isAccountLockPayload(accountLockPayload)
+    ) {
+      forceLogoutUser(accountLockPayload);
+      return Promise.reject({
+        statusCode,
+        success: false,
+        ...accountLockPayload,
+        message:
+          data?.message ||
+          "Tài khoản đã bị khóa do vi phạm quy định cộng đồng.",
+        data: data?.data || null,
+        errors: data?.errors || null,
+      } satisfies ApiErrorType);
+    }
 
     if (!originalRequest || !originalRequest.url) {
       return Promise.reject({

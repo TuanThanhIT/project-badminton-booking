@@ -70,6 +70,25 @@ const UserDetailModal = ({ userId, onClose }: UserDetailModalProps) => {
               { label: "Xác thực",  value: user.isVerified ? "✅ Đã xác thực" : "❌ Chưa xác thực" },
               { label: "Trạng thái", value: user.isActive ? "🟢 Hoạt động" : "🔴 Đã khóa" },
               {
+                label: "Kiểm duyệt",
+                value:
+                  user.accountStatus === "BANNED"
+                    ? "Bị cấm"
+                    : user.accountStatus === "SUSPENDED"
+                      ? "Đang tạm khóa"
+                      : user.accountStatus === "WARNING"
+                        ? "Đang cảnh báo"
+                        : "Bình thường",
+              },
+              { label: "Số vi phạm", value: String(user.violationCount || 0) },
+              {
+                label: "Khóa đến",
+                value: user.suspendedUntil
+                  ? new Date(user.suspendedUntil).toLocaleString("vi-VN")
+                  : "—",
+              },
+              { label: "Lý do khóa", value: user.suspensionReason || "—" },
+              {
                 label: "Ngày tạo",
                 value: user.createdDate
                   ? new Date(user.createdDate).toLocaleDateString("vi-VN")

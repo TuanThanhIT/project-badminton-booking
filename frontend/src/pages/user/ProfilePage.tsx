@@ -17,6 +17,7 @@ import {
   GraduationCap,
   Search,
   SlidersHorizontal,
+  AlertTriangle,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import type { PostReactionType, PostType, PostWithAuthor } from "../../types/post";
@@ -42,6 +43,10 @@ import WalletPanel from "../../components/ui/user/wallet/WalletPanel";
 import { ROLE_NAME } from "../../utils/constants/role";
 import { POST_TYPE_LABEL, POST_TYPES } from "../../utils/constants/postConstant";
 import { showConfirmDialog } from "../../utils/confirmDialog";
+import {
+  ACCOUNT_STATUS_BADGE_CLASS,
+  ACCOUNT_STATUS_LABEL,
+} from "../../utils/moderationLabels";
 
 type EditTarget = {
   id: number;
@@ -121,6 +126,9 @@ const ProfilePage = () => {
   const isCoach =
     currentUser?.role === ROLE_NAME.COACH ||
     profile?.role === ROLE_NAME.COACH;
+  const accountStatus = profile?.accountStatus || "ACTIVE";
+  const violationCount = profile?.violationCount || 0;
+  const showAccountWarning = accountStatus !== "ACTIVE";
 
   const engagementStats = useMemo(
     () =>
@@ -453,6 +461,161 @@ const ProfilePage = () => {
             </button>
           }
         />
+
+        {accountStatus === "ACTIVE" && violationCount > 0 ? (
+          <div className="mt-5 rounded-3xl border border-sky-200 bg-sky-50 p-4 text-sky-900 shadow-sm">
+            <div className="flex gap-3">
+              <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/70">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="font-semibold">
+                  Bạn đã có {violationCount} lần vi phạm quy định cộng đồng.
+                </p>
+                <p className="mt-1 text-sm">
+                  Vui lòng đăng bài đúng nội quy để tránh bị cảnh báo hoặc khóa
+                  tài khoản.
+                </p>
+                <Link
+                  to="/about#community-guidelines"
+                  className="mt-2 inline-flex text-sm font-semibold text-sky-700 hover:text-sky-800"
+                >
+                  Xem quy định cộng đồng
+                </Link>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {showAccountWarning ? (
+          <div
+            className={`mt-5 rounded-3xl border p-4 shadow-sm ${
+              accountStatus === "WARNING"
+                ? "border-amber-200 bg-amber-50 text-amber-900"
+                : "border-red-200 bg-red-50 text-red-900"
+            }`}
+          >
+            <div className="flex gap-3">
+              <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/70">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-semibold">
+                    {accountStatus === "WARNING"
+                      ? "Tài khoản của bạn đã có cảnh báo do vi phạm quy định cộng đồng."
+                      : accountStatus === "SUSPENDED"
+                        ? "Tài khoản của bạn đang bị tạm khóa do vi phạm quy định cộng đồng."
+                        : "Tài khoản của bạn đã bị khóa do vi phạm quy định cộng đồng."}
+                  </p>
+                  <span
+                    className={`rounded border px-2 py-0.5 text-xs font-semibold ${
+                      ACCOUNT_STATUS_BADGE_CLASS[accountStatus]
+                    }`}
+                  >
+                    {ACCOUNT_STATUS_LABEL[accountStatus]}
+                  </span>
+                </div>
+                <div className="mt-2 grid gap-1 text-sm sm:grid-cols-2">
+                  <p>Số lần vi phạm: {profile.violationCount || 0}</p>
+                  {profile.lastViolationAt ? (
+                    <p>
+                      Vi phạm gần nhất:{" "}
+                      {new Date(profile.lastViolationAt).toLocaleString("vi-VN")}
+                    </p>
+                  ) : null}
+                  {profile.suspendedUntil ? (
+                    <p>
+                      Tạm khóa đến:{" "}
+                      {new Date(profile.suspendedUntil).toLocaleString("vi-VN")}
+                    </p>
+                  ) : null}
+                  {profile.suspensionReason ? (
+                    <p className="sm:col-span-2">
+                      Lý do: {profile.suspensionReason}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        <section className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold text-slate-900">
+                Trạng thái cộng đồng
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Theo dõi số lần vi phạm và tình trạng tài khoản của bạn.
+              </p>
+            </div>
+            <span
+              className={`rounded border px-2.5 py-1 text-xs font-semibold ${
+                ACCOUNT_STATUS_BADGE_CLASS[accountStatus]
+              }`}
+            >
+              {ACCOUNT_STATUS_LABEL[accountStatus]}
+            </span>
+          </div>
+
+          <div className="mt-4 grid gap-3 text-sm text-slate-700 sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <p className="text-xs font-medium uppercase text-slate-400">
+                Trạng thái tài khoản
+              </p>
+              <p className="mt-1 font-semibold text-slate-900">
+                {ACCOUNT_STATUS_LABEL[accountStatus]}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-medium uppercase text-slate-400">
+                Số lần vi phạm
+              </p>
+              <p className="mt-1 font-semibold text-slate-900">
+                {violationCount}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-medium uppercase text-slate-400">
+                Lần vi phạm gần nhất
+              </p>
+              <p className="mt-1 font-semibold text-slate-900">
+                {profile.lastViolationAt
+                  ? new Date(profile.lastViolationAt).toLocaleString("vi-VN")
+                  : "Chưa có"}
+              </p>
+            </div>
+            {profile.suspensionReason ? (
+              <div className="sm:col-span-2">
+                <p className="text-xs font-medium uppercase text-slate-400">
+                  Lý do khóa
+                </p>
+                <p className="mt-1 font-semibold text-slate-900">
+                  {profile.suspensionReason}
+                </p>
+              </div>
+            ) : null}
+            {profile.suspendedUntil ? (
+              <div>
+                <p className="text-xs font-medium uppercase text-slate-400">
+                  Thời gian mở khóa
+                </p>
+                <p className="mt-1 font-semibold text-slate-900">
+                  {new Date(profile.suspendedUntil).toLocaleString("vi-VN")}
+                </p>
+              </div>
+            ) : null}
+          </div>
+
+          <Link
+            to="/about#community-guidelines"
+            className="mt-4 inline-flex text-sm font-semibold text-sky-700 hover:text-sky-800"
+          >
+            Xem quy định cộng đồng
+          </Link>
+        </section>
 
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-8">
           {/* SIDEBAR */}

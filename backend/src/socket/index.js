@@ -14,6 +14,8 @@ import {
   scheduleOffline,
 } from "./presenceManager.js";
 import { SOCKET_EVENTS } from "./socketEvents.js";
+import { ACCOUNT_STATUS } from "../constants/moderationConstant.js";
+import { reactivateUserIfSuspensionExpired } from "../services/moderationViolationService.js";
 
 // File này tạo Socket.IO server. Khi frontend connect lên, backend lấy token, verify JWT, rồi cho socket vào room riêng:
 
@@ -94,7 +96,7 @@ export const initSocket = (httpServer) => {
   });
 
   // Middleware xác thực JWT
-  io.use((socket, next) => {
+  io.use(async (socket, next) => {
     const token = socket.handshake.auth?.token;
 
     if (!token) {
@@ -103,6 +105,33 @@ export const initSocket = (httpServer) => {
 
     try {
       const decoded = verifyAccessToken(token);
+      const user = await User.findByPk(decoded.id, {
+        attributes: [
+          "id",
+          "isActive",
+          "isVerified",
+          "accountStatus",
+          "suspendedUntil",
+        ],
+      });
+
+      if (!user || !user.isActive || !user.isVerified) {
+        return next(new ApiError(StatusCodes.UNAUTHORIZED, "ACCOUNT_DISABLED"));
+      }
+
+      await reactivateUserIfSuspensionExpired(user);
+
+      const suspensionIsActive =
+        user.accountStatus === ACCOUNT_STATUS.SUSPENDED &&
+        user.suspendedUntil &&
+        new Date(user.suspendedUntil).getTime() > Date.now();
+
+      if (
+        user.accountStatus === ACCOUNT_STATUS.BANNED ||
+        suspensionIsActive
+      ) {
+        return next(new ApiError(StatusCodes.FORBIDDEN, "ACCOUNT_LOCKED"));
+      }
 
       // Lưu info user vào socket
       socket.data.userId = decoded.id;

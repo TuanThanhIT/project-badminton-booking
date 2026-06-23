@@ -29,12 +29,21 @@ const createManagerService = (data: {
 const deleteUserService = (userId: number) =>
   instance.delete(`/admin/users/${userId}`);
 
+const getUserModerationViolationsService = (
+  userId: number,
+  params: { page?: number; limit?: number },
+) =>
+  instance.get(`/admin/users/${userId}/moderation-violations`, {
+    params,
+  });
+
 const adminUserService = {
   getUsersService,
   getUserDetailService,
   toggleUserActiveService,
   createManagerService,
   deleteUserService,
+  getUserModerationViolationsService,
 };
 
 export default adminUserService;

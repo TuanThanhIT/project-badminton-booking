@@ -9,6 +9,10 @@ import { getCategoriesGrouped } from "./redux/slices/user/cateSlice";
 import RealtimeProvider from "./components/contexts/providers/RealtimeProvider";
 import { AIChatProvider } from "./contexts/AIChatContext";
 import AIChatWidget from "./components/ai/AIChatWidget";
+import {
+  forceLogoutUser,
+  getForceLogoutStorageKey,
+} from "./utils/forceLogout";
 
 const App = () => {
   const dispatch = useAppDispatch();
@@ -23,6 +27,21 @@ const App = () => {
 
     dispatch(getCategoriesGrouped());
   }, [dispatch, accessToken]);
+
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== getForceLogoutStorageKey() || !event.newValue) return;
+
+      try {
+        forceLogoutUser(JSON.parse(event.newValue), { broadcast: false });
+      } catch {
+        forceLogoutUser({}, { broadcast: false });
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
   return (
     <Router>

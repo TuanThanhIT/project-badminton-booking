@@ -201,6 +201,7 @@ const deleteSocial = async (qi, transaction) => {
   });
   const commentIds = comments.map((r) => Number(r.id));
   if (commentIds.length) await del(qi, "Comments", { parentId: commentIds }, transaction);
+  await del(qi, "UserModerationViolations", { postId: postIds }, transaction).catch(() => {});
   await del(qi, "Comments", { postId: postIds }, transaction);
   await del(qi, "PostLikes", { postId: postIds }, transaction);
   await del(qi, "PostShares", { postId: postIds }, transaction);
@@ -232,6 +233,7 @@ const cleanupUsers = async (qi, transaction) => {
   `, { type: QueryTypes.SELECT, transaction });
   const ids = users.map((r) => Number(r.id));
   if (!ids.length) return;
+  await del(qi, "UserModerationViolations", { userId: ids }, transaction).catch(() => {});
   await del(qi, "BranchEmployees", { employeeId: ids }, transaction);
   await del(qi, "CoachProfiles", { userId: ids }, transaction);
   await del(qi, "CoachApplications", { userId: ids }, transaction);

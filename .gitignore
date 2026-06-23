@@ -8,3 +8,7 @@ npm-debug.log
 *.log
 .DS_Store
 desktop.ini
+ai-service/.venv/
+ai-service/**/__pycache__/
+ai-service/models/**/*.safetensors
+ai-service/models/**/*.bin

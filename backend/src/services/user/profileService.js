@@ -11,7 +11,17 @@ const getMyProfileService = async (data) => {
     const user = await User.findOne({
       where: { id: userId },
       transaction: t,
-      attributes: ["id", "username", "email", "createdAt"],
+      attributes: [
+        "id",
+        "username",
+        "email",
+        "createdAt",
+        "accountStatus",
+        "suspendedUntil",
+        "suspensionReason",
+        "violationCount",
+        "lastViolationAt",
+      ],
       include: [
         {
           model: Role,
@@ -58,6 +68,11 @@ const getMyProfileService = async (data) => {
       email: user.email,
       role: user.role?.roleName,
       createdDate: user.createdDate,
+      accountStatus: user.accountStatus,
+      suspendedUntil: user.suspendedUntil,
+      suspensionReason: user.suspensionReason,
+      violationCount: user.violationCount,
+      lastViolationAt: user.lastViolationAt,
       postCount,
       profile: user.profile,
       coachProfile: user.coachProfile,

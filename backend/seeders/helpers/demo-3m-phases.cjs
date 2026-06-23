@@ -90,7 +90,23 @@ const seedUsers = async (qi, Sequelize) => u.phaseTransaction(qi, async (transac
       const now = u.dateTime(u.randomDate(), u.publicHour(), u.int(0, 59));
       const name = `${u.pick(u.names)} ${u.pad(number)}`;
       const phone = `09${String(40000000 + number + (group.role === "EMPLOYEE" ? 10000 : group.role === "COACH" ? 20000 : 0)).slice(-8)}`;
-      users.push({ username, email, password, isVerified: true, isActive: true, isOnline: false, lastSeenAt: now, roleId: roleIds[group.role], createdAt: now, updatedAt: now });
+      users.push({
+        username,
+        email,
+        password,
+        isVerified: true,
+        isActive: true,
+        isOnline: false,
+        lastSeenAt: now,
+        accountStatus: "ACTIVE",
+        suspendedUntil: null,
+        suspensionReason: null,
+        violationCount: 0,
+        lastViolationAt: null,
+        roleId: roleIds[group.role],
+        createdAt: now,
+        updatedAt: now,
+      });
       profiles.push({ username, fullName: name, dob: new Date(u.int(1985, 2006), u.int(0, 11), u.int(1, 28)), gender: u.weighted([["male", 48], ["female", 48], ["other", 4]]), address: u.pick(u.addresses).address, phoneNumber: phone, avatar: u.avatar, level: u.weighted([["BEGINNER", 50], ["INTERMEDIATE", 35], ["ADVANCED", 15]]), createdAt: now, updatedAt: now });
     }
   }
@@ -603,23 +619,381 @@ const downFeedbacks = async (qi, Sequelize) => u.phaseTransaction(qi, async (tra
   await u.del(qi, "Feedbacks", { content: { [Sequelize.Op.like]: `%${u.MARKER}%` } }, transaction);
 });
 
+const getPostSeedUsers = async (qi, Sequelize, transaction) => {
+  const demoUsers = await u.getDemoUsers(qi, Sequelize, transaction);
+  if (demoUsers.length) return demoUsers;
+  return u.q(qi, Sequelize, `
+    SELECT u.id, u.username, u.roleId, r.roleName, p.fullName, p.phoneNumber
+    FROM Users u
+    JOIN Roles r ON r.id = u.roleId
+    LEFT JOIN Profiles p ON p.userId = u.id
+    WHERE u.isActive = 1
+    ORDER BY u.id
+  `, {}, transaction);
+};
+
+const getPostSeedLocations = async (qi, Sequelize, transaction) => {
+  const branches = await u.q(qi, Sequelize, "SELECT id, branchName, districtName, provinceName FROM Branches WHERE isActive = 1 ORDER BY id", {}, transaction);
+  const courts = await u.q(qi, Sequelize, `
+    SELECT c.id, c.branchId, c.courtName
+    FROM Courts c
+    JOIN Branches b ON b.id = c.branchId
+    WHERE b.isActive = 1 AND c.courtStatus = 'ACTIVE'
+    ORDER BY c.branchId, c.id
+  `, {}, transaction);
+  if (!branches.length || !courts.length) {
+    throw new Error("Seed Posts requires active Branches and Courts. Please seed Branch/Court before seeding Posts.");
+  }
+  return {
+    branches,
+    courts,
+    courtPairs: courts.map((court) => ({ branchId: Number(court.branchId), courtId: Number(court.id) })),
+  };
+};
+
+const postContact = (i) => {
+  const phone = `090${String(1234567 + i).slice(-7)}`;
+  return { inApp: true, phone, zalo: phone };
+};
+
+const typeText = {
+  FIND_PLAYER: "tim nguoi choi",
+  FIND_COACH: "tim huan luyen vien",
+  CLASS: "lop hoc cau long",
+  TOURNAMENT: "giai dau",
+  GROUP: "nhom cong dong",
+};
+
+const levelText = {
+  BEGINNER: "moi choi",
+  INTERMEDIATE: "trung binh",
+  ADVANCED: "nang cao",
+  BASIC: "co ban",
+};
+
+const weekdayText = {
+  1: "chu nhat",
+  2: "thu hai",
+  3: "thu ba",
+  4: "thu tu",
+  5: "thu nam",
+  6: "thu sau",
+  7: "thu bay",
+};
+
+const textValue = (value) => value === null || value === undefined || value === "" ? "khong ro" : value;
+const weekdaysText = (weekdays = []) => weekdays.map((day) => weekdayText[day] || day).join(", ");
+
+const buildSeedModerationText = (type, title, content, formData) => {
+  const parts = [
+    `Loai bai: ${typeText[type] || type}.`,
+    title.replace(u.MARKER, "").trim(),
+    content.replace(u.MARKER, "").trim(),
+  ];
+
+  if (type === "FIND_PLAYER") {
+    parts.push(
+      `Ngay choi: ${textValue(formData.schedule?.date)}.`,
+      `Gio choi: ${textValue(formData.schedule?.startTime)} den ${textValue(formData.schedule?.endTime)}.`,
+      `Trinh do yeu cau: ${levelText[formData.playerRequirement?.level] || textValue(formData.playerRequirement?.customLevel || formData.playerRequirement?.level)}.`,
+      `So nguoi can tim: ${textValue(formData.playerRequirement?.slotsNeeded)}.`,
+      `Ghi chu: ${textValue(formData.notes)}.`,
+    );
+  } else if (type === "FIND_COACH") {
+    parts.push(
+      `Trinh do hien tai: ${levelText[formData.currentLevel] || textValue(formData.currentLevel)}.`,
+      `Muc tieu: ${textValue(formData.goal)}.`,
+      `Lich hoc mong muon: ${textValue(formData.scheduleNote)}.`,
+      `Ngan sach: ${textValue(formData.budget)}.`,
+      `Ghi chu: ${textValue(formData.notes)}.`,
+    );
+  } else if (type === "CLASS") {
+    parts.push(
+      `Trinh do dau vao: ${levelText[formData.inputLevel] || textValue(formData.inputLevel)}.`,
+      `Do tuoi: ${textValue(formData.ageRange)}.`,
+      `Ngay hoc trong tuan: ${weekdaysText(formData.schedule?.weekdays)}.`,
+      `Ngay bat dau: ${textValue(formData.schedule?.startDate)}.`,
+      `Gio hoc: ${textValue(formData.schedule?.startTime)} den ${textValue(formData.schedule?.endTime)}.`,
+      `So hoc vien toi da: ${textValue(formData.maxStudents)}.`,
+      `Hoc phi: ${textValue(formData.tuitionFee)}.`,
+      `Ghi chu: ${textValue(formData.notes)}.`,
+    );
+  } else if (type === "TOURNAMENT") {
+    parts.push(
+      `Don vi to chuc: ${textValue(formData.organizerName)}.`,
+      `Mo dang ky: ${textValue(formData.registration?.startDate)} den ${textValue(formData.registration?.endDate)}.`,
+      `Ngay thi dau: ${textValue(formData.eventDate)}.`,
+      `Hang muc: ${(formData.categories || []).join(", ")}.`,
+    );
+  } else if (type === "GROUP") {
+    parts.push(
+      `Khu vuc: ${textValue(formData.area?.district)}, ${textValue(formData.area?.city)}.`,
+      `Lich hang tuan: ${weekdaysText(formData.weeklySchedule?.weekdays)}.`,
+      `Gio sinh hoat: ${textValue(formData.weeklySchedule?.startTime)} den ${textValue(formData.weeklySchedule?.endTime)}.`,
+      `Trinh do mong muon: ${levelText[formData.levelWanted] || textValue(formData.levelWanted)}.`,
+    );
+  }
+
+  return parts.filter(Boolean).join(" ");
+};
+
+const postModerationFields = (type, title, content, formData, createdAt, i, overrides = {}) => ({
+  moderationStatus: overrides.moderationStatus || "APPROVED",
+  moderationLabel: overrides.moderationLabel || "normal",
+  moderationConfidence: overrides.moderationConfidence ?? Number((0.95 + (i % 5) * 0.01).toFixed(2)),
+  moderationAction: overrides.moderationAction || "ALLOW",
+  moderationReason: overrides.moderationReason || "Noi dung hop le.",
+  moderationText: overrides.moderationText || buildSeedModerationText(type, title, content, formData),
+  moderatedAt: overrides.moderatedAt || u.addMinutes(createdAt, 5),
+});
+
+const buildPostRow = ({ authorId, type, title, content, formData, createdAt, index, moderation = {}, isActive = true }) => ({
+  authorId,
+  type,
+  title,
+  content,
+  formData: JSON.stringify(formData),
+  ...postModerationFields(type, title, content, formData, createdAt, index, moderation),
+  repostOfPostId: null,
+  isRepost: false,
+  isActive,
+  isDeleted: false,
+  deletedAt: null,
+  createdAt,
+  updatedAt: createdAt,
+});
+
+const applyDemoModerationAccountStatus = async (qi, Sequelize, transaction) => {
+  const demoUsers = await u.q(qi, Sequelize, "SELECT id FROM Users WHERE username LIKE 'demo\\_%'", {}, transaction);
+  const demoUserIds = demoUsers.map((row) => Number(row.id));
+  if (!demoUserIds.length) return;
+
+  await u.exec(qi, `
+    UPDATE Users
+    SET accountStatus = 'ACTIVE',
+        suspendedUntil = NULL,
+        suspensionReason = NULL,
+        violationCount = 0,
+        lastViolationAt = NULL,
+        updatedAt = NOW()
+    WHERE id IN (:ids)
+  `, { ids: demoUserIds }, transaction);
+
+  const totals = await u.q(qi, Sequelize, `
+    SELECT userId, COUNT(*) AS total, MAX(createdAt) AS lastViolationAt
+    FROM UserModerationViolations
+    WHERE userId IN (:ids)
+    GROUP BY userId
+  `, { ids: demoUserIds }, transaction).catch(() => []);
+
+  for (const row of totals) {
+    const total = Number(row.total || 0);
+    const status = total >= 5 ? "BANNED" : total >= 3 ? "SUSPENDED" : total >= 2 ? "WARNING" : "ACTIVE";
+    const suspendedUntil = status === "SUSPENDED" ? u.addDays(new Date(), 1) : null;
+    const suspensionReason = status === "BANNED"
+      ? "Tai khoan bi khoa do vi pham nghiem trong quy dinh cong dong."
+      : status === "SUSPENDED"
+        ? "Tai khoan co nhieu bai viet vi pham quy dinh cong dong."
+        : null;
+
+    await u.exec(qi, `
+      UPDATE Users
+      SET accountStatus = :status,
+          suspendedUntil = :suspendedUntil,
+          suspensionReason = :suspensionReason,
+          violationCount = :total,
+          lastViolationAt = :lastViolationAt,
+          updatedAt = NOW()
+      WHERE id = :userId
+    `, {
+      status,
+      suspendedUntil,
+      suspensionReason,
+      total,
+      lastViolationAt: row.lastViolationAt,
+      userId: row.userId,
+    }, transaction);
+  }
+};
+
+const classPlans = [
+  { title: "Lớp cầu lông căn bản cho người mới", content: "Nhận học viên mới bắt đầu, tập cầm vợt, di chuyển cơ bản và phát cầu đúng kỹ thuật.", level: "BEGINNER", ageRange: "15-25 tuổi", weekdays: [2, 4, 6], start: "19:00", end: "21:00", fee: "2 triệu đồng/khóa", notes: "Học viên tự chuẩn bị vợt." },
+  { title: "Lớp đánh đôi buổi tối", content: "Tập chiến thuật đánh đôi, xoay cầu và phối hợp trên sân cho học viên đã biết đánh cơ bản.", level: "INTERMEDIATE", ageRange: "18-35 tuổi", weekdays: [3, 5, 7], start: "18:30", end: "20:30", fee: "2.4 triệu đồng/khóa", notes: "Nên có giày cầu lông riêng." },
+  { title: "Lớp kỹ thuật trái tay cuối tuần", content: "Sửa động tác trái tay, phòng thủ cuối sân và chuyển trạng thái sang tấn công.", level: "INTERMEDIATE", ageRange: "16-40 tuổi", weekdays: [7, 1], start: "08:00", end: "10:00", fee: "1.8 triệu đồng/khóa", notes: "Có bài tập thêm sau mỗi buổi." },
+  { title: "Lớp cầu lông thiếu nhi", content: "Lớp nhỏ cho học viên thiếu nhi, ưu tiên thể lực, phản xạ và kỹ thuật an toàn.", level: "BEGINNER", ageRange: "8-14 tuổi", weekdays: [6, 7], start: "17:30", end: "19:00", fee: "1.6 triệu đồng/khóa", notes: "Phụ huynh có thể trao đổi qua chat trong app." },
+  { title: "Lớp nâng cao phong trào", content: "Rèn tốc độ, điều cầu và bài tập thi đấu cho người chơi phong trào muốn lên trình.", level: "ADVANCED", ageRange: "18-45 tuổi", weekdays: [2, 5], start: "20:00", end: "22:00", fee: "2.8 triệu đồng/khóa", notes: "Ưu tiên học viên đã chơi trên 1 năm." },
+];
+
+const findPlayerTemplates = [
+  { title: "Tìm 2 bạn ghép sân đánh đôi tối nay", content: "Nhóm mình thiếu 2 slot đánh đôi, tiền sân chia đều, ưu tiên đến đúng giờ để khỏi trễ lịch.", level: "INTERMEDIATE", slots: 2, notes: "Có mặt trước 15 phút để khởi động." },
+  { title: "Cần người chơi cùng sau giờ làm", content: "Đã đặt sân buổi tối, cần thêm bạn đánh cùng trình độ trung bình, vui vẻ và chơi lâu dài.", level: "INTERMEDIATE", slots: 1, notes: "Tiền cầu và tiền sân chia đều." },
+  { title: "Ghép sân đánh đơn/đánh đôi cuối tuần", content: "Tìm bạn đánh ổn định cuối tuần, có thể xoay cặp đánh đôi nếu đủ người.", level: "BEGINNER", slots: 2, notes: "Không yêu cầu quá nặng, chỉ cần đúng giờ." },
+  { title: "Thiếu slot đánh đôi phong trào", content: "Sân đã có 2 người, cần thêm 2 bạn đánh phong trào, ưu tiên người chơi đều và lịch sự.", level: "ADVANCED", slots: 2, notes: "Mang theo cầu riêng nếu có." },
+];
+
+const findCoachTemplates = [
+  { title: "Tìm huấn luyện viên sửa kỹ thuật cơ bản", content: "Mình mới chơi cầu lông, cần HLV sửa cầm vợt, di chuyển và phản xạ trong các buổi tối.", level: "BEGINNER", goal: "Cải thiện kỹ thuật và phản xạ", schedule: "Tối thứ 7 và chủ nhật", budget: "500.000 đồng/tháng", notes: "Ưu tiên huấn luyện viên có kinh nghiệm dạy người mới." },
+  { title: "Cần HLV dạy đánh đôi", content: "Muốn học cách di chuyển, bổ vị trí và phối hợp khi đánh đôi, lịch học có thể trao đổi thêm.", level: "INTERMEDIATE", goal: "Học chiến thuật đánh đôi và điều cầu", schedule: "Tối thứ 3 và thứ 5", budget: "Thỏa thuận theo buổi", notes: "Có thể học nhóm 2 người." },
+  { title: "Tìm thầy cô luyện trái tay", content: "Cần sửa trái tay và phòng thủ cuối sân, mong có bài tập rõ ràng để tập thêm.", level: "INTERMEDIATE", goal: "Sửa trái tay và phòng thủ cuối sân", schedule: "Cuối tuần hoặc sau 19:00", budget: "700.000 đồng/tháng", notes: "Ưu tiên HLV gần chi nhánh." },
+  { title: "Tìm HLV nâng thể lực cầu lông", content: "Cần giáo án vừa kỹ thuật vừa thể lực để chơi phong trào tốt hơn.", level: "ADVANCED", goal: "Tăng tốc độ, sức bền và khả năng thi đấu", schedule: "Sáng chủ nhật", budget: "Thỏa thuận", notes: "Mong HLV theo sát tiến độ." },
+];
+
+const tournamentTemplates = [
+  { title: "Mở đăng ký giải cầu lông mở rộng B-Hub", content: "Giải phong trào mở rộng cho thành viên B-Hub và khách mời, ưu tiên tinh thần giao lưu.", categories: ["Đơn nam", "Đôi nam nữ"] },
+  { title: "Giải giao lưu phong trào cuối tháng", content: "Mời các cặp đôi đăng ký giải giao lưu cuối tháng, lịch thi đấu sẽ cập nhật trong app.", categories: ["Đôi nam", "Đôi nữ"] },
+  { title: "Cập nhật lịch thi đấu giải nội bộ", content: "Ban tổ chức thông báo lịch thi đấu và hạng mục cho giải nội bộ câu lạc bộ.", categories: ["Đồng đội", "Đôi nam nữ"] },
+  { title: "Giải cầu lông cấp CLB", content: "Giải dành cho các nhóm tập luyện thường xuyên, có hạng mục đơn và đôi.", categories: ["Đơn nam", "Đơn nữ", "Đôi nam"] },
+];
+
+const groupTemplates = [
+  { title: "Nhóm cầu lông khu vực Thủ Đức", content: "Nhóm đánh sau giờ làm, lịch ổn định hằng tuần, ưu tiên thành viên gần khu vực.", city: "Hồ Chí Minh", district: "Thủ Đức", slug: "thu-duc", level: "INTERMEDIATE", weekdays: [3, 5, 7], start: "18:00", end: "20:00" },
+  { title: "Cộng đồng cầu lông sau giờ làm Quận 7", content: "Tìm thêm thành viên cho nhóm đánh vui vẻ sau giờ làm, có thể ghép cặp đánh đôi.", city: "Hồ Chí Minh", district: "Quận 7", slug: "quan-7", level: "BEGINNER", weekdays: [2, 4, 6], start: "19:00", end: "21:00" },
+  { title: "Nhóm người mới tập cầu lông", content: "Nhóm cho người mới, tập nhẹ và chia sẻ kinh nghiệm chọn vợt, giày, cách khởi động.", city: "Hồ Chí Minh", district: "Gò Vấp", slug: "go-vap", level: "BEGINNER", weekdays: [7, 1], start: "08:00", end: "10:00" },
+  { title: "Nhóm đánh đôi cố định Tân Bình", content: "Cần thêm thành viên đánh đôi cố định hằng tuần, lịch linh hoạt nếu trùng ngày lễ.", city: "Hồ Chí Minh", district: "Tân Bình", slug: "tan-binh", level: "ADVANCED", weekdays: [3, 6], start: "20:00", end: "22:00" },
+];
+
+const specialPostData = ({ type, index, branch, pair, day, contact, review = false, label = "spam" }) => {
+  if (type === "FIND_PLAYER") {
+    return {
+      title: review ? "Can duyet bai pass vot cau long" : `${label === "spam" ? "Tin lap lai tim nguoi choi" : "Bai viet cong kich trong nhom ghep san"} ${u.pad(index, 2)}`,
+      content: review
+        ? "Noi dung co nhac den pass vot va phu kien, can admin kiem tra truoc khi hien thi."
+        : label === "spam"
+          ? "Noi dung lap lai nhieu lan ve viec mua ban ngoai cong dong thay vi tim nguoi choi."
+          : "Noi dung co dau hieu cong kich nguoi choi khac va khong phu hop quy dinh cong dong.",
+      formData: {
+        location: pair,
+        schedule: { date: day, startTime: "19:00", endTime: "21:00" },
+        playerRequirement: { level: "INTERMEDIATE", customLevel: null, slotsNeeded: 2 },
+        contact,
+        notes: review ? "Can admin xem vi noi dung nghieng ve mua ban." : "Noi dung khong phu hop de hien thi cong khai.",
+      },
+    };
+  }
+  if (type === "FIND_COACH") {
+    return {
+      title: review ? "Can duyet bai order vot Lining Victor" : `${label === "spam" ? "Tin spam tim HLV" : "Bai viet xuc pham HLV"} ${u.pad(index, 2)}`,
+      content: review
+        ? "Noi dung co nhac order vot va phu kien tu ben ngoai, can admin duyet."
+        : label === "spam"
+          ? "Noi dung quang ba lap lai khong lien quan den nhu cau tim huan luyen vien."
+          : "Noi dung co dau hieu xuc pham huan luyen vien va thanh vien khac.",
+      formData: {
+        location: { branchId: Number(branch.id) },
+        currentLevel: "BEGINNER",
+        goal: "Can ho tro ky thuat co ban",
+        scheduleNote: "Toi cuoi tuan",
+        budget: "Thoa thuan",
+        contact,
+        notes: review ? "Can kiem tra yeu to mua ban ngoai nen tang." : "Noi dung bi chan boi moderation.",
+      },
+    };
+  }
+  if (type === "CLASS") {
+    return {
+      title: review ? "Can duyet noi dung nhan cang vot" : `${label === "spam" ? "Tin spam lop cau long" : "Bai viet cong kich hoc vien"} ${u.pad(index, 2)}`,
+      content: review
+        ? "Noi dung lop co chen dich vu cang vot, thay day va quan can, can admin duyet."
+        : label === "spam"
+          ? "Noi dung lap lai de quang ba dich vu khong dung muc dich lop hoc."
+          : "Noi dung co dau hieu cong kich hoc vien va khong phu hop cong dong.",
+      formData: {
+        inputLevel: "BEGINNER",
+        ageRange: "15-25 tuoi",
+        schedule: { weekdays: [2, 4, 6], startTime: "19:00", endTime: "21:00", startDate: day },
+        location: { branchId: Number(branch.id) },
+        maxStudents: 10,
+        tuitionFee: "2 trieu dong/khoa",
+        contact: { inAppChat: true, phone: contact.phone, zalo: contact.zalo },
+        notes: review ? "Can admin duyet vi noi dung co dich vu ngoai." : "Noi dung bi chan boi moderation.",
+      },
+    };
+  }
+  if (type === "TOURNAMENT") {
+    return {
+      title: review ? "Can duyet bai ban ao team trong giai dau" : `${label === "spam" ? "Tin spam giai dau" : "Bai viet xuc pham doi thu"} ${u.pad(index, 2)}`,
+      content: review
+        ? "Thong bao giai co chen noi dung ban ao team, can admin kiem tra truoc khi cong khai."
+        : label === "spam"
+          ? "Noi dung lap lai keu goi ngoai le va khong phu hop thong tin giai dau."
+          : "Noi dung co dau hieu xuc pham doi thu va ban to chuc.",
+      formData: {
+        organizerName: "B-Hub Badminton",
+        location: pair,
+        registration: { startDate: day, endDate: u.dateOnly(u.addDays(new Date(`${day}T12:00:00+07:00`), 7)) },
+        eventDate: u.dateOnly(u.addDays(new Date(`${day}T12:00:00+07:00`), 14)),
+        categories: ["Don nam", "Doi nam nu"],
+        contact: { phone: contact.phone, email: "moderation-demo@bhub.local", inApp: true },
+      },
+    };
+  }
+  return {
+    title: review ? "Can duyet bai shop ban giay vot" : `${label === "spam" ? "Tin spam nhom cau long" : "Bai viet cong kich thanh vien"} ${u.pad(index, 2)}`,
+    content: review
+      ? "Noi dung nhom co dau hieu quang cao shop ban giay va vot, can admin duyet."
+      : label === "spam"
+        ? "Noi dung lap lai nhieu lan de quang cao ngoai muc dich sinh hoat nhom."
+        : "Noi dung co dau hieu cong kich thanh vien trong nhom.",
+    formData: {
+      area: { city: "Ho Chi Minh", district: "Go Vap" },
+      weeklySchedule: { weekdays: [3, 5, 7], startTime: "18:00", endTime: "20:00" },
+      levelWanted: "INTERMEDIATE",
+      contact: { inApp: true, zaloGroupLink: "https://zalo.me/g/bhub-moderation-demo" },
+    },
+  };
+};
+
 const seedCoachClasses = async (qi, Sequelize) => u.phaseTransaction(qi, async (transaction) => {
   await u.deleteChat(qi, transaction);
   await u.deleteSocial(qi, transaction);
-  const users = await u.getDemoUsers(qi, Sequelize, transaction);
+  const users = await getPostSeedUsers(qi, Sequelize, transaction);
+  const { branches } = await getPostSeedLocations(qi, Sequelize, transaction);
   const coaches = users.filter((row) => row.roleName === "COACH");
   const customers = users.filter((row) => row.roleName === "USER");
+  const classAuthors = coaches.length ? coaches : users;
+  if (!classAuthors.length) throw new Error("Seed Posts requires at least one active user.");
+  if (!customers.length) throw new Error("Seed coach classes requires at least one USER for enrollments.");
   const posts = [];
-  for (let i = 1; i <= 22; i += 1) {
-    const coach = u.pick(coaches);
+  // CLASS should be authored by COACH users. If the database has no COACH yet, reuse any valid user so the seed can still run.
+  for (let i = 1; i <= 40; i += 1) {
+    const plan = classPlans[(i - 1) % classPlans.length];
+    const coach = classAuthors[(i - 1) % classAuthors.length];
+    const branch = branches[(i - 1) % branches.length];
     const createdAt = u.dateTime(u.randomDate(), u.publicHour(), u.int(0, 59));
-    posts.push({ authorId: coach.id, type: "CLASS", title: `${u.MARKER} Lop cau long demo ${u.pad(i, 3)}`, content: `${u.MARKER} Lop huong dan ky thuat co ban, danh doi va phan xa cho hoc vien demo.`, formData: JSON.stringify({ capacity: 12 + (i % 8), startDate: u.dateOnly(u.addDays(createdAt, 7)), fee: 2000000 + (i % 4) * 300000 }), repostOfPostId: null, isRepost: false, isActive: true, isDeleted: false, deletedAt: null, createdAt, updatedAt: createdAt });
+    const startDate = u.dateOnly(u.addDays(new Date("2026-07-01T12:00:00+07:00"), i + (i % 5)));
+    posts.push(buildPostRow({
+      authorId: coach.id,
+      type: "CLASS",
+      title: `${u.MARKER} ${plan.title} ${u.pad(i, 3)}`,
+      content: `${u.MARKER} ${plan.content}`,
+      formData: {
+        inputLevel: plan.level,
+        ageRange: plan.ageRange,
+        schedule: {
+          weekdays: plan.weekdays,
+          startTime: plan.start,
+          endTime: plan.end,
+          startDate,
+        },
+        location: { branchId: Number(branch.id) },
+        maxStudents: 8 + (i % 7),
+        tuitionFee: plan.fee,
+        contact: {
+          inAppChat: true,
+          phone: postContact(i).phone,
+          zalo: postContact(i).zalo,
+        },
+        notes: plan.notes,
+      },
+      createdAt,
+      index: i,
+    }));
   }
   await u.insert(qi, "Posts", posts, transaction);
   const dbPosts = await u.q(qi, Sequelize, "SELECT * FROM Posts WHERE title LIKE :note AND type = 'CLASS'", { note: `%${u.MARKER}%` }, transaction);
-  const conversations = dbPosts.map((p, i) => ({ conversationName: `${u.MARKER} Lop demo ${u.pad(i + 1, 3)}`, avatar: u.avatar, type: "GROUP", createdAt: p.createdAt, updatedAt: p.createdAt }));
+  const conversations = dbPosts.map((p, i) => ({ conversationName: `${u.MARKER} Lop cau long ${u.pad(i + 1, 3)}`, avatar: u.avatar, type: "GROUP", createdAt: p.createdAt, updatedAt: p.createdAt }));
   await u.insert(qi, "Conversations", conversations, transaction);
-  const dbConvs = await u.q(qi, Sequelize, "SELECT * FROM Conversations WHERE conversationName LIKE :name ORDER BY id", { name: `%${u.MARKER} Lop demo%` }, transaction);
+  const dbConvs = await u.q(qi, Sequelize, "SELECT * FROM Conversations WHERE conversationName LIKE :name ORDER BY id", { name: `%${u.MARKER} Lop cau long%` }, transaction);
   await u.insert(qi, "ClassRooms", dbPosts.map((p, i) => ({ postId: p.id, coachUserId: p.authorId, conversationId: dbConvs[i]?.id || null, enrollmentStatus: i % 5 === 0 ? "ENDED" : i % 7 === 0 ? "LOCKED" : "OPEN", createdAt: p.createdAt, updatedAt: p.updatedAt })), transaction);
   const enrollments = [];
   const participants = [];
@@ -630,7 +1004,7 @@ const seedCoachClasses = async (qi, Sequelize) => u.phaseTransaction(qi, async (
     for (let j = 0; j < count; j += 1) {
       const student = customers[(i * 11 + j) % customers.length];
       const createdAt = u.addDays(new Date(p.createdAt), u.int(1, 5));
-      enrollments.push({ postId: p.id, coachUserId: p.authorId, studentUserId: student.id, status: i % 5 === 0 ? "COMPLETED" : u.weighted([["ACTIVE", 76], ["PENDING", 12], ["REJECTED", 6], ["CANCELLED", 6]]), source: "POST_REGISTER", coachNote: `${u.MARKER} Enrollment demo`, rejectReason: null, createdAt, updatedAt: createdAt });
+      enrollments.push({ postId: p.id, coachUserId: p.authorId, studentUserId: student.id, status: i % 5 === 0 ? "COMPLETED" : u.weighted([["ACTIVE", 76], ["PENDING", 12], ["REJECTED", 6], ["CANCELLED", 6]]), source: "POST_REGISTER", coachNote: `${u.MARKER} Dang ky lop cau long`, rejectReason: null, createdAt, updatedAt: createdAt });
       if (conv) participants.push({ conversationId: conv.id, userId: student.id, role: "MEMBER", joinedAt: createdAt, lastReadAt: createdAt });
     }
   });
@@ -650,19 +1024,187 @@ const downCoachClasses = async (qi) => u.phaseTransaction(qi, async (transaction
 });
 
 const seedSocial = async (qi, Sequelize) => u.phaseTransaction(qi, async (transaction) => {
-  const users = await u.getDemoUsers(qi, Sequelize, transaction);
+  const users = await getPostSeedUsers(qi, Sequelize, transaction);
+  const { branches, courtPairs } = await getPostSeedLocations(qi, Sequelize, transaction);
   const authors = users.filter((row) => ["USER", "COACH"].includes(row.roleName));
+  const postAuthors = authors.length ? authors : users;
+  if (!postAuthors.length) throw new Error("Seed Posts requires at least one active user.");
   const posts = [];
-  for (let i = 1; i <= 220; i += 1) {
-    const author = u.pick(authors);
+  for (let i = 1; i <= 160; i += 1) {
+    const author = postAuthors[(i - 1) % postAuthors.length];
     const createdAt = u.dateTime(u.randomDate(), u.publicHour(), u.int(0, 59));
-    const type = author.roleName === "COACH" ? u.weighted([["GROUP", 45], ["FIND_COACH", 35], ["CLASS", 20]]) : u.weighted([["FIND_PLAYER", 45], ["GROUP", 35], ["TOURNAMENT", 10], ["FIND_COACH", 10]]);
-    posts.push({ authorId: author.id, type, title: `${u.MARKER} Bai viet cong dong ${u.pad(i, 4)}`, content: `${u.MARKER} Chia se kinh nghiem cau long, tim ban danh cau va danh gia san demo ${u.pad(i, 4)}.`, formData: JSON.stringify({ imageUrl: `https://placehold.co/900x600/png?text=B-Hub+Post+${u.pad(i, 4)}` }), repostOfPostId: null, isRepost: false, isActive: true, isDeleted: false, deletedAt: null, createdAt, updatedAt: createdAt });
+    const group = Math.floor((i - 1) / 40);
+    const indexInType = ((i - 1) % 40) + 1;
+    const pair = courtPairs[(i - 1) % courtPairs.length];
+    const branch = branches[(i - 1) % branches.length];
+    const day = u.dateOnly(u.addDays(new Date("2026-06-25T12:00:00+07:00"), indexInType + group * 3));
+    const contact = postContact(100 + i);
+    if (group === 0) {
+      const item = findPlayerTemplates[(indexInType - 1) % findPlayerTemplates.length];
+      posts.push(buildPostRow({
+        authorId: author.id,
+        type: "FIND_PLAYER",
+        title: `${u.MARKER} ${item.title} ${u.pad(indexInType, 3)}`,
+        content: `${u.MARKER} ${item.content}`,
+        formData: {
+          location: pair,
+          schedule: {
+            date: day,
+            startTime: `${18 + (indexInType % 3)}:00`,
+            endTime: `${20 + (indexInType % 3)}:00`,
+          },
+          playerRequirement: {
+            level: item.level,
+            customLevel: null,
+            slotsNeeded: item.slots,
+          },
+          contact,
+          notes: item.notes,
+        },
+        createdAt,
+        index: i,
+      }));
+    } else if (group === 1) {
+      const item = findCoachTemplates[(indexInType - 1) % findCoachTemplates.length];
+      posts.push(buildPostRow({
+        authorId: author.id,
+        type: "FIND_COACH",
+        title: `${u.MARKER} ${item.title} ${u.pad(indexInType, 3)}`,
+        content: `${u.MARKER} ${item.content}`,
+        formData: {
+          location: { branchId: Number(branch.id) },
+          currentLevel: item.level,
+          goal: item.goal,
+          scheduleNote: item.schedule,
+          budget: item.budget,
+          contact,
+          notes: item.notes,
+        },
+        createdAt,
+        index: i,
+      }));
+    } else if (group === 2) {
+      const item = tournamentTemplates[(indexInType - 1) % tournamentTemplates.length];
+      posts.push(buildPostRow({
+        authorId: author.id,
+        type: "TOURNAMENT",
+        title: `${u.MARKER} ${item.title} ${u.pad(indexInType, 3)}`,
+        content: `${u.MARKER} ${item.content}`,
+        formData: {
+          organizerName: "B-Hub Badminton",
+          location: pair,
+          registration: {
+            startDate: day,
+            endDate: u.dateOnly(u.addDays(new Date(`${day}T12:00:00+07:00`), 10)),
+          },
+          eventDate: u.dateOnly(u.addDays(new Date(`${day}T12:00:00+07:00`), 20)),
+          categories: item.categories,
+          contact: {
+            phone: contact.phone,
+            email: "tournament@bhub.vn",
+            inApp: true,
+          },
+        },
+        createdAt,
+        index: i,
+      }));
+    } else {
+      const item = groupTemplates[(indexInType - 1) % groupTemplates.length];
+      posts.push(buildPostRow({
+        authorId: author.id,
+        type: "GROUP",
+        title: `${u.MARKER} ${item.title} ${u.pad(indexInType, 3)}`,
+        content: `${u.MARKER} ${item.content}`,
+        formData: {
+          area: {
+            city: item.city,
+            district: item.district,
+          },
+          weeklySchedule: {
+            weekdays: item.weekdays,
+            startTime: item.start,
+            endTime: item.end,
+          },
+          levelWanted: item.level,
+          contact: {
+            inApp: true,
+            zaloGroupLink: `https://zalo.me/g/bhub-${item.slug}-${u.pad(indexInType, 2)}`,
+          },
+        },
+        createdAt,
+        index: i,
+      }));
+    }
   }
+
+  const reviewTypes = ["GROUP", "CLASS", "TOURNAMENT", "FIND_PLAYER", "FIND_COACH"];
+  reviewTypes.forEach((type, offset) => {
+    const specialIndex = 201 + offset;
+    const author = postAuthors[(offset + 4) % postAuthors.length];
+    const pair = courtPairs[(offset + 11) % courtPairs.length];
+    const branch = branches[(offset + 3) % branches.length];
+    const day = u.dateOnly(u.addDays(new Date("2026-07-20T12:00:00+07:00"), offset));
+    const data = specialPostData({ type, index: specialIndex, branch, pair, day, contact: postContact(500 + offset), review: true });
+    const createdAt = u.dateTime(u.addDays(new Date("2026-06-18T12:00:00+07:00"), offset), 10 + offset, 0);
+    posts.push(buildPostRow({
+      authorId: author.id,
+      type,
+      title: `${u.MARKER} ${data.title}`,
+      content: `${u.MARKER} ${data.content}`,
+      formData: data.formData,
+      createdAt,
+      index: specialIndex,
+      isActive: false,
+      moderation: {
+        moderationStatus: "REVIEW_REQUIRED",
+        moderationLabel: "unauthorized_ad",
+        moderationConfidence: Number((0.9 + offset * 0.01).toFixed(2)),
+        moderationAction: "REVIEW",
+        moderationReason: "Noi dung co dau hieu quang cao trai phep, can quan tri vien duyet.",
+      },
+    }));
+  });
+
+  const moderationAuthors = [postAuthors[1], postAuthors[2], postAuthors[3]].filter(Boolean);
+  const rejectedPlan = [
+    ...Array.from({ length: 2 }, (_, i) => ({ author: moderationAuthors[0] || postAuthors[0], label: i % 2 === 0 ? "spam" : "offensive" })),
+    ...Array.from({ length: 3 }, (_, i) => ({ author: moderationAuthors[1] || postAuthors[0], label: i % 2 === 0 ? "spam" : "offensive" })),
+    ...Array.from({ length: 5 }, (_, i) => ({ author: moderationAuthors[2] || postAuthors[0], label: i % 2 === 0 ? "spam" : "offensive" })),
+  ];
+  const rejectedTypes = ["FIND_PLAYER", "FIND_COACH", "GROUP", "TOURNAMENT", "CLASS"];
+  rejectedPlan.forEach((plan, offset) => {
+    const type = rejectedTypes[offset % rejectedTypes.length];
+    const specialIndex = 301 + offset;
+    const pair = courtPairs[(offset + 21) % courtPairs.length];
+    const branch = branches[(offset + 7) % branches.length];
+    const day = u.dateOnly(u.addDays(new Date("2026-07-25T12:00:00+07:00"), offset));
+    const data = specialPostData({ type, index: specialIndex, branch, pair, day, contact: postContact(700 + offset), label: plan.label });
+    const createdAt = u.dateTime(u.addDays(new Date("2026-06-20T12:00:00+07:00"), offset % 3), 13 + (offset % 5), 15);
+    posts.push(buildPostRow({
+      authorId: plan.author.id,
+      type,
+      title: `${u.MARKER} ${data.title}`,
+      content: `${u.MARKER} ${data.content}`,
+      formData: data.formData,
+      createdAt,
+      index: specialIndex,
+      isActive: false,
+      moderation: {
+        moderationStatus: "REJECTED",
+        moderationLabel: plan.label,
+        moderationConfidence: Number((0.91 + (offset % 8) * 0.01).toFixed(2)),
+        moderationAction: "BLOCK",
+        moderationReason: plan.label === "spam"
+          ? "Noi dung co dau hieu spam."
+          : "Noi dung co dau hieu cong kich hoac xuc pham.",
+      },
+    }));
+  });
+
   await u.insert(qi, "Posts", posts, transaction);
-  const dbPosts = await u.q(qi, Sequelize, "SELECT * FROM Posts WHERE title LIKE :note AND title LIKE '%Bai viet%'", { note: `%${u.MARKER}%` }, transaction);
+  const dbPosts = await u.q(qi, Sequelize, "SELECT * FROM Posts WHERE title LIKE :note AND type <> 'CLASS'", { note: `%${u.MARKER}%` }, transaction);
   const likes = [], shares = [], comments = [];
-  dbPosts.forEach((post, i) => {
+  dbPosts.filter((post) => post.isActive).forEach((post, i) => {
     const likeCount = i % 17 === 0 ? 35 : i % 5 === 0 ? 14 : u.int(2, 9);
     for (let j = 0; j < likeCount; j += 1) {
       const user = users[(i * 13 + j) % users.length];
@@ -670,16 +1212,35 @@ const seedSocial = async (qi, Sequelize) => u.phaseTransaction(qi, async (transa
       const createdAt = u.addMinutes(new Date(post.createdAt), 10 + j);
       likes.push({ userId: user.id, postId: post.id, reactionType: u.weighted([["LIKE", 70], ["LOVE", 15], ["HAHA", 6], ["WOW", 5], ["SAD", 2], ["ANGRY", 2]]), createdAt, updatedAt: createdAt });
     }
-    if (i % 2 === 0) shares.push({ userId: users[(i * 7) % users.length].id, postId: post.id, type: "SHARE", content: `${u.MARKER} Chia se bai viet hay`, createdAt: u.addMinutes(new Date(post.createdAt), 120), updatedAt: u.addMinutes(new Date(post.createdAt), 120) });
+    if (i % 2 === 0) shares.push({ userId: users[(i * 7) % users.length].id, postId: post.id, type: "SHARE", content: `${u.MARKER} Chia se bai viet cau long huu ich`, createdAt: u.addMinutes(new Date(post.createdAt), 120), updatedAt: u.addMinutes(new Date(post.createdAt), 120) });
     const commentCount = i % 11 === 0 ? 18 : u.int(2, 7);
     for (let j = 0; j < commentCount; j += 1) {
-      comments.push({ parentId: null, authorId: users[(i * 9 + j) % users.length].id, postId: post.id, content: `${u.MARKER} Binh luan demo rat huu ich ${u.pad(j, 2)}`, type: "COMMENT", isDeleted: false, deletedAt: null, createdAt: u.addMinutes(new Date(post.createdAt), 30 + j * 4), updatedAt: u.addMinutes(new Date(post.createdAt), 30 + j * 4) });
+      comments.push({ parentId: null, authorId: users[(i * 9 + j) % users.length].id, postId: post.id, content: `${u.MARKER} Minh quan tam bai nay, cho minh xin them thong tin ${u.pad(j, 2)}`, type: "COMMENT", isDeleted: false, deletedAt: null, createdAt: u.addMinutes(new Date(post.createdAt), 30 + j * 4), updatedAt: u.addMinutes(new Date(post.createdAt), 30 + j * 4) });
     }
   });
   const likeSeen = new Set();
   await u.insert(qi, "PostLikes", likes.filter((l) => { const key = `${l.userId}-${l.postId}`; if (likeSeen.has(key)) return false; likeSeen.add(key); return true; }).slice(0, 2400), transaction);
   await u.insert(qi, "PostShares", shares.slice(0, 300), transaction);
   await u.insert(qi, "Comments", comments.slice(0, 1100), transaction);
+  const rejectedPosts = await u.q(qi, Sequelize, `
+    SELECT id, authorId, moderationLabel, moderationConfidence, moderationReason, moderatedAt
+    FROM Posts
+    WHERE title LIKE :note AND moderationStatus = 'REJECTED'
+  `, { note: `%${u.MARKER}%` }, transaction);
+  await u.insert(qi, "UserModerationViolations", rejectedPosts.map((post) => ({
+    userId: post.authorId,
+    postId: post.id,
+    targetType: "POST",
+    targetId: post.id,
+    label: post.moderationLabel,
+    action: "BLOCK",
+    confidence: post.moderationConfidence,
+    reason: post.moderationReason,
+    source: "AI",
+    createdAt: post.moderatedAt || new Date(),
+    updatedAt: post.moderatedAt || new Date(),
+  })), transaction);
+  await applyDemoModerationAccountStatus(qi, Sequelize, transaction);
 });
 
 const downSocial = async (qi) => u.phaseTransaction(qi, async (transaction) => {

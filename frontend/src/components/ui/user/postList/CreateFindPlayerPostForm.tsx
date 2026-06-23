@@ -13,12 +13,15 @@ import {
   clearLastCreatedPost,
 } from "../../../../redux/slices/user/postSlice";
 import { getAllCourts } from "../../../../redux/slices/user/courtSlice";
-import { toast } from "react-toastify";
 import LoadingButton from "../../common/LoadingButton";
 import { getBranchOptions } from "../../../../redux/slices/user/branchSlice";
 import { FIND_PLAYER_LEVEL_VALUES } from "../../../../utils/constants/postConstant";
 import { PLAYER_LEVEL_LABEL } from "../../../../utils/constants/profileConstant";
 import type { FindPlayerFormData } from "../../../../types/post";
+import {
+  showCreatePostErrorToast,
+  showCreatePostModerationToast,
+} from "../../../../utils/postModerationToast";
 
 type CreateFindPlayerPostFormProps = {
   initialValues?: Partial<formCreateFindPlayerPost>;
@@ -75,6 +78,12 @@ const CreateFindPlayerPostForm = ({
   );
 
   const lastCreatedPost = useAppSelector((state) => state.post.lastCreatedPost);
+  const lastCreateModeration = useAppSelector(
+    (state) => state.post.lastCreateModeration,
+  );
+  const lastCreateViolation = useAppSelector(
+    (state) => state.post.lastCreateViolation,
+  );
   const branches = useAppSelector((state) => state.branch.branchOptions);
   const courts = useAppSelector((state) => state.court.courts);
 
@@ -161,8 +170,8 @@ const CreateFindPlayerPostForm = ({
           },
         }),
       ).unwrap();
-    } catch {
-      toast.error("Đăng bài thất bại. Vui lòng thử lại.");
+    } catch (error) {
+      showCreatePostErrorToast(error);
     }
   };
 
@@ -170,7 +179,7 @@ const CreateFindPlayerPostForm = ({
     if (!redirectOnSuccess) return;
     if (!lastCreatedPost) return;
 
-    toast.success("Đăng bài tìm người chơi thành công!");
+    showCreatePostModerationToast(lastCreateModeration, lastCreateViolation);
     reset();
 
     const timer = setTimeout(() => {
@@ -179,7 +188,7 @@ const CreateFindPlayerPostForm = ({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [lastCreatedPost, reset, dispatch, navigate, redirectOnSuccess]);
+  }, [lastCreatedPost, lastCreateModeration, lastCreateViolation, reset, dispatch, navigate, redirectOnSuccess]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

@@ -153,17 +153,27 @@ export const sendEmployeesNotification = async (type, title, message) => {
   return notify;
 };
 
-export const sendAdminNotification = async (type, title, message) => {
-  const notify = await Notification.create({
-    role: ROLE_NAME.ADMIN,
-    type,
-    title,
-    message,
-  });
+export const sendAdminNotification = async (
+  type,
+  title,
+  message,
+  options = {},
+) => {
+  const notify = await Notification.create(
+    {
+      role: ROLE_NAME.ADMIN,
+      type,
+      title,
+      message,
+    },
+    { transaction: options.transaction },
+  );
 
   const payload = buildNotificationPayload(notify);
 
-  emitSafely(() => emitNotificationToRole(ROLE_NAME.ADMIN, payload));
+  runAfterCommit(options.transaction, () =>
+    emitSafely(() => emitNotificationToRole(ROLE_NAME.ADMIN, payload)),
+  );
 
   return notify;
 };

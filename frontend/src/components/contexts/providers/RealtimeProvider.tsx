@@ -25,6 +25,7 @@ import {
   managerUserPresenceChanged,
   removeManagerConversationLocal,
 } from "../../../redux/slices/manager/conversationSlice";
+import { forceLogoutUser } from "../../../utils/forceLogout";
 
 // Đây là chỗ quan trọng nhất. App chỉ cần bọc RealtimeProvider, sau đó provider sẽ:
 
@@ -57,7 +58,18 @@ const RealtimeProvider = ({ children }: RealtimeProviderProps) => {
     chatMessagesRead,
     chatConversationUpdated,
     presence,
+    accountLocked,
   } = useRealtime(token);
+
+  useEffect(() => {
+    if (!accountLocked) return;
+
+    forceLogoutUser(accountLocked, {
+      message:
+        accountLocked.message ||
+        "Tài khoản của bạn đã bị khóa do vi phạm quy định cộng đồng.",
+    });
+  }, [accountLocked]);
 
   useEffect(() => {
     if (!notification) return;

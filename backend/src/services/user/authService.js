@@ -28,6 +28,9 @@ import UnauthorizedError from "../../errors/UnauthorizedError.js";
 import { WALLET_STATUS } from "../../constants/paymentConstant.js";
 import { getEmployeeBranchIds } from "../employee/branchAccessService.js";
 import { ROLE_NAME } from "../../constants/userConstant.js";
+import { ACCOUNT_STATUS } from "../../constants/moderationConstant.js";
+import ForbiddenError from "../../errors/ForbiddenError.js";
+import { reactivateUserIfSuspensionExpired } from "../moderationViolationService.js";
 
 // Bước tiếp theo nâng cấp lên để tránh spam gửi OTP
 
@@ -409,6 +412,43 @@ const refreshTokenService = async (data) => {
       ],
       transaction: t,
     });
+
+    if (!user || !user.isVerified || !user.isActive) {
+      throw new UnauthorizedError("Tài khoản hiện không thể sử dụng.");
+    }
+
+    await reactivateUserIfSuspensionExpired(user, t);
+
+    if (user.accountStatus === ACCOUNT_STATUS.BANNED) {
+      throw new ForbiddenError(
+        "Tài khoản đã bị khóa do vi phạm quy định cộng đồng.",
+        {
+          accountStatus: user.accountStatus,
+          forceLogout: true,
+          suspendedUntil: user.suspendedUntil,
+          suspensionReason: user.suspensionReason,
+          violationCount: user.violationCount,
+        },
+      );
+    }
+
+    const suspensionIsActive =
+      user.accountStatus === ACCOUNT_STATUS.SUSPENDED &&
+      user.suspendedUntil &&
+      new Date(user.suspendedUntil).getTime() > Date.now();
+
+    if (suspensionIsActive) {
+      throw new ForbiddenError(
+        "Tài khoản đang bị tạm khóa do vi phạm quy định cộng đồng.",
+        {
+          accountStatus: user.accountStatus,
+          forceLogout: true,
+          suspendedUntil: user.suspendedUntil,
+          suspensionReason: user.suspensionReason,
+          violationCount: user.violationCount,
+        },
+      );
+    }
 
     const branchIds =
       user.role.roleName === ROLE_NAME.EMPLOYEE

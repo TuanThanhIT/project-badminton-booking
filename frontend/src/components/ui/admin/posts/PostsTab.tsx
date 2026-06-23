@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   ChevronDown,
+  Eye,
   Lock,
   Search,
   Trash2,
@@ -10,8 +11,16 @@ import { toast } from "react-toastify";
 import adminPostService from "../../../../services/admin/postService";
 import type { AdminPost } from "../../../../types/admin";
 import { showConfirmDialog } from "../../../../utils/confirmDialog";
+import {
+  formatModerationConfidence,
+  MODERATION_LABEL_BADGE_CLASS,
+  MODERATION_LABEL_TEXT,
+  MODERATION_STATUS_BADGE_CLASS,
+  MODERATION_STATUS_LABEL,
+} from "../../../../utils/moderationLabels";
 import AdminPagination from "../AdminPagination";
 import UserAvatar from "../UserAvatar";
+import ModerationReviewModal from "./ModerationReviewModal";
 
 const POST_TYPE_LABEL: Record<string, string> = {
   FIND_PLAYER: "Tìm người chơi",
@@ -42,8 +51,13 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
   const [appliedSearch, setAppliedSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [moderationStatusFilter, setModerationStatusFilter] = useState("");
+  const [moderationLabelFilter, setModerationLabelFilter] = useState("");
   const [togglingId, setTogglingId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [selectedModerationPostId, setSelectedModerationPostId] = useState<
+    number | null
+  >(null);
 
   const fetchPosts = useCallback(async () => {
     setLoading(true);
@@ -60,6 +74,8 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
               ? "false"
               : undefined,
         isDeleted: statusFilter === "deleted" ? "true" : "false",
+        moderationStatus: moderationStatusFilter || undefined,
+        moderationLabel: moderationLabelFilter || undefined,
       });
       const data = (res.data as any).data;
       setPosts(data.posts || []);
@@ -73,7 +89,14 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
     } finally {
       setLoading(false);
     }
-  }, [page, appliedSearch, typeFilter, statusFilter]);
+  }, [
+    page,
+    appliedSearch,
+    typeFilter,
+    statusFilter,
+    moderationStatusFilter,
+    moderationLabelFilter,
+  ]);
 
   useEffect(() => {
     fetchPosts();
@@ -144,7 +167,7 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
   return (
     <div className="space-y-5">
       <section>
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px_220px]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_180px_180px_200px_200px]">
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-600">
               Tìm kiếm
@@ -211,6 +234,52 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
               <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             </div>
           </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Kiểm duyệt
+            </label>
+            <div className="relative">
+              <select
+                value={moderationStatusFilter}
+                onChange={(event) => {
+                  setModerationStatusFilter(event.target.value);
+                  setPage(1);
+                }}
+                className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-8 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              >
+                <option value="">Tất cả</option>
+                <option value="APPROVED">Đã duyệt</option>
+                <option value="REVIEW_REQUIRED">Chờ kiểm duyệt</option>
+                <option value="REJECTED">Đã từ chối</option>
+                <option value="PENDING">Đang chờ xử lý</option>
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Nhãn AI
+            </label>
+            <div className="relative">
+              <select
+                value={moderationLabelFilter}
+                onChange={(event) => {
+                  setModerationLabelFilter(event.target.value);
+                  setPage(1);
+                }}
+                className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-8 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              >
+                <option value="">Tất cả</option>
+                <option value="normal">Bình thường</option>
+                <option value="spam">Spam</option>
+                <option value="unauthorized_ad">Quảng cáo trái phép</option>
+                <option value="offensive">Xúc phạm/công kích</option>
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -225,7 +294,7 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1024px] text-sm">
+            <table className="w-full min-w-[1180px] text-sm">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                   {[
@@ -279,6 +348,30 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                           {stripHtml(post.content)}
                         </p>
                       ) : null}
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                        {post.moderationLabel ? (
+                          <span
+                            className={`rounded border px-2 py-0.5 text-[11px] font-semibold ${
+                              MODERATION_LABEL_BADGE_CLASS[post.moderationLabel] ||
+                              "border-slate-200 bg-slate-50 text-slate-600"
+                            }`}
+                          >
+                            {MODERATION_LABEL_TEXT[post.moderationLabel] ||
+                              post.moderationLabel}
+                          </span>
+                        ) : null}
+                        <span className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                          AI: {formatModerationConfidence(post.moderationConfidence)}
+                        </span>
+                      </div>
+                      {post.moderationReason ? (
+                        <p
+                          title={post.moderationReason}
+                          className="mt-1 line-clamp-1 text-[11px] text-slate-500"
+                        >
+                          {post.moderationReason}
+                        </p>
+                      ) : null}
                     </td>
                     <td className="px-3 py-3 text-center">
                       <span
@@ -294,6 +387,19 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                       {post.commentCount}
                     </td>
                     <td className="px-3 py-3 text-center">
+                      {post.moderationStatus ? (
+                        <div className="mb-1 flex justify-center">
+                          <span
+                            className={`rounded border px-2 py-0.5 text-xs font-semibold ${
+                              MODERATION_STATUS_BADGE_CLASS[post.moderationStatus] ||
+                              "border-slate-200 bg-slate-50 text-slate-600"
+                            }`}
+                          >
+                            {MODERATION_STATUS_LABEL[post.moderationStatus] ||
+                              post.moderationStatus}
+                          </span>
+                        </div>
+                      ) : null}
                       {post.isDeleted ? (
                         <span className="rounded border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">
                           Đã xóa
@@ -314,6 +420,13 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                     <td className="px-3 py-3 text-center">
                       {!post.isDeleted ? (
                         <div className="flex items-center justify-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedModerationPostId(post.id)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-sky-200 bg-sky-50 px-2 py-1.5 text-xs font-medium text-sky-600 transition hover:bg-sky-100"
+                          >
+                            <Eye size={11} /> Chi tiết
+                          </button>
                           <button
                             type="button"
                             onClick={() => handleToggle(post)}
@@ -366,6 +479,17 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
           onPage={setPage}
         />
       </section>
+
+      {selectedModerationPostId !== null ? (
+        <ModerationReviewModal
+          postId={selectedModerationPostId}
+          onClose={() => setSelectedModerationPostId(null)}
+          onResolved={() => {
+            fetchPosts();
+            onStatsChange?.();
+          }}
+        />
+      ) : null}
     </div>
   );
 };

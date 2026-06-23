@@ -15,10 +15,13 @@ import {
   clearLastCreatedPost,
 } from "../../../../redux/slices/user/postSlice";
 import type { CreatePostRequest } from "../../../../types/post";
-import { toast } from "react-toastify";
 import LoadingButton from "../../common/LoadingButton";
 import { CLASS_INPUT_LEVEL_OPTIONS } from "../../../../utils/constants/postConstant";
 import { getAllBranches } from "../../../../redux/slices/user/branchSlice";
+import {
+  showCreatePostErrorToast,
+  showCreatePostModerationToast,
+} from "../../../../utils/postModerationToast";
 
 type CreateClassPostFormProps = {
   initialValues?: Partial<formCreateClassPost>;
@@ -69,6 +72,12 @@ const CreateClassPostForm = ({
   );
 
   const lastCreatedPost = useAppSelector((state) => state.post.lastCreatedPost);
+  const lastCreateModeration = useAppSelector(
+    (state) => state.post.lastCreateModeration,
+  );
+  const lastCreateViolation = useAppSelector(
+    (state) => state.post.lastCreateViolation,
+  );
   const branches = useAppSelector((state) => state.branch.branches);
 
   const {
@@ -140,8 +149,8 @@ const CreateClassPostForm = ({
 
     try {
       await dispatch(createPost({ data })).unwrap();
-    } catch {
-      toast.error("Đăng bài thất bại. Vui lòng thử lại.");
+    } catch (error) {
+      showCreatePostErrorToast(error);
     }
   };
 
@@ -149,7 +158,7 @@ const CreateClassPostForm = ({
     if (!redirectOnSuccess) return;
     if (lastCreatedPost?.type !== "CLASS") return;
 
-    toast.success("Đăng bài lớp học thành công!");
+    showCreatePostModerationToast(lastCreateModeration, lastCreateViolation);
     reset();
 
     const timer = setTimeout(() => {
@@ -158,7 +167,7 @@ const CreateClassPostForm = ({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [dispatch, lastCreatedPost, navigate, reset, redirectOnSuccess]);
+  }, [dispatch, lastCreatedPost, lastCreateModeration, lastCreateViolation, navigate, reset, redirectOnSuccess]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

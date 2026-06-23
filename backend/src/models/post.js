@@ -1,6 +1,11 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
 import { POST_TYPE } from "../constants/postConstant.js";
+import {
+  MODERATION_ACTION,
+  MODERATION_LABEL,
+  POST_MODERATION_STATUS,
+} from "../constants/moderationConstant.js";
 import User from "./user.js";
 
 const Post = sequelize.define(
@@ -72,6 +77,39 @@ const Post = sequelize.define(
           }
         },
       },
+    },
+    moderationStatus: {
+      type: DataTypes.ENUM(...Object.values(POST_MODERATION_STATUS)),
+      allowNull: false,
+      defaultValue: POST_MODERATION_STATUS.PENDING,
+    },
+    moderationLabel: {
+      type: DataTypes.ENUM(...Object.values(MODERATION_LABEL)),
+      allowNull: true,
+    },
+    moderationConfidence: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+      validate: {
+        min: 0,
+        max: 1,
+      },
+    },
+    moderationAction: {
+      type: DataTypes.ENUM(...Object.values(MODERATION_ACTION)),
+      allowNull: true,
+    },
+    moderationReason: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    moderationText: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    moderatedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
     },
     repostOfPostId: {
       type: DataTypes.INTEGER,

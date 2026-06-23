@@ -4,6 +4,7 @@ import {
   Eye,
   Lock,
   Search,
+  ShieldAlert,
   ShieldCheck,
   Unlock,
   UserCog,
@@ -18,6 +19,7 @@ import AdminSpinner from "../../components/ui/admin/AdminSpinner";
 import AdminStatusBadge from "../../components/ui/admin/AdminStatusBadge";
 import UserAvatar from "../../components/ui/admin/UserAvatar";
 import UserDetailModal from "../../components/ui/admin/users/UserDetailModal";
+import UserViolationsModal from "../../components/ui/admin/users/UserViolationsModal";
 import adminManagerService from "../../services/admin/managerService";
 import adminUserService from "../../services/admin/userService";
 import type { AdminUser } from "../../types/admin";
@@ -28,7 +30,7 @@ const LIMIT = 10;
 const ROLE_FILTER_OPTIONS = [
   { label: "Tất cả", value: "" },
   { label: "Người dùng", value: "USER" },
-  { label: "Dạy cầu lông", value: "COACH" },
+  { label: "Huấn luyện viên", value: "COACH" },
   { label: "Quản lý", value: "MANAGER" },
   { label: "Nhân viên", value: "EMPLOYEE" },
 ];
@@ -37,7 +39,7 @@ const ROLE_LABEL: Record<string, string> = {
   MANAGER: "Quản lý",
   EMPLOYEE: "Nhân viên",
   USER: "Người dùng",
-  COACH: "Dạy cầu lông",
+  COACH: "Huấn luyện viên",
 };
 
 const StatCard = ({
@@ -76,6 +78,7 @@ const UserManagementPage = () => {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [detailUserId, setDetailUserId] = useState<number | null>(null);
+  const [violationUser, setViolationUser] = useState<AdminUser | null>(null);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -129,7 +132,9 @@ const UserManagementPage = () => {
     setTogglingId(user.id);
     try {
       await adminUserService.toggleUserActiveService(user.id);
-      toast.success(user.isActive ? "Đã khóa tài khoản" : "Đã mở khóa tài khoản");
+      toast.success(
+        user.isActive ? "Đã khóa tài khoản" : "Đã mở khóa tài khoản",
+      );
       fetchUsers();
     } catch (err: any) {
       toast.error(
@@ -145,8 +150,8 @@ const UserManagementPage = () => {
     const newRole = user.role === "COACH" ? "USER" : "COACH";
     const message =
       newRole === "COACH"
-        ? "Chuyển tài khoản này thành người dạy cầu lông?"
-        : "Thu hồi quyền dạy cầu lông và chuyển về Người dùng?";
+        ? "Chuyển tài khoản này thành tài khoản HLV?"
+        : "Thu hồi tài khoản HLV và chuyển về tài khoản Người dùng?";
 
     if (newRole === "COACH") {
       const confirmed = await showConfirmDialog(
@@ -171,7 +176,9 @@ const UserManagementPage = () => {
     try {
       await adminManagerService.changeUserRoleService(user.id, { newRole });
       toast.success(
-        newRole === "COACH" ? "Đã cấp quyền dạy cầu lông" : "Đã chuyển về Người dùng",
+        newRole === "COACH"
+          ? "Đã cấp quyền dạy cầu lông"
+          : "Đã chuyển về Người dùng",
       );
       fetchUsers();
     } catch (err: any) {
@@ -284,7 +291,7 @@ const UserManagementPage = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[920px] text-sm">
+            <table className="w-full min-w-[1120px] text-sm">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                   {[
@@ -294,6 +301,7 @@ const UserManagementPage = () => {
                     "Vai trò",
                     "Xác thực",
                     "Trạng thái",
+                    "Kiểm duyệt",
                     "Thao tác",
                   ].map((header) => (
                     <th
@@ -353,7 +361,9 @@ const UserManagementPage = () => {
                             ? "bg-green-100 text-green-700 border-green-200"
                             : "bg-red-100 text-red-600 border-red-200"
                         }
-                        label={user.isVerified ? "Đã xác thực" : "Chưa xác thực"}
+                        label={
+                          user.isVerified ? "Đã xác thực" : "Chưa xác thực"
+                        }
                       />
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -366,6 +376,33 @@ const UserManagementPage = () => {
                         label={user.isActive ? "Hoạt động" : "Đã khóa"}
                       />
                     </td>
+                    <td className="px-4 py-3 text-center">
+                      <div className="space-y-1">
+                        <AdminStatusBadge
+                          color={
+                            user.accountStatus === "BANNED"
+                              ? "bg-red-100 text-red-700 border-red-200"
+                              : user.accountStatus === "SUSPENDED"
+                                ? "bg-orange-100 text-orange-700 border-orange-200"
+                                : user.accountStatus === "WARNING"
+                                  ? "bg-amber-100 text-amber-700 border-amber-200"
+                                  : "bg-emerald-100 text-emerald-700 border-emerald-200"
+                          }
+                          label={
+                            user.accountStatus === "BANNED"
+                              ? "Cấm"
+                              : user.accountStatus === "SUSPENDED"
+                                ? "Tạm khóa"
+                                : user.accountStatus === "WARNING"
+                                  ? "Cảnh báo"
+                                  : "Bình thường"
+                          }
+                        />
+                        <p className="text-xs text-slate-400">
+                          {user.violationCount || 0} vi phạm
+                        </p>
+                      </div>
+                    </td>
                     <td className="whitespace-nowrap px-4 py-3 text-center">
                       <div className="inline-flex items-center justify-center gap-1.5">
                         <button
@@ -376,6 +413,14 @@ const UserManagementPage = () => {
                           <Eye size={13} />
                           Chi tiết
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => setViolationUser(user)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-600 transition hover:bg-rose-100"
+                        >
+                          <ShieldAlert size={13} />
+                          Vi phạm
+                        </button>
                         {(user.role === "USER" || user.role === "COACH") && (
                           <button
                             type="button"
@@ -383,7 +428,9 @@ const UserManagementPage = () => {
                             className="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-medium text-amber-700 transition hover:bg-amber-100"
                           >
                             <UserCog size={13} />
-                            {user.role === "COACH" ? "Về Người dùng" : "Dạy cầu lông"}
+                            {user.role === "COACH"
+                              ? "Về Người dùng"
+                              : "Huấn luyện viên"}
                           </button>
                         )}
                         {user.role !== "ADMIN" && (
@@ -432,6 +479,13 @@ const UserManagementPage = () => {
         <UserDetailModal
           userId={detailUserId}
           onClose={() => setDetailUserId(null)}
+        />
+      ) : null}
+      {violationUser ? (
+        <UserViolationsModal
+          userId={violationUser.id}
+          username={violationUser.username}
+          onClose={() => setViolationUser(null)}
         />
       ) : null}
     </div>

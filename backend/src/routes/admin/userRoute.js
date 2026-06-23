@@ -3,6 +3,8 @@ import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
 import { ROLE_NAME } from "../../constants/userConstant.js";
 import adminUserController from "../../controllers/admin/userController.js";
+import validate from "../../middlewares/validate.js";
+import { userModerationViolationsSchema } from "../../validations/adminModerationValidation.js";
 
 const adminUserRoute = express.Router();
 
@@ -19,6 +21,14 @@ const initAdminUserRoute = (app) => {
     auth,
     authorize(ROLE_NAME.ADMIN),
     adminUserController.getUserDetailController,
+  );
+
+  adminUserRoute.get(
+    "/:userId/moderation-violations",
+    auth,
+    authorize(ROLE_NAME.ADMIN),
+    validate(userModerationViolationsSchema),
+    adminUserController.getUserModerationViolationsController,
   );
 
   adminUserRoute.put(

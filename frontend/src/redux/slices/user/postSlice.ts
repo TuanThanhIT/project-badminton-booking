@@ -15,6 +15,8 @@ import {
   type CreateCommentRequest,
   type PostFilterData,
   type PostReactionType,
+  type CreatePostModeration,
+  type CreatePostViolation,
 } from "../../../types/post";
 import postService from "../../../services/user/postService";
 import postSocialService from "../../../services/user/postSocialService";
@@ -22,12 +24,16 @@ import postSocialService from "../../../services/user/postSocialService";
 interface PostState {
   posts: PostFilterData;
   lastCreatedPost?: Post;
+  lastCreateModeration?: CreatePostModeration;
+  lastCreateViolation?: CreatePostViolation | null;
   lastGetPostsQuery?: GetPostsQuery;
 }
 
 const initialState: PostState = {
   posts: { posts: [], total: 0, page: 1, limit: 10 },
   lastCreatedPost: undefined,
+  lastCreateModeration: undefined,
+  lastCreateViolation: undefined,
   lastGetPostsQuery: undefined,
 };
 
@@ -164,14 +170,20 @@ const postSlice = createSlice({
   reducers: {
     clearLastCreatedPost: (state) => {
       state.lastCreatedPost = undefined;
+      state.lastCreateModeration = undefined;
+      state.lastCreateViolation = undefined;
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(createPost.fulfilled, (state, action) => {
-        const post = action.payload.data;
+        const { post, moderation, violation } = action.payload.data;
         state.lastCreatedPost = post;
-        state.posts.posts.unshift(post as PostWithAuthor);
+        state.lastCreateModeration = moderation;
+        state.lastCreateViolation = violation;
+        if (moderation.status === "APPROVED") {
+          state.posts.posts.unshift(post as PostWithAuthor);
+        }
       })
       .addCase(getPosts.fulfilled, (state, action) => {
         const { data, total, page, limit } = action.payload.data;

@@ -1,6 +1,7 @@
 import SuccessResponse from "../../helpers/SuccessResponse.js";
 import asyncHandler from "../../middlewares/asyncHandler.js";
 import userService from "../../services/admin/userService.js";
+import { getUserViolations } from "../../services/moderationViolationService.js";
 
 const getUsersController = asyncHandler(async (req, res) => {
   const data = { ...req.query };
@@ -47,12 +48,31 @@ const deleteManagerController = asyncHandler(async (req, res) => {
   return res.status(200).json(new SuccessResponse("Xóa tài khoản thành công", result));
 });
 
+const getUserModerationViolationsController = asyncHandler(
+  async (req, res) => {
+    const result = await getUserViolations({
+      userId: req.params.userId,
+      ...req.query,
+    });
+
+    return res
+      .status(200)
+      .json(
+        new SuccessResponse(
+          "Lấy lịch sử vi phạm thành công",
+          result,
+        ),
+      );
+  },
+);
+
 const adminUserController = {
   getUsersController,
   getUserDetailController,
   toggleUserActiveController,
   createManagerController,
   deleteManagerController,
+  getUserModerationViolationsController,
 };
 
 export default adminUserController;

@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 import { CalendarDays, MapPin, MessageCircle, Users } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hook";
 import {
@@ -16,6 +15,10 @@ import {
   type FormCreateGroupPost,
 } from "../../../../schemas/FormCreateGroupPostSchema";
 import { GROUP_LEVEL_OPTIONS } from "../../../../utils/constants/postConstant";
+import {
+  showCreatePostErrorToast,
+  showCreatePostModerationToast,
+} from "../../../../utils/postModerationToast";
 
 const weekdayOptions = [
   { d: 2, label: "Thứ 2" },
@@ -83,6 +86,12 @@ const CreateGroupPostForm = ({
   );
 
   const lastCreatedPost = useAppSelector((state) => state.post.lastCreatedPost);
+  const lastCreateModeration = useAppSelector(
+    (state) => state.post.lastCreateModeration,
+  );
+  const lastCreateViolation = useAppSelector(
+    (state) => state.post.lastCreateViolation,
+  );
 
   const {
     register,
@@ -124,7 +133,7 @@ const CreateGroupPostForm = ({
     if (!redirectOnSuccess) return;
     if (lastCreatedPost?.type !== "GROUP") return;
 
-    toast.success("Đăng bài nhóm thành công!");
+    showCreatePostModerationToast(lastCreateModeration, lastCreateViolation);
     reset();
 
     const timer = setTimeout(() => {
@@ -133,7 +142,7 @@ const CreateGroupPostForm = ({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [dispatch, lastCreatedPost, navigate, reset, redirectOnSuccess]);
+  }, [dispatch, lastCreatedPost, lastCreateModeration, lastCreateViolation, navigate, reset, redirectOnSuccess]);
 
   const toggleWeekday = (day: number) => {
     const current = weekdays ?? [];
@@ -168,8 +177,8 @@ const CreateGroupPostForm = ({
       };
 
       await dispatch(createPost({ data })).unwrap();
-    } catch {
-      toast.error("Đăng bài thất bại. Vui lòng thử lại.");
+    } catch (error) {
+      showCreatePostErrorToast(error);
     }
   };
 

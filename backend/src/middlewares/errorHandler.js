@@ -17,13 +17,30 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
+  const errorData =
+    isOperational && err.data && typeof err.data === "object"
+      ? err.data
+      : null;
+
   res.status(statusCode).json({
     success: false,
     message: isOperational
       ? err.message
       : "Lỗi hệ thống. Vui lòng thử lại sau.",
     errors: isOperational ? err.errors || null : null,
-    data: isOperational ? err.data || null : null,
+    data: errorData,
+    ...(errorData?.forceLogout !== undefined
+      ? { forceLogout: errorData.forceLogout }
+      : {}),
+    ...(errorData?.accountStatus
+      ? { accountStatus: errorData.accountStatus }
+      : {}),
+    ...(errorData?.suspendedUntil !== undefined
+      ? { suspendedUntil: errorData.suspendedUntil }
+      : {}),
+    ...(errorData?.suspensionReason !== undefined
+      ? { suspensionReason: errorData.suspensionReason }
+      : {}),
   });
 };
 

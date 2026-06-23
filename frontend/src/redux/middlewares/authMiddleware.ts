@@ -1,55 +1,63 @@
 import { isRejectedWithValue, type Middleware } from "@reduxjs/toolkit";
-import { logout, logoutLocal } from "../slices/user/authSlice";
 import { toast } from "react-toastify";
-import type { AppDispatch } from "../store";
+import { logoutLocal } from "../slices/user/authSlice";
+import {
+  forceLogoutUser,
+  isAccountLockPayload,
+} from "../../utils/forceLogout";
 
 export const authMiddleware: Middleware =
   (store) => (next) => (action: any) => {
     const result = next(action);
 
-    const dispatch = store.dispatch as AppDispatch;
+    if (!isRejectedWithValue(action)) {
+      return result;
+    }
 
-    if (isRejectedWithValue(action)) {
-      const status = action.payload?.statusCode;
-      const message = action.payload?.message || "Something went wrong";
-      const remainingTime = action.payload?.data?.remainingTime;
+    const status = action.payload?.statusCode;
+    const message = action.payload?.message || "Có lỗi xảy ra";
+    const remainingTime = action.payload?.data?.remainingTime;
+    const accountLockPayload = {
+      forceLogout:
+        action.payload?.forceLogout ?? action.payload?.data?.forceLogout,
+      accountStatus:
+        action.payload?.accountStatus ?? action.payload?.data?.accountStatus,
+      suspendedUntil:
+        action.payload?.suspendedUntil ?? action.payload?.data?.suspendedUntil,
+      suspensionReason:
+        action.payload?.suspensionReason ??
+        action.payload?.data?.suspensionReason,
+      violationCount: action.payload?.data?.violationCount,
+      message,
+    };
 
-      // không spam toast khi token sắp refresh
-      if (!remainingTime && status !== 401 && status !== 403) {
-        toast.error(message, {
-          toastId: message,
-        });
-      }
+    if (
+      [403, 423].includes(status) &&
+      isAccountLockPayload(accountLockPayload)
+    ) {
+      forceLogoutUser(accountLockPayload);
+      return result;
+    }
 
-      // =========================
-      // 401 - TOKEN HẾT HẠN
-      // =========================
-      if (status === 401) {
-        // chỉ logout khi refresh token fail
-        if (action.type === "auth/refreshTokenThunk/rejected") {
-          toast.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.", {
-            toastId: "session-expired",
-          });
+    if (!remainingTime && status !== 401 && status !== 403) {
+      toast.error(message, { toastId: message });
+    }
 
-          dispatch(logoutLocal());
-          dispatch(logout());
-        }
-      }
+    if (
+      status === 401 &&
+      action.type === "auth/refreshTokenThunk/rejected"
+    ) {
+      toast.error(
+        "Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.",
+        { toastId: "session-expired" },
+      );
+      store.dispatch(logoutLocal());
+    }
 
-      // =========================
-      // 403 - KHÔNG CÓ QUYỀN
-      // =========================
-      if (status === 403) {
-        toast.error(message || "Không có quyền truy cập", {
-          toastId: "forbidden",
-        });
-
-        // clear local auth
-        dispatch(logoutLocal());
-
-        // optional call api logout
-        dispatch(logout());
-      }
+    if (status === 403) {
+      toast.error(message || "Không có quyền truy cập", {
+        toastId: "forbidden",
+      });
     }
 
     return result;

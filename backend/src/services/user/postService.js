@@ -6,6 +6,28 @@ import { CLASS_ENROLLMENT_STATUS } from "../../constants/classConstant.js";
 import ForbiddenError from "../../errors/ForbiddenError.js";
 import NotFoundError from "../../errors/NotFoundError.js";
 import { Op } from "sequelize";
+import {
+  ACCOUNT_STATUS,
+  MODERATION_ACTION,
+  MODERATION_LABEL,
+  MODERATION_SOURCE,
+  MODERATION_TARGET_TYPE,
+  POST_MODERATION_STATUS,
+  VIOLATION_ACTION,
+} from "../../constants/moderationConstant.js";
+import { buildModerationText } from "../../utils/moderationTextBuilder.js";
+import {
+  decideModerationAction,
+  predictModerationText,
+} from "../aiModerationService.js";
+import {
+  createViolation,
+  reactivateUserIfSuspensionExpired,
+} from "../moderationViolationService.js";
+import {
+  sendAdminNotification,
+  sendUserNotification,
+} from "../../helpers/notification.js";
 
 const emptyReactionSummary = () =>
   Object.values(POST_REACTION).reduce((summary, reactionType) => {
@@ -51,11 +73,114 @@ const attachReactionSummaries = async (posts, transaction) => {
   });
 };
 
+const toUserPostPayload = (post) => {
+  const payload = post?.toJSON ? post.toJSON() : post;
+  if (!payload) return payload;
+  delete payload.moderationText;
+  return payload;
+};
+
+const toAccountLockData = (user) => ({
+  accountStatus: user.accountStatus,
+  suspendedUntil: user.suspendedUntil,
+  suspensionReason: user.suspensionReason,
+  violationCount: user.violationCount,
+  forceLogout: true,
+});
+
 // Tạo bài đăng mới. Nếu type = Class thì chỉ Coach được đăng.
+const assertUserCanCreatePost = (user) => {
+  if (user.accountStatus === ACCOUNT_STATUS.BANNED) {
+    throw new ForbiddenError(
+      "Tài khoản đã bị khóa do vi phạm quy định cộng đồng.",
+      toAccountLockData(user),
+    );
+  }
+
+  const suspensionIsActive =
+    user.accountStatus === ACCOUNT_STATUS.SUSPENDED &&
+    user.suspendedUntil &&
+    new Date(user.suspendedUntil).getTime() > Date.now();
+
+  if (suspensionIsActive) {
+    throw new ForbiddenError(
+      `Tài khoản tạm thời bị khóa đến ${new Date(
+        user.suspendedUntil,
+      ).toLocaleString("vi-VN")}.`,
+      toAccountLockData(user),
+    );
+  }
+};
+
 const createPostService = async (data) => {
   const { title, content, type, formData, userId, userRole } = data;
 
+  if (type === POST_TYPE.CLASS && userRole !== ROLE_NAME.COACH) {
+    throw new ForbiddenError(
+      "Chỉ người dạy cầu lông mới được đăng bài lớp học.",
+    );
+  }
+
+  let user = await User.findByPk(userId);
+  if (!user) {
+    throw new NotFoundError("Không tìm thấy người dùng.");
+  }
+
+  user = await reactivateUserIfSuspensionExpired(user);
+  assertUserCanCreatePost(user);
+
+  const moderationText = buildModerationText({
+    type,
+    title,
+    content,
+    formData,
+  });
+
+  let aiResult = null;
+  let decision;
+
+  try {
+    aiResult = await predictModerationText(moderationText);
+    decision = decideModerationAction(aiResult);
+  } catch (error) {
+    console.error("AI moderation unavailable:", error.message);
+    decision = {
+      action: MODERATION_ACTION.REVIEW,
+      reason: "AI service unavailable",
+    };
+  }
+
+  const statusByAction = {
+    [MODERATION_ACTION.ALLOW]: POST_MODERATION_STATUS.APPROVED,
+    [MODERATION_ACTION.REVIEW]: POST_MODERATION_STATUS.REVIEW_REQUIRED,
+    [MODERATION_ACTION.BLOCK]: POST_MODERATION_STATUS.REJECTED,
+  };
+  const moderationStatus = statusByAction[decision.action];
+  const isActive =
+    moderationStatus === POST_MODERATION_STATUS.APPROVED;
+  const moderationLabel = Object.values(MODERATION_LABEL).includes(
+    aiResult?.label,
+  )
+    ? aiResult.label
+    : null;
+  const confidence = Number(aiResult?.confidence);
+  const moderationConfidence = Number.isFinite(confidence)
+    ? confidence
+    : null;
+
   return sequelize.transaction(async (t) => {
+    let lockedUser = await User.findByPk(userId, {
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
+
+    if (!lockedUser) {
+      throw new NotFoundError("Không tìm thấy người dùng.");
+    }
+
+    lockedUser = await reactivateUserIfSuspensionExpired(lockedUser, t);
+    assertUserCanCreatePost(lockedUser);
+
     // Rule: chỉ Coach được đăng lớp học
     if (type === POST_TYPE.CLASS && userRole !== ROLE_NAME.COACH) {
       throw new ForbiddenError("Chỉ người dạy cầu lông mới được đăng bài lớp học.");
@@ -68,11 +193,71 @@ const createPostService = async (data) => {
         title: title?.trim(),
         content: content?.trim() || null,
         formData: formData || null,
-        isActive: true,
+        isActive,
         isDeleted: false,
+        moderationStatus,
+        moderationLabel,
+        moderationConfidence,
+        moderationAction: decision.action,
+        moderationReason: decision.reason,
+        moderationText,
+        moderatedAt: new Date(),
       },
       { transaction: t },
     );
+
+    let violationResult = null;
+
+    if (decision.action === MODERATION_ACTION.BLOCK) {
+      violationResult = await createViolation(
+        {
+          userId,
+          postId: post.id,
+          targetType: MODERATION_TARGET_TYPE.POST,
+          targetId: post.id,
+          label: moderationLabel,
+          action: VIOLATION_ACTION.BLOCK,
+          confidence: moderationConfidence,
+          reason: decision.reason,
+          source: MODERATION_SOURCE.AI,
+        },
+        { transaction: t },
+      );
+    }
+
+    if (decision.action === MODERATION_ACTION.REVIEW) {
+      await sendUserNotification(
+        userId,
+        "POST_MODERATION_REVIEW_REQUIRED",
+        "Bài viết đang chờ duyệt",
+        `Bài viết "${post.title}" đang chờ quản trị viên duyệt trước khi hiển thị.`,
+        { transaction: t },
+      );
+
+      await sendAdminNotification(
+        "POST_MODERATION_REVIEW",
+        "Có bài viết cần kiểm duyệt",
+        `Bài viết "${post.title}" đang chờ duyệt: ${decision.reason}`,
+        { transaction: t },
+      );
+    }
+
+    if (decision.action === MODERATION_ACTION.BLOCK) {
+      await sendUserNotification(
+        userId,
+        "POST_MODERATION_REJECTED",
+        "Bài viết bị từ chối",
+        `Bài viết "${post.title}" bị từ chối do: ${decision.reason}.`,
+        { transaction: t },
+      );
+
+      await sendAdminNotification(
+        "POST_MODERATION_REJECTED",
+        "AI đã từ chối một bài viết",
+        `Bài viết "${post.title}" bị từ chối: ${decision.reason}`,
+        { transaction: t },
+      );
+    }
 
     if (type === POST_TYPE.CLASS) {
       await ClassRoom.findOrCreate({
@@ -107,7 +292,28 @@ const createPostService = async (data) => {
       ],
     });
 
-    return created;
+    return {
+      post: toUserPostPayload(created),
+      moderation: {
+        status: moderationStatus,
+        label: moderationLabel,
+        confidence: moderationConfidence,
+        action: decision.action,
+        reason: decision.reason,
+      },
+      violation: violationResult
+        ? {
+            violationCount: violationResult.violationCount || 0,
+            accountStatus: violationResult.accountStatus || null,
+            lastViolationAt: violationResult.lastViolationAt || null,
+            suspendedUntil: violationResult.suspendedUntil || null,
+            suspensionReason: violationResult.suspensionReason || null,
+            forceLogout: violationResult.forceLogout,
+            statusChanged: violationResult.statusChanged,
+          }
+        : null,
+      forceLogout: Boolean(violationResult?.forceLogout),
+    };
   });
 };
 

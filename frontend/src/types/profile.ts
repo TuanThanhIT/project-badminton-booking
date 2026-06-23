@@ -1,4 +1,5 @@
 import type { ApiResponse } from "./api";
+import type { AccountStatus } from "./admin";
 
 export type UserProfileData = {
   id: number;
@@ -6,6 +7,11 @@ export type UserProfileData = {
   email: string;
   role?: string;
   createdDate: string;
+  accountStatus?: AccountStatus;
+  suspendedUntil?: string | null;
+  suspensionReason?: string | null;
+  violationCount?: number;
+  lastViolationAt?: string | null;
   postCount: number;
   profile: {
     fullName: string;

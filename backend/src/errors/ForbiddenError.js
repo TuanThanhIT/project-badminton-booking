@@ -1,8 +1,8 @@
 import ApiError from "./ApiError.js";
 
 class ForbiddenError extends ApiError {
-  constructor(msg = "Bạn không có quyền truy cập") {
-    super(403, msg);
+  constructor(msg, data = null) {
+    super(403, msg || "Forbidden", null, data);
   }
 }
 

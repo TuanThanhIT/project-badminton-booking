@@ -152,10 +152,18 @@ const seedSystemAccounts = async (queryInterface) => phaseTransaction(queryInter
   const hashedPasswords = await hashPasswordsByRole();
   const users = getRows("users").map((user) => {
     const roleName = roles.get(Number(user.roleId));
-    return { ...user, password: hashedPasswords[roleName] || hashedPasswords.USER };
+    return {
+      ...user,
+      password: hashedPasswords[roleName] || hashedPasswords.USER,
+      accountStatus: "ACTIVE",
+      suspendedUntil: null,
+      suspensionReason: null,
+      violationCount: 0,
+      lastViolationAt: null,
+    };
   });
   validateUniqueRows(users, ["username", "email"], "Users");
-  await upsertRows(queryInterface, "Users", users, transaction, ["password", "email", "isVerified", "isActive", "roleId", "createdAt", "updatedAt"]);
+  await upsertRows(queryInterface, "Users", users, transaction, ["password", "email", "isVerified", "isActive", "accountStatus", "suspendedUntil", "suspensionReason", "violationCount", "lastViolationAt", "roleId", "createdAt", "updatedAt"]);
   await upsertRows(queryInterface, "Profiles", getRows("profiles"), transaction);
   await upsertRows(queryInterface, "Wallets", getRows("wallets"), transaction);
 });

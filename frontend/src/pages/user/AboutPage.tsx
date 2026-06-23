@@ -402,6 +402,48 @@ const AboutPage = () => {
         </div>
       </section>
 
+      <section id="community-guidelines" className="bg-white py-20">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="rounded-[2rem] border border-sky-100 bg-sky-50/50 p-7 md:p-9">
+            <div className="mb-6 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-sky-600 shadow-sm">
+                <ShieldCheck size={26} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-widest text-sky-600">
+                  Kiểm duyệt AI
+                </p>
+                <h2 className="text-2xl font-semibold text-slate-900">
+                  Quy định cộng đồng
+                </h2>
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              {[
+                "Không đăng spam, nội dung lặp lại hoặc kéo tương tác.",
+                "Không quảng cáo, bán hàng, pass vợt/giày/phụ kiện trái phép trong bài cộng đồng.",
+                "Không xúc phạm, công kích cá nhân, đội nhóm, ban tổ chức hoặc huấn luyện viên.",
+                "Nội dung lớp học, giải đấu, tìm người chơi, tìm huấn luyện viên phải đúng loại bài đăng.",
+                "Bài có dấu hiệu quảng cáo sẽ được đưa vào trạng thái chờ quản trị viên duyệt.",
+                "Bài spam hoặc xúc phạm có thể bị từ chối tự động.",
+                "Người dùng vi phạm nhiều lần có thể bị cảnh báo hoặc khóa tài khoản.",
+              ].map((rule, index) => (
+                <div
+                  key={rule}
+                  className="flex items-start gap-3 rounded-2xl border border-white bg-white/80 p-4 text-sm leading-relaxed text-slate-700 shadow-sm"
+                >
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-sky-100 text-xs font-bold text-sky-700">
+                    {index + 1}
+                  </span>
+                  <span>{rule}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* POLICY */}
       <section className="bg-slate-50 py-24">
         <div className="max-w-7xl mx-auto px-6">

@@ -71,6 +71,7 @@ import WithdrawRequest from "./withdrawRequest.js";
 import RefreshToken from "./refreshToken.js";
 import AiChatSession from "./aiChatSession.js";
 import AiChatMessage from "./aiChatMessage.js";
+import UserModerationViolation from "./userModerationViolation.js";
 
 import OrderGroup from "./orderGroup.js";
 import VariantStock from "./variantStock.js";
@@ -736,6 +737,24 @@ PostShare.belongsTo(Post, {
   as: "post",
 });
 
+User.hasMany(UserModerationViolation, {
+  foreignKey: "userId",
+  as: "moderationViolations",
+});
+UserModerationViolation.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
+Post.hasMany(UserModerationViolation, {
+  foreignKey: "postId",
+  as: "moderationViolations",
+});
+UserModerationViolation.belongsTo(Post, {
+  foreignKey: "postId",
+  as: "post",
+});
+
 //////////////////////////////////////////////////////
 //////////////// CHAT ////////////////////////////////
 //////////////////////////////////////////////////////
@@ -991,4 +1010,5 @@ export {
   RefreshToken,
   AiChatSession,
   AiChatMessage,
+  UserModerationViolation,
 };

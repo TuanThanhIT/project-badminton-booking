@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 import {
   CalendarDays,
   MapPin,
@@ -25,6 +24,10 @@ import {
 } from "../../../../schemas/FormCreateTournamentPostSchema";
 import { TOURNAMENT_CATEGORY_OPTIONS } from "../../../../utils/constants/postConstant";
 import { getBranchOptions } from "../../../../redux/slices/user/branchSlice";
+import {
+  showCreatePostErrorToast,
+  showCreatePostModerationToast,
+} from "../../../../utils/postModerationToast";
 
 type CreateTournamentPostFormProps = {
   initialValues?: Partial<FormCreateTournamentPost>;
@@ -65,6 +68,12 @@ const CreateTournamentPostForm = ({
   );
 
   const lastCreatedPost = useAppSelector((state) => state.post.lastCreatedPost);
+  const lastCreateModeration = useAppSelector(
+    (state) => state.post.lastCreateModeration,
+  );
+  const lastCreateViolation = useAppSelector(
+    (state) => state.post.lastCreateViolation,
+  );
   const branches = useAppSelector((state) => state.branch.branchOptions);
   const courts = useAppSelector((state) => state.court.courts);
 
@@ -133,7 +142,7 @@ const CreateTournamentPostForm = ({
     if (!redirectOnSuccess) return;
     if (lastCreatedPost?.type !== "TOURNAMENT") return;
 
-    toast.success("Đăng bài giải đấu thành công!");
+    showCreatePostModerationToast(lastCreateModeration, lastCreateViolation);
     reset();
 
     const timer = setTimeout(() => {
@@ -142,7 +151,7 @@ const CreateTournamentPostForm = ({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [dispatch, lastCreatedPost, navigate, reset, redirectOnSuccess]);
+  }, [dispatch, lastCreatedPost, lastCreateModeration, lastCreateViolation, navigate, reset, redirectOnSuccess]);
 
   const onSubmit = async (formValue: FormCreateTournamentPost) => {
     const data: CreatePostRequest = {
@@ -159,8 +168,8 @@ const CreateTournamentPostForm = ({
 
     try {
       await dispatch(createPost({ data })).unwrap();
-    } catch {
-      toast.error("Đăng bài thất bại. Vui lòng thử lại.");
+    } catch (error) {
+      showCreatePostErrorToast(error);
     }
   };
 

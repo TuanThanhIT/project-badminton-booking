@@ -4,6 +4,7 @@ import { connectSocket, disconnectSocket } from "../socket";
 import type { ChatMessage, PresencePayload } from "../types/message";
 import type { NotificationResponse } from "../types/notification";
 import type { OrderShippingRealtimePayload } from "../types/order";
+import type { AccountLockPayload } from "../utils/forceLogout";
 
 const SOCKET_EVENTS = {
   NOTIFICATION_NEW: "notification:new",
@@ -13,6 +14,7 @@ const SOCKET_EVENTS = {
   CHAT_CONVERSATION_UPDATED: "chat:conversation-updated",
   PRESENCE_USER_ONLINE: "presence:user-online",
   PRESENCE_USER_OFFLINE: "presence:user-offline",
+  ACCOUNT_LOCKED: "account:locked",
 } as const;
 
 export const useRealtime = (token: string) => {
@@ -29,6 +31,7 @@ export const useRealtime = (token: string) => {
     action?: string;
   }>();
   const [presence, setPresence] = useState<PresencePayload>();
+  const [accountLocked, setAccountLocked] = useState<AccountLockPayload>();
 
   useEffect(() => {
     if (!token) return;
@@ -80,6 +83,7 @@ export const useRealtime = (token: string) => {
 
     socket.on(SOCKET_EVENTS.PRESENCE_USER_ONLINE, handlePresence);
     socket.on(SOCKET_EVENTS.PRESENCE_USER_OFFLINE, handlePresence);
+    socket.on(SOCKET_EVENTS.ACCOUNT_LOCKED, setAccountLocked);
 
     return () => {
       socket.off(SOCKET_EVENTS.NOTIFICATION_NEW);
@@ -89,6 +93,7 @@ export const useRealtime = (token: string) => {
       socket.off(SOCKET_EVENTS.CHAT_CONVERSATION_UPDATED);
       socket.off(SOCKET_EVENTS.PRESENCE_USER_ONLINE, handlePresence);
       socket.off(SOCKET_EVENTS.PRESENCE_USER_OFFLINE, handlePresence);
+      socket.off(SOCKET_EVENTS.ACCOUNT_LOCKED, setAccountLocked);
       socket.off("connect");
       socket.off("disconnect");
       disconnectSocket();
@@ -102,5 +107,6 @@ export const useRealtime = (token: string) => {
     chatMessagesRead,
     chatConversationUpdated,
     presence,
+    accountLocked,
   };
 };

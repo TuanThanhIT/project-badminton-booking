@@ -13,7 +13,7 @@ import { Notification } from "../models/index.js";
 const formatNotification = (notify) => ({
   id: notify.id,
   title: notify.title,
-    message: "Đã đánh dấu tất cả thông báo là đã đọc",
+  message: notify.message,
   isRead: notify.isRead,
   type: notify.type,
   createdAt: notify.createdAt,

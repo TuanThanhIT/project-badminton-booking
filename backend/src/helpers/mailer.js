@@ -533,6 +533,79 @@ B-Hub Support
   });
 };
 
+const sendModerationAccountLockMail = async ({
+  email,
+  username,
+  accountStatus,
+  violationCount,
+  suspensionReason,
+  suspendedUntil,
+}) => {
+  const isBanned = accountStatus === "BANNED";
+  const subject = isBanned
+    ? "Tài khoản B-Hub của bạn đã bị khóa"
+    : "Tài khoản B-Hub của bạn đã bị tạm khóa";
+  const untilText = suspendedUntil
+    ? new Date(suspendedUntil).toLocaleString("vi-VN")
+    : "Không áp dụng";
+  const reasonText =
+    suspensionReason ||
+    "Vi phạm quy định cộng đồng hoặc tái phạm nhiều lần.";
+
+  await transporter.sendMail({
+    from: `"Hỗ trợ B-Hub" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject,
+    text: `
+Chào ${username || "bạn"},
+
+Tài khoản B-Hub của bạn đã ${isBanned ? "bị khóa" : "bị tạm khóa"} do vi phạm quy định cộng đồng.
+
+Số lần vi phạm hiện tại: ${violationCount || 0}
+Lý do khóa: ${reasonText}
+${isBanned ? "" : `Thời gian khóa đến: ${untilText}`}
+
+Các loại vi phạm thường gặp:
+- Spam, kéo tương tác, nội dung lặp lại.
+- Quảng cáo hoặc bán hàng trái phép trong bài cộng đồng.
+- Xúc phạm, công kích người khác.
+
+Vui lòng đọc quy định cộng đồng trước khi tiếp tục sử dụng B-Hub. Nếu cho rằng đây là nhầm lẫn, hãy liên hệ quản trị viên để được hỗ trợ.
+
+Trân trọng,
+B-Hub Support
+    `,
+    html: `
+      <p>Chào <strong>${username || "bạn"}</strong>,</p>
+      <p>
+        Tài khoản B-Hub của bạn đã
+        <strong>${isBanned ? "bị khóa" : "bị tạm khóa"}</strong>
+        do vi phạm quy định cộng đồng.
+      </p>
+      <ul>
+        <li><strong>Số lần vi phạm hiện tại:</strong> ${violationCount || 0}</li>
+        <li><strong>Lý do khóa:</strong> ${reasonText}</li>
+        ${
+          isBanned
+            ? ""
+            : `<li><strong>Thời gian khóa đến:</strong> ${untilText}</li>`
+        }
+      </ul>
+      <p><strong>Các loại vi phạm thường gặp:</strong></p>
+      <ul>
+        <li>Spam, kéo tương tác, nội dung lặp lại.</li>
+        <li>Quảng cáo hoặc bán hàng trái phép trong bài cộng đồng.</li>
+        <li>Xúc phạm, công kích người khác.</li>
+      </ul>
+      <p>
+        Vui lòng đọc quy định cộng đồng trước khi tiếp tục sử dụng B-Hub.
+        Nếu cho rằng đây là nhầm lẫn, hãy liên hệ quản trị viên để được hỗ trợ.
+      </p>
+      <p>Trân trọng,<br /><strong>B-Hub Support</strong></p>
+    `,
+  });
+};
+
 const mailer = {
   sendContactMail,
   sendOtpMail,
@@ -540,6 +613,7 @@ const mailer = {
   sendOrderMail,
   sendWorkShiftMail,
   sendLockAccountMail,
+  sendModerationAccountLockMail,
   sendUnlockAccountMail,
 };
 

@@ -1,4 +1,9 @@
 import type { ApiResponse } from "./api";
+import type {
+  ModerationAction,
+  ModerationLabel,
+  ModerationStatus,
+} from "./admin";
 
 export type PostType =
   | "FIND_PLAYER"
@@ -173,7 +178,30 @@ export type CreatePostRequest = {
   formData?: PostFormData | null;
 };
 
-export type CreatePostResponse = ApiResponse<Post>;
+export type CreatePostModeration = {
+  status: ModerationStatus;
+  label?: ModerationLabel | null;
+  confidence?: number | null;
+  action?: ModerationAction | null;
+  reason?: string | null;
+};
+
+export type CreatePostViolation = {
+  violationCount?: number | null;
+  accountStatus?: string | null;
+  lastViolationAt?: string | null;
+  suspendedUntil?: string | null;
+  suspensionReason?: string | null;
+  forceLogout?: boolean;
+  statusChanged?: boolean;
+};
+
+export type CreatePostResponse = ApiResponse<{
+  post: Post;
+  moderation: CreatePostModeration;
+  violation?: CreatePostViolation | null;
+  forceLogout?: boolean;
+}>;
 export type UpdatePostRequest = {
   title?: string;
   content?: string;

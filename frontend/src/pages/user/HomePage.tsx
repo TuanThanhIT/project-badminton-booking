@@ -108,11 +108,11 @@ const ProductCard = ({
   onClick,
 }: ProductCardProps) => {
   const cardClass =
-    "group relative h-full cursor-pointer overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-sky-300 hover:shadow-xl hover:shadow-sky-100";
+    "group relative h-fit self-start cursor-pointer overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-sky-300 hover:shadow-lg";
   const imageClass =
-    "h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110";
+    "h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105";
   const actionBtnClass =
-    "mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700 transition-all duration-300 hover:border-sky-600 hover:bg-sky-600 hover:text-white hover:shadow-lg hover:shadow-sky-100 active:scale-[0.98]";
+    "flex w-full items-center justify-center gap-2 rounded-2xl border border-sky-100 bg-sky-50 px-4 py-2.5 text-sm font-semibold text-sky-700 transition-all duration-300 hover:border-sky-600 hover:bg-sky-600 hover:text-white active:scale-[0.98]";
 
   return (
     <article onClick={onClick} className={cardClass}>
@@ -156,62 +156,62 @@ const ProductCard = ({
         )}
       </div>
 
-      <div className="p-[18px]">
+      <div className="flex flex-col p-[18px]">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <p className="line-clamp-1 text-[11px] font-medium uppercase tracking-wide text-sky-600">
+          <p className="min-w-0 flex-1 truncate text-[11px] font-medium uppercase tracking-wide text-sky-600">
             {loading ? "..." : product?.brand}
           </p>
 
           {!loading && product?.category?.cateName && (
-            <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
+            <span
+              className="max-w-[58%] shrink-0 truncate rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600"
+              title={product.category.cateName}
+            >
               {product.category.cateName}
             </span>
           )}
         </div>
 
         <h3
-          className="
-    mt-1.5 line-clamp-2 min-h-[56px]
-    text-[17px] font-semibold leading-snug
-    text-slate-700 transition
-    group-hover:text-sky-700
-  "
+          className="mt-1.5 line-clamp-2 h-12 max-h-12 shrink-0 overflow-hidden text-[17px] font-semibold leading-6 text-slate-700 transition group-hover:text-sky-700"
           title={loading ? "Đang tải sản phẩm..." : product?.productName}
         >
           {loading ? "Đang tải sản phẩm..." : product?.productName}
         </h3>
 
-        <div className="mt-2 flex flex-wrap items-baseline gap-2">
-          <span className="text-[19px] font-semibold tracking-tight text-sky-700">
-            {loading
-              ? "--"
-              : formatPrice(
-                  product?.minDiscountedPrice || product?.minPrice || 0,
-                )}
-          </span>
-
-          {!loading && product && product.discount > 0 && (
-            <span className="text-[13px] text-slate-400 line-through">
-              {formatPrice(product.minPrice)}
+        <div className="mt-3 flex min-h-8 shrink-0 items-center justify-between gap-2">
+          <div className="flex min-w-0 items-baseline gap-1.5">
+            <span className="whitespace-nowrap text-[19px] font-semibold tracking-tight text-sky-700">
+              {loading
+                ? "--"
+                : formatPrice(
+                    product?.minDiscountedPrice || product?.minPrice || 0,
+                  )}
             </span>
+
+            {!loading && product && product.discount > 0 && (
+              <span className="hidden whitespace-nowrap text-[11px] text-slate-400 line-through 2xl:inline">
+                {formatPrice(product.minPrice)}
+              </span>
+            )}
+          </div>
+
+          {!loading && (
+            <div className="flex shrink-0 items-center gap-1 text-[11px] font-medium">
+              {product?.reviewCount ? (
+                <span className="whitespace-nowrap rounded-full bg-amber-50 px-2 py-1 text-amber-600">
+                  ★ {product.avgRating} ({product.reviewCount})
+                </span>
+              ) : null}
+
+              {product?.soldCount ? (
+                <span className="whitespace-nowrap rounded-full bg-orange-50 px-2 py-1 text-orange-600">
+                  Đã bán {formatNumber(product.soldCount)}
+                </span>
+              ) : null}
+            </div>
           )}
         </div>
-
-        {!loading && (
-          <div className="mt-2 flex flex-wrap gap-2 text-xs font-medium text-slate-500">
-            {product?.soldCount ? (
-              <span className="rounded-full bg-orange-50 px-2.5 py-1 text-orange-600">
-                Đã bán {formatNumber(product.soldCount)}
-              </span>
-            ) : null}
-
-            {product?.reviewCount ? (
-              <span className="rounded-full bg-amber-50 px-2.5 py-1 text-amber-600">
-                ★ {product.avgRating} ({product.reviewCount})
-              </span>
-            ) : null}
-          </div>
-        )}
 
         {!loading && (
           <button
@@ -220,7 +220,7 @@ const ProductCard = ({
               event.stopPropagation();
               onClick?.();
             }}
-            className={actionBtnClass}
+            className={`${actionBtnClass} mt-3`}
           >
             Xem chi tiết
             <ArrowRight
@@ -248,13 +248,13 @@ const BranchCard = ({
   badge = "Chi nhánh B-Hub",
 }: BranchCardProps) => {
   const cardClass =
-    "group relative h-full cursor-pointer overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-sky-300 hover:shadow-xl hover:shadow-sky-100";
+    "group relative h-full cursor-pointer overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-sky-300 hover:shadow-lg";
 
   const imageClass =
-    "h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110";
+    "h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105";
 
   const actionBtnClass =
-    "mt-5 flex w-full items-center justify-center gap-2 rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700 transition-all duration-300 hover:border-sky-600 hover:bg-sky-600 hover:text-white hover:shadow-lg hover:shadow-sky-100 active:scale-[0.98]";
+    "mt-5 flex w-full items-center justify-center gap-2 rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700 transition-all duration-300 hover:border-sky-600 hover:bg-sky-600 hover:text-white active:scale-[0.98]";
 
   return (
     <article onClick={onClick} className={cardClass}>
@@ -411,7 +411,7 @@ const HomePage = () => {
   const titleBadgeClass =
     "inline-flex items-center gap-2 rounded-full border border-sky-100 bg-white px-4 py-2 text-sm font-semibold text-sky-700 shadow-sm";
   const viewMoreBtnClass =
-    "group inline-flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-sky-300 hover:bg-sky-50 hover:text-sky-700 hover:shadow-md";
+    "group inline-flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-300 hover:border-sky-300 hover:bg-sky-50 hover:text-sky-700";
 
   const goToProductDetail = (product: HomeProduct) => {
     navigate(
@@ -490,26 +490,26 @@ const HomePage = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/85 to-slate-900/10" />
         </div>
 
-        <div className="relative mx-auto grid min-h-[540px] max-w-[1280px] items-center gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1.35fr_0.85fr] lg:py-12">
+        <div className="relative mx-auto grid min-h-[460px] max-w-[1220px] items-center gap-6 px-4 py-7 sm:min-h-[500px] sm:px-5 sm:py-8 lg:grid-cols-[1.35fr_0.85fr] lg:py-10">
           <div className="home-hero-copy max-w-3xl">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-sky-100 backdrop-blur-sm">
-              <Sparkles size={16} />
+            <div className="mb-4 inline-flex max-w-full items-start gap-2 rounded-2xl border border-white/15 bg-white/10 px-3.5 py-1.5 text-sm font-medium leading-6 text-sky-100 backdrop-blur-sm">
+              <Sparkles size={16} className="mt-1 shrink-0" />
               Trang chủ B-Hub - Đam mê cầu lông bắt đầu ở đây
             </div>
 
-            <h1 className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
+            <h1 className="text-[2rem] font-bold leading-[1.18] tracking-tight text-white sm:text-4xl md:text-5xl">
               {currentBanner.title}
             </h1>
 
-            <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-200 sm:text-lg">
+            <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-200 sm:text-lg">
               {currentBanner.subtitle}
             </p>
 
-            <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+            <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:gap-3">
               <button
                 type="button"
                 onClick={() => navigate(currentBanner.primaryAction.href)}
-                className="group inline-flex items-center justify-center gap-2 rounded-full bg-sky-500 px-7 py-4 text-sm font-semibold text-white shadow-2xl shadow-sky-950/30 transition hover:bg-sky-400 active:scale-[0.98]"
+                className="group inline-flex items-center justify-center gap-2 rounded-full bg-sky-500 px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-sky-400 hover:shadow-lg active:scale-[0.98]"
               >
                 {currentBanner.primaryAction.label}
                 <ArrowRight
@@ -521,7 +521,7 @@ const HomePage = () => {
               <button
                 type="button"
                 onClick={() => navigate(currentBanner.secondaryAction.href)}
-                className="group inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-7 py-4 text-sm font-semibold text-white transition hover:bg-white/20 active:scale-[0.98]"
+                className="group inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20 active:scale-[0.98]"
               >
                 {currentBanner.secondaryAction.label}
                 <ArrowRight
@@ -531,7 +531,7 @@ const HomePage = () => {
               </button>
             </div>
 
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
               {[
                 {
                   title: "Đặt sân nhanh",
@@ -556,10 +556,10 @@ const HomePage = () => {
               ].map((item) => (
                 <div
                   key={item.title}
-                  className="group rounded-3xl border border-white/10 bg-white/5 p-5 shadow-xl shadow-slate-950/10 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:bg-white/10"
+                  className="group rounded-2xl border border-white/10 bg-white/5 p-4 shadow-sm backdrop-blur transition-all duration-300 hover:border-white/20 hover:bg-white/10 hover:shadow-md"
                 >
-                  <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-500/15 text-sky-200 transition-all duration-300 group-hover:rotate-6 group-hover:scale-110 group-hover:bg-sky-500/25">
-                    <item.icon size={22} />
+                  <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-sky-500/15 text-sky-200 transition-colors duration-300 group-hover:bg-sky-500/25">
+                    <item.icon size={20} />
                   </div>
 
                   <h3 className="text-lg font-semibold text-white">
@@ -574,16 +574,16 @@ const HomePage = () => {
             </div>
           </div>
 
-          <div className="home-float rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-2xl shadow-slate-950/20 backdrop-blur">
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-md backdrop-blur">
             <p className="text-sm font-semibold uppercase text-sky-300">
               Dữ liệu nổi bật
             </p>
 
-            <h2 className="mt-4 text-3xl font-semibold text-white">
+            <h2 className="mt-3 text-2xl font-semibold text-white">
               B-Hub trong hôm nay
             </h2>
 
-            <div className="mt-8 grid gap-4">
+            <div className="mt-6 grid gap-3">
               {[
                 {
                   title: `${formatNumber(homeData.stats.bookingCount)} lượt đặt sân`,
@@ -603,7 +603,7 @@ const HomePage = () => {
               ].map((item) => (
                 <div
                   key={item.title}
-                  className="rounded-3xl border border-slate-800/80 bg-slate-900/80 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-400/40 hover:bg-slate-900"
+                  className="rounded-2xl border border-slate-800/80 bg-slate-900/80 p-4 transition-all duration-300 hover:border-sky-400/40 hover:bg-slate-900"
                 >
                   <span className="inline-flex rounded-full bg-sky-500/15 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-sky-200">
                     {item.tag}
@@ -689,9 +689,9 @@ const HomePage = () => {
             ].map((stat) => (
               <div
                 key={stat.label}
-                className="group rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sky-300 hover:bg-white hover:shadow-lg hover:shadow-sky-100"
+                className="group rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-sky-300 hover:bg-white hover:shadow-lg"
               >
-                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-sky-600 shadow-sm transition-all duration-300 group-hover:rotate-6 group-hover:scale-110 group-hover:bg-sky-600 group-hover:text-white">
+                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-sky-600 shadow-sm transition-colors duration-300 group-hover:bg-sky-600 group-hover:text-white">
                   <stat.icon size={22} />
                 </div>
 
@@ -731,7 +731,7 @@ const HomePage = () => {
                 key={loading ? index : category.id}
                 type="button"
                 onClick={() => !loading && goToProductGroup(category.groupName)}
-                className="group relative h-52 overflow-hidden rounded-[1.75rem] border border-white bg-slate-200 text-left shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-sky-100"
+                className="group relative h-52 overflow-hidden rounded-[1.75rem] border border-white bg-slate-200 text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-sky-300 hover:shadow-lg"
               >
                 {loading ? (
                   <div className="h-full w-full animate-pulse bg-slate-200" />
@@ -740,7 +740,7 @@ const HomePage = () => {
                     <img
                       src={category.imageUrl}
                       alt={category.title}
-                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
 
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-white/10" />
@@ -798,7 +798,7 @@ const HomePage = () => {
                   onClick={() => setActiveNewGroup(group.menuGroup)}
                   className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 ${
                     activeNewGroup === group.menuGroup
-                      ? "bg-sky-600 text-white shadow-lg shadow-sky-100"
+                      ? "bg-sky-600 text-white shadow-sm"
                       : "bg-sky-50 text-sky-700 hover:bg-sky-100"
                   }`}
                 >
@@ -832,7 +832,7 @@ const HomePage = () => {
                   badge={
                     <>
                       <Sparkles size={12} />
-                      NEW
+                      MỚI
                     </>
                   }
                   badgeClassName="bg-emerald-500"
@@ -939,7 +939,7 @@ const HomePage = () => {
               onClick={() => setActiveDiscountType(tab.key as any)}
               className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 ${
                 activeDiscountType === tab.key
-                  ? "bg-sky-600 text-white shadow-lg shadow-sky-100"
+                  ? "bg-sky-600 text-white shadow-sm"
                   : "bg-white text-sky-700 shadow-sm hover:bg-sky-50"
               }`}
             >
@@ -956,13 +956,13 @@ const HomePage = () => {
             {activeDiscounts.slice(0, 4).map((discount) => (
               <article
                 key={discount.id}
-                className="group relative overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-sky-300 hover:shadow-xl hover:shadow-sky-100"
+                className="group relative overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-sky-300 hover:shadow-lg"
               >
-                <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-sky-50 transition-all duration-300 group-hover:scale-125 group-hover:bg-sky-100" />
+                <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-sky-50 transition-colors duration-300 group-hover:bg-sky-100" />
 
                 <div className="relative">
                   <div className="mb-5 flex items-start justify-between gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-700 transition-all duration-300 group-hover:rotate-6 group-hover:scale-110 group-hover:bg-sky-600 group-hover:text-white">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-700 transition-colors duration-300 group-hover:bg-sky-600 group-hover:text-white">
                       <TicketPercent size={22} />
                     </div>
 
@@ -1088,7 +1088,7 @@ const HomePage = () => {
               {homeData.customerReviews.slice(0, 6).map((review) => (
                 <article
                   key={review.id}
-                  className="group rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-sky-300 hover:shadow-xl hover:shadow-sky-100"
+                  className="group rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-sky-300 hover:shadow-lg"
                 >
                   <div className="mb-4 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
@@ -1161,7 +1161,7 @@ const HomePage = () => {
               <button
                 type="button"
                 onClick={() => navigate("/courts")}
-                className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-sky-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-sky-100 transition-all duration-300 hover:-translate-y-0.5 hover:bg-sky-700 hover:shadow-xl active:scale-[0.98] sm:w-auto"
+                className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-sky-600 px-7 py-3.5 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:bg-sky-700 hover:shadow-md active:scale-[0.98] sm:w-auto"
               >
                 Đặt sân ngay
                 <ArrowRight
@@ -1173,7 +1173,7 @@ const HomePage = () => {
               <button
                 type="button"
                 onClick={() => navigate("/products")}
-                className="group inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-7 py-3.5 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700 hover:shadow-md active:scale-[0.98] sm:w-auto"
+                className="group inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-7 py-3.5 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-300 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700 active:scale-[0.98] sm:w-auto"
               >
                 Mua sắm ngay
                 <ArrowRight

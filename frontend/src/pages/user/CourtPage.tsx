@@ -485,13 +485,12 @@ const CourtPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-700">
-      <section className="relative overflow-hidden bg-sky-950">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.22),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.14),transparent_32%)]" />
-        <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:py-12">
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-sky-100">
-                <Navigation size={16} className="text-sky-300" />
+      <section className="user-hero-surface">
+        <div className="relative mx-auto max-w-[1220px] px-4 py-10 sm:px-6 lg:py-12">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-end lg:gap-6">
+            <div className="max-w-2xl">
+              <div className="user-hero-badge mb-5">
+                <Navigation />
                 Trung tâm đặt sân
               </div>
 
@@ -503,9 +502,20 @@ const CourtPage = () => {
                 Chọn chi nhánh, khung giờ và sân còn trống. Sau khi đặt, bạn có
                 thể theo dõi toàn bộ lịch sân trong tài khoản.
               </p>
+
+              <div className="mt-6 flex flex-wrap gap-3 text-sm text-sky-100">
+                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2">
+                  <CalendarDays size={16} />
+                  Đặt theo ngày hoặc tháng
+                </div>
+                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2">
+                  <Clock3 size={16} />
+                  Theo dõi lịch dễ dàng
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3 lg:min-w-[420px]">
+            <div className="grid grid-cols-3 gap-3">
               {[
                 {
                   icon: MapPin,

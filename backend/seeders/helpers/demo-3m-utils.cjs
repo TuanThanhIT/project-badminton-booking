@@ -6,7 +6,9 @@ const { QueryTypes } = require("sequelize");
 const MARKER = "[DEMO-SEED-3M]";
 const RANDOM_SEED = 20260310;
 const START = new Date("2026-03-10T00:00:00+07:00");
-const END = new Date("2026-06-10T23:59:59+07:00");
+const END = new Date("2026-06-30T23:59:59+07:00");
+const FEEDBACK_END = new Date("2026-06-30T23:59:59+07:00");
+const RECENT_CUTOFF = new Date("2026-06-27T00:00:00+07:00");
 
 const STATUS = {
   booking: ["PENDING", "CONFIRMED", "CHECKED_IN", "COMPLETED", "CANCELLED", "FAILED"],
@@ -47,7 +49,13 @@ const int = (min, max) => Math.floor(rand() * (max - min + 1)) + min;
 const pick = (items) => items[int(0, items.length - 1)];
 const money = (value) => Math.max(0, Math.round(Number(value || 0) / 1000) * 1000);
 const pad = (value, size = 3) => String(value).padStart(size, "0");
-const dateOnly = (date) => date.toISOString().slice(0, 10);
+const dateOnly = (date) =>
+  new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Bangkok",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(date));
 const dateTime = (date, hour = 0, minute = 0) => {
   const d = new Date(date);
   d.setHours(hour, minute, int(0, 50), 0);
@@ -73,6 +81,12 @@ const randomDate = () => {
   const multiplier = month === 4 ? 1.18 : month === 3 ? 1.05 : 1;
   if (rand() > multiplier / 1.2) return randomDate();
   return d;
+};
+const spreadDate = (index, total, start = START, end = END) => {
+  if (total <= 1) return new Date(end);
+  const days = Math.floor((end - start) / 86400000);
+  const offset = Math.round((Math.max(0, index) * days) / (total - 1));
+  return addDays(start, Math.min(days, offset));
 };
 const bookingHour = () => weighted([[6, 12], [7, 10], [8, 8], [10, 5], [14, 7], [17, 16], [18, 18], [19, 20], [20, 18], [21, 13]]);
 const publicHour = () => int(8, 23);
@@ -244,9 +258,9 @@ const cleanupUsers = async (qi, transaction) => {
 };
 
 module.exports = {
-  MARKER, RANDOM_SEED, START, END, STATUS, addresses, avatar, names,
+  MARKER, RANDOM_SEED, START, END, FEEDBACK_END, RECENT_CUTOFF, STATUS, addresses, avatar, names,
   rand, int, pick, money, pad, dateOnly, dateTime, addMinutes, addDays, time,
-  weighted, randomDate, bookingHour, publicHour, q, exec, insert, del,
+  weighted, randomDate, spreadDate, bookingHour, publicHour, q, exec, insert, del,
   getRoleIds, getDemoUsers, phaseTransaction, deletePaymentsByExternal,
   deleteBookings, deleteOrders, deleteCounter, deleteSocial, deleteChat,
   cleanupUsers, bcrypt,

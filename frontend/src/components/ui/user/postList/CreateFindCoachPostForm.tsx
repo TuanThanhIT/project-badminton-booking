@@ -29,7 +29,7 @@ type CreateFindCoachPostFormProps = {
 };
 
 const inputClass =
-  "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-[15px] text-slate-800 outline-none transition-all placeholder:text-slate-400 shadow-sm hover:border-sky-200 hover:bg-sky-50/20 focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100/70";
+  "w-full rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-colors placeholder:text-slate-400 hover:border-slate-300 focus:border-sky-400 focus:ring-2 focus:ring-sky-100/70";
 const labelClass = "block text-[13px] font-medium text-slate-600 mb-1.5";
 const errorClass = "text-red-500 text-xs font-medium mt-1.5";
 const sectionClass =
@@ -138,7 +138,7 @@ const CreateFindCoachPostForm = ({
         <label className={labelClass}>Nội dung</label>
         <textarea
           {...register("content")}
-          className={`${inputClass} min-h-[110px] resize-none leading-relaxed`}
+          className={`${inputClass} min-h-[104px] resize-none leading-relaxed`}
           placeholder="Mô tả ngắn về nhu cầu học, mục tiêu và tình trạng hiện tại..."
         />
         {errors.content && <p className={errorClass}>{errors.content.message}</p>}
@@ -256,7 +256,7 @@ const CreateFindCoachPostForm = ({
         <label className={labelClass}>Ghi chú</label>
         <textarea
           {...register("formData.notes")}
-          className={`${inputClass} min-h-[90px] resize-none leading-relaxed`}
+          className={`${inputClass} min-h-[88px] resize-none leading-relaxed`}
           placeholder="Thông tin thêm nếu cần..."
         />
       </div>

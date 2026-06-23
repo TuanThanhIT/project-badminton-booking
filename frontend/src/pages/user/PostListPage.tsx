@@ -1,11 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { MessageCircle, Search, SlidersHorizontal, Sparkles, Users } from "lucide-react";
+import {
+  MessageCircle,
+  Search,
+  SlidersHorizontal,
+  Sparkles,
+  Users,
+} from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { getAllBranches } from "../../redux/slices/user/branchSlice";
 import { getCourtsByIds } from "../../redux/slices/user/courtSlice";
 import { getPosts } from "../../redux/slices/user/postSlice";
 import type { PostType, PostWithAuthor } from "../../types/post";
-import { POST_TYPE_LABEL, POST_TYPES } from "../../utils/constants/postConstant";
+import {
+  POST_TYPE_LABEL,
+  POST_TYPES,
+} from "../../utils/constants/postConstant";
 import CreatePostBar from "../../components/ui/user/postList/CreatePostBar";
 import FilterSidebar from "../../components/ui/user/postList/FilterSidebar";
 import PostCard from "../../components/ui/user/postList/PostCard";
@@ -16,11 +25,17 @@ const PostListPage = () => {
   const { posts, total, limit } = useAppSelector((state) => state.post.posts);
   const branches = useAppSelector((state) => state.branch.branches);
   const courts = useAppSelector((state) => state.court.courts);
-  const loading = useAppSelector((state) => state.ui.loadingMap["post/getPosts"]);
+  const loading = useAppSelector(
+    (state) => state.ui.loadingMap["post/getPosts"],
+  );
 
   const [selectedType, setSelectedType] = useState<PostType | "">("");
-  const [filterValues, setFilterValues] = useState<Record<string, string | number>>({});
-  const [appliedFilters, setAppliedFilters] = useState<Record<string, string | number>>({});
+  const [filterValues, setFilterValues] = useState<
+    Record<string, string | number>
+  >({});
+  const [appliedFilters, setAppliedFilters] = useState<
+    Record<string, string | number>
+  >({});
   const [search, setSearch] = useState("");
   const [searchDebounce, setSearchDebounce] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -42,7 +57,14 @@ const PostListPage = () => {
     });
 
     dispatch(getPosts({ params }));
-  }, [dispatch, currentPage, selectedType, searchDebounce, appliedFilters, hideReposts]);
+  }, [
+    dispatch,
+    currentPage,
+    selectedType,
+    searchDebounce,
+    appliedFilters,
+    hideReposts,
+  ]);
 
   useEffect(() => {
     dispatch(getAllBranches());
@@ -51,7 +73,10 @@ const PostListPage = () => {
   useEffect(() => {
     const ids = posts
       .map((post) => {
-        const formData = post.formData as { location?: { courtId?: number } } | null | undefined;
+        const formData = post.formData as
+          | { location?: { courtId?: number } }
+          | null
+          | undefined;
         return formData?.location?.courtId;
       })
       .filter((courtId): courtId is number => Boolean(courtId && courtId > 0));
@@ -94,19 +119,27 @@ const PostListPage = () => {
 
   const branchInfoById = useMemo(
     () =>
-      branches.reduce<Record<number, { branchName: string; address?: string; ward?: string; district?: string; province?: string }>>(
-        (acc, branch) => {
-          acc[branch.id] = {
-            branchName: branch.branchName,
-            address: branch.address,
-            ward: branch.wardName,
-            district: branch.districtName,
-            province: branch.provinceName,
-          };
-          return acc;
-        },
-        {},
-      ),
+      branches.reduce<
+        Record<
+          number,
+          {
+            branchName: string;
+            address?: string;
+            ward?: string;
+            district?: string;
+            province?: string;
+          }
+        >
+      >((acc, branch) => {
+        acc[branch.id] = {
+          branchName: branch.branchName,
+          address: branch.address,
+          ward: branch.wardName,
+          district: branch.districtName,
+          province: branch.provinceName,
+        };
+        return acc;
+      }, {}),
     [branches],
   );
 
@@ -121,15 +154,13 @@ const PostListPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-700">
-      <section className="relative overflow-hidden bg-sky-950 py-14 sm:py-16 lg:py-20">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.22),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.14),transparent_35%)]" />
-
+      <section className="user-hero-surface py-14 sm:py-16 lg:py-20">
         <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
           <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-2xl">
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-sky-100">
-                <Sparkles size={16} className="text-sky-300" />
-                B-Hub Community
+              <div className="user-hero-badge mb-5">
+                <Sparkles />
+                Cộng đồng B-Hub
               </div>
 
               <h1 className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
@@ -137,7 +168,8 @@ const PostListPage = () => {
               </h1>
 
               <p className="mt-4 text-sm leading-relaxed text-sky-100 sm:text-base">
-                Khám phá bài viết, chia sẻ kinh nghiệm, tìm bạn chơi và cập nhật hoạt động từ cộng đồng cầu lông.
+                Khám phá bài viết, chia sẻ kinh nghiệm, tìm bạn chơi và cập nhật
+                hoạt động từ cộng đồng cầu lông.
               </p>
 
               <div className="mt-6 flex flex-wrap gap-3 text-sm text-sky-100">
@@ -160,8 +192,12 @@ const PostListPage = () => {
                   className="h-52 w-full rounded-[2rem] border border-white/20 object-cover shadow-2xl"
                 />
                 <div className="absolute -bottom-5 left-6 right-6 rounded-2xl border border-sky-50 bg-white p-4 shadow-xl">
-                  <p className="text-sm font-semibold text-slate-800">Cộng đồng năng động</p>
-                  <p className="mt-0.5 text-xs text-slate-500">Chia sẻ, tìm bạn chơi và cập nhật hoạt động</p>
+                  <p className="text-sm font-semibold text-slate-800">
+                    Cộng đồng năng động
+                  </p>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    Chia sẻ, tìm bạn chơi và cập nhật hoạt động
+                  </p>
                 </div>
               </div>
             </div>
@@ -192,8 +228,12 @@ const PostListPage = () => {
               <div className="border-b border-slate-100 bg-white px-5 py-5 sm:px-6">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-xl font-semibold text-slate-800">Bài đăng</h2>
-                    <p className="mt-0.5 text-sm text-slate-500">Cập nhật mới nhất từ cộng đồng</p>
+                    <h2 className="text-xl font-semibold text-slate-800">
+                      Bài đăng
+                    </h2>
+                    <p className="mt-0.5 text-sm text-slate-500">
+                      Cập nhật mới nhất từ cộng đồng
+                    </p>
                   </div>
                   <div className="shrink-0 rounded-full bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700">
                     {total} bài
@@ -299,7 +339,9 @@ const PostListPage = () => {
                   </span>
                   <button
                     disabled={currentPage >= totalPages || loading}
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    onClick={() =>
+                      setCurrentPage((p) => Math.min(totalPages, p + 1))
+                    }
                     className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-600 transition-all hover:bg-slate-200 disabled:opacity-50"
                   >
                     Sau

@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import crypto from "crypto";
-import { dateFormat, VNPay, VnpLocale } from "vnpay";
+import { VNPay, VnpLocale } from "vnpay";
 import { Op } from "sequelize";
 import sequelize from "../../config/db.js";
 import {
@@ -35,6 +35,10 @@ import {
   WALLET_TRANSACTION_TYPE,
 } from "../../constants/paymentConstant.js";
 import { verifyVNPayURL } from "../../utils/handleVNPayURL.js";
+import {
+  createVNPayDateRange,
+  logVNPayDiagnostics,
+} from "../../utils/vnpayDate.js";
 import { formatBookingCode } from "../../utils/displayCode.js";
 import {
   DISCOUNT_APPLY_TYPE,
@@ -399,9 +403,11 @@ const buildBookingVNPayUrl = ({ booking, payment, ip }) => {
     hashAlgorithm: "SHA512",
   });
 
-  const expireDate = new Date(Date.now() + PAYMENT_RETRY_WINDOW_MS);
+  const { createDate, expireDate } = createVNPayDateRange({
+    expiresInMs: PAYMENT_RETRY_WINDOW_MS,
+  });
 
-  return vnpay.buildPaymentUrl({
+  const paymentUrl = vnpay.buildPaymentUrl({
     vnp_Amount: payment.paymentAmount,
     vnp_IpAddr: ip,
     vnp_TxnRef: payment.externalId,
@@ -409,9 +415,18 @@ const buildBookingVNPayUrl = ({ booking, payment, ip }) => {
     vnp_OrderType: "booking",
     vnp_ReturnUrl: process.env.VNP_RETURN_URL,
     vnp_Locale: VnpLocale.VN,
-    vnp_CreateDate: dateFormat(new Date()),
-    vnp_ExpireDate: dateFormat(expireDate),
+    vnp_CreateDate: createDate,
+    vnp_ExpireDate: expireDate,
   });
+
+  logVNPayDiagnostics({
+    context: "booking",
+    createDate,
+    expireDate,
+    paymentUrl,
+  });
+
+  return paymentUrl;
 };
 
 const getAvailableWalletBalance = async ({ wallet, transaction }) => {

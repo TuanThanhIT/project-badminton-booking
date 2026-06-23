@@ -123,39 +123,39 @@ const Header = ({ cartRef }: HeaderProps) => {
   }, [avatarUrl]);
 
   const actionLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `relative flex h-11 items-center gap-2 rounded-full border px-3.5 text-sm font-medium transition-all ${
+    `relative flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full border p-0 text-sm font-medium transition-all sm:h-10 sm:w-10 xl:w-auto xl:px-3 ${
       isActive
         ? "border-sky-200 bg-sky-50 text-sky-800"
         : "border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-800"
     }`;
 
   const badgeClass =
-    "absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-400 px-1 text-[10px] font-medium text-white shadow";
+    "absolute -right-1.5 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-semibold text-white shadow";
 
   return (
-    <header className="border-b border-slate-200/80 bg-white/95 backdrop-blur-xl">
-      <div className="flex w-full items-center justify-between gap-3 px-4 py-5 sm:px-6 lg:px-10 2xl:px-14">
+    <header className="max-w-full border-b border-slate-200/80 bg-white/95 backdrop-blur-xl">
+      <div className="flex w-full min-w-0 flex-col gap-3 px-3 py-3 sm:px-5 sm:py-3.5 lg:flex-row lg:items-center lg:justify-between lg:px-8 lg:py-4 2xl:px-12">
         <button
           type="button"
-          className="flex shrink-0 items-center gap-3 text-left"
-          onClick={() => navigate(accessToken ? "/home" : "/")}
+          className="flex shrink-0 items-center gap-3 self-start text-left"
+          onClick={() => navigate("/")}
         >
           <img
             src="/img/logo_badminton.jpg"
             alt="B-Hub"
-            className="h-[52px] w-[52px] rounded-2xl border border-sky-100 object-cover shadow-sm"
+            className="h-11 w-11 rounded-xl border border-sky-100 object-cover shadow-sm sm:h-[52px] sm:w-[52px] sm:rounded-2xl"
           />
           <div className="min-w-0">
-            <p className="text-[1.55rem] font-bold leading-none tracking-tight text-slate-900 sm:text-[1.65rem]">
+            <p className="text-xl font-bold leading-none tracking-tight text-slate-900 sm:text-[1.6rem]">
               B-Hub
             </p>
-            <p className="mt-1.5 hidden text-[13px] font-medium leading-snug text-slate-500 sm:block">
+            <p className="mt-1.5 hidden text-[13px] font-medium leading-snug text-slate-500 md:block">
               Đặt sân, mua sắm, kết nối cầu lông
             </p>
           </div>
         </button>
 
-        <div className="flex min-w-0 items-center justify-end gap-2">
+        <div className="flex w-full min-w-0 max-w-full items-center justify-between gap-1 sm:gap-1.5 lg:w-auto lg:justify-end">
           {accessToken && user ? (
             <>
               <NavLink
@@ -258,7 +258,7 @@ const Header = ({ cartRef }: HeaderProps) => {
               <NavLink
                 to="/profile"
                 className={({ isActive }) =>
-                  `flex h-11 min-w-0 items-center gap-2 rounded-full border px-3 transition-all ${
+                  `flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full border p-0 transition-all sm:h-10 sm:w-10 xl:w-auto xl:px-2.5 ${
                     isActive
                       ? "border-sky-200 bg-sky-50"
                       : "border-slate-200 bg-white hover:border-sky-200 hover:bg-sky-50"
@@ -266,7 +266,7 @@ const Header = ({ cartRef }: HeaderProps) => {
                 }
                 title="Hồ sơ"
               >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-sky-100 text-sm font-semibold text-sky-800">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-sky-100 text-xs font-semibold text-sky-800 sm:h-8 sm:w-8">
                   {avatarUrl && !avatarError ? (
                     <img
                       src={avatarUrl}
@@ -283,11 +283,11 @@ const Header = ({ cartRef }: HeaderProps) => {
                 </span>
               </NavLink>
 
-              <div ref={notificationRef} className="relative">
+              <div ref={notificationRef} className="relative shrink-0">
                 <button
                   type="button"
                   onClick={handleOpenNotifications}
-                  className={`relative flex h-11 items-center gap-2 rounded-full border px-3.5 text-sm font-medium transition-all ${
+                  className={`relative flex h-9 w-9 items-center justify-center gap-2 rounded-full border p-0 text-sm font-medium transition-all sm:h-10 sm:w-10 ${
                     isNotificationOpen
                       ? "border-sky-200 bg-sky-50 text-sky-800"
                       : "border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-800"
@@ -303,7 +303,7 @@ const Header = ({ cartRef }: HeaderProps) => {
                 </button>
 
                 {isNotificationOpen && (
-                  <div className="absolute right-0 top-14 z-50 w-[min(92vw,420px)] overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_20px_50px_rgba(15,23,42,0.16)]">
+                  <div className="fixed left-3 right-3 top-[7.5rem] z-50 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_20px_50px_rgba(15,23,42,0.16)] sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-[min(92vw,400px)] sm:rounded-[1.5rem]">
                     <div className="flex items-center justify-between border-b border-slate-100 p-4">
                       <div>
                         <p className="text-base font-semibold text-slate-900">
@@ -396,14 +396,14 @@ const Header = ({ cartRef }: HeaderProps) => {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-all hover:border-rose-100 hover:bg-rose-50 hover:text-rose-600"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-all hover:border-rose-100 hover:bg-rose-50 hover:text-rose-600 sm:h-10 sm:w-10"
                 title="Đăng xuất"
               >
                 <LogOut className="h-5 w-5" />
               </button>
             </>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex w-full items-center gap-2 sm:w-auto">
               <NavLink
                 to="/login"
                 className="hidden rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-all hover:border-sky-200 hover:bg-sky-50 hover:text-sky-800 sm:inline-flex"

@@ -26,6 +26,9 @@
     "migrate:undo": "sequelize-cli db:migrate:undo",
     "migrate:undo:all": "sequelize-cli db:migrate:undo:all",
     "seed": "sequelize-cli db:seed:all",
+    "seed:check-operations": "node scripts/check-operational-seed.cjs",
+    "seed:refresh-branch-descriptions": "node scripts/refresh-branch-seed-descriptions.cjs",
+    "seed:refresh-product-media": "node scripts/refresh-product-seed-media.cjs",
     "seed:undo": "sequelize-cli db:seed:undo",
     "seed:undo:all": "sequelize-cli db:seed:undo:all"
   },

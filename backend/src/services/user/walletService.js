@@ -21,8 +21,12 @@ import {
 } from "../../constants/paymentConstant.js";
 import NotFoundError from "../../errors/NotFoundError.js";
 import BadRequestError from "../../errors/BadRequestError.js";
-import { VnpLocale, dateFormat, VNPay } from "vnpay";
+import { VnpLocale, VNPay } from "vnpay";
 import { verifyVNPayURL } from "../../utils/handleVNPayURL.js";
+import {
+  createVNPayDateRange,
+  logVNPayDiagnostics,
+} from "../../utils/vnpayDate.js";
 import mailer from "../../helpers/mailer.js";
 import { OTP_TYPE } from "../../constants/userConstant.js";
 import ForbiddenError from "../../errors/ForbiddenError.js";
@@ -293,8 +297,7 @@ const walletDepositService = async (data) => {
       hashAlgorithm: "SHA512",
     });
 
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const { createDate, expireDate } = createVNPayDateRange();
 
     const paymentUrl = await vnpay.buildPaymentUrl({
       vnp_Amount: amount,
@@ -304,8 +307,15 @@ const walletDepositService = async (data) => {
       vnp_OrderType: "topup",
       vnp_ReturnUrl: process.env.VNP_RETURN_URL,
       vnp_Locale: VnpLocale.VN,
-      vnp_CreateDate: dateFormat(new Date()),
-      vnp_ExpireDate: dateFormat(tomorrow),
+      vnp_CreateDate: createDate,
+      vnp_ExpireDate: expireDate,
+    });
+
+    logVNPayDiagnostics({
+      context: "wallet-topup",
+      createDate,
+      expireDate,
+      paymentUrl,
     });
 
     return paymentUrl;

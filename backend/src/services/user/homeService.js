@@ -514,35 +514,109 @@ const getActiveDiscounts = async () => {
   };
 };
 
+const getBranchTransactionStatsMap = async (branchIds = []) => {
+  if (!branchIds.length) return new Map();
+
+  const normalizedBranchIds = [
+    ...new Set(branchIds.map(Number).filter(Boolean)),
+  ];
+  const successBookingStatuses = getSuccessBookingStatuses();
+  const successOrderStatuses = getSuccessOrderStatuses();
+
+  const [bookingRows, orderRows] = await Promise.all([
+    Booking.findAll({
+      attributes: [
+        "branchId",
+        [fn("COUNT", col("Booking.id")), "bookingCount"],
+        [fn("SUM", col("Booking.totalAmount")), "bookingRevenue"],
+      ],
+      where: {
+        branchId: { [Op.in]: normalizedBranchIds },
+        bookingStatus: { [Op.in]: successBookingStatuses },
+      },
+      group: ["branchId"],
+      raw: true,
+    }),
+    Order.findAll({
+      attributes: [
+        "branchId",
+        [fn("COUNT", col("Order.id")), "orderCount"],
+        [fn("SUM", col("Order.totalAmount")), "revenue"],
+      ],
+      where: {
+        branchId: { [Op.in]: normalizedBranchIds },
+        orderStatus: { [Op.in]: successOrderStatuses },
+      },
+      group: ["branchId"],
+      raw: true,
+    }),
+  ]);
+
+  const statsMap = new Map(
+    normalizedBranchIds.map((branchId) => [
+      branchId,
+      {
+        bookingCount: 0,
+        bookingRevenue: 0,
+        orderCount: 0,
+        revenue: 0,
+      },
+    ]),
+  );
+
+  bookingRows.forEach((row) => {
+    const branchId = Number(row.branchId);
+    statsMap.set(branchId, {
+      ...statsMap.get(branchId),
+      bookingCount: toNumber(row.bookingCount),
+      bookingRevenue: toNumber(row.bookingRevenue),
+    });
+  });
+
+  orderRows.forEach((row) => {
+    const branchId = Number(row.branchId);
+    statsMap.set(branchId, {
+      ...statsMap.get(branchId),
+      orderCount: toNumber(row.orderCount),
+      revenue: toNumber(row.revenue),
+    });
+  });
+
+  return statsMap;
+};
+
 const getBranchCardsByIds = async (branchIds = [], extraMap = new Map()) => {
   if (!branchIds.length) return [];
 
-  const branchRows = await Branch.findAll({
-    where: {
-      id: { [Op.in]: branchIds },
-      isActive: true,
-    },
-    attributes: [
-      "id",
-      "branchName",
-      "description",
-      "address",
-      "wardName",
-      "districtName",
-      "provinceName",
-      "phoneNumber",
-      "latitude",
-      "longitude",
-    ],
-    include: [
-      {
-        model: BranchImage,
-        as: "images",
-        attributes: ["imageUrl"],
-        required: false,
+  const [branchRows, transactionStatsMap] = await Promise.all([
+    Branch.findAll({
+      where: {
+        id: { [Op.in]: branchIds },
+        isActive: true,
       },
-    ],
-  });
+      attributes: [
+        "id",
+        "branchName",
+        "description",
+        "address",
+        "wardName",
+        "districtName",
+        "provinceName",
+        "phoneNumber",
+        "latitude",
+        "longitude",
+      ],
+      include: [
+        {
+          model: BranchImage,
+          as: "images",
+          attributes: ["imageUrl"],
+          required: false,
+        },
+      ],
+    }),
+    getBranchTransactionStatsMap(branchIds),
+  ]);
 
   const branchMap = new Map(
     branchRows.map((branch) => [Number(branch.id), branch]),
@@ -554,7 +628,10 @@ const getBranchCardsByIds = async (branchIds = [], extraMap = new Map()) => {
       if (!branch) return null;
 
       const data = branch.toJSON();
-      const extra = extraMap.get(Number(id)) || {};
+      const extra = {
+        ...(transactionStatsMap.get(Number(id)) || {}),
+        ...(extraMap.get(Number(id)) || {}),
+      };
 
       return {
         id: data.id,

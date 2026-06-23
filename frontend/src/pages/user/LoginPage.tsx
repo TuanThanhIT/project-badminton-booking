@@ -24,7 +24,7 @@ const LoginPage = () => {
   const location = useLocation();
   const from = location.state?.from
     ? `${location.state.from.pathname}${location.state.from.search || ""}`
-    : "/home";
+    : "/";
 
   const {
     register,
@@ -163,4 +163,3 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
-

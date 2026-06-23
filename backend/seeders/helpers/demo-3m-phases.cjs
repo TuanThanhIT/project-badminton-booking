@@ -213,7 +213,11 @@ const seedWalletAddress = async (qi, Sequelize) => u.phaseTransaction(qi, async 
   const payments = [];
   wallets.forEach((wallet, index) => {
     if (index % 5 === 0) return;
-    const createdAt = u.dateTime(u.randomDate(), u.int(8, 21), u.int(0, 59));
+    const createdAt = u.dateTime(
+      u.spreadDate(index, Math.max(1, wallets.length - 1)),
+      u.int(8, 21),
+      u.int(0, 59),
+    );
     const amount = u.pick([100000, 200000, 300000, 500000, 1000000]);
     payments.push({ walletId: wallet.id, amount, createdAt });
   });
@@ -277,7 +281,6 @@ const seedWorkShifts = async (qi, Sequelize) => u.phaseTransaction(qi, async (tr
   for (let d = new Date(u.START); d <= u.END; d = u.addDays(d, 1)) {
     base.branches.forEach((branch) => {
       [["Morning", 6, 14], ["Evening", 14, 22]].forEach(([label, start, end]) => {
-        const isNear = d > new Date("2026-06-07T00:00:00+07:00");
         shifts.push({
           shiftName: `${u.MARKER} ${label} ${branch.branchName} ${u.dateOnly(d)}`,
           workDate: u.dateOnly(d),
@@ -286,7 +289,7 @@ const seedWorkShifts = async (qi, Sequelize) => u.phaseTransaction(qi, async (tr
           cashierShiftWage: 280000,
           staffShiftWage: 240000,
           branchId: branch.id,
-          shiftStatus: isNear ? "SCHEDULED" : (u.rand() < 0.025 ? "CANCELLED" : "COMPLETED"),
+          shiftStatus: u.rand() < 0.025 ? "CANCELLED" : "COMPLETED",
           createdAt: u.dateTime(d, start - 1, 40),
           updatedAt: u.dateTime(d, end, 10),
         });
@@ -362,7 +365,7 @@ const seedBookings = async (qi, Sequelize) => u.phaseTransaction(qi, async (tran
   for (let i = 1; i <= 760; i += 1) {
     let branch = u.pick(base.branches);
     let courts = courtsByBranch[branch.id] || base.courts;
-    let d = u.randomDate();
+    let d = u.spreadDate(i - 1, 760);
     let start = u.bookingHour();
     let duration = u.rand() < 0.72 ? 1 : 2;
     let court = u.pick(courts);
@@ -378,7 +381,7 @@ const seedBookings = async (qi, Sequelize) => u.phaseTransaction(qi, async (tran
       guard += 1;
     }
     occupied.add(key);
-    const status = d > new Date("2026-06-07T00:00:00+07:00")
+    const status = d > u.RECENT_CUTOFF
       ? u.weighted([["CONFIRMED", 55], ["PENDING", 20], ["COMPLETED", 25]])
       : u.weighted([["COMPLETED", 80], ["CANCELLED", 9], ["FAILED", 2], ["CONFIRMED", 9]]);
     const price = priceFor(base.prices, branch.id, d, start, start + duration);
@@ -450,9 +453,15 @@ const seedCounter = async (qi, Sequelize) => u.phaseTransaction(qi, async (trans
   const drafts = [];
   const itemMeta = [];
   for (let i = 1; i <= 320; i += 1) {
-    const session = u.pick(shifts);
+    const session = shifts[Math.round(((i - 1) * (shifts.length - 1)) / 319)];
     const createdAt = u.dateTime(session.workDate, Number(String(session.startTime).slice(0, 2)) + u.int(0, 6), u.int(0, 55));
-    const kind = u.weighted([["court", 35], ["court_bev", 30], ["bev", 15], ["product", 10], ["mixed", 10]]);
+    const kind = i === 318
+      ? "product"
+      : i === 319
+        ? "bev"
+        : i === 320
+          ? "mixed"
+          : u.weighted([["court", 35], ["court_bev", 30], ["bev", 15], ["product", 10], ["mixed", 10]]);
     drafts.push({ employeeId: session.employeeId, branchId: session.branchId, nameCustomer: `${u.pick(u.names)} Counter`, phoneNumber: `0966${u.pad(i, 6)}`, note: `${u.MARKER} DEMO-COUNTER-${u.pad(i, 4)} ${kind}`, draftBookingStatus: "COMPLETED", totalAmount: 0, createdAt, updatedAt: u.addMinutes(createdAt, 30) });
     itemMeta.push({ marker: `DEMO-COUNTER-${u.pad(i, 4)}`, session, kind });
   }
@@ -523,8 +532,8 @@ const seedOrders = async (qi, Sequelize) => u.phaseTransaction(qi, async (transa
   const groupMeta = [];
   for (let i = 1; i <= 560; i += 1) {
     const user = u.pick(customers);
-    const createdAt = u.dateTime(u.randomDate(), u.publicHour(), u.int(0, 59));
-    const status = createdAt > new Date("2026-06-07T00:00:00+07:00")
+    const createdAt = u.dateTime(u.spreadDate(i - 1, 560), u.publicHour(), u.int(0, 59));
+    const status = createdAt > u.RECENT_CUTOFF
       ? u.weighted([["PAID", 65], ["PENDING_PAYMENT", 20], ["FAILED", 5], ["CANCELLED", 10]])
       : u.weighted([["PAID", 86], ["FAILED", 3], ["CANCELLED", 11]]);
     groups.push({ totalAmount: 0, totalShippingFee: 0, discountId: null, discountAmount: 0, isDiscountApplied: false, finalAmount: 0, status, note: `${u.MARKER} DEMO-ORDER-GROUP-${u.pad(i, 5)}`, userId: user.id, createdAt, updatedAt: u.addMinutes(createdAt, 30) });
@@ -544,7 +553,7 @@ const seedOrders = async (qi, Sequelize) => u.phaseTransaction(qi, async (transa
       let branch = u.pick(base.branches);
       if (usedBranches.has(branch.id)) branch = base.branches[(j + i) % base.branches.length];
       usedBranches.add(branch.id);
-      const orderStatus = meta.status === "CANCELLED" ? "CANCELLED" : meta.status === "FAILED" ? "FAILED" : (meta.createdAt > new Date("2026-06-07T00:00:00+07:00") ? u.weighted([["READY_TO_SHIP", 30], ["SHIPPING", 35], ["COMPLETED", 35]]) : u.weighted([["COMPLETED", 78], ["CANCELLED", 9], ["RETURNED", 4], ["FAILED", 2], ["SHIPPING", 7]]));
+      const orderStatus = meta.status === "CANCELLED" ? "CANCELLED" : meta.status === "FAILED" ? "FAILED" : (meta.createdAt > u.RECENT_CUTOFF ? u.weighted([["READY_TO_SHIP", 30], ["SHIPPING", 35], ["COMPLETED", 35]]) : u.weighted([["COMPLETED", 78], ["CANCELLED", 9], ["RETURNED", 4], ["FAILED", 2], ["SHIPPING", 7]]));
       const shippingStatus = orderStatus === "COMPLETED" ? "DELIVERED" : orderStatus === "RETURNED" ? "RETURNED" : orderStatus === "CANCELLED" ? "CANCELLED" : orderStatus === "FAILED" ? "FAILED" : orderStatus === "SHIPPING" ? u.pick(["PICKING", "PICKED", "IN_TRANSIT", "DELIVERING"]) : "CREATED";
       const addr = (addrByUser[meta.user.id] || [u.addresses[i % u.addresses.length]])[0];
       const marker = `DEMO-ORDER-${u.pad(i + 1, 5)}-${j + 1}`;
@@ -594,24 +603,164 @@ const downOrders = async (qi) => u.phaseTransaction(qi, async (transaction) => {
 
 const seedFeedbacks = async (qi, Sequelize) => u.phaseTransaction(qi, async (transaction) => {
   await u.del(qi, "Feedbacks", { content: { [Sequelize.Op.like]: `%${u.MARKER}%` } }, transaction);
-  const orderRows = await u.q(qi, Sequelize, `
-    SELECT o.id AS orderId, og.userId, od.variantId, o.createdAt
+  const orderCandidates = await u.q(qi, Sequelize, `
+    SELECT
+      o.id AS orderId,
+      og.userId,
+      od.variantId,
+      p.productName,
+      c.menuGroup,
+      o.createdAt,
+      COALESCE(o.deliveredAt, DATE_ADD(o.createdAt, INTERVAL 3 DAY)) AS eligibleAt
     FROM Orders o JOIN OrderGroups og ON og.id = o.orderGroupId
     JOIN OrderDetails od ON od.orderId = o.id
+    JOIN ProductVariants pv ON pv.id = od.variantId
+    JOIN Products p ON p.id = pv.productId
+    JOIN Categories c ON c.id = p.categoryId
     WHERE o.trackingCode LIKE 'BH-DEMO-%' AND o.orderStatus = 'COMPLETED'
-    LIMIT 220
-  `, {}, transaction);
-  const branchRows = await u.q(qi, Sequelize, `
-    SELECT MIN(b.id) AS bookingId, b.userId, b.branchId, MAX(b.createdAt) AS createdAt
-    FROM Bookings b
-    WHERE b.note LIKE :note AND b.bookingStatus = 'COMPLETED'
-    GROUP BY b.userId, b.branchId
-    LIMIT 90
-  `, { note: `%${u.MARKER}%` }, transaction);
-  const comments = ["San sach, nhan vien ho tro tot", "Hang dung mo ta, giao nhanh", "Trai nghiem on va se quay lai", "Gia hop ly cho du lieu demo", "Can cai thien thoi gian cho mot chut"];
+      AND COALESCE(o.deliveredAt, DATE_ADD(o.createdAt, INTERVAL 3 DAY)) <= :latestEligibleAt
+    ORDER BY eligibleAt, o.id, od.variantId
+  `, { latestEligibleAt: "2026-06-28 23:59:59" }, transaction);
+  const branchCandidates = await u.q(qi, Sequelize, `
+    SELECT userId, branchId, MIN(eligibleAt) AS eligibleAt
+    FROM (
+      SELECT b.userId, b.branchId, MAX(bd.playDate) AS eligibleAt
+      FROM Bookings b
+      JOIN BookingDetails bd ON bd.bookingId = b.id
+      WHERE b.note LIKE :note AND b.bookingStatus = 'COMPLETED'
+      GROUP BY b.id, b.userId, b.branchId
+
+      UNION ALL
+
+      SELECT og.userId, o.branchId, COALESCE(o.deliveredAt, DATE_ADD(o.createdAt, INTERVAL 3 DAY)) AS eligibleAt
+      FROM Orders o
+      JOIN OrderGroups og ON og.id = o.orderGroupId
+      WHERE o.trackingCode LIKE 'BH-DEMO-%' AND o.orderStatus = 'COMPLETED'
+    ) eligible
+    WHERE eligibleAt <= :latestEligibleAt
+    GROUP BY userId, branchId
+    ORDER BY eligibleAt, userId, branchId
+  `, {
+    note: `%${u.MARKER}%`,
+    latestEligibleAt: "2026-06-28 23:59:59",
+  }, transaction);
+
+  const sampleEvenly = (rows, limit) => {
+    if (rows.length <= limit) return rows;
+    const sampled = [];
+    const used = new Set();
+    for (let index = 0; index < limit; index += 1) {
+      const sourceIndex = Math.round((index * (rows.length - 1)) / (limit - 1));
+      if (!used.has(sourceIndex)) {
+        sampled.push(rows[sourceIndex]);
+        used.add(sourceIndex);
+      }
+    }
+    return sampled;
+  };
+
+  const orderRows = sampleEvenly(orderCandidates, 220);
+  const branchRows = sampleEvenly(branchCandidates, 80);
+  const productCommentsByGroup = {
+    "VỢT CẦU LÔNG": [
+      "Vợt có cảm giác cầm chắc tay, dễ điều cầu và phù hợp đánh phong trào.",
+      "Khung vợt hoàn thiện tốt, vung khá linh hoạt và đúng với thông tin mô tả.",
+      "Đã sử dụng nhiều buổi, độ ổn định tốt và cảm giác đánh khá thoải mái.",
+    ],
+    "GIÀY CẦU LÔNG": [
+      "Giày ôm chân vừa phải, bám sân tốt và di chuyển ngang khá tự tin.",
+      "Đệm chân êm, mang tập lâu không quá mỏi và kiểu dáng thực tế đẹp.",
+      "Size phù hợp, đế bám ổn định và hỗ trợ đổi hướng tốt trên sân trong nhà.",
+    ],
+    "ÁO CẦU LÔNG": [
+      "Áo nhẹ, thoáng và form gọn nên vận động trên sân khá thoải mái.",
+      "Chất vải dễ chịu, màu sắc đúng hình và phù hợp mặc tập thường xuyên.",
+      "Form thể thao đẹp, phần vai linh hoạt và thấm hút tương đối tốt.",
+    ],
+    "QUẦN CẦU LÔNG": [
+      "Quần nhẹ, co giãn ổn và không bị vướng khi di chuyển hoặc chùng gối.",
+      "Phom vừa vặn, chất liệu thoáng và phù hợp cho các buổi tập dài.",
+      "Mặc vận động thoải mái, đường may ổn và dễ phối với áo thi đấu.",
+    ],
+    "VÁY CẦU LÔNG": [
+      "Váy có phom gọn đẹp, vận động linh hoạt và màu sắc đúng hình.",
+      "Chất liệu nhẹ, dễ di chuyển và phù hợp cả tập luyện lẫn giao lưu.",
+      "Thiết kế thể thao đẹp, mặc thoải mái và không hạn chế bước chạy.",
+    ],
+    "TÚI VỢT CẦU LÔNG": [
+      "Túi có không gian chứa đồ hợp lý, đường may chắc và mang khá tiện.",
+      "Đựng vợt cùng phụ kiện gọn gàng, quai đeo êm và kiểu dáng đẹp.",
+      "Nhiều ngăn dễ sắp xếp, chất liệu ổn và phù hợp mang đi tập hằng ngày.",
+    ],
+    "BALO CẦU LÔNG": [
+      "Balo chia ngăn hợp lý, đeo êm vai và đủ chỗ cho đồ tập hằng ngày.",
+      "Kiểu dáng gọn, chất liệu chắc chắn và sắp xếp dụng cụ khá thuận tiện.",
+      "Không gian chứa đồ tốt, màu sắc đẹp và mang đi sân rất tiện.",
+    ],
+    "PHỤ KIỆN CẦU LÔNG": [
+      "Phụ kiện đúng mô tả, sử dụng tiện lợi và hoàn thiện khá tốt.",
+      "Sản phẩm nhỏ gọn, dễ dùng và hỗ trợ tốt cho buổi tập.",
+      "Chất lượng ổn trong tầm giá, phù hợp bổ sung vào túi đồ cầu lông.",
+    ],
+    DEFAULT: [
+      "Sản phẩm đúng mô tả, hình ảnh rõ ràng và đóng gói cẩn thận.",
+      "Chất lượng hoàn thiện tốt, sử dụng ổn định trong các buổi tập.",
+      "Giao hàng nhanh, sản phẩm đẹp và phù hợp với nhu cầu chơi phong trào.",
+    ],
+  };
+  const branchComments = [
+    "Sân sạch, ánh sáng tốt và nhân viên hỗ trợ nhiệt tình.",
+    "Không gian thoáng, lịch đặt sân rõ ràng và trải nghiệm thuận tiện.",
+    "Nhân viên thân thiện, sân được chuẩn bị tốt trước giờ chơi.",
+    "Vị trí dễ tìm, dịch vụ ổn định và sẽ tiếp tục quay lại.",
+    "Khu vực sân và quầy dịch vụ gọn gàng, phù hợp để chơi cùng nhóm bạn.",
+  ];
   const feedbacks = [];
-  orderRows.forEach((row, i) => feedbacks.push({ userId: row.userId, orderId: row.orderId, variantId: row.variantId, branchId: null, content: `${u.MARKER} ${u.pick(comments)} #${u.pad(i)}`, rating: u.weighted([[5, 45], [4, 35], [3, 15], [2, 4], [1, 1]]), createdAt: u.addDays(new Date(row.createdAt), u.int(2, 9)), updatedAt: u.addDays(new Date(row.createdAt), u.int(2, 9)) }));
-  branchRows.forEach((row, i) => feedbacks.push({ userId: row.userId, orderId: null, variantId: null, branchId: row.branchId, content: `${u.MARKER} ${u.pick(comments)} branch #${u.pad(i)}`, rating: u.weighted([[5, 45], [4, 35], [3, 15], [2, 4], [1, 1]]), createdAt: u.addDays(new Date(row.createdAt), u.int(1, 8)), updatedAt: u.addDays(new Date(row.createdAt), u.int(1, 8)) }));
+  const feedbackEnd = u.FEEDBACK_END;
+  const buildFeedbackTime = (eligibleAt, index, maxDelay) => {
+    const remainingDays = Math.max(
+      1,
+      Math.floor((feedbackEnd - new Date(eligibleAt)) / 86400000),
+    );
+    const availableDelay = Math.max(1, Math.min(maxDelay, remainingDays));
+    const delay = 1 + (index % availableDelay);
+    const result = u.addDays(new Date(eligibleAt), delay);
+    result.setHours(8 + (index % 15), (index * 17) % 60, (index * 13) % 60, 0);
+    return result > feedbackEnd ? new Date(feedbackEnd) : result;
+  };
+
+  orderRows.forEach((row, i) => {
+    const eligibleAt = new Date(row.eligibleAt || row.createdAt);
+    const createdAt = buildFeedbackTime(eligibleAt, i, 10);
+    const normalizedGroup = String(row.menuGroup || "").trim().toUpperCase();
+    const comments =
+      productCommentsByGroup[normalizedGroup] || productCommentsByGroup.DEFAULT;
+    feedbacks.push({
+      userId: row.userId,
+      orderId: row.orderId,
+      variantId: row.variantId,
+      branchId: null,
+      content: `${u.MARKER} ${u.pick(comments)} #${u.pad(i)}`,
+      rating: u.weighted([[5, 48], [4, 34], [3, 13], [2, 4], [1, 1]]),
+      createdAt,
+      updatedAt: createdAt,
+    });
+  });
+
+  branchRows.forEach((row, i) => {
+    const eligibleAt = new Date(row.eligibleAt);
+    const createdAt = buildFeedbackTime(eligibleAt, orderRows.length + i, 7);
+    feedbacks.push({
+      userId: row.userId,
+      orderId: null,
+      variantId: null,
+      branchId: row.branchId,
+      content: `${u.MARKER} ${u.pick(branchComments)} branch #${u.pad(i)}`,
+      rating: u.weighted([[5, 48], [4, 34], [3, 13], [2, 4], [1, 1]]),
+      createdAt,
+      updatedAt: createdAt,
+    });
+  });
   await u.insert(qi, "Feedbacks", feedbacks.slice(0, 300), transaction);
 });
 

@@ -80,7 +80,7 @@ const TABS = [
 ];
 
 const inputClass =
-  "w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition-all hover:border-sky-200 hover:bg-white focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100";
+  "w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-700 outline-none transition-all hover:border-sky-200 hover:bg-white focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100";
 
 const BookingPage = () => {
   const dispatch = useAppDispatch();
@@ -165,14 +165,12 @@ const BookingPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-700">
-      <section className="relative overflow-hidden bg-sky-950">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.22),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.14),transparent_32%)]" />
-
-        <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:py-12">
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+      <section className="user-hero-surface">
+        <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-5 lg:py-10">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-sky-100">
-                <CalendarDays size={16} className="text-sky-300" />
+              <div className="user-hero-badge mb-4">
+                <CalendarDays />
                 Trung tâm lịch sân
               </div>
 
@@ -180,13 +178,24 @@ const BookingPage = () => {
                 Lịch đặt sân của tôi
               </h1>
 
-              <p className="mt-4 max-w-2xl text-base leading-relaxed text-sky-100 sm:text-lg">
+              <p className="mt-3 max-w-2xl text-base leading-relaxed text-sky-100 sm:text-lg">
                 Theo dõi lịch đã đặt, trạng thái xử lý và phương thức thanh toán
                 cho từng buổi chơi tại B-Hub.
               </p>
+
+              <div className="mt-6 flex flex-wrap gap-3 text-sm text-sky-100">
+                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2">
+                  <Calendar size={16} />
+                  Quản lý lịch đã đặt
+                </div>
+                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2">
+                  <Clock size={16} />
+                  Theo dõi trạng thái
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3 lg:min-w-[420px]">
+            <div className="grid grid-cols-3 gap-2.5 lg:min-w-[380px]">
               {[
                 { icon: ReceiptText, label: "Lịch đặt", value: stats.count },
                 {
@@ -202,7 +211,7 @@ const BookingPage = () => {
               ].map((item) => (
                 <div
                   key={item.label}
-                  className="rounded-2xl border border-white/10 bg-white/10 px-3 py-4 text-white backdrop-blur-sm sm:px-4"
+                  className="rounded-xl border border-white/10 bg-white/10 px-3 py-3 text-white backdrop-blur-sm"
                 >
                   <item.icon size={18} className="mb-2 text-sky-200" />
 
@@ -218,10 +227,10 @@ const BookingPage = () => {
         </div>
       </section>
 
-      <main className="relative z-10 mx-auto -mt-6 max-w-[1220px] px-4 pb-10 sm:px-6">
+      <main className="relative z-10 mx-auto -mt-5 max-w-[1160px] px-4 pb-8 sm:px-5">
         {/* FILTER */}
-        <section className="mb-6 overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.08)]">
-          <div className="flex flex-col gap-4 border-b border-slate-100 p-5 lg:flex-row lg:items-center lg:justify-between">
+        <section className="mb-5 overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.08)]">
+          <div className="flex flex-col gap-3 border-b border-slate-100 p-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-sky-100 bg-sky-50 text-sky-600">
                 <Filter size={21} />
@@ -254,7 +263,7 @@ const BookingPage = () => {
             </button>
           </div>
 
-          <div className="space-y-5 p-5">
+          <div className="space-y-4 p-4">
             <div className="flex gap-2 overflow-x-auto pb-1">
               {TABS.map((tab) => (
                 <button
@@ -264,7 +273,7 @@ const BookingPage = () => {
                     setStatus(tab);
                     setPage(1);
                   }}
-                  className={`shrink-0 rounded-2xl border px-4 py-2.5 text-sm font-medium transition-all ${
+                  className={`shrink-0 rounded-xl border px-3.5 py-2 text-sm font-medium transition-all ${
                     status === tab
                       ? "border-sky-300 bg-sky-50 text-sky-800 shadow-sm"
                       : "border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
@@ -301,9 +310,9 @@ const BookingPage = () => {
         </section>
 
         {/* BOOKING LIST BLOCK */}
-        <section className="overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.08)]">
+        <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.08)]">
           {/* HEADER DANH SÁCH */}
-          <div className="flex flex-col gap-4 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-sky-100 bg-sky-50 text-sky-600">
                 <ClipboardList size={21} />
@@ -326,7 +335,7 @@ const BookingPage = () => {
           </div>
 
           {/* BODY DANH SÁCH */}
-          <div className="bg-slate-50/70 p-5">
+          <div className="bg-slate-50/70 p-4">
             {bookings.length === 0 ? (
               <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm">
                 <div className="mb-4 rounded-3xl bg-sky-50 p-4 text-sky-600">
@@ -371,13 +380,13 @@ const BookingPage = () => {
                   return (
                     <article
                       key={booking.bookingId}
-                      className={`overflow-hidden rounded-[2rem] border bg-white shadow-sm transition-all hover:border-slate-300 hover:shadow-md ${
+                      className={`overflow-hidden rounded-3xl border bg-white shadow-sm transition-all hover:border-slate-300 hover:shadow-md ${
                         isMonthlyBooking ? "border-sky-100" : "border-slate-200"
                       }`}
                     >
                       {/* HEADER LỊCH */}
-                      <div className="border-b border-slate-100 bg-white p-5">
-                        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                      <div className="border-b border-slate-100 bg-white p-4">
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                           <div className="min-w-0">
                             <div className="mb-3 flex items-center gap-3">
                               <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-sky-100 bg-sky-50 text-sky-600">
@@ -457,8 +466,8 @@ const BookingPage = () => {
                       </div>
 
                       {/* BODY LỊCH */}
-                      <div className="bg-gradient-to-br from-sky-50/35 via-white to-slate-50/80 p-5">
-                        <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_240px]">
+                      <div className="bg-gradient-to-br from-sky-50/35 via-white to-slate-50/80 p-4">
+                        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
                           {/* LEFT INFO */}
                           <div className="min-w-0">
                             {/* BRANCH */}

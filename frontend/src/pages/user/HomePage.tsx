@@ -1,8 +1,10 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   CalendarDays,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   MapPin,
   MessageCircle,
@@ -112,7 +114,7 @@ const ProductCard = ({
   const imageClass =
     "h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105";
   const actionBtnClass =
-    "flex w-full items-center justify-center gap-2 rounded-2xl border border-sky-100 bg-sky-50 px-4 py-2.5 text-sm font-semibold text-sky-700 transition-all duration-300 hover:border-sky-600 hover:bg-sky-600 hover:text-white active:scale-[0.98]";
+    "flex w-full items-center justify-center gap-2 rounded-2xl border border-sky-100 bg-sky-50 px-3.5 py-2 text-[13px] font-semibold text-sky-700 transition-all duration-300 hover:border-sky-600 hover:bg-sky-600 hover:text-white active:scale-[0.98]";
 
   return (
     <article onClick={onClick} className={cardClass}>
@@ -132,21 +134,21 @@ const ProductCard = ({
 
             <div className="absolute left-3 top-3 flex flex-col gap-2">
               {(product?.discount ?? 0) > 0 && (
-                <span className="w-fit rounded-full bg-red-500 px-2.5 py-1 text-xs font-medium text-white shadow">
+                <span className="w-fit rounded-full bg-red-500 px-2.5 py-0.5 text-[11px] font-medium text-white shadow">
                   -{product?.discount}%
                 </span>
               )}
 
               {product?.isNew && !badge && (
-                <span className="inline-flex w-fit items-center gap-1 rounded-full bg-emerald-500 px-2.5 py-1 text-xs font-medium text-white shadow">
-                  <Sparkles size={12} />
+                <span className="inline-flex w-fit items-center gap-1 rounded-full bg-emerald-500 px-2.5 py-0.5 text-[11px] font-medium text-white shadow">
+                  <Sparkles size={11} />
                   Mới
                 </span>
               )}
 
               {badge && (
                 <span
-                  className={`inline-flex w-fit items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-white shadow ${badgeClassName}`}
+                  className={`inline-flex w-fit items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-medium text-white shadow ${badgeClassName}`}
                 >
                   {badge}
                 </span>
@@ -158,13 +160,13 @@ const ProductCard = ({
 
       <div className="flex flex-col p-[18px]">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <p className="min-w-0 flex-1 truncate text-[11px] font-medium uppercase tracking-wide text-sky-600">
+          <p className="min-w-0 flex-1 truncate text-[10px] font-medium uppercase tracking-wide text-sky-600">
             {loading ? "..." : product?.brand}
           </p>
 
           {!loading && product?.category?.cateName && (
             <span
-              className="max-w-[58%] shrink-0 truncate rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600"
+              className="max-w-[58%] shrink-0 truncate rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600"
               title={product.category.cateName}
             >
               {product.category.cateName}
@@ -173,7 +175,7 @@ const ProductCard = ({
         </div>
 
         <h3
-          className="mt-1.5 line-clamp-2 h-12 max-h-12 shrink-0 overflow-hidden text-[17px] font-semibold leading-6 text-slate-700 transition group-hover:text-sky-700"
+          className="mt-1.5 line-clamp-2 h-12 max-h-12 shrink-0 overflow-hidden text-[16px] font-semibold leading-6 text-slate-700 transition group-hover:text-sky-700"
           title={loading ? "Đang tải sản phẩm..." : product?.productName}
         >
           {loading ? "Đang tải sản phẩm..." : product?.productName}
@@ -181,7 +183,7 @@ const ProductCard = ({
 
         <div className="mt-3 flex min-h-8 shrink-0 items-center justify-between gap-2">
           <div className="flex min-w-0 items-baseline gap-1.5">
-            <span className="whitespace-nowrap text-[19px] font-semibold tracking-tight text-sky-700">
+            <span className="whitespace-nowrap text-[18px] font-semibold tracking-tight text-sky-700">
               {loading
                 ? "--"
                 : formatPrice(
@@ -190,22 +192,22 @@ const ProductCard = ({
             </span>
 
             {!loading && product && product.discount > 0 && (
-              <span className="hidden whitespace-nowrap text-[11px] text-slate-400 line-through 2xl:inline">
+              <span className="hidden whitespace-nowrap text-[10px] text-slate-400 line-through 2xl:inline">
                 {formatPrice(product.minPrice)}
               </span>
             )}
           </div>
 
           {!loading && (
-            <div className="flex shrink-0 items-center gap-1 text-[11px] font-medium">
+            <div className="flex shrink-0 items-center gap-1 text-[10px] font-medium">
               {product?.reviewCount ? (
-                <span className="whitespace-nowrap rounded-full bg-amber-50 px-2 py-1 text-amber-600">
+                <span className="whitespace-nowrap rounded-full bg-amber-50 px-1.5 py-0.5 text-amber-600">
                   ★ {product.avgRating} ({product.reviewCount})
                 </span>
               ) : null}
 
               {product?.soldCount ? (
-                <span className="whitespace-nowrap rounded-full bg-orange-50 px-2 py-1 text-orange-600">
+                <span className="whitespace-nowrap rounded-full bg-orange-50 px-1.5 py-0.5 text-orange-600">
                   Đã bán {formatNumber(product.soldCount)}
                 </span>
               ) : null}
@@ -356,6 +358,7 @@ const HomePage = () => {
   const [activeDiscountType, setActiveDiscountType] = useState<
     "ORDER" | "BOOKING" | "ALL"
   >("ORDER");
+  const newProductGroupTabsRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     dispatch(getHomeData());
@@ -425,6 +428,13 @@ const HomePage = () => {
 
   const goToProductGroup = (groupName: string) => {
     navigate(`/products?groupName=${encodeURIComponent(groupName)}`);
+  };
+
+  const scrollNewProductGroups = (direction: "left" | "right") => {
+    newProductGroupTabsRef.current?.scrollBy({
+      left: direction === "left" ? -280 : 280,
+      behavior: "smooth",
+    });
   };
 
   const renderSectionHeader = ({
@@ -779,24 +789,27 @@ const HomePage = () => {
         })}
 
         <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
-          <div
-            className="
-    mb-6 overflow-x-auto pb-0.5
-    [&::-webkit-scrollbar]:h-1
-    [&::-webkit-scrollbar-track]:rounded-full
-    [&::-webkit-scrollbar-track]:bg-transparent
-    [&::-webkit-scrollbar-thumb]:rounded-full
-    [&::-webkit-scrollbar-thumb]:bg-slate-300/70
-    hover:[&::-webkit-scrollbar-thumb]:bg-sky-400
-  "
-          >
-            <div className="flex min-w-max gap-3">
+          <div className="relative mb-6">
+            <button
+              type="button"
+              onClick={() => scrollNewProductGroups("left")}
+              className="absolute left-0 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-sky-600 hover:bg-sky-600 hover:text-white hover:shadow-md"
+              aria-label="Trượt nhóm sản phẩm sang trái"
+            >
+              <ChevronLeft size={18} />
+            </button>
+
+            <div
+              ref={newProductGroupTabsRef}
+              className="overflow-x-hidden scroll-smooth px-10"
+            >
+              <div className="flex min-w-max gap-3">
               {homeData.newProductsByGroup.map((group) => (
                 <button
                   key={group.menuGroup}
                   type="button"
                   onClick={() => setActiveNewGroup(group.menuGroup)}
-                  className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 ${
+                  className={`rounded-full px-4 py-2 text-[13px] font-semibold transition-all duration-300 ${
                     activeNewGroup === group.menuGroup
                       ? "bg-sky-600 text-white shadow-sm"
                       : "bg-sky-50 text-sky-700 hover:bg-sky-100"
@@ -804,7 +817,7 @@ const HomePage = () => {
                 >
                   {group.menuGroup}
                   <span
-                    className={`ml-2 rounded-full px-2 py-0.5 text-xs ${
+                    className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[11px] ${
                       activeNewGroup === group.menuGroup
                         ? "bg-white/25 text-white"
                         : "bg-white/70 text-sky-700"
@@ -814,7 +827,17 @@ const HomePage = () => {
                   </span>
                 </button>
               ))}
+              </div>
             </div>
+
+            <button
+              type="button"
+              onClick={() => scrollNewProductGroups("right")}
+              className="absolute right-0 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-sky-600 hover:bg-sky-600 hover:text-white hover:shadow-md"
+              aria-label="Trượt nhóm sản phẩm sang phải"
+            >
+              <ChevronRight size={18} />
+            </button>
           </div>
 
           {loading ? (
@@ -831,7 +854,7 @@ const HomePage = () => {
                   product={product}
                   badge={
                     <>
-                      <Sparkles size={12} />
+                      <Sparkles size={11} />
                       MỚI
                     </>
                   }
@@ -872,7 +895,7 @@ const HomePage = () => {
                   product={product}
                   badge={
                     <>
-                      <Flame size={12} />
+                      <Flame size={11} />
                       HOT
                     </>
                   }
@@ -904,7 +927,7 @@ const HomePage = () => {
                 product={product}
                 badge={
                   <>
-                    <Star size={12} className="fill-white" />
+                    <Star size={11} className="fill-white" />
                     {product.avgRating}
                   </>
                 }

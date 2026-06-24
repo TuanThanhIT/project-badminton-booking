@@ -320,7 +320,7 @@ const changeUserRoleService = async (data) => {
 
   const allowedRoles = [ROLE_NAME.MANAGER, ROLE_NAME.USER, ROLE_NAME.COACH];
   if (!allowedRoles.includes(newRole)) {
-    throw new BadRequestError("Role khong hop le");
+    throw new BadRequestError("Vai trò không hợp lệ");
   }
 
   const user = await User.findByPk(userId, {

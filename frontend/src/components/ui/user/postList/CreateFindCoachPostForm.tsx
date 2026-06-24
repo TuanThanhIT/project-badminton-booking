@@ -29,7 +29,7 @@ type CreateFindCoachPostFormProps = {
 };
 
 const inputClass =
-  "w-full rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-colors placeholder:text-slate-400 hover:border-slate-300 focus:border-sky-400 focus:ring-2 focus:ring-sky-100/70";
+  "w-full rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-colors placeholder:text-slate-400 hover:border-slate-300 focus:border-sky-400 focus:ring-1 focus:ring-sky-100/70";
 const labelClass = "block text-[13px] font-medium text-slate-600 mb-1.5";
 const errorClass = "text-red-500 text-xs font-medium mt-1.5";
 const sectionClass =
@@ -37,7 +37,7 @@ const sectionClass =
 
 const CreateFindCoachPostForm = ({
   initialValues,
-  submitText = "Đăng bài tìm người giảng dạy",
+  submitText = "Đăng bài",
   onSubmitForm,
   redirectOnSuccess = true,
 }: CreateFindCoachPostFormProps) => {
@@ -120,7 +120,15 @@ const CreateFindCoachPostForm = ({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [dispatch, lastCreatedPost, lastCreateModeration, lastCreateViolation, navigate, redirectOnSuccess, reset]);
+  }, [
+    dispatch,
+    lastCreatedPost,
+    lastCreateModeration,
+    lastCreateViolation,
+    navigate,
+    redirectOnSuccess,
+    reset,
+  ]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -141,13 +149,17 @@ const CreateFindCoachPostForm = ({
           className={`${inputClass} min-h-[104px] resize-none leading-relaxed`}
           placeholder="Mô tả ngắn về nhu cầu học, mục tiêu và tình trạng hiện tại..."
         />
-        {errors.content && <p className={errorClass}>{errors.content.message}</p>}
+        {errors.content && (
+          <p className={errorClass}>{errors.content.message}</p>
+        )}
       </div>
 
       <div className={sectionClass}>
         <div className="flex items-center gap-2">
           <MapPin size={19} className="text-sky-600" />
-          <h3 className="text-base font-semibold text-slate-800">Địa điểm mong muốn</h3>
+          <h3 className="text-base font-semibold text-slate-800">
+            Địa điểm mong muốn
+          </h3>
         </div>
         <select
           {...register("formData.location.branchId", { valueAsNumber: true })}
@@ -163,20 +175,27 @@ const CreateFindCoachPostForm = ({
           ))}
         </select>
         {errors.formData?.location?.branchId && (
-          <p className={errorClass}>{errors.formData.location.branchId.message}</p>
+          <p className={errorClass}>
+            {errors.formData.location.branchId.message}
+          </p>
         )}
       </div>
 
       <div className={sectionClass}>
         <div className="flex items-center gap-2">
           <Target size={19} className="text-sky-600" />
-          <h3 className="text-base font-semibold text-slate-800">Nhu cầu học</h3>
+          <h3 className="text-base font-semibold text-slate-800">
+            Nhu cầu học
+          </h3>
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <label className={labelClass}>Trình độ hiện tại</label>
-            <select {...register("formData.currentLevel")} className={inputClass}>
+            <select
+              {...register("formData.currentLevel")}
+              className={inputClass}
+            >
               {PLAYER_LEVEL_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
                   {o.label}
@@ -184,7 +203,9 @@ const CreateFindCoachPostForm = ({
               ))}
             </select>
             {errors.formData?.currentLevel && (
-              <p className={errorClass}>{errors.formData.currentLevel.message}</p>
+              <p className={errorClass}>
+                {errors.formData.currentLevel.message}
+              </p>
             )}
           </div>
 

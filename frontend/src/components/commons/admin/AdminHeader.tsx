@@ -63,11 +63,11 @@ const AdminHeader = () => {
   return (
     <header className="flex h-20 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6 lg:px-8">
       <div className="min-w-0">
-        <h2 className="truncate text-xl font-semibold text-slate-800">
+        <h2 className="truncate text-xl font-bold tracking-normal text-slate-900">
           Trang quản trị
         </h2>
 
-        <p className="mt-1 hidden text-sm font-normal text-slate-500 sm:block">
+        <p className="mt-1 hidden text-sm font-normal tracking-normal text-slate-600 sm:block">
           Quản lý hệ thống B-Hub trong ngày
         </p>
       </div>
@@ -106,7 +106,7 @@ const AdminHeader = () => {
             <div className="absolute right-0 top-14 z-50 w-[min(92vw,420px)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_20px_50px_rgba(15,23,42,0.16)]">
               <div className="flex items-center justify-between border-b border-slate-100 p-4">
                 <div>
-                  <p className="text-base font-semibold text-slate-900">
+                  <p className="text-base font-bold tracking-normal text-slate-900">
                     Thông báo
                   </p>
                   <p className="text-xs text-slate-500">
@@ -137,7 +137,7 @@ const AdminHeader = () => {
                     <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
                       <Bell size={22} />
                     </div>
-                    <p className="font-medium text-slate-800">
+                    <p className="font-bold tracking-normal text-slate-800">
                       Chưa có thông báo
                     </p>
                     <p className="mt-1 text-sm text-slate-500">
@@ -164,7 +164,7 @@ const AdminHeader = () => {
                         />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-start justify-between gap-3">
-                            <p className="line-clamp-1 font-semibold text-slate-900">
+                            <p className="line-clamp-1 font-bold tracking-normal text-slate-900">
                               {notification.title}
                             </p>
                             {!notification.isRead ? (
@@ -197,7 +197,7 @@ const AdminHeader = () => {
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-slate-900">{displayName}</p>
+            <p className="text-sm font-bold tracking-normal text-slate-900">{displayName}</p>
             <p className="text-xs font-medium text-slate-500">Quản trị viên</p>
           </div>
         </div>

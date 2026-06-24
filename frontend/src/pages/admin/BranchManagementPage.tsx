@@ -78,7 +78,9 @@ const BranchManagementPage = () => {
     } catch (err: any) {
       setBranches([]);
       setTotal(0);
-      toast.error(err?.response?.data?.message || "Không thể tải danh sách chi nhánh");
+      toast.error(
+        err?.response?.data?.message || "Không thể tải danh sách chi nhánh",
+      );
     } finally {
       setLoading(false);
     }
@@ -112,10 +114,15 @@ const BranchManagementPage = () => {
     setTogglingId(branch.id);
     try {
       await adminBranchService.toggleBranchActiveService(branch.id);
-      toast.success(branch.isActive ? "Đã khóa chi nhánh" : "Đã mở khóa chi nhánh");
+      toast.success(
+        branch.isActive ? "Đã khóa chi nhánh" : "Đã mở khóa chi nhánh",
+      );
       fetchBranches();
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Không thể cập nhật trạng thái chi nhánh");
+      toast.error(
+        err?.response?.data?.message ||
+          "Không thể cập nhật trạng thái chi nhánh",
+      );
     } finally {
       setTogglingId(null);
     }
@@ -124,7 +131,9 @@ const BranchManagementPage = () => {
   const totalPages = Math.max(Math.ceil(total / LIMIT), 1);
   const activeInPage = branches.filter((branch) => branch.isActive).length;
   const lockedInPage = branches.filter((branch) => !branch.isActive).length;
-  const managedInPage = branches.filter((branch) => branch.managers?.length).length;
+  const managedInPage = branches.filter(
+    (branch) => branch.managers?.length,
+  ).length;
 
   return (
     <div className="space-y-6">
@@ -146,16 +155,38 @@ const BranchManagementPage = () => {
       />
 
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-        <StatCard label="Tổng chi nhánh" value={total} icon={Building2} color="bg-sky-50 border-sky-200 text-sky-700" />
-        <StatCard label="Hoạt động đang hiển thị" value={activeInPage} icon={CheckCircle} color="bg-emerald-50 border-emerald-200 text-emerald-700" />
-        <StatCard label="Đã khóa đang hiển thị" value={lockedInPage} icon={XCircle} color="bg-red-50 border-red-200 text-red-700" />
-        <StatCard label="Có quản lý đang hiển thị" value={managedInPage} icon={UserCheck} color="bg-amber-50 border-amber-200 text-amber-700" />
+        <StatCard
+          label="Tổng chi nhánh"
+          value={total}
+          icon={Building2}
+          color="bg-sky-50 border-sky-200 text-sky-700"
+        />
+        <StatCard
+          label="Hoạt động đang hiển thị"
+          value={activeInPage}
+          icon={CheckCircle}
+          color="bg-emerald-50 border-emerald-200 text-emerald-700"
+        />
+        <StatCard
+          label="Đã khóa đang hiển thị"
+          value={lockedInPage}
+          icon={XCircle}
+          color="bg-red-50 border-red-200 text-red-700"
+        />
+        <StatCard
+          label="Có quản lý đang hiển thị"
+          value={managedInPage}
+          icon={UserCheck}
+          color="bg-amber-50 border-amber-200 text-amber-700"
+        />
       </div>
 
       <section>
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-[220px] flex-1">
-            <label className="mb-1 block text-xs font-medium text-slate-600">Tìm kiếm</label>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Tìm kiếm
+            </label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
@@ -168,13 +199,15 @@ const BranchManagementPage = () => {
                   }
                 }}
                 placeholder="Tên chi nhánh, địa chỉ, điện thoại, quản lý..."
-                className="h-11 w-full rounded-xl border border-slate-200 pl-9 pr-3 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="h-10 w-full rounded-lg border border-slate-200 pl-8 pr-2.5 text-[13px] outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               />
             </div>
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Trạng thái</label>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Trạng thái
+            </label>
             <div className="relative">
               <select
                 value={status}
@@ -182,7 +215,7 @@ const BranchManagementPage = () => {
                   setStatus(event.target.value);
                   setPage(1);
                 }}
-                className="h-11 appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-8 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="h-10 appearance-none rounded-lg border border-slate-200 bg-white px-2.5 pr-7 text-[13px] outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               >
                 <option value="">Tất cả</option>
                 <option value="ACTIVE">Hoạt động</option>
@@ -199,14 +232,40 @@ const BranchManagementPage = () => {
         {loading ? (
           <AdminSpinner />
         ) : branches.length === 0 ? (
-          <div className="py-14 text-center text-sm text-slate-400">Không có dữ liệu</div>
+          <div className="py-14 text-center text-sm text-slate-400">
+            Không có dữ liệu
+          </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1120px] text-sm">
+          <div className="overflow-hidden">
+            <table className="w-full table-fixed text-sm">
+              <colgroup>
+                <col className="w-[4%]" />
+                <col className="w-[15%]" />
+                <col className="w-[25%]" />
+                <col className="w-[10%]" />
+                <col className="w-[12%]" />
+                <col className="w-[9%]" />
+                <col className="w-[6%]" />
+                <col className="w-[6%]" />
+                <col className="w-[13%]" />
+              </colgroup>
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                  {["#", "Chi nhánh", "Địa chỉ", "Điện thoại", "Quản lý", "Trạng thái", "Số sân", "Số NV", "Thao tác"].map((header) => (
-                    <th key={header} className="px-4 py-3 text-center font-semibold">
+                  {[
+                    "#",
+                    "Chi nhánh",
+                    "Địa chỉ",
+                    "Điện thoại",
+                    "Quản lý",
+                    "Trạng thái",
+                    "Số sân",
+                    "Số NV",
+                    "Thao tác",
+                  ].map((header) => (
+                    <th
+                      key={header}
+                      className="px-2 py-3 text-center font-semibold"
+                    >
                       {header}
                     </th>
                   ))}
@@ -215,40 +274,52 @@ const BranchManagementPage = () => {
               <tbody className="divide-y divide-slate-100">
                 {branches.map((branch, index) => (
                   <tr key={branch.id} className="transition hover:bg-sky-50/40">
-                    <td className="px-4 py-3 text-center text-slate-400">
+                    <td className="px-2 py-3 text-center text-slate-400">
                       {(page - 1) * LIMIT + index + 1}
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
+                    <td className="px-2 py-3">
+                      <div className="flex min-w-0 items-center gap-2">
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-100">
                           <Store className="h-4 w-4 text-sky-600" />
                         </div>
-                        <span className="font-semibold text-slate-800">{branch.branchName}</span>
+                        <span className="min-w-0 truncate font-semibold text-slate-800">
+                          {branch.branchName}
+                        </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-center text-slate-600">
-                      <span className="block max-w-[260px] truncate text-xs">
-                        {branch.fullAddress || `${branch.address}, ${branch.districtName}, ${branch.provinceName}`}
+                    <td className="px-2 py-3 text-center text-slate-600">
+                      <span className="block truncate text-xs">
+                        {branch.fullAddress ||
+                          `${branch.address}, ${branch.districtName}, ${branch.provinceName}`}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center text-slate-600">{branch.phoneNumber}</td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-2 py-3 text-center text-slate-600">
+                      {branch.phoneNumber}
+                    </td>
+                    <td className="px-2 py-3 text-center">
                       {branch.managers?.length ? (
                         <div className="space-y-1">
                           {branch.managers.slice(0, 2).map((manager) => (
-                            <p key={manager.id} className="text-xs font-medium text-blue-600">
+                            <p
+                              key={manager.id}
+                              className="truncate text-xs font-medium text-blue-600"
+                            >
                               {manager.fullName || manager.username}
                             </p>
                           ))}
                           {branch.managers.length > 2 ? (
-                            <p className="text-xs text-slate-400">+{branch.managers.length - 2} khác</p>
+                            <p className="text-xs text-slate-400">
+                              +{branch.managers.length - 2} khác
+                            </p>
                           ) : null}
                         </div>
                       ) : (
-                        <span className="text-xs italic text-slate-400">Chưa có</span>
+                        <span className="text-xs italic text-slate-400">
+                          Chưa có
+                        </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-2 py-3 text-center">
                       <AdminStatusBadge
                         color={
                           branch.isActive
@@ -258,14 +329,20 @@ const BranchManagementPage = () => {
                         label={branch.isActive ? "Hoạt động" : "Đã khóa"}
                       />
                     </td>
-                    <td className="px-4 py-3 text-center font-medium text-slate-700">{branch.courtCount ?? 0}</td>
-                    <td className="px-4 py-3 text-center font-medium text-slate-700">{branch.employeeCount ?? 0}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-center">
-                      <div className="inline-flex items-center justify-center gap-1.5">
+                    <td className="px-2 py-3 text-center font-medium text-slate-700">
+                      {branch.courtCount ?? 0}
+                    </td>
+                    <td className="px-2 py-3 text-center font-medium text-slate-700">
+                      {branch.employeeCount ?? 0}
+                    </td>
+                    <td className="px-2 py-3 text-center">
+                      <div className="flex flex-wrap items-center justify-center gap-1">
                         <button
                           type="button"
-                          onClick={() => navigate(`/admin/branches/${branch.id}`)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-sky-200 bg-sky-50 px-2.5 py-1.5 text-xs font-medium text-sky-600 transition hover:bg-sky-100"
+                          onClick={() =>
+                            navigate(`/admin/branches/${branch.id}`)
+                          }
+                          className="inline-flex items-center gap-1 rounded-lg border border-sky-200 bg-sky-50 px-2 py-1 text-[11px] font-medium text-sky-600 transition hover:bg-sky-100"
                         >
                           <Eye size={13} /> Chi tiết
                         </button>
@@ -275,7 +352,7 @@ const BranchManagementPage = () => {
                             setEditBranch(branch);
                             setShowForm(true);
                           }}
-                          className="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-medium text-amber-600 transition hover:bg-amber-100"
+                          className="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-medium text-amber-600 transition hover:bg-amber-100"
                         >
                           <Edit2 size={13} /> Sửa
                         </button>
@@ -283,7 +360,7 @@ const BranchManagementPage = () => {
                           type="button"
                           onClick={() => handleToggleActive(branch)}
                           disabled={togglingId === branch.id}
-                          className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition disabled:opacity-60 ${
+                          className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition disabled:opacity-60 ${
                             branch.isActive
                               ? "border-red-200 bg-red-50 text-red-500 hover:bg-red-100"
                               : "border-green-200 bg-green-50 text-green-600 hover:bg-green-100"
@@ -293,7 +370,8 @@ const BranchManagementPage = () => {
                             <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
                           ) : (
                             <>
-                              <Power size={13} /> {branch.isActive ? "Khóa" : "Mở"}
+                              <Power size={13} />{" "}
+                              {branch.isActive ? "Khóa" : "Mở"}
                             </>
                           )}
                         </button>
@@ -305,7 +383,12 @@ const BranchManagementPage = () => {
             </table>
           </div>
         )}
-        <AdminPagination page={page} totalPages={totalPages} total={total} onPage={setPage} />
+        <AdminPagination
+          page={page}
+          totalPages={totalPages}
+          total={total}
+          onPage={setPage}
+        />
       </section>
 
       {showForm ? (

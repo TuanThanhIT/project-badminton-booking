@@ -3,7 +3,10 @@ import { ChevronDown, Lock, Search, Unlock } from "lucide-react";
 import { toast } from "react-toastify";
 import adminFinanceService from "../../../../services/admin/financeService";
 import type { AdminUserWallet } from "../../../../types/admin";
-import { fmtCurrency, fmtDate } from "../../../../utils/constants/adminConstant";
+import {
+  fmtCurrency,
+  fmtDate,
+} from "../../../../utils/constants/adminConstant";
 import { showConfirmDialog } from "../../../../utils/confirmDialog";
 import AdminPagination from "../AdminPagination";
 import AdminUserCell from "../AdminUserCell";
@@ -88,20 +91,24 @@ const WalletsTab = () => {
       <section>
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Tìm kiếm người dùng</label>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Tìm kiếm người dùng
+            </label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
                 placeholder="Tên, email..."
-                className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2.5 text-[13px] outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               />
             </div>
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Trạng thái ví</label>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Trạng thái ví
+            </label>
             <div className="relative">
               <select
                 value={statusFilter}
@@ -109,7 +116,7 @@ const WalletsTab = () => {
                   setStatusFilter(event.target.value);
                   setPage(1);
                 }}
-                className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-8 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="h-10 w-full appearance-none rounded-lg border border-slate-200 bg-white px-2.5 pr-7 text-[13px] text-slate-700 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               >
                 <option value="">Tất cả</option>
                 <option value="ACTIVE">Hoạt động</option>
@@ -123,7 +130,8 @@ const WalletsTab = () => {
 
       {wallets.length > 0 ? (
         <div className="rounded-xl border border-sky-200 bg-sky-50 p-3 text-xs text-sky-700">
-          Tổng số dư đang hiển thị: <b>{fmtCurrency(totalBalance)}</b> · {wallets.length} ví
+          Tổng số dư đang hiển thị: <b>{fmtCurrency(totalBalance)}</b> ·{" "}
+          {wallets.length} ví
         </div>
       ) : null}
 
@@ -133,50 +141,85 @@ const WalletsTab = () => {
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-sky-500 border-t-transparent" />
           </div>
         ) : wallets.length === 0 ? (
-          <div className="py-14 text-center text-sm text-slate-400">Không có dữ liệu</div>
+          <div className="py-14 text-center text-sm text-slate-400">
+            Không có dữ liệu
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[920px] text-sm">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                  {["#", "Người dùng", "Số dư", "Trạng thái", "Ngày tạo", "Thao tác"].map((header) => (
-                    <th key={header} className="px-4 py-3 text-center font-semibold">{header}</th>
+                  {[
+                    "#",
+                    "Người dùng",
+                    "Số dư",
+                    "Trạng thái",
+                    "Ngày tạo",
+                    "Thao tác",
+                  ].map((header) => (
+                    <th
+                      key={header}
+                      className="px-4 py-3 text-center font-semibold"
+                    >
+                      {header}
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 [&_td]:align-top">
                 {wallets.map((wallet, index) => (
                   <tr key={wallet.id} className="transition hover:bg-sky-50/40">
-                    <td className="px-4 py-3 text-center text-slate-400">{(page - 1) * LIMIT + index + 1}</td>
-                    <td className="px-4 py-3"><AdminUserCell avatar={wallet.avatar} fullName={wallet.fullName} username={wallet.username} email={wallet.email} /></td>
+                    <td className="px-4 py-3 text-center text-slate-400">
+                      {(page - 1) * LIMIT + index + 1}
+                    </td>
+                    <td className="px-4 py-3">
+                      <AdminUserCell
+                        avatar={wallet.avatar}
+                        fullName={wallet.fullName}
+                        username={wallet.username}
+                        email={wallet.email}
+                      />
+                    </td>
                     <td className="px-4 py-3 text-center">
-                      <span className={`text-base font-bold ${wallet.balance > 0 ? "text-sky-700" : "text-slate-400"}`}>
+                      <span
+                        className={`text-base font-bold ${wallet.balance > 0 ? "text-sky-700" : "text-slate-400"}`}
+                      >
                         {fmtCurrency(wallet.balance)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <span className={`rounded border px-2 py-0.5 text-xs font-semibold ${
-                        wallet.status === "ACTIVE"
-                          ? "border-green-200 bg-green-50 text-green-700"
-                          : "border-red-200 bg-red-50 text-red-600"
-                      }`}>
+                      <span
+                        className={`rounded border px-2 py-0.5 text-xs font-semibold ${
+                          wallet.status === "ACTIVE"
+                            ? "border-green-200 bg-green-50 text-green-700"
+                            : "border-red-200 bg-red-50 text-red-600"
+                        }`}
+                      >
                         {wallet.status === "ACTIVE" ? "Hoạt động" : "Đã khóa"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center text-xs text-slate-500">{fmtDate(wallet.createdAt)}</td>
+                    <td className="px-4 py-3 text-center text-xs text-slate-500">
+                      {fmtDate(wallet.createdAt)}
+                    </td>
                     <td className="px-4 py-3 text-center">
                       <button
                         type="button"
                         onClick={() => handleToggle(wallet)}
                         disabled={toggling}
                         className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white transition ${
-                          wallet.status === "ACTIVE" ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"
+                          wallet.status === "ACTIVE"
+                            ? "bg-red-500 hover:bg-red-600"
+                            : "bg-green-500 hover:bg-green-600"
                         }`}
                       >
                         {wallet.status === "ACTIVE" ? (
-                          <><Lock className="h-3.5 w-3.5" /> Khóa</>
+                          <>
+                            <Lock className="h-3.5 w-3.5" /> Khóa
+                          </>
                         ) : (
-                          <><Unlock className="h-3.5 w-3.5" /> Mở khóa</>
+                          <>
+                            <Unlock className="h-3.5 w-3.5" /> Mở khóa
+                          </>
                         )}
                       </button>
                     </td>
@@ -186,9 +229,13 @@ const WalletsTab = () => {
             </table>
           </div>
         )}
-        <AdminPagination page={page} totalPages={totalPages} total={total} onPage={setPage} />
+        <AdminPagination
+          page={page}
+          totalPages={totalPages}
+          total={total}
+          onPage={setPage}
+        />
       </section>
-
     </div>
   );
 };

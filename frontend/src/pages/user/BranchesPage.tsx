@@ -180,7 +180,7 @@ const BranchPage = () => {
 
                   <div className="relative">
                     <select
-                      className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none appearance-none transition-all cursor-pointer text-sm"
+                      className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-1 focus:ring-sky-500 outline-none appearance-none transition-all cursor-pointer text-sm"
                       value={city}
                       onChange={(e) => {
                         setCity(e.target.value);
@@ -212,7 +212,7 @@ const BranchPage = () => {
 
                   <div className="relative">
                     <select
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 outline-none appearance-none transition-all cursor-pointer text-sm ${
+                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-1 focus:ring-sky-500 outline-none appearance-none transition-all cursor-pointer text-sm ${
                         !city
                           ? "bg-gray-100 text-gray-400"
                           : "bg-gray-50 text-gray-700 border-gray-200"

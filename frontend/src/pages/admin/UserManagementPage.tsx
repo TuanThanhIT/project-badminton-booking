@@ -237,7 +237,7 @@ const UserManagementPage = () => {
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
                 placeholder="Tên đăng nhập, email..."
-                className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2.5 text-[13px] outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               />
             </div>
           </div>
@@ -252,7 +252,7 @@ const UserManagementPage = () => {
                 setRole(event.target.value);
                 setPage(1);
               }}
-              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              className="h-10 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[13px] text-slate-700 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
             >
               {ROLE_FILTER_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -272,7 +272,7 @@ const UserManagementPage = () => {
                 setIsActive(event.target.value);
                 setPage(1);
               }}
-              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              className="h-10 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[13px] text-slate-700 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
             >
               <option value="">Tất cả</option>
               <option value="true">Hoạt động</option>

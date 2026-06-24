@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   AlertTriangle,
@@ -10,6 +10,7 @@ import {
   MessageCircle,
   Newspaper,
   PackageCheck,
+  RefreshCw,
   ShoppingBag,
   Star,
   Store,
@@ -479,14 +480,37 @@ const RecentFeedbacks = ({
 const AdminDashboardPage = () => {
   const [data, setData] = useState<AdminDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchDashboard = useCallback(
+    async ({ showSkeleton = false }: { showSkeleton?: boolean } = {}) => {
+      if (showSkeleton) {
+        setLoading(true);
+      } else {
+        setRefreshing(true);
+      }
+      try {
+        const res = await adminRevenueService.getDashboardService({
+          range: "today",
+        });
+        setData((res.data as any).data);
+      } catch {
+        setData(null);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
-    adminRevenueService
-      .getDashboardService({ range: "today" })
-      .then((res) => setData((res.data as any).data))
-      .catch(() => setData(null))
-      .finally(() => setLoading(false));
-  }, []);
+    fetchDashboard({ showSkeleton: true });
+  }, [fetchDashboard]);
+
+  const handleRefresh = () => {
+    fetchDashboard();
+  };
 
   const summary = data?.summary;
   const operation = data?.operationSummary;
@@ -613,13 +637,23 @@ const AdminDashboardPage = () => {
         title="Dashboard Admin"
         subtitle="Tổng quan nhanh tình hình vận hành hôm nay: doanh thu, booking, đơn hàng, phiếu nhập và cảnh báo tồn kho."
         action={
-          <Link
-            to="/admin/revenue"
-            className={adminPrimaryButtonClass}
-          >
-            <BarChart3 className="h-4 w-4" />
-            Xem báo cáo doanh thu
-          </Link>
+          <>
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 text-sm font-bold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+              />
+              Làm mới
+            </button>
+            <Link to="/admin/revenue" className={adminPrimaryButtonClass}>
+              <BarChart3 className="h-4 w-4" />
+              Xem báo cáo doanh thu
+            </Link>
+          </>
         }
       />
 

@@ -49,21 +49,21 @@ export const updateMyProfileSchema = {
       experienceYears: Joi.number().integer().min(0).max(80).messages({
         "number.base": "So nam kinh nghiem phai la so.",
         "number.integer": "So nam kinh nghiem phai la so nguyen.",
-        "number.min": "So nam kinh nghiem khong duoc am.",
-        "number.max": "So nam kinh nghiem khong hop le.",
+        "number.min": "Số năm kinh nghiệm không được âm.",
+        "number.max": "Số năm kinh nghiệm không hợp lệ.",
       }),
       certificate: Joi.string().trim().max(500).allow(null, "").messages({
         "string.base": "Chung chi phai la chuoi.",
-        "string.max": "Chung chi toi da 500 ky tu.",
+        "string.max": "Chứng chỉ tối đa 500 ký tự.",
       }),
       certificateImages: Joi.array()
         .items(Joi.string().uri().max(1000))
         .max(10)
         .messages({
-          "array.base": "Danh sach anh chung chi khong hop le.",
-          "array.max": "Toi da 10 anh chung chi.",
+          "array.base": "Danh sách ảnh chứng chỉ không hợp lệ.",
+          "array.max": "Tối đa 10 ảnh chứng chỉ.",
           "string.uri": "Anh chung chi phai la URL hop le.",
-          "string.max": "URL anh chung chi toi da 1000 ky tu.",
+          "string.max": "URL ảnh chứng chỉ tối đa 1000 ký tự.",
         }),
       introduction: Joi.string().trim().max(2000).allow(null, "").messages({
         "string.base": "Giới thiệu dạy cầu lông phải là chuỗi.",

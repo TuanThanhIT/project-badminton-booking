@@ -75,9 +75,12 @@ const ManagerManagementPage = () => {
   const [page, setPage] = useState(1);
 
   const [showCreate, setShowCreate] = useState(false);
-  const [branchManageTarget, setBranchManageTarget] = useState<AdminManager | null>(null);
+  const [branchManageTarget, setBranchManageTarget] =
+    useState<AdminManager | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminManager | null>(null);
-  const [changeRoleTarget, setChangeRoleTarget] = useState<AdminManager | null>(null);
+  const [changeRoleTarget, setChangeRoleTarget] = useState<AdminManager | null>(
+    null,
+  );
   const [togglingId, setTogglingId] = useState<number | null>(null);
 
   const fetchManagers = useCallback(async () => {
@@ -93,11 +96,15 @@ const ManagerManagementPage = () => {
       const data = (res.data as any).data;
       setManagers(data?.managers || []);
       setTotal(data?.pagination?.total || 0);
-      setStats(data?.stats || { total: 0, active: 0, locked: 0, unassigned: 0 });
+      setStats(
+        data?.stats || { total: 0, active: 0, locked: 0, unassigned: 0 },
+      );
     } catch (err: any) {
       setManagers([]);
       setTotal(0);
-      toast.error(err?.response?.data?.message || "Không thể tải danh sách quản lý");
+      toast.error(
+        err?.response?.data?.message || "Không thể tải danh sách quản lý",
+      );
     } finally {
       setLoading(false);
     }
@@ -143,10 +150,16 @@ const ManagerManagementPage = () => {
     setTogglingId(manager.id);
     try {
       await adminUserService.toggleUserActiveService(manager.id);
-      toast.success(manager.isActive ? "Đã khóa tài khoản quản lý" : "Đã mở khóa tài khoản quản lý");
+      toast.success(
+        manager.isActive
+          ? "Đã khóa tài khoản quản lý"
+          : "Đã mở khóa tài khoản quản lý",
+      );
       fetchManagers();
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Không thể cập nhật trạng thái quản lý");
+      toast.error(
+        err?.response?.data?.message || "Không thể cập nhật trạng thái quản lý",
+      );
     } finally {
       setTogglingId(null);
     }
@@ -190,16 +203,38 @@ const ManagerManagementPage = () => {
       />
 
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-        <StatCard label="Tổng quản lý" value={stats.total} icon={Users} color="bg-sky-50 border-sky-200 text-sky-700" />
-        <StatCard label="Đang hoạt động" value={stats.active} icon={CheckCircle} color="bg-emerald-50 border-emerald-200 text-emerald-700" />
-        <StatCard label="Bị khóa" value={stats.locked} icon={Lock} color="bg-red-50 border-red-200 text-red-700" />
-        <StatCard label="Chưa có chi nhánh" value={stats.unassigned} icon={Building2} color="bg-amber-50 border-amber-200 text-amber-700" />
+        <StatCard
+          label="Tổng quản lý"
+          value={stats.total}
+          icon={Users}
+          color="bg-sky-50 border-sky-200 text-sky-700"
+        />
+        <StatCard
+          label="Đang hoạt động"
+          value={stats.active}
+          icon={CheckCircle}
+          color="bg-emerald-50 border-emerald-200 text-emerald-700"
+        />
+        <StatCard
+          label="Bị khóa"
+          value={stats.locked}
+          icon={Lock}
+          color="bg-red-50 border-red-200 text-red-700"
+        />
+        <StatCard
+          label="Chưa có chi nhánh"
+          value={stats.unassigned}
+          icon={Building2}
+          color="bg-amber-50 border-amber-200 text-amber-700"
+        />
       </div>
 
       <section>
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-[220px] flex-1">
-            <label className="mb-1 block text-xs font-medium text-slate-600">Tìm kiếm</label>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Tìm kiếm
+            </label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
@@ -212,13 +247,15 @@ const ManagerManagementPage = () => {
                   }
                 }}
                 placeholder="Tên, email, tên đăng nhập..."
-                className="h-11 w-full rounded-xl border border-slate-200 pl-9 pr-3 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="h-10 w-full rounded-lg border border-slate-200 pl-8 pr-2.5 text-[13px] outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               />
             </div>
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Trạng thái</label>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Trạng thái
+            </label>
             <div className="relative">
               <select
                 value={statusFilter}
@@ -226,7 +263,7 @@ const ManagerManagementPage = () => {
                   setStatusFilter(e.target.value);
                   setPage(1);
                 }}
-                className="h-11 appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-8 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="h-10 appearance-none rounded-lg border border-slate-200 bg-white px-2.5 pr-7 text-[13px] outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               >
                 <option value="">Tất cả</option>
                 <option value="active">Hoạt động</option>
@@ -237,16 +274,20 @@ const ManagerManagementPage = () => {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Chi nhánh</label>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Chi nhánh
+            </label>
             <div className="relative">
               <Building2 className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
               <select
                 value={branchFilter}
                 onChange={(e) => {
-                  setBranchFilter(e.target.value === "" ? "" : Number(e.target.value));
+                  setBranchFilter(
+                    e.target.value === "" ? "" : Number(e.target.value),
+                  );
                   setPage(1);
                 }}
-                className="h-11 max-w-[220px] appearance-none rounded-xl border border-slate-200 bg-white pl-8 pr-8 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="h-10 max-w-[220px] appearance-none rounded-lg border border-slate-200 bg-white pl-8 pr-7 text-[13px] outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               >
                 <option value="">Tất cả chi nhánh</option>
                 <option value={-1}>Chưa có chi nhánh</option>
@@ -275,8 +316,18 @@ const ManagerManagementPage = () => {
             <table className="w-full min-w-[1024px] text-sm">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                  {["#", "Quản lý", "Liên hệ", "Chi nhánh quản lý", "Trạng thái", "Thao tác"].map((header) => (
-                    <th key={header} className="px-4 py-3 text-center font-semibold">
+                  {[
+                    "#",
+                    "Quản lý",
+                    "Liên hệ",
+                    "Chi nhánh quản lý",
+                    "Trạng thái",
+                    "Thao tác",
+                  ].map((header) => (
+                    <th
+                      key={header}
+                      className="px-4 py-3 text-center font-semibold"
+                    >
                       {header}
                     </th>
                   ))}
@@ -284,7 +335,10 @@ const ManagerManagementPage = () => {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {managers.map((manager, index) => (
-                  <tr key={manager.id} className="transition hover:bg-sky-50/40">
+                  <tr
+                    key={manager.id}
+                    className="transition hover:bg-sky-50/40"
+                  >
                     <td className="px-4 py-4 text-center text-xs font-medium text-slate-400">
                       {(page - 1) * LIMIT + index + 1}
                     </td>
@@ -296,13 +350,17 @@ const ManagerManagementPage = () => {
                             name={manager.fullName || manager.username}
                             className="h-10 w-10 rounded-xl border border-slate-200"
                           />
-                          <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${manager.isActive ? "bg-emerald-500" : "bg-slate-400"}`} />
+                          <span
+                            className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${manager.isActive ? "bg-emerald-500" : "bg-slate-400"}`}
+                          />
                         </div>
                         <div>
                           <p className="font-semibold leading-tight text-slate-800">
                             {manager.fullName || manager.username}
                           </p>
-                          <p className="text-xs text-slate-400">@{manager.username}</p>
+                          <p className="text-xs text-slate-400">
+                            @{manager.username}
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -310,7 +368,9 @@ const ManagerManagementPage = () => {
                       <div className="inline-flex flex-col items-start gap-0.5">
                         <div className="flex items-center gap-1.5 text-xs text-slate-600">
                           <Mail className="h-3 w-3 shrink-0 text-slate-400" />
-                          <span className="max-w-[180px] truncate">{manager.email}</span>
+                          <span className="max-w-[180px] truncate">
+                            {manager.email}
+                          </span>
                         </div>
                         {manager.phoneNumber ? (
                           <div className="flex items-center gap-1.5 text-xs text-slate-500">
@@ -322,7 +382,9 @@ const ManagerManagementPage = () => {
                     </td>
                     <td className="px-4 py-4 text-center">
                       {manager.managedBranches.length === 0 ? (
-                        <span className="text-xs italic text-slate-400">Chưa gán</span>
+                        <span className="text-xs italic text-slate-400">
+                          Chưa gán
+                        </span>
                       ) : (
                         <div className="flex flex-wrap justify-center gap-1">
                           {manager.managedBranches.slice(0, 2).map((branch) => (
@@ -330,11 +392,14 @@ const ManagerManagementPage = () => {
                               key={branch.branchId}
                               className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700"
                             >
-                              <Building2 className="h-2.5 w-2.5" /> {branch.branchName}
+                              <Building2 className="h-2.5 w-2.5" />{" "}
+                              {branch.branchName}
                             </span>
                           ))}
                           {manager.managedBranches.length > 2 ? (
-                            <span className="text-xs text-slate-400">+{manager.managedBranches.length - 2}</span>
+                            <span className="text-xs text-slate-400">
+                              +{manager.managedBranches.length - 2}
+                            </span>
                           ) : null}
                         </div>
                       )}
@@ -342,11 +407,13 @@ const ManagerManagementPage = () => {
                     <td className="px-4 py-4 text-center">
                       {manager.isActive ? (
                         <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Hoạt động
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{" "}
+                          Hoạt động
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600">
-                          <span className="h-1.5 w-1.5 rounded-full bg-red-500" /> Bị khóa
+                          <span className="h-1.5 w-1.5 rounded-full bg-red-500" />{" "}
+                          Bị khóa
                         </span>
                       )}
                     </td>
@@ -372,7 +439,9 @@ const ManagerManagementPage = () => {
                           type="button"
                           onClick={() => handleToggleActive(manager)}
                           disabled={togglingId === manager.id}
-                          title={manager.isActive ? "Khóa tài khoản" : "Mở khóa"}
+                          title={
+                            manager.isActive ? "Khóa tài khoản" : "Mở khóa"
+                          }
                           className={`flex h-8 w-8 items-center justify-center rounded-lg border transition disabled:opacity-60 ${
                             manager.isActive
                               ? "border-red-200 bg-red-50 text-red-500 hover:bg-red-100"
@@ -404,11 +473,21 @@ const ManagerManagementPage = () => {
           </div>
         )}
 
-        <AdminPagination page={page} totalPages={totalPages} total={total} onPage={setPage} unit="quản lý" />
+        <AdminPagination
+          page={page}
+          totalPages={totalPages}
+          total={total}
+          onPage={setPage}
+          unit="quản lý"
+        />
       </section>
 
       {showCreate ? (
-        <CreateManagerModal branches={branches} onClose={() => setShowCreate(false)} onSuccess={fetchManagers} />
+        <CreateManagerModal
+          branches={branches}
+          onClose={() => setShowCreate(false)}
+          onSuccess={fetchManagers}
+        />
       ) : null}
       {branchManageTarget ? (
         <BranchManageModal

@@ -52,6 +52,7 @@ import Post from "./post.js";
 import PostLike from "./postLike.js";
 import PostShare from "./postShare.js";
 import Comment from "./comment.js";
+import CommentReport from "./commentReport.js";
 
 import Conversation from "./conversation.js";
 import ConversationParticipant from "./conversationParticipant.js";
@@ -675,6 +676,18 @@ Comment.belongsTo(User, { foreignKey: "authorId", as: "author" });
 Comment.hasMany(Comment, { foreignKey: "parentId", as: "replies" });
 Comment.belongsTo(Comment, { foreignKey: "parentId", as: "parent" });
 
+Comment.hasMany(CommentReport, { foreignKey: "commentId", as: "reports" });
+CommentReport.belongsTo(Comment, { foreignKey: "commentId", as: "comment" });
+
+User.hasMany(CommentReport, { foreignKey: "reporterId", as: "commentReports" });
+CommentReport.belongsTo(User, { foreignKey: "reporterId", as: "reporter" });
+
+User.hasMany(CommentReport, {
+  foreignKey: "handledBy",
+  as: "handledCommentReports",
+});
+CommentReport.belongsTo(User, { foreignKey: "handledBy", as: "handler" });
+
 User.belongsToMany(Post, {
   through: PostLike,
   foreignKey: "userId",
@@ -989,6 +1002,7 @@ export {
   PostLike,
   PostShare,
   Comment,
+  CommentReport,
   Conversation,
   ConversationParticipant,
   Message,

@@ -225,7 +225,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none"
         >
           <option value="none">Không sắp xếp</option>
           <option value="price_asc">Giá tăng dần</option>

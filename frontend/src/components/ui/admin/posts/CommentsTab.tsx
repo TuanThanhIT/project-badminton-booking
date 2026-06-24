@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   ChevronDown,
+  Eye,
+  EyeOff,
   FileText,
   MessageCircle,
   Search,
+  ShieldAlert,
   Trash2,
 } from "lucide-react";
 import { toast } from "react-toastify";
@@ -30,8 +33,19 @@ const POST_TYPE_COLOR: Record<string, string> = {
 };
 
 const LIMIT = 10;
+const REPORT_FILTER_LABEL: Record<string, string> = {
+  REPORTED: "Có báo cáo",
+  UNREPORTED: "Chưa có báo cáo",
+  PENDING_REPORT: "Chờ xử lý báo cáo",
+  AUTO_HIDDEN: "Tự động ẩn",
+  HIDDEN: "Đang bị ẩn",
+};
+
 const stripHtml = (html = "") =>
-  html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
 const CommentsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
   const [comments, setComments] = useState<AdminComment[]>([]);
@@ -42,7 +56,9 @@ const CommentsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
   const [appliedSearch, setAppliedSearch] = useState("");
   const [commentTypeFilter, setCommentTypeFilter] = useState("");
   const [postTypeFilter, setPostTypeFilter] = useState("");
+  const [reportFilter, setReportFilter] = useState("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [visibilityId, setVisibilityId] = useState<number | null>(null);
 
   const fetchComments = useCallback(async () => {
     setLoading(true);
@@ -53,6 +69,7 @@ const CommentsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
         search: appliedSearch || undefined,
         commentType: commentTypeFilter || undefined,
         postType: postTypeFilter || undefined,
+        reportFilter: reportFilter || undefined,
       });
       const data = (res.data as any).data;
       setComments(data.comments || []);
@@ -66,7 +83,7 @@ const CommentsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
     } finally {
       setLoading(false);
     }
-  }, [page, appliedSearch, commentTypeFilter, postTypeFilter]);
+  }, [page, appliedSearch, commentTypeFilter, postTypeFilter, reportFilter]);
 
   useEffect(() => {
     fetchComments();
@@ -104,12 +121,47 @@ const CommentsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
     }
   };
 
+  const handleToggleVisibility = async (comment: AdminComment) => {
+    const isHidden = comment.isActive === false;
+    const actionLabel = isHidden ? "hiện" : "ẩn";
+    const confirmed = await showConfirmDialog(
+      isHidden ? "Hiện bình luận?" : "Ẩn bình luận?",
+      isHidden
+        ? "Bình luận này sẽ hiển thị trở lại cho người dùng."
+        : "Bình luận này sẽ bị ẩn khỏi người dùng.",
+      isHidden ? "Hiện" : "Ẩn",
+      "Hủy",
+      isHidden ? "success" : "warning",
+    );
+    if (!confirmed) return;
+
+    setVisibilityId(comment.id);
+    try {
+      if (isHidden) {
+        await adminPostService.unhideCommentService(comment.id, {
+          reason: "Quản trị viên đã hiện lại bình luận.",
+        });
+      } else {
+        await adminPostService.hideCommentService(comment.id, {
+          reason: "Quản trị viên đã ẩn bình luận.",
+        });
+      }
+      toast.success(`Đã ${actionLabel} bình luận`);
+      fetchComments();
+      onStatsChange?.();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Có lỗi xảy ra");
+    } finally {
+      setVisibilityId(null);
+    }
+  };
+
   const totalPages = Math.max(Math.ceil(total / LIMIT), 1);
 
   return (
     <div className="space-y-5">
       <section>
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px_220px]">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_190px_210px_210px]">
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-600">
               Tìm kiếm nội dung
@@ -126,7 +178,7 @@ const CommentsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                   }
                 }}
                 placeholder="Nội dung bình luận..."
-                className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2.5 text-[13px] outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               />
             </div>
           </div>
@@ -143,7 +195,7 @@ const CommentsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                   setCommentTypeFilter(event.target.value);
                   setPage(1);
                 }}
-                className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white pl-9 pr-8 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="h-10 w-full appearance-none rounded-lg border border-slate-200 bg-white pl-8 pr-7 text-[13px] text-slate-700 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               >
                 <option value="">Tất cả</option>
                 <option value="COMMENT">Bình luận</option>
@@ -165,10 +217,35 @@ const CommentsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                   setPostTypeFilter(event.target.value);
                   setPage(1);
                 }}
-                className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white pl-9 pr-8 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="h-10 w-full appearance-none rounded-lg border border-slate-200 bg-white pl-8 pr-7 text-[13px] text-slate-700 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               >
                 <option value="">Tất cả</option>
                 {Object.entries(POST_TYPE_LABEL).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Theo dõi báo cáo
+            </label>
+            <div className="relative">
+              <ShieldAlert className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <select
+                value={reportFilter}
+                onChange={(event) => {
+                  setReportFilter(event.target.value);
+                  setPage(1);
+                }}
+                className="h-10 w-full appearance-none rounded-lg border border-slate-200 bg-white pl-8 pr-7 text-[13px] text-slate-700 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
+              >
+                <option value="">Tất cả</option>
+                {Object.entries(REPORT_FILTER_LABEL).map(([value, label]) => (
                   <option key={value} value={value}>
                     {label}
                   </option>
@@ -191,7 +268,7 @@ const CommentsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[980px] text-sm">
+            <table className="w-full min-w-[1040px] text-sm">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                   {[
@@ -226,9 +303,7 @@ const CommentsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                         <UserAvatar
                           src={comment.authorAvatar}
                           name={
-                            comment.authorName ||
-                            comment.authorUsername ||
-                            "?"
+                            comment.authorName || comment.authorUsername || "?"
                           }
                           className="h-7 w-7 rounded-lg border border-slate-200"
                         />
@@ -246,6 +321,20 @@ const CommentsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                       <p className="line-clamp-2 text-xs text-slate-700">
                         {stripHtml(comment.content)}
                       </p>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {Number(comment.reportCount || 0) > 0 ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-600">
+                            <ShieldAlert size={11} />
+                            {comment.reportCount} báo cáo
+                          </span>
+                        ) : null}
+                        {comment.isActive === false ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                            <EyeOff size={11} />
+                            Đang ẩn
+                          </span>
+                        ) : null}
+                      </div>
                     </td>
                     <td className="px-3 py-3 text-center">
                       <span
@@ -269,7 +358,8 @@ const CommentsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                             "bg-slate-50 text-slate-600 border-slate-200"
                           }`}
                         >
-                          {POST_TYPE_LABEL[comment.postType] || comment.postType}
+                          {POST_TYPE_LABEL[comment.postType] ||
+                            comment.postType}
                         </span>
                       ) : null}
                     </td>
@@ -277,20 +367,44 @@ const CommentsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                       {new Date(comment.createdAt).toLocaleDateString("vi-VN")}
                     </td>
                     <td className="px-3 py-3 text-center">
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(comment.id)}
-                        disabled={deletingId === comment.id}
-                        className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-500 transition hover:bg-red-100 disabled:opacity-60"
-                      >
-                        {deletingId === comment.id ? (
-                          <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                        ) : (
-                          <>
-                            <Trash2 size={11} /> Xóa
-                          </>
-                        )}
-                      </button>
+                      <div className="inline-flex flex-wrap items-center justify-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleVisibility(comment)}
+                          disabled={visibilityId === comment.id}
+                          className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition disabled:opacity-60 ${
+                            comment.isActive === false
+                              ? "border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                              : "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                          }`}
+                        >
+                          {visibilityId === comment.id ? (
+                            <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                          ) : comment.isActive === false ? (
+                            <>
+                              <Eye size={11} /> Hiện
+                            </>
+                          ) : (
+                            <>
+                              <EyeOff size={11} /> Ẩn
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(comment.id)}
+                          disabled={deletingId === comment.id}
+                          className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-500 transition hover:bg-red-100 disabled:opacity-60"
+                        >
+                          {deletingId === comment.id ? (
+                            <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                          ) : (
+                            <>
+                              <Trash2 size={11} /> Xóa
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

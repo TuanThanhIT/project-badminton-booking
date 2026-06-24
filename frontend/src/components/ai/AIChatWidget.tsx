@@ -190,9 +190,7 @@ const AIChatWidget = () => {
             setMessagesByContext((prev) => ({
               ...prev,
               [activeContext]: (prev[activeContext] || []).map((m) =>
-                m.id === assistantId
-                  ? { ...m, content: m.content + chunk }
-                  : m,
+                m.id === assistantId ? { ...m, content: m.content + chunk } : m,
               ),
             }));
           },
@@ -260,7 +258,7 @@ const AIChatWidget = () => {
         <button
           type="button"
           onClick={toggleChat}
-          className="fixed bottom-24 right-6 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-emerald-500 text-white shadow-lg transition hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-sky-400"
+          className="fixed bottom-24 right-6 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-emerald-500 text-white shadow-lg transition hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-1 focus:ring-sky-400"
           aria-label="Mở trợ lý AI"
         >
           <Bot className="h-7 w-7" />
@@ -286,7 +284,9 @@ const AIChatWidget = () => {
         open={isOpen}
         onClose={closeChat}
         closeIcon={<X className="h-5 w-5" />}
-        styles={{ body: { padding: 0, display: "flex", flexDirection: "column" } }}
+        styles={{
+          body: { padding: 0, display: "flex", flexDirection: "column" },
+        }}
       >
         <div className="flex flex-col h-full min-h-[70vh]">
           <div className="px-4 pt-2 pb-3 border-b border-gray-100 space-y-2">
@@ -390,8 +390,15 @@ const AIChatWidget = () => {
                     <span className="inline-block w-1.5 h-4 ml-0.5 bg-gray-400 animate-pulse align-middle" />
                   )}
 
-                  <div className={`text-[10px] mt-2 ${msg.isUser ? "text-white/70 text-right" : "text-gray-400 text-left"}`}>
-                    {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) : ""}
+                  <div
+                    className={`text-[10px] mt-2 ${msg.isUser ? "text-white/70 text-right" : "text-gray-400 text-left"}`}
+                  >
+                    {msg.createdAt
+                      ? new Date(msg.createdAt).toLocaleTimeString("vi-VN", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : ""}
                   </div>
                 </div>
 

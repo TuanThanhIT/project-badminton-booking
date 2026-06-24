@@ -182,7 +182,7 @@ const updateAdminProductService = async (productId, data) => {
 
 const getAdminProductImagesService = async (productId) => {
   const product = await Product.findByPk(productId);
-  if (!product) throw new NotFoundError("Khong tim thay san pham");
+  if (!product) throw new NotFoundError("Không tìm thấy sản phẩm");
 
   const images = await ProductImage.findAll({
     where: { productId },
@@ -195,7 +195,7 @@ const getAdminProductImagesService = async (productId) => {
 
 const createAdminProductImagesService = async (productId, data) => {
   const product = await Product.findByPk(productId);
-  if (!product) throw new NotFoundError("Khong tim thay san pham");
+  if (!product) throw new NotFoundError("Không tìm thấy sản phẩm");
 
   const urls = (data.thumbnailUrls || data.imageUrls || [])
     .map((url) => String(url || "").trim())
@@ -212,7 +212,7 @@ const createAdminProductImagesService = async (productId, data) => {
 
 const updateAdminProductImageService = async (imageId, data) => {
   const image = await ProductImage.findByPk(imageId);
-  if (!image) throw new NotFoundError("Khong tim thay hinh anh san pham");
+  if (!image) throw new NotFoundError("Không tìm thấy hình ảnh sản phẩm");
 
   await image.update({ imageUrl: data.imageUrl || data.thumbnailUrl });
   return image.toJSON();
@@ -220,7 +220,7 @@ const updateAdminProductImageService = async (imageId, data) => {
 
 const deleteAdminProductImageService = async (imageId) => {
   const image = await ProductImage.findByPk(imageId);
-  if (!image) throw new NotFoundError("Khong tim thay hinh anh san pham");
+  if (!image) throw new NotFoundError("Không tìm thấy hình ảnh sản phẩm");
 
   await image.destroy();
   return { id: Number(imageId) };
@@ -228,7 +228,7 @@ const deleteAdminProductImageService = async (imageId) => {
 
 const getAdminProductVariantsService = async (productId) => {
   const product = await Product.findByPk(productId);
-  if (!product) throw new NotFoundError("Khong tim thay san pham");
+  if (!product) throw new NotFoundError("Không tìm thấy sản phẩm");
 
   const variants = await ProductVariant.findAll({
     where: { productId },
@@ -270,7 +270,7 @@ const saveVariantStocks = async ({ variantId, stocks, transaction }) => {
 
 const createAdminProductVariantService = async (productId, data) => {
   const product = await Product.findByPk(productId);
-  if (!product) throw new NotFoundError("Khong tim thay san pham");
+  if (!product) throw new NotFoundError("Không tìm thấy sản phẩm");
 
   const transaction = await sequelize.transaction();
   try {
@@ -306,7 +306,7 @@ const createAdminProductVariantService = async (productId, data) => {
 
 const updateAdminProductVariantService = async (variantId, data) => {
   const variant = await ProductVariant.findByPk(variantId);
-  if (!variant) throw new NotFoundError("Khong tim thay bien the san pham");
+  if (!variant) throw new NotFoundError("Không tìm thấy biến thể sản phẩm");
 
   const transaction = await sequelize.transaction();
   try {
@@ -337,7 +337,7 @@ const updateAdminProductVariantService = async (variantId, data) => {
 
 const deleteAdminProductVariantService = async (variantId) => {
   const variant = await ProductVariant.findByPk(variantId);
-  if (!variant) throw new NotFoundError("Khong tim thay bien the san pham");
+  if (!variant) throw new NotFoundError("Không tìm thấy biến thể sản phẩm");
 
   const transaction = await sequelize.transaction();
   try {

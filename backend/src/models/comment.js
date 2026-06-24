@@ -75,12 +75,41 @@ const Comment = sequelize.define(
         },
       },
     },
+    isActive: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
     isDeleted: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
     },
     deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    reportCount: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      validate: {
+        min: {
+          args: [0],
+          msg: "Report count cannot be negative",
+        },
+      },
+    },
+    autoHiddenByReports: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    hiddenReason: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    hiddenAt: {
       type: DataTypes.DATE,
       allowNull: true,
     },

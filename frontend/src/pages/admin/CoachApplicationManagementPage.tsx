@@ -1,5 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
-import { Check, CheckCircle, ChevronDown, Clock3, FileText, GraduationCap, Loader2, Search, X, XCircle } from "lucide-react";
+import {
+  Check,
+  CheckCircle,
+  ChevronDown,
+  Clock3,
+  FileText,
+  GraduationCap,
+  Loader2,
+  RefreshCw,
+  Search,
+  X,
+  XCircle,
+} from "lucide-react";
 import { toast } from "react-toastify";
 import AdminPageHeader from "../../components/ui/admin/AdminPageHeader";
 import AdminPagination from "../../components/ui/admin/AdminPagination";
@@ -7,19 +19,26 @@ import AdminSpinner from "../../components/ui/admin/AdminSpinner";
 import AdminStatusBadge from "../../components/ui/admin/AdminStatusBadge";
 import UserAvatar from "../../components/ui/admin/UserAvatar";
 import adminCoachApplicationService from "../../services/admin/coachApplicationService";
-import type { CoachApplication, CoachApplicationStatus } from "../../types/coachApplication";
+import type {
+  CoachApplication,
+  CoachApplicationStatus,
+} from "../../types/coachApplication";
 import { showConfirmDialog } from "../../utils/confirmDialog";
 
 const LIMIT = 10;
 
-const STATUS_OPTIONS: { value: "" | CoachApplicationStatus; label: string }[] = [
-  { value: "", label: "Tất cả" },
-  { value: "PENDING", label: "Chờ duyệt" },
-  { value: "APPROVED", label: "Đã duyệt" },
-  { value: "REJECTED", label: "Từ chối" },
-];
+const STATUS_OPTIONS: { value: "" | CoachApplicationStatus; label: string }[] =
+  [
+    { value: "", label: "Tất cả" },
+    { value: "PENDING", label: "Chờ duyệt" },
+    { value: "APPROVED", label: "Đã duyệt" },
+    { value: "REJECTED", label: "Từ chối" },
+  ];
 
-const STATUS_BADGE: Record<CoachApplicationStatus, { label: string; color: string }> = {
+const STATUS_BADGE: Record<
+  CoachApplicationStatus,
+  { label: string; color: string }
+> = {
   PENDING: {
     label: "Chờ duyệt",
     color: "bg-amber-50 text-amber-800 border-amber-200",
@@ -93,7 +112,10 @@ const CoachApplicationManagementPage = () => {
       } catch (err: any) {
         setApplications([]);
         setTotal(0);
-        toast.error(err?.response?.data?.message || "Không thể tải danh sách yêu cầu dạy cầu lông");
+        toast.error(
+          err?.response?.data?.message ||
+            "Không thể tải danh sách yêu cầu dạy cầu lông",
+        );
       } finally {
         setLoading(false);
       }
@@ -104,6 +126,10 @@ const CoachApplicationManagementPage = () => {
   useEffect(() => {
     fetchApplications();
   }, [fetchApplications]);
+
+  const handleRefresh = () => {
+    fetchApplications();
+  };
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -166,27 +192,64 @@ const CoachApplicationManagementPage = () => {
   };
 
   const totalPages = Math.max(Math.ceil(total / LIMIT), 1);
-  const approvedInPage = applications.filter((app) => app.status === "APPROVED").length;
-  const rejectedInPage = applications.filter((app) => app.status === "REJECTED").length;
+  const approvedInPage = applications.filter(
+    (app) => app.status === "APPROVED",
+  ).length;
+  const rejectedInPage = applications.filter(
+    (app) => app.status === "REJECTED",
+  ).length;
 
   return (
     <div className="space-y-6">
       <AdminPageHeader
         title="Yêu cầu dạy cầu lông"
         subtitle="Xem xét hồ sơ đăng ký huấn luyện, duyệt hoặc từ chối yêu cầu nâng quyền dạy cầu lông."
+        action={
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={loading}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 text-sm font-bold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            Làm mới
+          </button>
+        }
       />
 
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-        <StatCard label="Tổng theo bộ lọc" value={total} icon={FileText} color="bg-sky-50 border-sky-200 text-sky-700" />
-        <StatCard label="Chờ duyệt" value={pendingCount} icon={Clock3} color="bg-amber-50 border-amber-200 text-amber-700" />
-        <StatCard label="Đã duyệt đang hiển thị" value={approvedInPage} icon={CheckCircle} color="bg-emerald-50 border-emerald-200 text-emerald-700" />
-        <StatCard label="Đã từ chối đang hiển thị" value={rejectedInPage} icon={XCircle} color="bg-red-50 border-red-200 text-red-700" />
+        <StatCard
+          label="Tổng theo bộ lọc"
+          value={total}
+          icon={FileText}
+          color="bg-sky-50 border-sky-200 text-sky-700"
+        />
+        <StatCard
+          label="Chờ duyệt"
+          value={pendingCount}
+          icon={Clock3}
+          color="bg-amber-50 border-amber-200 text-amber-700"
+        />
+        <StatCard
+          label="Đã duyệt đang hiển thị"
+          value={approvedInPage}
+          icon={CheckCircle}
+          color="bg-emerald-50 border-emerald-200 text-emerald-700"
+        />
+        <StatCard
+          label="Đã từ chối đang hiển thị"
+          value={rejectedInPage}
+          icon={XCircle}
+          color="bg-red-50 border-red-200 text-red-700"
+        />
       </div>
 
       <section>
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-[220px] flex-1">
-            <label className="mb-1 block text-xs font-medium text-slate-600">Tìm kiếm</label>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Tìm kiếm
+            </label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
@@ -199,12 +262,14 @@ const CoachApplicationManagementPage = () => {
                   }
                 }}
                 placeholder="Tên đăng nhập, email..."
-                className="h-11 w-full rounded-xl border border-slate-200 pl-9 pr-3 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="h-10 w-full rounded-lg border border-slate-200 pl-8 pr-2.5 text-[13px] outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               />
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Trạng thái</label>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Trạng thái
+            </label>
             <div className="relative">
               <select
                 value={status}
@@ -212,7 +277,7 @@ const CoachApplicationManagementPage = () => {
                   setStatus(e.target.value);
                   setPage(1);
                 }}
-                className="h-11 appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-8 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="h-10 appearance-none rounded-lg border border-slate-200 bg-white px-2.5 pr-7 text-[13px] outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               >
                 {STATUS_OPTIONS.map((option) => (
                   <option key={option.value || "all"} value={option.value}>
@@ -230,14 +295,26 @@ const CoachApplicationManagementPage = () => {
         {loading ? (
           <AdminSpinner />
         ) : applications.length === 0 ? (
-          <div className="py-14 text-center text-sm text-slate-400">Không có yêu cầu nào</div>
+          <div className="py-14 text-center text-sm text-slate-400">
+            Không có yêu cầu nào
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[960px] text-sm">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                  {["#", "Người gửi", "Kinh nghiệm", "Trạng thái", "Ngày gửi", "Thao tác"].map((header) => (
-                    <th key={header} className="px-4 py-3 text-center font-semibold">
+                  {[
+                    "#",
+                    "Người gửi",
+                    "Kinh nghiệm",
+                    "Trạng thái",
+                    "Ngày gửi",
+                    "Thao tác",
+                  ].map((header) => (
+                    <th
+                      key={header}
+                      className="px-4 py-3 text-center font-semibold"
+                    >
                       {header}
                     </th>
                   ))}
@@ -246,7 +323,9 @@ const CoachApplicationManagementPage = () => {
               <tbody className="divide-y divide-slate-100">
                 {applications.map((app, index) => (
                   <tr key={app.id} className="transition hover:bg-sky-50/40">
-                    <td className="px-4 py-3 text-center text-slate-400">{(page - 1) * LIMIT + index + 1}</td>
+                    <td className="px-4 py-3 text-center text-slate-400">
+                      {(page - 1) * LIMIT + index + 1}
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <UserAvatar
@@ -258,7 +337,9 @@ const CoachApplicationManagementPage = () => {
                           <p className="truncate font-semibold text-slate-800">
                             {app.user?.fullName || app.user?.username}
                           </p>
-                          <p className="truncate text-xs text-slate-400">{app.user?.email}</p>
+                          <p className="truncate text-xs text-slate-400">
+                            {app.user?.email}
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -320,7 +401,12 @@ const CoachApplicationManagementPage = () => {
             </table>
           </div>
         )}
-        <AdminPagination page={page} totalPages={totalPages} total={total} onPage={setPage} />
+        <AdminPagination
+          page={page}
+          totalPages={totalPages}
+          total={total}
+          onPage={setPage}
+        />
       </section>
 
       {detailApp ? (
@@ -349,14 +435,17 @@ const CoachApplicationManagementPage = () => {
 
             <div className="mt-4 space-y-3 text-sm text-slate-700">
               <p>
-                <span className="font-medium">Kinh nghiệm:</span> {detailApp.experienceYears} năm
+                <span className="font-medium">Kinh nghiệm:</span>{" "}
+                {detailApp.experienceYears} năm
               </p>
               <p>
-                <span className="font-medium">Chứng chỉ:</span> {detailApp.certificate}
+                <span className="font-medium">Chứng chỉ:</span>{" "}
+                {detailApp.certificate}
               </p>
               {detailApp.phoneContact ? (
                 <p>
-                  <span className="font-medium">Liên hệ:</span> {detailApp.phoneContact}
+                  <span className="font-medium">Liên hệ:</span>{" "}
+                  {detailApp.phoneContact}
                 </p>
               ) : null}
               <div>
@@ -377,7 +466,11 @@ const CoachApplicationManagementPage = () => {
                         rel="noreferrer"
                         className="block h-20 w-20 overflow-hidden rounded-lg border border-slate-200"
                       >
-                        <img src={url} alt="" className="h-full w-full object-cover" />
+                        <img
+                          src={url}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
                       </a>
                     ))}
                   </div>
@@ -385,7 +478,8 @@ const CoachApplicationManagementPage = () => {
               ) : null}
               {detailApp.rejectReason ? (
                 <p className="text-red-600">
-                  <span className="font-medium">Lý do từ chối:</span> {detailApp.rejectReason}
+                  <span className="font-medium">Lý do từ chối:</span>{" "}
+                  {detailApp.rejectReason}
                 </p>
               ) : null}
             </div>
@@ -419,7 +513,9 @@ const CoachApplicationManagementPage = () => {
       {rejectModal ? (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 p-4">
           <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
-            <h3 className="font-bold text-slate-900">Từ chối yêu cầu dạy cầu lông</h3>
+            <h3 className="font-bold text-slate-900">
+              Từ chối yêu cầu dạy cầu lông
+            </h3>
             <p className="mt-1 text-sm text-slate-500">
               {rejectModal.user?.fullName || rejectModal.user?.username}
             </p>
@@ -428,7 +524,7 @@ const CoachApplicationManagementPage = () => {
               onChange={(e) => setRejectReason(e.target.value)}
               rows={4}
               placeholder="Nhập lý do từ chối..."
-              className="mt-4 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              className="mt-4 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
             />
             <div className="mt-4 flex gap-2">
               <button

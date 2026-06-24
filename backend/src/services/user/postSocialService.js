@@ -1,6 +1,8 @@
 import sequelize from "../../config/db.js";
+import { Op } from "sequelize";
 import {
   Comment,
+  CommentReport,
   Post,
   PostLike,
   PostShare,
@@ -9,11 +11,17 @@ import {
 } from "../../models/index.js";
 import NotFoundError from "../../errors/NotFoundError.js";
 import BadRequestError from "../../errors/BadRequestError.js";
+import ForbiddenError from "../../errors/ForbiddenError.js";
+import { COMMENT_TYPE, POST_REACTION } from "../../constants/postConstant.js";
 import {
-  COMMENT_TYPE,
-  POST_REACTION,
-} from "../../constants/postConstant.js";
-import { sendUserNotification } from "../../helpers/notification.js";
+  COMMENT_REPORT_AUTO_HIDE_THRESHOLD,
+  COMMENT_REPORT_REASON_LABEL,
+  COMMENT_REPORT_STATUS,
+} from "../../constants/commentReportConstant.js";
+import {
+  sendAdminNotification,
+  sendUserNotification,
+} from "../../helpers/notification.js";
 
 const rootPostIdOf = (post, fallbackId) => {
   const repostOfPostId = Number(post?.repostOfPostId || 0);
@@ -132,31 +140,34 @@ const buildPostCounts = async (postId, currentUserId, transaction) => {
     sharedByMe,
     reactionSummary,
   ] = await Promise.all([
-      PostLike.count({ where: { postId }, transaction }),
-      Comment.count({ where: { postId, isDeleted: false }, transaction }),
-      Post.count({
-        where: { repostOfPostId: rootPostId, isDeleted: false },
-        transaction,
-      }),
-      PostShare.count({ where: { postId: rootPostId }, transaction }),
-      currentUserId
-        ? Promise.all([
-            PostShare.count({
-              where: { postId: rootPostId, userId: currentUserId },
-              transaction,
-            }),
-            Post.count({
-              where: {
-                repostOfPostId: rootPostId,
-                authorId: currentUserId,
-                isDeleted: false,
-              },
-              transaction,
-            }),
-          ]).then(([shareRows, repostRows]) => shareRows > 0 || repostRows > 0)
-        : Promise.resolve(false),
-      buildReactionSummary(postId, transaction),
-    ]);
+    PostLike.count({ where: { postId }, transaction }),
+    Comment.count({
+      where: { postId, isDeleted: false, isActive: true },
+      transaction,
+    }),
+    Post.count({
+      where: { repostOfPostId: rootPostId, isDeleted: false },
+      transaction,
+    }),
+    PostShare.count({ where: { postId: rootPostId }, transaction }),
+    currentUserId
+      ? Promise.all([
+          PostShare.count({
+            where: { postId: rootPostId, userId: currentUserId },
+            transaction,
+          }),
+          Post.count({
+            where: {
+              repostOfPostId: rootPostId,
+              authorId: currentUserId,
+              isDeleted: false,
+            },
+            transaction,
+          }),
+        ]).then(([shareRows, repostRows]) => shareRows > 0 || repostRows > 0)
+      : Promise.resolve(false),
+    buildReactionSummary(postId, transaction),
+  ]);
 
   const myReaction = currentUserId
     ? await PostLike.findOne({
@@ -234,7 +245,8 @@ const createCommentService = async (data) => {
 
   const text = (content ?? "").toString().trim();
   if (!text) throw new BadRequestError("Comment content is required.");
-  if (text.length > 2000) throw new BadRequestError("Comment content is too long.");
+  if (text.length > 2000)
+    throw new BadRequestError("Comment content is too long.");
 
   return sequelize.transaction(async (t) => {
     const post = await Post.findOne({
@@ -251,7 +263,7 @@ const createCommentService = async (data) => {
       }
 
       const parent = await Comment.findOne({
-        where: { id: parentIdNum, postId, isDeleted: false },
+        where: { id: parentIdNum, postId, isDeleted: false, isActive: true },
         attributes: ["id", "parentId"],
         transaction: t,
       });
@@ -277,7 +289,9 @@ const createCommentService = async (data) => {
       post,
       actorId: userId,
       type: "POST_COMMENT",
-      title: parentIdNum ? "Bài viết có phản hồi mới" : "Bài viết có bình luận mới",
+      title: parentIdNum
+        ? "Bài viết có phản hồi mới"
+        : "Bài viết có bình luận mới",
       message: `${actorName} đã ${parentIdNum ? "trả lời bình luận trong" : "bình luận về"} bài viết "${post.title}".`,
       transaction: t,
     });
@@ -294,7 +308,7 @@ const getCommentsService = async (data) => {
 
   return sequelize.transaction(async (t) => {
     const { count, rows: roots } = await Comment.findAndCountAll({
-      where: { postId, parentId: null, isDeleted: false },
+      where: { postId, parentId: null, isDeleted: false, isActive: true },
       order: [["createdAt", "DESC"]],
       limit,
       offset,
@@ -305,7 +319,12 @@ const getCommentsService = async (data) => {
     const rootIds = roots.map((comment) => comment.id);
     const replies = rootIds.length
       ? await Comment.findAll({
-          where: { postId, parentId: rootIds, isDeleted: false },
+          where: {
+            postId,
+            parentId: rootIds,
+            isDeleted: false,
+            isActive: true,
+          },
           order: [["createdAt", "ASC"]],
           transaction: t,
           include: [authorInclude],
@@ -322,13 +341,172 @@ const getCommentsService = async (data) => {
   });
 };
 
+const deleteCommentService = async (data) => {
+  const { commentId, userId } = data;
+  if (!userId) throw new BadRequestError("Missing user information.");
+
+  return sequelize.transaction(async (t) => {
+    const comment = await Comment.findOne({
+      where: { id: commentId, isDeleted: false },
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+      include: [
+        {
+          model: Post,
+          as: "post",
+          attributes: ["id", "isDeleted"],
+        },
+      ],
+    });
+
+    if (!comment || comment.post?.isDeleted) {
+      throw new NotFoundError("KhÃ´ng tÃ¬m tháº¥y bÃ¬nh luáº­n Ä‘á»ƒ gá»¡.");
+    }
+
+    if (Number(comment.authorId) !== Number(userId)) {
+      throw new ForbiddenError("Báº¡n khÃ´ng cÃ³ quyá»n gá»¡ bÃ¬nh luáº­n nÃ y.");
+    }
+
+    const deletedAt = new Date();
+    const deleteWhere = comment.parentId
+      ? { id: comment.id }
+      : { [Op.or]: [{ id: comment.id }, { parentId: comment.id }] };
+
+    await Comment.update(
+      { isDeleted: true, deletedAt },
+      { where: deleteWhere, transaction: t },
+    );
+
+    return buildPostCounts(comment.postId, userId, t);
+  });
+};
+
+const reportCommentService = async (data) => {
+  const { commentId, userId, reason } = data;
+  if (!userId) throw new BadRequestError("Missing user information.");
+
+  const normalizedDescription =
+    data.description === undefined || data.description === null
+      ? null
+      : data.description.toString().trim() || null;
+
+  return sequelize.transaction(async (t) => {
+    const comment = await Comment.findOne({
+      where: { id: commentId, isDeleted: false, isActive: true },
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+      include: [
+        {
+          model: Post,
+          as: "post",
+          attributes: ["id", "title", "isDeleted"],
+        },
+      ],
+    });
+
+    if (!comment || comment.post?.isDeleted) {
+      throw new NotFoundError("Không tìm thấy bình luận để báo cáo.");
+    }
+
+    if (Number(comment.authorId) === Number(userId)) {
+      throw new BadRequestError(
+        "Bạn không thể báo cáo bình luận của chính mình.",
+      );
+    }
+
+    const existingReport = await CommentReport.findOne({
+      where: { commentId, reporterId: userId },
+      transaction: t,
+    });
+    if (existingReport) {
+      throw new BadRequestError("Bạn đã báo cáo bình luận này trước đó.");
+    }
+
+    const report = await CommentReport.create(
+      {
+        commentId,
+        reporterId: userId,
+        reason,
+        description: normalizedDescription,
+        status: COMMENT_REPORT_STATUS.PENDING,
+      },
+      { transaction: t },
+    );
+
+    const reportCount = await CommentReport.count({
+      where: { commentId },
+      distinct: true,
+      col: "reporterId",
+      transaction: t,
+    });
+
+    const shouldAutoHide =
+      reportCount >= COMMENT_REPORT_AUTO_HIDE_THRESHOLD && comment.isActive;
+    const hiddenReason = shouldAutoHide
+      ? `Tự động ẩn do có ${reportCount} người báo cáo bình luận.`
+      : comment.hiddenReason;
+
+    await comment.update(
+      {
+        reportCount,
+        ...(shouldAutoHide
+          ? {
+              isActive: false,
+              autoHiddenByReports: true,
+              hiddenReason,
+              hiddenAt: new Date(),
+            }
+          : {}),
+      },
+      { transaction: t },
+    );
+
+    await sendAdminNotification(
+      "COMMENT_REPORTED",
+      shouldAutoHide ? "Bình luận đã tự động ẩn" : "Bình luận mới bị báo cáo",
+      `Bình luận #${comment.id} trong bài "${comment.post?.title || `#${comment.postId}`}" bị báo cáo: ${COMMENT_REPORT_REASON_LABEL[reason] || reason}.`,
+      { transaction: t },
+    );
+
+    if (shouldAutoHide) {
+      await CommentReport.update(
+        {
+          status: COMMENT_REPORT_STATUS.RESOLVED,
+          adminNote: hiddenReason,
+          handledAt: new Date(),
+        },
+        {
+          where: { commentId, status: COMMENT_REPORT_STATUS.PENDING },
+          transaction: t,
+        },
+      );
+
+      await sendUserNotification(
+        comment.authorId,
+        "COMMENT_AUTO_HIDDEN",
+        "Bình luận đã bị ẩn",
+        "Bình luận của bạn đã tạm thời bị ẩn do có nhiều báo cáo từ cộng đồng.",
+        { transaction: t },
+      );
+    }
+
+    return {
+      report,
+      reportCount,
+      autoHidden: shouldAutoHide,
+    };
+  });
+};
+
 const createRepostService = async (data) => {
   const { postId, content, User: authUser } = data;
   const currentUserId = authUser?.id;
   if (!currentUserId) throw new BadRequestError("Missing user information.");
 
   const repostText =
-    content === undefined || content === null ? null : content.toString().trim();
+    content === undefined || content === null
+      ? null
+      : content.toString().trim();
   if (repostText && repostText.length > 2000) {
     throw new BadRequestError("Share content is too long.");
   }
@@ -383,6 +561,8 @@ const postSocialService = {
   toggleLikeService,
   createCommentService,
   getCommentsService,
+  deleteCommentService,
+  reportCommentService,
   createRepostService,
 };
 

@@ -15,7 +15,11 @@ const LABEL_TEXT: Record<string, string> = {
   offensive: "Công kích / xúc phạm",
 };
 
-const ModerationTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
+const ModerationTab = ({
+  onStatsChange,
+}: {
+  onStatsChange?: () => void | Promise<void>;
+}) => {
   const [posts, setPosts] = useState<AdminModerationPost[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -46,9 +50,8 @@ const ModerationTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
     fetchPosts();
   }, [fetchPosts]);
 
-  const refresh = () => {
-    fetchPosts();
-    onStatsChange?.();
+  const refresh = async () => {
+    await Promise.all([fetchPosts(), onStatsChange?.()]);
   };
 
   return (

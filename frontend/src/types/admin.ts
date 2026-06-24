@@ -294,6 +294,12 @@ export interface AdminComment {
   type: string;
   postId: number;
   parentId?: number;
+  isActive?: boolean;
+  isDeleted?: boolean;
+  reportCount?: number;
+  autoHiddenByReports?: boolean;
+  hiddenReason?: string | null;
+  hiddenAt?: string | null;
   createdAt: string;
   authorId?: number;
   authorUsername?: string;
@@ -301,6 +307,58 @@ export interface AdminComment {
   authorAvatar?: string;
   postTitle?: string;
   postType?: string;
+}
+
+export type CommentReportReason =
+  | "SPAM"
+  | "OFFENSIVE"
+  | "UNAUTHORIZED_AD"
+  | "HARASSMENT"
+  | "OTHER";
+
+export type CommentReportStatus = "PENDING" | "RESOLVED" | "REJECTED";
+
+export interface AdminCommentReportItem extends AdminComment {
+  reportSummary?: {
+    byReason?: Partial<Record<CommentReportReason, number>>;
+    byStatus?: Partial<Record<CommentReportStatus, number>>;
+  };
+  latestReport?: {
+    id: number;
+    reason: CommentReportReason;
+    description?: string | null;
+    status: CommentReportStatus;
+    createdAt: string;
+    reporter?: {
+      id: number;
+      username?: string;
+      profile?: {
+        fullName?: string;
+        avatar?: string;
+      } | null;
+    };
+  };
+  reports?: Array<{
+    id: number;
+    reason: CommentReportReason;
+    description?: string | null;
+    status: CommentReportStatus;
+    adminNote?: string | null;
+    createdAt: string;
+    handledAt?: string | null;
+    reporter?: {
+      id: number;
+      username?: string;
+      profile?: {
+        fullName?: string;
+        avatar?: string;
+      } | null;
+    };
+    handler?: {
+      id: number;
+      username?: string;
+    } | null;
+  }>;
 }
 
 // ─── Revenue Management ───────────────────────────────────────────────────────

@@ -121,6 +121,19 @@ export const createComment = createAsyncThunk<
     }
 }); 
 
+export const deleteComment = createAsyncThunk<
+  { postId: number; commentId: number; counts: PostCounts },
+  { postId: number; commentId: number },
+  { rejectValue: ApiErrorType }
+>("post/deleteComment", async ({ postId, commentId }, { rejectWithValue }) => {
+  try {
+    const res = await postSocialService.deleteCommentService(commentId);
+    return { postId, commentId, counts: res.data.data };
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
 type CreateRepostResponse = ApiResponse<{ repostPost: Post } & PostCounts>;
 
 export const repostPost = createAsyncThunk<
@@ -205,6 +218,18 @@ const postSlice = createSlice({
         post.reactionSummary = counts.reactionSummary ?? post.reactionSummary;
         if (!post.comments) post.comments = [];
         post.comments.push(comment);
+      })
+      .addCase(deleteComment.fulfilled, (state, action) => {
+        const { postId, commentId, counts } = action.payload;
+        const post = state.posts.posts.find((p) => p.id === postId);
+        if (!post) return;
+        post.commentsCount = counts.commentsCount;
+        post.reactionSummary = counts.reactionSummary ?? post.reactionSummary;
+        if (post.comments) {
+          post.comments = post.comments.filter(
+            (comment) => comment.id !== commentId && comment.parentId !== commentId,
+          );
+        }
       })
       .addCase(repostPost.fulfilled, (state, action) => {
         const { postId } = action.meta.arg;

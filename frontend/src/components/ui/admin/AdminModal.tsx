@@ -11,10 +11,10 @@ type AdminModalProps = {
 };
 
 export const adminInputClass =
-  "h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100";
+  "h-10 rounded-lg border border-slate-200 bg-white px-2.5 text-[13px] text-slate-700 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100";
 
 export const adminTextAreaClass =
-  "rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100";
+  "rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] text-slate-700 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100";
 
 export const adminPrimaryButtonClass =
   "inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70";
@@ -57,7 +57,9 @@ const AdminModal = ({
   description,
 }: AdminModalProps) => (
   <AdminModalOverlay>
-    <div className={`flex w-full ${maxWidth} max-h-[calc(100dvh-3rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm`}>
+    <div
+      className={`flex w-full ${maxWidth} max-h-[calc(100dvh-3rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm`}
+    >
       <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
         <div className="flex items-center gap-2">
           {icon}

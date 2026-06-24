@@ -1152,7 +1152,7 @@ const EmployeeHomePage = () => {
                                               Number(event.target.value),
                                             )
                                           }
-                                          className="h-9 w-14 rounded-xl border border-slate-200 bg-slate-50 text-center text-sm font-semibold text-slate-700 outline-none transition focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100"
+                                          className="h-9 w-14 rounded-xl border border-slate-200 bg-slate-50 text-center text-sm font-semibold text-slate-700 outline-none transition focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-100"
                                         />
 
                                         <button

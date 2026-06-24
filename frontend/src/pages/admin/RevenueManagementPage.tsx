@@ -341,7 +341,14 @@ const RevenueManagementPage = () => {
       },
       {
         title: "Top do uong",
-        headers: ["Ten", "So luong", "So don", "Doanh thu", "Gia von", "Loi nhuan gop"],
+        headers: [
+          "Ten",
+          "So luong",
+          "So don",
+          "Doanh thu",
+          "Gia von",
+          "Loi nhuan gop",
+        ],
         rows: report.beverageRevenueItems.map((item) => [
           item.beverageName,
           item.totalQuantity || 0,
@@ -498,7 +505,7 @@ const RevenueManagementPage = () => {
                 setStartDate(event.target.value);
                 setActivePreset("Tùy chỉnh");
               }}
-              className="h-11 rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              className="h-10 rounded-lg border border-slate-200 px-2.5 text-[13px] outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
             />
             <span className="text-sm text-slate-400">đến</span>
             <input
@@ -508,7 +515,7 @@ const RevenueManagementPage = () => {
                 setEndDate(event.target.value);
                 setActivePreset("Tùy chỉnh");
               }}
-              className="h-11 rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              className="h-10 rounded-lg border border-slate-200 px-2.5 text-[13px] outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
             />
             <button
               type="button"
@@ -524,7 +531,7 @@ const RevenueManagementPage = () => {
           <select
             value={branchId}
             onChange={(event) => setBranchId(event.target.value)}
-            className="h-11 rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+            className="h-10 rounded-lg border border-slate-200 px-2.5 text-[13px] outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
           >
             <option value="">Tất cả chi nhánh</option>
             {branchOptions.map((branch) => (
@@ -538,7 +545,7 @@ const RevenueManagementPage = () => {
             onChange={(event) =>
               setRevenueType(event.target.value as RevenueType)
             }
-            className="h-11 rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+            className="h-10 rounded-lg border border-slate-200 px-2.5 text-[13px] outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
           >
             {revenueTypeOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -549,7 +556,7 @@ const RevenueManagementPage = () => {
           <select
             value={itemType}
             onChange={(event) => setItemType(event.target.value as ItemType)}
-            className="h-11 rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+            className="h-10 rounded-lg border border-slate-200 px-2.5 text-[13px] outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
           >
             {itemTypeOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -560,7 +567,7 @@ const RevenueManagementPage = () => {
           <select
             value={groupBy}
             onChange={(event) => setGroupBy(event.target.value as GroupBy)}
-            className="h-11 rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+            className="h-10 rounded-lg border border-slate-200 px-2.5 text-[13px] outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
           >
             <option value="day">Biểu đồ theo ngày</option>
             <option value="month">Biểu đồ theo tháng</option>
@@ -700,7 +707,7 @@ const RevenueManagementPage = () => {
                   value={branchSearch}
                   onChange={(event) => setBranchSearch(event.target.value)}
                   placeholder="Tìm chi nhánh..."
-                  className="h-11 w-full rounded-xl border border-slate-200 pl-9 pr-3 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                  className="h-10 w-full rounded-lg border border-slate-200 pl-8 pr-2.5 text-[13px] outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
                 />
               </div>
             </div>
@@ -777,10 +784,13 @@ const RevenueManagementPage = () => {
               <div className="mb-5 flex items-center gap-3">
                 <Package className="h-5 w-5 text-emerald-500" />
                 <div>
-                <h2 className="text-lg font-bold text-slate-900">
-                  Sản phẩm cầu lông
-                </h2>
-                  <p className="mt-1 text-sm text-slate-500">Theo dõi doanh thu, số lượng bán và lợi nhuận gộp theo từng biến thể</p>
+                  <h2 className="text-lg font-bold text-slate-900">
+                    Sản phẩm cầu lông
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Theo dõi doanh thu, số lượng bán và lợi nhuận gộp theo từng
+                    biến thể
+                  </p>
                 </div>
               </div>
               <div className="overflow-x-auto rounded-lg border border-slate-100">
@@ -865,7 +875,10 @@ const RevenueManagementPage = () => {
                 <Coffee className="h-5 w-5 text-amber-500" />
                 <div>
                   <h2 className="text-lg font-bold text-slate-900">Đồ uống</h2>
-                  <p className="mt-1 text-sm text-slate-500">Tổng hợp mặt hàng đồ uống bán chạy, doanh thu và biên lợi nhuận</p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Tổng hợp mặt hàng đồ uống bán chạy, doanh thu và biên lợi
+                    nhuận
+                  </p>
                 </div>
               </div>
               <div className="overflow-x-auto rounded-lg border border-slate-100">
@@ -940,10 +953,12 @@ const RevenueManagementPage = () => {
             <div className="mb-5 flex items-center gap-3">
               <Building2 className="h-5 w-5 text-sky-500" />
               <div>
-              <h2 className="text-lg font-bold text-slate-900">
-                Doanh thu theo loại
-              </h2>
-                <p className="mt-1 text-sm text-slate-500">Tách doanh thu đặt sân, sản phẩm cầu lông và đồ uống trong kỳ</p>
+                <h2 className="text-lg font-bold text-slate-900">
+                  Doanh thu theo loại
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Tách doanh thu đặt sân, sản phẩm cầu lông và đồ uống trong kỳ
+                </p>
               </div>
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">

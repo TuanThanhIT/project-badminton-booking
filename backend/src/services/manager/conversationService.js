@@ -1,4 +1,4 @@
-import { Op } from "sequelize";
+﻿import { Op } from "sequelize";
 import sequelize from "../../config/db.js";
 import {
   BranchManager,
@@ -139,7 +139,7 @@ const ensureConversationAllowed = async (managerId, conversationId, transaction)
     where: { conversationId, userId: managerId },
     transaction,
   });
-  if (!membership) throw new ForbiddenError("Ban khong thuoc cuoc tro chuyen nay.");
+  if (!membership) throw new ForbiddenError("Bạn không thuộc cuộc trò chuyện này.");
 
   const allowed = await getManagerChatAllowedIds(managerId, transaction);
   const participants = await ConversationParticipant.findAll({
@@ -149,7 +149,7 @@ const ensureConversationAllowed = async (managerId, conversationId, transaction)
   });
   const invalid = participants.some((p) => !allowed.has(Number(p.userId)));
   if (invalid) {
-    throw new ForbiddenError("Cuoc tro chuyen nay khong thuoc pham vi chi nhanh cua ban.");
+    throw new ForbiddenError("Cuộc trò chuyện này không thuộc phạm vi chi nhánh của bạn.");
   }
   return membership;
 };
@@ -326,7 +326,7 @@ const getConversationsService = async ({ managerId }) => {
 
 const createOrGetDirectConversationService = async ({ managerId, targetUserId }) => {
   const targetId = Number(targetUserId);
-  if (targetId === Number(managerId)) throw new ForbiddenError("Khong the tu nhan tin cho chinh ban.");
+  if (targetId === Number(managerId)) throw new ForbiddenError("Không thể tự nhắn tin cho chính bạn.");
 
   return sequelize.transaction(async (t) => {
     await ensureUsersInManagedBranches(managerId, [targetId], t);
@@ -334,7 +334,7 @@ const createOrGetDirectConversationService = async ({ managerId, targetUserId })
       where: { id: targetId, isActive: true },
       transaction: t,
     });
-    if (!targetUser) throw new NotFoundError("Khong tim thay nguoi dung.");
+    if (!targetUser) throw new NotFoundError("Không tìm thấy người dùng.");
 
     const memberships = await ConversationParticipant.findAll({
       where: { userId: [managerId, targetId] },
@@ -377,13 +377,13 @@ const createOrGetDirectConversationService = async ({ managerId, targetUserId })
 
 const createGroupConversationService = async ({ managerId, name, userIds }) => {
   const uniqueIds = [...new Set((userIds || []).map(Number))].filter((id) => id !== Number(managerId));
-  if (!name?.trim()) throw new BadRequestError("Ten nhom khong duoc de trong.");
-  if (uniqueIds.length < 1) throw new BadRequestError("Nhom can it nhat mot thanh vien khac.");
+  if (!name?.trim()) throw new BadRequestError("Tên nhóm không được để trống.");
+  if (uniqueIds.length < 1) throw new BadRequestError("Nhóm cần ít nhất một thành viên khác.");
 
   return sequelize.transaction(async (t) => {
     await ensureUsersInManagedBranches(managerId, uniqueIds, t);
     const users = await User.findAll({ where: { id: uniqueIds, isActive: true }, transaction: t });
-    if (users.length !== uniqueIds.length) throw new BadRequestError("Thanh vien khong hop le.");
+    if (users.length !== uniqueIds.length) throw new BadRequestError("Thành viên không hợp lệ.");
 
     const conversation = await Conversation.create(
       { conversationName: name.trim(), type: CONVERSATION_TYPE.GROUP },
@@ -409,19 +409,19 @@ const createGroupConversationService = async ({ managerId, name, userIds }) => {
 };
 
 const ensureGroupAdmin = (membership, conversation) => {
-  if (conversation.type !== CONVERSATION_TYPE.GROUP) throw new BadRequestError("Thao tac chi ap dung cho nhom.");
-  if (membership.role !== ROLE_CONVERSATION.ADMIN) throw new ForbiddenError("Chi admin nhom moi thuc hien duoc.");
+  if (conversation.type !== CONVERSATION_TYPE.GROUP) throw new BadRequestError("Thao tác chỉ áp dụng cho nhóm.");
+  if (membership.role !== ROLE_CONVERSATION.ADMIN) throw new ForbiddenError("Chỉ admin nhóm mới thực hiện được.");
 };
 
 const addMembersToGroupService = async ({ managerId, conversationId, userIds }) => {
   const addIds = [...new Set((userIds || []).map(Number))].filter(Boolean);
-  if (addIds.length < 1) throw new BadRequestError("Danh sach thanh vien khong hop le.");
+  if (addIds.length < 1) throw new BadRequestError("Danh sách thành viên không hợp lệ.");
 
   return sequelize.transaction(async (t) => {
     await ensureUsersInManagedBranches(managerId, addIds, t);
     const membership = await ensureConversationAllowed(managerId, conversationId, t);
     const conversation = await Conversation.findByPk(conversationId, { transaction: t });
-    if (!conversation) throw new NotFoundError("Khong tim thay cuoc tro chuyen.");
+    if (!conversation) throw new NotFoundError("Không tìm thấy cuộc trò chuyện.");
     ensureGroupAdmin(membership, conversation);
 
     const existing = await ConversationParticipant.findAll({
@@ -431,7 +431,7 @@ const addMembersToGroupService = async ({ managerId, conversationId, userIds }) 
     });
     const existingSet = new Set(existing.map((e) => Number(e.userId)));
     const toAdd = addIds.filter((id) => !existingSet.has(id));
-    if (toAdd.length < 1) throw new BadRequestError("Cac thanh vien da co trong nhom.");
+    if (toAdd.length < 1) throw new BadRequestError("Các thành viên đã có trong nhóm.");
 
     await ConversationParticipant.bulkCreate(
       toAdd.map((userId) => ({ conversationId, userId, role: ROLE_CONVERSATION.MEMBER })),
@@ -458,7 +458,7 @@ const removeMemberFromGroupService = async ({ managerId, conversationId, targetU
   return sequelize.transaction(async (t) => {
     const membership = await ensureConversationAllowed(managerId, conversationId, t);
     const conversation = await Conversation.findByPk(conversationId, { transaction: t });
-    if (!conversation) throw new NotFoundError("Khong tim thay cuoc tro chuyen.");
+    if (!conversation) throw new NotFoundError("Không tìm thấy cuộc trò chuyện.");
     const isSelf = Number(targetUserId) === Number(managerId);
     if (!isSelf || membership.role !== ROLE_CONVERSATION.ADMIN) {
       ensureGroupAdmin(membership, conversation);
@@ -468,7 +468,7 @@ const removeMemberFromGroupService = async ({ managerId, conversationId, targetU
       where: { conversationId, userId: targetUserId },
       transaction: t,
     });
-    if (!target) throw new NotFoundError("Thanh vien khong thuoc nhom.");
+    if (!target) throw new NotFoundError("Thành viên không thuộc nhóm.");
 
     if (isSelf && membership.role === ROLE_CONVERSATION.ADMIN) {
       const participants = await ConversationParticipant.findAll({
@@ -518,7 +518,7 @@ const deleteGroupConversationService = async ({ managerId, conversationId }) => 
   return sequelize.transaction(async (t) => {
     const membership = await ensureConversationAllowed(managerId, conversationId, t);
     const conversation = await Conversation.findByPk(conversationId, { transaction: t });
-    if (!conversation) throw new NotFoundError("Khong tim thay cuoc tro chuyen.");
+    if (!conversation) throw new NotFoundError("Không tìm thấy cuộc trò chuyện.");
     ensureGroupAdmin(membership, conversation);
 
     const participants = await ConversationParticipant.findAll({
@@ -590,3 +590,4 @@ const conversationService = {
 };
 
 export default conversationService;
+

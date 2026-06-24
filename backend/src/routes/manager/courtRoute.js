@@ -34,7 +34,7 @@ const initCourtRoute = (app) => {
     authorize(ROLE_NAME.MANAGER),
     upload.single("image"),
     asyncHandler(async (req, res) => {
-      if (!req.file) throw new BadRequestError("Khong tim thay file anh");
+      if (!req.file) throw new BadRequestError("Không tìm thấy file ảnh");
       const result = await uploadBuffer(req.file.buffer, "court-uploads");
       return res
         .status(200)

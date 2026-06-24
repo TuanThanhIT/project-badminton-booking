@@ -230,6 +230,12 @@ export type PostComment = {
   parentId?: number | null;
   content: string;
   type: string;
+  isActive?: boolean;
+  isDeleted?: boolean;
+  reportCount?: number;
+  autoHiddenByReports?: boolean;
+  hiddenReason?: string | null;
+  hiddenAt?: string | null;
   createdAt: string;
   author?: {
     id: number;
@@ -283,6 +289,18 @@ export type CreateCommentRequest = {
   postId: number;
   content: string;
   parentId?: number | null;
+};
+
+export type CommentReportReason =
+  | "SPAM"
+  | "OFFENSIVE"
+  | "UNAUTHORIZED_AD"
+  | "HARASSMENT"
+  | "OTHER";
+
+export type ReportCommentRequest = {
+  reason: CommentReportReason;
+  description?: string | null;
 };
 
 export type PostFilterData = {

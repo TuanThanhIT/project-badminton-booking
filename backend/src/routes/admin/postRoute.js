@@ -84,6 +84,24 @@ const initAdminPostRoute = (app) => {
     authorize(ROLE_NAME.ADMIN),
     adminPostController.getCommentsController,
   );
+  adminCommentRoute.patch(
+    "/:commentId/hide",
+    auth,
+    authorize(ROLE_NAME.ADMIN),
+    adminPostController.hideCommentController,
+  );
+  adminCommentRoute.patch(
+    "/:commentId/unhide",
+    auth,
+    authorize(ROLE_NAME.ADMIN),
+    adminPostController.unhideCommentController,
+  );
+  adminCommentRoute.post(
+    "/:commentId/warn-author",
+    auth,
+    authorize(ROLE_NAME.ADMIN),
+    adminPostController.warnCommentAuthorController,
+  );
   adminCommentRoute.delete(
     "/:commentId",
     auth,
@@ -91,6 +109,21 @@ const initAdminPostRoute = (app) => {
     adminPostController.deleteCommentController,
   );
   app.use("/admin/comments", adminCommentRoute);
+
+  const adminCommentReportRoute = express.Router();
+  adminCommentReportRoute.get(
+    "/",
+    auth,
+    authorize(ROLE_NAME.ADMIN),
+    adminPostController.getCommentReportsController,
+  );
+  adminCommentReportRoute.patch(
+    "/:reportId/reject",
+    auth,
+    authorize(ROLE_NAME.ADMIN),
+    adminPostController.rejectCommentReportController,
+  );
+  app.use("/admin/comment-reports", adminCommentReportRoute);
 };
 
 export default initAdminPostRoute;

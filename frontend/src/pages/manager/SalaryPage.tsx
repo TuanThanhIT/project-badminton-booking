@@ -181,7 +181,7 @@ const SalaryPage = () => {
               <select
                 value={month}
                 onChange={(event) => setMonth(Number(event.target.value))}
-                className="bg-transparent text-sm font-medium text-white outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="bg-transparent text-sm font-medium text-white outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               >
                 {Array.from({ length: 12 }, (_, index) => index + 1).map(
                   (item) => (
@@ -195,7 +195,7 @@ const SalaryPage = () => {
             <select
               value={year}
               onChange={(event) => setYear(Number(event.target.value))}
-              className="h-11 rounded-xl border border-white/10 bg-white/10 px-3 text-sm font-medium text-white outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              className="h-10 rounded-lg border border-white/10 bg-white/10 px-2.5 text-[13px] font-medium text-white outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
             >
               {years.map((item) => (
                 <option key={item} value={item} className="text-slate-900">
@@ -232,7 +232,7 @@ const SalaryPage = () => {
             <select
               value={month}
               onChange={(event) => setMonth(Number(event.target.value))}
-              className="bg-transparent text-sm font-medium text-slate-700 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              className="bg-transparent text-sm font-medium text-slate-700 outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
             >
               {Array.from({ length: 12 }, (_, index) => index + 1).map(
                 (item) => (
@@ -246,7 +246,7 @@ const SalaryPage = () => {
           <select
             value={year}
             onChange={(event) => setYear(Number(event.target.value))}
-            className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+            className="h-10 rounded-lg border border-slate-200 bg-white px-2.5 text-[13px] text-slate-700 shadow-sm outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
           >
             {years.map((item) => (
               <option key={item} value={item}>

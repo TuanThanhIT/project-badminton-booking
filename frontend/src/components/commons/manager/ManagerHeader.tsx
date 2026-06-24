@@ -74,10 +74,10 @@ const ManagerHeader = () => {
   return (
     <header className="flex h-20 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6 lg:px-8">
       <div className="min-w-0">
-        <h2 className="truncate text-xl font-semibold text-slate-800">
+        <h2 className="truncate text-xl font-bold tracking-normal text-slate-900">
           Quản lý cửa hàng
         </h2>
-        <p className="mt-1 hidden text-sm font-normal text-slate-500 sm:block">
+        <p className="mt-1 hidden text-sm font-normal tracking-normal text-slate-600 sm:block">
           Theo dõi hoạt động chi nhánh B-Hub trong ngày
         </p>
       </div>
@@ -88,7 +88,7 @@ const ManagerHeader = () => {
           <input
             type="text"
             placeholder="Tìm kiếm..."
-            className="h-11 w-[420px] rounded-xl border border-slate-200 bg-white pl-11 pr-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-100 2xl:w-[520px]"
+            className="h-10 w-[420px] rounded-lg border border-slate-200 bg-white pl-10 pr-2.5 text-[13px] text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-1 focus:ring-sky-100 2xl:w-[520px]"
           />
         </div>
 
@@ -129,7 +129,7 @@ const ManagerHeader = () => {
             <div className="absolute right-0 top-14 z-50 w-[min(92vw,420px)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
               <div className="flex items-center justify-between border-b border-slate-100 p-4">
                 <div>
-                  <p className="text-base font-semibold text-slate-900">
+                  <p className="text-base font-bold tracking-normal text-slate-900">
                     Thông báo
                   </p>
                   <p className="text-xs text-slate-500">
@@ -159,7 +159,7 @@ const ManagerHeader = () => {
                     <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
                       <Bell size={22} />
                     </div>
-                    <p className="font-medium text-slate-800">
+                    <p className="font-bold tracking-normal text-slate-800">
                       Chưa có thông báo
                     </p>
                     <p className="mt-1 text-sm text-slate-500">
@@ -187,7 +187,7 @@ const ManagerHeader = () => {
                         />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-start justify-between gap-3">
-                            <p className="line-clamp-1 font-semibold text-slate-900">
+                            <p className="line-clamp-1 font-bold tracking-normal text-slate-900">
                               {notification.title}
                             </p>
                             {!notification.isRead && (
@@ -220,7 +220,7 @@ const ManagerHeader = () => {
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold leading-5 text-slate-900">
+            <p className="truncate text-sm font-bold leading-5 tracking-normal text-slate-900">
               {displayName}
             </p>
             <p

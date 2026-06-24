@@ -24,10 +24,39 @@ const getCommentsService = (params: {
   postId?: number;
   commentType?: string;
   postType?: string;
+  isActive?: string;
+  isDeleted?: string;
+  reportFilter?: string;
 }) => instance.get("/admin/comments", { params });
 
 const deleteCommentService = (commentId: number) =>
   instance.delete(`/admin/comments/${commentId}`);
+
+const getCommentReportsService = (params: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  reason?: string;
+  search?: string;
+  keyword?: string;
+  autoHidden?: string;
+}) => instance.get("/admin/comment-reports", { params });
+
+const rejectCommentReportService = (
+  reportId: number,
+  data?: { adminNote?: string },
+) => instance.patch(`/admin/comment-reports/${reportId}/reject`, data || {});
+
+const hideCommentService = (commentId: number, data?: { reason?: string }) =>
+  instance.patch(`/admin/comments/${commentId}/hide`, data || {});
+
+const unhideCommentService = (commentId: number, data?: { reason?: string }) =>
+  instance.patch(`/admin/comments/${commentId}/unhide`, data || {});
+
+const warnCommentAuthorService = (
+  commentId: number,
+  data?: { reason?: string; label?: string },
+) => instance.post(`/admin/comments/${commentId}/warn-author`, data || {});
 
 const getPendingModerationPostsService = (params: {
   page?: number;
@@ -56,6 +85,11 @@ const adminPostService = {
   deletePostService,
   getCommentsService,
   deleteCommentService,
+  getCommentReportsService,
+  rejectCommentReportService,
+  hideCommentService,
+  unhideCommentService,
+  warnCommentAuthorService,
   getPendingModerationPostsService,
   getPostModerationDetailService,
   approveModerationPostService,

@@ -14,14 +14,13 @@ type ManagerPageHeaderProps = {
   actions?: ReactNode;
 };
 
-export const managerCardClass =
-  "rounded-2xl border border-slate-200 bg-white";
+export const managerCardClass = "rounded-2xl border border-slate-200 bg-white";
 
 export const managerInputClass =
-  "h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-100";
+  "h-10 rounded-lg border border-slate-200 bg-white px-2.5 text-[13px] text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-1 focus:ring-sky-100";
 
 export const managerTextAreaClass =
-  "rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-100";
+  "rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-1 focus:ring-sky-100";
 
 export const managerPrimaryButtonClass =
   "inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70";
@@ -39,10 +38,10 @@ export const ManagerPageHeader = ({
   <section className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#0b3f56] text-white shadow-sm">
     <div className="grid gap-6 p-6 sm:p-7 lg:grid-cols-[1fr_auto] lg:items-center">
       <div className="min-w-0">
-        <p className="text-sm font-semibold uppercase tracking-wide text-sky-100">
+        <p className="text-sm font-bold uppercase tracking-wider text-sky-100">
           {eyebrow}
         </p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight lg:text-4xl">
+        <h1 className="mt-2 text-3xl font-bold tracking-normal lg:text-4xl">
           {title}
         </h1>
         <p className="mt-4 max-w-3xl text-base leading-7 text-sky-50">
@@ -57,7 +56,7 @@ export const ManagerPageHeader = ({
               key={metric.label}
               className="min-w-40 rounded-2xl border border-white/15 bg-white/10 px-5 py-4"
             >
-              <p className="text-xs font-semibold uppercase text-slate-200">
+              <p className="text-xs font-bold uppercase tracking-normal text-slate-200">
                 {metric.label}
               </p>
               <p className="mt-3 text-3xl font-bold">{metric.value}</p>
@@ -91,7 +90,9 @@ export const ManagerStatCard = ({
         <Icon className={`h-5 w-5 ${iconClassName}`} />
       </span>
       <div>
-        <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
+        <p className="text-xs font-bold uppercase tracking-normal text-slate-500">
+          {label}
+        </p>
         <p className="text-2xl font-bold text-slate-900">{value}</p>
       </div>
     </div>
@@ -109,7 +110,7 @@ export const ManagerEmptyState = ({
 }) => (
   <div className="flex min-h-40 flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
     <Icon className="h-11 w-11 text-slate-300" />
-    <p className="mt-3 font-semibold text-slate-800">{title}</p>
+    <p className="mt-3 font-bold tracking-normal text-slate-800">{title}</p>
     {description ? (
       <p className="mt-1 max-w-md text-sm text-slate-500">{description}</p>
     ) : null}

@@ -52,7 +52,7 @@ const CancelForm = (props: CancelFormProps) => {
                   ? "Nhập chi tiết lý do hủy đơn hàng..."
                   : "Nhập chi tiết lý do hủy sân..."
               }
-              className="w-full rounded-2xl p-4 border border-gray-300 bg-gray-50 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-transparent placeholder-gray-400 resize-none transition"
+              className="w-full rounded-2xl p-4 border border-gray-300 bg-gray-50 shadow-sm focus:outline-none focus:ring-1 focus:ring-sky-300 focus:border-transparent placeholder-gray-400 resize-none transition"
             />
             {errors.cancelReason && (
               <p className="text-red-500 text-sm mt-1">

@@ -233,7 +233,7 @@ const ProductManagementPage = () => {
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
                 placeholder="Tên sản phẩm, thương hiệu..."
-                className="h-11 w-full rounded-xl border border-gray-300 pl-9 pr-3 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="h-10 w-full rounded-lg border border-gray-300 pl-8 pr-2.5 text-[13px] outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               />
             </div>
           </div>
@@ -249,7 +249,7 @@ const ProductManagementPage = () => {
                 setCategoryFilter("");
                 setPage(1);
               }}
-              className="h-11 w-full rounded-xl border border-gray-300 bg-white px-3 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              className="h-10 w-full rounded-lg border border-gray-300 bg-white px-2.5 text-[13px] outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
             >
               <option value="">Tất cả nhóm</option>
               {menuGroups.map((group) => (
@@ -270,7 +270,7 @@ const ProductManagementPage = () => {
                 setCategoryFilter(event.target.value);
                 setPage(1);
               }}
-              className="h-11 w-full rounded-xl border border-gray-300 bg-white px-3 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              className="h-10 w-full rounded-lg border border-gray-300 bg-white px-2.5 text-[13px] outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
             >
               <option value="">Tất cả danh mục</option>
               {filteredCategories.map((category) => (

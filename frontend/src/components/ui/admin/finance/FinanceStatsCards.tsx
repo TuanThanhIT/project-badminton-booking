@@ -31,7 +31,7 @@ const StatCard = ({
   </div>
 );
 
-const FinanceStatsCards = () => {
+const FinanceStatsCards = ({ refreshKey = 0 }: { refreshKey?: number }) => {
   const [stats, setStats] = useState<AdminFinanceStats | null>(null);
 
   useEffect(() => {
@@ -39,7 +39,7 @@ const FinanceStatsCards = () => {
       .getFinanceStatsService()
       .then((res) => setStats((res.data as any).data))
       .catch(() => {});
-  }, []);
+  }, [refreshKey]);
 
   if (!stats) return null;
 

@@ -1,12 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  ChevronDown,
-  Eye,
-  Lock,
-  Search,
-  Trash2,
-  Unlock,
-} from "lucide-react";
+import { ChevronDown, Eye, Lock, Search, Trash2, Unlock } from "lucide-react";
 import { toast } from "react-toastify";
 import adminPostService from "../../../../services/admin/postService";
 import type { AdminPost } from "../../../../types/admin";
@@ -40,7 +33,10 @@ const POST_TYPE_COLOR: Record<string, string> = {
 
 const LIMIT = 10;
 const stripHtml = (html = "") =>
-  html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
 const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
   const [posts, setPosts] = useState<AdminPost[]>([]);
@@ -184,7 +180,7 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                   }
                 }}
                 placeholder="Tiêu đề, nội dung..."
-                className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2.5 text-[13px] outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               />
             </div>
           </div>
@@ -200,7 +196,7 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                   setTypeFilter(event.target.value);
                   setPage(1);
                 }}
-                className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-8 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="h-10 w-full appearance-none rounded-lg border border-slate-200 bg-white px-2.5 pr-7 text-[13px] text-slate-700 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               >
                 <option value="">Tất cả</option>
                 {Object.entries(POST_TYPE_LABEL).map(([value, label]) => (
@@ -224,7 +220,7 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                   setStatusFilter(event.target.value);
                   setPage(1);
                 }}
-                className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-8 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="h-10 w-full appearance-none rounded-lg border border-slate-200 bg-white px-2.5 pr-7 text-[13px] text-slate-700 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               >
                 <option value="">Tất cả</option>
                 <option value="active">Hoạt động</option>
@@ -246,7 +242,7 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                   setModerationStatusFilter(event.target.value);
                   setPage(1);
                 }}
-                className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-8 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="h-10 w-full appearance-none rounded-lg border border-slate-200 bg-white px-2.5 pr-7 text-[13px] text-slate-700 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               >
                 <option value="">Tất cả</option>
                 <option value="APPROVED">Đã duyệt</option>
@@ -269,7 +265,7 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                   setModerationLabelFilter(event.target.value);
                   setPage(1);
                 }}
-                className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-8 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="h-10 w-full appearance-none rounded-lg border border-slate-200 bg-white px-2.5 pr-7 text-[13px] text-slate-700 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               >
                 <option value="">Tất cả</option>
                 <option value="normal">Bình thường</option>
@@ -293,8 +289,18 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
             Không có bài đăng
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1180px] text-sm">
+          <div className="overflow-hidden">
+            <table className="w-full table-fixed text-sm">
+              <colgroup>
+                <col className="w-[4%]" />
+                <col className="w-[17%]" />
+                <col className="w-[27%]" />
+                <col className="w-[11%]" />
+                <col className="w-[8%]" />
+                <col className="w-[11%]" />
+                <col className="w-[9%]" />
+                <col className="w-[13%]" />
+              </colgroup>
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                   {[
@@ -309,7 +315,7 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                   ].map((header) => (
                     <th
                       key={header}
-                      className="px-3 py-3 text-center font-semibold"
+                      className="px-2 py-3 text-center font-semibold"
                     >
                       {header}
                     </th>
@@ -319,27 +325,27 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
               <tbody className="divide-y divide-slate-100 [&_td]:align-top">
                 {posts.map((post, index) => (
                   <tr key={post.id} className="transition hover:bg-sky-50/40">
-                    <td className="px-3 py-3 text-center text-slate-400">
+                    <td className="px-2 py-3 text-center text-slate-400">
                       {(page - 1) * LIMIT + index + 1}
                     </td>
-                    <td className="px-3 py-3">
-                      <div className="flex items-center gap-2">
+                    <td className="px-2 py-3">
+                      <div className="flex min-w-0 items-center gap-2">
                         <UserAvatar
                           src={post.authorAvatar}
                           name={post.authorName || post.authorUsername || "?"}
-                          className="h-8 w-8 rounded-lg border border-slate-200"
+                          className="h-8 w-8 shrink-0 rounded-lg border border-slate-200"
                         />
-                        <div>
-                          <p className="text-xs font-medium text-slate-800">
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-medium text-slate-800">
                             {post.authorName || post.authorUsername}
                           </p>
-                          <p className="text-xs text-slate-400">
+                          <p className="truncate text-xs text-slate-400">
                             @{post.authorUsername}
                           </p>
                         </div>
                       </div>
                     </td>
-                    <td className="max-w-[220px] px-3 py-3">
+                    <td className="min-w-0 px-2 py-3">
                       <p className="truncate text-xs font-semibold text-slate-800">
                         {post.title}
                       </p>
@@ -352,8 +358,9 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                         {post.moderationLabel ? (
                           <span
                             className={`rounded border px-2 py-0.5 text-[11px] font-semibold ${
-                              MODERATION_LABEL_BADGE_CLASS[post.moderationLabel] ||
-                              "border-slate-200 bg-slate-50 text-slate-600"
+                              MODERATION_LABEL_BADGE_CLASS[
+                                post.moderationLabel
+                              ] || "border-slate-200 bg-slate-50 text-slate-600"
                             }`}
                           >
                             {MODERATION_LABEL_TEXT[post.moderationLabel] ||
@@ -361,7 +368,10 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                           </span>
                         ) : null}
                         <span className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
-                          AI: {formatModerationConfidence(post.moderationConfidence)}
+                          AI:{" "}
+                          {formatModerationConfidence(
+                            post.moderationConfidence,
+                          )}
                         </span>
                       </div>
                       {post.moderationReason ? (
@@ -373,7 +383,7 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                         </p>
                       ) : null}
                     </td>
-                    <td className="px-3 py-3 text-center">
+                    <td className="px-2 py-3 text-center">
                       <span
                         className={`rounded border px-2 py-0.5 text-xs font-medium ${
                           POST_TYPE_COLOR[post.type] ||
@@ -383,16 +393,17 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                         {POST_TYPE_LABEL[post.type] || post.type}
                       </span>
                     </td>
-                    <td className="px-3 py-3 text-center text-slate-600">
+                    <td className="px-2 py-3 text-center text-slate-600">
                       {post.commentCount}
                     </td>
-                    <td className="px-3 py-3 text-center">
+                    <td className="px-2 py-3 text-center">
                       {post.moderationStatus ? (
                         <div className="mb-1 flex justify-center">
                           <span
                             className={`rounded border px-2 py-0.5 text-xs font-semibold ${
-                              MODERATION_STATUS_BADGE_CLASS[post.moderationStatus] ||
-                              "border-slate-200 bg-slate-50 text-slate-600"
+                              MODERATION_STATUS_BADGE_CLASS[
+                                post.moderationStatus
+                              ] || "border-slate-200 bg-slate-50 text-slate-600"
                             }`}
                           >
                             {MODERATION_STATUS_LABEL[post.moderationStatus] ||
@@ -414,24 +425,17 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                         </span>
                       )}
                     </td>
-                    <td className="px-3 py-3 text-center text-xs text-slate-500">
+                    <td className="px-2 py-3 text-center text-xs text-slate-500">
                       {new Date(post.createdAt).toLocaleDateString("vi-VN")}
                     </td>
-                    <td className="px-3 py-3 text-center">
+                    <td className="px-2 py-3 text-center">
                       {!post.isDeleted ? (
-                        <div className="flex items-center justify-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedModerationPostId(post.id)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-sky-200 bg-sky-50 px-2 py-1.5 text-xs font-medium text-sky-600 transition hover:bg-sky-100"
-                          >
-                            <Eye size={11} /> Chi tiết
-                          </button>
+                        <div className="flex flex-wrap items-center justify-center gap-1">
                           <button
                             type="button"
                             onClick={() => handleToggle(post)}
                             disabled={togglingId === post.id}
-                            className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1.5 text-xs font-medium transition disabled:opacity-60 ${
+                            className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition disabled:opacity-60 ${
                               post.isActive
                                 ? "border-orange-200 bg-orange-50 text-orange-600 hover:bg-orange-100"
                                 : "border-green-200 bg-green-50 text-green-600 hover:bg-green-100"
@@ -453,7 +457,7 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                             type="button"
                             onClick={() => handleDelete(post.id)}
                             disabled={deletingId === post.id}
-                            className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2 py-1.5 text-xs font-medium text-red-500 transition hover:bg-red-100 disabled:opacity-60"
+                            className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2 py-1 text-[11px] font-medium text-red-500 transition hover:bg-red-100 disabled:opacity-60"
                           >
                             {deletingId === post.id ? (
                               <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -462,6 +466,13 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                                 <Trash2 size={11} /> Xóa
                               </>
                             )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedModerationPostId(post.id)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-sky-200 bg-sky-50 px-2 py-1 text-[11px] font-medium text-sky-600 transition hover:bg-sky-100"
+                          >
+                            <Eye size={11} /> Chi tiết
                           </button>
                         </div>
                       ) : null}

@@ -19,18 +19,18 @@ const STATUS = {
 };
 
 const names = [
-  "Nguyen Hoai An", "Tran Minh Khang", "Le Bao Chau", "Pham Gia Huy", "Vo Thanh Truc",
-  "Dang Nhat Linh", "Bui Tuan Kiet", "Hoang Minh Quan", "Do Khanh Vy", "Huynh Gia Bao",
-  "Ngo Phuong Nam", "Mai Thanh Dat", "Cao Yen Nhi", "Truong Hai Dang", "Phan Kim Ngan",
-  "Nguyen Anh Thu", "Tran Quoc Viet", "Le Khanh Ngoc", "Pham Duc Anh", "Vo Minh Tam",
+  "Nguyễn Hoài An", "Trần Minh Khang", "Lê Bảo Châu", "Phạm Gia Huy", "Võ Thanh Trúc",
+  "Đặng Nhật Linh", "Bùi Tuấn Kiệt", "Hoàng Minh Quân", "Đỗ Khánh Vy", "Huỳnh Gia Bảo",
+  "Ngô Phương Nam", "Mai Thành Đạt", "Cao Yến Nhi", "Trương Hải Đăng", "Phan Kim Ngân",
+  "Nguyễn Anh Thư", "Trần Quốc Việt", "Lê Khánh Ngọc", "Phạm Đức Anh", "Võ Minh Tâm",
 ];
 
 const addresses = [
-  { address: "12 Nguyen Van Bao", wardName: "Phuong 4", districtName: "Go Vap", provinceName: "Ho Chi Minh", provinceId: 202, districtId: 1444, wardCode: "20308", latitude: 10.826, longitude: 106.682 },
-  { address: "45 Nguyen Thi Minh Khai", wardName: "Ben Nghe", districtName: "Quan 1", provinceName: "Ho Chi Minh", provinceId: 202, districtId: 1442, wardCode: "20101", latitude: 10.781, longitude: 106.699 },
-  { address: "92 Nguyen Thi Thap", wardName: "Tan Phu", districtName: "Quan 7", provinceName: "Ho Chi Minh", provinceId: 202, districtId: 1447, wardCode: "20508", latitude: 10.741, longitude: 106.711 },
-  { address: "120 Cong Hoa", wardName: "Phuong 12", districtName: "Tan Binh", provinceName: "Ho Chi Minh", provinceId: 202, districtId: 1450, wardCode: "20710", latitude: 10.803, longitude: 106.651 },
-  { address: "231 Le Van Chi", wardName: "Linh Trung", districtName: "Thu Duc", provinceName: "Ho Chi Minh", provinceId: 202, districtId: 1463, wardCode: "21808", latitude: 10.871, longitude: 106.772 },
+  { address: "12 Nguyễn Văn Bảo", wardName: "Phường 4", districtName: "Gò Vấp", provinceName: "Hồ Chí Minh", provinceId: 202, districtId: 1444, wardCode: "20308", latitude: 10.826, longitude: 106.682 },
+  { address: "45 Nguyễn Thị Minh Khai", wardName: "Bến Nghé", districtName: "Quận 1", provinceName: "Hồ Chí Minh", provinceId: 202, districtId: 1442, wardCode: "20101", latitude: 10.781, longitude: 106.699 },
+  { address: "92 Nguyễn Thị Thập", wardName: "Tân Phú", districtName: "Quận 7", provinceName: "Hồ Chí Minh", provinceId: 202, districtId: 1447, wardCode: "20508", latitude: 10.741, longitude: 106.711 },
+  { address: "120 Cộng Hòa", wardName: "Phường 12", districtName: "Tân Bình", provinceName: "Hồ Chí Minh", provinceId: 202, districtId: 1450, wardCode: "20710", latitude: 10.803, longitude: 106.651 },
+  { address: "231 Lê Văn Chí", wardName: "Linh Trung", districtName: "Thủ Đức", provinceName: "Hồ Chí Minh", provinceId: 202, districtId: 1463, wardCode: "21808", latitude: 10.871, longitude: 106.772 },
 ];
 
 const avatar = "https://placehold.co/512x512/png?text=B-Hub+Demo";
@@ -214,6 +214,7 @@ const deleteSocial = async (qi, transaction) => {
     transaction,
   });
   const commentIds = comments.map((r) => Number(r.id));
+  if (commentIds.length) await del(qi, "CommentReports", { commentId: commentIds }, transaction).catch(() => {});
   if (commentIds.length) await del(qi, "Comments", { parentId: commentIds }, transaction);
   await del(qi, "UserModerationViolations", { postId: postIds }, transaction).catch(() => {});
   await del(qi, "Comments", { postId: postIds }, transaction);

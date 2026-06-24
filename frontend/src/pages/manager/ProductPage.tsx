@@ -376,21 +376,21 @@ const ProductPagae = () => {
             <span className={filterLabelClass}>Tìm kiếm</span>
             <div
               className="
-    group flex h-11 flex-1 items-center gap-3 rounded-xl
-    border border-slate-200 bg-white px-3
+    group flex h-10 flex-1 items-center gap-2.5 rounded-lg
+    border border-slate-200 bg-white px-2.5
     transition-all duration-200
     focus-within:border-sky-400
     focus-within:ring-2
     focus-within:ring-sky-100
   "
             >
-              <Search className="h-4 w-4 text-slate-400 transition-colors duration-200 group-focus-within:text-sky-500" />
+              <Search className="h-3.5 w-3.5 text-slate-400 transition-colors duration-200 group-focus-within:text-sky-500" />
 
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 className="
-      h-full flex-1 bg-transparent text-sm text-slate-700 outline-none
+      h-full flex-1 bg-transparent text-[13px] text-slate-700 outline-none
       placeholder:text-slate-400
     "
                 placeholder={

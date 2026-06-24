@@ -257,7 +257,7 @@ const WorkShiftPage = () => {
                 type="date"
                 value={workDate}
                 onChange={(event) => setWorkDate(event.target.value)}
-                className="bg-transparent text-sm font-medium text-white outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="bg-transparent text-sm font-medium text-white outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               />
             </label>
             <button
@@ -288,7 +288,7 @@ const WorkShiftPage = () => {
             type="date"
             value={workDate}
             onChange={(event) => setWorkDate(event.target.value)}
-            className="bg-transparent text-sm font-medium text-slate-700 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+            className="bg-transparent text-sm font-medium text-slate-700 outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
           />
         </label>
       </div>

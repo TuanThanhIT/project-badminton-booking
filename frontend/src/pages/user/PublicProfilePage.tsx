@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { Award, GraduationCap, Search, SlidersHorizontal, X } from "lucide-react";
+import {
+  Award,
+  GraduationCap,
+  Search,
+  SlidersHorizontal,
+  X,
+} from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import {
   clearPublicProfileState,
@@ -16,8 +22,15 @@ import PostDetailModal from "../../components/ui/user/postList/PostDetailModal";
 import { getAllBranches } from "../../redux/slices/user/branchSlice";
 import { PLAYER_LEVEL_LABEL } from "../../utils/constants/profileConstant";
 import { ROLE_NAME } from "../../utils/constants/role";
-import type { PostReactionType, PostType, PostWithAuthor } from "../../types/post";
-import { POST_TYPE_LABEL, POST_TYPES } from "../../utils/constants/postConstant";
+import type {
+  PostReactionType,
+  PostType,
+  PostWithAuthor,
+} from "../../types/post";
+import {
+  POST_TYPE_LABEL,
+  POST_TYPES,
+} from "../../utils/constants/postConstant";
 
 const PublicProfilePage = () => {
   const dispatch = useAppDispatch();
@@ -32,7 +45,9 @@ const PublicProfilePage = () => {
   const [search, setSearch] = useState("");
   const [selectedType, setSelectedType] = useState<PostType | "">("");
   const [hideReposts, setHideReposts] = useState(false);
-  const [sortBy, setSortBy] = useState<"latest" | "likes" | "comments">("latest");
+  const [sortBy, setSortBy] = useState<"latest" | "likes" | "comments">(
+    "latest",
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const [detailPost, setDetailPost] = useState<PostWithAuthor | null>(null);
   const [coachProfileOpen, setCoachProfileOpen] = useState(false);
@@ -194,11 +209,11 @@ const PublicProfilePage = () => {
       return list.sort((a, b) => (b.likesCount ?? 0) - (a.likesCount ?? 0));
     }
     if (sortBy === "comments") {
-      return list.sort((a, b) => (b.commentsCount ?? 0) - (a.commentsCount ?? 0));
+      return list.sort(
+        (a, b) => (b.commentsCount ?? 0) - (a.commentsCount ?? 0),
+      );
     }
-    return list.sort(
-      (a, b) => +new Date(b.createdAt) - +new Date(a.createdAt),
-    );
+    return list.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
   }, [filteredPosts, sortBy]);
 
   const pageSize = 10;
@@ -249,7 +264,9 @@ const PublicProfilePage = () => {
               : undefined
           }
           isCoach={isCoach}
-          coachExperienceYears={profile.coachProfile?.experienceYears ?? undefined}
+          coachExperienceYears={
+            profile.coachProfile?.experienceYears ?? undefined
+          }
           trailingActions={
             <div className="flex flex-wrap justify-end gap-2">
               {isCoach && (
@@ -277,7 +294,9 @@ const PublicProfilePage = () => {
           <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-slate-900">Bài đăng</h2>
+                <h2 className="text-xl font-semibold text-slate-900">
+                  Bài đăng
+                </h2>
                 <p className="mt-1 text-sm text-slate-500">
                   Các bài viết công khai của {displayName}
                 </p>
@@ -294,7 +313,7 @@ const PublicProfilePage = () => {
                   type="text"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Tìm bài theo tiêu đề, nội dung, loại bài..."
+                  placeholder="Tìm bài viết..."
                   className="w-full bg-transparent py-2.5 pl-10 pr-4 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
                 />
               </div>
@@ -302,9 +321,11 @@ const PublicProfilePage = () => {
               <select
                 value={sortBy}
                 onChange={(event) =>
-                  setSortBy(event.target.value as "latest" | "likes" | "comments")
+                  setSortBy(
+                    event.target.value as "latest" | "likes" | "comments",
+                  )
                 }
-                className="min-h-[48px] rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-600 outline-none transition-colors focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
+                className="min-h-[48px] rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-600 outline-none transition-colors focus:border-sky-300 focus:ring-1 focus:ring-sky-100"
               >
                 <option value="latest">Mới nhất</option>
                 <option value="likes">Nhiều lượt thích</option>
@@ -318,20 +339,20 @@ const PublicProfilePage = () => {
                   onChange={(event) => setHideReposts(event.target.checked)}
                   className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
                 />
-                Ẩn bài chia sẻ
+                Ẩn bài chia sẻ lại
               </label>
             </div>
 
             <div className="mt-4">
-              <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+              <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-slate-500">
                 <SlidersHorizontal className="h-4 w-4" />
-                Lọc loại bài
+                Loại bài viết
               </div>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => setSelectedType("")}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  className={`rounded-full border px-3 py-1.5 text-[13px] font-semibold leading-tight tracking-normal transition-colors ${
                     selectedType === ""
                       ? "border-sky-500 bg-sky-50 text-sky-700"
                       : "border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50"
@@ -344,7 +365,7 @@ const PublicProfilePage = () => {
                     key={type}
                     type="button"
                     onClick={() => setSelectedType(type)}
-                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                    className={`rounded-full border px-3 py-1.5 text-[13px] font-semibold leading-tight tracking-normal transition-colors ${
                       selectedType === type
                         ? "border-sky-500 bg-sky-50 text-sky-700"
                         : "border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50"
@@ -432,7 +453,8 @@ const PublicProfilePage = () => {
                     Hồ sơ dạy cầu lông
                   </h2>
                   <p className="mt-1 text-sm text-slate-500">
-                    {displayName} · {profile.coachProfile?.experienceYears ?? 0} năm kinh nghiệm
+                    {displayName} · {profile.coachProfile?.experienceYears ?? 0}{" "}
+                    năm kinh nghiệm
                   </p>
                 </div>
               </div>

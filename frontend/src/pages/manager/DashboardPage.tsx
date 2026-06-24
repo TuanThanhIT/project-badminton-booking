@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import {
   AlertTriangle,
@@ -6,6 +6,7 @@ import {
   Coffee,
   History,
   PackagePlus,
+  RefreshCw,
   ShoppingBag,
   Trophy,
 } from "lucide-react";
@@ -26,6 +27,7 @@ import {
   ManagerEmptyState,
   ManagerPageHeader,
   managerCardClass,
+  managerSecondaryButtonClass,
 } from "../../components/commons/manager/ManagerPage";
 import TablePagination from "../../components/ui/user/pagination/TablePagination";
 import {
@@ -58,15 +60,38 @@ const fmtDate = (value: Date) =>
 const DashboardPage = () => {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [stockPage, setStockPage] = useState(1);
 
+  const fetchDashboard = useCallback(
+    async ({ showSkeleton = false }: { showSkeleton?: boolean } = {}) => {
+      if (showSkeleton) {
+        setLoading(true);
+      } else {
+        setRefreshing(true);
+      }
+      try {
+        const res = await managerRevenueService.getDashboardService({
+          range: "today",
+        });
+        setData((res.data as any).data);
+      } catch {
+        setData(null);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [],
+  );
+
   useEffect(() => {
-    managerRevenueService
-      .getDashboardService({ range: "today" })
-      .then((res) => setData((res.data as any).data))
-      .catch(() => setData(null))
-      .finally(() => setLoading(false));
-  }, []);
+    fetchDashboard({ showSkeleton: true });
+  }, [fetchDashboard]);
+
+  const handleRefresh = () => {
+    fetchDashboard();
+  };
 
   const summary = data?.summary || {};
   const chart = data?.quickRevenueChart || [];
@@ -166,6 +191,19 @@ const DashboardPage = () => {
             value: `${(summary.pendingBookingCount || 0) + (summary.pendingOrderCount || 0)}`,
           },
         ]}
+        actions={
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className={`${managerSecondaryButtonClass} border-white/20 bg-white/10 text-white hover:bg-white/15`}
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+            />
+            Làm mới
+          </button>
+        }
       />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -410,17 +448,39 @@ const DashboardPage = () => {
         </p>
         <div className="mt-4 grid gap-3 md:grid-cols-3 xl:grid-cols-6">
           {[
-            ["Tổng booking", operation.todayBookingCount, "border-sky-100 bg-sky-50/70 text-sky-700"],
-            ["Chờ xác nhận", operation.pendingBookingCount, "border-amber-100 bg-amber-50/70 text-amber-700"],
-            ["Đã xác nhận", operation.confirmedBookingCount, "border-indigo-100 bg-indigo-50/70 text-indigo-700"],
-            ["Đang chơi", operation.playingBookingCount, "border-emerald-100 bg-emerald-50/70 text-emerald-700"],
-            ["Hoàn thành", operation.completedBookingCount, "border-teal-100 bg-teal-50/70 text-teal-700"],
-            ["Đã hủy", operation.cancelledBookingCount, "border-rose-100 bg-rose-50/70 text-rose-700"],
+            [
+              "Tổng booking",
+              operation.todayBookingCount,
+              "border-sky-100 bg-sky-50/70 text-sky-700",
+            ],
+            [
+              "Chờ xác nhận",
+              operation.pendingBookingCount,
+              "border-amber-100 bg-amber-50/70 text-amber-700",
+            ],
+            [
+              "Đã xác nhận",
+              operation.confirmedBookingCount,
+              "border-indigo-100 bg-indigo-50/70 text-indigo-700",
+            ],
+            [
+              "Đang chơi",
+              operation.playingBookingCount,
+              "border-emerald-100 bg-emerald-50/70 text-emerald-700",
+            ],
+            [
+              "Hoàn thành",
+              operation.completedBookingCount,
+              "border-teal-100 bg-teal-50/70 text-teal-700",
+            ],
+            [
+              "Đã hủy",
+              operation.cancelledBookingCount,
+              "border-rose-100 bg-rose-50/70 text-rose-700",
+            ],
           ].map(([label, value, tone]) => (
             <div key={label} className={`rounded-lg border p-4 ${tone}`}>
-              <p className="text-xs font-bold uppercase opacity-75">
-                {label}
-              </p>
+              <p className="text-xs font-bold uppercase opacity-75">{label}</p>
               <p className="mt-2 text-2xl font-bold text-slate-900">
                 {Number(value || 0)}
               </p>

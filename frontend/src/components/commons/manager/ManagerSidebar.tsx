@@ -175,10 +175,10 @@ const ManagerSidebar = ({ collapsed, setCollapsed }: Props) => {
 
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <h1 className="text-2xl font-semibold leading-none text-slate-900">
+              <h1 className="text-2xl font-bold leading-none tracking-normal text-slate-900">
                 B-Hub
               </h1>
-              <p className="mt-1 text-sm font-normal leading-none text-slate-500">
+              <p className="mt-1 text-sm font-normal leading-none tracking-normal text-slate-500">
                 Quản lý cửa hàng
               </p>
             </div>

@@ -20,7 +20,11 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
-import type { PostReactionType, PostType, PostWithAuthor } from "../../types/post";
+import type {
+  PostReactionType,
+  PostType,
+  PostWithAuthor,
+} from "../../types/post";
 import PostCard from "../../components/ui/user/postList/PostCard";
 import ProfileHeroBanner from "../../components/ui/user/profile/ProfileHeroBanner";
 import { getCourtsByIds } from "../../redux/slices/user/courtSlice";
@@ -41,7 +45,10 @@ import {
 } from "../../utils/constants/profileConstant";
 import WalletPanel from "../../components/ui/user/wallet/WalletPanel";
 import { ROLE_NAME } from "../../utils/constants/role";
-import { POST_TYPE_LABEL, POST_TYPES } from "../../utils/constants/postConstant";
+import {
+  POST_TYPE_LABEL,
+  POST_TYPES,
+} from "../../utils/constants/postConstant";
 import { showConfirmDialog } from "../../utils/confirmDialog";
 import {
   ACCOUNT_STATUS_BADGE_CLASS,
@@ -64,7 +71,7 @@ const inputClass =
 const labelClass = "text-sm font-medium text-slate-700";
 
 const tabBtnClass = (active: boolean) =>
-  `group flex min-w-fit items-center gap-2.5 rounded-2xl border px-4 py-3 text-sm font-medium transition-all lg:w-full lg:justify-start ${
+  `group flex min-w-fit items-center gap-2.5 rounded-2xl border px-4 py-3 text-sm font-semibold leading-tight tracking-normal transition-all lg:w-full lg:justify-start ${
     active
       ? "border-sky-400 bg-sky-100 text-sky-900 shadow-sm"
       : "border-slate-200 bg-white text-slate-700 hover:border-sky-300 hover:bg-sky-50 hover:text-sky-800"
@@ -124,8 +131,7 @@ const ProfilePage = () => {
   const displayName = form.fullName.trim() || profile?.username || "Bạn";
   const avatarLetter = displayName.charAt(0).toUpperCase();
   const isCoach =
-    currentUser?.role === ROLE_NAME.COACH ||
-    profile?.role === ROLE_NAME.COACH;
+    currentUser?.role === ROLE_NAME.COACH || profile?.role === ROLE_NAME.COACH;
   const accountStatus = profile?.accountStatus || "ACTIVE";
   const violationCount = profile?.violationCount || 0;
   const showAccountWarning = accountStatus !== "ACTIVE";
@@ -381,15 +387,18 @@ const ProfilePage = () => {
       return list.sort((a, b) => (b.likesCount ?? 0) - (a.likesCount ?? 0));
     }
     if (postSortBy === "comments") {
-      return list.sort((a, b) => (b.commentsCount ?? 0) - (a.commentsCount ?? 0));
+      return list.sort(
+        (a, b) => (b.commentsCount ?? 0) - (a.commentsCount ?? 0),
+      );
     }
-    return list.sort(
-      (a, b) => +new Date(b.createdAt) - +new Date(a.createdAt),
-    );
+    return list.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
   }, [filteredPosts, postSortBy]);
 
   const postsPageSize = 10;
-  const totalPostPages = Math.max(1, Math.ceil(sortedPosts.length / postsPageSize));
+  const totalPostPages = Math.max(
+    1,
+    Math.ceil(sortedPosts.length / postsPageSize),
+  );
   const visiblePosts = useMemo(() => {
     const safePage = Math.min(currentPostPage, totalPostPages);
     const start = (safePage - 1) * postsPageSize;
@@ -521,7 +530,9 @@ const ProfilePage = () => {
                   {profile.lastViolationAt ? (
                     <p>
                       Vi phạm gần nhất:{" "}
-                      {new Date(profile.lastViolationAt).toLocaleString("vi-VN")}
+                      {new Date(profile.lastViolationAt).toLocaleString(
+                        "vi-VN",
+                      )}
                     </p>
                   ) : null}
                   {profile.suspendedUntil ? (
@@ -637,7 +648,9 @@ const ProfilePage = () => {
                   onClick={() => setTab("profile")}
                 >
                   <User className="h-5 w-5 shrink-0" strokeWidth={2} />
-                  <span>Hồ sơ</span>
+                  <span className="min-w-0 text-sm leading-tight tracking-normal">
+                    Hồ sơ
+                  </span>
                 </button>
 
                 <button
@@ -646,7 +659,9 @@ const ProfilePage = () => {
                   onClick={() => setTab("posts")}
                 >
                   <FileText className="h-5 w-5 shrink-0" strokeWidth={2} />
-                  <span>Bài đăng</span>
+                  <span className="min-w-0 text-sm leading-tight tracking-normal">
+                    Bài đăng
+                  </span>
 
                   <span
                     className={`ml-auto rounded-full px-2 py-0.5 text-xs tabular-nums ${
@@ -665,33 +680,38 @@ const ProfilePage = () => {
                   onClick={() => setTab("wallet")}
                 >
                   <Wallet className="h-5 w-5 shrink-0" strokeWidth={2} />
-                  <span>Ví thanh toán</span>
+                  <span className="min-w-0 text-sm leading-tight tracking-normal">
+                    Ví thanh toán
+                  </span>
                 </button>
 
                 {isCoach ? (
-                  <Link
-                    to="/coach/students"
-                    className={tabBtnClass(false)}
-                  >
-                    <GraduationCap className="h-5 w-5 shrink-0" strokeWidth={2} />
-                    <span>Lớp học</span>
+                  <Link to="/coach/students" className={tabBtnClass(false)}>
+                    <GraduationCap
+                      className="h-5 w-5 shrink-0"
+                      strokeWidth={2}
+                    />
+                    <span className="min-w-0 text-sm leading-tight tracking-normal">
+                      Lớp học
+                    </span>
                   </Link>
                 ) : (
                   <>
-                    <Link
-                      to="/my-classes"
-                      className={tabBtnClass(false)}
-                    >
-                      <GraduationCap className="h-5 w-5 shrink-0" strokeWidth={2} />
-                      <span>Lớp học</span>
+                    <Link to="/my-classes" className={tabBtnClass(false)}>
+                      <GraduationCap
+                        className="h-5 w-5 shrink-0"
+                        strokeWidth={2}
+                      />
+                      <span className="min-w-0 text-sm leading-tight tracking-normal">
+                        Lớp học
+                      </span>
                     </Link>
                     {currentUser?.role === ROLE_NAME.USER && (
-                      <Link
-                        to="/become-coach"
-                        className={tabBtnClass(false)}
-                      >
+                      <Link to="/become-coach" className={tabBtnClass(false)}>
                         <Trophy className="h-5 w-5 shrink-0" strokeWidth={2} />
-                        <span>Đăng ký dạy cầu lông</span>
+                        <span className="min-w-0 text-sm leading-tight tracking-normal">
+                          Đăng ký dạy cầu lông
+                        </span>
                       </Link>
                     )}
                   </>
@@ -721,7 +741,6 @@ const ProfilePage = () => {
                       </p>
                     </div>
                   </div>
-
                 </div>
 
                 <div className="bg-slate-100/60 p-3 sm:p-5">
@@ -808,29 +827,31 @@ const ProfilePage = () => {
                       </div>
 
                       {!isCoach && (
-                      <div className="relative sm:col-span-2">
-                        <label className={labelClass}>Trình độ cầu lông</label>
-                        <Trophy size={17} className={fieldIconClass} />
-                        <select
-                          className={`${inputClass} pl-11`}
-                          value={form.level}
-                          onChange={(e) =>
-                            setForm((p) => ({ ...p, level: e.target.value }))
-                          }
-                        >
-                          <option value="">-- Chưa chọn --</option>
+                        <div className="relative sm:col-span-2">
+                          <label className={labelClass}>
+                            Trình độ cầu lông
+                          </label>
+                          <Trophy size={17} className={fieldIconClass} />
+                          <select
+                            className={`${inputClass} pl-11`}
+                            value={form.level}
+                            onChange={(e) =>
+                              setForm((p) => ({ ...p, level: e.target.value }))
+                            }
+                          >
+                            <option value="">-- Chưa chọn --</option>
 
-                          {PLAYER_LEVELS.map((val) => (
-                            <option key={val} value={val}>
-                              {PLAYER_LEVEL_LABEL[val]}
-                            </option>
-                          ))}
-                        </select>
+                            {PLAYER_LEVELS.map((val) => (
+                              <option key={val} value={val}>
+                                {PLAYER_LEVEL_LABEL[val]}
+                              </option>
+                            ))}
+                          </select>
 
-                        <p className="mt-2 text-xs leading-relaxed text-slate-500">
-                          Hiển thị công khai để mọi người dễ kết nối giao lưu.
-                        </p>
-                      </div>
+                          <p className="mt-2 text-xs leading-relaxed text-slate-500">
+                            Hiển thị công khai để mọi người dễ kết nối giao lưu.
+                          </p>
+                        </div>
                       )}
 
                       {isCoach && (
@@ -840,16 +861,21 @@ const ProfilePage = () => {
                               <GraduationCap size={20} />
                             </div>
                             <div>
-                              <h3 className="text-sm font-semibold text-slate-900">Hồ sơ dạy cầu lông</h3>
+                              <h3 className="text-sm font-semibold text-slate-900">
+                                Hồ sơ dạy cầu lông
+                              </h3>
                               <p className="text-xs text-slate-500">
-                                Các thông tin này sẽ hiển thị công khai trên trang cá nhân của bạn.
+                                Các thông tin này sẽ hiển thị công khai trên
+                                trang cá nhân của bạn.
                               </p>
                             </div>
                           </div>
 
                           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
-                              <label className={labelClass}>Số năm kinh nghiệm</label>
+                              <label className={labelClass}>
+                                Số năm kinh nghiệm
+                              </label>
                               <input
                                 type="number"
                                 min={0}
@@ -858,14 +884,18 @@ const ProfilePage = () => {
                                 onChange={(e) =>
                                   setForm((p) => ({
                                     ...p,
-                                    coachExperienceYears: Number(e.target.value),
+                                    coachExperienceYears: Number(
+                                      e.target.value,
+                                    ),
                                   }))
                                 }
                               />
                             </div>
 
                             <div>
-                              <label className={labelClass}>Chứng chỉ / thành tích</label>
+                              <label className={labelClass}>
+                                Chứng chỉ / thành tích
+                              </label>
                               <input
                                 className={inputClass}
                                 placeholder="VD: Chứng chỉ dạy cầu lông cấp CLB, giải phong trào..."
@@ -950,7 +980,7 @@ const ProfilePage = () => {
                         type="text"
                         value={postSearch}
                         onChange={(event) => setPostSearch(event.target.value)}
-                        placeholder="Tìm bài theo tiêu đề, nội dung, loại bài..."
+                        placeholder="Tìm bài viết..."
                         className="w-full bg-transparent py-2.5 pl-10 pr-4 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
                       />
                     </div>
@@ -962,7 +992,7 @@ const ProfilePage = () => {
                           event.target.value as "latest" | "likes" | "comments",
                         )
                       }
-                      className="min-h-[48px] rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-600 outline-none transition-colors focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
+                      className="min-h-[48px] rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-600 outline-none transition-colors focus:border-sky-300 focus:ring-1 focus:ring-sky-100"
                     >
                       <option value="latest">Mới nhất</option>
                       <option value="likes">Nhiều lượt thích</option>
@@ -973,23 +1003,25 @@ const ProfilePage = () => {
                       <input
                         type="checkbox"
                         checked={hideReposts}
-                        onChange={(event) => setHideReposts(event.target.checked)}
+                        onChange={(event) =>
+                          setHideReposts(event.target.checked)
+                        }
                         className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
                       />
-                      Ẩn bài chia sẻ
+                      Ẩn bài chia sẻ lại
                     </label>
                   </div>
 
                   <div className="mt-4">
-                    <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+                    <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-slate-500">
                       <SlidersHorizontal className="h-4 w-4" />
-                      Lọc loại bài
+                      Loại bài viết
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
                         onClick={() => setSelectedPostType("")}
-                        className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                        className={`rounded-full border px-3 py-1.5 text-[13px] font-semibold leading-tight tracking-normal transition-colors ${
                           selectedPostType === ""
                             ? "border-sky-500 bg-sky-50 text-sky-700"
                             : "border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50"
@@ -1002,7 +1034,7 @@ const ProfilePage = () => {
                           key={type}
                           type="button"
                           onClick={() => setSelectedPostType(type)}
-                          className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                          className={`rounded-full border px-3 py-1.5 text-[13px] font-semibold leading-tight tracking-normal transition-colors ${
                             selectedPostType === type
                               ? "border-sky-500 bg-sky-50 text-sky-700"
                               : "border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50"
@@ -1016,40 +1048,40 @@ const ProfilePage = () => {
                 </div>
 
                 <div className="space-y-5 bg-slate-50/70 p-4 sm:p-5">
-                {posts.length === 0 && (
-                  <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-600 shadow-sm">
-                    Bạn chưa có bài đăng nào. Hãy tạo bài mới từ mục đăng bài.
-                  </div>
-                )}
+                  {posts.length === 0 && (
+                    <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-600 shadow-sm">
+                      Bạn chưa có bài đăng nào. Hãy tạo bài mới từ mục đăng bài.
+                    </div>
+                  )}
                   {posts.length > 0 && filteredPosts.length === 0 && (
                     <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-14 text-center text-sm text-slate-500">
                       Không tìm thấy bài đăng phù hợp.
                     </div>
                   )}
                   {filteredPosts.length > 0 && (
-                  <div className="space-y-5">
-                    {visiblePosts.map((post) => (
-                      <PostCard
-                        key={post.id}
-                        post={post}
-                        branchInfoById={branchInfoById}
-                        courtNameById={courtNameById}
-                        onOpenDetail={() => setDetailPost(post)}
-                        ownerMenuActions={{
-                          onEdit: () =>
-                            setEditTarget({
-                              id: post.id,
-                              type: post.type,
-                              title: post.title,
-                              content: post.content,
-                              formData: post.formData,
-                            }),
-                          onDelete: () => handleDeletePost(post.id),
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
+                    <div className="space-y-5">
+                      {visiblePosts.map((post) => (
+                        <PostCard
+                          key={post.id}
+                          post={post}
+                          branchInfoById={branchInfoById}
+                          courtNameById={courtNameById}
+                          onOpenDetail={() => setDetailPost(post)}
+                          ownerMenuActions={{
+                            onEdit: () =>
+                              setEditTarget({
+                                id: post.id,
+                                type: post.type,
+                                title: post.title,
+                                content: post.content,
+                                formData: post.formData,
+                              }),
+                            onDelete: () => handleDeletePost(post.id),
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {sortedPosts.length > postsPageSize && (

@@ -1,9 +1,14 @@
 import Joi from "joi";
 import { idParams } from "./common/numberField.js";
 import { POST_REACTION } from "../constants/postConstant.js";
+import { COMMENT_REPORT_REASON } from "../constants/commentReportConstant.js";
 
 const postIdParamSchema = Joi.object({
   postId: idParams("postId"),
+});
+
+const commentIdParamSchema = Joi.object({
+  commentId: idParams("commentId"),
 });
 
 const commentContentField = Joi.string().trim().min(1).max(2000).required().messages({
@@ -52,5 +57,25 @@ export const createRepostSchema = {
   body: Joi.object({
     content: repostContentField,
   }),
+};
+
+export const reportCommentSchema = {
+  params: commentIdParamSchema,
+  body: Joi.object({
+    reason: Joi.string()
+      .valid(...Object.values(COMMENT_REPORT_REASON))
+      .required()
+      .messages({
+        "any.only": "Lý do báo cáo bình luận không hợp lệ",
+        "any.required": "Lý do báo cáo bình luận là bắt buộc",
+      }),
+    description: Joi.string().trim().max(1000).allow("", null).optional().messages({
+      "string.max": "Mô tả báo cáo tối đa 1000 ký tự",
+    }),
+  }),
+};
+
+export const deleteCommentSchema = {
+  params: commentIdParamSchema,
 };
 

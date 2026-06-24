@@ -21,9 +21,7 @@ import bookingService from "../../services/manager/bookingService";
 import {
   ManagerEmptyState,
   ManagerPageHeader,
-  managerCardClass,
   managerInputClass,
-  managerSecondaryButtonClass,
 } from "../../components/commons/manager/ManagerPage";
 import TablePagination from "../../components/ui/user/pagination/TablePagination";
 
@@ -182,8 +180,13 @@ const BookingSchedulePage = () => {
     setPage(1);
   }, [status, keyword, date]);
 
+  const getTabCount = (value: BookingStatus | "ALL") => {
+    if (value === "ALL") return pagination.total || 0;
+    return summary[value] || 0;
+  };
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <ManagerPageHeader
         eyebrow="Manager bookings"
         title="Quản lý lịch sân"
@@ -197,19 +200,19 @@ const BookingSchedulePage = () => {
         ]}
       />
 
-      <section className={`${managerCardClass} overflow-hidden`}>
-        <div className="grid gap-3 p-4 lg:grid-cols-[1fr_180px_auto] lg:items-end">
+      <section className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
+        <div className="grid gap-3 border-b border-slate-100 bg-slate-50/70 p-4 lg:grid-cols-[minmax(0,1fr)_190px_auto] lg:items-end">
           <label>
             <span className="mb-1 block text-xs font-medium text-slate-600">
               Tìm kiếm
             </span>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
               <input
                 value={keyword}
                 onChange={(event) => setKeyword(event.target.value)}
                 placeholder="Mã lịch, username, email, SĐT..."
-                className={`w-full pl-9 ${managerInputClass}`}
+                className={`w-full pl-8 ${managerInputClass}`}
               />
             </div>
           </label>
@@ -228,42 +231,55 @@ const BookingSchedulePage = () => {
           <button
             type="button"
             onClick={fetchBookings}
-            className={managerSecondaryButtonClass}
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-[13px] font-semibold text-slate-600 transition hover:border-sky-300 hover:bg-sky-50 hover:text-sky-700"
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className="h-3.5 w-3.5" />
             Làm mới
           </button>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto border-t border-slate-100 px-4 py-3">
+        <div className="px-4 py-3">
+          <div className="flex flex-wrap gap-1.5 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-inner shadow-slate-100">
           {BOOKING_TABS.map((tab) => (
             <button
               key={tab.value}
               type="button"
               onClick={() => setStatus(tab.value)}
-              className={`shrink-0 rounded-xl border px-3 py-2 text-xs font-bold transition ${
+              className={`group shrink-0 rounded-xl border px-3.5 py-2 text-[13px] font-bold transition-all duration-200 ${
                 status === tab.value
-                  ? "border-sky-300 bg-sky-50 text-sky-700"
-                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                  ? "border-sky-600 bg-gradient-to-r from-sky-600 to-cyan-500 text-white shadow-md shadow-sky-100"
+                  : "border-transparent text-slate-500 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
               }`}
             >
               {tab.label}
-              {tab.value !== "ALL" && summary[tab.value] ? (
-                <span className="ml-2 rounded-full bg-white px-1.5 py-0.5 text-[11px]">
-                  {summary[tab.value]}
-                </span>
-              ) : null}
+              <span
+                className={`ml-2 rounded-full px-1.5 py-0.5 text-[11px] font-bold transition ${
+                  status === tab.value
+                    ? "bg-white/20 text-white"
+                    : "bg-white text-sky-700 ring-1 ring-sky-100 group-hover:bg-white"
+                }`}
+              >
+                {getTabCount(tab.value)}
+              </span>
             </button>
           ))}
+          </div>
         </div>
       </section>
 
-      <div className="grid gap-5 xl:grid-cols-[0.95fr_1.25fr]">
+      <div className="grid gap-5 xl:h-[calc(100dvh-330px)] xl:min-h-[560px] xl:grid-cols-[420px_minmax(0,1fr)] xl:items-stretch">
         <section
-          className={`min-h-[560px] overflow-hidden ${managerCardClass}`}
+          className="flex min-h-[560px] flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm xl:h-full xl:min-h-0"
         >
-          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-            <h2 className="text-lg font-bold text-slate-900">Danh sách lịch</h2>
+          <div className="flex shrink-0 items-center justify-between border-b border-slate-100 bg-white px-4 py-3">
+            <div>
+              <h2 className="text-base font-bold text-slate-900">
+                Danh sách lịch
+              </h2>
+              <p className="text-xs font-medium text-slate-500">
+                {pagination.total} lịch phù hợp
+              </p>
+            </div>
             {loading ? (
               <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-bold text-slate-500">
                 Đang tải
@@ -271,7 +287,7 @@ const BookingSchedulePage = () => {
             ) : null}
           </div>
 
-          <div className="space-y-3 p-4">
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-slate-50/60 p-4">
             {bookings.length ? (
               bookings.map((booking) => {
                 const firstDetail = getFirstDetail(booking);
@@ -280,13 +296,13 @@ const BookingSchedulePage = () => {
                     key={booking.id}
                     type="button"
                     onClick={() => fetchBookingDetail(booking.id)}
-                    className={`w-full rounded-2xl border p-4 text-left transition ${
+                    className={`w-full rounded-2xl border bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 ${
                       selectedBooking?.id === booking.id
-                        ? "border-sky-300 bg-sky-50"
-                        : "border-slate-200 bg-white hover:border-sky-200 hover:bg-sky-50/40"
+                        ? "border-sky-400 ring-2 ring-sky-100"
+                        : "border-slate-200 hover:border-sky-200"
                     }`}
                   >
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="font-mono text-sm font-bold text-sky-700">
                         {formatBookingCode(booking.id, booking.createdAt)}
                       </span>
@@ -304,7 +320,8 @@ const BookingSchedulePage = () => {
                           booking.user?.username ||
                           "Khách"}
                       </p>
-                      <p>
+                      <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+                        <Clock3 className="h-3.5 w-3.5 text-sky-500" />
                         {firstDetail
                           ? `${formatDate(firstDetail.playDate)} · ${firstDetail.startTime} - ${firstDetail.endTime}`
                           : "Chưa có khung giờ"}
@@ -336,7 +353,7 @@ const BookingSchedulePage = () => {
           />
         </section>
 
-        <section className={`min-h-[560px] p-5 ${managerCardClass}`}>
+        <section className="min-h-[560px] overflow-y-auto rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm xl:h-full xl:min-h-0">
           {selectedBooking ? (
             <BookingDetailPanel
               booking={selectedBooking}
@@ -363,10 +380,10 @@ const BookingDetailPanel = ({
   detailLoading: boolean;
 }) => (
   <div className="space-y-5">
-    <div className="flex flex-wrap items-start justify-between gap-4 rounded-2xl bg-slate-50 p-4">
+    <div className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 to-white p-5">
       <div>
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-xl font-bold text-sky-700">
+          <h2 className="text-2xl font-bold text-sky-700">
             {formatBookingCode(booking.id, booking.createdAt)}
           </h2>
           <span
@@ -388,7 +405,7 @@ const BookingDetailPanel = ({
       </div>
       <div className="text-left lg:text-right">
         <p className="text-xs font-semibold text-slate-500">Tổng thanh toán</p>
-        <p className="text-xl font-bold text-slate-900">
+        <p className="text-2xl font-bold text-slate-900">
           {formatCurrency(booking.totalAmount)}
         </p>
       </div>
@@ -485,19 +502,19 @@ const InfoPanel = ({
   title: string;
   children: ReactNode;
 }) => (
-  <section className="rounded-2xl border border-slate-200 bg-white p-4">
+  <section className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
     <div className="mb-3 flex items-center gap-2">
       <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-50 text-sky-700">
         <Icon className="h-4 w-4" />
       </span>
       <h3 className="text-sm font-bold text-slate-900">{title}</h3>
     </div>
-    <div className="space-y-3">{children}</div>
+    <div className="space-y-2.5">{children}</div>
   </section>
 );
 
 const InfoRow = ({ label, value }: { label: string; value: ReactNode }) => (
-  <div>
+  <div className="rounded-xl bg-white px-3 py-2 ring-1 ring-slate-100">
     <p className="text-xs font-semibold text-slate-500">{label}</p>
     <p className="mt-1 break-words text-sm font-semibold text-slate-800">
       {value}

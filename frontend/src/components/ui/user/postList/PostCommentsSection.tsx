@@ -1,11 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import type { PostComment } from "../../../../types/post";
 import postSocialService from "../../../../services/user/postSocialService";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hook";
-import { createComment } from "../../../../redux/slices/user/postSlice";
+import {
+  createComment,
+  deleteComment,
+} from "../../../../redux/slices/user/postSlice";
 import { formatRelativeTimeVi } from "../../../../utils/formatRelativeTimeVi";
+import { showConfirmDialog } from "../../../../utils/confirmDialog";
+import type { CommentReportReason } from "../../../../types/post";
 
 type Props = {
   postId: number;
@@ -15,6 +20,21 @@ type Props = {
 type CommentNode = PostComment & { children: CommentNode[] };
 
 const COMMENTS_PAGE_LIMIT = 10;
+const DELETE_COMMENT_CONFIRM = "B\u1ea1n mu\u1ed1n g\u1ee1 b\u00ecnh lu\u1eadn n\u00e0y?";
+const DELETE_COMMENT_DESCRIPTION =
+  "B\u00ecnh lu\u1eadn s\u1ebd b\u1ecb g\u1ee1 kh\u1ecfi b\u00e0i vi\u1ebft. N\u1ebfu \u0111\u00e2y l\u00e0 b\u00ecnh lu\u1eadn g\u1ed1c, c\u00e1c ph\u1ea3n h\u1ed3i b\u00ean d\u01b0\u1edbi c\u0169ng s\u1ebd \u0111\u01b0\u1ee3c g\u1ee1.";
+const DELETE_COMMENT_SUCCESS = "\u0110\u00e3 g\u1ee1 b\u00ecnh lu\u1eadn.";
+const DELETE_COMMENT_ERROR = "Kh\u00f4ng th\u1ec3 g\u1ee1 b\u00ecnh lu\u1eadn.";
+const DELETE_COMMENT_LABEL = "G\u1ee1";
+const DELETING_COMMENT_LABEL = "\u0110ang g\u1ee1...";
+
+const REPORT_REASONS: { value: CommentReportReason; label: string }[] = [
+  { value: "SPAM", label: "Spam" },
+  { value: "OFFENSIVE", label: "Ngôn từ xúc phạm" },
+  { value: "UNAUTHORIZED_AD", label: "Quảng cáo trái phép" },
+  { value: "HARASSMENT", label: "Quấy rối" },
+  { value: "OTHER", label: "Khác" },
+];
 
 const mergeUniqueComments = (current: PostComment[], next: PostComment[]) => {
   const map = new Map<number, PostComment>();
@@ -22,6 +42,12 @@ const mergeUniqueComments = (current: PostComment[], next: PostComment[]) => {
     map.set(comment.id, comment);
   });
   return Array.from(map.values());
+};
+
+const resizeTextareaToContent = (textarea: HTMLTextAreaElement | null) => {
+  if (!textarea) return;
+  textarea.style.height = "auto";
+  textarea.style.height = `${textarea.scrollHeight}px`;
 };
 
 function buildCommentTree(comments: PostComment[]): CommentNode[] {
@@ -73,6 +99,9 @@ type CommentItemProps = {
   onCancelReply: () => void;
   onReplyContentChange: (value: string) => void;
   onReplySubmit: (parentId: number) => void;
+  onOpenReport: (comment: CommentNode) => void;
+  onDelete: (comment: CommentNode) => void;
+  deletingCommentId: number | null;
 };
 
 function CommentItem({
@@ -87,9 +116,14 @@ function CommentItem({
   onCancelReply,
   onReplyContentChange,
   onReplySubmit,
+  onOpenReport,
+  onDelete,
+  deletingCommentId,
 }: CommentItemProps) {
   const navigate = useNavigate();
-  const name = node.author?.profile?.fullName || node.author?.username || "Ẩn danh";
+  const replyTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const name =
+    node.author?.profile?.fullName || node.author?.username || "Ẩn danh";
   const authorId = node.author?.id;
   const avatarUrl = node.author?.profile?.avatar;
   const [avatarError, setAvatarError] = useState(false);
@@ -102,6 +136,24 @@ function CommentItem({
     if (!authorId) return;
     navigate(authorId === myUserId ? "/profile" : `/profile/${authorId}`);
   };
+
+  const isReplyBoxOpen = replyToId === node.id;
+  const canReport =
+    node.isDeleted !== true &&
+    node.isActive !== false &&
+    (!authorId || authorId !== myUserId);
+  const canDelete =
+    node.isDeleted !== true &&
+    node.isActive !== false &&
+    Boolean(authorId && authorId === myUserId);
+  const initial = name.charAt(0).toUpperCase();
+  const indentClass = depth > 0 ? "mt-2" : "mt-3";
+
+  useEffect(() => {
+    if (isReplyBoxOpen) {
+      resizeTextareaToContent(replyTextareaRef.current);
+    }
+  }, [isReplyBoxOpen, replyContent]);
 
   if (depth > 20) {
     return (
@@ -121,13 +173,9 @@ function CommentItem({
     );
   }
 
-  const isReplyBoxOpen = replyToId === node.id;
-  const initial = name.charAt(0).toUpperCase();
-  const indentClass = depth > 0 ? "ml-10 mt-2" : "mt-3";
-
   return (
     <div className={indentClass}>
-      <div className="flex items-start gap-2">
+      <div className="flex items-start gap-2.5">
         <button
           type="button"
           onClick={openAuthorProfile}
@@ -150,7 +198,7 @@ function CommentItem({
         </button>
 
         <div className="min-w-0 flex-1">
-          <div className="inline-block max-w-full rounded-2xl bg-gray-100 px-3 py-2">
+          <div className="inline-block max-w-full rounded-2xl bg-gray-100 px-3.5 py-2">
             <button
               type="button"
               onClick={openAuthorProfile}
@@ -164,29 +212,54 @@ function CommentItem({
             </p>
           </div>
 
-          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 pl-1">
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 pl-3">
             <span className="text-[12px] text-gray-500">
               {formatRelativeTimeVi(node.createdAt)}
             </span>
             <button
               type="button"
               onClick={() => onOpenReply(node.id)}
-              className="text-[12px] font-semibold text-gray-700 hover:underline"
+              className="text-[12px] font-bold text-gray-700 hover:text-blue-700 hover:underline"
             >
               Trả lời
             </button>
+            {canReport ? (
+              <button
+                type="button"
+                onClick={() => onOpenReport(node)}
+                className="text-[12px] font-medium text-gray-700 hover:text-red-600 hover:underline"
+              >
+                Báo cáo
+              </button>
+            ) : null}
+            {canDelete ? (
+              <button
+                type="button"
+                onClick={() => onDelete(node)}
+                disabled={deletingCommentId === node.id}
+                className="text-[12px] font-medium text-red-600 hover:underline disabled:cursor-wait disabled:opacity-60"
+              >
+                {deletingCommentId === node.id
+                  ? DELETING_COMMENT_LABEL
+                  : DELETE_COMMENT_LABEL}
+              </button>
+            ) : null}
           </div>
 
           {isReplyBoxOpen && (
-            <div className="mt-2 flex items-end gap-2">
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end">
               <textarea
+                ref={replyTextareaRef}
                 value={replyContent}
-                onChange={(event) => onReplyContentChange(event.target.value)}
-                className="min-h-[64px] flex-1 resize-y rounded-xl border border-gray-200 bg-white px-3 py-2 text-[15px] text-gray-900 placeholder:text-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-400"
+                onChange={(event) => {
+                  onReplyContentChange(event.target.value);
+                  resizeTextareaToContent(event.currentTarget);
+                }}
+                className="min-h-[44px] flex-1 resize-none overflow-hidden rounded-xl border border-gray-200 bg-white px-3 py-2 text-[15px] text-gray-900 placeholder:text-gray-400 focus:border-transparent focus:outline-none focus:ring-1 focus:ring-sky-400"
                 placeholder="Viết câu trả lời..."
-                rows={2}
+                rows={1}
               />
-              <div className="flex shrink-0 flex-col gap-1">
+              <div className="flex shrink-0 justify-end gap-2 sm:flex-col sm:gap-1">
                 <button
                   type="button"
                   onClick={() => onReplySubmit(node.id)}
@@ -209,7 +282,7 @@ function CommentItem({
       </div>
 
       {node.children.length > 0 && (
-        <div className="ml-4 border-l border-gray-200 pl-1">
+        <div className="ml-4 border-l border-gray-200 pl-3 sm:ml-10">
           {node.children.map((child) => (
             <CommentItem
               key={child.id}
@@ -224,6 +297,9 @@ function CommentItem({
               onCancelReply={onCancelReply}
               onReplyContentChange={onReplyContentChange}
               onReplySubmit={onReplySubmit}
+              onOpenReport={onOpenReport}
+              onDelete={onDelete}
+              deletingCommentId={deletingCommentId}
             />
           ))}
         </div>
@@ -234,6 +310,8 @@ function CommentItem({
 
 const PostCommentsSection = ({ postId, open }: Props) => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const commentTextareaRef = useRef<HTMLTextAreaElement>(null);
   const myUserId = useAppSelector((state) => state.auth.user?.id);
   const [comments, setComments] = useState<PostComment[]>([]);
   const [loading, setLoading] = useState(false);
@@ -246,6 +324,11 @@ const PostCommentsSection = ({ postId, open }: Props) => {
   const [replyToId, setReplyToId] = useState<number | null>(null);
   const [replyContent, setReplyContent] = useState("");
   const [replySubmitting, setReplySubmitting] = useState(false);
+  const [deletingCommentId, setDeletingCommentId] = useState<number | null>(null);
+  const [reportTarget, setReportTarget] = useState<CommentNode | null>(null);
+  const [reportReason, setReportReason] = useState<CommentReportReason>("SPAM");
+  const [reportDescription, setReportDescription] = useState("");
+  const [reportSubmitting, setReportSubmitting] = useState(false);
 
   const canSubmit = useMemo(() => content.trim().length > 0, [content]);
   const canReplySubmit = useMemo(
@@ -254,6 +337,10 @@ const PostCommentsSection = ({ postId, open }: Props) => {
   );
 
   const commentTree = useMemo(() => buildCommentTree(comments), [comments]);
+
+  useEffect(() => {
+    resizeTextareaToContent(commentTextareaRef.current);
+  }, [content]);
 
   useEffect(() => {
     if (!open) return;
@@ -350,6 +437,95 @@ const PostCommentsSection = ({ postId, open }: Props) => {
     setReplyContent("");
   }, []);
 
+  const onOpenReport = useCallback(
+    (comment: CommentNode) => {
+      if (!myUserId) {
+        toast.info("Vui lòng đăng nhập để báo cáo bình luận.");
+        navigate("/login");
+        return;
+      }
+      setReportTarget(comment);
+      setReportReason("SPAM");
+      setReportDescription("");
+    },
+    [myUserId, navigate],
+  );
+
+  const closeReportModal = useCallback(() => {
+    if (reportSubmitting) return;
+    setReportTarget(null);
+    setReportDescription("");
+  }, [reportSubmitting]);
+
+  const removeCommentFromList = useCallback((commentId: number) => {
+    setComments((prev) =>
+      prev.filter(
+        (comment) => comment.id !== commentId && comment.parentId !== commentId,
+      ),
+    );
+  }, []);
+
+  const handleDeleteComment = useCallback(
+    async (comment: CommentNode) => {
+      if (deletingCommentId) return;
+      const confirmed = await showConfirmDialog(
+        DELETE_COMMENT_CONFIRM,
+        DELETE_COMMENT_DESCRIPTION,
+        DELETE_COMMENT_LABEL,
+        "H\u1ee7y",
+        "danger",
+      );
+      if (!confirmed) return;
+
+      setDeletingCommentId(comment.id);
+      try {
+        await dispatch(
+          deleteComment({ postId, commentId: comment.id }),
+        ).unwrap();
+        removeCommentFromList(comment.id);
+        if (replyToId === comment.id) {
+          setReplyToId(null);
+          setReplyContent("");
+        }
+        toast.success(DELETE_COMMENT_SUCCESS);
+      } catch (err: any) {
+        toast.error(
+          err?.response?.data?.message || DELETE_COMMENT_ERROR,
+        );
+      } finally {
+        setDeletingCommentId(null);
+      }
+    },
+    [deletingCommentId, dispatch, postId, removeCommentFromList, replyToId],
+  );
+
+  const handleReportSubmit = async () => {
+    if (!reportTarget || reportSubmitting) return;
+    setReportSubmitting(true);
+    try {
+      const res = await postSocialService.reportCommentService(
+        reportTarget.id,
+        {
+          reason: reportReason,
+          description: reportDescription.trim() || null,
+        },
+      );
+      const payload = res.data.data;
+      toast.success(res.data.message || "Đã gửi báo cáo bình luận.");
+      if (payload?.autoHidden) {
+        removeCommentFromList(reportTarget.id);
+      }
+      setReportTarget(null);
+      setReportDescription("");
+    } catch (err: any) {
+      toast.error(
+        err?.response?.data?.message || "Không thể báo cáo bình luận.",
+      );
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
+
   if (!open) return null;
 
   return (
@@ -362,9 +538,13 @@ const PostCommentsSection = ({ postId, open }: Props) => {
         <div className="space-y-3 p-4">
           <div className="flex items-end gap-2">
             <textarea
+              ref={commentTextareaRef}
               value={content}
-              onChange={(event) => setContent(event.target.value)}
-              className="max-h-40 min-h-[44px] flex-1 resize-y rounded-2xl border-0 bg-slate-100 px-4 py-2.5 text-[15px] text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
+              onChange={(event) => {
+                setContent(event.target.value);
+                resizeTextareaToContent(event.currentTarget);
+              }}
+              className="min-h-[44px] flex-1 resize-none overflow-hidden rounded-2xl border-0 bg-slate-100 px-4 py-2.5 text-[15px] text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-sky-400"
               placeholder="Viết bình luận công khai..."
               rows={1}
             />
@@ -402,6 +582,9 @@ const PostCommentsSection = ({ postId, open }: Props) => {
                   onCancelReply={onCancelReply}
                   onReplyContentChange={setReplyContent}
                   onReplySubmit={handleReplySubmit}
+                  onOpenReport={onOpenReport}
+                  onDelete={handleDeleteComment}
+                  deletingCommentId={deletingCommentId}
                 />
               ))}
               {hasMoreComments && (
@@ -418,6 +601,69 @@ const PostCommentsSection = ({ postId, open }: Props) => {
           )}
         </div>
       </div>
+
+      {reportTarget ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 px-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
+            <div className="mb-4">
+              <h3 className="text-base font-semibold text-slate-900">
+                Báo cáo bình luận
+              </h3>
+              <p className="mt-1 line-clamp-2 text-sm text-slate-500">
+                {reportTarget.content}
+              </p>
+            </div>
+
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Lý do
+            </label>
+            <select
+              value={reportReason}
+              onChange={(event) =>
+                setReportReason(event.target.value as CommentReportReason)
+              }
+              className="mb-3 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
+            >
+              {REPORT_REASONS.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Mô tả thêm
+            </label>
+            <textarea
+              value={reportDescription}
+              onChange={(event) => setReportDescription(event.target.value)}
+              rows={3}
+              maxLength={1000}
+              className="w-full resize-y rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
+              placeholder="Nếu cần, hãy nói rõ vấn đề..."
+            />
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeReportModal}
+                disabled={reportSubmitting}
+                className="rounded-xl px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-60"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                onClick={handleReportSubmit}
+                disabled={reportSubmitting}
+                className="rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-60"
+              >
+                {reportSubmitting ? "Đang gửi..." : "Gửi báo cáo"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };

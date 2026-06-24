@@ -85,7 +85,9 @@ const PurchaseReceiptManagementPage = () => {
   const [supplierId, setSupplierId] = useState("ALL");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const [rejectTarget, setRejectTarget] = useState<PurchaseReceipt | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<PurchaseReceipt | null>(
+    null,
+  );
   const [rejectReason, setRejectReason] = useState("");
 
   const fetchReceipts = useCallback(async () => {
@@ -242,7 +244,7 @@ const PurchaseReceiptManagementPage = () => {
               <input
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
-                className="h-11 w-full rounded-xl border border-gray-300 bg-white pl-9 pr-3 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="h-10 w-full rounded-lg border border-gray-300 bg-white pl-8 pr-2.5 text-[13px] outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
                 placeholder="Nhập mã phiếu nhập..."
               />
             </div>
@@ -258,7 +260,7 @@ const PurchaseReceiptManagementPage = () => {
                 setStatusFilter(event.target.value as ReceiptStatusFilter);
                 setPage(1);
               }}
-              className="h-11 w-full rounded-xl border border-gray-300 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              className="h-10 w-full rounded-lg border border-gray-300 bg-white px-2.5 text-[13px] text-slate-700 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
             >
               {statusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -278,7 +280,7 @@ const PurchaseReceiptManagementPage = () => {
                 setSupplierId(event.target.value);
                 setPage(1);
               }}
-              className="h-11 w-full rounded-xl border border-gray-300 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              className="h-10 w-full rounded-lg border border-gray-300 bg-white px-2.5 text-[13px] text-slate-700 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
             >
               <option value="ALL">Tất cả nhà cung cấp</option>
               {suppliers.map((supplier) => (
@@ -407,7 +409,7 @@ const PurchaseReceiptManagementPage = () => {
                 <textarea
                   value={rejectReason}
                   onChange={(event) => setRejectReason(event.target.value)}
-                  className="mt-2 min-h-28 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                  className="mt-2 min-h-28 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
                   placeholder="Nhập lý do để dễ theo dõi sau này..."
                   autoFocus
                 />

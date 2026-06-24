@@ -224,7 +224,7 @@ const DiscountManagementPage = () => {
                   setSearchInput(event.target.value.toUpperCase())
                 }
                 placeholder="Nhập mã..."
-                className="h-11 w-full rounded-xl border border-gray-300 pl-9 pr-3 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                className="h-10 w-full rounded-lg border border-gray-300 pl-8 pr-2.5 text-[13px] outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               />
             </div>
           </div>
@@ -239,7 +239,7 @@ const DiscountManagementPage = () => {
                 setTypeFilter(event.target.value);
                 setPage(1);
               }}
-              className="h-11 w-full rounded-xl border border-gray-300 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              className="h-10 w-full rounded-lg border border-gray-300 bg-white px-2.5 text-[13px] text-slate-700 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
             >
               <option value="">Tất cả loại</option>
               {Object.entries(DISCOUNT_TYPE_LABEL).map(([value, label]) => (
@@ -260,7 +260,7 @@ const DiscountManagementPage = () => {
                 setIsActiveFilter(event.target.value);
                 setPage(1);
               }}
-              className="h-11 w-full rounded-xl border border-gray-300 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              className="h-10 w-full rounded-lg border border-gray-300 bg-white px-2.5 text-[13px] text-slate-700 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
             >
               <option value="">Tất cả trạng thái</option>
               <option value="true">Đang bật</option>

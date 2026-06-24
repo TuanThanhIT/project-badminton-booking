@@ -5,8 +5,10 @@ import validate from "../../middlewares/validate.js";
 import postSocialController from "../../controllers/user/postSocialController.js";
 import {
   createCommentSchema,
+  deleteCommentSchema,
   createRepostSchema,
   getCommentsSchema,
+  reportCommentSchema,
   toggleLikeSchema,
 } from "../../validations/postSocialValidation.js";
 import { ROLE_NAME } from "../../constants/userConstant.js";
@@ -49,6 +51,23 @@ const initPostSocialRoute = (app) => {
   );
 
   app.use("/user/posts", postSocialRoute);
+
+  const commentSocialRoute = express.Router();
+  commentSocialRoute.post(
+    "/:commentId/report",
+    auth,
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
+    validate(reportCommentSchema),
+    postSocialController.reportCommentController,
+  );
+  commentSocialRoute.delete(
+    "/:commentId",
+    auth,
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
+    validate(deleteCommentSchema),
+    postSocialController.deleteCommentController,
+  );
+  app.use("/user/comments", commentSocialRoute);
 };
 
 export default initPostSocialRoute;

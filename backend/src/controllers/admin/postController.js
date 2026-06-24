@@ -58,6 +58,7 @@ const getCommentsController = asyncHandler(async (req, res) => {
 const deleteCommentController = asyncHandler(async (req, res) => {
   const result = await adminPostService.deleteAdminCommentService(
     req.params.commentId,
+    { ...req.body, adminId: req.user.id },
   );
   return res
     .status(200)
@@ -130,12 +131,64 @@ const rejectModerationPostController = asyncHandler(
   },
 );
 
+const getCommentReportsController = asyncHandler(async (req, res) => {
+  const result = await adminPostService.getCommentReportsService(req.query);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Lấy danh sách báo cáo bình luận thành công", result));
+});
+
+const rejectCommentReportController = asyncHandler(async (req, res) => {
+  const result = await adminPostService.rejectCommentReportService(
+    req.params.reportId,
+    { ...req.body, adminId: req.user.id },
+  );
+  return res
+    .status(200)
+    .json(new SuccessResponse("Đã từ chối báo cáo bình luận", result));
+});
+
+const hideCommentController = asyncHandler(async (req, res) => {
+  const result = await adminPostService.hideCommentService(req.params.commentId, {
+    ...req.body,
+    adminId: req.user.id,
+  });
+  return res
+    .status(200)
+    .json(new SuccessResponse("Đã ẩn bình luận", result));
+});
+
+const unhideCommentController = asyncHandler(async (req, res) => {
+  const result = await adminPostService.unhideCommentService(req.params.commentId, {
+    ...req.body,
+    adminId: req.user.id,
+  });
+  return res
+    .status(200)
+    .json(new SuccessResponse("Đã hiện lại bình luận", result));
+});
+
+const warnCommentAuthorController = asyncHandler(async (req, res) => {
+  const result = await adminPostService.warnCommentAuthorService(
+    req.params.commentId,
+    { ...req.body, adminId: req.user.id },
+  );
+  return res
+    .status(200)
+    .json(new SuccessResponse("Đã cảnh báo tác giả bình luận", result));
+});
+
 const adminPostController = {
   getPostsController,
   togglePostActiveController,
   deletePostController,
   getCommentsController,
   deleteCommentController,
+  getCommentReportsController,
+  rejectCommentReportController,
+  hideCommentController,
+  unhideCommentController,
+  warnCommentAuthorController,
   getPendingModerationPostsController,
   getPostModerationDetailController,
   approveModerationPostController,

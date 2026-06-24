@@ -385,36 +385,36 @@ const createExampleImage = (text) =>
 const buildDescription = ({ productName, brand, type, categoryName }) => {
   const textByType = {
     racket:
-      "mau vot can bang tot, khung graphite ben va phu hop nguoi choi trung cap den nang cao.",
+      "mẫu vợt cân bằng tốt, khung graphite bền và phù hợp người chơi trung cấp đến nâng cao.",
     shoes:
-      "doi giay bam san on dinh, dem em va ho tro di chuyen ngang trong san trong nha.",
+      "đôi giày bám sân ổn định, đệm êm và hỗ trợ di chuyển ngang trong sân trong nhà.",
     shirt:
-      "ao cau long vai polyester nhanh kho, form the thao va phu hop tap luyen hang ngay.",
+      "áo cầu lông vải polyester nhanh khô, form thể thao và phù hợp tập luyện hằng ngày.",
     shorts:
-      "quan cau long nhe, co gian tot va giup nguoi choi thoai mai khi bung toc tren san.",
+      "quần cầu lông nhẹ, co giãn tốt và giúp người chơi thoải mái khi bứt tốc trên sân.",
     skirt:
-      "vay cau long nhe, thoang va co lop trong tien loi cho cac buoi tap va thi dau.",
+      "váy cầu lông nhẹ, thoáng và có lớp trong tiện lợi cho các buổi tập và thi đấu.",
     bag:
-      "tui dung vot nhieu ngan, chat lieu polyester/PU ben va de sap xep giay, vot, phu kien.",
+      "túi đựng vợt nhiều ngăn, chất liệu polyester/PU bền và dễ sắp xếp giày, vợt, phụ kiện.",
     backpack:
-      "balo cau long gon nhe, co ngan rieng cho vot va vat dung ca nhan khi di tap.",
+      "balo cầu lông gọn nhẹ, có ngăn riêng cho vợt và vật dụng cá nhân khi đi tập.",
     socks:
-      "vo cau long co dem em, thoang khi va giup giam truot trong giay khi van dong nhanh.",
+      "vớ cầu lông có đệm êm, thoáng khí và giúp giảm trượt trong giày khi vận động nhanh.",
     string:
-      "cuoc dan vot co do nay tot, cam giac danh ro va phu hop ca tap luyen lan thi dau.",
+      "cước đan vợt có độ nảy tốt, cảm giác đánh rõ và phù hợp cả tập luyện lẫn thi đấu.",
     shuttle:
-      "qua cau co duong bay on dinh, dau cau chac va phu hop cho cau lac bo hoac lop hoc.",
+      "quả cầu có đường bay ổn định, đầu cầu chắc và phù hợp cho câu lạc bộ hoặc lớp học.",
     support:
-      "phu kien ho tro co khop, chat lieu co gian va phu hop khoi dong, hoi phuc sau tran.",
+      "phụ kiện hỗ trợ cơ khớp, chất liệu co giãn và phù hợp khởi động, hồi phục sau trận.",
     training:
-      "dung cu tap luyen giup cai thien phan xa, footwork va the luc cho nguoi choi cau long.",
+      "dụng cụ tập luyện giúp cải thiện phản xạ, footwork và thể lực cho người chơi cầu lông.",
     drink:
-      "san pham bo sung nuoc va nang luong, tien dung cho nguoi choi truoc va sau buoi tap.",
+      "sản phẩm bổ sung nước và năng lượng, tiện dùng cho người chơi trước và sau buổi tập.",
     accessory:
-      "phu kien cau long thiet thuc, de ban kem voi vot, giay va cac don hang tai quay.",
+      "phụ kiện cầu lông thiết thực, dễ bán kèm với vợt, giày và các đơn hàng tại quầy.",
   };
 
-  return `<h2>${productName}</h2><p>${productName} la san pham ${categoryName} cua ${brand}, ${textByType[type]}</p><ul><li>Thiet ke cho nguoi choi phong trao, hoc vien va nguoi choi ban chuyen.</li><li>Chat lieu duoc chon theo dung cong nang cua tung nhom san pham.</li><li>Du lieu demo phu hop de kiem thu xem chi tiet, chon bien the, dat hang va thong ke doanh thu.</li></ul>`;
+  return `<h2>${productName}</h2><p>${productName} là sản phẩm ${categoryName} của ${brand}, ${textByType[type]}</p><ul><li>Thiết kế cho người chơi phong trào, học viên và người chơi bán chuyên.</li><li>Chất liệu được chọn theo đúng công năng của từng nhóm sản phẩm.</li><li>Dữ liệu demo phù hợp để kiểm thử xem chi tiết, chọn biến thể, đặt hàng và thống kê doanh thu.</li></ul>`;
 };
 
 const roundPrice = (value) => Math.round(value / 10000) * 10000;

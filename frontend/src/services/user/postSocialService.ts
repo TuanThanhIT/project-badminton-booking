@@ -2,6 +2,7 @@ import instance from "../../utils/axiosCustomize";
 import type { ApiResponse } from "../../types/api";
 import type {
   CreateCommentRequest,
+  ReportCommentRequest,
   Post,
   PostComment,
   PostCounts,
@@ -25,6 +26,13 @@ type GetCommentsResponse = ApiResponse<{
 type CreateRepostResponse = ApiResponse<{
   repostPost: Post;
 } & PostCounts>;
+
+type ReportCommentResponse = ApiResponse<{
+  reportCount: number;
+  autoHidden: boolean;
+}>;
+
+type DeleteCommentResponse = ApiResponse<PostCounts>;
 
 const toggleLikeService = (postId: number, reactionType: PostReactionType = "LIKE") =>
   instance.post<ToggleLikeResponse>(`/user/posts/${postId}/like`, {
@@ -52,11 +60,19 @@ const createRepostService = (postId: number, content?: string) =>
     content,
   });
 
+const reportCommentService = (commentId: number, data: ReportCommentRequest) =>
+  instance.post<ReportCommentResponse>(`/user/comments/${commentId}/report`, data);
+
+const deleteCommentService = (commentId: number) =>
+  instance.delete<DeleteCommentResponse>(`/user/comments/${commentId}`);
+
 const postSocialService = {
   toggleLikeService,
   createCommentService,
   getCommentsService,
   createRepostService,
+  reportCommentService,
+  deleteCommentService,
 };
 
 export default postSocialService;

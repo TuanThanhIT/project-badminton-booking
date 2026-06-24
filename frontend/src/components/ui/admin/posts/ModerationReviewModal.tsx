@@ -6,6 +6,7 @@ import type {
   AdminModerationPost,
   ModerationLabel,
 } from "../../../../types/admin";
+import { showConfirmDialog } from "../../../../utils/confirmDialog";
 import AdminModal, {
   adminPrimaryButtonClass,
   adminSecondaryButtonClass,
@@ -22,14 +23,10 @@ const LABEL_TEXT: Record<string, string> = {
 type Props = {
   postId: number;
   onClose: () => void;
-  onResolved: () => void;
+  onResolved: () => void | Promise<void>;
 };
 
-const ModerationReviewModal = ({
-  postId,
-  onClose,
-  onResolved,
-}: Props) => {
+const ModerationReviewModal = ({ postId, onClose, onResolved }: Props) => {
   const [post, setPost] = useState<AdminModerationPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState<"approve" | "reject" | null>(
@@ -55,11 +52,20 @@ const ModerationReviewModal = ({
   }, [onClose, postId]);
 
   const approve = async () => {
+    const confirmed = await showConfirmDialog(
+      "Duyệt bài viết?",
+      "Bài viết sẽ được công khai cho người dùng sau khi duyệt.",
+      "Duyệt bài",
+      "Hủy",
+      "success",
+    );
+    if (!confirmed) return;
+
     setSubmitting("approve");
     try {
       await adminPostService.approveModerationPostService(postId, { reason });
       toast.success("Đã duyệt và công khai bài viết");
-      onResolved();
+      await onResolved();
       onClose();
     } catch (error: any) {
       toast.error(error?.message || "Không thể duyệt bài viết");
@@ -74,6 +80,15 @@ const ModerationReviewModal = ({
       return;
     }
 
+    const confirmed = await showConfirmDialog(
+      "Từ chối bài viết?",
+      "Bài viết sẽ không được công khai và hệ thống sẽ ghi nhận vi phạm cho tác giả.",
+      "Từ chối",
+      "Hủy",
+      "danger",
+    );
+    if (!confirmed) return;
+
     setSubmitting("reject");
     try {
       await adminPostService.rejectModerationPostService(postId, {
@@ -81,7 +96,7 @@ const ModerationReviewModal = ({
         reason,
       });
       toast.success("Đã từ chối bài viết và ghi nhận vi phạm");
-      onResolved();
+      await onResolved();
       onClose();
     } catch (error: any) {
       toast.error(error?.message || "Không thể từ chối bài viết");
@@ -107,7 +122,7 @@ const ModerationReviewModal = ({
           <div className="grid gap-4 md:grid-cols-2">
             <section className="space-y-3 rounded-xl border border-slate-200 p-4">
               <div>
-                <p className="text-xs font-semibold uppercase text-slate-400">
+                <p className="text-xs font-bold uppercase text-slate-500">
                   Tác giả
                 </p>
                 <p className="font-semibold text-slate-800">
@@ -116,12 +131,12 @@ const ModerationReviewModal = ({
                     "Không rõ"}
                 </p>
                 <p className="text-xs text-slate-500">
-                  @{post.author?.username} · {post.author?.violationCount || 0} vi
-                  phạm
+                  @{post.author?.username} · {post.author?.violationCount || 0}{" "}
+                  vi phạm
                 </p>
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase text-slate-400">
+                <p className="text-xs font-bold uppercase text-slate-500">
                   Nội dung gốc
                 </p>
                 <h3 className="mt-1 font-bold text-slate-900">{post.title}</h3>
@@ -173,7 +188,7 @@ const ModerationReviewModal = ({
                 onChange={(event) =>
                   setLabel(event.target.value as ModerationLabel | "")
                 }
-                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-sky-400"
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[13px] outline-none focus:border-sky-400"
               >
                 <option value="">Chọn nhãn</option>
                 <option value="spam">Spam</option>
@@ -206,7 +221,10 @@ const ModerationReviewModal = ({
             <button
               type="button"
               onClick={reject}
-              disabled={submitting !== null || post.moderationStatus !== "REVIEW_REQUIRED"}
+              disabled={
+                submitting !== null ||
+                post.moderationStatus !== "REVIEW_REQUIRED"
+              }
               className="inline-flex h-11 items-center gap-2 rounded-xl bg-rose-600 px-4 text-sm font-bold text-white hover:bg-rose-700 disabled:opacity-60"
             >
               <XCircle className="h-4 w-4" />
@@ -215,7 +233,10 @@ const ModerationReviewModal = ({
             <button
               type="button"
               onClick={approve}
-              disabled={submitting !== null || post.moderationStatus !== "REVIEW_REQUIRED"}
+              disabled={
+                submitting !== null ||
+                post.moderationStatus !== "REVIEW_REQUIRED"
+              }
               className={adminPrimaryButtonClass}
             >
               <CheckCircle2 className="h-4 w-4" />

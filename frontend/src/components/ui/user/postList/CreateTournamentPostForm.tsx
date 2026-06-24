@@ -37,7 +37,7 @@ type CreateTournamentPostFormProps = {
 };
 
 const inputClass =
-  "w-full rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-colors placeholder:text-slate-400 hover:border-slate-300 focus:border-sky-400 focus:ring-2 focus:ring-sky-100/70";
+  "w-full rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition-colors placeholder:text-slate-400 hover:border-slate-300 focus:border-sky-400 focus:ring-1 focus:ring-sky-100/70";
 
 const labelClass = "block text-[13px] font-medium text-slate-600 mb-1.5";
 
@@ -151,7 +151,15 @@ const CreateTournamentPostForm = ({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [dispatch, lastCreatedPost, lastCreateModeration, lastCreateViolation, navigate, reset, redirectOnSuccess]);
+  }, [
+    dispatch,
+    lastCreatedPost,
+    lastCreateModeration,
+    lastCreateViolation,
+    navigate,
+    reset,
+    redirectOnSuccess,
+  ]);
 
   const onSubmit = async (formValue: FormCreateTournamentPost) => {
     const data: CreatePostRequest = {

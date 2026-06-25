@@ -20,7 +20,7 @@ const getManagerBranchId = async (managerId) => {
   });
 
   if (!branchManager) {
-    throw new NotFoundError("Manager has no active branch");
+    throw new NotFoundError("Quản lý chưa được gán chi nhánh đang hoạt động");
   }
 
   return branchManager.branchId;
@@ -38,11 +38,11 @@ const assertValidTimeRange = (startTime, endTime) => {
   const normalizedEnd = normalizeTime(endTime);
 
   if (!normalizedStart || !normalizedEnd) {
-    throw new BadRequestError("Invalid shift time");
+    throw new BadRequestError("Thời gian ca làm không hợp lệ");
   }
 
   if (normalizedEnd <= normalizedStart) {
-    throw new BadRequestError("End time must be greater than start time");
+    throw new BadRequestError("Giờ kết thúc phải lớn hơn giờ bắt đầu");
   }
 
   return { startTime: normalizedStart, endTime: normalizedEnd };
@@ -127,7 +127,7 @@ const findManagerShift = async ({ managerId, workShiftId, transaction }) => {
   });
 
   if (!shift) {
-    throw new NotFoundError("Work shift not found in manager branch");
+    throw new NotFoundError("Không tìm thấy ca làm trong chi nhánh của quản lý");
   }
 
   return { branchId, shift };
@@ -140,7 +140,7 @@ const assertEmployeeInBranch = async ({ employeeId, branchId, transaction }) => 
   });
 
   if (!branchEmployee) {
-    throw new BadRequestError("Employee does not belong to manager branch");
+    throw new BadRequestError("Nhân viên không thuộc chi nhánh của quản lý");
   }
 };
 
@@ -185,7 +185,7 @@ const createManagerWorkShiftService = async (managerId, data) => {
   });
 
   if (overlapping) {
-    throw new ConflictError("Work shift time overlaps another shift");
+    throw new ConflictError("Thời gian ca làm bị trùng với ca khác");
   }
 
   const shift = await WorkShift.create({
@@ -211,7 +211,7 @@ const assignEmployeeToShiftService = async (managerId, data) => {
   });
 
   if (shift.shiftStatus !== WORK_SHIFT_STATUS.SCHEDULED) {
-    throw new BadRequestError("Only scheduled shifts can be assigned");
+    throw new BadRequestError("Chỉ có thể phân công ca làm đã lên lịch");
   }
 
   await assertEmployeeInBranch({
@@ -227,7 +227,7 @@ const assignEmployeeToShiftService = async (managerId, data) => {
   });
 
   if (existed) {
-    throw new ConflictError("Employee already assigned to this shift");
+    throw new ConflictError("Nhân viên đã được phân công vào ca này");
   }
 
   if (data.roleInShift === ROLE_IN_SHIFT.CASHIER) {
@@ -239,7 +239,7 @@ const assignEmployeeToShiftService = async (managerId, data) => {
     });
 
     if (cashier) {
-      throw new ConflictError("This shift already has a cashier");
+      throw new ConflictError("Ca làm này đã có thu ngân");
     }
   }
 
@@ -263,7 +263,7 @@ const assignEmployeeToShiftService = async (managerId, data) => {
   });
 
   if (overlapping) {
-    throw new ConflictError("Employee already has an overlapping shift");
+    throw new ConflictError("Nhân viên đã có ca làm bị trùng thời gian");
   }
 
   const assignment = await WorkShiftEmployee.create({
@@ -291,7 +291,7 @@ const updateShiftAssignmentService = async (managerId, assignmentId, data) => {
   });
 
   if (!assignment) {
-    throw new NotFoundError("Shift assignment not found");
+    throw new NotFoundError("Không tìm thấy phân công ca làm");
   }
 
   await findManagerShift({
@@ -300,7 +300,7 @@ const updateShiftAssignmentService = async (managerId, assignmentId, data) => {
   });
 
   if (assignment.workShift.shiftStatus !== WORK_SHIFT_STATUS.SCHEDULED) {
-    throw new BadRequestError("Only scheduled shift assignments can be updated");
+    throw new BadRequestError("Chỉ có thể cập nhật phân công của ca đã lên lịch");
   }
 
   if (data.roleInShift === ROLE_IN_SHIFT.CASHIER) {
@@ -313,7 +313,7 @@ const updateShiftAssignmentService = async (managerId, assignmentId, data) => {
     });
 
     if (cashier) {
-      throw new ConflictError("This shift already has a cashier");
+      throw new ConflictError("Ca làm này đã có thu ngân");
     }
   }
 
@@ -332,7 +332,7 @@ const removeShiftAssignmentService = async (managerId, assignmentId) => {
   });
 
   if (!assignment) {
-    throw new NotFoundError("Shift assignment not found");
+    throw new NotFoundError("Không tìm thấy phân công ca làm");
   }
 
   await findManagerShift({
@@ -341,7 +341,7 @@ const removeShiftAssignmentService = async (managerId, assignmentId) => {
   });
 
   if (assignment.workShift.shiftStatus !== WORK_SHIFT_STATUS.SCHEDULED) {
-    throw new BadRequestError("Only scheduled shift assignments can be removed");
+    throw new BadRequestError("Chỉ có thể gỡ phân công của ca đã lên lịch");
   }
 
   await assignment.destroy();

@@ -8,7 +8,12 @@ const getProductsController = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Lay danh sach san pham cua quan ly thanh cong", result));
+    .json(
+      new SuccessResponse(
+        "Lấy danh sách sản phẩm của quản lý thành công",
+        result,
+      ),
+    );
 });
 
 const getProductCategoriesController = asyncHandler(async (req, res) => {
@@ -16,7 +21,12 @@ const getProductCategoriesController = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Lay danh muc san pham cua quan ly thanh cong", result));
+    .json(
+      new SuccessResponse(
+        "Lấy danh mục sản phẩm của quản lý thành công",
+        result,
+      ),
+    );
 });
 
 const getProductDetailController = asyncHandler(async (req, res) => {
@@ -28,7 +38,12 @@ const getProductDetailController = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Lay chi tiet san pham cua quan ly thanh cong", result));
+    .json(
+      new SuccessResponse(
+        "Lấy chi tiết sản phẩm của quản lý thành công",
+        result,
+      ),
+    );
 });
 
 export default {

@@ -46,7 +46,7 @@ const getManagerBranchId = async (managerId) => {
   });
 
   if (!branchManager) {
-    throw new NotFoundError("Manager has no active branch");
+    throw new NotFoundError("Quản lý chưa được gán chi nhánh đang hoạt động");
   }
 
   return branchManager.branchId;

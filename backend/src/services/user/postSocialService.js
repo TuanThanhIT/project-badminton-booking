@@ -35,7 +35,7 @@ const resolveOriginalPost = async (post, transaction) => {
   for (let depth = 0; depth < 20; depth += 1) {
     if (!current) return null;
     if (visited.has(current.id)) {
-      throw new BadRequestError("Invalid repost chain.");
+      throw new BadRequestError("Chuỗi đăng lại không hợp lệ.");
     }
     visited.add(current.id);
 
@@ -48,7 +48,7 @@ const resolveOriginalPost = async (post, transaction) => {
     });
   }
 
-  throw new BadRequestError("Repost chain is too deep.");
+  throw new BadRequestError("Chuỗi đăng lại quá sâu.");
 };
 
 const emptyReactionSummary = () =>
@@ -191,7 +191,7 @@ const buildPostCounts = async (postId, currentUserId, transaction) => {
 const toggleLikeService = async (data) => {
   const { postId, User: authUser } = data;
   const currentUserId = authUser?.id;
-  if (!currentUserId) throw new BadRequestError("Missing user information.");
+  if (!currentUserId) throw new BadRequestError("Thiếu thông tin người dùng.");
 
   const reactionType = Object.values(POST_REACTION).includes(data.reactionType)
     ? data.reactionType
@@ -202,7 +202,7 @@ const toggleLikeService = async (data) => {
       where: { id: postId, isDeleted: false },
       transaction: t,
     });
-    if (!post) throw new NotFoundError("Post not found.");
+    if (!post) throw new NotFoundError("Không tìm thấy bài viết.");
 
     const existing = await PostLike.findOne({
       where: { userId: currentUserId, postId },
@@ -241,25 +241,25 @@ const toggleLikeService = async (data) => {
 
 const createCommentService = async (data) => {
   const { postId, content, userId, parentId } = data;
-  if (!userId) throw new BadRequestError("Missing user information.");
+  if (!userId) throw new BadRequestError("Thiếu thông tin người dùng.");
 
   const text = (content ?? "").toString().trim();
-  if (!text) throw new BadRequestError("Comment content is required.");
+  if (!text) throw new BadRequestError("Nội dung bình luận là bắt buộc.");
   if (text.length > 2000)
-    throw new BadRequestError("Comment content is too long.");
+    throw new BadRequestError("Nội dung bình luận quá dài.");
 
   return sequelize.transaction(async (t) => {
     const post = await Post.findOne({
       where: { id: postId, isDeleted: false },
       transaction: t,
     });
-    if (!post) throw new NotFoundError("Post not found.");
+    if (!post) throw new NotFoundError("Không tìm thấy bài viết.");
 
     let parentIdNum =
       parentId === undefined || parentId === null ? null : Number(parentId);
     if (parentIdNum !== null) {
       if (Number.isNaN(parentIdNum) || parentIdNum <= 0) {
-        throw new BadRequestError("Invalid parentId.");
+        throw new BadRequestError("Bình luận cha không hợp lệ.");
       }
 
       const parent = await Comment.findOne({
@@ -267,7 +267,7 @@ const createCommentService = async (data) => {
         attributes: ["id", "parentId"],
         transaction: t,
       });
-      if (!parent) throw new NotFoundError("Parent comment not found.");
+      if (!parent) throw new NotFoundError("Không tìm thấy bình luận cha.");
       parentIdNum = parent.parentId || parent.id;
     }
 
@@ -343,7 +343,7 @@ const getCommentsService = async (data) => {
 
 const deleteCommentService = async (data) => {
   const { commentId, userId } = data;
-  if (!userId) throw new BadRequestError("Missing user information.");
+  if (!userId) throw new BadRequestError("Thiếu thông tin người dùng.");
 
   return sequelize.transaction(async (t) => {
     const comment = await Comment.findOne({
@@ -383,7 +383,7 @@ const deleteCommentService = async (data) => {
 
 const reportCommentService = async (data) => {
   const { commentId, userId, reason } = data;
-  if (!userId) throw new BadRequestError("Missing user information.");
+  if (!userId) throw new BadRequestError("Thiếu thông tin người dùng.");
 
   const normalizedDescription =
     data.description === undefined || data.description === null
@@ -501,14 +501,14 @@ const reportCommentService = async (data) => {
 const createRepostService = async (data) => {
   const { postId, content, User: authUser } = data;
   const currentUserId = authUser?.id;
-  if (!currentUserId) throw new BadRequestError("Missing user information.");
+  if (!currentUserId) throw new BadRequestError("Thiếu thông tin người dùng.");
 
   const repostText =
     content === undefined || content === null
       ? null
       : content.toString().trim();
   if (repostText && repostText.length > 2000) {
-    throw new BadRequestError("Share content is too long.");
+    throw new BadRequestError("Nội dung chia sẻ quá dài.");
   }
 
   return sequelize.transaction(async (t) => {
@@ -516,10 +516,10 @@ const createRepostService = async (data) => {
       where: { id: postId, isDeleted: false },
       transaction: t,
     });
-    if (!selectedPost) throw new NotFoundError("Post not found.");
+    if (!selectedPost) throw new NotFoundError("Không tìm thấy bài viết.");
 
     const rootPost = await resolveOriginalPost(selectedPost, t);
-    if (!rootPost) throw new NotFoundError("Original post not found.");
+    if (!rootPost) throw new NotFoundError("Không tìm thấy bài viết gốc.");
 
     const createdRepost = await Post.create(
       {

@@ -43,6 +43,15 @@ const reactionMeta: Record<ReactionKey, { icon: string; label: string }> = {
   ANGRY: { icon: "\u{1F621}", label: "Phẫn nộ" },
 };
 
+const reactionOrder: ReactionKey[] = [
+  "LIKE",
+  "LOVE",
+  "HAHA",
+  "WOW",
+  "SAD",
+  "ANGRY",
+];
+
 const ProfileHeroBanner = ({
   displayName,
   username,
@@ -59,9 +68,9 @@ const ProfileHeroBanner = ({
   isCoach = false,
   coachExperienceYears,
 }: ProfileHeroBannerProps) => {
-  const reactionEntries = Object.entries(stats?.reactions ?? {})
-    .filter((entry): entry is [ReactionKey, number] => Number(entry[1]) > 0)
-    .sort((a, b) => b[1] - a[1]);
+  const reactionEntries = reactionOrder.map(
+    (type) => [type, Number(stats?.reactions?.[type] ?? 0)] as const,
+  );
 
   const statCards = [
     {
@@ -183,21 +192,21 @@ const ProfileHeroBanner = ({
                   )}
                 </div>
 
-                {reactionEntries.length > 0 && (
-                  <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-600 sm:justify-start">
-                    <span className="font-semibold text-slate-700">{"C\u1EA3m x\u00FAc:"}</span>
-                    {reactionEntries.slice(0, 6).map(([type, count]) => (
-                      <span
-                        key={type}
-                        className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 font-medium"
-                        title={reactionMeta[type].label}
-                      >
-                        <span>{reactionMeta[type].icon}</span>
-                        <span className="tabular-nums">{count}</span>
-                      </span>
-                    ))}
-                  </div>
-                )}
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-600 sm:justify-start">
+                  <span className="font-semibold text-slate-700">
+                    {"C\u1EA3m x\u00FAc:"}
+                  </span>
+                  {reactionEntries.map(([type, count]) => (
+                    <span
+                      key={type}
+                      className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 font-medium"
+                      title={reactionMeta[type].label}
+                    >
+                      <span>{reactionMeta[type].icon}</span>
+                      <span className="tabular-nums">{count}</span>
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
 

@@ -8,7 +8,7 @@ const getBeveragesController = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Lay danh sach do uong thanh cong", result));
+    .json(new SuccessResponse("Lấy danh sách đồ uống thành công", result));
 });
 
 export default {

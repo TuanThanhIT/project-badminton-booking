@@ -616,7 +616,7 @@ const walletWithdrawConfirmService = async (data) => {
       lock: t.LOCK.UPDATE,
     });
 
-    if (!tx) throw new BadRequestError("Transaction không tồn tại");
+    if (!tx) throw new BadRequestError("Giao dịch không tồn tại");
 
     // check expire
     if (tx.expiredAt && tx.expiredAt < new Date()) {

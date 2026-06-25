@@ -10,19 +10,23 @@ import { STOCK_ITEM_TYPE } from "../../constants/inventoryConstant.js";
 const validateItemReference = ({ itemType, variantId, beverageId }) => {
   if (itemType === STOCK_ITEM_TYPE.PRODUCT_VARIANT) {
     if (!variantId || beverageId) {
-      throw new BadRequestError("Product variant stock change requires variantId only");
+      throw new BadRequestError(
+        "Điều chỉnh tồn kho sản phẩm chỉ được truyền variantId",
+      );
     }
     return;
   }
 
   if (itemType === STOCK_ITEM_TYPE.BEVERAGE) {
     if (!beverageId || variantId) {
-      throw new BadRequestError("Beverage stock change requires beverageId only");
+      throw new BadRequestError(
+        "Điều chỉnh tồn kho đồ uống chỉ được truyền beverageId",
+      );
     }
     return;
   }
 
-  throw new BadRequestError("Invalid stock item type");
+  throw new BadRequestError("Loại hàng tồn kho không hợp lệ");
 };
 
 const getOrCreateVariantStock = async ({
@@ -111,14 +115,14 @@ const changeItemStock = async ({
   transaction,
 }) => {
   if (!transaction) {
-    throw new BadRequestError("Stock changes must run inside a transaction");
+    throw new BadRequestError("Điều chỉnh tồn kho phải chạy trong transaction");
   }
 
   validateItemReference({ itemType, variantId, beverageId });
 
   const change = Number(quantityChange);
   if (!Number.isInteger(change) || change === 0) {
-    throw new BadRequestError("Quantity change must be a non-zero integer");
+    throw new BadRequestError("Số lượng điều chỉnh phải là số nguyên khác 0");
   }
 
   const lock = transaction.LOCK?.UPDATE || transaction.constructor.LOCK?.UPDATE || true;
@@ -141,7 +145,7 @@ const changeItemStock = async ({
   const afterStock = beforeStock + change;
 
   if (afterStock < 0) {
-    throw new BadRequestError("Not enough stock");
+    throw new BadRequestError("Tồn kho không đủ");
   }
 
   await stock.update({ stock: afterStock }, { transaction });

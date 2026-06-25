@@ -134,7 +134,60 @@ const ProfilePage = () => {
     currentUser?.role === ROLE_NAME.COACH || profile?.role === ROLE_NAME.COACH;
   const accountStatus = profile?.accountStatus || "ACTIVE";
   const violationCount = profile?.violationCount || 0;
-  const showAccountWarning = accountStatus !== "ACTIVE";
+  const showCommunityNotice = accountStatus !== "ACTIVE" || violationCount > 0;
+  const isRestrictedAccount =
+    accountStatus === "BANNED" || accountStatus === "SUSPENDED";
+  const communityNoticeTone = isRestrictedAccount
+    ? {
+        topBar: "from-red-500 via-rose-400 to-red-200",
+        icon: "border-red-100 bg-red-50 text-red-600",
+        badge: "border-red-200 bg-red-50 text-red-700",
+        notice: "border-red-100 bg-red-50/70",
+        title: "text-red-800",
+      }
+    : violationCount >= 3
+      ? {
+          topBar: "from-rose-400 via-pink-300 to-rose-100",
+          icon: "border-rose-100 bg-rose-50 text-rose-600",
+          badge: "border-rose-200 bg-rose-50 text-rose-700",
+          notice: "border-rose-100 bg-rose-50/70",
+          title: "text-rose-800",
+        }
+      : violationCount === 2
+        ? {
+            topBar: "from-violet-400 via-indigo-300 to-violet-100",
+            icon: "border-violet-100 bg-violet-50 text-violet-600",
+            badge: "border-violet-200 bg-violet-50 text-violet-700",
+            notice: "border-violet-100 bg-violet-50/70",
+            title: "text-violet-800",
+          }
+        : violationCount === 1 || accountStatus === "WARNING"
+          ? {
+              topBar: "from-sky-400 via-cyan-400 to-sky-200",
+              icon: "border-sky-100 bg-sky-50 text-sky-600",
+              badge: "border-sky-200 bg-sky-50 text-sky-700",
+              notice: "border-sky-100 bg-sky-50/70",
+              title: "text-sky-900",
+            }
+          : {
+              topBar: "from-sky-400 via-cyan-400 to-sky-200",
+              icon: "border-sky-100 bg-sky-50 text-sky-600",
+              badge: ACCOUNT_STATUS_BADGE_CLASS[accountStatus],
+              notice: "border-sky-100 bg-sky-50/70",
+              title: "text-sky-900",
+            };
+  const communityNoticeTitle =
+    accountStatus === "ACTIVE"
+      ? `Bạn đã có ${violationCount} lần vi phạm quy định cộng đồng.`
+      : accountStatus === "WARNING"
+        ? "Tài khoản của bạn đang ở trạng thái cảnh báo."
+        : accountStatus === "SUSPENDED"
+          ? "Tài khoản của bạn đang bị tạm khóa."
+          : "Tài khoản của bạn đã bị khóa.";
+  const communityNoticeMessage =
+    accountStatus === "ACTIVE"
+      ? "Hãy kiểm tra lại nội dung trước khi đăng để tránh bị cảnh báo hoặc khóa tài khoản."
+      : "Vui lòng xem lại quy định cộng đồng để tránh phát sinh thêm vi phạm trong các bài đăng tiếp theo.";
 
   const engagementStats = useMemo(
     () =>
@@ -471,108 +524,51 @@ const ProfilePage = () => {
           }
         />
 
-        {accountStatus === "ACTIVE" && violationCount > 0 ? (
-          <div className="mt-5 rounded-3xl border border-sky-200 bg-sky-50 p-4 text-sky-900 shadow-sm">
-            <div className="flex gap-3">
-              <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/70">
-                <AlertTriangle className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="font-semibold">
-                  Bạn đã có {violationCount} lần vi phạm quy định cộng đồng.
-                </p>
-                <p className="mt-1 text-sm">
-                  Vui lòng đăng bài đúng nội quy để tránh bị cảnh báo hoặc khóa
-                  tài khoản.
-                </p>
-                <Link
-                  to="/about#community-guidelines"
-                  className="mt-2 inline-flex text-sm font-semibold text-sky-700 hover:text-sky-800"
-                >
-                  Xem quy định cộng đồng
-                </Link>
-              </div>
-            </div>
-          </div>
-        ) : null}
-
-        {showAccountWarning ? (
+        <section className="mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
           <div
-            className={`mt-5 rounded-3xl border p-4 shadow-sm ${
-              accountStatus === "WARNING"
-                ? "border-amber-200 bg-amber-50 text-amber-900"
-                : "border-red-200 bg-red-50 text-red-900"
-            }`}
-          >
-            <div className="flex gap-3">
-              <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/70">
-                <AlertTriangle className="h-5 w-5" />
-              </div>
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-semibold">
-                    {accountStatus === "WARNING"
-                      ? "Tài khoản của bạn đã có cảnh báo do vi phạm quy định cộng đồng."
-                      : accountStatus === "SUSPENDED"
-                        ? "Tài khoản của bạn đang bị tạm khóa do vi phạm quy định cộng đồng."
-                        : "Tài khoản của bạn đã bị khóa do vi phạm quy định cộng đồng."}
+            className={`h-1 bg-gradient-to-r ${communityNoticeTone.topBar}`}
+          />
+          <div className="p-5 sm:p-6">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="flex gap-3">
+                <div
+                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ${communityNoticeTone.icon}`}
+                >
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">
+                    Trạng thái cộng đồng
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Theo dõi số lần vi phạm và tình trạng tài khoản của bạn.
                   </p>
-                  <span
-                    className={`rounded border px-2 py-0.5 text-xs font-semibold ${
-                      ACCOUNT_STATUS_BADGE_CLASS[accountStatus]
-                    }`}
-                  >
-                    {ACCOUNT_STATUS_LABEL[accountStatus]}
-                  </span>
-                </div>
-                <div className="mt-2 grid gap-1 text-sm sm:grid-cols-2">
-                  <p>Số lần vi phạm: {profile.violationCount || 0}</p>
-                  {profile.lastViolationAt ? (
-                    <p>
-                      Vi phạm gần nhất:{" "}
-                      {new Date(profile.lastViolationAt).toLocaleString(
-                        "vi-VN",
-                      )}
-                    </p>
-                  ) : null}
-                  {profile.suspendedUntil ? (
-                    <p>
-                      Tạm khóa đến:{" "}
-                      {new Date(profile.suspendedUntil).toLocaleString("vi-VN")}
-                    </p>
-                  ) : null}
-                  {profile.suspensionReason ? (
-                    <p className="sm:col-span-2">
-                      Lý do: {profile.suspensionReason}
-                    </p>
-                  ) : null}
                 </div>
               </div>
+              <span
+                className={`rounded-full border px-3 py-1 text-xs font-semibold ${communityNoticeTone.badge}`}
+              >
+                {ACCOUNT_STATUS_LABEL[accountStatus]}
+              </span>
             </div>
-          </div>
-        ) : null}
 
-        <section className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="text-base font-semibold text-slate-900">
-                Trạng thái cộng đồng
-              </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Theo dõi số lần vi phạm và tình trạng tài khoản của bạn.
+          {showCommunityNotice ? (
+            <div
+              className={`mt-5 rounded-2xl border p-4 ${communityNoticeTone.notice}`}
+            >
+              <p
+                className={`text-sm font-semibold ${communityNoticeTone.title}`}
+              >
+                {communityNoticeTitle}
+              </p>
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                {communityNoticeMessage}
               </p>
             </div>
-            <span
-              className={`rounded border px-2.5 py-1 text-xs font-semibold ${
-                ACCOUNT_STATUS_BADGE_CLASS[accountStatus]
-              }`}
-            >
-              {ACCOUNT_STATUS_LABEL[accountStatus]}
-            </span>
-          </div>
+          ) : null}
 
-          <div className="mt-4 grid gap-3 text-sm text-slate-700 sm:grid-cols-2 lg:grid-cols-3">
-            <div>
+          <div className="mt-5 grid gap-3 text-sm text-slate-700 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3">
               <p className="text-xs font-medium uppercase text-slate-400">
                 Trạng thái tài khoản
               </p>
@@ -580,7 +576,7 @@ const ProfilePage = () => {
                 {ACCOUNT_STATUS_LABEL[accountStatus]}
               </p>
             </div>
-            <div>
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3">
               <p className="text-xs font-medium uppercase text-slate-400">
                 Số lần vi phạm
               </p>
@@ -588,7 +584,7 @@ const ProfilePage = () => {
                 {violationCount}
               </p>
             </div>
-            <div>
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3">
               <p className="text-xs font-medium uppercase text-slate-400">
                 Lần vi phạm gần nhất
               </p>
@@ -599,7 +595,7 @@ const ProfilePage = () => {
               </p>
             </div>
             {profile.suspensionReason ? (
-              <div className="sm:col-span-2">
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3 sm:col-span-2">
                 <p className="text-xs font-medium uppercase text-slate-400">
                   Lý do khóa
                 </p>
@@ -609,7 +605,7 @@ const ProfilePage = () => {
               </div>
             ) : null}
             {profile.suspendedUntil ? (
-              <div>
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3">
                 <p className="text-xs font-medium uppercase text-slate-400">
                   Thời gian mở khóa
                 </p>
@@ -626,6 +622,7 @@ const ProfilePage = () => {
           >
             Xem quy định cộng đồng
           </Link>
+          </div>
         </section>
 
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-8">

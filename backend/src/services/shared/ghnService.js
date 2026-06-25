@@ -38,7 +38,7 @@ ghnClient.interceptors.request.use((config) => {
 
 const ensureGhnToken = () => {
   if (!process.env.GHN_TOKEN_DEV) {
-    throw new InternalServerError("GHN token is not configured");
+    throw new InternalServerError("Chưa cấu hình token GHN");
   }
 };
 
@@ -46,7 +46,7 @@ const ensureGhnDataArray = (response, label) => {
   const data = response.data?.data;
 
   if (!Array.isArray(data)) {
-    throw new InternalServerError(`GHN ${label} response is invalid`);
+    throw new InternalServerError(`Phản hồi GHN ${label} không hợp lệ`);
   }
 
   return data;
@@ -58,14 +58,14 @@ const throwGhnMasterDataError = (error, label) => {
   }
 
   if (error.code === "ECONNABORTED") {
-    throw new InternalServerError(`GHN ${label} request timed out`);
+    throw new InternalServerError(`Yêu cầu GHN ${label} đã quá thời gian chờ`);
   }
 
   if (!error.response) {
-    throw new InternalServerError(`Unable to connect to GHN ${label} service`);
+    throw new InternalServerError(`Không thể kết nối dịch vụ GHN ${label}`);
   }
 
-  throw new BadRequestError(`GHN: ${getGhnErrorMessage(error)}`, {
+  throw new BadRequestError(`GHN báo lỗi: ${getGhnErrorMessage(error)}`, {
     status: error.response.status,
     service: label,
   });
@@ -79,7 +79,7 @@ const getGhnErrorMessage = (error) => {
     responseData?.code_message ||
     responseData?.data?.message ||
     error.message ||
-    "GHN rejected the shipping request"
+    "GHN từ chối yêu cầu vận chuyển"
   );
 };
 
@@ -87,7 +87,7 @@ const toPositiveInteger = (value, fieldName) => {
   const numberValue = Number(value);
 
   if (!Number.isInteger(numberValue) || numberValue <= 0) {
-    throw new BadRequestError(`${fieldName} is invalid`);
+    throw new BadRequestError(`${fieldName} không hợp lệ`);
   }
 
   return numberValue;
@@ -139,7 +139,7 @@ const throwGhnRequestError = (error, context = {}) => {
     throw error;
   }
 
-  throw new BadRequestError(`GHN: ${getGhnErrorMessage(error)}`, {
+  throw new BadRequestError(`GHN báo lỗi: ${getGhnErrorMessage(error)}`, {
     status: error.response?.status || null,
     ghn: error.response?.data || null,
     context,
@@ -205,28 +205,28 @@ export const getLeadtimeService = async ({
 export const createGHNOrderService = async (order) => {
   const branch = await Branch.findByPk(order.branchId);
   if (!branch) {
-    throw new NotFoundError("Branch not found");
+    throw new NotFoundError("Không tìm thấy chi nhánh");
   }
 
   if (!process.env.GHN_TOKEN_DEV) {
-    throw new BadRequestError("GHN token is not configured");
+    throw new BadRequestError("Chưa cấu hình token GHN");
   }
 
   if (!branch.ghnShopId) {
-    throw new BadRequestError("Branch has no GHN shop ID configured");
+    throw new BadRequestError("Chi nhánh chưa cấu hình mã cửa hàng GHN");
   }
 
   if (!branch.districtId || !branch.wardCode) {
-    throw new BadRequestError("Branch GHN address is incomplete");
+    throw new BadRequestError("Địa chỉ GHN của chi nhánh chưa đầy đủ");
   }
 
   if (!order.shippingDistrictId || !order.shippingWardCode) {
-    throw new BadRequestError("Shipping GHN address is incomplete");
+    throw new BadRequestError("Địa chỉ GHN nhận hàng chưa đầy đủ");
   }
 
   const orderGroup = await OrderGroup.findByPk(order.orderGroupId);
   if (!orderGroup) {
-    throw new NotFoundError("Order group not found");
+    throw new NotFoundError("Không tìm thấy nhóm đơn hàng");
   }
 
   const payment = await Payment.findOne({
@@ -260,7 +260,7 @@ export const createGHNOrderService = async (order) => {
   const shippingServiceId = Number(order.shippingServiceId || 0);
 
   if (!shippingServiceId) {
-    throw new BadRequestError("Order has no GHN shipping service selected");
+    throw new BadRequestError("Đơn hàng chưa chọn dịch vụ vận chuyển GHN");
   }
 
   const payload = {
@@ -338,7 +338,7 @@ export const cancelGHNOrder = async ({ orderCode, shopId }) => {
 
   if (!result?.result) {
     throw new BadRequestError(
-      result?.message || "GHN does not allow cancelling this order",
+      result?.message || "GHN không cho phép hủy đơn hàng này",
     );
   }
 
@@ -364,7 +364,7 @@ export const returnGHNOrder = async ({ orderCode, shopId }) => {
 
   if (!result?.result) {
     throw new BadRequestError(
-      result?.message || "GHN does not allow returning this order",
+      result?.message || "GHN không cho phép hoàn đơn hàng này",
     );
   }
 

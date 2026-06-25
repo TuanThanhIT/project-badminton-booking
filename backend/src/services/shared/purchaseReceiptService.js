@@ -100,7 +100,7 @@ const normalizeReceipt = (receipt) => {
 const parsePositiveInteger = (value, label) => {
   const number = Number(value);
   if (!Number.isInteger(number) || number <= 0) {
-    throw new BadRequestError(`${label} must be a positive integer`);
+    throw new BadRequestError(`${label} phải là số nguyên dương`);
   }
   return number;
 };
@@ -108,32 +108,32 @@ const parsePositiveInteger = (value, label) => {
 const parseMoney = (value, label) => {
   const number = Number(value);
   if (!Number.isFinite(number) || number < 0) {
-    throw new BadRequestError(`${label} must be a non-negative number`);
+    throw new BadRequestError(`${label} phải là số không âm`);
   }
   return number;
 };
 
 const buildDetailPayloads = async (details, transaction) => {
   if (!Array.isArray(details) || !details.length) {
-    throw new BadRequestError("Purchase receipt details are required");
+    throw new BadRequestError("Chi tiết phiếu nhập là bắt buộc");
   }
 
   const payloads = [];
 
   for (const detail of details) {
     const itemType = detail.itemType;
-    const quantity = parsePositiveInteger(detail.quantity, "Quantity");
-    const importPrice = parseMoney(detail.importPrice, "Import price");
+    const quantity = parsePositiveInteger(detail.quantity, "Số lượng");
+    const importPrice = parseMoney(detail.importPrice, "Giá nhập");
 
     if (itemType === STOCK_ITEM_TYPE.PRODUCT_VARIANT) {
-      const variantId = parsePositiveInteger(detail.variantId, "Variant ID");
+      const variantId = parsePositiveInteger(detail.variantId, "Mã biến thể");
       const variant = await ProductVariant.findByPk(variantId, {
         include: [{ model: Product, as: "product", attributes: ["id", "productName"] }],
         transaction,
       });
 
       if (!variant) {
-        throw new NotFoundError("Product variant not found");
+        throw new NotFoundError("Không tìm thấy biến thể sản phẩm");
       }
 
       payloads.push({
@@ -149,11 +149,11 @@ const buildDetailPayloads = async (details, transaction) => {
     }
 
     if (itemType === STOCK_ITEM_TYPE.BEVERAGE) {
-      const beverageId = parsePositiveInteger(detail.beverageId, "Beverage ID");
+      const beverageId = parsePositiveInteger(detail.beverageId, "Mã đồ uống");
       const beverage = await Beverage.findByPk(beverageId, { transaction });
 
       if (!beverage) {
-        throw new NotFoundError("Beverage not found");
+        throw new NotFoundError("Không tìm thấy đồ uống");
       }
 
       payloads.push({
@@ -168,7 +168,7 @@ const buildDetailPayloads = async (details, transaction) => {
       continue;
     }
 
-    throw new BadRequestError("Invalid item type");
+    throw new BadRequestError("Loại hàng không hợp lệ");
   }
 
   return payloads;
@@ -178,7 +178,7 @@ const createReceiptService = async ({ branchId, supplierId, createdBy, data }) =
   sequelize.transaction(async (transaction) => {
     const supplier = await Supplier.findByPk(supplierId, { transaction });
     if (!supplier || supplier.status !== SUPPLIER_STATUS.ACTIVE) {
-      throw new NotFoundError("Active supplier not found");
+      throw new NotFoundError("Không tìm thấy nhà cung cấp đang hoạt động");
     }
 
     const detailPayloads = await buildDetailPayloads(data.details, transaction);
@@ -258,7 +258,7 @@ const getReceiptDetailService = async ({ receiptId, branchId = null }) => {
   });
 
   if (!receipt) {
-    throw new NotFoundError("Purchase receipt not found");
+    throw new NotFoundError("Không tìm thấy phiếu nhập");
   }
 
   return normalizeReceipt(receipt);
@@ -273,15 +273,15 @@ const approveReceiptService = async ({ receiptId, adminId }) =>
     });
 
     if (!receipt) {
-      throw new NotFoundError("Purchase receipt not found");
+      throw new NotFoundError("Không tìm thấy phiếu nhập");
     }
 
     if (receipt.status !== PURCHASE_RECEIPT_STATUS.PENDING) {
-      throw new BadRequestError("Only pending purchase receipts can be approved");
+      throw new BadRequestError("Chỉ có thể duyệt phiếu nhập đang chờ xử lý");
     }
 
     if (!receipt.details?.length) {
-      throw new BadRequestError("Purchase receipt has no details");
+      throw new BadRequestError("Phiếu nhập chưa có chi tiết");
     }
 
     for (const detail of receipt.details) {
@@ -294,7 +294,7 @@ const approveReceiptService = async ({ receiptId, adminId }) =>
         type: STOCK_TRANSACTION_TYPE.IMPORT,
         referenceType: STOCK_REFERENCE_TYPE.PURCHASE_RECEIPT,
         referenceId: receipt.id,
-        note: `Import from receipt ${receipt.receiptCode}`,
+        note: `Nhập kho từ phiếu ${receipt.receiptCode}`,
         createdBy: adminId,
         transaction,
       });
@@ -325,11 +325,11 @@ const rejectReceiptService = async ({ receiptId, adminId, reason }) =>
     });
 
     if (!receipt) {
-      throw new NotFoundError("Purchase receipt not found");
+      throw new NotFoundError("Không tìm thấy phiếu nhập");
     }
 
     if (receipt.status !== PURCHASE_RECEIPT_STATUS.PENDING) {
-      throw new BadRequestError("Only pending purchase receipts can be rejected");
+      throw new BadRequestError("Chỉ có thể từ chối phiếu nhập đang chờ xử lý");
     }
 
     await receipt.update(
@@ -358,19 +358,19 @@ const cancelReceiptService = async ({ receiptId, managerId, branchId }) =>
     });
 
     if (!receipt) {
-      throw new NotFoundError("Purchase receipt not found");
+      throw new NotFoundError("Không tìm thấy phiếu nhập");
     }
 
     if (Number(receipt.branchId) !== Number(branchId)) {
-      throw new ForbiddenError("Cannot cancel another branch purchase receipt");
+      throw new ForbiddenError("Không thể hủy phiếu nhập của chi nhánh khác");
     }
 
     if (Number(receipt.createdBy) !== Number(managerId)) {
-      throw new ForbiddenError("Only creator can cancel this purchase receipt");
+      throw new ForbiddenError("Chỉ người tạo mới có thể hủy phiếu nhập này");
     }
 
     if (receipt.status !== PURCHASE_RECEIPT_STATUS.PENDING) {
-      throw new BadRequestError("Only pending purchase receipts can be cancelled");
+      throw new BadRequestError("Chỉ có thể hủy phiếu nhập đang chờ xử lý");
     }
 
     await receipt.update(

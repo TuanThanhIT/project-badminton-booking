@@ -9,7 +9,7 @@ const getUserAddressController = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Lay dia chi nguoi dung thanh cong", address));
+    .json(new SuccessResponse("Lấy địa chỉ người dùng thành công", address));
 });
 
 const addUserAddressController = asyncHandler(async (req, res) => {
@@ -18,7 +18,7 @@ const addUserAddressController = asyncHandler(async (req, res) => {
 
   return res
     .status(201)
-    .json(new SuccessResponse("Them dia chi thanh cong", userAddress));
+    .json(new SuccessResponse("Thêm địa chỉ thành công", userAddress));
 });
 
 const updateUserAddressController = asyncHandler(async (req, res) => {
@@ -30,7 +30,7 @@ const updateUserAddressController = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Cap nhat dia chi thanh cong", userAddress));
+    .json(new SuccessResponse("Cập nhật địa chỉ thành công", userAddress));
 });
 
 const deleteUserAddressController = asyncHandler(async (req, res) => {
@@ -39,7 +39,7 @@ const deleteUserAddressController = asyncHandler(async (req, res) => {
   const data = { addressId, userId };
   await addressService.deleteUserAddressService(data);
 
-  return res.status(200).json(new SuccessResponse("Xoa dia chi thanh cong"));
+  return res.status(200).json(new SuccessResponse("Xóa địa chỉ thành công"));
 });
 
 const createEmployee = asyncHandler(async (req, res) => {
@@ -51,7 +51,7 @@ const createEmployee = asyncHandler(async (req, res) => {
 
   return res
     .status(201)
-    .json(new SuccessResponse("Tao nhan vien thanh cong", employee));
+    .json(new SuccessResponse("Tạo nhân viên thành công", employee));
 });
 
 const getEmployees = asyncHandler(async (req, res) => {
@@ -60,7 +60,7 @@ const getEmployees = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Lay danh sach nhan vien thanh cong", employees));
+    .json(new SuccessResponse("Lấy danh sách nhân viên thành công", employees));
 });
 
 export default {

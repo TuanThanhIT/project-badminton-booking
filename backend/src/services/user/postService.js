@@ -146,7 +146,7 @@ const createPostService = async (data) => {
     console.error("AI moderation unavailable:", error.message);
     decision = {
       action: MODERATION_ACTION.REVIEW,
-      reason: "AI service unavailable",
+      reason: "Dịch vụ kiểm duyệt AI hiện không khả dụng",
     };
   }
 

@@ -22,7 +22,7 @@ const getBranchIdByManager = async (managerId, options = {}) => {
   });
 
   if (!branchManager) {
-    throw new Error("Manager has no active branch");
+    throw new Error("Quản lý chưa được gán chi nhánh đang hoạt động");
   }
 
   return branchManager.branchId;
@@ -103,7 +103,7 @@ const createEmployeeService = async ({
     });
 
     if (!branch) {
-      throw new Error("Branch not found");
+      throw new Error("Không tìm thấy chi nhánh");
     }
 
     const existedUser = await User.findOne({
@@ -112,7 +112,7 @@ const createEmployeeService = async ({
     });
 
     if (existedUser) {
-      throw new Error("Email already exists");
+      throw new Error("Email đã tồn tại");
     }
 
     const employeeRole = await Role.findOne({
@@ -121,7 +121,7 @@ const createEmployeeService = async ({
     });
 
     if (!employeeRole) {
-      throw new Error("Employee role not found");
+      throw new Error("Không tìm thấy vai trò nhân viên");
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);

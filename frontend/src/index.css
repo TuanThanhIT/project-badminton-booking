@@ -165,27 +165,39 @@ b {
 .app-toast-container {
   --toastify-toast-width: 360px;
   --toastify-toast-min-height: 58px;
-  --toastify-toast-bd-radius: 16px;
+  --toastify-toast-bd-radius: 8px;
   padding: 12px;
 }
 
 .app-toast {
-  margin-bottom: 10px;
-  border-radius: 16px;
-  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.18);
+  margin-bottom: 8px;
+  border-radius: 8px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
   font-size: 0.875rem;
   line-height: 1.45;
+  padding: 12px 14px;
 }
 
 .app-toast .Toastify__toast-body {
   min-width: 0;
-  padding: 2px 0;
+  padding: 0;
   overflow-wrap: anywhere;
 }
 
+.app-toast .Toastify__toast-icon {
+  width: 22px;
+  margin-inline-end: 10px;
+}
+
 .app-toast .Toastify__close-button {
-  align-self: center;
+  align-self: flex-start;
   flex-shrink: 0;
+  margin-top: 1px;
+  opacity: 0.9;
+}
+
+.app-toast .Toastify__progress-bar {
+  border-bottom-left-radius: 8px;
 }
 
 @media (max-width: 639px) {
@@ -201,7 +213,7 @@ b {
     width: 100%;
     min-height: 52px;
     margin: 0 0 8px;
-    border-radius: 14px;
+    border-radius: 8px;
     padding: 10px 12px;
     font-size: 0.8125rem;
   }

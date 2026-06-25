@@ -10,7 +10,7 @@ const getRevenue = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Lay doanh thu cua quan ly thanh cong", result));
+    .json(new SuccessResponse("Lấy doanh thu của quản lý thành công", result));
 });
 
 const getDashboard = asyncHandler(async (req, res) => {
@@ -21,7 +21,12 @@ const getDashboard = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Lay du lieu dashboard cua quan ly thanh cong", result));
+    .json(
+      new SuccessResponse(
+        "Lấy dữ liệu dashboard của quản lý thành công",
+        result,
+      ),
+    );
 });
 
 const getRevenueReport = asyncHandler(async (req, res) => {
@@ -32,7 +37,12 @@ const getRevenueReport = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Lay bao cao doanh thu cua quan ly thanh cong", result));
+    .json(
+      new SuccessResponse(
+        "Lấy báo cáo doanh thu của quản lý thành công",
+        result,
+      ),
+    );
 });
 
 export default {

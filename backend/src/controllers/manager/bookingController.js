@@ -7,7 +7,12 @@ const getBookings = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Lay danh sach lich dat san cua quan ly thanh cong", result));
+    .json(
+      new SuccessResponse(
+        "Lấy danh sách lịch đặt sân của quản lý thành công",
+        result,
+      ),
+    );
 });
 
 const getBookingDetail = asyncHandler(async (req, res) => {
@@ -18,7 +23,12 @@ const getBookingDetail = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new SuccessResponse("Lay chi tiet lich dat san cua quan ly thanh cong", result));
+    .json(
+      new SuccessResponse(
+        "Lấy chi tiết lịch đặt sân của quản lý thành công",
+        result,
+      ),
+    );
 });
 
 export default {

@@ -1,5 +1,7 @@
 import axios from "axios";
 import dotenv from "dotenv";
+import BadRequestError from "../errors/BadRequestError.js";
+import InternalServerError from "../errors/InternalServerError.js";
 
 dotenv.config();
 
@@ -38,7 +40,7 @@ const formatAiErrorResponse = (data) => {
 
 export const predictModerationText = async (text) => {
   if (typeof text !== "string" || !text.trim()) {
-    throw new Error("Moderation text must be a non-empty string.");
+    throw new BadRequestError("Nội dung kiểm duyệt không được để trống.");
   }
 
   const { baseUrl, timeout } = getAiModerationConfig();
@@ -62,20 +64,22 @@ export const predictModerationText = async (text) => {
     }
 
     if (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT") {
-      throw new Error(`AI moderation request timed out after ${timeout}ms.`);
+      throw new InternalServerError(
+        `Yêu cầu kiểm duyệt AI đã quá thời gian chờ ${timeout}ms.`,
+      );
     }
 
     if (error.response) {
       const errorText = formatAiErrorResponse(error.response.data);
       const detail = errorText ? `: ${errorText}` : "";
 
-      throw new Error(
-        `AI moderation service returned HTTP ${error.response.status}${detail}`,
+      throw new InternalServerError(
+        `Dịch vụ kiểm duyệt AI trả về HTTP ${error.response.status}${detail}`,
       );
     }
 
-    throw new Error(
-      `Unable to connect to AI moderation service at ${baseUrl}: ${error.message}`,
+    throw new InternalServerError(
+      `Không thể kết nối dịch vụ kiểm duyệt AI tại ${baseUrl}: ${error.message}`,
     );
   }
 };

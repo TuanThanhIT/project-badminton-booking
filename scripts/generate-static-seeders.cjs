@@ -297,8 +297,8 @@ const buildVariant = (product, index, basePrice) => {
       ["Xanh", "4U-G6", "Graphite", 0.082],
     ],
     shoe: [
-      ["White/Blue", "39", "Mesh", 0.6],
-      ["Black/Red", "40", "Synthetic Leather", 0.64],
+      ["White", "39", "Mesh", 0.6],
+      ["Black", "40", "Synthetic Leather", 0.64],
       ["Gray", "41", "Rubber", 0.66],
     ],
     apparel: [

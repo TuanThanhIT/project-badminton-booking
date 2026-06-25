@@ -42,8 +42,7 @@ import { addCartItem, getCart } from "../../redux/slices/user/cartSlice";
 
 import { toast } from "react-toastify";
 
-import { normalizeColor } from "../../utils/color";
-import { COLOR_MAP } from "../../utils/constants/color";
+import { getColorHex } from "../../utils/color";
 import { flyToCart } from "../../utils/flyToCart";
 
 import type { BranchStock } from "../../types/branch";
@@ -624,8 +623,6 @@ const ProductDetailPage: React.FC = () => {
 
                     <div className="flex flex-wrap gap-3">
                       {colors.map((color) => {
-                        const key = normalizeColor(color);
-
                         const isSelected = selectedColor === color;
 
                         return (
@@ -646,7 +643,7 @@ const ProductDetailPage: React.FC = () => {
                             <span
                               className="h-7 w-7 rounded-xl border border-slate-200"
                               style={{
-                                backgroundColor: COLOR_MAP[key] || "#ccc",
+                                backgroundColor: getColorHex(color),
                               }}
                             />
 

@@ -438,60 +438,60 @@ const buildVariants = ({ type, categoryCode, productIndex, productName }) => {
   const basePrice = buildBasePrice(type, productIndex);
   const variantTemplates = {
     racket: [
-      { size: "4U-G5", color: "Black", material: "Graphite", weight: 0.083 },
-      { size: "4U-G6", color: "Blue", material: "Graphite", weight: 0.084 },
-      { size: "3U-G5", color: "White", material: "Graphite", weight: 0.089 },
+      { size: "4U-G5", color: "Đen", material: "Graphite", weight: 0.083 },
+      { size: "4U-G6", color: "Xanh", material: "Graphite", weight: 0.084 },
+      { size: "3U-G5", color: "Trắng", material: "Graphite", weight: 0.089 },
     ],
     shoes: [
-      { size: "39", color: "White/Blue", material: "Mesh, Rubber", weight: 0.72 },
-      { size: "40", color: "Black/Red", material: "Synthetic Leather, Rubber", weight: 0.76 },
-      { size: "41", color: "White", material: "Mesh, Rubber", weight: 0.8 },
-      { size: "42", color: "Navy", material: "Synthetic Leather, Rubber", weight: 0.86 },
+      { size: "39", color: "Trắng", material: "Mesh, Rubber", weight: 0.72 },
+      { size: "40", color: "Đen", material: "Synthetic Leather, Rubber", weight: 0.76 },
+      { size: "41", color: "Trắng", material: "Mesh, Rubber", weight: 0.8 },
+      { size: "42", color: "Xanh navy", material: "Synthetic Leather, Rubber", weight: 0.86 },
     ],
     shirt: [
-      { size: "S", color: "Blue", material: "Polyester Dry-fit", weight: 0.22 },
-      { size: "M", color: "White", material: "Polyester Dry-fit", weight: 0.24 },
-      { size: "L", color: "Black", material: "Polyester Dry-fit", weight: 0.26 },
-      { size: "XL", color: "Red", material: "Polyester Dry-fit", weight: 0.28 },
+      { size: "S", color: "Xanh", material: "Polyester Dry-fit", weight: 0.22 },
+      { size: "M", color: "Trắng", material: "Polyester Dry-fit", weight: 0.24 },
+      { size: "L", color: "Đen", material: "Polyester Dry-fit", weight: 0.26 },
+      { size: "XL", color: "Đỏ", material: "Polyester Dry-fit", weight: 0.28 },
     ],
     shorts: [
-      { size: "M", color: "Black", material: "Polyester", weight: 0.24 },
-      { size: "L", color: "Navy", material: "Polyester", weight: 0.26 },
-      { size: "XL", color: "White", material: "Polyester", weight: 0.28 },
+      { size: "M", color: "Đen", material: "Polyester", weight: 0.24 },
+      { size: "L", color: "Xanh navy", material: "Polyester", weight: 0.26 },
+      { size: "XL", color: "Trắng", material: "Polyester", weight: 0.28 },
     ],
     skirt: [
-      { size: "S", color: "White", material: "Polyester Dry-fit", weight: 0.25 },
-      { size: "M", color: "Black", material: "Polyester Dry-fit", weight: 0.27 },
-      { size: "L", color: "Blue", material: "Polyester Dry-fit", weight: 0.29 },
+      { size: "S", color: "Trắng", material: "Polyester Dry-fit", weight: 0.25 },
+      { size: "M", color: "Đen", material: "Polyester Dry-fit", weight: 0.27 },
+      { size: "L", color: "Xanh", material: "Polyester Dry-fit", weight: 0.29 },
     ],
     bag: [
-      { size: "3 compartments", color: "Black", material: "Polyester, PU", weight: 0.9 },
-      { size: "6 rackets", color: "Blue", material: "Polyester, PU", weight: 1.1 },
-      { size: "2 compartments", color: "White", material: "Polyester, PU", weight: 0.75 },
+      { size: "3 compartments", color: "Đen", material: "Polyester, PU", weight: 0.9 },
+      { size: "6 rackets", color: "Xanh", material: "Polyester, PU", weight: 1.1 },
+      { size: "2 compartments", color: "Trắng", material: "Polyester, PU", weight: 0.75 },
     ],
     backpack: [
-      { size: "25L", color: "Black", material: "Polyester, PU", weight: 0.65 },
-      { size: "30L", color: "Blue", material: "Polyester, PU", weight: 0.75 },
+      { size: "25L", color: "Đen", material: "Polyester, PU", weight: 0.65 },
+      { size: "30L", color: "Xanh", material: "Polyester, PU", weight: 0.75 },
       { size: "35L", color: "Grey", material: "Polyester, PU", weight: 0.85 },
     ],
     socks: [
-      { size: "M", color: "White", material: "Cotton, Spandex", weight: 0.12 },
-      { size: "L", color: "Black", material: "Cotton, Spandex", weight: 0.13 },
+      { size: "M", color: "Trắng", material: "Cotton, Spandex", weight: 0.12 },
+      { size: "L", color: "Đen", material: "Cotton, Spandex", weight: 0.13 },
     ],
     string: [
-      { size: "0.63mm", color: "White", material: "Nylon Multifilament", weight: 0.05 },
+      { size: "0.63mm", color: "Trắng", material: "Nylon Multifilament", weight: 0.05 },
       { size: "0.66mm", color: "Yellow", material: "Nylon Multifilament", weight: 0.05 },
     ],
     shuttle: [
-      { size: "Speed 76", color: "White", material: "Feather, Cork", weight: 0.18 },
-      { size: "Speed 77", color: "White", material: "Feather, Cork", weight: 0.18 },
+      { size: "Speed 76", color: "Trắng", material: "Feather, Cork", weight: 0.18 },
+      { size: "Speed 77", color: "Trắng", material: "Feather, Cork", weight: 0.18 },
     ],
     support: [
-      { size: "M", color: "Black", material: "Elastic Nylon", weight: 0.18 },
-      { size: "L", color: "Blue", material: "Elastic Nylon", weight: 0.2 },
+      { size: "M", color: "Đen", material: "Elastic Nylon", weight: 0.18 },
+      { size: "L", color: "Xanh", material: "Elastic Nylon", weight: 0.2 },
     ],
     training: [
-      { size: "Standard", color: "Blue", material: "PVC, Rubber", weight: 0.5 },
+      { size: "Standard", color: "Xanh", material: "PVC, Rubber", weight: 0.5 },
       { size: "Pro", color: "Orange", material: "PVC, Rubber", weight: 0.75 },
     ],
     drink: [
@@ -499,8 +499,8 @@ const buildVariants = ({ type, categoryCode, productIndex, productName }) => {
       { size: "Pack", color: "Mixed", material: "Food Grade Packaging", weight: 1.2 },
     ],
     accessory: [
-      { size: "Standard", color: "Black", material: "Polyester", weight: 0.2 },
-      { size: "Pro", color: "Blue", material: "Polyester", weight: 0.25 },
+      { size: "Standard", color: "Đen", material: "Polyester", weight: 0.2 },
+      { size: "Pro", color: "Xanh", material: "Polyester", weight: 0.25 },
     ],
   };
 

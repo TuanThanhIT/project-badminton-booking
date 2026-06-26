@@ -215,42 +215,50 @@ const ProductRecommendationWidget = ({
         .rec-related-swiper .swiper-button-prev,
         .rec-user-swiper .swiper-button-next,
         .rec-user-swiper .swiper-button-prev {
-          width: 38px;
-          height: 38px;
+          width: 44px;
+          height: 44px;
           border-radius: 9999px;
-          background: white;
-          border: 1px solid rgb(226 232 240);
-          color: rgb(2 132 199);
-          box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
-          transition: all 0.2s ease;
+          background: rgba(255, 255, 255, 0.94);
+          border: 1px solid rgba(125, 211, 252, 0.5);
+          color: rgb(3 105 161);
+          box-shadow: 0 14px 32px rgba(15, 23, 42, 0.16);
+          backdrop-filter: blur(10px);
+          transition:
+            transform 0.2s ease,
+            background-color 0.2s ease,
+            border-color 0.2s ease,
+            box-shadow 0.2s ease,
+            color 0.2s ease;
         }
 
         .rec-related-swiper .swiper-button-next,
         .rec-user-swiper .swiper-button-next {
-          right: -6px;
+          right: 8px;
         }
 
         .rec-related-swiper .swiper-button-prev,
         .rec-user-swiper .swiper-button-prev {
-          left: -6px;
+          left: 8px;
         }
 
         .rec-related-swiper .swiper-button-next:hover,
         .rec-related-swiper .swiper-button-prev:hover,
         .rec-user-swiper .swiper-button-next:hover,
         .rec-user-swiper .swiper-button-prev:hover {
-          background: rgb(14 165 233);
-          border-color: rgb(14 165 233);
+          background: rgb(2 132 199);
+          border-color: rgb(2 132 199);
           color: white;
-          transform: scale(1.06);
+          box-shadow: 0 18px 38px rgba(2, 132, 199, 0.28);
+          transform: translateY(-1px) scale(1.04);
         }
 
         .rec-related-swiper .swiper-button-next::after,
         .rec-related-swiper .swiper-button-prev::after,
         .rec-user-swiper .swiper-button-next::after,
         .rec-user-swiper .swiper-button-prev::after {
-          font-size: 13px;
-          font-weight: 900;
+          font-size: 15px;
+          font-weight: 800;
+          line-height: 1;
         }
 
         .rec-related-swiper .swiper-button-disabled,

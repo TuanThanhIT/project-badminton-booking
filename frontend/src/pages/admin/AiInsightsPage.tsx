@@ -37,6 +37,7 @@ import type {
   AdminAiInsights,
   AdminPromotionByBranch,
 } from "../../types/aiRecommendation";
+import { exportExcel } from "../../utils/exportExcel";
 
 const cronToText = (cron?: string) => {
   if (!cron) return "—";
@@ -686,43 +687,36 @@ const formatDaysSinceLabel = (days?: number | null) => {
   return `${days} ngày trước`;
 };
 
-const downloadInsightsCsv = (data: AdminAiInsights) => {
-  const rows: string[][] = [
-    ["Loại", "Chi nhánh", "Giờ", "Fill rate %", "Ghi chú"],
-  ];
-  (data.lowFillPromotionSuggestions || []).forEach((slot) => {
-    rows.push([
-      "Khung giờ thấp điểm",
-      slot.branchName,
-      slot.hourLabel,
-      String(slot.fillRate),
-      slot.suggestion,
-    ]);
-  });
-  (data.voucherActivationCandidates || []).forEach((user) => {
-    rows.push([
-      "Tái kích hoạt",
-      user.fullName || `User #${user.userId}`,
-      user.lastBranchName || "",
-      String(user.sessionsLast30Days ?? 0),
-      formatDaysSinceLabel(user.daysSinceLastBooking),
-      user.suggestedAction || user.reason,
-    ]);
-  });
-  const csv = rows
-    .map((row) =>
-      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
-    )
-    .join("\n");
-  const blob = new Blob([`\uFEFF${csv}`], {
-    type: "text/csv;charset=utf-8;",
-  });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `bhub-ai-insights-${new Date().toISOString().slice(0, 10)}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
+const downloadInsightsExcel = (data: AdminAiInsights) => {
+  exportExcel(`bhub-ai-insights-${new Date().toISOString().slice(0, 10)}.xls`, [
+    {
+      title: "Khung giờ thấp điểm",
+      headers: ["Chi nhánh", "Giờ", "Fill rate %", "Ghi chú"],
+      rows: (data.lowFillPromotionSuggestions || []).map((slot) => [
+        slot.branchName,
+        slot.hourLabel,
+        slot.fillRate,
+        slot.suggestion,
+      ]),
+    },
+    {
+      title: "Khách hàng cần tái kích hoạt",
+      headers: [
+        "Khách hàng",
+        "Chi nhánh gần nhất",
+        "Số lượt 30 ngày",
+        "Lần đặt gần nhất",
+        "Gợi ý",
+      ],
+      rows: (data.voucherActivationCandidates || []).map((user) => [
+        user.fullName || `User #${user.userId}`,
+        user.lastBranchName || "",
+        user.sessionsLast30Days ?? 0,
+        formatDaysSinceLabel(user.daysSinceLastBooking),
+        user.suggestedAction || user.reason,
+      ]),
+    },
+  ]);
 };
 
 const AiInsightsPage = () => {
@@ -831,34 +825,34 @@ const AiInsightsPage = () => {
         title="Phân tích vận hành & Gợi ý hành động"
         subtitle="Theo dõi mức lấp đầy sân, khung giờ nên khuyến mãi và nhóm khách cần chăm sóc. Admin có thể làm mới số liệu, xuất báo cáo hoặc tạo mã giảm giá ngay từ trang này."
         action={
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() => insights && downloadInsightsCsv(insights)}
-              disabled={!insights}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20 disabled:opacity-50"
-            >
-              <Download className="h-4 w-4" /> Xuất file báo cáo
-            </button>
-            <button
-              type="button"
-              onClick={() => loadInsights(false)}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
-            >
-              <RefreshCw className="h-4 w-4" /> Làm mới
-            </button>
+          <div className="flex flex-wrap items-center justify-end gap-3">
             <button
               type="button"
               onClick={handleTrain}
               disabled={training}
-              className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#0b3f56] transition hover:bg-sky-50 disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#0b3f56] transition hover:bg-sky-50 disabled:opacity-60"
             >
               {training ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Sparkles className="h-4 w-4" />
               )}
-              Cập nhật gợi ý sản phẩm
+              Cập nhật gợi ý
+            </button>
+            <button
+              type="button"
+              onClick={() => insights && downloadInsightsExcel(insights)}
+              disabled={!insights}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:opacity-50"
+            >
+              <Download className="h-4 w-4" /> Xuất Excel
+            </button>
+            <button
+              type="button"
+              onClick={() => loadInsights(false)}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
+            >
+              <RefreshCw className="h-4 w-4" /> Làm mới
             </button>
           </div>
         }

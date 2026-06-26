@@ -72,8 +72,22 @@ const phaseTransaction = async (queryInterface, work) => {
   }
 };
 
+const withMigrationDefaults = (key, row) => {
+  if (key === "discounts") {
+    return {
+      visibility: "PUBLIC",
+      branchId: null,
+      startHour: null,
+      endHour: null,
+      ...row,
+    };
+  }
+  return row;
+};
+
 const getRows = (key) => (seedData[key] || []).map((row) => {
-  const copy = { ...row };
+  const source = withMigrationDefaults(key, row);
+  const copy = { ...source };
   delete copy._demoAdded;
   delete copy.kind;
   return copy;

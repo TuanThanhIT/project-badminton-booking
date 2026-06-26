@@ -146,7 +146,6 @@ const seedUsers = async (qi, Sequelize) =>
     SELECT r.roleName, COUNT(*) AS total
     FROM Users u JOIN Roles r ON r.id = u.roleId
     GROUP BY r.roleName
-<<<<<<< HEAD
   `,
       {},
       transaction,
@@ -154,14 +153,9 @@ const seedUsers = async (qi, Sequelize) =>
     const counts = Object.fromEntries(
       roleCounts.map((row) => [row.roleName, Number(row.total)]),
     );
-    const targets = { USER: 200, EMPLOYEE: 50, COACH: 15 };
+    // USER accounts come from the static demo seed as demo_user1..N.
+    const targets = { EMPLOYEE: 50, COACH: 15 };
     const groups = [
-      {
-        role: "USER",
-        prefix: "demo_customer_",
-        email: "demo.customer",
-        start: counts.USER || 0,
-      },
       {
         role: "EMPLOYEE",
         prefix: "demo_employee_",
@@ -181,19 +175,6 @@ const seedUsers = async (qi, Sequelize) =>
     );
     const users = [];
     const profiles = [];
-=======
-  `, {}, transaction);
-  const counts = Object.fromEntries(roleCounts.map((row) => [row.roleName, Number(row.total)]));
-  // USER: dùng demo_user1..N từ static-seed / demo-data — không tạo thêm demo_customer_
-  const targets = { EMPLOYEE: 50, COACH: 15 };
-  const groups = [
-    { role: "EMPLOYEE", prefix: "demo_employee_", email: "demo.employee", start: counts.EMPLOYEE || 0 },
-    { role: "COACH", prefix: "demo_coach_", email: "demo.coach", start: counts.COACH || 0 },
-  ];
-  const password = await u.bcrypt.hash(process.env.DEMO_PASSWORD || "@Demo123456", 10);
-  const users = [];
-  const profiles = [];
->>>>>>> Branch_Nam_ML
 
     for (const group of groups) {
       const missing = Math.max(
@@ -875,17 +856,6 @@ const downBookings = async (qi) =>
     await u.deleteBookings(qi, transaction);
   });
 
-<<<<<<< HEAD
-const seedCounter = async (qi, Sequelize) =>
-  u.phaseTransaction(qi, async (transaction) => {
-    await paymentPrefix(qi, "DEMO-EXT-COUNTER-", transaction);
-    await u.deleteCounter(qi, transaction);
-    const base = await getBase(qi, Sequelize, transaction);
-    const shifts = await u.q(
-      qi,
-      Sequelize,
-      `
-=======
 // ============================================================
 // AI PATTERN BOOKINGS
 // Tạo vài "user có thói quen mạnh" (luôn đặt 1 chi nhánh + 1 khung giờ
@@ -1045,7 +1015,7 @@ const AI_PRODUCT_CONFIG = {
   PERSONA_COMBO: 6,
 };
 
-const findProductVariant = async (qi, Sequelize, transaction, nameLike, branchId) => {
+const findProductVariantByCategory = async (qi, Sequelize, transaction, categoryIds, branchId) => {
   const rows = await u.q(
     qi,
     Sequelize,
@@ -1055,11 +1025,11 @@ const findProductVariant = async (qi, Sequelize, transaction, nameLike, branchId
       FROM Products p
       INNER JOIN ProductVariants pv ON pv.productId = p.id
       INNER JOIN VariantStocks vs ON vs.variantId = pv.id AND vs.branchId = :branchId
-      WHERE p.productName LIKE :nameLike AND vs.stock > 0
+      WHERE p.categoryId IN (:categoryIds) AND vs.stock > 0
       ORDER BY pv.id
       LIMIT 1
     `,
-    { nameLike, branchId },
+    { categoryIds, branchId },
     transaction,
   );
   return rows[0] || null;
@@ -1251,14 +1221,14 @@ const seedAiProductPatterns = async (qi, Sequelize) =>
     const persona = (username) => users.find((row) => row.username === username);
 
     for (const branch of base.branches) {
-      const resolve = (like) =>
-        findProductVariant(qi, Sequelize, transaction, like, branch.id);
+      const resolve = (categoryIds) =>
+        findProductVariantByCategory(qi, Sequelize, transaction, categoryIds, branch.id);
 
-      const racket = await resolve("%Nanoflare Skill%Vợt%");
-      const shuttle = await resolve("%Cước đan vợt%");
-      const bag = await resolve("%Balo cầu lông Yonex%");
-      const shoes = await resolve("%Giày cầu lông Yonex%");
-      const socks = await resolve("%Tất cầu lông%");
+      const racket = await resolve([1]);
+      const shuttle = await resolve([70]);
+      const bag = await resolve([59]);
+      const shoes = await resolve([11]);
+      const grip = await resolve([76]);
 
       if (!racket || !shuttle) continue;
 
@@ -1277,14 +1247,14 @@ const seedAiProductPatterns = async (qi, Sequelize) =>
         });
       }
 
-      if (shoes && socks) {
+      if (shoes && grip) {
         for (let i = 0; i < AI_PRODUCT_CONFIG.SHOE_KITS_PER_BRANCH; i += 1) {
           paySeq += 1;
           const buyer = users[(Number(branch.id) * 9 + i + 3) % users.length];
           await insertAiPaidOrder(qi, Sequelize, transaction, {
             user: buyer,
             branch,
-            variants: [shoes, socks].map((v) => buildVariantLine(v, 1)),
+            variants: [shoes, grip].map((v) => buildVariantLine(v, 1)),
             groupNote: `${AI_PRODUCT_TAG} SHOE-KIT-B${branch.id}-${u.pad(i + 1, 2)}`,
             createdAt: daysAgoFromToday(u.int(1, 45)),
             paySeq,
@@ -1294,10 +1264,10 @@ const seedAiProductPatterns = async (qi, Sequelize) =>
     }
 
     const mainBranch = base.branches[0];
-    const resolveMain = (like) =>
-      findProductVariant(qi, Sequelize, transaction, like, mainBranch.id);
-    const racket = await resolveMain("%Nanoflare Skill%Vợt%");
-    const shuttle = await resolveMain("%Cước đan vợt%");
+    const resolveMain = (categoryIds) =>
+      findProductVariantByCategory(qi, Sequelize, transaction, categoryIds, mainBranch.id);
+    const racket = await resolveMain([1]);
+    const shuttle = await resolveMain([70]);
 
     const user001 = persona("demo_user1");
     if (user001 && racket) {
@@ -1477,12 +1447,15 @@ const downAdminOccupancySkew = async (qi, Sequelize) =>
     await deleteAiOccupancySkewBookings(qi, Sequelize, transaction);
   });
 
-const seedCounter = async (qi, Sequelize) => u.phaseTransaction(qi, async (transaction) => {
-  await paymentPrefix(qi, "DEMO-EXT-COUNTER-", transaction);
-  await u.deleteCounter(qi, transaction);
-  const base = await getBase(qi, Sequelize, transaction);
-  const shifts = await u.q(qi, Sequelize, `
->>>>>>> Branch_Nam_ML
+const seedCounter = async (qi, Sequelize) =>
+  u.phaseTransaction(qi, async (transaction) => {
+    await paymentPrefix(qi, "DEMO-EXT-COUNTER-", transaction);
+    await u.deleteCounter(qi, transaction);
+    const base = await getBase(qi, Sequelize, transaction);
+    const shifts = await u.q(
+      qi,
+      Sequelize,
+      `
     SELECT wse.id AS sessionId, wse.employeeId, ws.branchId, ws.workDate, ws.startTime, ws.endTime
     FROM WorkShiftEmployees wse
     JOIN WorkShifts ws ON ws.id = wse.workShiftId
@@ -3871,7 +3844,6 @@ const downInventory = async (qi, Sequelize) =>
   });
 
 module.exports = {
-<<<<<<< HEAD
   seedUsers,
   downUsers,
   seedWalletAddress,
@@ -3882,6 +3854,12 @@ module.exports = {
   downBookings,
   seedCounter,
   downCounter,
+  seedAiPatternBookings,
+  downAiPatternBookings,
+  seedAiProductPatterns,
+  downAiProductPatterns,
+  seedAdminOccupancySkew,
+  downAdminOccupancySkew,
   seedOrders,
   downOrders,
   seedFeedbacks,
@@ -3897,17 +3875,4 @@ module.exports = {
   getBase,
   priceFor,
   paymentPrefix,
-=======
-  seedUsers, downUsers, seedWalletAddress, downWalletAddress,
-  seedWorkShifts, downWorkShifts,
-  seedBookings, downBookings, seedCounter, downCounter,
-  seedAiPatternBookings, downAiPatternBookings,
-  seedAiProductPatterns, downAiProductPatterns,
-  seedAdminOccupancySkew, downAdminOccupancySkew,
-  seedOrders, downOrders, seedFeedbacks, downFeedbacks,
-  seedCoachClasses, downCoachClasses, seedSocial, downSocial,
-  seedChatNotificationsAi, downChatNotificationsAi,
-  seedInventory, downInventory,
-  getBase, priceFor, paymentPrefix,
->>>>>>> Branch_Nam_ML
 };

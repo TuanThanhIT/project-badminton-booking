@@ -2,13 +2,19 @@ from __future__ import annotations
 
 import random
 from datetime import datetime, timezone
+import os
 from pathlib import Path
 
 import joblib
 import pandas as pd
 from lightgbm import LGBMClassifier
 
-MODEL_DIR = Path(__file__).resolve().parent.parent.parent / "models"
+MODEL_DIR = Path(
+    os.getenv(
+        "RECOMMENDATION_MODEL_DIR",
+        Path(__file__).resolve().parent.parent.parent / "models" / "recommendation",
+    )
+)
 MODEL_DIR.mkdir(parents=True, exist_ok=True)
 
 COOCCUR_PATH = MODEL_DIR / "product_cooccur.joblib"

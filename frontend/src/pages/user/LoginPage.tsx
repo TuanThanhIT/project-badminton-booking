@@ -73,6 +73,12 @@ const LoginPage = () => {
                 toast.success("Đăng nhập Google thành công.");
                 setTimeout(() => navigate(from, { replace: true }), 700);
               }
+            })
+            .catch((error) => {
+              toast.error(
+                error?.message ||
+                  "Đăng nhập Google chưa thành công. Vui lòng thử lại.",
+              );
             });
         },
       });
@@ -245,7 +251,7 @@ const LoginPage = () => {
           <button
             type="button"
             disabled
-            className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-400"
+            className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-400 shadow-sm"
           >
             Đăng nhập bằng Google
           </button>

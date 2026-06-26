@@ -463,10 +463,10 @@ http://127.0.0.1:8001/health
 ```
 .venv\Scripts\activate   # Windows
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8001
 ```
 
-Backend cần `AI_SERVICE_URL=http://localhost:8000`.
+Backend cần `AI_SERVICE_URL=http://localhost:8001`.
 
 ## API
 
@@ -490,4 +490,5 @@ Backend cần `AI_SERVICE_URL=http://localhost:8000`.
 - Khung giờ thấp điểm → gợi ý tạo khuyến mãi
 - Khách quay lại / cần voucher kích hoạt
 
-Model lưu tại volume `ai_models` (Docker) hoặc thư mục `models/`.
+Model PhoBERT lưu trong `models/bhub_phobert_moderation_model_v8/`.
+Model LightGBM/joblib lưu trong `models/recommendation/`.

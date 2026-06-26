@@ -5,7 +5,7 @@ import BadRequestError from "../errors/BadRequestError.js";
 dotenv.config();
 
 const getBaseUrl = () =>
-  (process.env.AI_SERVICE_URL || "http://localhost:8000").replace(/\/$/, "");
+  (process.env.AI_SERVICE_URL || "http://127.0.0.1:8001").replace(/\/$/, "");
 
 const getTimeout = () => Number(process.env.AI_SERVICE_TIMEOUT_MS || 30000);
 

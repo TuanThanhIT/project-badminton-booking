@@ -85,16 +85,12 @@ services:
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
       OPENAI_TEMPERATURE: ${OPENAI_TEMPERATURE:-0.7}
       OPENAI_MAX_TOKENS: ${OPENAI_MAX_TOKENS:-2048}
-<<<<<<< HEAD
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?GOOGLE_CLIENT_ID is required}
       AI_MODERATION_URL: ${AI_MODERATION_URL:?AI_MODERATION_URL  is required}
       AI_MODERATION_TIMEOUT_MS: ${AI_MODERATION_TIMEOUT_MS:?AI_MODERATION_TIMEOUT_MS}
-=======
-      AI_SERVICE_URL: ${AI_SERVICE_URL:-http://ai-service:8000}
+      AI_SERVICE_URL: ${AI_SERVICE_URL:-http://ai-service:8001}
       AI_SERVICE_TIMEOUT_MS: ${AI_SERVICE_TIMEOUT_MS:-30000}
->>>>>>> Branch_Nam_ML
     depends_on:
-      ai-service:
-        condition: service_healthy
       mysql:
         condition: service_healthy
       redis:
@@ -131,7 +127,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_URL: redis://redis:6379
-      AI_SERVICE_URL: ${AI_SERVICE_URL:-http://ai-service:8000}
+      AI_SERVICE_URL: ${AI_SERVICE_URL:-http://ai-service:8001}
       AI_SERVICE_TIMEOUT_MS: ${AI_SERVICE_TIMEOUT_MS:-30000}
       AI_TRAINING_CRON: ${AI_TRAINING_CRON:-0 3 * * *}
     depends_on:
@@ -194,6 +190,7 @@ services:
       args:
         VITE_BACKEND_URL: ${VITE_BACKEND_URL:-/api}
         VITE_SOCKET_URL: ${VITE_SOCKET_URL:-}
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
     image: badminton_frontend:latest
     container_name: badminton_frontend
     restart: unless-stopped
@@ -231,14 +228,15 @@ services:
     build:
       context: ./ai-service
       dockerfile: Dockerfile
-<<<<<<< HEAD
+    image: badminton_ai_service:latest
     container_name: badminton_ai_service
     restart: unless-stopped
     environment:
       MODEL_DIR: /app/models/bhub_phobert_moderation_model_v8
+      RECOMMENDATION_MODEL_DIR: /app/models/recommendation
       MAX_LENGTH: 128
     volumes:
-      - ./ai-service/models:/app/models:ro
+      - ./ai-service/models:/app/models
     ports:
       - "8001:8001"
     healthcheck:
@@ -252,32 +250,12 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-=======
-    image: badminton_ai_service:latest
-    container_name: badminton_ai_service
-    restart: unless-stopped
-    volumes:
-      - ai_models:/app/models
-    expose:
-      - "8000"
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\"",
-        ]
-      interval: 15s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
->>>>>>> Branch_Nam_ML
     networks:
       - badminton_network
 
 volumes:
   mysql_data:
   redis_data:
-  ai_models:
 
 networks:
   badminton_network:

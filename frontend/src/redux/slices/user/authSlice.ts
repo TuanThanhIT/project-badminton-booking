@@ -273,6 +273,7 @@ const authSlice = createSlice({
         state.user = action.payload.data.user;
         state.accessToken = action.payload.data.accessToken;
         localStorage.setItem("accessToken", action.payload.data.accessToken);
+        localStorage.removeItem("accountForceLogout");
       })
       .addCase(adminLogin.fulfilled, (state, action) => {
         state.user = action.payload.data.user;

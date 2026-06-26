@@ -1,4 +1,4 @@
-﻿export {
+export {
   sendAdminNotification,
   sendBranchEmployeesNotification,
   sendBranchManagersNotification,
@@ -11,27 +11,23 @@ import { Op } from "sequelize";
 import { Notification } from "../models/index.js";
 
 const normalizeNotificationTitle = (title) => {
-  if (title === "Thong bao demo B-Hub") return "Thông báo demo B-Hub";
+  if (title === "Thong bao demo B-Hub") return "Th�ng b�o demo B-Hub";
   return title || "";
 };
 
 const normalizeNotificationMessage = (message) => {
   if (!message) return "";
   if (/Thong bao ve booking, order, chat hoac lop hoc/i.test(message)) {
-    return "Thông báo demo về đặt sân, đơn hàng, tin nhắn hoặc lớp học.";
+    return "Th�ng b�o demo v? d?t s�n, don h�ng, tin nh?n ho?c l?p h?c.";
   }
   return message;
 };
 
 const formatNotification = (notify) => ({
   id: notify.id,
-<<<<<<< HEAD
-  title: notify.title,
-  message: notify.message,
-=======
   title: normalizeNotificationTitle(notify.title),
   message: normalizeNotificationMessage(notify.message),
->>>>>>> Branch_Nam_ML
+
   isRead: notify.isRead,
   type: notify.type,
   createdAt: notify.createdAt,
@@ -110,7 +106,7 @@ const markAllNotificationsReadService = async ({ userId, role }) => {
   await Notification.update({ isRead: true }, { where });
 
   return {
-    message: "Đã đánh dấu tất cả thông báo là đã đọc",
+    message: "�� d�nh d?u t?t c? th�ng b�o l� d� d?c",
   };
 };
 

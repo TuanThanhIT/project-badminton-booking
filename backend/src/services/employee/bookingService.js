@@ -90,11 +90,8 @@ const mapBooking = (booking, payment = null) => {
     customer: plain.user
       ? {
           fullName:
-<<<<<<< HEAD
             plain.user.profile?.fullName || plain.user.username || "Khách",
-=======
-            plain.user.profile?.fullName || plain.user.username || "Kh�ch",
->>>>>>> Branch_Nam_ML
+
           phoneNumber: plain.user.profile?.phoneNumber || "",
         }
       : null,
@@ -173,11 +170,8 @@ const assertNoShowWindowReached = (booking) => {
 
   if (Date.now() < noShowAt.getTime()) {
     throw new BadRequestError(
-<<<<<<< HEAD
       "Chỉ được hủy vắng mặt sau khi khách trễ nhận sân quá 30 phút.",
-=======
-      "Ch? du?c h?y v?ng m?t sau khi kh�ch tr? nh?n s�n qu� 30 ph�t.",
->>>>>>> Branch_Nam_ML
+
     );
   }
 };
@@ -189,11 +183,8 @@ const assertBookingPlayTimeEnded = (booking) => {
   const endAt = toLocalDateTime(lastDetail.playDate, lastDetail.endTime);
   if (Date.now() < endAt.getTime()) {
     throw new BadRequestError(
-<<<<<<< HEAD
       "Chỉ được hoàn thành sau khi khách đã đánh hết thời gian đặt sân.",
-=======
-      "Ch? du?c ho�n th�nh sau khi kh�ch d� d�nh h?t th?i gian d?t s�n.",
->>>>>>> Branch_Nam_ML
+
     );
   }
 };
@@ -209,11 +200,8 @@ const getBookingPayment = async ({ booking, transaction, lock = false }) =>
   });
 
 const getDepositDescription = (booking) =>
-<<<<<<< HEAD
   `Cọc giữ sân ${formatBookingCode(booking.id, booking.createdAt)}`;
-=======
-  `C?c gi? s�n ${formatBookingCode(booking.id, booking.createdAt)}`;
->>>>>>> Branch_Nam_ML
+
 
 const getBookingMailPayload = async ({ bookingId, transaction }) => {
   const booking = await Booking.findByPk(bookingId, {
@@ -305,11 +293,8 @@ const chargeNoShowDeposit = async ({ booking, payment, transaction }) => {
   });
 
   if (!wallet || Number(wallet.balance) < Number(tx.amount)) {
-<<<<<<< HEAD
     throw new BadRequestError("Ví khách không đủ số dư để trả cọc giữ sân.");
-=======
-    throw new BadRequestError("V� kh�ch kh�ng d? s? du d? tr? c?c gi? s�n.");
->>>>>>> Branch_Nam_ML
+
   }
 
   await wallet.update(
@@ -403,11 +388,8 @@ const getBookingDetailService = async (data) => {
     include: bookingInclude,
   });
 
-<<<<<<< HEAD
   if (!booking) throw new NotFoundError("Lịch đặt sân không tồn tại");
-=======
-  if (!booking) throw new NotFoundError("L?ch d?t s�n kh�ng t?n t?i");
->>>>>>> Branch_Nam_ML
+
 
   await assertEmployeeActiveCashierForBranch({
     employeeId,
@@ -435,11 +417,8 @@ const confirmBookingService = async (data) => {
 
     if (booking.bookingStatus !== BOOKING_STATUS.PENDING) {
       throw new BadRequestError(
-<<<<<<< HEAD
         "Chỉ có thể xác nhận lịch sân đang chờ xác nhận",
-=======
-        "Ch? c� th? x�c nh?n l?ch s�n dang ch? x�c nh?n",
->>>>>>> Branch_Nam_ML
+
       );
     }
 
@@ -457,13 +436,9 @@ const confirmBookingService = async (data) => {
   await sendUserNotification(
     booking.userId,
     "booking-confirmed",
-<<<<<<< HEAD
     "Lịch sân đã được xác nhận",
     `${booking.branch?.branchName || "Chi nhánh"} đã xác nhận lịch sân ${formatBookingCode(booking.id, booking.createdAt)}. Vui lòng đến đúng giờ và xuất trình email xác nhận để nhận sân.`,
-=======
-    "L?ch s�n d� du?c x�c nh?n",
-    `${booking.branch?.branchName || "Chi nh�nh"} d� x�c nh?n l?ch s�n ${formatBookingCode(booking.id, booking.createdAt)}. Vui l�ng d?n d�ng gi? v� xu?t tr�nh email x�c nh?n d? nh?n s�n.`,
->>>>>>> Branch_Nam_ML
+
   );
 
   await sendBookingMailSafely({ bookingId: booking.id, type: "confirm" });
@@ -479,11 +454,8 @@ const completeBookingService = async (data) => {
     });
 
     if (booking.bookingStatus !== BOOKING_STATUS.CHECKED_IN) {
-<<<<<<< HEAD
       throw new BadRequestError("Chỉ có thể hoàn thành lịch sân đã nhận sân");
-=======
-      throw new BadRequestError("Ch? c� th? ho�n th�nh l?ch s�n d� nh?n s�n");
->>>>>>> Branch_Nam_ML
+
     }
 
     assertBookingPlayTimeEnded(booking);
@@ -515,11 +487,8 @@ const completeBookingService = async (data) => {
         !Object.values(PAYMENT_OFFLINE_METHOD_STATUS).includes(paymentMethod)
       ) {
         throw new BadRequestError(
-<<<<<<< HEAD
           "Vui lòng chọn phương thức thanh toán tại sân",
-=======
-          "Vui l�ng ch?n phuong th?c thanh to�n t?i s�n",
->>>>>>> Branch_Nam_ML
+
         );
       }
 
@@ -544,13 +513,9 @@ const completeBookingService = async (data) => {
   await sendUserNotification(
     booking.userId,
     "booking-completed",
-<<<<<<< HEAD
     "Lịch sân đã hoàn tất",
     `Lịch sân ${formatBookingCode(booking.id, booking.createdAt)} tại ${booking.branch?.branchName || "chi nhánh"} đã được hoàn tất. Cảm ơn bạn đã sử dụng dịch vụ B-Hub.`,
-=======
-    "L?ch s�n d� ho�n t?t",
-    `L?ch s�n ${formatBookingCode(booking.id, booking.createdAt)} t?i ${booking.branch?.branchName || "chi nh�nh"} d� du?c ho�n t?t. C?m on b?n d� s? d?ng d?ch v? B-Hub.`,
->>>>>>> Branch_Nam_ML
+
   );
 
   await sendBookingMailSafely({ bookingId: booking.id, type: "complete" });
@@ -566,11 +531,8 @@ const receiveBookingService = async (data) => {
     });
 
     if (booking.bookingStatus !== BOOKING_STATUS.CONFIRMED) {
-<<<<<<< HEAD
       throw new BadRequestError("Chỉ có thể nhận sân cho lịch đã xác nhận");
-=======
-      throw new BadRequestError("Ch? c� th? nh?n s�n cho l?ch d� x�c nh?n");
->>>>>>> Branch_Nam_ML
+
     }
 
     await booking.update(
@@ -587,13 +549,9 @@ const receiveBookingService = async (data) => {
   await sendUserNotification(
     booking.userId,
     "booking-checked-in",
-<<<<<<< HEAD
     "Bạn đã nhận sân",
     `Lịch sân ${formatBookingCode(booking.id, booking.createdAt)} tại ${booking.branch?.branchName || "chi nhánh"} đã được xác nhận nhận sân. Chúc bạn có buổi chơi vui vẻ.`,
-=======
-    "B?n d� nh?n s�n",
-    `L?ch s�n ${formatBookingCode(booking.id, booking.createdAt)} t?i ${booking.branch?.branchName || "chi nh�nh"} d� du?c x�c nh?n nh?n s�n. Ch�c b?n c� bu?i choi vui v?.`,
->>>>>>> Branch_Nam_ML
+
   );
 
   await sendBookingMailSafely({ bookingId: booking.id, type: "checkedIn" });
@@ -629,11 +587,8 @@ const getEmployeeBookingForAction = async ({
     lock: transaction.LOCK.UPDATE,
   });
 
-<<<<<<< HEAD
   if (!booking) throw new NotFoundError("Lịch đặt sân không tồn tại");
-=======
-  if (!booking) throw new NotFoundError("L?ch d?t s�n kh�ng t?n t?i");
->>>>>>> Branch_Nam_ML
+
 
   await assertEmployeeActiveCashierForBranch({
     employeeId,
@@ -662,11 +617,8 @@ const refundBookingToWallet = async ({ booking, transaction }) => {
     };
   }
 
-<<<<<<< HEAD
   const refundDescription = `Hoàn tiền lịch sân ${formatBookingCode(booking.id, booking.createdAt)}`;
-=======
-  const refundDescription = `Ho�n ti?n l?ch s�n ${formatBookingCode(booking.id, booking.createdAt)}`;
->>>>>>> Branch_Nam_ML
+
 
   let wallet = await Wallet.findOne({
     where: { userId: booking.userId },
@@ -753,11 +705,8 @@ const approveCancelBookingService = async (data) => {
     });
 
     if (booking.bookingStatus !== BOOKING_STATUS.CANCEL_REQUESTED) {
-<<<<<<< HEAD
       throw new BadRequestError("Lịch sân chưa có yêu cầu hủy");
-=======
-      throw new BadRequestError("L?ch s�n chua c� y�u c?u h?y");
->>>>>>> Branch_Nam_ML
+
     }
 
     const payment = await getBookingPayment({
@@ -792,21 +741,13 @@ const approveCancelBookingService = async (data) => {
   await sendUserNotification(
     handledBooking.userId,
     "booking-cancel-approved",
-<<<<<<< HEAD
     "Yêu cầu hủy lịch sân đã được duyệt",
     refundResult?.refunded
       ? `Lịch sân ${formatBookingCode(handledBooking.id, handledBooking.createdAt)} đã được hủy và hoàn ${Number(
           refundResult.refundAmount,
         ).toLocaleString("vi-VN")}d vào ví.`
       : `Lịch sân ${formatBookingCode(handledBooking.id, handledBooking.createdAt)} đã được hủy thành công.`,
-=======
-    "Y�u c?u h?y l?ch s�n d� du?c duy?t",
-    refundResult?.refunded
-      ? `L?ch s�n ${formatBookingCode(handledBooking.id, handledBooking.createdAt)} d� du?c h?y v� ho�n ${Number(
-          refundResult.refundAmount,
-        ).toLocaleString("vi-VN")}d v�o v�.`
-      : `L?ch s�n ${formatBookingCode(handledBooking.id, handledBooking.createdAt)} d� du?c h?y th�nh c�ng.`,
->>>>>>> Branch_Nam_ML
+
   );
 
   return {
@@ -824,11 +765,8 @@ const rejectCancelBookingService = async (data) => {
     });
 
     if (booking.bookingStatus !== BOOKING_STATUS.CANCEL_REQUESTED) {
-<<<<<<< HEAD
       throw new BadRequestError("Lịch sân chưa có yêu cầu hủy");
-=======
-      throw new BadRequestError("L?ch s�n chua c� y�u c?u h?y");
->>>>>>> Branch_Nam_ML
+
     }
 
     await booking.update(
@@ -848,17 +786,11 @@ const rejectCancelBookingService = async (data) => {
   await sendUserNotification(
     booking.userId,
     "booking-cancel-rejected",
-<<<<<<< HEAD
     "Yêu cầu hủy lịch sân bị từ chối",
     reason
       ? `Yêu cầu hủy lịch sân ${formatBookingCode(booking.id, booking.createdAt)} bị từ chối. Lý do: ${reason}`
       : `Yêu cầu hủy lịch sân ${formatBookingCode(booking.id, booking.createdAt)} bị từ chối.`,
-=======
-    "Y�u c?u h?y l?ch s�n b? t? ch?i",
-    reason
-      ? `Y�u c?u h?y l?ch s�n ${formatBookingCode(booking.id, booking.createdAt)} b? t? ch?i. L� do: ${reason}`
-      : `Y�u c?u h?y l?ch s�n ${formatBookingCode(booking.id, booking.createdAt)} b? t? ch?i.`,
->>>>>>> Branch_Nam_ML
+
   );
 };
 
@@ -876,11 +808,8 @@ const cancelNoShowBookingService = async (data) => {
 
     if (booking.bookingStatus !== BOOKING_STATUS.CONFIRMED) {
       throw new BadRequestError(
-<<<<<<< HEAD
         "Chỉ có thể hủy vắng mặt lịch sân đã xác nhận",
-=======
-        "Ch? c� th? h?y v?ng m?t l?ch s�n d� x�c nh?n",
->>>>>>> Branch_Nam_ML
+
       );
     }
 
@@ -893,11 +822,8 @@ const cancelNoShowBookingService = async (data) => {
         BOOKING_STATUS.FAILED,
       ].includes(booking.bookingStatus)
     ) {
-<<<<<<< HEAD
       throw new BadRequestError("Trạng thái lịch sân hiện tại không thể hủy");
-=======
-      throw new BadRequestError("Tr?ng th�i l?ch s�n hi?n t?i kh�ng th? h?y");
->>>>>>> Branch_Nam_ML
+
     }
 
     const payment = await getBookingPayment({
@@ -928,11 +854,8 @@ const cancelNoShowBookingService = async (data) => {
         previousBookingStatus: booking.bookingStatus,
         bookingStatus: BOOKING_STATUS.CANCELLED,
         cancelledBy: CANCELLED_BY.EMPLOYEE,
-<<<<<<< HEAD
         cancelReason: reason || "Khách không đến nhận sân",
-=======
-        cancelReason: reason || "Kh�ch kh�ng d?n nh?n s�n",
->>>>>>> Branch_Nam_ML
+
         cancelHandledAt: new Date(),
         cancelledAt: new Date(),
       },
@@ -945,21 +868,13 @@ const cancelNoShowBookingService = async (data) => {
   await sendUserNotification(
     handledBooking.userId,
     "booking-cancelled-by-employee",
-<<<<<<< HEAD
     "Lịch sân đã bị hủy",
     refundResult?.refunded
       ? `Lịch sân ${formatBookingCode(handledBooking.id, handledBooking.createdAt)} đã bị hủy và hoàn ${Number(
           refundResult.refundAmount,
         ).toLocaleString("vi-VN")}d vào ví.`
       : `Lịch sân ${formatBookingCode(handledBooking.id, handledBooking.createdAt)} đã bị hủy. Lý do: ${reason || "Khách không đến nhận sân"}`,
-=======
-    "L?ch s�n d� b? h?y",
-    refundResult?.refunded
-      ? `L?ch s�n ${formatBookingCode(handledBooking.id, handledBooking.createdAt)} d� b? h?y v� ho�n ${Number(
-          refundResult.refundAmount,
-        ).toLocaleString("vi-VN")}d v�o v�.`
-      : `L?ch s�n ${formatBookingCode(handledBooking.id, handledBooking.createdAt)} d� b? h?y. L� do: ${reason || "Kh�ch kh�ng d?n nh?n s�n"}`,
->>>>>>> Branch_Nam_ML
+
   );
 
   await sendBookingMailSafely({

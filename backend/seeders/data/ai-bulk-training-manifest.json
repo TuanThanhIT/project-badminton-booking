@@ -1,0 +1,50 @@
+{
+  "marker": "[DEMO-SEED-3M] AI-BULK-TRAIN",
+  "accounts": {
+    "note": "Khách demo từ static-seed (demo_user1..40), KHÔNG dùng demo_customer_",
+    "passwordUser": "@User123456",
+    "passwordLegacy3m": "@Demo123456"
+  },
+  "seederOrder": [
+    "npm run migrate",
+    "npm run seed",
+    "npx sequelize-cli db:seed --seed 20260610120000-seed-3m-ai-pattern-bookings.cjs",
+    "npx sequelize-cli db:seed --seed 20260610130000-seed-ai-product-patterns.cjs",
+    "npx sequelize-cli db:seed --seed 20260610140000-seed-admin-occupancy-skew.cjs",
+    "npx sequelize-cli db:seed --seed 20260619100000-seed-ai-bulk-training-data.cjs"
+  ],
+  "noteSeederAll": "db:seed:all đã gồm các file AI trên (theo timestamp). Chỉ chạy lẻ khi cần seed lại phần AI.",
+  "expectedCounts": {
+    "demo_user_role": 40,
+    "demo_customer_role": 0,
+    "demoBookings": "~760",
+    "demoOrderGroups": "~560",
+    "aiBulkBookings": "~528",
+    "aiBulkPaidOrders": "135",
+    "aiProductPatternOrders": "~50",
+    "aiPatternBookings": "~60",
+    "aiOccupancySkewBookings": "~75"
+  },
+  "testAccounts": {
+    "bookingRec": [
+      { "username": "demo_user1", "branchId": 1, "expect": "Gợi ý 19h + chi nhánh 1 (sau bulk seed)" },
+      { "username": "demo_user6", "branchId": 2, "expect": "Gợi ý 6h sáng + chi nhánh 2" },
+      { "username": "demo_user11", "branchId": 3, "expect": "Gợi ý 20h + chi nhánh 3" }
+    ],
+    "productPersona": [
+      { "username": "demo_user1", "persona": "RACKET-only orders", "expect": "Gợi ý SP chưa mua (cước, balo…)" },
+      { "username": "demo_user2", "persona": "COMBO vợt+cước", "expect": "Gợi ý balo/giày" }
+    ],
+    "boughtTogether": {
+      "viewProduct": "Yonex Nanoflare Skill Vợt cầu lông Yonex (id ~10000)",
+      "expectKem": ["Cước đan vợt Yonex BG65 (~918)", "Balo Yonex Pro Tour 30L (~914)"]
+    }
+  },
+  "verifySql": [
+    "SELECT COUNT(*) AS demo_user FROM Users WHERE username LIKE 'demo_user%';",
+    "SELECT COUNT(*) AS demo_customer FROM Users WHERE username LIKE 'demo_customer_%';",
+    "SELECT COUNT(*) FROM Bookings WHERE note LIKE '%AI-BULK-TRAIN%';",
+    "SELECT COUNT(*) FROM OrderGroups WHERE note LIKE '%AI-BULK-TRAIN%' AND status='PAID';",
+    "SELECT COUNT(*) FROM OrderGroups WHERE note LIKE '%AI-PRODUCT-PATTERN%' AND status='PAID';"
+  ]
+}

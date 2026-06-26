@@ -42,6 +42,14 @@ const getTomorrowDate = () => {
   return d.toISOString().split("T")[0];
 };
 
+// Cộng 1 giờ vào "HH:mm" (chặn trần 23:59) để mặc định khung 1 tiếng khi thiếu endTime
+const addOneHour = (hhmm) => {
+  const [h, m] = String(hhmm).split(":").map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return hhmm;
+  const total = Math.min(h * 60 + m + 60, 23 * 60 + 59);
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+};
+
 const MENU_GROUP_BY_KEYWORD = [
   { pattern: /vợt|vot/i, group: "Vợt cầu lông" },
   { pattern: /giày|giay/i, group: "Giày cầu lông" },
@@ -189,6 +197,7 @@ const mapProductSearchResults = (products) =>
       brand: p.brand,
       minPrice,
       description: p.description?.slice(0, 220) || null,
+      thumbnailUrl: p.thumbnailUrl || null,
       url: `/product/${p.id}`,
     };
   });
@@ -256,12 +265,22 @@ const searchAvailableCourtsTool = async (args) => {
       bookingUrl: `/branches/${branchId}`,
     };
   } catch (err) {
+    const msg = err.message || "Không tra cứu được lịch sân.";
+    const isTimingError = /quá khứ|ít nhất 1 tiếng|quá hạn/i.test(msg);
     return {
       branch: { id: branch.id, name: branch.branchName },
       date,
       timeSlot: { startTime, endTime },
-      error: err.message || "Không tra cứu được lịch sân.",
-      suggestion: "Thử khung giờ khác hoặc ngày khác (định dạng YYYY-MM-DD).",
+      error: msg,
+      ...(isTimingError
+        ? {
+            doNotChangeDate: true,
+            instruction:
+              "Khung giờ/ngày này không đặt được vì lý do trên. TUYỆT ĐỐI KHÔNG tự đổi sang ngày hoặc giờ khác rồi trả lời như thật. Hãy báo đúng lý do cho user và HỎI họ muốn chọn khung giờ khác (hoặc ngày khác).",
+          }
+        : {
+            suggestion: "Thử khung giờ khác hoặc ngày khác (định dạng YYYY-MM-DD).",
+          }),
     };
   }
 };
@@ -492,6 +511,9 @@ export const executeAiTool = async (toolName, rawArgs, options = {}) => {
         args.branchId = Number(options.defaultBranchId);
       }
       if (!args.date) args.date = getTomorrowDate();
+      if (args.startTime && !args.endTime) {
+        args.endTime = addOneHour(args.startTime);
+      }
       if (!args.branchId) {
         return {
           needsBranchSelection: true,

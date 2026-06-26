@@ -19,7 +19,7 @@
     "test:coverage": "vitest run --coverage",
     "test:ai-moderation": "node scripts/test-ai-moderation-service.js",
     "start": "node src/server.js",
-    "worker": "node src/workers/ghnWebhookWorker.js",
+    "worker": "node src/workers/index.js",
     "build": "babel src/server.js -d dist",
     "dev": "npm run build && nodemon src/server.js",
     "migrate": "sequelize-cli db:migrate",

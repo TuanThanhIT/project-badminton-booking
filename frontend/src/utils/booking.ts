@@ -14,3 +14,17 @@ export const formatBookingCode = (
 
   return `BK-${datePart}-${String(id).padStart(4, "0")}`;
 };
+
+export const formatTimeShort = (value?: string | null) => {
+  if (!value) return "--:--";
+
+  const match = String(value).match(/(\d{1,2}):(\d{2})/);
+  if (!match) return String(value);
+
+  return `${match[1].padStart(2, "0")}:${match[2]}`;
+};
+
+export const formatTimeRange = (
+  startTime?: string | null,
+  endTime?: string | null,
+) => `${formatTimeShort(startTime)} - ${formatTimeShort(endTime)}`;

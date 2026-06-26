@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
@@ -38,15 +38,15 @@ import {
 import { OTP_TYPE } from "../../utils/constants/otpType";
 import type { OtpFlowData, OtpSendRequest } from "../../types/auth";
 import { showConfirmDialog } from "../../utils/confirmDialog";
+import { BOOKING_DISCOUNT_STORAGE_KEY } from "../../constants/bookingDiscount";
+import { formatPrice } from "../../utils/checkout";
+import { formatTimeRange } from "../../utils/booking";
 
 const iconMap = {
   cash: <Banknote size={18} />,
   vnpay: <CreditCard size={18} />,
   wallet: <Wallet size={18} />,
 } as const;
-
-const formatPrice = (value: number) =>
-  `${Number(value || 0).toLocaleString()}đ`;
 
 const CheckoutBookingPage = () => {
   const { state } = useLocation();
@@ -63,10 +63,24 @@ const CheckoutBookingPage = () => {
   const [appliedDiscount, setAppliedDiscount] =
     useState<DiscountCheckResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const autoDiscountAppliedRef = useRef(false);
 
   const totalAmount = Number(state?.totalAmount || 0);
   const discountAmount = appliedDiscount?.discountValue ?? 0;
   const finalAmount = appliedDiscount?.finalAmount ?? totalAmount;
+
+  const bookingScope = useMemo(() => {
+    const parseHour = (t?: string) => {
+      if (!t) return undefined;
+      const h = Number(String(t).split(":")[0]);
+      return Number.isFinite(h) ? h : undefined;
+    };
+    return {
+      branchId: state?.branchId ? Number(state.branchId) : undefined,
+      startHour: parseHour(state?.startTime),
+      endHour: parseHour(state?.endTime),
+    };
+  }, [state]);
 
   const availablePaymentMethods =
     state?.type === "monthly"
@@ -97,10 +111,37 @@ const CheckoutBookingPage = () => {
     const data: DiscountRequest = {
       amount: totalAmount,
       targetType: "BOOKING",
+      ...bookingScope,
     };
 
     dispatch(getDiscountsCheckout({ data }));
-  }, [dispatch, totalAmount]);
+  }, [dispatch, totalAmount, bookingScope]);
+
+  useEffect(() => {
+    if (!totalAmount || autoDiscountAppliedRef.current) return;
+
+    const savedCode = localStorage.getItem(BOOKING_DISCOUNT_STORAGE_KEY)?.trim();
+    if (!savedCode) return;
+
+    autoDiscountAppliedRef.current = true;
+
+    dispatch(
+      checkBookingDiscount({
+        code: savedCode,
+        bookingAmount: totalAmount,
+        ...bookingScope,
+      }),
+    )
+      .unwrap()
+      .then((res) => {
+        setAppliedDiscount(res.data);
+        toast.success(`Đã áp dụng mã ${res.data.code}`);
+      })
+      .catch(() => {
+        localStorage.removeItem(BOOKING_DISCOUNT_STORAGE_KEY);
+        setAppliedDiscount(null);
+      });
+  }, [dispatch, totalAmount, bookingScope]);
 
   if (!state) {
     return (
@@ -152,18 +193,19 @@ const CheckoutBookingPage = () => {
       checkBookingDiscount({
         code: data.code,
         bookingAmount: totalAmount,
+        ...bookingScope,
       }),
     )
       .unwrap()
       .then((res) => {
         setAppliedDiscount(res.data);
-        localStorage.setItem("bookingDiscountCode", data.code);
+        localStorage.setItem(BOOKING_DISCOUNT_STORAGE_KEY, data.code);
         setOpenDiscount(false);
         toast.success("Áp mã giảm giá đặt sân thành công");
       })
       .catch(() => {
         setAppliedDiscount(null);
-        localStorage.removeItem("bookingDiscountCode");
+        localStorage.removeItem(BOOKING_DISCOUNT_STORAGE_KEY);
       });
   };
 
@@ -376,7 +418,7 @@ const CheckoutBookingPage = () => {
 
                     <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700">
                       <Clock size={17} className="text-sky-600" />
-                      {state.startTime} - {state.endTime}
+                      {formatTimeRange(state.startTime, state.endTime)}
                     </div>
                   </div>
 
@@ -546,7 +588,7 @@ const CheckoutBookingPage = () => {
           setOpenDiscount={setOpenDiscount}
           onSubmit={handleApplyDiscount}
           discounts={discounts}
-          storageKey="bookingDiscountCode"
+          storageKey={BOOKING_DISCOUNT_STORAGE_KEY}
         />
       )}
     </div>

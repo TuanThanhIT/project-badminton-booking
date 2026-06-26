@@ -21,7 +21,6 @@ import {
 
 import type {
   ProductDetailRequest,
-  ProductQueriesRequest,
   ProductVariant,
 } from "../../types/product";
 
@@ -30,11 +29,10 @@ import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import {
   getProductDetail,
   getProductFeedback,
-  getProductsByFilter,
 } from "../../redux/slices/user/productSlice";
 
 import Breadcrumb from "../../components/ui/user/category/Breadcrumb";
-import ProductsRelated from "../../components/ui/user/product/ProductsRelated";
+import ProductRecommendationWidget from "../../components/ui/user/product/ProductRecommendationWidget";
 
 import type { AddCartItemRequest } from "../../types/cart";
 
@@ -62,8 +60,6 @@ const ProductDetailPage: React.FC = () => {
 
   const productDetail = useAppSelector((state) => state.product.productDetail);
   const cart = useAppSelector((state) => state.cart.cart);
-
-  const products = useAppSelector((state) => state.product.products?.products);
 
   const productFeedback = useAppSelector(
     (state) => state.product.productFeedback,
@@ -116,35 +112,6 @@ const ProductDetailPage: React.FC = () => {
 
     dispatch(getCart());
   }, [dispatch, productId]);
-
-  useEffect(() => {
-    const resolvedCateId =
-      cateId > 0
-        ? cateId
-        : productDetail?.categoryId || productDetail?.category?.id;
-    const resolvedGroupName =
-      groupName || productDetail?.category?.menuGroup || undefined;
-
-    if (!resolvedCateId && !resolvedGroupName) return;
-
-    const data: ProductQueriesRequest = {
-      productId,
-      limit: 8,
-      ...(resolvedCateId
-        ? { cateId: resolvedCateId }
-        : { groupName: resolvedGroupName }),
-    };
-
-    dispatch(getProductsByFilter({ data }));
-  }, [
-    dispatch,
-    cateId,
-    groupName,
-    productId,
-    productDetail?.categoryId,
-    productDetail?.category?.id,
-    productDetail?.category?.menuGroup,
-  ]);
 
   useEffect(() => {
     if (!productDetail) return;
@@ -915,9 +882,14 @@ const ProductDetailPage: React.FC = () => {
           )}
         </div>
 
-        {/* RELATED */}
-        <div className="mt-10">
-          <ProductsRelated productsRelated={products} groupName={groupName} />
+        {/* AI: THƯỜNG ĐƯỢC MUA KÈM */}
+        <div className="mt-8">
+          <ProductRecommendationWidget mode="related" productId={productId} />
+        </div>
+
+        {/* AI: GỢI Ý CHO BẠN */}
+        <div className="mt-8">
+          <ProductRecommendationWidget mode="user" />
         </div>
       </div>
     </div>

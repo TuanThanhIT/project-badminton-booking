@@ -95,6 +95,21 @@ const handleLoginController = asyncHandler(async (req, res) => {
     );
 });
 
+const handleGoogleLoginController = asyncHandler(async (req, res) => {
+  const data = { ...req.body };
+  const result = await authService.handleGoogleLoginService(data);
+  const { accessToken, refreshToken, user } = result;
+  return res
+    .status(200)
+    .cookie("refreshToken", refreshToken, refreshTokenCookieOptions)
+    .json(
+      new SuccessResponse("Đăng nhập Google thành công", {
+        accessToken,
+        user,
+      }),
+    );
+});
+
 const handleAdminLoginController = asyncHandler(async (req, res) => {
   const data = { ...req.body };
   const result = await authService.handleAdminLoginService(data);
@@ -154,6 +169,7 @@ const logoutController = async (req, res) => {
 const authController = {
   handleRegisterController,
   handleLoginController,
+  handleGoogleLoginController,
   handleAdminLoginController,
   handleManagerLoginController,
   handleEmployeeLoginController,

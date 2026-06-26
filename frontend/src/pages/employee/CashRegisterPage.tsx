@@ -23,6 +23,7 @@ import {
   isShiftCheckoutWindowOpen,
   SHIFT_CHECKOUT_EARLY_MINUTES,
 } from "../../utils/workShift";
+import { formatTimeRange } from "../../utils/booking";
 
 const getToday = () =>
   new Date().toLocaleDateString("en-CA", {
@@ -61,7 +62,7 @@ const ShiftSummary = ({ shift }: { shift: EmployeeWorkShift }) => (
     <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
       <Clock className="h-4 w-4 text-sky-600" />
       <span>
-        {shift.workShift.startTime} - {shift.workShift.endTime}
+        {formatTimeRange(shift.workShift.startTime, shift.workShift.endTime)}
       </span>
     </div>
     <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
@@ -472,8 +473,10 @@ const CashRegisterPage = () => {
                             </p>
 
                             <p className="mt-1 text-sm text-slate-500">
-                              {shift.workShift.startTime} -{" "}
-                              {shift.workShift.endTime}
+                              {formatTimeRange(
+                                shift.workShift.startTime,
+                                shift.workShift.endTime,
+                              )}
                             </p>
                           </div>
                         ))}

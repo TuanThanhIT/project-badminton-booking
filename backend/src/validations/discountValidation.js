@@ -23,6 +23,9 @@ export const getDiscountsCheckoutSchema = {
   query: Joi.object({
     amount: orderAmountField,
     targetType: targetTypeField,
+    branchId: Joi.number().integer().positive().optional(),
+    startHour: Joi.number().integer().min(0).max(23).optional(),
+    endHour: Joi.number().integer().min(1).max(24).optional(),
   }),
 };
 
@@ -30,6 +33,9 @@ export const applyDiscountBookingSchema = {
   body: Joi.object({
     code: codeField,
     bookingAmount: bookingAmountField,
+    branchId: Joi.number().integer().positive().optional(),
+    startHour: Joi.number().integer().min(0).max(23).optional(),
+    endHour: Joi.number().integer().min(1).max(24).optional(),
   }),
 };
 

@@ -12,6 +12,9 @@ export const AI_MESSAGE_ROLE = Object.freeze({
 
 export const AI_HISTORY_LIMIT = 40;
 
+// Số tin nhắn lịch sử thực sự gửi vào prompt mỗi lượt (tiết kiệm token, vẫn lưu đủ AI_HISTORY_LIMIT trong DB)
+export const AI_PROMPT_HISTORY_LIMIT = 12;
+
 export const AI_TOOL_NAMES = Object.freeze({
   LIST_BRANCHES: "list_branches",
   SEARCH_AVAILABLE_COURTS: "search_available_courts",

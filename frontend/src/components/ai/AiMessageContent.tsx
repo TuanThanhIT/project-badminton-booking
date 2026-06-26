@@ -1,5 +1,6 @@
 import { Fragment, type ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { AiChatCards, parseAiMessageContent } from "./AiChatCards";
 
 type Segment =
   | { type: "text"; value: string }
@@ -135,7 +136,8 @@ const AiMessageContent = ({
     return <>{content}</>;
   }
 
-  const lines = content.split("\n");
+  const { text, cards } = parseAiMessageContent(content);
+  const lines = text.split("\n");
 
   return (
     <div className="space-y-1.5 leading-relaxed">
@@ -163,6 +165,7 @@ const AiMessageContent = ({
           </p>
         );
       })}
+      <AiChatCards cards={cards} onNavigate={onNavigate} />
     </div>
   );
 };

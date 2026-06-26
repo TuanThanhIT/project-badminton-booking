@@ -21,6 +21,7 @@ import CoachApplicationManagementPage from "../pages/admin/CoachApplicationManag
 import SupplierManagementPage from "../pages/admin/SupplierManagementPage";
 import PurchaseReceiptManagementPage from "../pages/admin/PurchaseReceiptManagementPage";
 import InventoryManagementPage from "../pages/admin/InventoryManagementPage";
+import AiInsightsPage from "../pages/admin/AiInsightsPage";
 
 const AdminRoute = () => {
   return (
@@ -35,6 +36,7 @@ const AdminRoute = () => {
       <Route element={<AdminProtectedRoute />}>
         <Route element={<AdminLayout />}>
           <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="ai-insights" element={<AiInsightsPage />} />
           <Route path="users" element={<UserManagementPage />} />
           <Route path="coach-applications" element={<CoachApplicationManagementPage />} />
           <Route path="branches" element={<BranchManagementPage />} />

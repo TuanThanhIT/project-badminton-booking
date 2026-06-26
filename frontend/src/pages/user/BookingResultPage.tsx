@@ -15,6 +15,7 @@ import {
   retryBookingVNPay,
 } from "../../redux/slices/user/bookingSlice";
 import { formatBookingCode } from "../../utils/booking";
+import { BOOKING_DISCOUNT_STORAGE_KEY } from "../../constants/bookingDiscount";
 
 const useCountUp = (end: number, duration = 900) => {
   const [value, setValue] = useState(0);
@@ -88,7 +89,7 @@ const BookingResultPage = () => {
         ).unwrap();
 
         setBookingData(res.data);
-        localStorage.removeItem("bookingDiscountCode");
+        localStorage.removeItem(BOOKING_DISCOUNT_STORAGE_KEY);
       } catch {
         setBookingData(null);
       } finally {

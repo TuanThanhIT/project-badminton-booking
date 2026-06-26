@@ -61,6 +61,7 @@ import initAdminCoachApplicationRoute from "./routes/admin/coachApplicationRoute
 import initCoachClassRoute from "./routes/user/coachClassRoute.js";
 import initCoachApplicationRoute from "./routes/user/coachApplicationRoute.js";
 import initAiRoute from "./routes/user/aiRoute.js";
+import initAdminAiRecommendationRoute from "./routes/admin/aiRecommendationRoute.js";
 import initAdminSupplierRoute from "./routes/admin/supplierRoute.js";
 import initAdminPurchaseReceiptRoute from "./routes/admin/purchaseReceiptRoute.js";
 import initAdminInventoryRoute from "./routes/admin/inventoryRoute.js";
@@ -70,7 +71,7 @@ dotenv.config();
 export const createApp = () => {
   const app = express();
   const allowedOrigins = [
-    ...(process.env.CORS_ORIGIN || "")
+    ...(process.env.CORS_ORIGIN || process.env.CLIENT_URL || "")
       .split(",")
       .map((origin) => origin.trim())
       .filter(Boolean),
@@ -149,6 +150,7 @@ export const createApp = () => {
   initAdminSupplierRoute(app);
   initAdminPurchaseReceiptRoute(app);
   initAdminInventoryRoute(app);
+  initAdminAiRecommendationRoute(app);
 
   initCourtRouteManager(app);
   initBranchRouteManager(app);

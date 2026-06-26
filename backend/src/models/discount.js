@@ -3,6 +3,7 @@ import sequelize from "../config/db.js";
 import {
   DISCOUNT_APPLY_TYPE,
   DISCOUNT_TYPE,
+  DISCOUNT_VISIBILITY,
 } from "../constants/discountConstant.js";
 
 const Discount = sequelize.define(
@@ -103,6 +104,45 @@ const Discount = sequelize.define(
       allowNull: false,
       validate: { isDate: { msg: "End date must be a valid date" } },
     },
+    visibility: {
+      type: DataTypes.ENUM(...Object.values(DISCOUNT_VISIBILITY)),
+      allowNull: false,
+      defaultValue: DISCOUNT_VISIBILITY.PUBLIC,
+      validate: {
+        isIn: {
+          args: [Object.values(DISCOUNT_VISIBILITY)],
+          msg: "Invalid discount visibility",
+        },
+      },
+    },
+    // Phạm vi áp dụng cho đặt sân. null = áp cho mọi chi nhánh.
+    branchId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: {
+        isInt: { msg: "Branch ID must be an integer" },
+        min: { args: [1], msg: "Branch ID must be a positive number" },
+      },
+    },
+    // Khung giờ áp dụng (0-23). null = mọi giờ. Áp cho slot có startHour >= startHour và < endHour.
+    startHour: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: {
+        isInt: { msg: "Start hour must be an integer" },
+        min: { args: [0], msg: "Start hour must be between 0 and 23" },
+        max: { args: [23], msg: "Start hour must be between 0 and 23" },
+      },
+    },
+    endHour: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: {
+        isInt: { msg: "End hour must be an integer" },
+        min: { args: [1], msg: "End hour must be between 1 and 24" },
+        max: { args: [24], msg: "End hour must be between 1 and 24" },
+      },
+    },
   },
   {
     tableName: "Discounts",
@@ -119,6 +159,13 @@ Discount.beforeValidate((discount) => {
   }
   if (discount.type === DISCOUNT_TYPE.PERCENT && discount.value > 100) {
     throw new Error("Percent discount cannot be greater than 100%");
+  }
+  if (
+    discount.startHour != null &&
+    discount.endHour != null &&
+    discount.endHour <= discount.startHour
+  ) {
+    throw new Error("End hour must be greater than start hour");
   }
 });
 

@@ -13,7 +13,6 @@ import {
   Navigation2,
 } from "lucide-react";
 import { getPagedBranches } from "../../redux/slices/user/branchSlice";
-
 const BranchPage = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();

@@ -60,3 +60,14 @@ export const handleLoginSchema = {
     password: passwordField,
   }),
 };
+
+export const handleGoogleLoginSchema = {
+  body: Joi.object({
+    credential: Joi.string().min(20).required().messages({
+      "string.base": "Google credential must be a string",
+      "string.empty": "Google credential cannot be empty",
+      "string.min": "Google credential is invalid",
+      "any.required": "Google credential is required",
+    }),
+  }),
+};

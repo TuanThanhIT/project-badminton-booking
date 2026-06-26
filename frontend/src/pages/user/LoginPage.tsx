@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { Lock, UserRound } from "lucide-react";
 import { FormLoginSchema, type formLogin } from "../../schemas/FormLoginSchema";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
-import { login } from "../../redux/slices/user/authSlice";
+import { googleLogin, login } from "../../redux/slices/user/authSlice";
 import type { LoginRequest } from "../../types/auth";
 import LoadingButton from "../../components/ui/common/LoadingButton";
 import AuthShell from "../../components/ui/user/auth/AuthShell";
@@ -20,8 +20,13 @@ const LoginPage = () => {
   const loginLoading = useAppSelector(
     (state) => state.ui.loadingMap["auth/login"] || false,
   );
+  const googleLoginLoading = useAppSelector(
+    (state) => state.ui.loadingMap["auth/googleLogin"] || false,
+  );
   const navigate = useNavigate();
   const location = useLocation();
+  const googleButtonRef = useRef<HTMLDivElement>(null);
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const from = location.state?.from
     ? `${location.state.from.pathname}${location.state.from.search || ""}`
     : "/";
@@ -43,6 +48,74 @@ const LoginPage = () => {
       setValue("rememberMe", true);
     }
   }, [setValue]);
+
+  useEffect(() => {
+    if (!googleClientId || !googleButtonRef.current) return;
+
+    let cancelled = false;
+
+    const renderGoogleButton = () => {
+      if (cancelled || !window.google || !googleButtonRef.current) return;
+
+      googleButtonRef.current.innerHTML = "";
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: (response) => {
+          if (!response.credential) {
+            toast.error("Không nhận được thông tin Google.");
+            return;
+          }
+
+          dispatch(googleLogin({ data: { credential: response.credential } }))
+            .unwrap()
+            .then((res) => {
+              if (res.data.accessToken && res.data.user) {
+                toast.success("Đăng nhập Google thành công.");
+                setTimeout(() => navigate(from, { replace: true }), 700);
+              }
+            });
+        },
+      });
+
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        theme: "outline",
+        size: "large",
+        text: "signin_with",
+        shape: "rectangular",
+        width: googleButtonRef.current.offsetWidth || 360,
+        locale: "vi",
+      });
+    };
+
+    const existingScript = document.querySelector<HTMLScriptElement>(
+      'script[src^="https://accounts.google.com/gsi/client"]',
+    );
+
+    if (existingScript) {
+      if (window.google) {
+        renderGoogleButton();
+      } else {
+        existingScript.addEventListener("load", renderGoogleButton);
+      }
+
+      return () => {
+        cancelled = true;
+        existingScript.removeEventListener("load", renderGoogleButton);
+      };
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client?hl=vi";
+    script.async = true;
+    script.defer = true;
+    script.onload = renderGoogleButton;
+    document.body.appendChild(script);
+
+    return () => {
+      cancelled = true;
+      script.onload = null;
+    };
+  }, [dispatch, from, googleClientId, navigate]);
 
   const onSubmit = (dt: formLogin) => {
     const data: LoginRequest = {
@@ -150,6 +223,33 @@ const LoginPage = () => {
         >
           Đăng nhập
         </LoadingButton>
+
+        <div className="flex items-center gap-3">
+          <span className="h-px flex-1 bg-slate-200" />
+          <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+            Hoặc
+          </span>
+          <span className="h-px flex-1 bg-slate-200" />
+        </div>
+
+        {googleClientId ? (
+          <div className="min-h-11 w-full">
+            <div ref={googleButtonRef} className="w-full" />
+            {googleLoginLoading && (
+              <p className="mt-2 text-center text-xs text-slate-500">
+                Đang xác nhận tài khoản Google...
+              </p>
+            )}
+          </div>
+        ) : (
+          <button
+            type="button"
+            disabled
+            className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-400"
+          >
+            Đăng nhập bằng Google
+          </button>
+        )}
 
         <p className="text-center text-sm text-slate-500">
           Chưa có tài khoản?{" "}

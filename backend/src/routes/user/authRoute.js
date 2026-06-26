@@ -4,6 +4,7 @@ import auth from "../../middlewares/auth.js";
 import authorize from "../../middlewares/authorize.js";
 import validate from "../../middlewares/validate.js";
 import {
+  handleGoogleLoginSchema,
   handleLoginSchema,
   handleRegisterSchema,
   resetPasswordSchema,
@@ -46,6 +47,11 @@ const initAuthRoute = (app) => {
     "/login",
     validate(handleLoginSchema),
     authController.handleLoginController,
+  );
+  authRoute.post(
+    "/google",
+    validate(handleGoogleLoginSchema),
+    authController.handleGoogleLoginController,
   );
   app.post(
     "/admin/auth/login",

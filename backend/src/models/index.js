@@ -28,6 +28,7 @@ import Order from "./order.js";
 import OrderDetail from "./orderDetail.js";
 import Payment from "./payment.js";
 import Discount from "./discount.js";
+import DiscountUser from "./discountUser.js";
 
 import DraftBooking from "./draftBooking.js";
 import DraftBookingItem from "./draftBookingItem.js";
@@ -265,6 +266,40 @@ Discount.hasMany(Booking, {
 Booking.belongsTo(Discount, {
   foreignKey: "discountId",
   as: "discount",
+});
+
+Discount.belongsTo(Branch, {
+  foreignKey: "branchId",
+  as: "branch",
+});
+Branch.hasMany(Discount, {
+  foreignKey: "branchId",
+  as: "discounts",
+});
+
+Discount.belongsToMany(User, {
+  through: DiscountUser,
+  foreignKey: "discountId",
+  otherKey: "userId",
+  as: "targetUsers",
+});
+User.belongsToMany(Discount, {
+  through: DiscountUser,
+  foreignKey: "userId",
+  otherKey: "discountId",
+  as: "privateDiscounts",
+});
+Discount.hasMany(DiscountUser, {
+  foreignKey: "discountId",
+  as: "assignments",
+});
+DiscountUser.belongsTo(Discount, {
+  foreignKey: "discountId",
+  as: "discount",
+});
+DiscountUser.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
 });
 
 Booking.hasMany(BookingDetail, {
@@ -988,6 +1023,7 @@ export {
   OrderShippingLog,
   Payment,
   Discount,
+  DiscountUser,
   DraftBooking,
   DraftBookingItem,
   DraftProductItem,

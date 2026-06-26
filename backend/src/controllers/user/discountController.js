@@ -3,8 +3,8 @@ import asyncHandler from "../../middlewares/asyncHandler.js";
 import discountService from "../../services/user/discountService.js";
 
 const checkDiscountController = asyncHandler(async (req, res) => {
-  // body thường chứa: code và bookingAmount (tổng tiền tạm tính)
-  const data = { ...req.body };
+  // body chứa: code, bookingAmount (+ context phạm vi: branchId, startHour, endHour)
+  const data = { ...req.body, userId: req.user?.id };
 
   const result = await discountService.checkDiscountBookingService(data);
 
@@ -23,7 +23,7 @@ const applyDiscountController = asyncHandler(async (req, res) => {
 });
 
 const getDiscountsCheckoutController = asyncHandler(async (req, res) => {
-  const data = { ...req.query };
+  const data = { ...req.query, userId: req.user?.id };
   const discounts = await discountService.getDiscountsCheckoutService(data);
   return res
     .status(200)

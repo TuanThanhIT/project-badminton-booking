@@ -16,7 +16,7 @@ import type {
   EmployeeBooking,
   EmployeeBookingSummary,
 } from "../../types/booking";
-import { formatBookingCode } from "../../utils/booking";
+import { formatBookingCode, formatTimeRange } from "../../utils/booking";
 import bookingService from "../../services/manager/bookingService";
 import {
   ManagerEmptyState,
@@ -323,7 +323,10 @@ const BookingSchedulePage = () => {
                       <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500">
                         <Clock3 className="h-3.5 w-3.5 text-sky-500" />
                         {firstDetail
-                          ? `${formatDate(firstDetail.playDate)} · ${firstDetail.startTime} - ${firstDetail.endTime}`
+                          ? `${formatDate(firstDetail.playDate)} · ${formatTimeRange(
+                              firstDetail.startTime,
+                              firstDetail.endTime,
+                            )}`
                           : "Chưa có khung giờ"}
                       </p>
                       <p className="font-bold text-slate-900">
@@ -472,8 +475,8 @@ const BookingDetailPanel = ({
               </p>
             </div>
             <p className="mt-1 text-sm text-slate-500">
-              {formatDate(detail.playDate)} · {detail.startTime} -{" "}
-              {detail.endTime}
+              {formatDate(detail.playDate)} ·{" "}
+              {formatTimeRange(detail.startTime, detail.endTime)}
             </p>
           </div>
         ))}

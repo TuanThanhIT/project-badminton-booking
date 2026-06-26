@@ -87,8 +87,12 @@ services:
       OPENAI_MAX_TOKENS: ${OPENAI_MAX_TOKENS:-2048}
       AI_MODERATION_URL: ${AI_MODERATION_URL:?AI_MODERATION_URL  is required}
       AI_MODERATION_TIMEOUT_MS: ${AI_MODERATION_TIMEOUT_MS:?AI_MODERATION_TIMEOUT_MS}
+      IMAGE_SEARCH_SERVICE_URL: ${IMAGE_SEARCH_SERVICE_URL:-http://image-search-service:8010}
+      IMAGE_SEARCH_TIMEOUT_MS: ${IMAGE_SEARCH_TIMEOUT_MS:-60000}
     depends_on:
       ai-service:
+        condition: service_healthy
+      image-search-service:
         condition: service_healthy
       mysql:
         condition: service_healthy
@@ -239,6 +243,44 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - badminton_network
+
+  image-search-service:
+    build:
+      context: ./image-search-service
+      dockerfile: Dockerfile
+    container_name: badminton_image_search_service
+    restart: unless-stopped
+    environment:
+      APP_NAME: badminton-image-search-service
+      HOST: 0.0.0.0
+      PORT: 8010
+      TEXT_MODEL_NAME: ${IMAGE_SEARCH_TEXT_MODEL_NAME:-sentence-transformers/clip-ViT-B-32-multilingual-v1}
+      IMAGE_MODEL_NAME: ${IMAGE_SEARCH_IMAGE_MODEL_NAME:-sentence-transformers/clip-ViT-B-32}
+      DEVICE: ${IMAGE_SEARCH_DEVICE:-cpu}
+      INDEX_PATH: data/index/product_vectors.faiss
+      METADATA_PATH: data/index/product_metadata.json
+      PRODUCTS_CSV_PATH: data/processed/products.csv
+      DEFAULT_LIMIT: 12
+      MAX_LIMIT: 50
+    volumes:
+      - ./image-search-service/data:/app/data
+      - ./image-search-service/artifacts:/app/artifacts
+    ports:
+      - "8010:8010"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8010/health')",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
     networks:
       - badminton_network
 

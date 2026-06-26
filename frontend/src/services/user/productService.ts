@@ -4,6 +4,7 @@ import type {
   ProductFeedbackRequest,
   ProductFeedbackResponse,
   ProductFilterResponse,
+  ProductImageSearchResponse,
   ProductQueriesRequest,
 } from "../../types/product";
 import instance from "../../utils/axiosCustomize";
@@ -31,10 +32,21 @@ const getProductFeedbackService = (data: ProductFeedbackRequest) => {
   );
 };
 
+const imageSearchProductsService = (formData: FormData) =>
+  instance.post<ProductImageSearchResponse>(
+    "/user/products/image-search",
+    formData,
+    {
+      headers: { "Content-Type": "multipart/form-data" },
+      timeout: 70000,
+    },
+  );
+
 const productService = {
   getProductsByFilterService,
   getProductDetailService,
   getProductFeedbackService,
+  imageSearchProductsService,
 };
 
 export default productService;

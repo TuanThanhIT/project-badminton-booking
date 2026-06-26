@@ -70,11 +70,11 @@ dotenv.config();
 export const createApp = () => {
   const app = express();
   const allowedOrigins = [
-    ...(process.env.CORS_ORIGIN || "")
-      .split(",")
-      .map((origin) => origin.trim())
-      .filter(Boolean),
-  ];
+    process.env.CLIENT_URL,
+    ...(process.env.CORS_ORIGIN || "").split(","),
+  ]
+    .map((origin) => origin?.trim())
+    .filter(Boolean);
 
   app.set("trust proxy", 1);
 

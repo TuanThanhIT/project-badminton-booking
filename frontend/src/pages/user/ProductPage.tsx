@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import debounce from "lodash.debounce";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Folder, Filter, Search, MapPinned, X } from "lucide-react";
+import { Camera, Folder, Filter, Search, MapPinned, X } from "lucide-react";
 
 import Breadcrumb from "../../components/ui/user/category/Breadcrumb";
 import ProductFilter from "../../components/ui/user/product/ProductFilter";
@@ -17,9 +17,15 @@ import {
 } from "../../redux/slices/user/cateSlice";
 import { getProductsByFilter } from "../../redux/slices/user/productSlice";
 import { getBranchOptions } from "../../redux/slices/user/branchSlice";
+import productService from "../../services/user/productService";
 
 import type { OtherCatesParamsRequest } from "../../types/cate";
-import type { ProductQueriesRequest } from "../../types/product";
+import type {
+  ProductFilterData,
+  ProductQueriesRequest,
+} from "../../types/product";
+
+const IMAGE_SEARCH_CACHE_KEY = "product-image-search-cache";
 
 const ProductPage = () => {
   const navigate = useNavigate();
@@ -48,6 +54,9 @@ const ProductPage = () => {
       materials: searchParams.get("materials") ?? undefined,
       colors: searchParams.get("colors") ?? undefined,
       sort: searchParams.get("sort") ?? undefined,
+      keyword: searchParams.get("keyword") ?? "",
+      page: Number(searchParams.get("page") ?? 1) || 1,
+      imageSearch: searchParams.get("imageSearch") === "1",
     };
   }, [searchParams]);
 
@@ -61,19 +70,34 @@ const ProductPage = () => {
     materials,
     colors,
     sort,
+    keyword,
+    imageSearch,
   } = query;
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(query.page);
 
   const limit = 9;
 
-  const [keywordSearch, setKeywordSearch] = useState("");
+  const [keywordSearch, setKeywordSearch] = useState(keyword);
 
   const [searchBranch, setSearchBranch] = useState("");
 
-  const [debouncedKeyword, setDebouncedKeyword] = useState("");
+  const [debouncedKeyword, setDebouncedKeyword] = useState(keyword);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
+  const didInitCategoryRef = useRef(false);
+  const [imageSearchFile, setImageSearchFile] = useState<File | null>(null);
+  const [imageSearchPreview, setImageSearchPreview] = useState<string | null>(
+    null,
+  );
+  const [imageSearchQuery, setImageSearchQuery] = useState(
+    "tìm sản phẩm tương tự nhưng màu trắng",
+  );
+  const [imageSearchResult, setImageSearchResult] =
+    useState<ProductFilterData | null>(null);
+  const [imageSearchLoading, setImageSearchLoading] = useState(false);
+  const [imageSearchError, setImageSearchError] = useState<string | null>(null);
 
   const [selectedBranch, setSelectedBranch] = useState<number[]>(() => {
     const savedBranch = localStorage.getItem("branchIds");
@@ -82,8 +106,49 @@ const ProductPage = () => {
   });
 
   useEffect(() => {
+    setKeywordSearch(keyword);
+    setDebouncedKeyword(keyword);
+  }, [keyword]);
+
+  useEffect(() => {
+    setPage(query.page);
+  }, [query.page]);
+
+  useEffect(() => {
+    try {
+      const cached = sessionStorage.getItem(IMAGE_SEARCH_CACHE_KEY);
+      if (!imageSearch || !cached) return;
+
+      const parsed = JSON.parse(cached) as {
+        result: ProductFilterData;
+      };
+
+      if (parsed.result) {
+        setImageSearchResult(parsed.result);
+      }
+    } catch {
+      sessionStorage.removeItem(IMAGE_SEARCH_CACHE_KEY);
+    }
+  }, [imageSearch]);
+
+  useEffect(() => {
+    if (!didInitCategoryRef.current) {
+      didInitCategoryRef.current = true;
+      return;
+    }
+
+    if (imageSearch) return;
+
     setPage(1);
-  }, [cateId, groupName]);
+    setImageSearchResult(null);
+    sessionStorage.removeItem(IMAGE_SEARCH_CACHE_KEY);
+  }, [cateId, groupName, imageSearch]);
+
+  useEffect(() => {
+    return () => {
+      if (imageSearchPreview) URL.revokeObjectURL(imageSearchPreview);
+    };
+  }, [imageSearchPreview]);
 
   const debouncedSearch = useMemo(
     () =>
@@ -211,6 +276,127 @@ const ProductPage = () => {
   useEffect(() => {
     localStorage.setItem("branchIds", JSON.stringify(selectedBranch));
   }, [selectedBranch]);
+
+  const handleImageFileChange = (file?: File | null) => {
+    if (imageSearchPreview) URL.revokeObjectURL(imageSearchPreview);
+    if (!file) {
+      setImageSearchFile(null);
+      setImageSearchPreview(null);
+      setImageSearchResult(null);
+      sessionStorage.removeItem(IMAGE_SEARCH_CACHE_KEY);
+      setSearchParams((currentParams) => {
+        const params = new URLSearchParams(currentParams);
+        params.delete("imageSearch");
+        params.delete("page");
+        return params;
+      });
+      if (imageInputRef.current) imageInputRef.current.value = "";
+      return;
+    }
+    setImageSearchFile(file);
+    setImageSearchPreview(URL.createObjectURL(file));
+    setImageSearchError(null);
+    setImageSearchResult(null);
+    sessionStorage.removeItem(IMAGE_SEARCH_CACHE_KEY);
+    setSearchParams((currentParams) => {
+      const params = new URLSearchParams(currentParams);
+      params.delete("imageSearch");
+      params.delete("page");
+      return params;
+    });
+  };
+
+  const handleImageSearch = async () => {
+    const trimmedQuery = keywordSearch.trim();
+    if (!imageSearchFile && !trimmedQuery) {
+      setImageSearchError("Vui lòng chọn ảnh hoặc nhập nội dung tìm kiếm.");
+      return;
+    }
+
+    const formData = new FormData();
+    if (imageSearchFile) formData.append("image", imageSearchFile);
+    if (trimmedQuery) formData.append("query", trimmedQuery);
+    formData.append("limit", String(limit));
+
+    try {
+      setImageSearchLoading(true);
+      setImageSearchError(null);
+      const res = await productService.imageSearchProductsService(formData);
+      setImageSearchResult(res.data.data);
+      sessionStorage.setItem(
+        IMAGE_SEARCH_CACHE_KEY,
+        JSON.stringify({
+          result: res.data.data,
+        }),
+      );
+      setPage(1);
+      setSearchParams((currentParams) => {
+        const params = new URLSearchParams(currentParams);
+        params.set("imageSearch", "1");
+        params.delete("page");
+        return params;
+      });
+    } catch (error: any) {
+      setImageSearchError(
+        error?.message || "Không thể tìm kiếm bằng hình ảnh lúc này.",
+      );
+      setImageSearchResult(null);
+    } finally {
+      setImageSearchLoading(false);
+    }
+  };
+
+  const clearImageSearch = () => {
+    setImageSearchResult(null);
+    setImageSearchError(null);
+    sessionStorage.removeItem(IMAGE_SEARCH_CACHE_KEY);
+    setSearchParams((currentParams) => {
+      const params = new URLSearchParams(currentParams);
+      params.delete("imageSearch");
+      params.delete("page");
+      return params;
+    });
+  };
+
+  const handleKeywordChange = (value: string) => {
+    setKeywordSearch(value);
+    setImageSearchQuery(value);
+    setImageSearchResult(null);
+    setImageSearchError(null);
+    sessionStorage.removeItem(IMAGE_SEARCH_CACHE_KEY);
+    setPage(1);
+    setSearchParams((currentParams) => {
+      const params = new URLSearchParams(currentParams);
+      const trimmed = value.trim();
+
+      if (trimmed) {
+        params.set("keyword", trimmed);
+      } else {
+        params.delete("keyword");
+      }
+
+      params.delete("page");
+      params.delete("imageSearch");
+      return params;
+    });
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    setSearchParams((currentParams) => {
+      const params = new URLSearchParams(currentParams);
+
+      if (newPage > 1) {
+        params.set("page", String(newPage));
+      } else {
+        params.delete("page");
+      }
+
+      return params;
+    });
+  };
+
+  const displayedProducts = imageSearchResult ?? products;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -358,11 +544,11 @@ const ProductPage = () => {
                 </h2>
 
                 <p className="mt-1 text-sm text-slate-500">
-                  Hiển thị {products?.total ?? 0} sản phẩm
+                  Hiển thị {displayedProducts?.total ?? 0} sản phẩm
                 </p>
               </div>
 
-              <div className="flex w-full flex-col gap-3 sm:flex-row lg:max-w-xl">
+              <div className="flex w-full flex-col gap-3 lg:max-w-2xl">
                 <div className="relative flex-1">
                   <Search
                     size={18}
@@ -373,10 +559,7 @@ const ProductPage = () => {
                     type="text"
                     placeholder="Tìm vợt, giày, áo cầu lông..."
                     value={keywordSearch}
-                    onChange={(e) => {
-                      setKeywordSearch(e.target.value);
-                      setPage(1);
-                    }}
+                    onChange={(e) => handleKeywordChange(e.target.value)}
                     className="
                       w-full rounded-2xl border border-slate-300
                       bg-slate-50 py-3 pl-11 pr-4
@@ -390,6 +573,66 @@ const ProductPage = () => {
                     "
                   />
                 </div>
+
+                <input
+                  id="product-image-search-upload"
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleImageFileChange(e.target.files?.[0])}
+                />
+
+                {imageSearchPreview && (
+                  <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-2">
+                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white">
+                      <img
+                        src={imageSearchPreview}
+                        alt="Ảnh tìm kiếm"
+                        className="h-full w-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleImageFileChange(null)}
+                        className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-slate-950/70 text-white"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-700">
+                      {imageSearchFile?.name}
+                    </span>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <label
+                    htmlFor="product-image-search-upload"
+                    className="
+                      flex cursor-pointer items-center justify-center gap-2 rounded-2xl
+                      border border-slate-300 bg-white px-4 py-3
+                      text-sm font-semibold text-slate-700 shadow-sm
+                      transition-all hover:border-sky-400 hover:text-sky-700
+                      active:scale-[0.98]
+                    "
+                  >
+                    <Camera size={18} />
+                    Chọn ảnh
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={handleImageSearch}
+                    disabled={imageSearchLoading}
+                    className="
+                      rounded-2xl bg-slate-900 px-4 py-3 text-sm
+                      font-semibold text-white shadow-sm transition
+                      hover:bg-slate-800 disabled:cursor-not-allowed
+                      disabled:opacity-60
+                    "
+                  >
+                    {imageSearchLoading ? "Đang tìm..." : "Tìm kiếm"}
+                  </button>
 
                 <button
                   onClick={() => setIsFilterOpen(true)}
@@ -407,12 +650,130 @@ const ProductPage = () => {
                   Bộ lọc
                 </button>
               </div>
+              </div>
             </div>
           </div>
 
+          {(imageSearchError || imageSearchResult) && (
+            <div className="mb-5 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-5 py-3 shadow-sm">
+              {imageSearchError && (
+                <p className="text-sm font-medium text-red-600">
+                  {imageSearchError}
+                </p>
+              )}
+              {imageSearchResult && (
+                <button
+                  type="button"
+                  onClick={clearImageSearch}
+                  className="text-sm font-semibold text-slate-600 transition hover:text-sky-700"
+                >
+                  Xóa tìm kiếm ảnh
+                </button>
+              )}
+            </div>
+          )}
+
+          {false && (
+            <>
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleImageFileChange(e.target.files?.[0])}
+              />
+
+              {imageSearchPreview ? (
+                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+                  <img
+                    src={imageSearchPreview || ""}
+                    alt="Ảnh tìm kiếm"
+                    className="h-full w-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleImageFileChange(null)}
+                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-slate-950/70 text-white"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => imageInputRef.current?.click()}
+                  className="
+                    flex items-center justify-center gap-2 rounded-2xl
+                    border border-slate-300 bg-white px-4 py-3
+                    text-sm font-semibold text-slate-700 shadow-sm
+                    transition-all hover:border-sky-400 hover:text-sky-700
+                    active:scale-[0.98]
+                  "
+                >
+                  <Camera size={18} />
+                  Chọn ảnh
+                </button>
+              )}
+
+              <div className="relative min-w-0 flex-1">
+                <Search
+                  size={18}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  type="text"
+                  value={imageSearchQuery}
+                  onChange={(e) => setImageSearchQuery(e.target.value)}
+                  placeholder="VD: tìm sản phẩm tương tự nhưng màu trắng"
+                  className="
+                    w-full rounded-2xl border border-slate-300 bg-white
+                    py-3 pl-11 pr-4 text-sm text-slate-800 outline-none
+                    transition-all placeholder:text-slate-400
+                    focus:border-sky-500 focus:ring-1 focus:ring-sky-100
+                  "
+                />
+              </div>
+
+              <div className="flex gap-2">
+                {imageSearchResult && (
+                  <button
+                    type="button"
+                    onClick={clearImageSearch}
+                    className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Xóa
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleImageSearch}
+                  disabled={imageSearchLoading}
+                  className="
+                    rounded-2xl bg-slate-900 px-5 py-3 text-sm
+                    font-semibold text-white shadow-sm transition
+                    hover:bg-slate-800 disabled:cursor-not-allowed
+                    disabled:opacity-60
+                  "
+                >
+                  {imageSearchLoading ? "Đang tìm..." : "Tìm kiếm"}
+                </button>
+              </div>
+            </div>
+
+            {imageSearchError && (
+              <p className="mt-3 text-sm font-medium text-red-600">
+                {imageSearchError}
+              </p>
+            )}
+            </>
+          )}
+
           {/* PRODUCT GRID */}
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            {products?.products && products.products.length > 0 ? (
+            {displayedProducts?.products &&
+            displayedProducts.products.length > 0 ? (
               <div
                 className="
     grid grid-cols-1 gap-5
@@ -421,7 +782,7 @@ const ProductPage = () => {
     min-[1440px]:grid-cols-4
   "
               >
-                {products.products.map((product) => (
+                {displayedProducts.products.map((product) => (
                   <ProductCard
                     key={product.id}
                     product={product}
@@ -437,12 +798,12 @@ const ProductPage = () => {
               </div>
             )}
 
-            {products && products.total > limit && (
+            {!imageSearchResult && products && products.total > limit && (
               <PaginatedItems
                 total={products.total ?? 0}
                 limit={products.limit ?? limit}
                 page={products.page ?? 1}
-                onPageChange={(newPage) => setPage(newPage)}
+                onPageChange={handlePageChange}
               />
             )}
           </div>

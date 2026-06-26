@@ -9,6 +9,7 @@ import {
 } from "../../validations/productValidation.js";
 import productController from "../../controllers/user/productController.js";
 import { ROLE_NAME } from "../../constants/userConstant.js";
+import imageSearchUpload from "../../middlewares/uploadImageSearch.js";
 
 const productRoute = express.Router();
 
@@ -19,6 +20,13 @@ const initProductRoute = (app) => {
     authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
     validate(getProductsByFilterSchema),
     productController.getProductsByFilterController,
+  );
+  productRoute.post(
+    "/image-search",
+    auth,
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
+    imageSearchUpload.single("image"),
+    productController.searchProductsByImageController,
   );
   productRoute.get(
     "/:productId",

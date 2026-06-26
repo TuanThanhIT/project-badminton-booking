@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import os
 from pathlib import Path
 from typing import Dict
@@ -98,7 +97,6 @@ def predict(payload: PredictRequest):
         "confidence": confidence,
         "probabilities": probabilities
     }
-=======
 from __future__ import annotations
 
 from fastapi import FastAPI
@@ -155,4 +153,3 @@ def recommend_product(request: ProductRecommendRequest):
     data = recommend_products(request.model_dump())
     data["productModelReady"] = get_product_model_info().get("ready", False)
     return ApiResponse(data=data)
->>>>>>> Branch_Nam_ML

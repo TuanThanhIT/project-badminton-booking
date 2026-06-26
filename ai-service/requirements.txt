@@ -4,3 +4,5 @@ torch
 transformers
 pydantic
 sentencepiece
+safetensors
+numpy

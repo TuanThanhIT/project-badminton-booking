@@ -12,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 MODEL_DIR = os.getenv(
     "MODEL_DIR",
-    str(BASE_DIR / "models" / "bhub_phobert_moderation_model_v4")
+    str(BASE_DIR / "models" / "bhub_phobert_moderation_model_v8")
 )
 
 MAX_LENGTH = int(os.getenv("MAX_LENGTH", "128"))

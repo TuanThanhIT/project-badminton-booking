@@ -24,7 +24,7 @@ ai-service/
   app/
     main.py
   models/
-    bhub_phobert_moderation_model_v4/
+    bhub_phobert_moderation_model_v8/
       config.json
       model.safetensors
       tokenizer_config.json
@@ -131,13 +131,13 @@ Do model khá nặng nên không lưu trực tiếp trong Git.
 Tải file model từ link được cung cấp riêng, ví dụ:
 
 ```text
-bhub_phobert_moderation_model_v4.zip
+bhub_phobert_moderation_model_v8.zip
 ```
 
 Sau khi tải về, giải nén vào thư mục:
 
 ```text
-ai-service/models/bhub_phobert_moderation_model_v4/
+ai-service/models/bhub_phobert_moderation_model_v8/
 ```
 
 Cấu trúc sau khi giải nén phải giống như sau:
@@ -145,7 +145,7 @@ Cấu trúc sau khi giải nén phải giống như sau:
 ```text
 ai-service/
   models/
-    bhub_phobert_moderation_model_v4/
+    bhub_phobert_moderation_model_v8/
       config.json
       model.safetensors
       tokenizer_config.json
@@ -164,7 +164,7 @@ Tạo file `.env` trong thư mục `ai-service` nếu project đã hỗ trợ đ
 Ví dụ:
 
 ```env
-MODEL_DIR=./models/bhub_phobert_moderation_model_v4
+MODEL_DIR=./models/bhub_phobert_moderation_model_v8
 MAX_LENGTH=128
 ```
 
@@ -173,7 +173,7 @@ Nếu code đang dùng đường dẫn mặc định trong `app/main.py`, có th
 Mặc định model sẽ được load từ:
 
 ```text
-ai-service/models/bhub_phobert_moderation_model_v4
+ai-service/models/bhub_phobert_moderation_model_v8
 ```
 
 ---
@@ -209,6 +209,7 @@ Nếu thành công sẽ trả về dạng:
   "status": "ok",
   "message": "AI service is running",
   "model_loaded": true,
+  "model_dir": "./models/bhub_phobert_moderation_model_v8",
   "device": "cpu",
   "labels": {
     "0": "normal",
@@ -312,16 +313,16 @@ OFFENSIVE -> BLOCK
 
 ## 12. Khi thay model mới
 
-Ví dụ train lại model V5, giải nén vào:
+Ví dụ sau này train lại model V9, giải nén vào:
 
 ```text
-ai-service/models/bhub_phobert_moderation_model_v5/
+ai-service/models/bhub_phobert_moderation_model_v9/
 ```
 
 Sau đó đổi `MODEL_DIR`:
 
 ```env
-MODEL_DIR=./models/bhub_phobert_moderation_model_v5
+MODEL_DIR=./models/bhub_phobert_moderation_model_v9
 MAX_LENGTH=128
 ```
 
@@ -364,7 +365,7 @@ pip install -r requirements.txt
 Nếu gặp lỗi khi load model, kiểm tra lại thư mục:
 
 ```text
-ai-service/models/bhub_phobert_moderation_model_v4/
+ai-service/models/bhub_phobert_moderation_model_v8/
 ```
 
 Bên trong phải có:

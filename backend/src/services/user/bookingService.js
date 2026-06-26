@@ -44,7 +44,11 @@ import {
   DISCOUNT_APPLY_TYPE,
   DISCOUNT_TYPE,
 } from "../../constants/discountConstant.js";
-import { applyDiscountUsage } from "../shared/applyDiscountUsage.js";
+import {
+  applyDiscountUsage,
+  restoreDiscountUsage,
+} from "../shared/applyDiscountUsage.js";
+import { assertBookingDiscountScope } from "./discountService.js";
 import {
   sendBranchStaffNotification,
   sendUserNotification,
@@ -271,6 +275,10 @@ const calculateBookingDiscount = async ({
   discountId,
   bookingAmount,
   transaction,
+  userId = null,
+  branchId = null,
+  startHour = null,
+  endHour = null,
 }) => {
   if (!discountId) {
     return {
@@ -309,6 +317,15 @@ const calculateBookingDiscount = async ({
   ) {
     throw new BadRequestError("Mã không áp dụng cho đặt sân");
   }
+
+  // Kiểm tra phạm vi: chi nhánh / khung giờ / mã riêng theo khách hàng.
+  await assertBookingDiscountScope(discount, {
+    userId,
+    branchId,
+    startHour,
+    endHour,
+    transaction,
+  });
 
   if (bookingAmount < Number(discount.minAmount || 0)) {
     throw new BadRequestError(
@@ -540,6 +557,10 @@ const createBookingService = async (bookingData) => {
       discountId,
       bookingAmount: totalAmount,
       transaction,
+      userId,
+      branchId,
+      startHour: Number(String(startTime).split(":")[0]),
+      endHour: Number(String(endTime).split(":")[0]),
     });
 
     const bookingStatus =
@@ -560,7 +581,7 @@ const createBookingService = async (bookingData) => {
     );
 
     if (discountId) {
-      await applyDiscountUsage(discountId, transaction);
+      await applyDiscountUsage(discountId, transaction, userId);
     }
 
     await BookingDetail.create(
@@ -1239,6 +1260,15 @@ const requestCancelBookingService = async ({
 
       const refund = await refundBookingToWallet({ booking, transaction });
       await releaseBookingDeposit({ booking, transaction });
+
+      // Hoàn lại lượt mã giảm giá (gồm mã riêng) vì lịch chưa hoàn tất.
+      if (booking.discountId) {
+        await restoreDiscountUsage(
+          booking.discountId,
+          transaction,
+          booking.userId,
+        );
+      }
 
       await booking.update(
         {

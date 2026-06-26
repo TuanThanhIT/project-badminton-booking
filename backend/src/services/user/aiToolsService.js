@@ -14,7 +14,6 @@ import productService from "./productService.js";
 import postService from "./postService.js";
 import BadRequestError from "../../errors/BadRequestError.js";
 import { AI_TOOL_NAMES } from "../../constants/aiConstant.js";
-import aiRecommendationService from "../aiRecommendationService.js";
 
 const PLAYER_LEVEL_LABELS = {
   [PLAYER_LEVEL.BEGINNER]: "Mới bắt đầu",
@@ -484,23 +483,6 @@ const searchClassPostsTool = async (args, options = {}) => {
   };
 };
 
-const getBookingRecommendationsTool = async (options = {}) => {
-  const result = await aiRecommendationService.getUserRecommendationService({
-    userId: options.userId ?? null,
-    topK: 5,
-    naturalLanguage: false,
-  });
-
-  const rec = result.recommendations || {};
-  return {
-    ...rec,
-    meta: result.meta,
-    hint: rec.isNewUser
-      ? "User mới — gợi ý sân phổ biến và khuyến mãi đang có."
-      : "Gợi ý dựa trên lịch sử đặt sân (LightGBM/heuristic).",
-  };
-};
-
 const resolveBranchIdByName = async (branchName) => {
   if (!branchName?.trim()) return null;
   const branch = await Branch.findOne({
@@ -557,9 +539,6 @@ export const executeAiTool = async (toolName, rawArgs, options = {}) => {
     case AI_TOOL_NAMES.SEARCH_CLASS_POSTS:
       return searchClassPostsTool(args, options);
 
-    case AI_TOOL_NAMES.GET_BOOKING_RECOMMENDATIONS:
-      return getBookingRecommendationsTool(options);
-
     default:
       return { error: `Công cụ không hỗ trợ: ${toolName}` };
   }
@@ -572,8 +551,6 @@ export const getToolStatusMessage = (toolName) => {
     [AI_TOOL_NAMES.SEARCH_PRODUCTS]: "Đang tìm sản phẩm phù hợp...",
     [AI_TOOL_NAMES.GET_PRODUCT_DETAIL]: "Đang xem chi tiết sản phẩm...",
     [AI_TOOL_NAMES.SEARCH_CLASS_POSTS]: "Đang tìm lớp học / HLV...",
-    [AI_TOOL_NAMES.GET_BOOKING_RECOMMENDATIONS]:
-      "Đang phân tích gợi ý đặt sân (AI)...",
   };
   return messages[toolName] || "Đang tra cứu dữ liệu...";
 };

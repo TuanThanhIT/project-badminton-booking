@@ -33,29 +33,6 @@ export const checkAiServiceHealth = async () => {
   }
 };
 
-export const trainBookingModel = async (records) => {
-  try {
-    const { data } = await client.post(`${getBaseUrl()}/api/v1/train`, {
-      records,
-    });
-    return data?.data ?? data;
-  } catch (err) {
-    handleError(err, "train");
-  }
-};
-
-export const getUserRecommendations = async (payload) => {
-  try {
-    const { data } = await client.post(
-      `${getBaseUrl()}/api/v1/recommend/user`,
-      payload,
-    );
-    return data?.data ?? data;
-  } catch (err) {
-    handleError(err, "recommend/user");
-  }
-};
-
 export const getAdminInsights = async (payload) => {
   try {
     const { data } = await client.post(
@@ -94,8 +71,6 @@ export const getProductRecommendations = async (payload) => {
 
 export default {
   checkAiServiceHealth,
-  trainBookingModel,
-  getUserRecommendations,
   getAdminInsights,
   trainProductModel,
   getProductRecommendations,

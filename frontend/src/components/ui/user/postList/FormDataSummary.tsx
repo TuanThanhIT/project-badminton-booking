@@ -6,6 +6,7 @@ import ClassPost from "./ClassPost";
 import FindPlayerPost from "./FindPlayerPost";
 import GroupPost from "./GroupPost";
 import FindCoachPost from "./FindCoachPost";
+import { formatTimeRange, formatTimeShort } from "../../../../utils/booking";
 
 type BranchInfo = {
   branchName: string;
@@ -55,8 +56,11 @@ const LegacyFormDataSummary = ({
     if (schedule?.date) {
       const time =
         schedule.startTime && schedule.endTime
-          ? `${schedule.startTime} - ${schedule.endTime}`
-          : [schedule.startTime, schedule.endTime].filter(Boolean).join(" - ");
+          ? formatTimeRange(schedule.startTime, schedule.endTime)
+          : [schedule.startTime, schedule.endTime]
+              .filter(Boolean)
+              .map((value) => formatTimeShort(value))
+              .join(" - ");
       left.push(`Thời gian: ${schedule.date}${time ? ` • ${time}` : ""}`);
     }
 
@@ -103,8 +107,10 @@ const LegacyFormDataSummary = ({
       | undefined;
     if (Array.isArray(schedule?.weekdays)) {
       left.push(
-        `T${schedule.weekdays.join(", T")} • ${schedule.startTime ?? "?"} - ${
-          schedule.endTime ?? "?"
+        `T${schedule.weekdays.join(", T")} • ${
+          schedule.startTime ? formatTimeShort(schedule.startTime) : "?"
+        } - ${
+          schedule.endTime ? formatTimeShort(schedule.endTime) : "?"
         }${schedule.startDate ? ` • Từ ${schedule.startDate}` : ""}`,
       );
     }
@@ -164,7 +170,12 @@ const LegacyFormDataSummary = ({
       | { weekdays?: number[]; startTime?: string; endTime?: string }
       | undefined;
     if (Array.isArray(weekly?.weekdays)) {
-      left.push(`T${weekly.weekdays.join(", T")} • ${weekly.startTime} - ${weekly.endTime}`);
+      left.push(
+        `T${weekly.weekdays.join(", T")} • ${formatTimeRange(
+          weekly.startTime,
+          weekly.endTime,
+        )}`,
+      );
     }
 
     const levelWanted = fd.levelWanted as string | undefined;

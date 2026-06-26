@@ -1,6 +1,6 @@
 # B-Hub AI Recommendation Service
 
-Python microservice dùng **LightGBMClassifier** để gợi ý đặt sân và **rule-based insights** cho Admin.
+Python microservice gợi ý **sản phẩm mua kèm / cá nhân hóa** (LightGBM + market-basket co-occurrence) và **rule-based insights** cho Admin.
 
 ## Kiến trúc
 
@@ -25,15 +25,17 @@ Backend cần `AI_SERVICE_URL=http://localhost:8000`.
 
 | Method | Path | Mô tả |
 |--------|------|--------|
-| GET | `/health` | Health check + trạng thái model |
-| POST | `/api/v1/train` | Huấn luyện LightGBM từ booking records |
-| POST | `/api/v1/recommend/user` | Gợi ý chi nhánh / khung giờ |
+| GET | `/health` | Health check + trạng thái model sản phẩm |
 | POST | `/api/v1/recommend/admin` | Phân tích lấp đầy + khách cần voucher |
+| GET | `/api/v1/product/status` | Trạng thái model gợi ý sản phẩm |
+| POST | `/api/v1/product/train` | Huấn luyện gợi ý sản phẩm (LightGBM + co-occurrence) |
+| POST | `/api/v1/recommend/product` | Gợi ý sản phẩm (cá nhân hóa / mua kèm) |
 
-## Luồng User
+## Luồng gợi ý sản phẩm
 
-- **Có lịch sử đặt**: LightGBM xếp hạng (branchId, hour, dayOfWeek) hoặc heuristic nếu chưa train.
-- **User mới**: Sân phổ biến + khung giờ cao điểm + mã giảm giá đang active.
+- **Mua kèm (related)**: market-basket co-occurrence — sản phẩm thường mua chung trong một đơn.
+- **Cá nhân hóa (user)**: LightGBM xếp hạng (userId, productId, categoryId); fallback theo danh mục đã mua + phổ biến.
+- **User mới**: sản phẩm phổ biến.
 
 ## Luồng Admin (rule-based)
 

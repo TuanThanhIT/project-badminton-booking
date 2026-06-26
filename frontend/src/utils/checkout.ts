@@ -18,8 +18,15 @@ export const mergeCheckoutItems = (groups: any[] = []) => {
   return Array.from(map.values());
 };
 
-export const formatPrice = (value: number) =>
-  value?.toLocaleString("vi-VN") + "đ";
+const toMoneyNumber = (value?: number | string | null) => {
+  const numericValue = Number(value ?? 0);
+  return Number.isFinite(numericValue) ? numericValue : 0;
+};
+
+export const formatPrice = (value?: number | string | null) =>
+  `${toMoneyNumber(value).toLocaleString("vi-VN", {
+    maximumFractionDigits: 0,
+  })}\u0111`;
 
 export const formatDate = (iso?: string) => {
   if (!iso) return "";

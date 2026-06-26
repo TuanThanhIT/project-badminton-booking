@@ -30,7 +30,7 @@ import {
   rejectCancelEmployeeBooking,
 } from "../../redux/slices/employee/bookingSlice";
 import type { BookingStatus, EmployeeBooking } from "../../types/booking";
-import { formatBookingCode } from "../../utils/booking";
+import { formatBookingCode, formatTimeRange } from "../../utils/booking";
 import { showConfirmDialog } from "../../utils/confirmDialog";
 
 const BOOKING_TABS: { value: BookingStatus | "ALL"; label: string }[] = [
@@ -624,7 +624,12 @@ const EmployeeBookingsPage = () => {
 
                             <p className="mt-0.5 truncate text-xs text-slate-500">
                               {firstDetail
-                                ? `${formatDate(firstDetail.playDate)} • ${firstDetail.startTime} - ${firstDetail.endTime}`
+                                ? `${formatDate(
+                                    firstDetail.playDate,
+                                  )} • ${formatTimeRange(
+                                    firstDetail.startTime,
+                                    firstDetail.endTime,
+                                  )}`
                                 : "Chưa có khung giờ"}
                             </p>
                           </div>
@@ -1068,7 +1073,7 @@ const EmployeeBookingsPage = () => {
 
                       <p className="flex items-center gap-2 font-normal text-slate-600">
                         <Clock3 className="h-4 w-4 text-sky-600" />
-                        {detail.startTime} - {detail.endTime}
+                        {formatTimeRange(detail.startTime, detail.endTime)}
                       </p>
 
                       <p className="font-semibold text-slate-800 md:text-right">

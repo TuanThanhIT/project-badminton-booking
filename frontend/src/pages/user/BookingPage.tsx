@@ -15,7 +15,8 @@ import {
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { getMyBookings } from "../../redux/slices/user/bookingSlice";
 import type { BookingItem } from "../../types/booking";
-import { formatBookingCode } from "../../utils/booking";
+import { formatBookingCode, formatTimeRange } from "../../utils/booking";
+import { formatPrice } from "../../utils/checkout";
 import CancelBookingModal from "../../components/ui/user/booking/CancelBookingModal";
 import PaginatedItems from "../../components/ui/user/pagination/PaginatedItems";
 
@@ -206,7 +207,7 @@ const BookingPage = () => {
                 {
                   icon: WalletCards,
                   label: "Tổng hiển thị",
-                  value: `${stats.totalAmount.toLocaleString()}đ`,
+                  value: formatPrice(stats.totalAmount),
                 },
               ].map((item) => (
                 <div
@@ -456,8 +457,7 @@ const BookingPage = () => {
                                 </p>
 
                                 <p className="mt-1 text-lg font-semibold leading-none text-sky-700">
-                                  {Number(booking.totalAmount).toLocaleString()}
-                                  đ
+                                  {formatPrice(booking.totalAmount)}
                                 </p>
                               </div>
                             </div>
@@ -513,8 +513,10 @@ const BookingPage = () => {
 
                                     <p className="flex items-center gap-2 text-slate-600">
                                       <Clock size={15} />
-                                      {firstDetail?.startTime || "--"} -{" "}
-                                      {firstDetail?.endTime || "--"}
+                                      {formatTimeRange(
+                                        firstDetail?.startTime,
+                                        firstDetail?.endTime,
+                                      )}
                                     </p>
 
                                     <p className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
@@ -557,8 +559,10 @@ const BookingPage = () => {
 
                                   <p className="flex items-center gap-2 text-sm text-slate-600">
                                     <Clock size={15} />
-                                    {firstDetail?.startTime || "--"} -{" "}
-                                    {firstDetail?.endTime || "--"}
+                                    {formatTimeRange(
+                                      firstDetail?.startTime,
+                                      firstDetail?.endTime,
+                                    )}
                                   </p>
                                 </div>
                               )}
@@ -610,7 +614,7 @@ const BookingPage = () => {
                             </p>
 
                             <p className="mt-2 text-2xl font-semibold text-sky-700">
-                              {Number(booking.totalAmount).toLocaleString()}đ
+                              {formatPrice(booking.totalAmount)}
                             </p>
 
                             <p className="mt-3 text-sm text-slate-600">

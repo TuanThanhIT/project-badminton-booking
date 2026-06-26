@@ -23,6 +23,7 @@ import type {
   EnrollmentStatus,
 } from "../../types/coachClass";
 import { showConfirmDialog } from "../../utils/confirmDialog";
+import { formatTimeRange } from "../../utils/booking";
 
 const STATUS_OPTIONS: { value: "" | EnrollmentStatus; label: string }[] = [
   { value: "", label: "Tất cả" },
@@ -122,7 +123,7 @@ const EnrollmentCard = ({
     .join(", ");
   const time =
     formData.schedule?.startTime && formData.schedule?.endTime
-      ? `${formData.schedule.startTime} - ${formData.schedule.endTime}`
+      ? formatTimeRange(formData.schedule.startTime, formData.schedule.endTime)
       : null;
   const location =
     [

@@ -2,6 +2,7 @@ import { Calendar, Clock, MapPin, Users, DollarSign, Phone, MessageCircle, FileT
 import type { PostWithAuthor } from "../../../../types/post";
 import { PLAYER_LEVEL_LABEL } from "../../../../utils/constants/profileConstant";
 import ClassEnrollAction from "../coach/ClassEnrollAction";
+import { formatTimeRange } from "../../../../utils/booking";
 
 type BranchInfo = {
   branchName: string;
@@ -99,7 +100,7 @@ const ClassPost = ({ post, formData, branchInfo }: Props) => {
                 </p>
                 <p className="text-sm text-slate-500">
                   {schedule.startTime && schedule.endTime
-                    ? `${schedule.startTime} - ${schedule.endTime}`
+                    ? formatTimeRange(schedule.startTime, schedule.endTime)
                     : ""}
                 </p>
               </div>

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import homeService from "../../services/user/homeService";
 import type { HomeData } from "../../types/home";
+import { formatPrice as formatVndPrice } from "../../utils/checkout";
 
 const fallbackHomeData: HomeData = {
   banners: [
@@ -326,9 +327,8 @@ const GuestHomePage = () => {
                     Giảm{" "}
                     {discount.type === "PERCENT"
                       ? `${discount.value}%`
-                      : `${discount.value.toLocaleString("vi-VN")}đ`}{" "}
-                    cho đơn hàng từ {discount.minAmount.toLocaleString("vi-VN")}
-                    đ.
+                      : formatVndPrice(discount.value)}{" "}
+                    cho đơn hàng từ {formatVndPrice(discount.minAmount)}.
                   </p>
                   <p className="mt-4 text-xs uppercase tracking-[0.2em] text-sky-700">
                     Đến {new Date(discount.endDate).toLocaleDateString("vi-VN")}

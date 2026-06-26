@@ -17,6 +17,10 @@ export type LoginRequest = {
   password: string;
 };
 
+export type GoogleLoginRequest = {
+  credential: string;
+};
+
 export type LoginData = {
   accessToken: string;
   user: User;

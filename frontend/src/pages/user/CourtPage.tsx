@@ -23,7 +23,8 @@ import type { BranchOptions } from "../../types/branch";
 import type { CourtAvailable } from "../../types/court";
 import { toast } from "react-toastify";
 import { showConfirmDialog } from "../../utils/confirmDialog";
-import BookingRecommendationWidget from "../../components/ui/user/BookingRecommendationWidget";
+import { formatPrice } from "../../utils/checkout";
+import { formatTimeRange } from "../../utils/booking";
 
 const generateTimeOptions = () => {
   const options: string[] = [];
@@ -401,20 +402,6 @@ const CourtPage = () => {
     );
   };
 
-  const handleRecommendBranch = (branchId: number) => {
-    const branch = branchOptions.find((item) => item.id === branchId);
-    if (branch) setSelectedBranch(branch);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleRecommendTimeSlot = (hour: number) => {
-    const safeStart = Math.min(Math.max(hour, 6), 22);
-    const startValue = `${String(safeStart).padStart(2, "0")}:00`;
-    const endValue = `${String(Math.min(safeStart + 1, 23)).padStart(2, "0")}:00`;
-    setStartTime(startValue);
-    setEndTime(endValue);
-  };
-
   const handleBooking = async () => {
     if (!selectedBranch) {
       toast.warning("Vui lòng chọn chi nhánh");
@@ -545,7 +532,7 @@ const CourtPage = () => {
                 {
                   icon: WalletCards,
                   label: "Tạm tính",
-                  value: `${totalPrice.toLocaleString()}đ`,
+                  value: formatPrice(totalPrice),
                 },
               ].map((item) => (
                 <div
@@ -563,14 +550,6 @@ const CourtPage = () => {
           </div>
         </div>
       </section>
-
-      <div className="relative z-10 mx-auto -mt-6 max-w-[1220px] px-4 sm:px-6">
-        <BookingRecommendationWidget
-          layout="horizontal"
-          onSelectBranch={handleRecommendBranch}
-          onSelectTimeSlot={handleRecommendTimeSlot}
-        />
-      </div>
 
       <main className="relative z-10 mx-auto mt-6 grid max-w-[1220px] gap-6 px-4 pb-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_380px]">
         <section className="space-y-6">
@@ -878,7 +857,7 @@ const CourtPage = () => {
                             )}
                           </div>
                           <p className="mt-4 text-lg font-semibold text-sky-700">
-                            {Number(court.totalPrice || 0).toLocaleString()}đ
+                            {formatPrice(court.totalPrice)}
                           </p>
                         </div>
                       </button>
@@ -972,7 +951,7 @@ const CourtPage = () => {
                 ["Hình thức", mode === "daily" ? "Theo ngày" : "Theo tháng"],
                 ["Chi nhánh", selectedBranch?.branchName || "Chưa chọn"],
                 ["Sân", selectedCourt?.courtName || "Chưa chọn"],
-                ["Thời gian", `${startTime} - ${endTime}`],
+                ["Thời gian", formatTimeRange(startTime, endTime)],
                 [
                   mode === "daily" ? "Ngày chơi" : "Khoảng ngày",
                   mode === "daily"
@@ -1005,7 +984,7 @@ const CourtPage = () => {
                 <div className="mt-4 flex items-end justify-between gap-4">
                   <span className="text-sm text-slate-500">Tổng tiền</span>
                   <span className="text-3xl font-semibold text-sky-700">
-                    {totalPrice.toLocaleString()}đ
+                    {formatPrice(totalPrice)}
                   </span>
                 </div>
               </div>

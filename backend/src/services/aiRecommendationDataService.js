@@ -1,18 +1,8 @@
-import { Op, QueryTypes } from "sequelize";
+import { QueryTypes } from "sequelize";
 import sequelize from "../config/db.js";
 import { BOOKING_STATUS } from "../constants/bookingConstant.js";
-import {
-  AI_RECOMMENDATION_DEFAULTS,
-} from "../constants/aiRecommendationConstant.js";
-import { DISCOUNT_APPLY_TYPE } from "../constants/discountConstant.js";
+import { AI_RECOMMENDATION_DEFAULTS } from "../constants/aiRecommendationConstant.js";
 import { ORDER_GROUP_STATUS } from "../constants/orderConstant.js";
-import {
-  Branch,
-  Booking,
-  BookingDetail,
-  Court,
-  Discount,
-} from "../models/index.js";
 
 const SUCCESS_STATUSES = [
   BOOKING_STATUS.CONFIRMED,
@@ -28,7 +18,11 @@ const getLookbackDate = (days) => {
   }).format(d);
 };
 
-/** Giờ mở cửa điển hình để tính lấp đầy (6h–21h, mỗi khung 1 giờ). */
+/**
+ * Giờ mở cửa trên heatmap (6h–21h).
+ * % lấp đầy = bookedCount ÷ (số sân ACTIVE × lookbackDays) — công thức cố định.
+ * Cao/thấp điểm: quy tắc cố định (ngưỡng %, top-N) áp lên % đã tính — giờ nào cao/thấp do data.
+ */
 const OCCUPANCY_OPERATING_HOURS = Array.from({ length: 16 }, (_, i) => i + 6);
 
 const formatHourRange = (hour) => {
@@ -36,204 +30,6 @@ const formatHourRange = (hour) => {
   const end = String(hour + 1).padStart(2, "0");
   return `${start}:00–${end}:00`;
 };
-
-const parseHour = (timeValue) => {
-  if (!timeValue) return 0;
-  const str = String(timeValue).slice(0, 5);
-  return Number(str.split(":")[0]) || 0;
-};
-
-const parseDayIndex = (playDate) => {
-  const d = new Date(`${playDate}T12:00:00`);
-  const jsDay = d.getDay();
-  return jsDay === 0 ? 6 : jsDay - 1;
-};
-
-export const getTrainingRecords = async (
-  lookbackDays = AI_RECOMMENDATION_DEFAULTS.TRAINING_LOOKBACK_DAYS,
-) => {
-  const since = getLookbackDate(lookbackDays);
-
-  const rows = await sequelize.query(
-    `
-      SELECT b.userId,
-             b.branchId,
-             bd.courtId,
-             bd.playDate,
-             bd.startTime
-      FROM BookingDetails bd
-      INNER JOIN Bookings b ON bd.bookingId = b.id
-      WHERE b.bookingStatus IN (:statuses)
-        AND bd.playDate >= :since
-        AND b.userId IS NOT NULL
-    `,
-    {
-      replacements: { since, statuses: SUCCESS_STATUSES },
-      type: QueryTypes.SELECT,
-    },
-  );
-
-  return rows.map((row) => ({
-    userId: Number(row.userId),
-    branchId: Number(row.branchId),
-    courtId: row.courtId ? Number(row.courtId) : null,
-    hour: parseHour(row.startTime),
-    dayOfWeek: parseDayIndex(row.playDate),
-  }));
-};
-
-export const getActiveBranches = async () => {
-  const branches = await Branch.findAll({
-    where: { isActive: true },
-    attributes: ["id", "branchName", "address"],
-    include: [
-      {
-        model: Court,
-        as: "courts",
-        attributes: ["id"],
-        required: false,
-        where: { courtStatus: "ACTIVE" },
-      },
-    ],
-    order: [["branchName", "ASC"]],
-  });
-
-  return branches.map((b) => ({
-    id: b.id,
-    name: b.branchName,
-    address: b.address,
-    courtCount: b.courts?.length || 0,
-  }));
-};
-
-export const getActiveBookingDiscounts = async () => {
-  const today = new Date().toISOString().split("T")[0];
-  const discounts = await Discount.findAll({
-    where: {
-      isActive: true,
-      startDate: { [Op.lte]: today },
-      endDate: { [Op.gte]: today },
-      applyType: { [Op.in]: [DISCOUNT_APPLY_TYPE.BOOKING, DISCOUNT_APPLY_TYPE.ALL] },
-    },
-    attributes: ["id", "code", "type", "value", "applyType"],
-    order: [["usageCount", "ASC"]],
-    limit: 10,
-  });
-
-  return discounts.map((d) => ({
-    id: d.id,
-    code: d.code,
-    type: d.type,
-    value: Number(d.value),
-    applyType: d.applyType,
-  }));
-};
-
-export const getPopularBranches = async (limit = 5) => {
-  const since = getLookbackDate(AI_RECOMMENDATION_DEFAULTS.OCCUPANCY_LOOKBACK_DAYS);
-
-  const rows = await sequelize.query(
-    `
-      SELECT b.branchId,
-             br.branchName,
-             COUNT(bd.id) AS bookingCount
-      FROM BookingDetails bd
-      INNER JOIN Bookings b ON bd.bookingId = b.id
-      INNER JOIN Branches br ON b.branchId = br.id
-      WHERE b.bookingStatus IN (:statuses)
-        AND bd.playDate >= :since
-      GROUP BY b.branchId, br.branchName
-      ORDER BY bookingCount DESC
-      LIMIT :limit
-    `,
-    {
-      replacements: { since, statuses: SUCCESS_STATUSES, limit },
-      type: QueryTypes.SELECT,
-    },
-  );
-
-  return rows.map((row) => ({
-    branchId: Number(row.branchId),
-    branchName: row.branchName,
-    score: Number(row.bookingCount),
-    reason: "popular",
-  }));
-};
-
-export const getPopularTimeSlots = async (limit = 5) => {
-  const since = getLookbackDate(AI_RECOMMENDATION_DEFAULTS.OCCUPANCY_LOOKBACK_DAYS);
-
-  const rows = await sequelize.query(
-    `
-      SELECT HOUR(bd.startTime) AS hour,
-             COUNT(bd.id) AS bookingCount
-      FROM BookingDetails bd
-      INNER JOIN Bookings b ON bd.bookingId = b.id
-      WHERE b.bookingStatus IN (:statuses)
-        AND bd.playDate >= :since
-      GROUP BY HOUR(bd.startTime)
-      ORDER BY bookingCount DESC
-      LIMIT :limit
-    `,
-    {
-      replacements: { since, statuses: SUCCESS_STATUSES, limit },
-      type: QueryTypes.SELECT,
-    },
-  );
-
-  return rows.map((row) => {
-    const hour = Number(row.hour);
-    return {
-      hour,
-      label: `${String(hour).padStart(2, "0")}:00`,
-      score: Number(row.bookingCount),
-      reason: "popular",
-    };
-  });
-};
-
-export const getUserBookingHistory = async (userId, limit = 50) => {
-  const details = await BookingDetail.findAll({
-    attributes: ["playDate", "startTime"],
-    include: [
-      {
-        model: Booking,
-        as: "booking",
-        attributes: ["branchId"],
-        where: {
-          userId,
-          bookingStatus: { [Op.in]: SUCCESS_STATUSES },
-        },
-        required: true,
-        include: [
-          {
-            model: Branch,
-            as: "branch",
-            attributes: ["branchName"],
-          },
-        ],
-      },
-    ],
-    order: [["playDate", "DESC"]],
-    limit,
-  });
-
-  return details.map((d) => ({
-    branchId: d.booking.branchId,
-    branchName: d.booking.branch?.branchName,
-    hour: parseHour(d.startTime),
-    dayOfWeek: parseDayIndex(d.playDate),
-    playDate: d.playDate,
-  }));
-};
-
-export const countUserBookings = async (userId) =>
-  Booking.count({
-    where: {
-      userId,
-      bookingStatus: { [Op.in]: SUCCESS_STATUSES },
-    },
-  });
 
 export const getOccupancyByBranchHour = async (
   lookbackDays = AI_RECOMMENDATION_DEFAULTS.OCCUPANCY_LOOKBACK_DAYS,
@@ -310,7 +106,11 @@ export const getOccupancyByBranchHour = async (
   return occupancy;
 };
 
-export const getUserActivityForAdmin = async () => {
+export const getUserActivityForAdmin = async (
+  lookbackDays = AI_RECOMMENDATION_DEFAULTS.CUSTOMER_ACTIVITY_LOOKBACK_DAYS,
+) => {
+  const since = getLookbackDate(lookbackDays);
+
   const rows = await sequelize.query(
     `
       SELECT u.id AS userId,
@@ -318,6 +118,8 @@ export const getUserActivityForAdmin = async () => {
              u.email,
              COUNT(DISTINCT b.id) AS totalBookings,
              SUM(CASE WHEN b.bookingStatus = :completed THEN 1 ELSE 0 END) AS completedBookings,
+             COUNT(CASE WHEN bd.playDate >= :since THEN bd.id END) AS sessionsLast30Days,
+             COUNT(DISTINCT CASE WHEN bd.playDate >= :since THEN b.id END) AS ordersLast30Days,
              MAX(bd.playDate) AS lastPlayDate,
              (
                SELECT b2.branchId
@@ -351,6 +153,7 @@ export const getUserActivityForAdmin = async () => {
       replacements: {
         statuses: SUCCESS_STATUSES,
         completed: BOOKING_STATUS.COMPLETED,
+        since,
       },
       type: QueryTypes.SELECT,
     },
@@ -374,39 +177,14 @@ export const getUserActivityForAdmin = async () => {
       email: row.email,
       totalBookings: Number(row.totalBookings) || 0,
       completedBookings: Number(row.completedBookings) || 0,
+      sessionsLast30Days: Number(row.sessionsLast30Days) || 0,
+      ordersLast30Days: Number(row.ordersLast30Days) || 0,
       daysSinceLastBooking,
       lastBranchId: row.lastBranchId ? Number(row.lastBranchId) : null,
       lastBranchName: row.lastBranchName,
       avgHour: row.avgHour != null ? Number(row.avgHour) : null,
     };
   });
-};
-
-export const buildUserRecommendPayload = async (userId, topK) => {
-  const [branches, discounts, popularBranches, popularTimeSlots, history, bookingCount] =
-    await Promise.all([
-      getActiveBranches(),
-      getActiveBookingDiscounts(),
-      getPopularBranches(topK),
-      getPopularTimeSlots(topK),
-      userId ? getUserBookingHistory(userId) : [],
-      userId ? countUserBookings(userId) : 0,
-    ]);
-
-  const isNewUser =
-    !userId ||
-    bookingCount < AI_RECOMMENDATION_DEFAULTS.NEW_USER_BOOKING_THRESHOLD;
-
-  return {
-    userId: userId || null,
-    isNewUser,
-    history,
-    branches,
-    popularBranches,
-    popularTimeSlots,
-    activeDiscounts: discounts,
-    topK,
-  };
 };
 
 export const buildAdminInsightsPayload = async (options = {}) => {
@@ -416,17 +194,32 @@ export const buildAdminInsightsPayload = async (options = {}) => {
     options.lowFillThreshold ?? AI_RECOMMENDATION_DEFAULTS.LOW_FILL_THRESHOLD;
   const churnDaysThreshold =
     options.churnDaysThreshold ?? AI_RECOMMENDATION_DEFAULTS.CHURN_DAYS_THRESHOLD;
+  const peakSlotsPerBranch =
+    options.peakSlotsPerBranch ??
+    AI_RECOMMENDATION_DEFAULTS.PEAK_SLOTS_PER_BRANCH;
+  const customerLookbackDays =
+    options.customerLookbackDays ??
+    AI_RECOMMENDATION_DEFAULTS.CUSTOMER_ACTIVITY_LOOKBACK_DAYS;
 
   const [occupancy, userActivity] = await Promise.all([
     getOccupancyByBranchHour(lookbackDays),
-    getUserActivityForAdmin(),
+    getUserActivityForAdmin(customerLookbackDays),
   ]);
 
   return {
     occupancy,
     userActivity,
+    lookbackDays,
     lowFillThreshold,
     churnDaysThreshold,
+    peakSlotsPerBranch,
+    maxPeakSlotsGlobal: AI_RECOMMENDATION_DEFAULTS.MAX_PEAK_SLOTS_GLOBAL,
+    periodStart: getLookbackDate(customerLookbackDays),
+    periodEnd: getLookbackDate(0),
+    customerLookbackDays,
+    vipMinSessions: AI_RECOMMENDATION_DEFAULTS.VIP_MIN_SESSIONS,
+    segmentTopK: AI_RECOMMENDATION_DEFAULTS.CUSTOMER_SEGMENT_TOP_K,
+    secondBookingNudgeDays: AI_RECOMMENDATION_DEFAULTS.SECOND_BOOKING_NUDGE_DAYS,
   };
 };
 
@@ -590,8 +383,6 @@ export const buildProductRecommendPayload = async ({
 };
 
 export default {
-  getTrainingRecords,
-  buildUserRecommendPayload,
   buildAdminInsightsPayload,
   buildProductTrainPayload,
   buildProductRecommendPayload,

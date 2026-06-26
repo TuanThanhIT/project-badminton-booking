@@ -12,6 +12,27 @@ const createDiscountController = asyncHandler(async (req, res) => {
   return res.status(201).json(new SuccessResponse("Tạo mã giảm giá thành công", result));
 });
 
+const createTargetedDiscountController = asyncHandler(async (req, res) => {
+  const result = await adminDiscountService.createTargetedDiscountService(req.body);
+  return res
+    .status(201)
+    .json(
+      new SuccessResponse(
+        `Đã tạo mã và gửi cho ${result.assignedCount} khách hàng`,
+        result,
+      ),
+    );
+});
+
+const getDiscountRecipientsController = asyncHandler(async (req, res) => {
+  const result = await adminDiscountService.getDiscountRecipientsService(
+    req.params.discountId,
+  );
+  return res
+    .status(200)
+    .json(new SuccessResponse("Lấy danh sách khách nhận mã thành công", result));
+});
+
 const updateDiscountController = asyncHandler(async (req, res) => {
   const result = await adminDiscountService.updateAdminDiscountService(req.params.discountId, req.body);
   return res.status(200).json(new SuccessResponse("Cập nhật mã giảm giá thành công", result));
@@ -31,7 +52,9 @@ const deleteDiscountController = asyncHandler(async (req, res) => {
 
 const adminDiscountController = {
   getDiscountsController,
+  getDiscountRecipientsController,
   createDiscountController,
+  createTargetedDiscountController,
   updateDiscountController,
   toggleDiscountController,
   deleteDiscountController,

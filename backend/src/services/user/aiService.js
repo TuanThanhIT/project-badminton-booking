@@ -199,15 +199,6 @@ const OPENAI_TOOLS = [
       },
     },
   },
-  {
-    type: "function",
-    function: {
-      name: AI_TOOL_NAMES.GET_BOOKING_RECOMMENDATIONS,
-      description:
-        "Gợi ý chi nhánh và khung giờ đặt sân dựa trên lịch sử đặt (LightGBM). BẮT BUỘC gọi khi user hỏi gợi ý sân, gợi ý giờ, sân quen, sân phổ biến, khuyến mãi đặt sân.",
-      parameters: { type: "object", properties: {}, additionalProperties: false },
-    },
-  },
 ];
 
 const getToolsForContext = (context) => {
@@ -217,7 +208,6 @@ const getToolsForContext = (context) => {
         [
           AI_TOOL_NAMES.LIST_BRANCHES,
           AI_TOOL_NAMES.SEARCH_AVAILABLE_COURTS,
-          AI_TOOL_NAMES.GET_BOOKING_RECOMMENDATIONS,
         ].includes(t.function.name),
       );
     case AI_CONTEXT.SHOPPING:
@@ -328,10 +318,6 @@ Luồng tra sân trống (bắt buộc theo thứ tự):
 3. Nếu user CÓ nói ngày (kể cả dạng "16/6", "hôm nay", "mai", "ngày kia") → BẮT BUỘC truyền tham số date đúng theo ngày đó (định dạng YYYY-MM-DD, suy ra năm theo "Hôm nay" ở đầu prompt). VÍ DỤ: "18h ngày 16/6" → date là ngày 16 tháng 6 của năm hiện tại, startTime=18:00. CHỈ mặc định mai khi user hoàn toàn không nói ngày. Thiếu giờ → dùng giờ user đã nói hoặc hỏi 1 câu.
 4. Trả lời sân: nêu RÕ ngày + khung giờ đã tra (vd: "ngày 16/06, 18:00–19:00"), rồi bullet (• Sân XX — giá ₫) + [Đặt sân tại đây](/branches/{branchId}).
 5. Nếu kết quả công cụ có "doNotChangeDate" hoặc báo giờ đã quá hạn/quá khứ → nói ĐÚNG lý do đó cho user và HỎI họ chọn khung giờ/ngày khác. TUYỆT ĐỐI KHÔNG tự đổi sang ngày/giờ khác rồi trả lời như thể còn sân.
-
-Luồng gợi ý đặt sân (AI Recommendation):
-- User hỏi gợi ý sân, gợi ý giờ, sân quen, sân phổ biến → gọi get_booking_recommendations.
-- Trả lời từ kết quả: chi nhánh gợi ý + khung giờ + khuyến mãi (nếu có) + link đặt sân.
 `,
     [AI_CONTEXT.SHOPPING]: `
 Bạn đang ở chế độ **Mua sắm**: tư vấn vợt, giày, phụ kiện theo trình độ và ngân sách.

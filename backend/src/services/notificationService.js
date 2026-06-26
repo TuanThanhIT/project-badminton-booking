@@ -10,10 +10,23 @@
 import { Op } from "sequelize";
 import { Notification } from "../models/index.js";
 
+const normalizeNotificationTitle = (title) => {
+  if (title === "Thong bao demo B-Hub") return "Thông báo demo B-Hub";
+  return title || "";
+};
+
+const normalizeNotificationMessage = (message) => {
+  if (!message) return "";
+  if (/Thong bao ve booking, order, chat hoac lop hoc/i.test(message)) {
+    return "Thông báo demo về đặt sân, đơn hàng, tin nhắn hoặc lớp học.";
+  }
+  return message;
+};
+
 const formatNotification = (notify) => ({
   id: notify.id,
-  title: notify.title,
-    message: "Đã đánh dấu tất cả thông báo là đã đọc",
+  title: normalizeNotificationTitle(notify.title),
+  message: normalizeNotificationMessage(notify.message),
   isRead: notify.isRead,
   type: notify.type,
   createdAt: notify.createdAt,

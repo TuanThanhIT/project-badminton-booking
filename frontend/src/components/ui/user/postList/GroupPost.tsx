@@ -1,6 +1,7 @@
 import { Calendar, MapPin, Users, Target, MessageCircle, ExternalLink } from "lucide-react";
 import type { PostWithAuthor } from "../../../../types/post";
 import { PLAYER_LEVEL_LABEL } from "../../../../utils/constants/profileConstant";
+import { formatTimeRange } from "../../../../utils/booking";
 
 type Props = {
   post: PostWithAuthor;
@@ -65,7 +66,10 @@ const GroupPost = ({ post, formData }: Props) => {
                   </p>
                   <p className="text-sm text-slate-500">
                     {weeklySchedule.startTime && weeklySchedule.endTime
-                      ? `${weeklySchedule.startTime} - ${weeklySchedule.endTime}`
+                      ? formatTimeRange(
+                          weeklySchedule.startTime,
+                          weeklySchedule.endTime,
+                        )
                       : ""}
                   </p>
                 </div>

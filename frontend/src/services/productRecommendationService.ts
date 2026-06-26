@@ -7,7 +7,7 @@ type ApiEnvelope<T> = {
   data: T;
 };
 
-export const getProductRecommendations = async (topK = 6) => {
+export const getProductRecommendations = async (topK = 12) => {
   const res = await instance.get<ApiEnvelope<ProductRecommendationResponse>>(
     "/user/ai/product-recommendations",
     { params: { topK }, timeout: 60000 },
@@ -15,7 +15,7 @@ export const getProductRecommendations = async (topK = 6) => {
   return res.data.data;
 };
 
-export const getRelatedProducts = async (productId: number, topK = 6) => {
+export const getRelatedProducts = async (productId: number, topK = 12) => {
   const res = await instance.get<ApiEnvelope<ProductRecommendationResponse>>(
     "/user/ai/product-recommendations/related",
     { params: { productId, topK }, timeout: 60000 },

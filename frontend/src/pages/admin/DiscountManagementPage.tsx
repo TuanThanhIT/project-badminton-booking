@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   CheckCircle2,
   Edit2,
+  Loader2,
   Percent,
   Plus,
   Search,
@@ -9,13 +11,21 @@ import {
   ToggleLeft,
   ToggleRight,
   Trash2,
+  Users,
+  X,
   XCircle,
   type LucideIcon,
 } from "lucide-react";
 import { toast } from "react-toastify";
-import adminDiscountService from "../../services/admin/discountService";
+import adminDiscountService, {
+  type DiscountRecipient,
+} from "../../services/admin/discountService";
 import type { AdminDiscount } from "../../types/admin";
 import DiscountFormModal from "../../components/ui/admin/discounts/DiscountFormModal";
+import {
+  DISCOUNT_PREFILL_STORAGE_KEY,
+  type DiscountSegmentDraft,
+} from "../../constants/marketingSegment";
 import AdminPagination from "../../components/ui/admin/AdminPagination";
 import AdminPageHeader from "../../components/ui/admin/AdminPageHeader";
 import { showConfirmDialog } from "../../utils/confirmDialog";
@@ -70,8 +80,13 @@ const DiscountManagementPage = () => {
   const [formDiscount, setFormDiscount] = useState<
     AdminDiscount | null | undefined
   >(undefined);
+  const [formDraft, setFormDraft] = useState<DiscountSegmentDraft | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [togglingId, setTogglingId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [recipientsFor, setRecipientsFor] = useState<AdminDiscount | null>(null);
+  const [recipients, setRecipients] = useState<DiscountRecipient[]>([]);
+  const [recipientsLoading, setRecipientsLoading] = useState(false);
 
   const fetchDiscounts = useCallback(async () => {
     setLoading(true);
@@ -98,6 +113,27 @@ const DiscountManagementPage = () => {
   useEffect(() => {
     fetchDiscounts();
   }, [fetchDiscounts]);
+
+  useEffect(() => {
+    if (searchParams.get("create") !== "segment") return;
+    const raw = sessionStorage.getItem(DISCOUNT_PREFILL_STORAGE_KEY);
+    if (!raw) return;
+    try {
+      const draft = JSON.parse(raw) as DiscountSegmentDraft;
+      sessionStorage.removeItem(DISCOUNT_PREFILL_STORAGE_KEY);
+      setFormDraft(draft);
+      setFormDiscount(null);
+      toast.info(
+        draft.segmentLabel
+          ? `Điền sẵn mã cho nhóm: ${draft.segmentLabel}`
+          : "Điền sẵn mã theo chính sách AI Insights",
+      );
+    } catch {
+      sessionStorage.removeItem(DISCOUNT_PREFILL_STORAGE_KEY);
+    }
+    searchParams.delete("create");
+    setSearchParams(searchParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -156,6 +192,24 @@ const DiscountManagementPage = () => {
       setDeletingId(null);
     }
   };
+
+  const openRecipients = async (discount: AdminDiscount) => {
+    setRecipientsFor(discount);
+    setRecipients([]);
+    setRecipientsLoading(true);
+    try {
+      const res = await adminDiscountService.getDiscountRecipientsService(
+        discount.id,
+      );
+      setRecipients(res.data.data.recipients || []);
+    } catch {
+      toast.error("Không tải được danh sách khách nhận mã");
+    } finally {
+      setRecipientsLoading(false);
+    }
+  };
+
+  const recipientsUsed = recipients.filter((r) => r.isUsed).length;
 
   const totalPages = Math.max(Math.ceil(total / LIMIT), 1);
   const activeCount = discounts.filter((discount) => discount.isActive).length;
@@ -316,6 +370,30 @@ const DiscountManagementPage = () => {
                         <span className="rounded-lg border border-sky-200 bg-sky-50 px-2 py-1 font-mono text-xs font-bold text-sky-700">
                           {discount.code}
                         </span>
+                        <div className="mt-1 flex flex-wrap justify-center gap-1">
+                          {discount.visibility === "PRIVATE" ? (
+                            <button
+                              type="button"
+                              onClick={() => openRecipients(discount)}
+                              title="Xem khách đã nhận mã & ai đã dùng"
+                              className="inline-flex items-center gap-1 rounded border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[10px] font-semibold text-rose-600 transition hover:bg-rose-100"
+                            >
+                              <Users className="h-3 w-3" />
+                              Mã riêng
+                            </button>
+                          ) : null}
+                          {discount.branch?.name ? (
+                            <span className="rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
+                              {discount.branch.name}
+                            </span>
+                          ) : null}
+                          {discount.startHour != null &&
+                          discount.endHour != null ? (
+                            <span className="rounded border border-indigo-200 bg-indigo-50 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700">
+                              {discount.startHour}h-{discount.endHour}h
+                            </span>
+                          ) : null}
+                        </div>
                       </td>
                       <td className="px-3 py-3 text-center">
                         <span
@@ -435,12 +513,90 @@ const DiscountManagementPage = () => {
         </div>
       </div>
 
+      {recipientsFor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="flex max-h-[80vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+            <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
+              <div>
+                <h3 className="flex items-center gap-2 text-base font-bold text-slate-900">
+                  <Users className="h-5 w-5 text-rose-500" />
+                  Khách nhận mã{" "}
+                  <span className="font-mono text-rose-600">
+                    {recipientsFor.code}
+                  </span>
+                </h3>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  Mã riêng · mỗi khách 1 lượt ·{" "}
+                  {recipientsLoading
+                    ? "đang tải..."
+                    : `${recipientsUsed}/${recipients.length} đã dùng`}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRecipientsFor(null)}
+                className="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto p-4">
+              {recipientsLoading ? (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-rose-500" />
+                </div>
+              ) : recipients.length === 0 ? (
+                <p className="py-12 text-center text-sm text-slate-400">
+                  Mã này chưa gán cho khách nào.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {recipients.map((r) => (
+                    <div
+                      key={r.userId}
+                      className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-slate-800">
+                          {r.fullName || `User #${r.userId}`}
+                        </p>
+                        <p className="truncate text-xs text-slate-400">
+                          {r.email}
+                        </p>
+                      </div>
+                      {r.isUsed ? (
+                        <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                          Đã dùng
+                          {r.usedAt
+                            ? ` · ${new Date(r.usedAt).toLocaleDateString("vi-VN")}`
+                            : ""}
+                        </span>
+                      ) : (
+                        <span className="shrink-0 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-500">
+                          Chưa dùng
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {formDiscount !== undefined && (
         <DiscountFormModal
           discount={formDiscount}
-          onClose={() => setFormDiscount(undefined)}
+          draft={formDraft}
+          onClose={() => {
+            setFormDiscount(undefined);
+            setFormDraft(null);
+          }}
           onSaved={() => {
             setFormDiscount(undefined);
+            setFormDraft(null);
             fetchDiscounts();
           }}
         />

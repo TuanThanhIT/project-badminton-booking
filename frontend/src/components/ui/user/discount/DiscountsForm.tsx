@@ -23,8 +23,6 @@ const DiscountsForm = ({
 }: DiscountsFormProps) => {
   const codeSaved = localStorage.getItem(storageKey);
 
-  console.log("discounts>>", discounts);
-
   const {
     register,
     handleSubmit,
@@ -84,19 +82,28 @@ const DiscountsForm = ({
             ) : (
               discounts.map((d) => {
                 const isSelected = code === d.code;
+                const isEligible = d.eligible !== false;
+                const isPrivate = d.visibility === "PRIVATE";
 
                 return (
                   <button
                     type="button"
                     key={d.id}
-                    onClick={() => handleSelectDiscount(d.code)}
-                    className={`flex w-full items-stretch gap-4 rounded-3xl border bg-white p-4 text-left transition-all ${
-                      isSelected
-                        ? "border-sky-300 shadow-[0_10px_26px_rgba(14,165,233,0.1)]"
-                        : "border-slate-200 hover:border-sky-200"
+                    disabled={!isEligible}
+                    onClick={() => isEligible && handleSelectDiscount(d.code)}
+                    className={`flex w-full items-stretch gap-4 rounded-3xl border p-4 text-left transition-all ${
+                      !isEligible
+                        ? "cursor-not-allowed border-slate-200 bg-slate-50 opacity-60"
+                        : isSelected
+                          ? "border-sky-300 bg-white shadow-[0_10px_26px_rgba(14,165,233,0.1)]"
+                          : "border-slate-200 bg-white hover:border-sky-200"
                     }`}
                   >
-                    <div className="flex min-w-[104px] flex-col items-center justify-center rounded-2xl bg-sky-600 px-4 py-3 text-white">
+                    <div
+                      className={`flex min-w-[104px] flex-col items-center justify-center rounded-2xl px-4 py-3 text-white ${
+                        isEligible ? "bg-sky-600" : "bg-slate-400"
+                      }`}
+                    >
                       <span className="text-xs opacity-90">GIẢM</span>
                       <span className="mt-1 text-lg font-semibold">
                         {d.type === "AMOUNT"
@@ -106,8 +113,13 @@ const DiscountsForm = ({
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-slate-800">
+                      <p className="flex items-center gap-2 font-semibold text-slate-800">
                         Mã: <span className="text-sky-700">{d.code}</span>
+                        {isPrivate && (
+                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                            Mã riêng
+                          </span>
+                        )}
                       </p>
                       <p className="mt-1 text-sm leading-6 text-slate-600">
                         {d.type === "AMOUNT"
@@ -118,19 +130,31 @@ const DiscountsForm = ({
                               d.maxDiscount,
                             )} cho đơn từ ${formatPrice(d.minAmount)}`}
                       </p>
-                      <p className="mt-1 text-xs text-slate-400">
-                        HSD: {d.endDate}
-                      </p>
+                      {!isEligible && d.reason ? (
+                        <p className="mt-1 text-xs font-medium text-rose-500">
+                          {d.reason}
+                        </p>
+                      ) : (
+                        <p className="mt-1 text-xs text-slate-400">
+                          HSD: {d.endDate}
+                        </p>
+                      )}
                     </div>
 
                     <span
                       className={`self-center rounded-full px-3 py-1.5 text-xs font-medium ${
-                        isSelected
-                          ? "bg-sky-500 text-white"
-                          : "bg-slate-100 text-slate-600"
+                        !isEligible
+                          ? "bg-slate-200 text-slate-400"
+                          : isSelected
+                            ? "bg-sky-500 text-white"
+                            : "bg-slate-100 text-slate-600"
                       }`}
                     >
-                      {isSelected ? "Đã chọn" : "Chọn"}
+                      {!isEligible
+                        ? "Không dùng được"
+                        : isSelected
+                          ? "Đã chọn"
+                          : "Chọn"}
                     </span>
                   </button>
                 );

@@ -1,8 +1,5 @@
 import instance from "../utils/axiosCustomize";
-import type {
-  AdminRecommendationResponse,
-  UserRecommendationResponse,
-} from "../types/aiRecommendation";
+import type { AdminRecommendationResponse } from "../types/aiRecommendation";
 
 type ApiEnvelope<T> = {
   success: boolean;
@@ -10,36 +7,11 @@ type ApiEnvelope<T> = {
   data: T;
 };
 
-export type UserRecommendationParams = {
-  topK?: number;
-  naturalLanguage?: boolean;
-};
-
 export type AdminInsightsParams = {
   lookbackDays?: number;
   lowFillThreshold?: number;
   churnDaysThreshold?: number;
   naturalLanguage?: boolean;
-};
-
-export const getUserRecommendations = async (
-  params?: UserRecommendationParams,
-) => {
-  const res = await instance.get<ApiEnvelope<UserRecommendationResponse>>(
-    "/user/ai/recommendations",
-    { params, timeout: 60000 },
-  );
-  return res.data.data;
-};
-
-export const getPublicRecommendations = async (
-  params?: UserRecommendationParams,
-) => {
-  const res = await instance.get<ApiEnvelope<UserRecommendationResponse>>(
-    "/user/ai/recommendations/public",
-    { params, timeout: 60000 },
-  );
-  return res.data.data;
 };
 
 export const getAdminAiInsights = async (params?: AdminInsightsParams) => {
@@ -61,16 +33,6 @@ export const trainAiModel = async () => {
 
 export type AiServiceStatus = {
   status: string;
-  model: {
-    ready: boolean;
-    modelType?: string;
-    sampleCount?: number;
-    trainedAt?: string;
-    metrics?: {
-      accuracy?: number | null;
-      rocAuc?: number | null;
-    };
-  };
   productModel?: {
     ready: boolean;
     modelType?: string;
@@ -89,16 +51,6 @@ export type AiServiceStatus = {
 };
 
 export type AiTrainResult = {
-  recordCount?: number;
-  trainResult?: {
-    trained?: boolean;
-    reason?: string;
-    sampleCount?: number;
-    metrics?: {
-      accuracy?: number | null;
-      rocAuc?: number | null;
-    };
-  };
   productResult?: {
     trained?: boolean;
     reason?: string;
@@ -120,8 +72,6 @@ export const getAiServiceStatus = async () => {
 };
 
 const aiRecommendationService = {
-  getUserRecommendations,
-  getPublicRecommendations,
   getAdminAiInsights,
   trainAiModel,
   getAiServiceStatus,

@@ -12,6 +12,7 @@ import {
   Disc,
 } from "lucide-react";
 import type { PostWithAuthor } from "../../../../types/post";
+import { formatTimeRange, formatTimeShort } from "../../../../utils/booking";
 
 type BranchInfo = {
   branchName: string;
@@ -71,7 +72,11 @@ const FindPlayerPost = ({
     : "Chưa xác định";
   const timeDisplay =
     schedule?.startTime || schedule?.endTime
-      ? `${schedule.startTime || "?"} - ${schedule.endTime || "?"}`
+      ? schedule.startTime && schedule.endTime
+        ? formatTimeRange(schedule.startTime, schedule.endTime)
+        : `${schedule.startTime ? formatTimeShort(schedule.startTime) : "?"} - ${
+            schedule.endTime ? formatTimeShort(schedule.endTime) : "?"
+          }`
       : "Chưa xác định";
 
   return (

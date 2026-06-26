@@ -1,47 +1,3 @@
-export type BranchRecommendation = {
-  branchId: number;
-  branchName?: string;
-  score: number;
-  reason: string;
-};
-
-export type TimeSlotRecommendation = {
-  hour: number;
-  label: string;
-  dayOfWeek?: number;
-  score: number;
-  reason: string;
-};
-
-export type PromotionSuggestion = {
-  branchId: number;
-  branchName?: string;
-  discountCode?: string;
-  discountValue?: number;
-  reason?: string;
-};
-
-export type UserAiRecommendation = {
-  strategy: string;
-  isNewUser: boolean;
-  branchRecommendations: BranchRecommendation[];
-  timeSlotRecommendations: TimeSlotRecommendation[];
-  promotionSuggestions: PromotionSuggestion[];
-  modelUsed: boolean;
-  modelType?: string;
-  modelReady?: boolean;
-};
-
-export type UserRecommendationResponse = {
-  recommendations: UserAiRecommendation;
-  meta: {
-    userId: number | null;
-    isNewUser: boolean;
-    historyCount: number;
-  };
-  naturalLanguageAnswer?: string;
-};
-
 export type AdminFillRateRow = {
   branchId: number;
   branchName: string;
@@ -59,6 +15,7 @@ export type AdminLowFillSlot = {
   fillRate: number;
   bookedCount: number;
   capacity: number;
+  courtCount?: number;
   needsPromotion?: boolean;
   suggestion: string;
 };
@@ -76,11 +33,17 @@ export type AdminCustomerInsight = {
   userId: number;
   fullName?: string;
   email?: string;
+  /** Tổng đơn đặt cả đời */
   totalBookings: number;
+  /** Suất chơi trong cửa sổ rolling (mặc định 30 ngày) */
+  sessionsLast30Days?: number;
+  /** Đơn đặt trong cửa sổ rolling (mặc định 30 ngày) */
+  ordersLast30Days?: number;
   daysSinceLastBooking?: number | null;
   lastBranchName?: string;
   reason: string;
   suggestedAction?: string;
+  rank?: number;
 };
 
 export type AdminAiInsights = {
@@ -93,6 +56,7 @@ export type AdminAiInsights = {
     hourLabel: string;
     bookedCount: number;
     capacity: number;
+    courtCount?: number;
     fillRate: number;
   }>;
   promotionByBranch?: AdminPromotionByBranch[];
@@ -106,6 +70,7 @@ export type AdminAiInsights = {
     fillRate: number;
     bookedCount?: number;
     capacity?: number;
+    courtCount?: number;
   }>;
   likelyReturnCustomers: AdminCustomerInsight[];
   voucherActivationCandidates: AdminCustomerInsight[];
@@ -115,6 +80,12 @@ export type AdminAiInsights = {
     likelyReturnCount: number;
     voucherCandidateCount: number;
     avgFillRate: number;
+    lookbackDays?: number;
+    customerLookbackDays?: number;
+    periodStart?: string;
+    periodEnd?: string;
+    vipMinSessions?: number;
+    segmentTopK?: number;
   };
   insightType: string;
   modelReady?: boolean;

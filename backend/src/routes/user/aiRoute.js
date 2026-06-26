@@ -1,9 +1,7 @@
 import express from "express";
 import aiController from "../../controllers/user/aiController.js";
-import aiRecommendationController from "../../controllers/user/aiRecommendationController.js";
 import productRecommendationController from "../../controllers/user/productRecommendationController.js";
 import optionalAuth from "../../middlewares/optionalAuth.js";
-import auth from "../../middlewares/auth.js";
 import validate from "../../middlewares/validate.js";
 import {
   chatSchema,
@@ -12,7 +10,6 @@ import {
   sessionIdParamSchema,
 } from "../../validations/aiValidation.js";
 import {
-  userRecommendationQuerySchema,
   productRecommendationQuerySchema,
   relatedProductQuerySchema,
 } from "../../validations/aiRecommendationValidation.js";
@@ -60,20 +57,6 @@ const initAiRoute = (app) => {
     optionalAuth,
     validate(sessionIdParamSchema),
     aiController.deleteSessionController,
-  );
-
-  aiRoute.get(
-    "/recommendations",
-    auth,
-    validate(userRecommendationQuerySchema),
-    aiRecommendationController.getUserRecommendationsController,
-  );
-
-  aiRoute.get(
-    "/recommendations/public",
-    optionalAuth,
-    validate(userRecommendationQuerySchema),
-    aiRecommendationController.getPublicRecommendationsController,
   );
 
   aiRoute.get(

@@ -189,6 +189,11 @@ export interface AdminDiscount {
   startDate: string;
   endDate: string;
   createdAt: string;
+  visibility?: "PUBLIC" | "PRIVATE";
+  branchId?: number | null;
+  startHour?: number | null;
+  endHour?: number | null;
+  branch?: { id: number; name: string } | null;
 }
 
 // ─── Feedback Management ──────────────────────────────────────────────────────

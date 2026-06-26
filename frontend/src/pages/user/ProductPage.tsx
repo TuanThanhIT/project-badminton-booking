@@ -7,7 +7,6 @@ import Breadcrumb from "../../components/ui/user/category/Breadcrumb";
 import ProductFilter from "../../components/ui/user/product/ProductFilter";
 import ProductCard from "../../components/ui/user/product/ProductCard";
 import PaginatedItems from "../../components/ui/user/pagination/PaginatedItems";
-import ProductRecommendationWidget from "../../components/ui/user/product/ProductRecommendationWidget";
 
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 
@@ -490,11 +489,6 @@ const ProductPage = () => {
             </div>
           </>
         )}
-      </div>
-
-      {/* AI: GỢI Ý CHO BẠN */}
-      <div className="mx-auto w-full max-w-[1450px] px-4 pb-10 sm:px-6">
-        <ProductRecommendationWidget mode="user" />
       </div>
     </div>
   );

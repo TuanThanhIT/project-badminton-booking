@@ -80,9 +80,6 @@ Không bịa dữ liệu ngoài JSON.`;
 };
 
 export const trainModelService = async () => {
-  const records = await aiRecommendationDataService.getTrainingRecords();
-  const trainResult = await aiRecommendationClient.trainBookingModel(records);
-
   let productResult = null;
   try {
     const productPayload =
@@ -98,8 +95,6 @@ export const trainModelService = async () => {
   }
 
   return {
-    recordCount: records.length,
-    trainResult,
     productResult,
   };
 };
@@ -128,37 +123,6 @@ export const getProductRecommendationService = async ({
       historyCount: payload.history.length,
     },
   };
-};
-
-export const getUserRecommendationService = async ({
-  userId,
-  topK = AI_RECOMMENDATION_DEFAULTS.TOP_K,
-  naturalLanguage = false,
-}) => {
-  const payload = await aiRecommendationDataService.buildUserRecommendPayload(
-    userId,
-    topK,
-  );
-  const recommendations =
-    await aiRecommendationClient.getUserRecommendations(payload);
-
-  const result = {
-    recommendations,
-    meta: {
-      userId,
-      isNewUser: payload.isNewUser,
-      historyCount: payload.history.length,
-    },
-  };
-
-  if (naturalLanguage) {
-    result.naturalLanguageAnswer = await summarizeWithLlm({
-      audience: AI_RECOMMENDATION_AUDIENCE.USER,
-      jsonPayload: recommendations,
-    });
-  }
-
-  return result;
 };
 
 export const getAdminRecommendationService = async ({
@@ -209,7 +173,6 @@ export const getAiServiceStatusService = async () => {
 
 export default {
   trainModelService,
-  getUserRecommendationService,
   getAdminRecommendationService,
   getProductRecommendationService,
   getAiServiceStatusService,

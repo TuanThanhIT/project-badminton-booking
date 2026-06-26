@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   AlertTriangle,
-  BadgePercent,
-  BrainCircuit,
   Clock,
   Download,
+  Flame,
   Gauge,
+  Gift,
   Loader2,
+  Megaphone,
   RefreshCw,
   Sparkles,
+  TicketPercent,
   TrendingUp,
-  UserCheck,
-  Users,
 } from "lucide-react";
 import {
   Bar,
@@ -25,14 +25,16 @@ import {
 } from "recharts";
 import { toast } from "react-toastify";
 import AdminPageHeader from "../../components/ui/admin/AdminPageHeader";
+import CustomerPoliciesSection from "../../components/ui/admin/ai/CustomerPoliciesSection";
+import DiscountFormModal from "../../components/ui/admin/discounts/DiscountFormModal";
 import { adminPrimaryButtonClass } from "../../components/ui/admin/AdminModal";
+import { type DiscountSegmentDraft } from "../../constants/marketingSegment";
 import aiRecommendationService, {
   type AiServiceStatus,
   type AiTrainResult,
 } from "../../services/aiRecommendationService";
 import type {
   AdminAiInsights,
-  AdminCustomerInsight,
   AdminPromotionByBranch,
 } from "../../types/aiRecommendation";
 
@@ -58,7 +60,7 @@ const fmtDateTime = (value?: string) =>
         hour: "2-digit",
         minute: "2-digit",
       })
-    : "Chưa train";
+    : "Chưa cập nhật";
 
 const fillColor = (rate: number) => {
   if (rate >= 70) return "#10b981";
@@ -77,12 +79,19 @@ const heatCellColor = (rate: number) => {
 
 const OPERATING_HOURS = Array.from({ length: 16 }, (_, i) => i + 6);
 
+const capacityBreakdown = (capacity: number, courtCount?: number) => {
+  if (!courtCount || courtCount <= 0) return "";
+  const days = Math.round(capacity / courtCount);
+  return ` (${courtCount} sân trong ${days} ngày)`;
+};
+
 type HourCell = {
   hour: number;
   hourLabel: string;
   fillRate: number;
   bookedCount: number;
   capacity: number;
+  courtCount?: number;
 };
 
 const OccupancyHeatmap = ({
@@ -108,6 +117,7 @@ const OccupancyHeatmap = ({
       fillRate: row.fillRate,
       bookedCount: row.bookedCount,
       capacity: row.capacity,
+      courtCount: row.courtCount,
     });
   });
 
@@ -158,7 +168,12 @@ const OccupancyHeatmap = ({
               return (
                 <div
                   key={h}
-                  title={`${label}: ${cell?.bookedCount ?? 0}/${cell?.capacity ?? 0} lượt (${rate}%)`}
+                  title={`${label}: đã đặt ${cell?.bookedCount ?? 0}/${
+                    cell?.capacity ?? 0
+                  } lượt có thể phục vụ${capacityBreakdown(
+                    cell?.capacity ?? 0,
+                    cell?.courtCount,
+                  )} = ${rate}%`}
                   className={`h-7 rounded ${heatCellColor(rate)} transition hover:ring-2 hover:ring-sky-400`}
                 />
               );
@@ -166,7 +181,7 @@ const OccupancyHeatmap = ({
           </div>
         ))}
         <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-          <span className="font-semibold text-slate-600">Chú thích:</span>
+          <span className="font-semibold text-slate-600">Màu sắc:</span>
           <span className="inline-flex items-center gap-1">
             <span className="h-3 w-3 rounded bg-slate-200" /> 0%
           </span>
@@ -189,9 +204,37 @@ const OccupancyHeatmap = ({
 };
 
 const LOW_FILL_THRESHOLD = 40;
-const SLOTS_PER_BRANCH = 5;
+const PEAK_SLOTS_PER_BRANCH = 3;
 
-/** Fallback khi ai-service chưa trả promotionByBranch (cần restart ai-service). */
+const todayIso = () => new Date().toISOString().slice(0, 10);
+const datePlusDays = (days: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+};
+
+/** Điền sẵn mã kích cầu cho 1 khung giờ trống của 1 chi nhánh. */
+const buildLowFillSlotDraft = (
+  branchId: number,
+  branchName: string,
+  startHour: number,
+  endHour: number,
+): DiscountSegmentDraft => ({
+  code: `OFF${String(startHour).padStart(2, "0")}B${branchId}`,
+  type: "PERCENT",
+  applyType: "BOOKING",
+  value: 15,
+  maxDiscount: 50000,
+  minAmount: 0,
+  startDate: todayIso(),
+  endDate: datePlusDays(30),
+  segmentLabel: `Khung trống ${branchName} ${startHour}h-${endHour}h`,
+  branchId,
+  branchName,
+  startHour,
+  endHour,
+});
+
 const buildPromotionByBranchFromHours = (
   rows: AdminAiInsights["fillRateByBranchHour"],
 ): AdminPromotionByBranch[] => {
@@ -220,9 +263,9 @@ const buildPromotionByBranchFromHours = (
           ? Math.round((totalBooked / totalCapacity) * 1000) / 10
           : 0;
 
-      const slots = [...branch.hours]
+      const slots = branch.hours
+        .filter((row) => row.fillRate < LOW_FILL_THRESHOLD)
         .sort((a, b) => a.fillRate - b.fillRate || a.hour - b.hour)
-        .slice(0, SLOTS_PER_BRANCH)
         .map((row) => ({
           branchId: row.branchId,
           branchName: row.branchName,
@@ -234,6 +277,7 @@ const buildPromotionByBranchFromHours = (
           fillRate: row.fillRate,
           bookedCount: row.bookedCount,
           capacity: row.capacity,
+          courtCount: row.courtCount,
           needsPromotion: row.fillRate < LOW_FILL_THRESHOLD,
           suggestion:
             row.fillRate < LOW_FILL_THRESHOLD
@@ -255,100 +299,160 @@ const buildPromotionByBranchFromHours = (
 const BranchPromotionPanel = ({
   groups,
   hourRowCount,
+  onCreatePromo,
 }: {
   groups: AdminPromotionByBranch[];
   hourRowCount: number;
+  onCreatePromo: (draft: DiscountSegmentDraft) => void;
 }) => {
+  const [activeBranchId, setActiveBranchId] = useState<number | null>(null);
+
   if (!groups.length) {
     return (
       <div className="space-y-3 py-8 text-center text-sm text-slate-500">
         <p>Không có dữ liệu khung giờ để gợi ý khuyến mãi.</p>
         {hourRowCount === 0 ? (
           <p className="text-xs text-slate-400">
-            Chưa có booking trong 30 ngày gần nhất (trạng thái CONFIRMED /
-            COMPLETED). Chạy seeder bulk rồi bấm <strong>Làm mới</strong>.
+            Chưa có lịch đặt sân đủ điều kiện trong 30 ngày gần nhất. Hãy kiểm
+            tra dữ liệu đặt sân hoặc bấm <strong>Làm mới</strong> sau khi có
+            lịch mới.
           </p>
         ) : (
           <p className="text-xs text-slate-400">
-            Có {hourRowCount} ô giờ nhưng chưa nhóm được — thử restart{" "}
-            <strong>ai-service</strong> và <strong>backend</strong>, sau đó Làm
-            mới.
+            Có {hourRowCount} ô giờ nhưng chưa có nhóm khuyến mãi phù hợp. Hãy
+            bấm <strong>Làm mới</strong> hoặc kiểm tra lại bộ lọc ngày.
           </p>
         )}
       </div>
     );
   }
 
+  const branch =
+    groups.find((g) => g.branchId === activeBranchId) ?? groups[0];
+
   return (
-    <div className="max-h-[520px] space-y-4 overflow-y-auto pr-1">
-      {groups.map((branch) => (
-        <div
-          key={branch.branchId}
-          className="rounded-xl border border-slate-200 bg-slate-50/80 p-4"
-        >
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <p className="text-sm font-bold text-slate-900">
-                {branch.branchName}
-              </p>
-              <p className="text-xs text-slate-500">
-                Lấp đầy TB 30 ngày:{" "}
-                <strong className="text-slate-700">
-                  {branch.branchFillRate}%
-                </strong>
-                {" · "}
-                {branch.totalBooked}/{branch.totalCapacity} lượt
-              </p>
-            </div>
-            <span
-              className={`rounded-full px-3 py-1 text-xs font-bold ${
-                branch.branchFillRate < 15
-                  ? "bg-rose-100 text-rose-600"
-                  : branch.branchFillRate < 40
-                    ? "bg-amber-100 text-amber-700"
-                    : "bg-emerald-100 text-emerald-700"
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        {groups.map((g) => {
+          const isActive = g.branchId === branch.branchId;
+          return (
+            <button
+              key={g.branchId}
+              type="button"
+              onClick={() => setActiveBranchId(g.branchId)}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                isActive
+                  ? "border-sky-600 bg-sky-600 text-white"
+                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
               }`}
             >
-              {branch.branchFillRate < 15
-                ? "Ưu tiên KM"
-                : branch.branchFillRate < 40
-                  ? "Cân nhắc KM"
-                  : "Ổn định"}
-            </span>
+              {g.branchName}
+              <span
+                className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                  isActive
+                    ? "bg-white/20 text-white"
+                    : "bg-slate-100 text-slate-500"
+                }`}
+              >
+                {g.slots.length}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="text-sm font-bold text-slate-900">
+              {branch.branchName}
+            </p>
+            <p className="text-xs text-slate-500">
+              Mức lấp đầy 30 ngày:{" "}
+              <strong className="text-slate-700">
+                {branch.branchFillRate}%
+              </strong>
+              {" · "}
+              {branch.totalBooked}/{branch.totalCapacity} lượt có thể phục vụ ·{" "}
+              {branch.slots.length} khung nên xem xét khuyến mãi
+            </p>
           </div>
-          <div className="space-y-2">
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-bold ${
+              branch.branchFillRate < 15
+                ? "bg-rose-100 text-rose-600"
+                : branch.branchFillRate < 40
+                  ? "bg-amber-100 text-amber-700"
+                  : "bg-emerald-100 text-emerald-700"
+            }`}
+          >
+            {branch.branchFillRate < 15
+              ? "Nên ưu tiên"
+              : branch.branchFillRate < 40
+                ? "Cần theo dõi"
+                : "Đang ổn"}
+          </span>
+        </div>
+        {branch.slots.length === 0 ? (
+          <p className="py-6 text-center text-xs text-slate-400">
+            Chi nhánh này chưa có khung giờ trống đáng kể, chưa cần tạo thêm
+            khuyến mãi.
+          </p>
+        ) : (
+          <div className="max-h-[440px] space-y-2 overflow-y-auto pr-1">
             {branch.slots.map((slot) => (
               <div
                 key={`${branch.branchId}-${slot.hour}`}
-                className="flex items-center justify-between rounded-lg border border-white bg-white px-3 py-2.5 shadow-sm"
+                className="flex items-center justify-between gap-3 rounded-lg border border-white bg-white px-3 py-2.5 shadow-sm"
               >
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-semibold text-slate-800">
                     {slot.hourLabel}
                   </p>
                   <p className="text-xs text-slate-400">
-                    Đã đặt {slot.bookedCount}/{slot.capacity} lượt ·{" "}
+                    Đã đặt {slot.bookedCount}/{slot.capacity} lượt có thể phục vụ
+                    {capacityBreakdown(slot.capacity, slot.courtCount)} ·{" "}
                     {slot.needsPromotion !== false
                       ? "Nên tạo khuyến mãi"
                       : "Theo dõi thêm"}
                   </p>
                 </div>
-                <span
-                  className={`rounded-full px-2.5 py-1 text-xs font-bold ${
-                    slot.fillRate < 15
-                      ? "bg-rose-100 text-rose-600"
-                      : slot.fillRate < 40
-                        ? "bg-amber-100 text-amber-700"
-                        : "bg-slate-100 text-slate-600"
-                  }`}
-                >
-                  {slot.fillRate}%
-                </span>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-xs font-bold ${
+                      slot.fillRate < 15
+                        ? "bg-rose-100 text-rose-600"
+                        : slot.fillRate < 40
+                          ? "bg-amber-100 text-amber-700"
+                          : "bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    {slot.fillRate}%
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onCreatePromo(
+                        buildLowFillSlotDraft(
+                          branch.branchId,
+                          branch.branchName,
+                          slot.hour,
+                          slot.hourEnd ?? slot.hour + 1,
+                        ),
+                      )
+                    }
+                    title={`Tạo mã giảm cho ${branch.branchName} khung ${slot.hourLabel}`}
+                    className="inline-flex items-center gap-1 rounded-lg bg-sky-600 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-sky-700"
+                  >
+                    <TicketPercent className="h-3.5 w-3.5" />
+                    Tạo KM
+                  </button>
+                </div>
               </div>
             ))}
           </div>
-        </div>
-      ))}
+        )}
+      </div>
     </div>
   );
 };
@@ -455,75 +559,132 @@ const StatCard = ({
   </div>
 );
 
-const CustomerTable = ({
-  title,
-  description,
-  icon: Icon,
-  tone,
-  rows,
-  emptyText,
-}: {
-  title: string;
-  description: string;
-  icon: typeof Users;
-  tone: string;
-  rows: AdminCustomerInsight[];
-  emptyText: string;
-}) => (
-  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-    <div className="mb-4 flex items-center gap-3">
-      <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${tone}`}>
-        <Icon className="h-5 w-5" />
-      </span>
-      <div>
-        <h3 className="text-base font-bold text-slate-900">{title}</h3>
-        <p className="text-xs text-slate-400">{description}</p>
-      </div>
-    </div>
-    {rows.length === 0 ? (
-      <p className="py-8 text-center text-sm text-slate-400">{emptyText}</p>
-    ) : (
-      <div className="max-h-[360px] overflow-y-auto">
-        <table className="w-full text-left text-sm">
-          <thead className="sticky top-0 bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
-            <tr>
-              <th className="px-3 py-2">Khách hàng</th>
-              <th className="px-3 py-2 text-center">Lượt đặt</th>
-              <th className="px-3 py-2 text-center">Lần cuối</th>
-              <th className="px-3 py-2">Gợi ý</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {rows.map((row) => (
-              <tr key={row.userId} className="hover:bg-slate-50">
-                <td className="px-3 py-2">
-                  <p className="font-semibold text-slate-800">
-                    {row.fullName || `User #${row.userId}`}
-                  </p>
-                  <p className="text-xs text-slate-400">{row.email || "—"}</p>
-                </td>
-                <td className="px-3 py-2 text-center font-semibold text-slate-700">
-                  {row.totalBookings}
-                </td>
-                <td className="px-3 py-2 text-center text-slate-500">
-                  {row.daysSinceLastBooking != null
-                    ? `${row.daysSinceLastBooking} ngày`
-                    : "—"}
-                </td>
-                <td className="px-3 py-2 text-xs text-slate-500">
-                  {row.suggestedAction || "Khả năng quay lại cao"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    )}
-  </div>
+const AdminUsageGuide = () => (
+  <section className="mb-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+    {[
+      {
+        icon: RefreshCw,
+        title: "1. Làm mới số liệu",
+        desc: "Bấm sau khi có lịch đặt sân hoặc đơn hàng mới để trang lấy lại tình hình hiện tại.",
+        tone: "bg-sky-50 text-sky-700",
+      },
+      {
+        icon: TrendingUp,
+        title: "2. Xem khung giờ",
+        desc: "Ô màu nhạt là khung còn trống nhiều; ô xanh là khung đang được đặt tốt.",
+        tone: "bg-emerald-50 text-emerald-700",
+      },
+      {
+        icon: TicketPercent,
+        title: "3. Tạo khuyến mãi",
+        desc: "Ở khung giờ trống, bấm Tạo KM để mở sẵn form mã giảm giá đúng chi nhánh và giờ.",
+        tone: "bg-amber-50 text-amber-700",
+      },
+      {
+        icon: Megaphone,
+        title: "4. Chăm sóc khách",
+        desc: "Dùng nhóm khách tích cực và khách lâu chưa quay lại để gửi mã riêng hoặc xuất danh sách.",
+        tone: "bg-rose-50 text-rose-700",
+      },
+    ].map((item) => (
+      <article
+        key={item.title}
+        className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+      >
+        <span
+          className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${item.tone}`}
+        >
+          <item.icon className="h-5 w-5" />
+        </span>
+        <h3 className="text-sm font-bold text-slate-900">{item.title}</h3>
+        <p className="mt-1 text-xs leading-5 text-slate-500">{item.desc}</p>
+      </article>
+    ))}
+  </section>
 );
 
-const fmtMetric = (value?: number | null) =>
-  value != null ? `${(value * 100).toFixed(1)}%` : "—";
+const PeakTimeBoard = ({
+  slots,
+}: {
+  slots: AdminAiInsights["peakTimeSlots"];
+}) => {
+  const byBranch = useMemo(() => {
+    const map = new Map<
+      number,
+      { branchName: string; slots: AdminAiInsights["peakTimeSlots"] }
+    >();
+    slots.forEach((slot) => {
+      if (!map.has(slot.branchId)) {
+        map.set(slot.branchId, { branchName: slot.branchName, slots: [] });
+      }
+      map.get(slot.branchId)!.slots.push(slot);
+    });
+    return [...map.entries()].sort((a, b) => a[0] - b[0]);
+  }, [slots]);
+
+  if (!byBranch.length) {
+    return (
+      <p className="py-10 text-center text-sm text-slate-400">
+        Chưa đủ dữ liệu để xác định cao điểm.
+      </p>
+    );
+  }
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {byBranch.map(([branchId, branch]) => (
+        <div
+          key={branchId}
+          className="rounded-xl border border-emerald-100 bg-white p-4 shadow-sm"
+        >
+          <div className="mb-3 flex items-start justify-between gap-2">
+            <div>
+              <p className="text-sm font-bold text-slate-900">{branch.branchName}</p>
+              <p className="text-xs text-slate-400">
+                Top {PEAK_SLOTS_PER_BRANCH} khung % cao nhất
+              </p>
+            </div>
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+              <Flame className="h-4 w-4" />
+            </span>
+          </div>
+          <div className="space-y-3">
+            {branch.slots
+              .sort((a, b) => b.fillRate - a.fillRate || a.hour - b.hour)
+              .map((slot, index) => (
+                <div key={`${slot.hour}-${index}`}>
+                  <div className="mb-1 flex items-center justify-between text-xs">
+                    <span className="font-semibold text-slate-700">
+                      #{index + 1} {slot.hourLabel}
+                    </span>
+                    <span className="font-bold text-emerald-700">{slot.fillRate}%</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all"
+                      style={{ width: `${Math.min(100, slot.fillRate)}%` }}
+                    />
+                  </div>
+                  <p className="mt-0.5 text-[10px] text-slate-400">
+                    {slot.bookedCount ?? 0}/{slot.capacity ?? 0} lượt có thể phục vụ
+                    {capacityBreakdown(slot.capacity ?? 0, slot.courtCount)}
+                  </p>
+                </div>
+              ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+
+const formatDaysSinceLabel = (days?: number | null) => {
+  if (days == null) return "—";
+  if (days === 0) return "Hôm nay";
+  if (days === 1) return "Hôm qua";
+  return `${days} ngày trước`;
+};
 
 const downloadInsightsCsv = (data: AdminAiInsights) => {
   const rows: string[][] = [
@@ -540,10 +701,11 @@ const downloadInsightsCsv = (data: AdminAiInsights) => {
   });
   (data.voucherActivationCandidates || []).forEach((user) => {
     rows.push([
-      "Cần voucher",
+      "Tái kích hoạt",
       user.fullName || `User #${user.userId}`,
       user.lastBranchName || "",
-      String(user.daysSinceLastBooking ?? ""),
+      String(user.sessionsLast30Days ?? 0),
+      formatDaysSinceLabel(user.daysSinceLastBooking),
       user.suggestedAction || user.reason,
     ]);
   });
@@ -570,6 +732,11 @@ const AiInsightsPage = () => {
   const [loading, setLoading] = useState(true);
   const [training, setTraining] = useState(false);
   const [explaining, setExplaining] = useState(false);
+  const [promoDraft, setPromoDraft] = useState<DiscountSegmentDraft | null>(null);
+
+  const handleCreatePromo = useCallback((draft: DiscountSegmentDraft) => {
+    setPromoDraft(draft);
+  }, []);
 
   const loadStatus = useCallback(async () => {
     try {
@@ -616,37 +783,27 @@ const AiInsightsPage = () => {
     try {
       setTraining(true);
       const result = (await aiRecommendationService.trainAiModel()) as AiTrainResult;
-      const booking = result?.trainResult;
       const product = result?.productResult;
 
-      if (booking?.trained) {
-        const acc = fmtMetric(booking.metrics?.accuracy);
-        toast.success(
-          `Đặt sân: train OK (${result.recordCount ?? 0} mẫu, accuracy ${acc}).`,
-        );
-      } else {
-        toast.info(
-          `Đặt sân: chưa train (${result?.recordCount ?? 0} mẫu).`,
-        );
-      }
-
       if (product?.trained) {
-        const acc = fmtMetric(product.metrics?.accuracy);
         toast.success(
-          `Sản phẩm: train OK (${product.recordCount ?? 0} mẫu, ${product.basketCount ?? 0} giỏ, accuracy ${acc}).`,
+          `Đã cập nhật gợi ý sản phẩm từ ${product.recordCount ?? 0} lượt tương tác và ${product.basketCount ?? 0} giỏ hàng.`,
         );
       } else if (product) {
-        toast.info(`Sản phẩm: ${product.reason || "chưa đủ dữ liệu"}.`);
+        toast.info(
+          product.reason ||
+            "Chưa đủ dữ liệu mua hàng để cập nhật gợi ý sản phẩm.",
+        );
       }
 
       await loadStatus();
       await loadInsights(false);
       toast.info(
-        "Số liệu lấp đầy sân cập nhật từ DB (bấm Làm mới). Huấn luyện chỉ cập nhật model gợi ý.",
+        "Số liệu sân đã được làm mới. Phần gợi ý sản phẩm được cập nhật riêng từ lịch sử mua hàng.",
       );
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Huấn luyện thất bại";
+        error instanceof Error ? error.message : "Không cập nhật được gợi ý";
       toast.error(message);
     } finally {
       setTraining(false);
@@ -671,8 +828,8 @@ const AiInsightsPage = () => {
   return (
     <div>
       <AdminPageHeader
-        title="Phân tích AI & Gợi ý vận hành"
-        subtitle="Bản đồ lấp đầy theo chi nhánh & khung giờ (SQL 30 ngày). Bấm Làm mới sau khi thêm đơn/đặt sân — không phụ thuộc Huấn luyện mô hình."
+        title="Phân tích vận hành & Gợi ý hành động"
+        subtitle="Theo dõi mức lấp đầy sân, khung giờ nên khuyến mãi và nhóm khách cần chăm sóc. Admin có thể làm mới số liệu, xuất báo cáo hoặc tạo mã giảm giá ngay từ trang này."
         action={
           <div className="flex flex-wrap items-center gap-3">
             <button
@@ -681,7 +838,7 @@ const AiInsightsPage = () => {
               disabled={!insights}
               className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20 disabled:opacity-50"
             >
-              <Download className="h-4 w-4" /> Xuất CSV
+              <Download className="h-4 w-4" /> Xuất file báo cáo
             </button>
             <button
               type="button"
@@ -699,27 +856,15 @@ const AiInsightsPage = () => {
               {training ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <BrainCircuit className="h-4 w-4" />
+                <Sparkles className="h-4 w-4" />
               )}
-              Huấn luyện mô hình
+              Cập nhật gợi ý sản phẩm
             </button>
           </div>
         }
       />
 
       <div className="mb-6 flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <span
-          className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold ${
-            status?.model?.ready
-              ? "bg-emerald-50 text-emerald-600"
-              : "bg-slate-100 text-slate-500"
-          }`}
-        >
-          <BrainCircuit className="h-4 w-4" />
-          {status?.model?.ready
-            ? `Đặt sân: ${status.model.modelType || "LightGBM"}`
-            : "Model đặt sân chưa train"}
-        </span>
         <span
           className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold ${
             status?.productModel?.ready
@@ -729,40 +874,26 @@ const AiInsightsPage = () => {
         >
           <Sparkles className="h-4 w-4" />
           {status?.productModel?.ready
-            ? `Sản phẩm: ${status.productModel.modelType || "sẵn sàng"}`
-            : "Model SP chưa train"}
+            ? "Gợi ý sản phẩm đã sẵn sàng"
+            : "Chưa có gợi ý sản phẩm"}
         </span>
-        {status?.model?.metrics?.accuracy != null ? (
-          <span className="text-sm text-slate-500">
-            Accuracy đặt sân:{" "}
-            <strong className="text-slate-700">
-              {fmtMetric(status.model.metrics.accuracy)}
-            </strong>
-          </span>
-        ) : null}
-        {status?.productModel?.metrics?.accuracy != null ? (
-          <span className="text-sm text-slate-500">
-            Accuracy SP:{" "}
-            <strong className="text-slate-700">
-              {fmtMetric(status.productModel.metrics.accuracy)}
-            </strong>
-          </span>
-        ) : null}
         <span className="flex items-center gap-1.5 text-sm text-slate-500">
           <RefreshCw className="h-4 w-4 text-slate-400" />
-          Lần train gần nhất:{" "}
+          Lần cập nhật gần nhất:{" "}
           <strong className="text-slate-700">
-            {fmtDateTime(status?.model?.trainedAt)}
+            {fmtDateTime(status?.productModel?.trainedAt)}
           </strong>
         </span>
         <span className="flex items-center gap-1.5 text-sm text-slate-500">
           <Clock className="h-4 w-4 text-slate-400" />
-          Tự động train:{" "}
+          Lịch tự cập nhật:{" "}
           <strong className="text-slate-700">
             {cronToText(status?.trainingSchedule?.cron)}
           </strong>
         </span>
       </div>
+
+      <AdminUsageGuide />
 
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -774,7 +905,7 @@ const AiInsightsPage = () => {
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
-              title="Tỷ lệ lấp đầy TB"
+              title="Mức lấp đầy TB"
               value={`${summary?.avgFillRate ?? 0}%`}
               note={`${summary?.branchCount ?? 0} cơ sở`}
               icon={Gauge}
@@ -788,17 +919,17 @@ const AiInsightsPage = () => {
               tone="bg-amber-50 text-amber-600"
             />
             <StatCard
-              title="Khách có thể quay lại"
+              title="Tri ân (top suất)"
               value={String(summary?.likelyReturnCount ?? 0)}
-              note="Hoạt động gần đây"
-              icon={UserCheck}
+              note={`Kỳ ${summary?.customerLookbackDays ?? 30} ngày`}
+              icon={Gift}
               tone="bg-emerald-50 text-emerald-600"
             />
             <StatCard
-              title="Cần voucher kích hoạt"
+              title="Cần tái kích hoạt"
               value={String(summary?.voucherCandidateCount ?? 0)}
-              note="Nguy cơ rời bỏ"
-              icon={BadgePercent}
+              note="Nên gửi ưu đãi quay lại"
+              icon={Megaphone}
               tone="bg-rose-50 text-rose-600"
             />
           </div>
@@ -811,9 +942,9 @@ const AiInsightsPage = () => {
                     <Sparkles className="h-5 w-5" />
                   </span>
                   <div>
-                    <h3 className="text-base font-bold">Nhận định từ trợ lý AI</h3>
+                    <h3 className="text-base font-bold">Tóm tắt dành cho quản trị</h3>
                     <p className="text-xs text-sky-50/90">
-                      Tổng hợp & gợi ý hành động dựa trên dữ liệu vận hành
+                      Diễn giải nhanh số liệu và đề xuất việc nên làm tiếp theo
                     </p>
                   </div>
                 </div>
@@ -844,10 +975,10 @@ const AiInsightsPage = () => {
                 </span>
                 <div>
                   <p className="text-sm font-bold text-slate-800">
-                    Nhận định bằng ngôn ngữ tự nhiên
+                    Tạo bản tóm tắt dễ đọc
                   </p>
                   <p className="text-xs text-slate-500">
-                    Để AI đọc số liệu và viết tóm tắt + gợi ý hành động cho bạn.
+                    Hệ thống sẽ viết lại các số liệu chính thành đoạn gợi ý dễ dùng cho admin.
                   </p>
                 </div>
               </div>
@@ -862,7 +993,7 @@ const AiInsightsPage = () => {
                 ) : (
                   <Sparkles className="h-4 w-4" />
                 )}
-                Tạo tóm tắt AI
+                Tạo tóm tắt
               </button>
             </div>
           )}
@@ -878,7 +1009,8 @@ const AiInsightsPage = () => {
                     Bản đồ lấp đầy theo chi nhánh & giờ
                   </h3>
                   <p className="text-xs text-slate-400">
-                    30 ngày gần nhất · mỗi ô = 1 khung 1 giờ (vd. 14h = 14:00–15:00)
+                    30 ngày gần nhất · di chuột vào ô để xem số lượt đặt và
+                    sức chứa của khung giờ.
                   </p>
                 </div>
               </div>
@@ -886,7 +1018,7 @@ const AiInsightsPage = () => {
               {fillRateChart.length > 0 ? (
                 <div className="mt-6 border-t border-slate-100 pt-5">
                   <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                    Tỷ lệ TB cả chi nhánh
+                    Mức lấp đầy trung bình theo chi nhánh
                   </p>
                   <ResponsiveContainer width="100%" height={220}>
                     <BarChart data={fillRateChart} margin={{ left: -10 }}>
@@ -924,63 +1056,67 @@ const AiInsightsPage = () => {
                     Gợi ý khuyến mãi theo chi nhánh
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Top {SLOTS_PER_BRANCH} khung thấp nhất / chi nhánh · %
-                    = đã đặt ÷ (số sân × 30 ngày)
+                    Ưu tiên các khung có nhiều sân trống trong 30 ngày gần nhất.
                   </p>
                 </div>
               </div>
               <div className="mb-4 rounded-lg border border-amber-100 bg-amber-50/60 px-3 py-2 text-xs leading-5 text-amber-900">
-                <strong>Cách đọc %:</strong> Khung{" "}
-                <strong>14:00–15:00</strong> tại một chi nhánh = trong 30 ngày,
-                có bao nhiêu lượt đặt (1h) so với tối đa{" "}
-                <strong>số sân × 30</strong>. Ví dụ 28/450 lượt → 6.2% — tức
-                khung đó còn trống nhiều, phù hợp khuyến mãi.
+                <strong>Cách dùng:</strong> chọn chi nhánh, xem các khung có tỷ
+                lệ thấp, rồi bấm <strong>Tạo KM</strong>. Form mã giảm giá sẽ
+                được điền sẵn chi nhánh và giờ áp dụng để admin chỉ cần kiểm tra
+                lại mức giảm trước khi lưu.
               </div>
               <BranchPromotionPanel
                 groups={promotionGroups}
                 hourRowCount={hourRowCount}
+                onCreatePromo={handleCreatePromo}
               />
             </div>
           </div>
 
-          {insights?.peakTimeSlots?.length ? (
-            <div className="mt-6 rounded-2xl border border-emerald-100 bg-emerald-50/40 p-5">
-              <p className="mb-3 text-sm font-bold text-emerald-800">
-                Khung giờ cao điểm (tham khảo)
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {insights.peakTimeSlots.slice(0, 8).map((slot, index) => (
-                  <span
-                    key={`${slot.branchId}-${slot.hour}-${index}`}
-                    className="rounded-full border border-emerald-200 bg-white px-3 py-1.5 text-xs font-medium text-emerald-800"
-                  >
-                    {slot.branchName} · {slot.hourLabel} · {slot.fillRate}%
-                  </span>
-                ))}
+          <div className="mt-6 rounded-2xl border border-emerald-100 bg-gradient-to-b from-emerald-50/60 to-white p-5 shadow-sm">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                  <Flame className="h-5 w-5" />
+                </span>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    Khung giờ cao điểm
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Các khung được đặt nhiều nhất trong 30 ngày gần nhất, nên
+                    hạn chế giảm giá sâu và chuẩn bị nhân sự/sân tốt hơn.
+                  </p>
+                </div>
               </div>
+              <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-emerald-700 shadow-sm ring-1 ring-emerald-100">
+                {insights?.peakTimeSlots?.length ?? 0} khung
+              </span>
             </div>
-          ) : null}
-
-          <div className="mt-6 grid gap-6 lg:grid-cols-2">
-            <CustomerTable
-              title="Khách hàng có khả năng quay lại"
-              description="Đặt sân gần đây, nên ưu tiên chăm sóc"
-              icon={Users}
-              tone="bg-emerald-50 text-emerald-600"
-              rows={insights?.likelyReturnCustomers || []}
-              emptyText="Chưa có khách hàng phù hợp."
-            />
-            <CustomerTable
-              title="Khách cần voucher kích hoạt"
-              description="Lâu chưa quay lại, nguy cơ rời bỏ"
-              icon={BadgePercent}
-              tone="bg-rose-50 text-rose-600"
-              rows={insights?.voucherActivationCandidates || []}
-              emptyText="Chưa có khách hàng cần kích hoạt."
-            />
+            <PeakTimeBoard slots={insights?.peakTimeSlots || []} />
           </div>
+
+          <CustomerPoliciesSection
+            activeRows={insights?.likelyReturnCustomers || []}
+            comebackRows={insights?.voucherActivationCandidates || []}
+            lowFillCount={summary?.lowFillSlotCount ?? 0}
+            periodStart={summary?.periodStart}
+            periodEnd={summary?.periodEnd}
+            lookbackDays={summary?.customerLookbackDays ?? summary?.lookbackDays}
+            vipMinSessions={summary?.vipMinSessions}
+          />
         </>
       )}
+
+      {promoDraft ? (
+        <DiscountFormModal
+          discount={null}
+          draft={promoDraft}
+          onClose={() => setPromoDraft(null)}
+          onSaved={() => setPromoDraft(null)}
+        />
+      ) : null}
     </div>
   );
 };

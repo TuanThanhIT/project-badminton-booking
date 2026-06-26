@@ -1,5 +1,6 @@
 import {
   type AccountResponse,
+  type GoogleLoginRequest,
   type LoginRequest,
   type LoginResponse,
   type LogoutResponse,
@@ -21,6 +22,9 @@ const registerService = (data: RegisterRequest) =>
 
 const loginService = (data: LoginRequest) =>
   instance.post<LoginResponse>("/user/auth/login", data);
+
+const googleLoginService = (data: GoogleLoginRequest) =>
+  instance.post<LoginResponse>("/user/auth/google", data);
 
 const adminLoginService = (data: LoginRequest) =>
   instance.post<LoginResponse>("/admin/auth/login", data);
@@ -56,6 +60,7 @@ const logoutService = () => instance.post<LogoutResponse>("/user/auth/logout");
 const authService = {
   registerService,
   loginService,
+  googleLoginService,
   adminLoginService,
   managerLoginService,
   employeeLoginService,

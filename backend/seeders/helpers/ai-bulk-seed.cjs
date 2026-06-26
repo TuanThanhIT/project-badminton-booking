@@ -4,11 +4,8 @@
  * Bulk AI training data — bookings + orders across ALL branches.
  * Marker: [DEMO-SEED-3M] AI-BULK-TRAIN
  *
- * Targets:
- * - Booking rec (LightGBM): users with fixed branch/hour/weekday habits per branch
- * - Admin occupancy: peak 18–21h vs low 7–8h per branch (last 30 days)
- * - Product co-occurrence: PAID multi-item baskets (vợt + cước + balo)
- * - Product user ML: persona purchase histories per branch
+ * Calibrated for 40 demo_user + existing ~760 demo bookings / ~560 demo orders.
+ * Expected bulk output: ~450–520 bookings, ~130–140 PAID orders (5 branches).
  */
 
 const u = require("./demo-3m-utils.cjs");
@@ -17,6 +14,19 @@ const { getBase, priceFor } = require("./demo-3m-phases.cjs");
 const BULK_TAG = `${u.MARKER} AI-BULK-TRAIN`;
 const PAY_PREFIX = "AI-BULK-PAY-";
 
+/** Calibrated for 40 demo_user + existing ~760 demo bookings / ~560 demo orders */
+const BULK_CONFIG = {
+  HABIT_WEEKS: 8,
+  USERS_PER_BRANCH: 4,
+  OCCUPANCY_DAYS: 21,
+  PEAK_HOURS: [18, 19, 20, 21],
+  LOW_HOURS: [7, 8],
+  LOW_DAY_STEP: 5,
+  CHURN_USERS_PER_BRANCH: 1,
+  KITS_PER_BRANCH: 8,
+  SHOE_KITS_PER_BRANCH: 4,
+};
+
 const BRANCH_HABITS = [
   { hour: 19, duration: 1, weekdays: [1, 3, 5] },
   { hour: 6, duration: 1, weekdays: [6, 0] },
@@ -24,9 +34,6 @@ const BRANCH_HABITS = [
   { hour: 17, duration: 2, weekdays: [1, 5] },
   { hour: 18, duration: 1, weekdays: [0, 3] },
 ];
-
-const PEAK_HOURS = [18, 19, 20, 21];
-const LOW_HOURS = [7, 8];
 
 const today = () => {
   const d = new Date();
@@ -335,17 +342,20 @@ const seedBulkBookings = async (qi, Sequelize) =>
       return true;
     };
 
-    // 1) Per-branch user habits — 5 users × branch, 14 weeks
+    // 1) Per-branch user habits — demo_user1/6/11… theo chi nhánh, 8 tuần
     base.branches.forEach((branch, branchIdx) => {
       const courts = courtsByBranch[branch.id] || [];
       if (!courts.length) return;
       const habit = BRANCH_HABITS[branchIdx % BRANCH_HABITS.length];
-      const branchUsers = users.slice(branchIdx * 5, branchIdx * 5 + 5);
+      const branchUsers = users.slice(
+        branchIdx * 5,
+        branchIdx * 5 + BULK_CONFIG.USERS_PER_BRANCH,
+      );
       if (!branchUsers.length) return;
 
       branchUsers.forEach((user, userIdx) => {
         const court = courts[userIdx % courts.length];
-        for (let w = 0; w < 14; w += 1) {
+        for (let w = 0; w < BULK_CONFIG.HABIT_WEEKS; w += 1) {
           const weekday = habit.weekdays[w % habit.weekdays.length];
           const anchor = daysAgo(w * 7 + 2);
           const d = new Date(anchor);
@@ -366,13 +376,13 @@ const seedBulkBookings = async (qi, Sequelize) =>
       });
     });
 
-    // 2) Occupancy skew — mỗi chi nhánh: nhiều 18–21h, ít 7–8h (28 ngày gần đây)
+    // 2) Occupancy skew — mỗi chi nhánh: peak 18–20h, ít 7–8h (21 ngày gần đây)
     base.branches.forEach((branch, branchIdx) => {
       const courts = courtsByBranch[branch.id] || [];
       if (!courts.length) return;
 
-      for (let day = 1; day <= 28; day += 1) {
-        for (const hour of PEAK_HOURS) {
+      for (let day = 1; day <= BULK_CONFIG.OCCUPANCY_DAYS; day += 1) {
+        for (const hour of BULK_CONFIG.PEAK_HOURS) {
           const playDate = daysAgo(day);
           const user = users[(branchIdx * 7 + day + hour) % users.length];
           const court = courts[(day + hour) % courts.length];
@@ -388,8 +398,8 @@ const seedBulkBookings = async (qi, Sequelize) =>
         }
       }
 
-      for (let day = 2; day <= 28; day += 4) {
-        for (const hour of LOW_HOURS) {
+      for (let day = 2; day <= BULK_CONFIG.OCCUPANCY_DAYS; day += BULK_CONFIG.LOW_DAY_STEP) {
+        for (const hour of BULK_CONFIG.LOW_HOURS) {
           const playDate = daysAgo(day);
           const user = users[(branchIdx * 3 + day) % users.length];
           const court = courts[day % courts.length];
@@ -406,11 +416,14 @@ const seedBulkBookings = async (qi, Sequelize) =>
       }
     });
 
-    // 3) Churn risk — 2 user / chi nhánh, lần cuối > 25 ngày
+    // 3) Churn risk — 1 user / chi nhánh, lần cuối > 25 ngày
     base.branches.forEach((branch, branchIdx) => {
       const courts = courtsByBranch[branch.id] || [];
       if (!courts.length) return;
-      const churnUsers = users.slice(branchIdx * 5 + 3, branchIdx * 5 + 5);
+      const churnUsers = users.slice(
+        branchIdx * 5 + BULK_CONFIG.USERS_PER_BRANCH,
+        branchIdx * 5 + BULK_CONFIG.USERS_PER_BRANCH + BULK_CONFIG.CHURN_USERS_PER_BRANCH,
+      );
       churnUsers.forEach((user, idx) => {
         const court = courts[idx % courts.length];
         const gaps = [75, 45, 28 + idx * 2];
@@ -488,18 +501,18 @@ const seedBulkOrders = async (qi, Sequelize) =>
     };
 
     const PERSONAS = [
-      { suffix: "RACKET", pick: (p) => (p.racket ? [p.racket] : []), repeats: 8 },
-      { suffix: "COMBO", pick: (p) => [p.racket, p.shuttle].filter(Boolean), repeats: 10 },
-      { suffix: "BAG", pick: (p) => (p.bag ? [p.bag] : []), repeats: 6 },
-      { suffix: "SHOES", pick: (p) => (p.shoes ? [p.shoes] : []), repeats: 6 },
-      { suffix: "MIXED", pick: (p) => [p.shuttle, p.bag].filter(Boolean), repeats: 5 },
+      { suffix: "RACKET", pick: (p) => (p.racket ? [p.racket] : []), repeats: 4 },
+      { suffix: "COMBO", pick: (p) => [p.racket, p.shuttle].filter(Boolean), repeats: 5 },
+      { suffix: "BAG", pick: (p) => (p.bag ? [p.bag] : []), repeats: 3 },
+      { suffix: "SHOES", pick: (p) => (p.shoes ? [p.shoes] : []), repeats: 3 },
+      { suffix: "MIXED", pick: (p) => [p.shuttle, p.bag].filter(Boolean), repeats: 2 },
     ];
 
-    for (const branch of base.branches) {
+    for (const [branchIdx, branch] of base.branches.entries()) {
       const products = await resolveBranchProducts(branch.id);
       const kit = [products.racket, products.shuttle, products.bag].filter(Boolean);
       if (kit.length >= 2) {
-        for (let i = 0; i < 24; i += 1) {
+        for (let i = 0; i < BULK_CONFIG.KITS_PER_BRANCH; i += 1) {
           paySeq += 1;
           const buyer = users[(Number(branch.id) * 11 + i) % users.length];
           const note = `${BULK_TAG} KIT-B${branch.id}-${u.pad(i + 1, 3)}`;
@@ -520,7 +533,7 @@ const seedBulkOrders = async (qi, Sequelize) =>
 
       const shoeKit = [products.shoes, products.bag].filter(Boolean);
       if (shoeKit.length >= 2) {
-        for (let i = 0; i < 12; i += 1) {
+        for (let i = 0; i < BULK_CONFIG.SHOE_KITS_PER_BRANCH; i += 1) {
           paySeq += 1;
           const buyer = users[(Number(branch.id) * 13 + i + 20) % users.length];
           const note = `${BULK_TAG} SHOE-B${branch.id}-${u.pad(i + 1, 3)}`;
@@ -540,8 +553,8 @@ const seedBulkOrders = async (qi, Sequelize) =>
       }
 
       const branchUsers = users.slice(
-        (Number(branch.id) - 1) * 5,
-        (Number(branch.id) - 1) * 5 + 5,
+        branchIdx * 5,
+        branchIdx * 5 + BULK_CONFIG.USERS_PER_BRANCH,
       );
       for (let userIdx = 0; userIdx < branchUsers.length; userIdx += 1) {
         const user = branchUsers[userIdx];

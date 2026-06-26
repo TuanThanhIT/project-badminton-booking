@@ -25,6 +25,7 @@ import type {
   HomeDiscount,
   HomeProduct,
 } from "../../types/home";
+import { formatPrice as formatVndPrice } from "../../utils/checkout";
 
 const emptyHomeData: HomeData = {
   banners: [],
@@ -83,7 +84,7 @@ const formatDate = (date?: string) => {
 
 const getDiscountValue = (discount: HomeDiscount) => {
   if (discount.type === "PERCENT") return `${discount.value}%`;
-  return `${discount.value.toLocaleString("vi-VN")}đ`;
+  return formatVndPrice(discount.value);
 };
 
 const getDiscountApplyLabel = (applyType: string) => {
@@ -989,7 +990,7 @@ const HomePage = () => {
                   <p className="mt-4 text-sm leading-relaxed text-slate-600">
                     Áp dụng cho đơn từ{" "}
                     <span className="font-semibold text-slate-900">
-                      {discount.minAmount.toLocaleString("vi-VN")}d
+                      {formatVndPrice(discount.minAmount)}
                     </span>
                     .
                   </p>

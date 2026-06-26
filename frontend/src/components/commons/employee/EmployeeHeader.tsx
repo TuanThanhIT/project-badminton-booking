@@ -266,7 +266,7 @@ const EmployeeHeader = () => {
                                 </span>
                               )}
                             </div>
-                            <p className="mt-1 line-clamp-2 text-sm leading-5 text-slate-600">
+                            <p className="mt-1 line-clamp-3 text-sm leading-5 text-slate-600">
                               {notification.message}
                             </p>
                             <p className="mt-2 text-xs text-slate-400">

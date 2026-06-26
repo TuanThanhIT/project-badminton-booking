@@ -5,6 +5,7 @@ import {
 } from "@reduxjs/toolkit";
 import type {
   AccountResponse,
+  GoogleLoginRequest,
   LoginRequest,
   LoginResponse,
   LogoutResponse,
@@ -53,6 +54,19 @@ export const login = createAsyncThunk<
 >("auth/login", async ({ data }, { rejectWithValue }) => {
   try {
     const res = await authService.loginService(data);
+    return res.data as LoginResponse;
+  } catch (error) {
+    return rejectWithValue(error as ApiErrorType);
+  }
+});
+
+export const googleLogin = createAsyncThunk<
+  LoginResponse,
+  { data: GoogleLoginRequest },
+  { rejectValue: ApiErrorType }
+>("auth/googleLogin", async ({ data }, { rejectWithValue }) => {
+  try {
+    const res = await authService.googleLoginService(data);
     return res.data as LoginResponse;
   } catch (error) {
     return rejectWithValue(error as ApiErrorType);
@@ -250,6 +264,11 @@ const authSlice = createSlice({
     builder
       // login
       .addCase(login.fulfilled, (state, action) => {
+        state.user = action.payload.data.user;
+        state.accessToken = action.payload.data.accessToken;
+        localStorage.setItem("accessToken", action.payload.data.accessToken);
+      })
+      .addCase(googleLogin.fulfilled, (state, action) => {
         state.user = action.payload.data.user;
         state.accessToken = action.payload.data.accessToken;
         localStorage.setItem("accessToken", action.payload.data.accessToken);

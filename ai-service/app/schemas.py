@@ -3,52 +3,6 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 
-class BookingRecord(BaseModel):
-    userId: int
-    branchId: int
-    courtId: int | None = None
-    hour: int = Field(ge=0, le=23)
-    dayOfWeek: int = Field(ge=0, le=6, description="0=Monday ... 6=Sunday")
-
-
-class TrainRequest(BaseModel):
-    records: list[BookingRecord] = Field(default_factory=list)
-
-
-class BranchInfo(BaseModel):
-    id: int
-    name: str
-    address: str | None = None
-    courtCount: int = 0
-
-
-class DiscountInfo(BaseModel):
-    id: int
-    code: str
-    type: str
-    value: float
-    applyType: str
-
-
-class UserHistoryItem(BaseModel):
-    branchId: int
-    branchName: str | None = None
-    hour: int
-    dayOfWeek: int
-    playDate: str | None = None
-
-
-class UserRecommendRequest(BaseModel):
-    userId: int | None = None
-    isNewUser: bool = False
-    history: list[UserHistoryItem] = Field(default_factory=list)
-    branches: list[BranchInfo] = Field(default_factory=list)
-    popularBranches: list[dict[str, Any]] = Field(default_factory=list)
-    popularTimeSlots: list[dict[str, Any]] = Field(default_factory=list)
-    activeDiscounts: list[DiscountInfo] = Field(default_factory=list)
-    topK: int = Field(default=5, ge=1, le=20)
-
-
 class OccupancyRow(BaseModel):
     branchId: int
     branchName: str
@@ -64,6 +18,8 @@ class UserActivityRow(BaseModel):
     email: str | None = None
     totalBookings: int
     completedBookings: int
+    sessionsLast30Days: int = 0
+    ordersLast30Days: int = 0
     daysSinceLastBooking: int | None = None
     lastBranchId: int | None = None
     lastBranchName: str | None = None
@@ -75,6 +31,12 @@ class AdminInsightsRequest(BaseModel):
     userActivity: list[UserActivityRow] = Field(default_factory=list)
     lowFillThreshold: float = Field(default=40.0, ge=0, le=100)
     churnDaysThreshold: int = Field(default=21, ge=1)
+    periodStart: str | None = None
+    periodEnd: str | None = None
+    customerLookbackDays: int = Field(default=30, ge=1)
+    vipMinSessions: int = Field(default=2, ge=1)
+    segmentTopK: int = Field(default=20, ge=1, le=100)
+    secondBookingNudgeDays: int = Field(default=7, ge=1)
 
 
 class ProductTrainRecord(BaseModel):

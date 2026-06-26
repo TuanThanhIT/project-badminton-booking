@@ -2,6 +2,13 @@
 
 const u = require("./demo-3m-utils.cjs");
 
+const seedToday = () => {
+  const d = new Date();
+  d.setHours(12, 0, 0, 0);
+  return d;
+};
+const daysAgoFromToday = (n) => u.addDays(seedToday(), -n);
+
 const paymentPrefix = async (qi, prefix, transaction) => {
   const payments = await qi.sequelize.query("SELECT id FROM Payments WHERE externalId LIKE :prefix", {
     type: require("sequelize").QueryTypes.SELECT,
@@ -70,9 +77,9 @@ const seedUsers = async (qi, Sequelize) => u.phaseTransaction(qi, async (transac
     GROUP BY r.roleName
   `, {}, transaction);
   const counts = Object.fromEntries(roleCounts.map((row) => [row.roleName, Number(row.total)]));
-  const targets = { USER: 200, EMPLOYEE: 50, COACH: 15 };
+  // USER: dùng demo_user1..N từ static-seed / demo-data — không tạo thêm demo_customer_
+  const targets = { EMPLOYEE: 50, COACH: 15 };
   const groups = [
-    { role: "USER", prefix: "demo_customer_", email: "demo.customer", start: counts.USER || 0 },
     { role: "EMPLOYEE", prefix: "demo_employee_", email: "demo.employee", start: counts.EMPLOYEE || 0 },
     { role: "COACH", prefix: "demo_coach_", email: "demo.coach", start: counts.COACH || 0 },
   ];
@@ -481,13 +488,13 @@ const seedAiPatternBookings = async (qi, Sequelize) =>
       const court = courts[idx % courts.length];
       const habit = HABITS[idx % HABITS.length];
 
-      for (let w = 0; w < 12; w += 1) {
+      for (let w = 0; w < 10; w += 1) {
         const weekday = habit.weekdays[w % habit.weekdays.length];
-        const anchor = u.addDays(u.END, -(w * 7 + 1));
+        const anchor = daysAgoFromToday(w * 7 + 1);
         const d = new Date(anchor);
         const diff = (d.getDay() - weekday + 7) % 7;
         d.setDate(d.getDate() - diff);
-        if (d < u.START) continue;
+        if (d > seedToday()) continue;
 
         seq += 1;
         const price = priceFor(
@@ -572,6 +579,14 @@ const downAiPatternBookings = async (qi, Sequelize) =>
 // ============================================================
 const AI_PRODUCT_TAG = `${u.MARKER} AI-PRODUCT-PATTERN`;
 const AI_OCCUPANCY_TAG = `${u.MARKER} AI-OCCUPANCY-SKEW`;
+
+/** Bổ sung co-occurrence — không trùng bulk KIT (40 demo_user + bulk ~40 KIT) */
+const AI_PRODUCT_CONFIG = {
+  KITS_PER_BRANCH: 6,
+  SHOE_KITS_PER_BRANCH: 2,
+  PERSONA_RACKET: 4,
+  PERSONA_COMBO: 6,
+};
 
 const findProductVariant = async (qi, Sequelize, transaction, nameLike, branchId) => {
   const rows = await u.q(
@@ -775,80 +790,83 @@ const seedAiProductPatterns = async (qi, Sequelize) =>
     );
     if (!users.length || !base.branches.length) return;
 
-    const branch = base.branches[0];
-    const resolve = (like) =>
-      findProductVariant(qi, Sequelize, transaction, like, branch.id);
-
-    const racket = await resolve("%Nanoflare Skill%");
-    const shuttle = await resolve("%Cước đan vợt%");
-    const bag = await resolve("%Balo cầu lông Yonex%");
-    const shoes = await resolve("%Giày cầu lông Yonex%");
-    const socks = await resolve("%Tất cầu lông%");
-
-    if (!racket || !shuttle) return;
-
     let paySeq = 0;
     const persona = (username) => users.find((row) => row.username === username);
 
-    // Combo "bộ người mới": vợt + cước + balo (lặp 45 đơn → co-occurrence rõ)
-    const beginnerKit = [racket, shuttle, bag].filter(Boolean);
-    for (let i = 0; i < 45; i += 1) {
-      paySeq += 1;
-      const buyer = users[i % users.length];
-      const lines = beginnerKit.map((v) => buildVariantLine(v, 1));
-      await insertAiPaidOrder(qi, Sequelize, transaction, {
-        user: buyer,
-        branch,
-        variants: lines,
-        groupNote: `${AI_PRODUCT_TAG} BEGINNER-KIT-${u.pad(i + 1, 3)}`,
-        createdAt: u.addDays(u.END, -u.int(1, 60)),
-        paySeq,
-      });
-    }
+    for (const branch of base.branches) {
+      const resolve = (like) =>
+        findProductVariant(qi, Sequelize, transaction, like, branch.id);
 
-    // Combo giày + tất
-    if (shoes && socks) {
-      for (let i = 0; i < 30; i += 1) {
+      const racket = await resolve("%Nanoflare Skill%Vợt%");
+      const shuttle = await resolve("%Cước đan vợt%");
+      const bag = await resolve("%Balo cầu lông Yonex%");
+      const shoes = await resolve("%Giày cầu lông Yonex%");
+      const socks = await resolve("%Tất cầu lông%");
+
+      if (!racket || !shuttle) continue;
+
+      const beginnerKit = [racket, shuttle, bag].filter(Boolean);
+      for (let i = 0; i < AI_PRODUCT_CONFIG.KITS_PER_BRANCH; i += 1) {
         paySeq += 1;
-        const buyer = users[(i + 5) % users.length];
+        const buyer = users[(Number(branch.id) * 7 + i) % users.length];
+        const lines = beginnerKit.map((v) => buildVariantLine(v, 1));
         await insertAiPaidOrder(qi, Sequelize, transaction, {
           user: buyer,
           branch,
-          variants: [shoes, socks].map((v) => buildVariantLine(v, 1)),
-          groupNote: `${AI_PRODUCT_TAG} SHOE-KIT-${u.pad(i + 1, 3)}`,
-          createdAt: u.addDays(u.END, -u.int(1, 45)),
+          variants: lines,
+          groupNote: `${AI_PRODUCT_TAG} BEGINNER-KIT-B${branch.id}-${u.pad(i + 1, 2)}`,
+          createdAt: daysAgoFromToday(u.int(1, 60)),
           paySeq,
         });
       }
+
+      if (shoes && socks) {
+        for (let i = 0; i < AI_PRODUCT_CONFIG.SHOE_KITS_PER_BRANCH; i += 1) {
+          paySeq += 1;
+          const buyer = users[(Number(branch.id) * 9 + i + 3) % users.length];
+          await insertAiPaidOrder(qi, Sequelize, transaction, {
+            user: buyer,
+            branch,
+            variants: [shoes, socks].map((v) => buildVariantLine(v, 1)),
+            groupNote: `${AI_PRODUCT_TAG} SHOE-KIT-B${branch.id}-${u.pad(i + 1, 2)}`,
+            createdAt: daysAgoFromToday(u.int(1, 45)),
+            paySeq,
+          });
+        }
+      }
     }
 
-    // Persona demo_customer_001: chỉ mua vợt → gợi ý cước/balo
-    const user001 = persona("demo_customer_001");
-    if (user001) {
-      for (let i = 0; i < 6; i += 1) {
+    const mainBranch = base.branches[0];
+    const resolveMain = (like) =>
+      findProductVariant(qi, Sequelize, transaction, like, mainBranch.id);
+    const racket = await resolveMain("%Nanoflare Skill%Vợt%");
+    const shuttle = await resolveMain("%Cước đan vợt%");
+
+    const user001 = persona("demo_user1");
+    if (user001 && racket) {
+      for (let i = 0; i < AI_PRODUCT_CONFIG.PERSONA_RACKET; i += 1) {
         paySeq += 1;
         await insertAiPaidOrder(qi, Sequelize, transaction, {
           user: user001,
-          branch,
+          branch: mainBranch,
           variants: [buildVariantLine(racket, 1)],
           groupNote: `${AI_PRODUCT_TAG} PERSONA-001-${u.pad(i + 1, 2)}`,
-          createdAt: u.addDays(u.END, -u.int(5, 40)),
+          createdAt: daysAgoFromToday(u.int(5, 40)),
           paySeq,
         });
       }
     }
 
-    // Persona demo_customer_002: vợt + cước nhiều lần
-    const user002 = persona("demo_customer_002");
-    if (user002) {
-      for (let i = 0; i < 10; i += 1) {
+    const user002 = persona("demo_user2");
+    if (user002 && racket && shuttle) {
+      for (let i = 0; i < AI_PRODUCT_CONFIG.PERSONA_COMBO; i += 1) {
         paySeq += 1;
         await insertAiPaidOrder(qi, Sequelize, transaction, {
           user: user002,
-          branch,
+          branch: mainBranch,
           variants: [racket, shuttle].map((v) => buildVariantLine(v, 1)),
           groupNote: `${AI_PRODUCT_TAG} PERSONA-002-${u.pad(i + 1, 2)}`,
-          createdAt: u.addDays(u.END, -u.int(3, 35)),
+          createdAt: daysAgoFromToday(u.int(3, 35)),
           paySeq,
         });
       }
@@ -928,10 +946,10 @@ const seedAdminOccupancySkew = async (qi, Sequelize) =>
       });
     };
 
-    // Giờ cao điểm 18–21: nhiều booking trong 30 ngày
-    for (let day = 1; day <= 30; day += 1) {
+    // Giờ cao điểm 18–21: bổ sung Thủ Đức (bulk đã cover 5 CN) — 14 ngày
+    for (let day = 1; day <= 14; day += 1) {
       for (const hour of [18, 19, 20, 21]) {
-        const playDate = u.addDays(u.END, -day);
+        const playDate = daysAgoFromToday(day);
         const user = users[day % users.length];
         const court = courts[(day + hour) % courts.length];
         pushBooking(user, court, playDate, hour, "PEAK");
@@ -939,9 +957,9 @@ const seedAdminOccupancySkew = async (qi, Sequelize) =>
     }
 
     // Giờ thấp điểm 7–8: ít booking
-    for (let day = 2; day <= 30; day += 3) {
+    for (let day = 2; day <= 14; day += 3) {
       for (const hour of [7, 8]) {
-        const playDate = u.addDays(u.END, -day);
+        const playDate = daysAgoFromToday(day);
         const user = users[(day + hour) % users.length];
         const court = courts[day % courts.length];
         pushBooking(user, court, playDate, hour, "LOW");
@@ -953,11 +971,11 @@ const seedAdminOccupancySkew = async (qi, Sequelize) =>
     churnUsers.forEach((user, idx) => {
       const court = courts[idx % courts.length];
       for (let i = 0; i < 3; i += 1) {
-        const daysAgo = i === 2 ? 28 + idx : 60 + i * 20;
+        const daysBack = i === 2 ? 28 + idx : 60 + i * 20;
         pushBooking(
           user,
           court,
-          u.addDays(u.END, -daysAgo),
+          daysAgoFromToday(daysBack),
           19,
           `CHURN-${idx + 1}`,
         );

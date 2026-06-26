@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import type { ClassEnrollmentStatus, CoachClassSummary } from "../../../../types/coachClass";
 import { PLAYER_LEVEL_LABEL } from "../../../../utils/constants/profileConstant";
+import { formatTimeRange } from "../../../../utils/booking";
 
 const WEEKDAYS = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 
@@ -142,7 +143,7 @@ const CoachClassCard = ({
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 shrink-0 text-indigo-500" />
               <span>
-                {schedule.startTime} - {schedule.endTime}
+                {formatTimeRange(schedule.startTime, schedule.endTime)}
               </span>
             </div>
           ) : null}

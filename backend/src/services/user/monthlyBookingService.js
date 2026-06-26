@@ -25,6 +25,7 @@ import {
   DISCOUNT_TYPE,
 } from "../../constants/discountConstant.js";
 import { applyDiscountUsage } from "../shared/applyDiscountUsage.js";
+import { assertBookingDiscountScope } from "./discountService.js";
 import { sendBranchStaffNotification } from "../../helpers/notification.js";
 import { formatBookingCode } from "../../utils/displayCode.js";
 import {
@@ -215,6 +216,10 @@ const calculateBookingDiscount = async ({
   discountId,
   bookingAmount,
   transaction,
+  userId = null,
+  branchId = null,
+  startHour = null,
+  endHour = null,
 }) => {
   if (!discountId) {
     return { discountAmount: 0, finalAmount: bookingAmount };
@@ -242,6 +247,15 @@ const calculateBookingDiscount = async ({
   ) {
     throw new BadRequestError("Ma khong ap dung cho dat san");
   }
+
+  // Kiểm tra phạm vi: chi nhánh / khung giờ / mã riêng theo khách hàng.
+  await assertBookingDiscountScope(discount, {
+    userId,
+    branchId,
+    startHour,
+    endHour,
+    transaction,
+  });
 
   if (bookingAmount < Number(discount.minAmount || 0)) {
     throw new BadRequestError(
@@ -337,6 +351,10 @@ const createMonthlyBookingService = async (data) => {
       discountId,
       bookingAmount: monthlyPrice.totalAmount,
       transaction: t,
+      userId,
+      branchId,
+      startHour: Number(String(startTime).split(":")[0]),
+      endHour: Number(String(endTime).split(":")[0]),
     });
 
     const monthlyBooking = await MonthlyBooking.create(
@@ -373,7 +391,7 @@ const createMonthlyBookingService = async (data) => {
     );
 
     if (discountId) {
-      await applyDiscountUsage(discountId, t);
+      await applyDiscountUsage(discountId, t, userId);
     }
 
     // =====================================================

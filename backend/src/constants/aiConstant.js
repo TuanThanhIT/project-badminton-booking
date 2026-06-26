@@ -21,7 +21,6 @@ export const AI_TOOL_NAMES = Object.freeze({
   SEARCH_PRODUCTS: "search_products",
   GET_PRODUCT_DETAIL: "get_product_detail",
   SEARCH_CLASS_POSTS: "search_class_posts",
-  GET_BOOKING_RECOMMENDATIONS: "get_booking_recommendations",
 });
 
 export const OPENAI_DEFAULTS = Object.freeze({

@@ -33,6 +33,7 @@ import {
 import { sendUserNotification } from "../../helpers/notification.js";
 import { formatBookingCode } from "../../utils/displayCode.js";
 import { handleSendBookingMail } from "../shared/sendBookingMail.js";
+import { restoreDiscountUsage } from "../shared/applyDiscountUsage.js";
 
 const bookingInclude = [
   {
@@ -89,7 +90,7 @@ const mapBooking = (booking, payment = null) => {
     customer: plain.user
       ? {
           fullName:
-            plain.user.profile?.fullName || plain.user.username || "Kh·ch",
+            plain.user.profile?.fullName || plain.user.username || "Khùch",
           phoneNumber: plain.user.profile?.phoneNumber || "",
         }
       : null,
@@ -168,7 +169,7 @@ const assertNoShowWindowReached = (booking) => {
 
   if (Date.now() < noShowAt.getTime()) {
     throw new BadRequestError(
-      "Ch? du?c h?y v?ng m?t sau khi kh·ch tr? nh?n s‚n qu· 30 ph˙t.",
+      "Ch? du?c h?y v?ng m?t sau khi khùch tr? nh?n sùn quù 30 phùt.",
     );
   }
 };
@@ -180,7 +181,7 @@ const assertBookingPlayTimeEnded = (booking) => {
   const endAt = toLocalDateTime(lastDetail.playDate, lastDetail.endTime);
   if (Date.now() < endAt.getTime()) {
     throw new BadRequestError(
-      "Ch? du?c ho‡n th‡nh sau khi kh·ch d„ d·nh h?t th?i gian d?t s‚n.",
+      "Ch? du?c hoùn thùnh sau khi khùch dù dùnh h?t th?i gian d?t sùn.",
     );
   }
 };
@@ -196,7 +197,7 @@ const getBookingPayment = async ({ booking, transaction, lock = false }) =>
   });
 
 const getDepositDescription = (booking) =>
-  `C?c gi? s‚n ${formatBookingCode(booking.id, booking.createdAt)}`;
+  `C?c gi? sùn ${formatBookingCode(booking.id, booking.createdAt)}`;
 
 const getBookingMailPayload = async ({ bookingId, transaction }) => {
   const booking = await Booking.findByPk(bookingId, {
@@ -288,7 +289,7 @@ const chargeNoShowDeposit = async ({ booking, payment, transaction }) => {
   });
 
   if (!wallet || Number(wallet.balance) < Number(tx.amount)) {
-    throw new BadRequestError("VÌ kh·ch khÙng d? s? du d? tr? c?c gi? s‚n.");
+    throw new BadRequestError("Vù khùch khùng d? s? du d? tr? c?c gi? sùn.");
   }
 
   await wallet.update(
@@ -382,7 +383,7 @@ const getBookingDetailService = async (data) => {
     include: bookingInclude,
   });
 
-  if (!booking) throw new NotFoundError("L?ch d?t s‚n khÙng t?n t?i");
+  if (!booking) throw new NotFoundError("L?ch d?t sùn khùng t?n t?i");
 
   await assertEmployeeActiveCashierForBranch({
     employeeId,
@@ -410,7 +411,7 @@ const confirmBookingService = async (data) => {
 
     if (booking.bookingStatus !== BOOKING_STATUS.PENDING) {
       throw new BadRequestError(
-        "Ch? cÛ th? x·c nh?n l?ch s‚n dang ch? x·c nh?n",
+        "Ch? cù th? xùc nh?n l?ch sùn dang ch? xùc nh?n",
       );
     }
 
@@ -428,8 +429,8 @@ const confirmBookingService = async (data) => {
   await sendUserNotification(
     booking.userId,
     "booking-confirmed",
-    "L?ch s‚n d„ du?c x·c nh?n",
-    `${booking.branch?.branchName || "Chi nh·nh"} d„ x·c nh?n l?ch s‚n ${formatBookingCode(booking.id, booking.createdAt)}. Vui lÚng d?n d˙ng gi? v‡ xu?t trÏnh email x·c nh?n d? nh?n s‚n.`,
+    "L?ch sùn dù du?c xùc nh?n",
+    `${booking.branch?.branchName || "Chi nhùnh"} dù xùc nh?n l?ch sùn ${formatBookingCode(booking.id, booking.createdAt)}. Vui lùng d?n dùng gi? vù xu?t trùnh email xùc nh?n d? nh?n sùn.`,
   );
 
   await sendBookingMailSafely({ bookingId: booking.id, type: "confirm" });
@@ -445,7 +446,7 @@ const completeBookingService = async (data) => {
     });
 
     if (booking.bookingStatus !== BOOKING_STATUS.CHECKED_IN) {
-      throw new BadRequestError("Ch? cÛ th? ho‡n th‡nh l?ch s‚n d„ nh?n s‚n");
+      throw new BadRequestError("Ch? cù th? hoùn thùnh l?ch sùn dù nh?n sùn");
     }
 
     assertBookingPlayTimeEnded(booking);
@@ -477,7 +478,7 @@ const completeBookingService = async (data) => {
         !Object.values(PAYMENT_OFFLINE_METHOD_STATUS).includes(paymentMethod)
       ) {
         throw new BadRequestError(
-          "Vui lÚng ch?n phuong th?c thanh to·n t?i s‚n",
+          "Vui lùng ch?n phuong th?c thanh toùn t?i sùn",
         );
       }
 
@@ -502,8 +503,8 @@ const completeBookingService = async (data) => {
   await sendUserNotification(
     booking.userId,
     "booking-completed",
-    "L?ch s‚n d„ ho‡n t?t",
-    `L?ch s‚n ${formatBookingCode(booking.id, booking.createdAt)} t?i ${booking.branch?.branchName || "chi nh·nh"} d„ du?c ho‡n t?t. C?m on b?n d„ s? d?ng d?ch v? B-Hub.`,
+    "L?ch sùn dù hoùn t?t",
+    `L?ch sùn ${formatBookingCode(booking.id, booking.createdAt)} t?i ${booking.branch?.branchName || "chi nhùnh"} dù du?c hoùn t?t. C?m on b?n dù s? d?ng d?ch v? B-Hub.`,
   );
 
   await sendBookingMailSafely({ bookingId: booking.id, type: "complete" });
@@ -519,7 +520,7 @@ const receiveBookingService = async (data) => {
     });
 
     if (booking.bookingStatus !== BOOKING_STATUS.CONFIRMED) {
-      throw new BadRequestError("Ch? cÛ th? nh?n s‚n cho l?ch d„ x·c nh?n");
+      throw new BadRequestError("Ch? cù th? nh?n sùn cho l?ch dù xùc nh?n");
     }
 
     await booking.update(
@@ -536,8 +537,8 @@ const receiveBookingService = async (data) => {
   await sendUserNotification(
     booking.userId,
     "booking-checked-in",
-    "B?n d„ nh?n s‚n",
-    `L?ch s‚n ${formatBookingCode(booking.id, booking.createdAt)} t?i ${booking.branch?.branchName || "chi nh·nh"} d„ du?c x·c nh?n nh?n s‚n. Ch˙c b?n cÛ bu?i choi vui v?.`,
+    "B?n dù nh?n sùn",
+    `L?ch sùn ${formatBookingCode(booking.id, booking.createdAt)} t?i ${booking.branch?.branchName || "chi nhùnh"} dù du?c xùc nh?n nh?n sùn. Chùc b?n cù bu?i choi vui v?.`,
   );
 
   await sendBookingMailSafely({ bookingId: booking.id, type: "checkedIn" });
@@ -573,7 +574,7 @@ const getEmployeeBookingForAction = async ({
     lock: transaction.LOCK.UPDATE,
   });
 
-  if (!booking) throw new NotFoundError("L?ch d?t s‚n khÙng t?n t?i");
+  if (!booking) throw new NotFoundError("L?ch d?t sùn khùng t?n t?i");
 
   await assertEmployeeActiveCashierForBranch({
     employeeId,
@@ -602,7 +603,7 @@ const refundBookingToWallet = async ({ booking, transaction }) => {
     };
   }
 
-  const refundDescription = `Ho‡n ti?n l?ch s‚n ${formatBookingCode(booking.id, booking.createdAt)}`;
+  const refundDescription = `Hoùn ti?n l?ch sùn ${formatBookingCode(booking.id, booking.createdAt)}`;
 
   let wallet = await Wallet.findOne({
     where: { userId: booking.userId },
@@ -689,7 +690,7 @@ const approveCancelBookingService = async (data) => {
     });
 
     if (booking.bookingStatus !== BOOKING_STATUS.CANCEL_REQUESTED) {
-      throw new BadRequestError("L?ch s‚n chua cÛ yÍu c?u h?y");
+      throw new BadRequestError("L?ch sùn chua cù yùu c?u h?y");
     }
 
     const payment = await getBookingPayment({
@@ -700,6 +701,14 @@ const approveCancelBookingService = async (data) => {
     await releaseBookingDeposit({ booking, payment, transaction });
 
     refundResult = await refundBookingToWallet({ booking, transaction });
+
+    if (booking.discountId) {
+      await restoreDiscountUsage(
+        booking.discountId,
+        transaction,
+        booking.userId,
+      );
+    }
 
     await booking.update(
       {
@@ -716,12 +725,12 @@ const approveCancelBookingService = async (data) => {
   await sendUserNotification(
     handledBooking.userId,
     "booking-cancel-approved",
-    "YÍu c?u h?y l?ch s‚n d„ du?c duy?t",
+    "Yùu c?u h?y l?ch sùn dù du?c duy?t",
     refundResult?.refunded
-      ? `L?ch s‚n ${formatBookingCode(handledBooking.id, handledBooking.createdAt)} d„ du?c h?y v‡ ho‡n ${Number(
+      ? `L?ch sùn ${formatBookingCode(handledBooking.id, handledBooking.createdAt)} dù du?c h?y vù hoùn ${Number(
           refundResult.refundAmount,
-        ).toLocaleString("vi-VN")}d v‡o vÌ.`
-      : `L?ch s‚n ${formatBookingCode(handledBooking.id, handledBooking.createdAt)} d„ du?c h?y th‡nh cÙng.`,
+        ).toLocaleString("vi-VN")}d vùo vù.`
+      : `L?ch sùn ${formatBookingCode(handledBooking.id, handledBooking.createdAt)} dù du?c h?y thùnh cùng.`,
   );
 
   return {
@@ -739,7 +748,7 @@ const rejectCancelBookingService = async (data) => {
     });
 
     if (booking.bookingStatus !== BOOKING_STATUS.CANCEL_REQUESTED) {
-      throw new BadRequestError("L?ch s‚n chua cÛ yÍu c?u h?y");
+      throw new BadRequestError("L?ch sùn chua cù yùu c?u h?y");
     }
 
     await booking.update(
@@ -759,10 +768,10 @@ const rejectCancelBookingService = async (data) => {
   await sendUserNotification(
     booking.userId,
     "booking-cancel-rejected",
-    "YÍu c?u h?y l?ch s‚n b? t? ch?i",
+    "Yùu c?u h?y l?ch sùn b? t? ch?i",
     reason
-      ? `YÍu c?u h?y l?ch s‚n ${formatBookingCode(booking.id, booking.createdAt)} b? t? ch?i. L˝ do: ${reason}`
-      : `YÍu c?u h?y l?ch s‚n ${formatBookingCode(booking.id, booking.createdAt)} b? t? ch?i.`,
+      ? `Yùu c?u h?y l?ch sùn ${formatBookingCode(booking.id, booking.createdAt)} b? t? ch?i. Lù do: ${reason}`
+      : `Yùu c?u h?y l?ch sùn ${formatBookingCode(booking.id, booking.createdAt)} b? t? ch?i.`,
   );
 };
 
@@ -780,7 +789,7 @@ const cancelNoShowBookingService = async (data) => {
 
     if (booking.bookingStatus !== BOOKING_STATUS.CONFIRMED) {
       throw new BadRequestError(
-        "Ch? cÛ th? h?y v?ng m?t l?ch s‚n d„ x·c nh?n",
+        "Ch? cù th? h?y v?ng m?t l?ch sùn dù xùc nh?n",
       );
     }
 
@@ -793,7 +802,7 @@ const cancelNoShowBookingService = async (data) => {
         BOOKING_STATUS.FAILED,
       ].includes(booking.bookingStatus)
     ) {
-      throw new BadRequestError("Tr?ng th·i l?ch s‚n hi?n t?i khÙng th? h?y");
+      throw new BadRequestError("Tr?ng thùi l?ch sùn hi?n t?i khùng th? h?y");
     }
 
     const payment = await getBookingPayment({
@@ -811,12 +820,20 @@ const cancelNoShowBookingService = async (data) => {
       ? { refunded: false, refundAmount: 0, penaltyAmount: penalty.amount }
       : await refundBookingToWallet({ booking, transaction });
 
+    if (booking.discountId) {
+      await restoreDiscountUsage(
+        booking.discountId,
+        transaction,
+        booking.userId,
+      );
+    }
+
     await booking.update(
       {
         previousBookingStatus: booking.bookingStatus,
         bookingStatus: BOOKING_STATUS.CANCELLED,
         cancelledBy: CANCELLED_BY.EMPLOYEE,
-        cancelReason: reason || "Kh·ch khÙng d?n nh?n s‚n",
+        cancelReason: reason || "Khùch khùng d?n nh?n sùn",
         cancelHandledAt: new Date(),
         cancelledAt: new Date(),
       },
@@ -829,12 +846,12 @@ const cancelNoShowBookingService = async (data) => {
   await sendUserNotification(
     handledBooking.userId,
     "booking-cancelled-by-employee",
-    "L?ch s‚n d„ b? h?y",
+    "L?ch sùn dù b? h?y",
     refundResult?.refunded
-      ? `L?ch s‚n ${formatBookingCode(handledBooking.id, handledBooking.createdAt)} d„ b? h?y v‡ ho‡n ${Number(
+      ? `L?ch sùn ${formatBookingCode(handledBooking.id, handledBooking.createdAt)} dù b? h?y vù hoùn ${Number(
           refundResult.refundAmount,
-        ).toLocaleString("vi-VN")}d v‡o vÌ.`
-      : `L?ch s‚n ${formatBookingCode(handledBooking.id, handledBooking.createdAt)} d„ b? h?y. L˝ do: ${reason || "Kh·ch khÙng d?n nh?n s‚n"}`,
+        ).toLocaleString("vi-VN")}d vùo vù.`
+      : `L?ch sùn ${formatBookingCode(handledBooking.id, handledBooking.createdAt)} dù b? h?y. Lù do: ${reason || "Khùch khùng d?n nh?n sùn"}`,
   );
 
   await sendBookingMailSafely({

@@ -47,6 +47,8 @@ import {
   managerSecondaryButtonClass,
 } from "../../components/commons/manager/ManagerPage";
 import TablePagination from "../../components/ui/user/pagination/TablePagination";
+import { formatPrice } from "../../utils/checkout";
+import { formatTimeRange } from "../../utils/booking";
 
 const COURT_LIMIT = 9;
 
@@ -633,7 +635,7 @@ const BranchPage = () => {
                       <div className="flex items-center gap-2 text-slate-600">
                         <Clock size={14} className="text-sky-600" />
                         <span>
-                          {item.startTime} - {item.endTime}
+                          {formatTimeRange(item.startTime, item.endTime)}
                         </span>
                       </div>
                     </td>
@@ -644,8 +646,7 @@ const BranchPage = () => {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <span className="font-bold text-sky-700">
-                        {item.price.toLocaleString()}{" "}
-                        <span className="text-xs">VNĐ</span>
+                        {formatPrice(item.price)}
                       </span>
                     </td>
                   </tr>

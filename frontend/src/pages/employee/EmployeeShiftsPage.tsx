@@ -24,6 +24,7 @@ import {
   isShiftCheckoutWindowOpen,
   SHIFT_CHECKOUT_EARLY_MINUTES,
 } from "../../utils/workShift";
+import { formatTimeRange } from "../../utils/booking";
 
 const getToday = () =>
   new Date().toLocaleDateString("en-CA", {
@@ -275,8 +276,10 @@ const EmployeeShiftsPage = () => {
                     Khung giờ
                   </p>
                   <p className="mt-1 font-bold text-slate-900">
-                    {currentWorkShift.workShift.startTime} -{" "}
-                    {currentWorkShift.workShift.endTime}
+                    {formatTimeRange(
+                      currentWorkShift.workShift.startTime,
+                      currentWorkShift.workShift.endTime,
+                    )}
                   </p>
                 </div>
 

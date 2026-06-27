@@ -10,7 +10,7 @@ const backendDir = path.resolve(__dirname, "..");
 const rootDir = path.resolve(backendDir, "..");
 const outputPath = path.join(
   rootDir,
-  "image-search-service",
+  "ai-service",
   "data",
   "processed",
   "products.csv",

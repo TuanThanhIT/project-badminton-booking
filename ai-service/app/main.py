@@ -7,6 +7,9 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
+from app.ml.image_search.api.dependencies import get_search_service
+from app.ml.image_search.api.routes.index_route import router as image_index_router
+from app.ml.image_search.api.routes.search_route import router as image_search_router
 from app.insights.admin_rules import build_admin_insights
 from app.ml.product_trainer import (
     get_product_model_info,
@@ -30,9 +33,12 @@ MAX_LENGTH = int(os.getenv("MAX_LENGTH", "128"))
 
 app = FastAPI(
     title="B-Hub AI Service",
-    description="PhoBERT moderation + LightGBM product recommendations",
+    description="PhoBERT moderation + LightGBM recommendations + image search",
     version="1.0.0",
 )
+
+app.include_router(image_search_router)
+app.include_router(image_index_router)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -70,6 +76,7 @@ def health_check():
             "labels": id2label,
         },
         "productModel": get_product_model_info(),
+        "imageSearch": get_search_service().status(),
     }
 
 

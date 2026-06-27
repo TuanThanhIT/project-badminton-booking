@@ -234,8 +234,10 @@ const searchProductsByImageService = async ({ image, query, limit }) => {
     throw new NotFoundError("Vui lòng cung cấp hình ảnh hoặc nội dung tìm kiếm");
   }
 
-  const serviceUrl =
-    process.env.IMAGE_SEARCH_SERVICE_URL || "http://localhost:8010";
+  const serviceUrl = (
+    process.env.AI_SERVICE_URL ||
+    "http://localhost:8001"
+  ).replace(/\/$/, "");
   const safeLimit = Math.min(Number(limit) || 12, 50);
   const formData = new FormData();
 
@@ -251,13 +253,17 @@ const searchProductsByImageService = async ({ image, query, limit }) => {
   let data;
   try {
     const response = await axios.post(`${serviceUrl}/search`, formData, {
-      timeout: Number(process.env.IMAGE_SEARCH_TIMEOUT_MS || 60000),
+      timeout: Number(
+        process.env.IMAGE_SEARCH_TIMEOUT_MS ||
+          process.env.AI_SERVICE_TIMEOUT_MS ||
+          60000,
+      ),
     });
     data = response.data;
   } catch (error) {
     if (["ECONNREFUSED", "ECONNABORTED", "ETIMEDOUT"].includes(error.code)) {
       throw new InternalServerError(
-        "Dịch vụ tìm kiếm hình ảnh chưa sẵn sàng. Vui lòng khởi động image-search-service ở port 8010.",
+        "Dịch vụ tìm kiếm hình ảnh chưa sẵn sàng. Vui lòng khởi động ai-service ở port 8001.",
       );
     }
     if (error.response?.data) {

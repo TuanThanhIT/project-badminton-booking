@@ -16,6 +16,7 @@ ai-service/**/*.pyc
 
 # Local AI model files
 ai-service/models/
+image-search-service/models/
 *.zip
 
 # AI service generated data
@@ -24,3 +25,14 @@ ai-service/data/raw/
 ai-service/data/processed/*.csv
 !ai-service/data/processed/.gitkeep
 ai-service/.pytest_cache/
+
+# Image search generated artifacts
+image-search-service/artifacts/
+image-search-service/data/index/
+image-search-service/data/raw/
+image-search-service/data/processed/*.csv
+!image-search-service/data/processed/.gitkeep
+image-search-service/.venv/
+image-search-service/**/__pycache__/
+image-search-service/**/*.pyc
+image-search-service/.pytest_cache/

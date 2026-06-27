@@ -548,8 +548,8 @@ const ProductPage = () => {
                 </p>
               </div>
 
-              <div className="flex w-full flex-col gap-3 lg:max-w-2xl">
-                <div className="relative flex-1">
+              <div className="flex w-full flex-col gap-2 sm:flex-row lg:max-w-2xl">
+                <div className="relative min-w-0 flex-1">
                   <Search
                     size={18}
                     className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
@@ -574,6 +574,8 @@ const ProductPage = () => {
                   />
                 </div>
 
+                {false && (
+                  <>
                 <input
                   id="product-image-search-upload"
                   ref={imageInputRef}
@@ -587,7 +589,7 @@ const ProductPage = () => {
                   <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-2">
                     <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white">
                       <img
-                        src={imageSearchPreview}
+                        src={imageSearchPreview || ""}
                         alt="Ảnh tìm kiếm"
                         className="h-full w-full object-cover"
                       />
@@ -633,6 +635,9 @@ const ProductPage = () => {
                   >
                     {imageSearchLoading ? "Đang tìm..." : "Tìm kiếm"}
                   </button>
+                </div>
+                  </>
+                )}
 
                 <button
                   onClick={() => setIsFilterOpen(true)}
@@ -649,7 +654,6 @@ const ProductPage = () => {
                   <Filter size={18} />
                   Bộ lọc
                 </button>
-              </div>
               </div>
             </div>
           </div>

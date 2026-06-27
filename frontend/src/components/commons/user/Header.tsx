@@ -1,13 +1,17 @@
 import { type RefObject, useEffect, useRef, useState } from "react";
 import {
   Bell,
+  Camera,
   CalendarCheck,
   CalendarPlus,
+  ChevronDown,
   CheckCheck,
   GraduationCap,
   LogOut,
+  Menu,
   MessageCircle,
   Package,
+  Search,
   ShoppingCart,
   UserRound,
 } from "lucide-react";
@@ -24,16 +28,21 @@ import {
 } from "../../../redux/slices/user/notificationSlice";
 import { getUserOrders } from "../../../redux/slices/user/orderSlice";
 import { getMyProfile } from "../../../redux/slices/user/profileSlice";
+import productService from "../../../services/user/productService";
 import { ROLE_NAME } from "../../../utils/constants/role";
 
 interface HeaderProps {
   cartRef: RefObject<HTMLDivElement | null>;
 }
 
+const IMAGE_SEARCH_CACHE_KEY = "product-image-search-cache";
+
 const Header = ({ cartRef }: HeaderProps) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const notificationRef = useRef<HTMLDivElement | null>(null);
+  const quickMenuRef = useRef<HTMLDivElement | null>(null);
+  const headerImageInputRef = useRef<HTMLInputElement | null>(null);
 
   const { user, accessToken } = useAppSelector((state) => state.auth);
   const myProfile = useAppSelector((state) => state.profile.myProfile);
@@ -54,6 +63,11 @@ const Header = ({ cartRef }: HeaderProps) => {
 
   const [countCartItem, setCountCartItem] = useState(0);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isQuickMenuOpen, setIsQuickMenuOpen] = useState(false);
+  const [headerImageQuery, setHeaderImageQuery] = useState("");
+  const [headerImageFile, setHeaderImageFile] = useState<File | null>(null);
+  const [headerImageLoading, setHeaderImageLoading] = useState(false);
+  const [headerImageError, setHeaderImageError] = useState(false);
   const orderCount = userOrderPagination?.total || 0;
   const bookingCount = totalBookings || 0;
   const activeProfile = myProfile?.id === user?.id ? myProfile : undefined;
@@ -84,6 +98,12 @@ const Header = ({ cartRef }: HeaderProps) => {
       ) {
         setIsNotificationOpen(false);
       }
+      if (
+        quickMenuRef.current &&
+        !quickMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsQuickMenuOpen(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -98,8 +118,47 @@ const Header = ({ cartRef }: HeaderProps) => {
 
   const handleOpenNotifications = () => {
     setIsNotificationOpen((prev) => !prev);
+    setIsQuickMenuOpen(false);
     if (!isNotificationOpen && accessToken) {
       dispatch(getNotifications({ data: { page: 1, limit: 8 } }));
+    }
+  };
+
+  const handleOpenQuickMenu = () => {
+    setIsQuickMenuOpen((prev) => !prev);
+    setIsNotificationOpen(false);
+  };
+
+  const handleHeaderImageSearch = async () => {
+    const trimmedQuery = headerImageQuery.trim();
+    if (!headerImageFile && !trimmedQuery) {
+      setHeaderImageError(true);
+      return;
+    }
+
+    const formData = new FormData();
+    if (headerImageFile) formData.append("image", headerImageFile);
+    if (trimmedQuery) formData.append("query", trimmedQuery);
+    formData.append("limit", "9");
+
+    try {
+      setHeaderImageLoading(true);
+      setHeaderImageError(false);
+      const res = await productService.imageSearchProductsService(formData);
+      sessionStorage.setItem(
+        IMAGE_SEARCH_CACHE_KEY,
+        JSON.stringify({ result: res.data.data }),
+      );
+      setHeaderImageFile(null);
+      setHeaderImageQuery("");
+      if (headerImageInputRef.current) headerImageInputRef.current.value = "";
+      setIsQuickMenuOpen(false);
+      setIsNotificationOpen(false);
+      navigate("/products?imageSearch=1");
+    } catch {
+      setHeaderImageError(true);
+    } finally {
+      setHeaderImageLoading(false);
     }
   };
 
@@ -131,6 +190,65 @@ const Header = ({ cartRef }: HeaderProps) => {
 
   const badgeClass =
     "absolute -right-1.5 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-semibold text-white shadow";
+  const menuItemClass = ({ isActive }: { isActive: boolean }) =>
+    `flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+      isActive
+        ? "bg-sky-50 text-sky-800"
+        : "text-slate-700 hover:bg-slate-50 hover:text-sky-700"
+    }`;
+  const quickMenuItems = user
+    ? [
+        {
+          to: "/create-post",
+          label: "Đăng bài",
+          title: "Đăng bài",
+          icon: CalendarPlus,
+          iconClass: "text-sky-600",
+        },
+        {
+          to: user.role === ROLE_NAME.COACH ? "/coach/students" : "/my-classes",
+          label: "Lớp học",
+          title:
+            user.role === ROLE_NAME.COACH ? "Quản lý lớp học" : "Lớp đã đăng ký",
+          icon: GraduationCap,
+          iconClass:
+            user.role === ROLE_NAME.COACH ? "text-amber-600" : "text-sky-600",
+        },
+        {
+          to: "/bookings",
+          label: "Lịch sân",
+          title: "Lịch sân",
+          icon: CalendarCheck,
+          iconClass: "text-sky-600",
+          count: bookingCount,
+        },
+        {
+          to: "/orders",
+          label: "Đơn hàng",
+          title: "Đơn hàng",
+          icon: Package,
+          iconClass: "text-sky-600",
+          count: orderCount,
+        },
+        {
+          to: "/messages",
+          label: "Tin nhắn",
+          title: "Tin nhắn",
+          icon: MessageCircle,
+          iconClass: "text-sky-600",
+          count: unreadMessages,
+        },
+        {
+          to: "/cart",
+          label: "Giỏ hàng",
+          title: "Giỏ hàng",
+          icon: ShoppingCart,
+          iconClass: "text-sky-600",
+          count: countCartItem,
+          ref: cartRef,
+        },
+      ]
+    : [];
 
   return (
     <header className="max-w-full border-b border-slate-200/80 bg-white/95 backdrop-blur-xl">
@@ -158,10 +276,139 @@ const Header = ({ cartRef }: HeaderProps) => {
         <div className="flex w-full min-w-0 max-w-full items-center justify-between gap-1 sm:gap-1.5 lg:w-auto lg:justify-end">
           {accessToken && user ? (
             <>
+              <form
+                className={`hidden min-w-0 items-center overflow-hidden rounded-full border bg-white transition-all md:flex lg:w-[360px] xl:w-[430px] ${
+                  headerImageError
+                    ? "border-rose-200 ring-2 ring-rose-50"
+                    : "border-slate-200 focus-within:border-sky-300 focus-within:ring-2 focus-within:ring-sky-50"
+                }`}
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  handleHeaderImageSearch();
+                }}
+              >
+                <input
+                  ref={headerImageInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(event) => {
+                    setHeaderImageFile(event.target.files?.[0] || null);
+                    setHeaderImageError(false);
+                    setIsQuickMenuOpen(false);
+                    setIsNotificationOpen(false);
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    headerImageInputRef.current?.click();
+                    setIsQuickMenuOpen(false);
+                    setIsNotificationOpen(false);
+                  }}
+                  className={`flex h-10 w-11 shrink-0 items-center justify-center border-r transition ${
+                    headerImageFile
+                      ? "border-sky-100 bg-sky-50 text-sky-700"
+                      : "border-slate-100 text-slate-500 hover:bg-sky-50 hover:text-sky-700"
+                  }`}
+                  title={headerImageFile ? headerImageFile.name : "Chọn ảnh"}
+                >
+                  <Camera className="h-5 w-5" />
+                </button>
+                <div className="relative min-w-0 flex-1">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={headerImageQuery}
+                    onFocus={() => {
+                      setIsQuickMenuOpen(false);
+                      setIsNotificationOpen(false);
+                    }}
+                    onChange={(event) => {
+                      setHeaderImageQuery(event.target.value);
+                      setHeaderImageError(false);
+                    }}
+                    placeholder={
+                      headerImageFile
+                        ? headerImageFile.name
+                        : "Tìm bằng ảnh, màu sắc..."
+                    }
+                    className="h-10 w-full bg-transparent pl-9 pr-3 text-sm text-slate-800 outline-none placeholder:text-slate-400"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={headerImageLoading}
+                  className="h-10 shrink-0 bg-slate-900 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {headerImageLoading ? "Đang tìm" : "Tìm"}
+                </button>
+              </form>
+
+              <div ref={quickMenuRef} className="relative shrink-0">
+                <button
+                  type="button"
+                  onClick={handleOpenQuickMenu}
+                  className={`flex h-9 shrink-0 items-center justify-center gap-2 rounded-full border px-3 text-sm font-semibold transition-all sm:h-10 ${
+                    isQuickMenuOpen
+                      ? "border-sky-200 bg-sky-50 text-sky-800"
+                      : "border-slate-200 bg-white text-slate-700 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-800"
+                  }`}
+                  title="Menu nhanh"
+                >
+                  <Menu className="h-5 w-5 text-sky-600" />
+                  <span className="hidden sm:inline">Menu</span>
+                  <ChevronDown
+                    className={`hidden h-4 w-4 transition sm:block ${
+                      isQuickMenuOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {isQuickMenuOpen && (
+                  <div className="fixed left-3 right-3 top-[7.5rem] z-50 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_20px_50px_rgba(15,23,42,0.16)] sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-64">
+                    {quickMenuItems.map((item) => {
+                      const Icon = item.icon;
+                      const count = item.count || 0;
+
+                      return (
+                        <NavLink
+                          key={item.to}
+                          to={item.to}
+                          title={item.title}
+                          className={menuItemClass}
+                          onClick={() => setIsQuickMenuOpen(false)}
+                        >
+                          <span className="flex min-w-0 items-center gap-3">
+                            <span
+                              ref={item.ref}
+                              className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-50"
+                            >
+                              <Icon className={`h-5 w-5 ${item.iconClass}`} />
+                              {count > 0 && (
+                                <span className={badgeClass}>
+                                  {count > 99 ? "99+" : count}
+                                </span>
+                              )}
+                            </span>
+                            <span className="truncate">{item.label}</span>
+                          </span>
+                          {count > 0 && (
+                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
+                              {count > 99 ? "99+" : count}
+                            </span>
+                          )}
+                        </NavLink>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
               <NavLink
                 to="/create-post"
                 className={(state) =>
-                  `${actionLinkClass(state)} hidden md:flex`
+                  `${actionLinkClass(state)} hidden`
                 }
                 title="Đăng bài"
               >
@@ -173,7 +420,7 @@ const Header = ({ cartRef }: HeaderProps) => {
                 <NavLink
                   to="/coach/students"
                   className={(state) =>
-                    `${actionLinkClass(state)} hidden md:flex`
+                    `${actionLinkClass(state)} hidden`
                   }
                   title="Quản lý lớp học"
                 >
@@ -184,7 +431,7 @@ const Header = ({ cartRef }: HeaderProps) => {
                 <NavLink
                   to="/my-classes"
                   className={(state) =>
-                    `${actionLinkClass(state)} hidden md:flex`
+                    `${actionLinkClass(state)} hidden`
                   }
                   title="Lớp đã đăng ký"
                 >
@@ -195,7 +442,7 @@ const Header = ({ cartRef }: HeaderProps) => {
 
               <NavLink
                 to="/bookings"
-                className={actionLinkClass}
+                className={(state) => `${actionLinkClass(state)} hidden`}
                 title="Lịch sân"
               >
                 <span className="relative">
@@ -211,7 +458,7 @@ const Header = ({ cartRef }: HeaderProps) => {
 
               <NavLink
                 to="/orders"
-                className={actionLinkClass}
+                className={(state) => `${actionLinkClass(state)} hidden`}
                 title="Đơn hàng"
               >
                 <span className="relative">
@@ -228,7 +475,7 @@ const Header = ({ cartRef }: HeaderProps) => {
               <NavLink
                 to="/messages"
                 className={(state) =>
-                  `${actionLinkClass(state)} hidden sm:flex`
+                  `${actionLinkClass(state)} hidden`
                 }
                 title="Tin nhắn"
               >
@@ -243,7 +490,11 @@ const Header = ({ cartRef }: HeaderProps) => {
                 <span className="hidden xl:inline">Tin nhắn</span>
               </NavLink>
 
-              <NavLink to="/cart" className={actionLinkClass} title="Giỏ hàng">
+              <NavLink
+                to="/cart"
+                className={(state) => `${actionLinkClass(state)} hidden`}
+                title="Giỏ hàng"
+              >
                 <span ref={cartRef} className="relative">
                   <ShoppingCart className="h-5 w-5 text-sky-600" />
                   {countCartItem > 0 && (

@@ -9,12 +9,100 @@ import {
   User,
   VariantStock,
 } from "../../models/index.js";
+import axios from "axios";
 import { col, fn, Op } from "sequelize";
 import { SORT_OPTIONS } from "../../constants/productConstant.js";
 import NotFoundError from "../../errors/NotFoundError.js";
+import InternalServerError from "../../errors/InternalServerError.js";
 
 const getSortOption = (sort) => {
   return SORT_OPTIONS[sort] || [];
+};
+
+const formatProductCards = async (products) => {
+  return Promise.all(
+    products.map(async (p) => {
+      const minPrice = parseFloat(p.get("minPrice"));
+
+      const variant = await ProductVariant.findOne({
+        where: { productId: p.id, price: minPrice },
+        attributes: ["discount"],
+        include: [
+          {
+            model: VariantStock,
+            as: "stocks",
+            attributes: ["stock"],
+          },
+        ],
+      });
+
+      const discount = variant ? variant.discount : 0;
+      const minDiscountedPrice = minPrice - (minPrice * discount) / 100;
+
+      let totalStock = 0;
+      if (variant && variant.stocks) {
+        totalStock = variant.stocks.reduce((sum, s) => sum + s.stock, 0);
+      }
+
+      const created = new Date(p.get("createdAt"));
+      const now = new Date();
+      const diffDays =
+        (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
+
+      return {
+        ...p.toJSON(),
+        discount,
+        minDiscountedPrice,
+        totalStock,
+        isNew: diffDays <= 15,
+      };
+    }),
+  );
+};
+
+const getProductCardsByIds = async (ids) => {
+  const safeIds = ids.map(Number).filter(Boolean);
+  if (safeIds.length === 0) return [];
+
+  const products = await Product.findAll({
+    where: { id: { [Op.in]: safeIds } },
+    attributes: [
+      "id",
+      "productName",
+      "brand",
+      "thumbnailUrl",
+      "createdAt",
+      [fn("MIN", col("variants.price")), "minPrice"],
+      [fn("SUM", col("variants->stocks.stock")), "totalStock"],
+    ],
+    include: [
+      {
+        model: ProductVariant,
+        as: "variants",
+        attributes: [],
+        include: [
+          {
+            model: VariantStock,
+            as: "stocks",
+            attributes: [],
+          },
+        ],
+        required: true,
+      },
+      {
+        model: Category,
+        as: "category",
+        attributes: ["id", "cateName", "menuGroup"],
+      },
+    ],
+    group: ["Product.id"],
+    raw: false,
+    nest: true,
+  });
+
+  const formatted = await formatProductCards(products);
+  const byId = new Map(formatted.map((product) => [Number(product.id), product]));
+  return safeIds.map((id) => byId.get(id)).filter(Boolean);
 };
 
 const getProductsByFilterService = async (data) => {
@@ -136,50 +224,74 @@ const getProductsByFilterService = async (data) => {
     nest: true,
   });
 
-  const productFormatted = await Promise.all(
-    productsFilter.map(async (p) => {
-      const minPrice = parseFloat(p.get("minPrice"));
-
-      const variant = await ProductVariant.findOne({
-        where: { productId: p.id, price: minPrice },
-        attributes: ["discount"],
-        include: [
-          {
-            model: VariantStock,
-            as: "stocks",
-            attributes: ["stock"],
-          },
-        ],
-      });
-
-      const discount = variant ? variant.discount : 0;
-
-      const minDiscountedPrice = minPrice - (minPrice * discount) / 100;
-
-      let totalStock = 0;
-
-      if (variant && variant.stocks) {
-        totalStock = variant.stocks.reduce((sum, s) => sum + s.stock, 0);
-      }
-
-      const created = new Date(p.get("createdAt"));
-      const now = new Date();
-      const diffDays =
-        (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
-
-      const isNew = diffDays <= 15;
-
-      return {
-        ...p.toJSON(),
-        discount,
-        minDiscountedPrice,
-        totalStock,
-        isNew,
-      };
-    }),
-  );
+  const productFormatted = await formatProductCards(productsFilter);
 
   return { products: productFormatted, total, page: p, limit: l };
+};
+
+const searchProductsByImageService = async ({ image, query, limit }) => {
+  if (!image && !query) {
+    throw new NotFoundError("Vui lòng cung cấp hình ảnh hoặc nội dung tìm kiếm");
+  }
+
+  const serviceUrl =
+    process.env.IMAGE_SEARCH_SERVICE_URL || "http://localhost:8010";
+  const safeLimit = Math.min(Number(limit) || 12, 50);
+  const formData = new FormData();
+
+  if (image?.buffer) {
+    const blob = new Blob([image.buffer], {
+      type: image.mimetype || "application/octet-stream",
+    });
+    formData.append("image", blob, image.originalname || "search-image.jpg");
+  }
+  if (query) formData.append("query", query);
+  formData.append("limit", String(safeLimit));
+
+  let data;
+  try {
+    const response = await axios.post(`${serviceUrl}/search`, formData, {
+      timeout: Number(process.env.IMAGE_SEARCH_TIMEOUT_MS || 60000),
+    });
+    data = response.data;
+  } catch (error) {
+    if (["ECONNREFUSED", "ECONNABORTED", "ETIMEDOUT"].includes(error.code)) {
+      throw new InternalServerError(
+        "Dịch vụ tìm kiếm hình ảnh chưa sẵn sàng. Vui lòng khởi động image-search-service ở port 8010.",
+      );
+    }
+    if (error.response?.data) {
+      const detail =
+        error.response.data.detail ||
+        error.response.data.message ||
+        error.response.data;
+      throw new InternalServerError(
+        typeof detail === "string"
+          ? detail
+          : "Dịch vụ tìm kiếm hình ảnh đang gặp lỗi.",
+      );
+    }
+    throw error;
+  }
+
+  const aiResults = Array.isArray(data?.results) ? data.results : [];
+  const productIds = aiResults.map((item) => item.product_id || item.productId);
+  const products = await getProductCardsByIds(productIds);
+  const scoreById = new Map(
+    aiResults.map((item) => [Number(item.product_id || item.productId), item]),
+  );
+
+  return {
+    products: products.map((product) => ({
+      ...product,
+      imageSearch: scoreById.get(Number(product.id)) || null,
+    })),
+    total: products.length,
+    page: 1,
+    limit: safeLimit,
+    query: data?.query || query || null,
+    desiredColor: data?.desired_color || null,
+  };
 };
 
 const getProductDetailService = async (data) => {
@@ -357,6 +469,7 @@ const productService = {
   getProductsByFilterService,
   getProductDetailService,
   getProductFeedbacksService,
+  searchProductsByImageService,
 };
 
 export default productService;

@@ -608,6 +608,11 @@ const bulkInsert = async (queryInterface, tableName, rows, transaction) => {
 
 module.exports = {
   async up(queryInterface, Sequelize) {
+    // Generated product rows are now part of static-seed-data.cjs.
+    // Keeping this legacy filler active creates duplicate VariantStocks before
+    // 20260610001100-seed-variant-stocks runs.
+    return;
+
     const transaction = await queryInterface.sequelize.transaction();
 
     try {

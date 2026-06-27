@@ -13,6 +13,11 @@ export type Product = {
   discount: number;
   minDiscountedPrice: number;
   isNew: boolean;
+  imageSearch?: {
+    score?: number;
+    reasons?: string[];
+    desired_color?: string | null;
+  } | null;
 };
 
 export type ProductFilterData = {
@@ -23,6 +28,13 @@ export type ProductFilterData = {
 };
 
 export type ProductFilterResponse = ApiResponse<ProductFilterData>;
+
+export type ProductImageSearchResponse = ApiResponse<
+  ProductFilterData & {
+    query?: string | null;
+    desiredColor?: string | null;
+  }
+>;
 
 export type ProductQueriesRequest = {
   cateId?: number;

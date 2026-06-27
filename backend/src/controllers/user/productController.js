@@ -67,9 +67,22 @@ const getProductFeedbacksController = asyncHandler(async (req, res) => {
     );
 });
 
+const searchProductsByImageController = asyncHandler(async (req, res) => {
+  const { query, limit } = req.body;
+  const result = await productService.searchProductsByImageService({
+    image: req.file,
+    query,
+    limit,
+  });
+  return res
+    .status(200)
+    .json(new SuccessResponse("Tìm sản phẩm bằng hình ảnh thành công", result));
+});
+
 const productController = {
   getProductsByFilterController,
   getProductDetailController,
   getProductFeedbacksController,
+  searchProductsByImageController,
 };
 export default productController;

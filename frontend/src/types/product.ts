@@ -33,6 +33,7 @@ export type ProductImageSearchResponse = ApiResponse<
   ProductFilterData & {
     query?: string | null;
     desiredColor?: string | null;
+    minScore?: number;
   }
 >;
 

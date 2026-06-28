@@ -11,6 +11,8 @@ class SearchResult(ProductMetadata):
 class SearchResponse(BaseModel):
     query: str | None
     desired_color: str | None
+    search_mode: str | None = None
+    applied_filters: dict | None = None
     total: int
     results: list[SearchResult]
 

@@ -40,7 +40,7 @@ import { addCartItem, getCart } from "../../redux/slices/user/cartSlice";
 
 import { toast } from "react-toastify";
 
-import { getColorHex } from "../../utils/color";
+import { getColorHex, getColorParts } from "../../utils/color";
 import { flyToCart } from "../../utils/flyToCart";
 
 import type { BranchStock } from "../../types/branch";
@@ -133,7 +133,7 @@ const ProductDetailPage: React.FC = () => {
 
       setSelectedSize(first.size);
 
-      setSelectedColor(first.color);
+      setSelectedColor(getColorParts(first.color)[0] || first.color);
 
       setSelectedVariant(first);
 
@@ -167,7 +167,9 @@ const ProductDetailPage: React.FC = () => {
       (v) => v.size === selectedSize,
     );
 
-    return Array.from(new Set(filtered.map((v) => v.color)));
+    return Array.from(
+      new Set(filtered.flatMap((v) => getColorParts(v.color))),
+    );
   }, [productDetail, selectedSize]);
 
   const handleSelectSize = (size: string) => {
@@ -178,7 +180,7 @@ const ProductDetailPage: React.FC = () => {
     );
 
     if (variantsOfSize && variantsOfSize.length > 0) {
-      const firstColor = variantsOfSize[0].color;
+      const firstColor = getColorParts(variantsOfSize[0].color)[0] || variantsOfSize[0].color;
 
       setSelectedColor(firstColor);
 
@@ -198,7 +200,7 @@ const ProductDetailPage: React.FC = () => {
     setSelectedColor(color);
 
     const variant = productDetail?.variants.find(
-      (v) => v.size === selectedSize && v.color === color,
+      (v) => v.size === selectedSize && getColorParts(v.color).includes(color),
     );
 
     setSelectedVariant(variant || null);

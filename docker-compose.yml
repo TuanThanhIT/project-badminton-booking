@@ -91,6 +91,8 @@ services:
       AI_SERVICE_URL: ${AI_SERVICE_URL:-http://ai-service:8001}
       AI_SERVICE_TIMEOUT_MS: ${AI_SERVICE_TIMEOUT_MS:-30000}
       IMAGE_SEARCH_TIMEOUT_MS: ${IMAGE_SEARCH_TIMEOUT_MS:-60000}
+      IMAGE_SEARCH_MIN_SCORE: ${IMAGE_SEARCH_MIN_SCORE:-0.25}
+      IMAGE_SEARCH_TEXT_MIN_SCORE: ${IMAGE_SEARCH_TEXT_MIN_SCORE:-0.35}
     depends_on:
       mysql:
         condition: service_healthy
@@ -130,6 +132,8 @@ services:
       REDIS_URL: redis://redis:6379
       AI_SERVICE_URL: ${AI_SERVICE_URL:-http://ai-service:8001}
       AI_SERVICE_TIMEOUT_MS: ${AI_SERVICE_TIMEOUT_MS:-30000}
+      IMAGE_SEARCH_MIN_SCORE: ${IMAGE_SEARCH_MIN_SCORE:-0.25}
+      IMAGE_SEARCH_TEXT_MIN_SCORE: ${IMAGE_SEARCH_TEXT_MIN_SCORE:-0.35}
       AI_TRAINING_CRON: ${AI_TRAINING_CRON:-0 3 * * *}
     depends_on:
       mysql:
@@ -233,19 +237,23 @@ services:
     container_name: badminton_ai_service
     restart: unless-stopped
     environment:
+      APP_NAME: badminton_ai_service
+
       MODEL_DIR: /app/models/bhub_phobert_moderation_model_v8
       RECOMMENDATION_MODEL_DIR: /app/models/recommendation
       MAX_LENGTH: 128
-      APP_NAME: badminton-ai-service
+
       TEXT_MODEL_NAME: ${IMAGE_SEARCH_TEXT_MODEL_NAME:-sentence-transformers/clip-ViT-B-32-multilingual-v1}
       IMAGE_MODEL_NAME: ${IMAGE_SEARCH_IMAGE_MODEL_NAME:-sentence-transformers/clip-ViT-B-32}
       MODEL_CACHE_DIR: ${IMAGE_SEARCH_MODEL_CACHE_DIR:-/app/models/image_search/cache}
       HF_HOME: /app/models/image_search/huggingface
       SENTENCE_TRANSFORMERS_HOME: /app/models/image_search/sentence_transformers
       DEVICE: ${IMAGE_SEARCH_DEVICE:-cpu}
+
       INDEX_PATH: data/index/product_vectors.faiss
       METADATA_PATH: data/index/product_metadata.json
       PRODUCTS_CSV_PATH: data/processed/products.csv
+
       DEFAULT_LIMIT: 12
       MAX_LIMIT: 50
     volumes:
@@ -264,6 +272,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 90
     networks:
       - badminton_network
 

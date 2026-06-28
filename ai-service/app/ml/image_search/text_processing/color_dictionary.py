@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 COLOR_ALIASES: dict[str, set[str]] = {
     "white": {"white", "trang", "mau trang", "màu trắng", "trang ngoc", "trắng ngọc"},
     "black": {"black", "den", "đen", "mau den", "màu đen"},

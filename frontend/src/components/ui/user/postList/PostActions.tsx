@@ -135,13 +135,7 @@ const PostActions = ({ post, alwaysShowComments = false, onOpenDetail }: Props) 
             <span className="hidden sm:inline">
               {currentReaction?.label || "Thích"}
             </span>
-            <span
-              className={
-                likedByMe
-                  ? currentReaction?.className || "text-sky-600"
-                  : "text-slate-400"
-              }
-            >
+            <span className="min-w-[1.25rem] text-left text-sm font-semibold text-emerald-600">
               {likesCount}
             </span>
           </button>
@@ -158,7 +152,9 @@ const PostActions = ({ post, alwaysShowComments = false, onOpenDetail }: Props) 
         >
           <MessageCircle className="h-4 w-4" />
           <span className="hidden sm:inline">Bình luận</span>
-          <span className="text-slate-400">{commentsCount}</span>
+          <span className="min-w-[1.25rem] text-left text-sm font-semibold text-emerald-600">
+            {commentsCount}
+          </span>
         </button>
 
         <button
@@ -168,7 +164,7 @@ const PostActions = ({ post, alwaysShowComments = false, onOpenDetail }: Props) 
         >
           <Share2 className={`h-4 w-4 ${sharedByMe ? "text-emerald-600" : ""}`} />
           <span className="hidden sm:inline">Chia sẻ</span>
-          <span className={sharedByMe ? "text-emerald-600" : "text-slate-400"}>
+          <span className="min-w-[1.25rem] text-left text-sm font-semibold text-emerald-600">
             {sharesCount}
           </span>
         </button>

@@ -7,6 +7,7 @@ import createApp from "./app.js";
 dotenv.config();
 
 const PORT = process.env.PORT || 8080;
+const HOST = process.env.HOST || "0.0.0.0";
 const app = createApp();
 const httpServer = createServer(app);
 
@@ -15,8 +16,8 @@ initSocket(httpServer);
 const startServer = async () => {
   await testConnection();
 
-  httpServer.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+  httpServer.listen(PORT, HOST, () => {
+    console.log(`Server running on http://${HOST}:${PORT}`);
   });
 };
 

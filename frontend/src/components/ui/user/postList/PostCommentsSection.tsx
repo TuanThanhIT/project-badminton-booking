@@ -20,7 +20,8 @@ type Props = {
 type CommentNode = PostComment & { children: CommentNode[] };
 
 const COMMENTS_PAGE_LIMIT = 10;
-const DELETE_COMMENT_CONFIRM = "B\u1ea1n mu\u1ed1n g\u1ee1 b\u00ecnh lu\u1eadn n\u00e0y?";
+const DELETE_COMMENT_CONFIRM =
+  "B\u1ea1n mu\u1ed1n g\u1ee1 b\u00ecnh lu\u1eadn n\u00e0y?";
 const DELETE_COMMENT_DESCRIPTION =
   "B\u00ecnh lu\u1eadn s\u1ebd b\u1ecb g\u1ee1 kh\u1ecfi b\u00e0i vi\u1ebft. N\u1ebfu \u0111\u00e2y l\u00e0 b\u00ecnh lu\u1eadn g\u1ed1c, c\u00e1c ph\u1ea3n h\u1ed3i b\u00ean d\u01b0\u1edbi c\u0169ng s\u1ebd \u0111\u01b0\u1ee3c g\u1ee1.";
 const DELETE_COMMENT_SUCCESS = "\u0110\u00e3 g\u1ee1 b\u00ecnh lu\u1eadn.";
@@ -247,7 +248,7 @@ function CommentItem({
           </div>
 
           {isReplyBoxOpen && (
-            <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end">
+            <div className="mt-2 flex items-stretch overflow-hidden rounded-2xl border border-gray-300 bg-white focus-within:border-sky-200">
               <textarea
                 ref={replyTextareaRef}
                 value={replyContent}
@@ -255,23 +256,23 @@ function CommentItem({
                   onReplyContentChange(event.target.value);
                   resizeTextareaToContent(event.currentTarget);
                 }}
-                className="min-h-[44px] flex-1 resize-none overflow-hidden rounded-xl border border-gray-200 bg-white px-3 py-2 text-[15px] text-gray-900 placeholder:text-gray-400 focus:border-transparent focus:outline-none focus:ring-1 focus:ring-sky-400"
+                className="min-h-[56px] flex-1 resize-none overflow-hidden border-0 bg-transparent px-3.5 py-3 text-[15px] text-gray-900 outline-none placeholder:text-gray-400"
                 placeholder="Viết câu trả lời..."
                 rows={1}
               />
-              <div className="flex shrink-0 justify-end gap-2 sm:flex-col sm:gap-1">
+              <div className="flex w-[72px] shrink-0 flex-col border-l border-gray-100 bg-slate-50/70">
                 <button
                   type="button"
                   onClick={() => onReplySubmit(node.id)}
                   disabled={!canReplySubmit || replySubmitting}
-                  className="rounded-lg bg-sky-600 px-3 py-1.5 text-[13px] font-semibold text-white disabled:pointer-events-none disabled:opacity-50"
+                  className="flex flex-1 items-center justify-center bg-sky-500 px-3 text-[13px] font-semibold text-white transition hover:bg-sky-600 disabled:pointer-events-none disabled:opacity-50"
                 >
                   {replySubmitting ? "..." : "Gửi"}
                 </button>
                 <button
                   type="button"
                   onClick={onCancelReply}
-                  className="rounded-lg px-3 py-1.5 text-[13px] text-gray-600 hover:bg-gray-100"
+                  className="flex flex-1 items-center justify-center px-3 text-[13px] font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-800"
                 >
                   Hủy
                 </button>
@@ -324,7 +325,9 @@ const PostCommentsSection = ({ postId, open }: Props) => {
   const [replyToId, setReplyToId] = useState<number | null>(null);
   const [replyContent, setReplyContent] = useState("");
   const [replySubmitting, setReplySubmitting] = useState(false);
-  const [deletingCommentId, setDeletingCommentId] = useState<number | null>(null);
+  const [deletingCommentId, setDeletingCommentId] = useState<number | null>(
+    null,
+  );
   const [reportTarget, setReportTarget] = useState<CommentNode | null>(null);
   const [reportReason, setReportReason] = useState<CommentReportReason>("SPAM");
   const [reportDescription, setReportDescription] = useState("");
@@ -489,9 +492,7 @@ const PostCommentsSection = ({ postId, open }: Props) => {
         }
         toast.success(DELETE_COMMENT_SUCCESS);
       } catch (err: any) {
-        toast.error(
-          err?.response?.data?.message || DELETE_COMMENT_ERROR,
-        );
+        toast.error(err?.response?.data?.message || DELETE_COMMENT_ERROR);
       } finally {
         setDeletingCommentId(null);
       }

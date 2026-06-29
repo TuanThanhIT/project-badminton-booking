@@ -4,7 +4,6 @@ import {
   Camera,
   CalendarCheck,
   CalendarPlus,
-  ChevronDown,
   CheckCheck,
   GraduationCap,
   Loader2,
@@ -211,6 +210,7 @@ const Header = ({ cartRef }: HeaderProps) => {
 
   const displayName =
     activeProfile?.profile?.fullName?.trim() || user?.username || "Tài khoản";
+  const usernameLabel = user?.username || displayName;
   const avatarUrl =
     activeProfile?.profile?.avatar || user?.profile?.avatar || "";
   const avatarLetter = displayName.charAt(0).toUpperCase();
@@ -225,9 +225,17 @@ const Header = ({ cartRef }: HeaderProps) => {
         ? "border-sky-200 bg-sky-50 text-sky-800"
         : "border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-800"
     }`;
+  const iconActionLinkClass = ({ isActive }: { isActive: boolean }) =>
+    `relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border p-0 text-sm font-medium transition-all sm:h-10 sm:w-10 ${
+      isActive
+        ? "border-sky-200 bg-sky-50 text-sky-800"
+        : "border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-800"
+    }`;
 
   const badgeClass =
     "absolute -right-1.5 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-semibold text-white shadow";
+  const topActionBadgeClass =
+    "absolute -right-1 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-semibold leading-none text-white shadow";
   const menuItemClass = ({ isActive }: { isActive: boolean }) =>
     `flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
       isActive
@@ -284,35 +292,38 @@ const Header = ({ cartRef }: HeaderProps) => {
   return (
     <header className="max-w-full border-b border-slate-200/80 bg-white/95 backdrop-blur-xl">
       <div className="flex w-full min-w-0 flex-col gap-3 px-3 py-3 sm:px-5 sm:py-3.5 lg:flex-row lg:items-center lg:justify-between lg:px-8 lg:py-4 2xl:px-12">
-        <button
-          type="button"
-          className="flex shrink-0 items-center gap-3 self-start text-left"
-          onClick={() => navigate("/")}
-        >
-          <img
-            src="/img/logo_badminton.jpg"
-            alt="B-Hub"
-            className="h-11 w-11 rounded-xl border border-sky-100 object-cover shadow-sm sm:h-[52px] sm:w-[52px] sm:rounded-2xl"
-          />
-          <div className="min-w-0">
-            <p className="text-xl font-bold leading-none tracking-tight text-slate-900 sm:text-[1.6rem]">
-              B-Hub
-            </p>
-            <p className="mt-1.5 hidden text-[13px] font-medium leading-snug text-slate-500 md:block">
-              Đặt sân, mua sắm, kết nối cầu lông
-            </p>
-          </div>
-        </button>
+        <div className="flex w-full min-w-0 items-center justify-between gap-3 lg:w-auto">
+          <button
+            type="button"
+            className="flex min-w-0 shrink-0 items-center gap-3 text-left"
+            onClick={() => navigate("/")}
+          >
+            <img
+              src="/img/logo_badminton.jpg"
+              alt="B-Hub"
+              className="h-11 w-11 rounded-xl border border-sky-100 object-cover shadow-sm sm:h-[52px] sm:w-[52px] sm:rounded-2xl"
+            />
+            <div className="min-w-0">
+              <p className="text-xl font-bold leading-none tracking-tight text-slate-900 sm:text-[1.6rem]">
+                B-Hub
+              </p>
+              <p className="mt-1.5 hidden text-[13px] font-medium leading-snug text-slate-500 md:block">
+                Đặt sân, mua sắm, kết nối cầu lông
+              </p>
+            </div>
+          </button>
+
+        </div>
 
         <div className="flex w-full min-w-0 max-w-full items-center justify-between gap-1 sm:gap-1.5 lg:w-auto lg:justify-end">
           {accessToken && user ? (
             <>
               <div
                 ref={searchRef}
-                className="relative hidden min-w-0 md:block lg:w-[430px] xl:w-[560px]"
+                className="relative min-w-[150px] flex-1 lg:w-[430px] lg:flex-none xl:w-[560px]"
               >
                 <form
-                  className={`flex h-10 min-w-0 items-center overflow-hidden rounded-full border transition-all ${
+                  className={`flex h-10 min-w-0 items-center overflow-hidden rounded-2xl border transition-all ${
                     headerImageError
                       ? "border-rose-200 bg-white ring-1 ring-rose-50"
                       : "border-slate-200 bg-slate-50 focus-within:border-sky-400 focus-within:bg-white focus-within:ring-1 focus-within:ring-blue-100"
@@ -346,7 +357,7 @@ const Header = ({ cartRef }: HeaderProps) => {
                         setIsNotificationOpen(false);
                       }}
                       disabled={headerImageLoading || Boolean(headerImageFile)}
-                      className={`absolute left-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                      className={`absolute left-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-xl transition disabled:cursor-not-allowed disabled:opacity-60 ${
                         headerImageFile
                           ? "bg-white text-sky-700 ring-1 ring-sky-100"
                           : "text-slate-400 hover:bg-white hover:text-slate-600"
@@ -378,7 +389,7 @@ const Header = ({ cartRef }: HeaderProps) => {
                           ? "Nhập thêm mô tả để lọc kết quả..."
                           : "Tìm sản phẩm qua hình ảnh, mô tả..."
                       }
-                      className="h-10 w-full bg-transparent pl-12 pr-3 text-sm font-medium text-slate-700 outline-none placeholder:text-slate-400"
+                      className="h-10 w-full bg-transparent pl-12 pr-3 text-sm font-medium text-slate-700 outline-none placeholder:text-[13px] placeholder:text-slate-400"
                     />
                   </div>
                   {headerImageFile && (
@@ -397,7 +408,7 @@ const Header = ({ cartRef }: HeaderProps) => {
                   <button
                     type="submit"
                     disabled={headerImageLoading}
-                    className="flex h-full w-16 shrink-0 items-center justify-center rounded-r-full border-l border-sky-500 bg-sky-600 text-white transition hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="flex h-full w-16 shrink-0 items-center justify-center rounded-r-2xl border-l border-sky-500 bg-sky-600 text-white transition hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-60"
                     title="Tìm kiếm"
                   >
                     {headerImageLoading ? (
@@ -534,44 +545,19 @@ const Header = ({ cartRef }: HeaderProps) => {
                 <span className="hidden xl:inline">Tin nhắn</span>
               </NavLink>
 
-              <NavLink to="/cart" className={actionLinkClass} title="Giỏ hàng">
+              <NavLink
+                to="/cart"
+                className={iconActionLinkClass}
+                title="Giỏ hàng"
+              >
                 <span ref={cartRef} className="relative">
                   <ShoppingCart className="h-5 w-5 text-sky-600" />
-                  {countCartItem > 0 && (
-                    <span className={badgeClass}>
-                      {countCartItem > 99 ? "99+" : countCartItem}
-                    </span>
-                  )}
                 </span>
-                <span className="hidden xl:inline">Giỏ hàng</span>
-              </NavLink>
-
-              <NavLink
-                to="/profile"
-                className={({ isActive }) =>
-                  `flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full border p-0 transition-all sm:h-10 sm:w-10 xl:w-auto xl:px-2.5 ${
-                    isActive
-                      ? "border-sky-200 bg-sky-50"
-                      : "border-slate-200 bg-white hover:border-sky-200 hover:bg-sky-50"
-                  }`
-                }
-                title="Hồ sơ"
-              >
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-sky-100 text-xs font-semibold text-sky-800 sm:h-8 sm:w-8">
-                  {avatarUrl && !avatarError ? (
-                    <img
-                      src={avatarUrl}
-                      alt=""
-                      className="h-full w-full object-cover"
-                      onError={() => setAvatarError(true)}
-                    />
-                  ) : (
-                    avatarLetter
-                  )}
-                </div>
-                <span className="hidden max-w-36 truncate text-sm font-medium text-slate-700 lg:block">
-                  {displayName}
-                </span>
+                {countCartItem > 0 && (
+                  <span className={topActionBadgeClass}>
+                    {countCartItem > 99 ? "99+" : countCartItem}
+                  </span>
+                )}
               </NavLink>
 
               <div ref={notificationRef} className="relative shrink-0">
@@ -587,7 +573,7 @@ const Header = ({ cartRef }: HeaderProps) => {
                 >
                   <Bell className="h-5 w-5 text-sky-600" />
                   {unreadCount > 0 && (
-                    <span className={badgeClass}>
+                    <span className={topActionBadgeClass}>
                       {unreadCount > 99 ? "99+" : unreadCount}
                     </span>
                   )}
@@ -684,11 +670,39 @@ const Header = ({ cartRef }: HeaderProps) => {
                 )}
               </div>
 
+              <NavLink
+                to="/profile"
+                className={({ isActive }) =>
+                  `flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full border p-0 transition-all sm:h-10 sm:w-auto sm:px-2.5 ${
+                    isActive
+                      ? "border-sky-200 bg-sky-50"
+                      : "border-slate-200 bg-white hover:border-sky-200 hover:bg-sky-50"
+                  }`
+                }
+                title={usernameLabel}
+              >
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-sky-100 text-xs font-semibold text-sky-800 sm:h-8 sm:w-8">
+                  {avatarUrl && !avatarError ? (
+                    <img
+                      src={avatarUrl}
+                      alt=""
+                      className="h-full w-full object-cover"
+                      onError={() => setAvatarError(true)}
+                    />
+                  ) : (
+                    avatarLetter
+                  )}
+                </div>
+                <span className="hidden max-w-32 truncate text-sm font-medium text-slate-700 sm:block sm:max-w-40">
+                  {usernameLabel}
+                </span>
+              </NavLink>
+
               <div ref={quickMenuRef} className="relative shrink-0">
                 <button
                   type="button"
                   onClick={handleOpenQuickMenu}
-                  className={`flex h-9 shrink-0 items-center justify-center gap-2 rounded-full border px-3 text-sm font-semibold transition-all sm:h-10 ${
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border p-0 text-sm font-semibold transition-all sm:h-10 sm:w-10 ${
                     isQuickMenuOpen
                       ? "border-sky-200 bg-sky-50 text-sky-800"
                       : "border-slate-200 bg-white text-slate-700 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-800"
@@ -696,12 +710,6 @@ const Header = ({ cartRef }: HeaderProps) => {
                   title="Menu nhanh"
                 >
                   <Menu className="h-5 w-5 text-sky-600" />
-                  <span className="hidden sm:inline">Menu</span>
-                  <ChevronDown
-                    className={`hidden h-4 w-4 transition sm:block ${
-                      isQuickMenuOpen ? "rotate-180" : ""
-                    }`}
-                  />
                 </button>
 
                 {isQuickMenuOpen && (

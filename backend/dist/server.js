@@ -12,6 +12,7 @@ function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.
 function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
 _dotenv["default"].config();
 var PORT = process.env.PORT || 8080;
+var HOST = process.env.HOST || "0.0.0.0";
 var app = (0, _app["default"])();
 var httpServer = (0, _http.createServer)(app);
 (0, _index.initSocket)(httpServer);
@@ -23,8 +24,8 @@ var startServer = /*#__PURE__*/function () {
           _context.n = 1;
           return (0, _db.testConnection)();
         case 1:
-          httpServer.listen(PORT, function () {
-            console.log("Server running on http://localhost:".concat(PORT));
+          httpServer.listen(PORT, HOST, function () {
+            console.log("Server running on http://".concat(HOST, ":").concat(PORT));
           });
         case 2:
           return _context.a(2);

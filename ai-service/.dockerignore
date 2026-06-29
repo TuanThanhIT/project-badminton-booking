@@ -1,7 +1,13 @@
 .venv
+.env
 __pycache__
 *.pyc
 *.pyo
 *.log
 *.zip
-models
+models/**/checkpoint-*
+models/**/optimizer.pt
+models/**/scheduler.pt
+models/**/scaler.pt
+models/**/rng_state*.pth
+models/**/trainer_state.json

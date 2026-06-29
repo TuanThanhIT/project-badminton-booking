@@ -86,9 +86,9 @@ services:
       OPENAI_TEMPERATURE: ${OPENAI_TEMPERATURE:-0.7}
       OPENAI_MAX_TOKENS: ${OPENAI_MAX_TOKENS:-2048}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?GOOGLE_CLIENT_ID is required}
-      AI_MODERATION_URL: ${AI_MODERATION_URL:?AI_MODERATION_URL  is required}
+      AI_MODERATION_URL: http://ai-service:8001
       AI_MODERATION_TIMEOUT_MS: ${AI_MODERATION_TIMEOUT_MS:?AI_MODERATION_TIMEOUT_MS}
-      AI_SERVICE_URL: ${AI_SERVICE_URL:-http://ai-service:8001}
+      AI_SERVICE_URL: http://ai-service:8001
       AI_SERVICE_TIMEOUT_MS: ${AI_SERVICE_TIMEOUT_MS:-30000}
       IMAGE_SEARCH_TIMEOUT_MS: ${IMAGE_SEARCH_TIMEOUT_MS:-60000}
       IMAGE_SEARCH_MIN_SCORE: ${IMAGE_SEARCH_MIN_SCORE:-0.25}
@@ -130,7 +130,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_URL: redis://redis:6379
-      AI_SERVICE_URL: ${AI_SERVICE_URL:-http://ai-service:8001}
+      AI_SERVICE_URL: http://ai-service:8001
       AI_SERVICE_TIMEOUT_MS: ${AI_SERVICE_TIMEOUT_MS:-30000}
       IMAGE_SEARCH_MIN_SCORE: ${IMAGE_SEARCH_MIN_SCORE:-0.25}
       IMAGE_SEARCH_TEXT_MIN_SCORE: ${IMAGE_SEARCH_TEXT_MIN_SCORE:-0.35}
@@ -246,6 +246,8 @@ services:
       TEXT_MODEL_NAME: ${IMAGE_SEARCH_TEXT_MODEL_NAME:-sentence-transformers/clip-ViT-B-32-multilingual-v1}
       IMAGE_MODEL_NAME: ${IMAGE_SEARCH_IMAGE_MODEL_NAME:-sentence-transformers/clip-ViT-B-32}
       MODEL_CACHE_DIR: ${IMAGE_SEARCH_MODEL_CACHE_DIR:-/app/models/image_search/cache}
+      TRANSFORMERS_OFFLINE: "1"
+      HF_HUB_OFFLINE: "1"
       HF_HOME: /app/models/image_search/huggingface
       SENTENCE_TRANSFORMERS_HOME: /app/models/image_search/sentence_transformers
       DEVICE: ${IMAGE_SEARCH_DEVICE:-cpu}
@@ -257,8 +259,8 @@ services:
       DEFAULT_LIMIT: 12
       MAX_LIMIT: 50
     volumes:
-      - ./ai-service/models:/app/models
-      - ./ai-service/data:/app/data
+      - ./ai-service/models:/app/models:ro
+      - ./ai-service/data:/app/data:ro
     ports:
       - "8001:8001"
     healthcheck:
@@ -272,7 +274,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 90
+      start_period: 90s
     networks:
       - badminton_network
 

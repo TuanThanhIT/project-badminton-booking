@@ -16,7 +16,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app ./app
 COPY scripts ./scripts
 COPY training ./training
-COPY data ./data
 
 EXPOSE 8001
 

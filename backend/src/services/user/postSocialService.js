@@ -268,7 +268,6 @@ const createCommentService = async (data) => {
         transaction: t,
       });
       if (!parent) throw new NotFoundError("Không tìm thấy bình luận cha.");
-      parentIdNum = parent.parentId || parent.id;
     }
 
     const type = parentIdNum ? COMMENT_TYPE.REPLY : COMMENT_TYPE.COMMENT;
@@ -316,20 +315,26 @@ const getCommentsService = async (data) => {
       include: [authorInclude],
     });
 
-    const rootIds = roots.map((comment) => comment.id);
-    const replies = rootIds.length
-      ? await Comment.findAll({
-          where: {
-            postId,
-            parentId: rootIds,
-            isDeleted: false,
-            isActive: true,
-          },
-          order: [["createdAt", "ASC"]],
-          transaction: t,
-          include: [authorInclude],
-        })
-      : [];
+    const replies = [];
+    let parentIds = roots.map((comment) => comment.id);
+
+    while (parentIds.length > 0) {
+      const children = await Comment.findAll({
+        where: {
+          postId,
+          parentId: { [Op.in]: parentIds },
+          isDeleted: false,
+          isActive: true,
+        },
+        order: [["createdAt", "ASC"]],
+        transaction: t,
+        include: [authorInclude],
+      });
+
+      if (children.length === 0) break;
+      replies.push(...children);
+      parentIds = children.map((comment) => comment.id);
+    }
 
     return {
       comments: [...roots, ...replies],

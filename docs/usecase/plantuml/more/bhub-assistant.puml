@@ -1,0 +1,72 @@
+@startuml
+title Lược đồ Use Case: Trợ lý hội thoại B-Hub Assistant
+
+left to right direction
+scale max 1050 width
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #F8FBFF
+  BorderColor #2563EB
+  ArrowColor #334155
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #334155
+}
+skinparam rectangle {
+  BorderColor #475569
+}
+
+actor "Khách hàng" as Customer
+actor "OpenAI API" as OpenAI <<external>>
+
+rectangle "Hệ thống B-Hub" {
+  package "B-Hub Assistant" {
+    usecase "Sử dụng\nB-Hub Assistant" as UC_Assistant
+    usecase "Hỏi đáp tổng quát\nvà hướng dẫn" as UC_GeneralQA
+    usecase "Duy trì lịch sử\nhội thoại" as UC_History
+    usecase "Gọi mô hình\nhội thoại" as UC_OpenAI
+  }
+
+  package "Tra cứu đặt sân" {
+    usecase "Tra cứu danh sách\nchi nhánh" as UC_ListBranches
+    usecase "Tìm sân còn trống\ntheo chi nhánh/ngày/giờ" as UC_SearchCourts
+  }
+
+  package "Tra cứu mua hàng" {
+    usecase "Tìm kiếm\nsản phẩm" as UC_SearchProducts
+    usecase "Xem chi tiết\nsản phẩm" as UC_ProductDetail
+  }
+
+  package "Tra cứu huấn luyện" {
+    usecase "Tìm lớp học hoặc\nhuấn luyện viên" as UC_SearchClasses
+  }
+}
+
+Customer -- UC_Assistant
+
+UC_Assistant ..> UC_OpenAI : <<include>>
+UC_Assistant ..> UC_History : <<include>>
+
+UC_Assistant <.. UC_GeneralQA : <<extend>>
+UC_Assistant <.. UC_ListBranches : <<extend>>
+UC_Assistant <.. UC_SearchCourts : <<extend>>
+UC_Assistant <.. UC_SearchProducts : <<extend>>
+UC_Assistant <.. UC_ProductDetail : <<extend>>
+UC_Assistant <.. UC_SearchClasses : <<extend>>
+
+UC_OpenAI -- OpenAI
+
+note right of UC_OpenAI
+  Backend dùng OpenAI Chat Completions.
+  Function calling được xử lý bằng các tool nội bộ,
+  không biểu diễn tool như tác nhân ngoài.
+end note
+
+note bottom of UC_History
+  Lưu phiên và tin nhắn bằng AiChatSession/AiChatMessage.
+  Frontend giữ sessionId theo context để tải lại lịch sử.
+end note
+
+@enduml

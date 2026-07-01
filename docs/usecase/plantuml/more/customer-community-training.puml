@@ -1,0 +1,103 @@
+@startuml
+title Lược đồ Use Case: Cộng đồng và huấn luyện của khách hàng
+
+left to right direction
+scale max 1050 width
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #F8FBFF
+  BorderColor #2563EB
+  ArrowColor #334155
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #334155
+}
+skinparam rectangle {
+  BorderColor #475569
+}
+
+actor "Khách hàng" as Customer
+actor "Cloudinary" as Cloudinary <<external>>
+
+rectangle "Hệ thống B-Hub" {
+  package "Cộng đồng" {
+    usecase "Xem danh sách\nbài viết" as UC_ViewPosts
+    usecase "Xem chi tiết\nbài viết" as UC_ViewPostDetail
+    usecase "Tạo bài viết" as UC_CreatePost
+    usecase "Cập nhật\nbài viết" as UC_UpdatePost
+    usecase "Xóa bài viết" as UC_DeletePost
+    usecase "Kiểm duyệt\nnội dung tự động" as UC_AutoModeration
+    usecase "Được đăng" as UC_PostPublished
+    usecase "Bị từ chối" as UC_PostRejected
+    usecase "Chuyển chờ duyệt" as UC_PostPending
+  }
+
+  package "Tương tác bài viết" {
+    usecase "Bình luận" as UC_Comment
+    usecase "Bày tỏ cảm xúc" as UC_React
+    usecase "Chia sẻ" as UC_Share
+  }
+
+  package "Nhắn tin" {
+    usecase "Nhắn tin cá nhân" as UC_DirectChat
+    usecase "Nhắn tin nhóm" as UC_GroupChat
+    usecase "Gửi tệp đính kèm" as UC_SendAttachment
+  }
+
+  package "Hồ sơ huấn luyện viên" {
+    usecase "Gửi hồ sơ\nhuấn luyện viên" as UC_SubmitCoachApplication
+    usecase "Tải chứng chỉ" as UC_UploadCertificate
+    usecase "Theo dõi xét duyệt" as UC_CheckApplication
+  }
+
+  package "Lớp học" {
+    usecase "Xem lớp" as UC_ViewClasses
+    usecase "Đăng ký lớp" as UC_EnrollClass
+    usecase "Hủy đăng ký lớp" as UC_CancelEnrollment
+    usecase "Theo dõi lớp\nđã đăng ký" as UC_MyEnrollments
+  }
+}
+
+Customer -- UC_ViewPosts
+Customer -- UC_ViewPostDetail
+Customer -- UC_CreatePost
+Customer -- UC_UpdatePost
+Customer -- UC_DeletePost
+Customer -- UC_Comment
+Customer -- UC_React
+Customer -- UC_Share
+Customer -- UC_DirectChat
+Customer -- UC_GroupChat
+Customer -- UC_SubmitCoachApplication
+Customer -- UC_UploadCertificate
+Customer -- UC_CheckApplication
+Customer -- UC_ViewClasses
+Customer -- UC_EnrollClass
+Customer -- UC_CancelEnrollment
+Customer -- UC_MyEnrollments
+
+UC_CreatePost ..> UC_AutoModeration : <<include>>
+UC_AutoModeration <.. UC_PostPublished : <<extend>>
+UC_AutoModeration <.. UC_PostRejected : <<extend>>
+UC_AutoModeration <.. UC_PostPending : <<extend>>
+
+UC_DirectChat <.. UC_SendAttachment : <<extend>>
+UC_GroupChat <.. UC_SendAttachment : <<extend>>
+UC_SubmitCoachApplication <.. UC_UploadCertificate : <<extend>>
+
+UC_SendAttachment -- Cloudinary
+UC_UploadCertificate -- Cloudinary
+
+note right of UC_AutoModeration
+  Backend gọi aiModerationService -> ai-service /predict.
+  PhoBERT là thành phần nội bộ nên không biểu diễn như tác nhân ngoài.
+end note
+
+note bottom of Cloudinary
+  Được dùng cho tệp đính kèm chat
+  và ảnh chứng chỉ hồ sơ huấn luyện viên.
+end note
+
+@enduml

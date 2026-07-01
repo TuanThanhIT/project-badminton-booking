@@ -1,0 +1,91 @@
+@startuml
+title Lược đồ Use Case: Tổng quan và báo cáo của quản lý chi nhánh
+
+left to right direction
+scale max 1050 width
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #F8FBFF
+  BorderColor #2563EB
+  ArrowColor #334155
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #334155
+}
+skinparam rectangle {
+  BorderColor #475569
+}
+
+actor "Quản lý chi nhánh" as Manager
+
+rectangle "Hệ thống B-Hub" {
+  package "Phạm vi dữ liệu" {
+    usecase "Xác định chi nhánh\nđược phân công" as UC_ResolveBranch
+  }
+
+  package "Dashboard chi nhánh" {
+    usecase "Xem dashboard\nchi nhánh" as UC_ViewDashboard
+    usecase "Xem số lượng\nlịch đặt" as UC_BookingCount
+    usecase "Xem số lượng\nđơn hàng" as UC_OrderCount
+    usecase "Xem doanh thu\ntrong ngày" as UC_TodayRevenue
+    usecase "Xem vận hành\nsân hôm nay" as UC_CourtOperation
+    usecase "Xem tình trạng\ntồn kho" as UC_StockStatus
+  }
+
+  package "Báo cáo thống kê" {
+    usecase "Xem báo cáo\nthống kê" as UC_ViewReport
+    usecase "Lọc báo cáo theo\nkhoảng thời gian" as UC_FilterDateRange
+    usecase "Xem doanh thu" as UC_Revenue
+    usecase "Xem sản phẩm\nbán chạy" as UC_TopProducts
+    usecase "Xem đồ uống\nbán chạy" as UC_TopBeverages
+    usecase "Xem cơ cấu\ndoanh thu" as UC_RevenueStructure
+    usecase "Xuất báo cáo Excel" as UC_ExportExcel
+  }
+}
+
+Manager -- UC_ViewDashboard
+Manager -- UC_ViewReport
+
+UC_ViewDashboard ..> UC_ResolveBranch : <<include>>
+UC_ViewReport ..> UC_ResolveBranch : <<include>>
+
+UC_ViewDashboard ..> UC_BookingCount : <<include>>
+UC_ViewDashboard ..> UC_OrderCount : <<include>>
+UC_ViewDashboard ..> UC_TodayRevenue : <<include>>
+UC_ViewDashboard ..> UC_CourtOperation : <<include>>
+UC_ViewDashboard ..> UC_StockStatus : <<include>>
+
+UC_ViewReport ..> UC_FilterDateRange : <<include>>
+UC_ViewReport ..> UC_Revenue : <<include>>
+UC_ViewReport ..> UC_TopProducts : <<include>>
+UC_ViewReport ..> UC_TopBeverages : <<include>>
+UC_ViewReport ..> UC_RevenueStructure : <<include>>
+UC_ViewReport <.. UC_ExportExcel : <<extend>>
+
+note right of UC_ResolveBranch
+  Manager service lấy branchId từ BranchManagers
+  theo managerId và isActive=true.
+  Mọi dashboard/report được gọi với branchId này.
+end note
+
+note bottom of UC_ViewDashboard
+  Dashboard manager có: doanh thu hôm nay,
+  lịch đặt, đơn hàng, sân đang sử dụng,
+  tồn kho thấp/hết hàng, phiếu nhập và hoạt động kho.
+end note
+
+note bottom of UC_ViewReport
+  Report manager hỗ trợ startDate/endDate,
+  revenueType và itemType; không trả về lợi nhuận
+  cho quản lý chi nhánh.
+end note
+
+note bottom
+  Không tìm thấy trong dashboard/report của quản lý:
+  tỷ lệ lấp đầy sân và khung giờ cao điểm/thấp điểm.
+  Không đưa chỉ số dự báo vào sơ đồ.
+end note
+
+@enduml

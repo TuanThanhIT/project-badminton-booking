@@ -1,0 +1,107 @@
+@startuml admin-discount-ai-insights
+left to right direction
+scale max 1050 width
+
+skinparam backgroundColor #FFFFFF
+skinparam handwritten false
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam roundcorner 8
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #F8FAFC
+  BorderColor #334155
+  ArrowColor #475569
+  FontColor #0F172A
+}
+skinparam rectangle {
+  BorderColor #94A3B8
+  FontColor #0F172A
+}
+skinparam package {
+  BorderColor #CBD5E1
+  FontColor #0F172A
+  BackgroundColor #FFFFFF
+}
+
+title Lược đồ Use Case: Quản lý khuyến mãi và AI Insights của quản trị viên
+
+actor "Quản trị viên" as Admin
+
+rectangle "Hệ thống B-Hub" as System {
+  package "Quản lý mã giảm giá" {
+    usecase "Xem/tìm kiếm\ndanh sách mã" as UC_List
+    usecase "Tạo mã\ngiảm giá" as UC_Create
+    usecase "Cập nhật mã\ngiảm giá" as UC_Update
+    usecase "Bật/tắt mã\ngiảm giá" as UC_Toggle
+    usecase "Xóa mã\ngiảm giá" as UC_Delete
+  }
+
+  package "Cấu hình mã" {
+    usecase "Tạo mã\ncông khai" as UC_Public
+    usecase "Tạo mã\nriêng" as UC_Private
+    usecase "Cấu hình\nAMOUNT/PERCENT" as UC_Type
+    usecase "Áp dụng\nORDER/BOOKING/ALL" as UC_ApplyType
+    usecase "Thiết lập minAmount,\nmaxDiscount, thời hạn,\nusageLimit" as UC_Conditions
+    usecase "Giới hạn branchId\nvà startHour/endHour" as UC_Scope
+  }
+
+  package "Người nhận mã riêng" {
+    usecase "Gán mã\ncho khách hàng" as UC_Assign
+    usecase "Xem danh sách người nhận\nvà trạng thái sử dụng" as UC_Recipients
+    usecase "Gửi thông báo\nkhuyến mãi" as UC_Notify
+  }
+
+  package "AI Insights" {
+    usecase "Xem đề xuất\nAI Insights" as UC_Insights
+    usecase "Tạo mã từ\nđề xuất AI Insights" as UC_CreateFromInsight
+    usecase "Tạo mã targeted\ntừ đề xuất" as UC_Targeted
+  }
+}
+
+Admin -- UC_List
+Admin -- UC_Create
+Admin -- UC_Update
+Admin -- UC_Toggle
+Admin -- UC_Delete
+Admin -- UC_Recipients
+Admin -- UC_Insights
+
+UC_Create ..> UC_Type : <<include>>
+UC_Create ..> UC_ApplyType : <<include>>
+UC_Create ..> UC_Conditions : <<include>>
+UC_Create ..> UC_Scope : <<include>>
+
+UC_Update ..> UC_Type : <<include>>
+UC_Update ..> UC_ApplyType : <<include>>
+UC_Update ..> UC_Conditions : <<include>>
+UC_Update ..> UC_Scope : <<include>>
+
+UC_Public ..> UC_Create : <<extend>>
+UC_Private ..> UC_Create : <<extend>>
+
+UC_Targeted ..> UC_Private : <<include>>
+UC_Targeted ..> UC_Assign : <<include>>
+UC_Targeted ..> UC_Notify : <<include>>
+UC_Targeted ..> UC_Conditions : <<include>>
+
+UC_CreateFromInsight ..> UC_Create : <<include>>
+UC_CreateFromInsight ..> UC_Insights : <<extend>>
+UC_Targeted ..> UC_Insights : <<extend>>
+
+note bottom of UC_Insights
+AI Insights là chức năng nội bộ của hệ thống,
+không biểu diễn thành tác nhân ngoài.
+end note
+
+note bottom of UC_Targeted
+Luồng targeted tạo mã PRIVATE cho nhóm khách,
+ghi DiscountUsers và gửi notification loại PROMOTION.
+end note
+
+note bottom of UC_Scope
+branchId và startHour/endHour dùng để giới hạn
+phạm vi mã áp dụng cho đặt sân.
+end note
+
+@enduml

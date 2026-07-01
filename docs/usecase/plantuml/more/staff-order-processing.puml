@@ -1,0 +1,98 @@
+@startuml
+title Lược đồ Use Case: Xử lý đơn hàng của nhân viên
+
+left to right direction
+scale max 1050 width
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #F8FBFF
+  BorderColor #2563EB
+  ArrowColor #334155
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #334155
+}
+skinparam rectangle {
+  BorderColor #475569
+}
+
+actor "Nhân viên chi nhánh" as Staff
+actor "GHN" as GHN <<external>>
+
+rectangle "Hệ thống B-Hub" {
+  package "Tra cứu đơn hàng" {
+    usecase "Xem danh sách đơn" as UC_ListOrders
+    usecase "Xem chi tiết đơn" as UC_OrderDetail
+    usecase "Theo dõi trạng thái\ngiao hàng" as UC_TrackShipping
+  }
+
+  package "Xử lý đơn mới" {
+    usecase "Xác nhận đơn mới" as UC_ConfirmOrder
+    usecase "Chuẩn bị sản phẩm" as UC_PrepareOrder
+    usecase "Đóng gói" as UC_PackOrder
+    usecase "Bàn giao cho\nvận chuyển" as UC_ShipOrder
+    usecase "Tạo vận đơn GHN" as UC_CreateGHNOrder
+  }
+
+  package "Hủy và hoàn trả" {
+    usecase "Xử lý yêu cầu hủy" as UC_HandleCancel
+    usecase "Từ chối yêu cầu hủy" as UC_RejectCancel
+    usecase "Hủy vận đơn GHN" as UC_CancelGHNOrder
+    usecase "Xử lý yêu cầu\ntrả hàng" as UC_HandleReturn
+    usecase "Xác nhận hoàn tất\ntrả hàng" as UC_CompleteReturn
+    usecase "Gửi yêu cầu\nhoàn hàng qua GHN" as UC_RequestGHNReturn
+  }
+
+  package "Đồng bộ vận chuyển" {
+    usecase "Nhận webhook\ntrạng thái GHN" as UC_GHNWebhook
+    usecase "Ghi log vận chuyển" as UC_ShippingLog
+    usecase "Đồng bộ trạng thái\nvới đơn hàng" as UC_SyncOrder
+  }
+}
+
+Staff -- UC_ListOrders
+Staff -- UC_OrderDetail
+Staff -- UC_TrackShipping
+Staff -- UC_ConfirmOrder
+Staff -- UC_PrepareOrder
+Staff -- UC_PackOrder
+Staff -- UC_ShipOrder
+Staff -- UC_HandleCancel
+Staff -- UC_RejectCancel
+Staff -- UC_HandleReturn
+Staff -- UC_CompleteReturn
+Staff -- UC_RequestGHNReturn
+
+UC_ShipOrder ..> UC_CreateGHNOrder : <<include>>
+UC_CreateGHNOrder -- GHN
+UC_CancelGHNOrder -- GHN
+UC_RequestGHNReturn -- GHN
+
+UC_HandleCancel <.. UC_CancelGHNOrder : <<extend>>
+
+GHN -- UC_GHNWebhook
+UC_GHNWebhook ..> UC_ShippingLog : <<include>>
+UC_GHNWebhook ..> UC_SyncOrder : <<include>>
+UC_TrackShipping ..> UC_ShippingLog : <<include>>
+
+note right of UC_GHNWebhook
+  GHN gửi trạng thái qua webhook /user/webhook/ghn.
+  Hệ thống map trạng thái GHN sang shippingStatus,
+  ghi OrderShippingLog và đồng bộ orderStatus.
+end note
+
+note bottom of UC_TrackShipping
+  Nhân viên theo dõi trạng thái đã đồng bộ.
+  Code không cho phép nhân viên tự cập nhật toàn bộ
+  trạng thái giao hàng như PICKING, PICKED, DELIVERING.
+end note
+
+note bottom of UC_RequestGHNReturn
+  Endpoint nhân viên có /ghn-return.
+  Service hiện chỉ gọi GHN return khi điều kiện cho phép,
+  còn lại chuyển luồng hoàn hàng nội bộ.
+end note
+
+@enduml

@@ -663,12 +663,12 @@ project-badminton-booking/
 
 ## Tác giả
 
-|                          |                                          |
-| ------------------------ | ---------------------------------------- |
-| **Sinh viên thực hiện**  | Nguyễn Tuấn Thành · Huỳnh Thái Toàn      |
-| **Giảng viên hướng dẫn** | ThS. Vũ Đình Bảo                         |
-| **Trường**               | Đại học Sư phạm Kỹ thuật TP. Hồ Chí Minh |
-| **Khoa**                 | Công nghệ Thông tin                      |
+|                          |                                                  |
+| ------------------------ | -------------------------------------------------|
+| **Sinh viên thực hiện**  | Nguyễn Tuấn Thành · Huỳnh Thái Toàn · Võ Văn Nam |
+| **Giảng viên hướng dẫn** | ThS. Vũ Đình Bảo                                 |
+| **Trường**               | Trường Đại học Công nghệ Kỹ thuật TP. Hồ Chí Minh|
+| **Khoa**                 | Công nghệ Thông tin                              |
 
 ---
 

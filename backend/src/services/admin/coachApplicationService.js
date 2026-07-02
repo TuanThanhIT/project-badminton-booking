@@ -75,13 +75,17 @@ const getCoachApplicationsService = async (data) => {
 
   const include = [userInclude];
   if (search && String(search).trim()) {
-    const term = `%${String(search).trim()}%`;
+    const trimmedSearch = String(search).trim();
+    const term = `%${trimmedSearch}%`;
+    const usernameTerm = `%${trimmedSearch.replace(/^@+/, "") || trimmedSearch}%`;
     include[0] = {
       ...userInclude,
       where: {
         [Op.or]: [
-          { username: { [Op.like]: term } },
+          { username: { [Op.like]: usernameTerm } },
           { email: { [Op.like]: term } },
+          { "$profile.fullName$": { [Op.like]: term } },
+          { "$profile.phoneNumber$": { [Op.like]: term } },
         ],
       },
       required: true,

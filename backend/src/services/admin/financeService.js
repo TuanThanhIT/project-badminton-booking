@@ -17,10 +17,11 @@ const getAdminWalletTransactionsService = async (data) => {
   const where = {};
   const userWhere = {};
   const trimmedSearch = String(search || "").trim();
+  const usernameSearch = trimmedSearch.replace(/^@+/, "");
   if (trimmedSearch) {
     where[Op.or] = [
       { description: { [Op.like]: `%${trimmedSearch}%` } },
-      { "$wallet.user.username$": { [Op.like]: `%${trimmedSearch}%` } },
+      { "$wallet.user.username$": { [Op.like]: `%${usernameSearch || trimmedSearch}%` } },
       { "$wallet.user.email$": { [Op.like]: `%${trimmedSearch}%` } },
       { "$wallet.user.profile.fullName$": { [Op.like]: `%${trimmedSearch}%` } },
     ];
@@ -90,12 +91,13 @@ const getAdminWithdrawRequestsService = async (data) => {
 
   const where = {};
   const trimmedSearch = String(search || "").trim();
+  const usernameSearch = trimmedSearch.replace(/^@+/, "");
   if (trimmedSearch) {
     where[Op.or] = [
       { bankName: { [Op.like]: `%${trimmedSearch}%` } },
       { bankAccount: { [Op.like]: `%${trimmedSearch}%` } },
       { accountHolder: { [Op.like]: `%${trimmedSearch}%` } },
-      { "$wallet.user.username$": { [Op.like]: `%${trimmedSearch}%` } },
+      { "$wallet.user.username$": { [Op.like]: `%${usernameSearch || trimmedSearch}%` } },
       { "$wallet.user.email$": { [Op.like]: `%${trimmedSearch}%` } },
       { "$wallet.user.profile.fullName$": { [Op.like]: `%${trimmedSearch}%` } },
     ];
@@ -153,12 +155,14 @@ const getAdminWithdrawRequestsService = async (data) => {
 const getAdminUserWalletsService = async (data) => {
   const { page = 1, limit = 15, search, status } = data;
   const offset = (page - 1) * limit;
+  const trimmedSearch = String(search || "").trim();
+  const usernameSearch = trimmedSearch.replace(/^@+/, "");
 
   const userWhere = {};
-  if (search) {
+  if (trimmedSearch) {
     userWhere[Op.or] = [
-      { username: { [Op.like]: `%${search}%` } },
-      { email: { [Op.like]: `%${search}%` } },
+      { username: { [Op.like]: `%${usernameSearch || trimmedSearch}%` } },
+      { email: { [Op.like]: `%${trimmedSearch}%` } },
     ];
   }
 

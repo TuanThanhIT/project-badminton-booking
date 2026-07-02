@@ -34,6 +34,8 @@ const ModerationReviewModal = ({ postId, onClose, onResolved }: Props) => {
   );
   const [reason, setReason] = useState("");
   const [label, setLabel] = useState<ModerationLabel | "">("");
+  const [initialReason, setInitialReason] = useState("");
+  const [initialLabel, setInitialLabel] = useState<ModerationLabel | "">("");
 
   useEffect(() => {
     adminPostService
@@ -43,6 +45,8 @@ const ModerationReviewModal = ({ postId, onClose, onResolved }: Props) => {
         setPost(data);
         setReason(data.moderationReason || "");
         setLabel(data.moderationLabel || "");
+        setInitialReason(data.moderationReason || "");
+        setInitialLabel(data.moderationLabel || "");
       })
       .catch((error: any) => {
         toast.error(error?.message || "Không thể tải chi tiết kiểm duyệt");
@@ -50,6 +54,26 @@ const ModerationReviewModal = ({ postId, onClose, onResolved }: Props) => {
       })
       .finally(() => setLoading(false));
   }, [onClose, postId]);
+
+  const handleClose = async () => {
+    if (submitting) return;
+
+    const hasDraftChanges =
+      reason.trim() !== initialReason.trim() || label !== initialLabel;
+    if (!hasDraftChanges) {
+      onClose();
+      return;
+    }
+
+    const confirmed = await showConfirmDialog(
+      "Đóng form duyệt bài?",
+      "Các thay đổi ở nhãn vi phạm hoặc ghi chú chưa được áp dụng. Bạn có chắc muốn đóng?",
+      "Đóng form",
+      "Ở lại",
+      "warning",
+    );
+    if (confirmed) onClose();
+  };
 
   const approve = async () => {
     const confirmed = await showConfirmDialog(
@@ -110,7 +134,7 @@ const ModerationReviewModal = ({ postId, onClose, onResolved }: Props) => {
       title="Duyệt nội dung bài viết"
       description={`Bài viết #${postId}`}
       icon={<ShieldAlert className="h-5 w-5 text-amber-600" />}
-      onClose={onClose}
+      onClose={handleClose}
       maxWidth="max-w-4xl"
     >
       {loading ? (
@@ -213,7 +237,7 @@ const ModerationReviewModal = ({ postId, onClose, onResolved }: Props) => {
           <div className="flex flex-wrap justify-end gap-3 border-t border-slate-100 pt-4">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className={adminSecondaryButtonClass}
             >
               Đóng

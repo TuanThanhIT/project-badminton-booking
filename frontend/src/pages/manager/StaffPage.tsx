@@ -103,6 +103,7 @@ const StaffPage = () => {
 
   const filteredEmployees = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase();
+    const normalizedUsernameKeyword = normalizedKeyword.replace(/^@+/, "");
     return employees.filter((employee) => {
       const matchesStatus =
         statusFilter === "ALL" ||
@@ -113,11 +114,13 @@ const StaffPage = () => {
       if (!normalizedKeyword) return true;
 
       return [
-        employee.username,
         employee.email,
         employee.fullName,
         employee.phoneNumber,
         employee.address,
+        employee.username?.toLowerCase().includes(normalizedUsernameKeyword)
+          ? normalizedKeyword
+          : employee.username,
       ]
         .filter(Boolean)
         .some((value) => value!.toLowerCase().includes(normalizedKeyword));
@@ -192,7 +195,7 @@ const StaffPage = () => {
               value={keyword}
               onChange={(event) => setKeyword(event.target.value)}
               className="h-full flex-1 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
-              placeholder="Tên, email, số điện thoại hoặc địa chỉ..."
+              placeholder="Username (@username), email, họ tên, SĐT hoặc địa chỉ..."
             />
           </div>
         </label>

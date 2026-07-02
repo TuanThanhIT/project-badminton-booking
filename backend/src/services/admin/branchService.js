@@ -122,18 +122,21 @@ const normalizeBranchPayload = (data, { partial = false } = {}) => {
 const getAdminBranchesService = async (data) => {
   const { page, limit, offset } = getPagination(data);
   const { search, isActive, status, districtName, provinceName } = data;
+  const trimmedSearch = String(search || "").trim();
+  const usernameSearch = trimmedSearch.replace(/^@+/, "");
 
   const where = {};
-  if (search) {
+  if (trimmedSearch) {
     where[Op.or] = [
-      { branchName: { [Op.like]: `%${search}%` } },
-      { address: { [Op.like]: `%${search}%` } },
-      { phoneNumber: { [Op.like]: `%${search}%` } },
-      { districtName: { [Op.like]: `%${search}%` } },
-      { provinceName: { [Op.like]: `%${search}%` } },
-      { "$managers.username$": { [Op.like]: `%${search}%` } },
-      { "$managers.email$": { [Op.like]: `%${search}%` } },
-      { "$managers.profile.fullName$": { [Op.like]: `%${search}%` } },
+      { branchName: { [Op.like]: `%${trimmedSearch}%` } },
+      { address: { [Op.like]: `%${trimmedSearch}%` } },
+      { phoneNumber: { [Op.like]: `%${trimmedSearch}%` } },
+      { districtName: { [Op.like]: `%${trimmedSearch}%` } },
+      { provinceName: { [Op.like]: `%${trimmedSearch}%` } },
+      { "$managers.username$": { [Op.like]: `%${usernameSearch || trimmedSearch}%` } },
+      { "$managers.email$": { [Op.like]: `%${trimmedSearch}%` } },
+      { "$managers.profile.fullName$": { [Op.like]: `%${trimmedSearch}%` } },
+      { "$managers.profile.phoneNumber$": { [Op.like]: `%${trimmedSearch}%` } },
     ];
   }
   if (districtName) where.districtName = { [Op.like]: `%${districtName}%` };

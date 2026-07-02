@@ -21,12 +21,16 @@ const saltRounds = 10;
 const getUsersService = async (data) => {
   const { page = 1, limit = 10, search, role, isActive, branchId } = data;
   const offset = (page - 1) * limit;
+  const trimmedSearch = String(search || "").trim();
+  const usernameSearch = trimmedSearch.replace(/^@+/, "");
 
   const userWhere = {};
-  if (search) {
+  if (trimmedSearch) {
     userWhere[Op.or] = [
-      { username: { [Op.like]: `%${search}%` } },
-      { email: { [Op.like]: `%${search}%` } },
+      { username: { [Op.like]: `%${usernameSearch || trimmedSearch}%` } },
+      { email: { [Op.like]: `%${trimmedSearch}%` } },
+      { "$profile.fullName$": { [Op.like]: `%${trimmedSearch}%` } },
+      { "$profile.phoneNumber$": { [Op.like]: `%${trimmedSearch}%` } },
     ];
   }
   if (isActive !== undefined && isActive !== "") {
@@ -86,6 +90,7 @@ const getUsersService = async (data) => {
     offset: Number(offset),
     order: [["createdAt", "DESC"]],
     distinct: true,
+    subQuery: false,
   });
 
   const users = rows.map((u) => {

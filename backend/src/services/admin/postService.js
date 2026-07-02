@@ -40,12 +40,13 @@ const getAdminPostsService = async (data) => {
   const offset = (page - 1) * limit;
 
   const where = {};
-  const searchTerm = search || keyword;
+  const searchTerm = String(search || keyword || "").trim();
+  const usernameSearchTerm = searchTerm.replace(/^@+/, "");
   if (searchTerm) {
     where[Op.or] = [
       { title: { [Op.like]: `%${searchTerm}%` } },
       { content: { [Op.like]: `%${searchTerm}%` } },
-      { "$author.username$": { [Op.like]: `%${searchTerm}%` } },
+      { "$author.username$": { [Op.like]: `%${usernameSearchTerm || searchTerm}%` } },
       { "$author.profile.fullName$": { [Op.like]: `%${searchTerm}%` } },
     ];
   }
@@ -644,12 +645,14 @@ const getPendingModerationPostsService = async ({
     };
   if (moderationLabel) where.moderationLabel = moderationLabel;
   if (type) where.type = type;
-  if (keyword) {
+  const trimmedKeyword = String(keyword || "").trim();
+  const usernameKeyword = trimmedKeyword.replace(/^@+/, "");
+  if (trimmedKeyword) {
     where[Op.or] = [
-      { title: { [Op.like]: `%${keyword}%` } },
-      { content: { [Op.like]: `%${keyword}%` } },
-      { "$author.username$": { [Op.like]: `%${keyword}%` } },
-      { "$author.profile.fullName$": { [Op.like]: `%${keyword}%` } },
+      { title: { [Op.like]: `%${trimmedKeyword}%` } },
+      { content: { [Op.like]: `%${trimmedKeyword}%` } },
+      { "$author.username$": { [Op.like]: `%${usernameKeyword || trimmedKeyword}%` } },
+      { "$author.profile.fullName$": { [Op.like]: `%${trimmedKeyword}%` } },
     ];
   }
 

@@ -8,10 +8,11 @@ const getAdminFeedbacksService = async (data) => {
 
   const where = {};
   const trimmedSearch = String(search || "").trim();
+  const usernameSearch = trimmedSearch.replace(/^@+/, "");
   if (trimmedSearch) {
     where[Op.or] = [
       { content: { [Op.like]: `%${trimmedSearch}%` } },
-      { "$user.username$": { [Op.like]: `%${trimmedSearch}%` } },
+      { "$user.username$": { [Op.like]: `%${usernameSearch || trimmedSearch}%` } },
       { "$user.profile.fullName$": { [Op.like]: `%${trimmedSearch}%` } },
       { "$branch.branchName$": { [Op.like]: `%${trimmedSearch}%` } },
       { "$variant.product.productName$": { [Op.like]: `%${trimmedSearch}%` } },

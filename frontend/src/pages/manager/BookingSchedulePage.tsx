@@ -211,7 +211,7 @@ const BookingSchedulePage = () => {
               <input
                 value={keyword}
                 onChange={(event) => setKeyword(event.target.value)}
-                placeholder="Mã lịch, username, email, SĐT..."
+                placeholder="Mã lịch, username (@username), email, họ tên, SĐT..."
                 className={`w-full pl-8 ${managerInputClass}`}
               />
             </div>

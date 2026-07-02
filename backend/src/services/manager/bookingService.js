@@ -145,13 +145,15 @@ const getBookingsService = async (managerId, query = {}) => {
   const detailWhere = {};
   if (date) detailWhere.playDate = date;
 
-  if (keyword) {
+  const trimmedKeyword = String(keyword || "").trim();
+  const usernameKeyword = trimmedKeyword.replace(/^@+/, "");
+  if (trimmedKeyword) {
     where[Op.or] = [
-      { id: Number(keyword) || 0 },
-      { "$user.username$": { [Op.like]: `%${keyword}%` } },
-      { "$user.email$": { [Op.like]: `%${keyword}%` } },
-      { "$user.profile.fullName$": { [Op.like]: `%${keyword}%` } },
-      { "$user.profile.phoneNumber$": { [Op.like]: `%${keyword}%` } },
+      { id: Number(trimmedKeyword) || 0 },
+      { "$user.username$": { [Op.like]: `%${usernameKeyword || trimmedKeyword}%` } },
+      { "$user.email$": { [Op.like]: `%${trimmedKeyword}%` } },
+      { "$user.profile.fullName$": { [Op.like]: `%${trimmedKeyword}%` } },
+      { "$user.profile.phoneNumber$": { [Op.like]: `%${trimmedKeyword}%` } },
     ];
   }
 

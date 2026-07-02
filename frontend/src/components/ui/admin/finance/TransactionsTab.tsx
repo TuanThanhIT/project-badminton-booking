@@ -90,7 +90,7 @@ const TransactionsTab = () => {
               <input
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
-                placeholder="Tên, email, mô tả giao dịch..."
+                placeholder="Username (@username), email, họ tên, mô tả giao dịch..."
                 className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2.5 text-[13px] outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               />
             </div>

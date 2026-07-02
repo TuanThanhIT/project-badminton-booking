@@ -212,7 +212,7 @@ const FeedbackManagementPage = () => {
                       setPage(1);
                     }
                   }}
-                  placeholder="Nội dung, người dùng, chi nhánh, sản phẩm..."
+                  placeholder="Nội dung, username (@username), họ tên, chi nhánh, sản phẩm..."
                   className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2.5 text-[13px] outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
                 />
               </div>

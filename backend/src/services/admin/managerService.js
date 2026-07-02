@@ -37,11 +37,13 @@ const getAllManagersService = async (data = {}) => {
 
   const where = { roleId: managerRole.id };
   const trimmedSearch = String(search || "").trim();
+  const usernameSearch = trimmedSearch.replace(/^@+/, "");
   if (trimmedSearch) {
     where[Op.or] = [
-      { username: { [Op.like]: `%${trimmedSearch}%` } },
+      { username: { [Op.like]: `%${usernameSearch || trimmedSearch}%` } },
       { email: { [Op.like]: `%${trimmedSearch}%` } },
       { "$profile.fullName$": { [Op.like]: `%${trimmedSearch}%` } },
+      { "$profile.phoneNumber$": { [Op.like]: `%${trimmedSearch}%` } },
     ];
   }
 

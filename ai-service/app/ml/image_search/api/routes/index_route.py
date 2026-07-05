@@ -12,9 +12,10 @@ router = APIRouter(prefix="/index", tags=["index"])
 @router.post("/rebuild")
 def rebuild_index(
     csv_path: str | None = None,
+    include_images: bool = True,
     index_service: IndexService = Depends(get_index_service),
     search_service: SearchService = Depends(get_search_service),
 ):
-    result = index_service.build_from_csv(Path(csv_path) if csv_path else None)
+    result = index_service.build_from_csv(Path(csv_path) if csv_path else None, include_images=include_images)
     search_service.reload()
     return result

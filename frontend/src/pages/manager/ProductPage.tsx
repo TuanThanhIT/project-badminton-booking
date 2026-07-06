@@ -395,7 +395,7 @@ const ProductPagae = () => {
     "
                 placeholder={
                   activeTab === "products"
-                    ? "Tên sản phẩm hoặc SKU..."
+                    ? "Tên sản phẩm, thương hiệu hoặc SKU..."
                     : "Tên đồ uống..."
                 }
               />

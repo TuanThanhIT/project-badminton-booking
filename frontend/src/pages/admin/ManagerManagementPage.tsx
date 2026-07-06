@@ -246,7 +246,7 @@ const ManagerManagementPage = () => {
                     setPage(1);
                   }
                 }}
-                placeholder="Tên, email, tên đăng nhập..."
+                placeholder="Username (@username), email, họ tên, SĐT..."
                 className="h-10 w-full rounded-lg border border-slate-200 pl-8 pr-2.5 text-[13px] outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               />
             </div>

@@ -502,6 +502,19 @@ const PostCommentsSection = ({ postId, open }: Props) => {
 
   const handleReportSubmit = async () => {
     if (!reportTarget || reportSubmitting) return;
+
+    const reasonLabel =
+      REPORT_REASONS.find((item) => item.value === reportReason)?.label ||
+      reportReason;
+    const confirmed = await showConfirmDialog(
+      "Gửi báo cáo bình luận?",
+      `Báo cáo này sẽ được gửi cho quản trị viên với lý do: ${reasonLabel}.`,
+      "Xác nhận",
+      "Xem lại",
+      "warning",
+    );
+    if (!confirmed) return;
+
     setReportSubmitting(true);
     try {
       const res = await postSocialService.reportCommentService(

@@ -1,0 +1,111 @@
+@startuml admin-content-moderation
+left to right direction
+scale max 1050 width
+
+skinparam backgroundColor #FFFFFF
+skinparam handwritten false
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam roundcorner 8
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #F8FAFC
+  BorderColor #334155
+  ArrowColor #475569
+  FontColor #0F172A
+}
+skinparam rectangle {
+  BorderColor #94A3B8
+  FontColor #0F172A
+}
+skinparam package {
+  BorderColor #CBD5E1
+  FontColor #0F172A
+  BackgroundColor #FFFFFF
+}
+
+title Lược đồ Use Case: Quản lý và kiểm duyệt nội dung của quản trị viên
+
+actor "Quản trị viên" as Admin
+
+rectangle "Hệ thống B-Hub" as System {
+  package "Quản lý bài viết" {
+    usecase "Xem danh sách\nbài viết" as UC_ListPosts
+    usecase "Xem chi tiết\nbài viết" as UC_PostDetail
+    usecase "Ẩn/hiện\nbài viết" as UC_TogglePost
+    usecase "Xóa\nbài viết" as UC_DeletePost
+  }
+
+  package "Kiểm duyệt bài viết" {
+    usecase "Kiểm duyệt tự động\nnội dung" as UC_AutoModeration
+    usecase "Xem bài viết\nchờ duyệt" as UC_PendingPosts
+    usecase "Xem kết quả kiểm duyệt\nnhãn và confidence" as UC_ViewModerationResult
+    usecase "Phê duyệt\nbài viết" as UC_ApprovePost
+    usecase "Từ chối bài viết\nvi phạm" as UC_RejectPost
+  }
+
+  package "Quản lý bình luận" {
+    usecase "Quản lý\nbình luận" as UC_ManageComments
+    usecase "Ẩn/hiện\nbình luận" as UC_ToggleComment
+    usecase "Xóa bình luận\nvi phạm" as UC_DeleteComment
+    usecase "Cảnh báo tác giả\nbình luận" as UC_WarnCommentAuthor
+  }
+
+  package "Báo cáo bình luận" {
+    usecase "Xem báo cáo\nbình luận" as UC_CommentReports
+    usecase "Xử lý báo cáo\nbình luận" as UC_HandleCommentReport
+    usecase "Từ chối báo cáo\nkhông phù hợp" as UC_RejectCommentReport
+  }
+
+  package "Quản lý phản hồi" {
+    usecase "Xem danh sách\nphản hồi/đánh giá" as UC_ListFeedback
+    usecase "Xóa phản hồi\nvi phạm" as UC_DeleteFeedback
+  }
+}
+
+Admin -- UC_ListPosts
+Admin -- UC_PostDetail
+Admin -- UC_TogglePost
+Admin -- UC_DeletePost
+Admin -- UC_PendingPosts
+Admin -- UC_ApprovePost
+Admin -- UC_RejectPost
+Admin -- UC_ManageComments
+Admin -- UC_CommentReports
+Admin -- UC_ListFeedback
+
+UC_PostDetail ..> UC_ViewModerationResult : <<include>>
+UC_PendingPosts ..> UC_ViewModerationResult : <<include>>
+UC_ApprovePost ..> UC_PendingPosts : <<extend>>
+UC_RejectPost ..> UC_PendingPosts : <<extend>>
+
+UC_ToggleComment ..> UC_ManageComments : <<extend>>
+UC_DeleteComment ..> UC_ManageComments : <<extend>>
+UC_WarnCommentAuthor ..> UC_ManageComments : <<extend>>
+
+UC_HandleCommentReport ..> UC_CommentReports : <<extend>>
+UC_RejectCommentReport ..> UC_CommentReports : <<extend>>
+UC_HandleCommentReport ..> UC_ToggleComment : <<include>>
+
+UC_DeleteFeedback ..> UC_ListFeedback : <<extend>>
+
+note bottom of UC_AutoModeration
+Xử lý nội bộ khi người dùng tạo bài viết:
+backend gọi ai-service /predict, nhận label,
+confidence, probabilities và quyết định
+APPROVED, REVIEW_REQUIRED hoặc REJECTED.
+Không biểu diễn PhoBERT thành tác nhân ngoài.
+end note
+
+note bottom of UC_ViewModerationResult
+Dữ liệu lấy từ Post:
+moderationLabel, moderationConfidence,
+moderationAction, moderationReason.
+end note
+
+note bottom of UC_ManageComments
+Admin có thể lọc bình luận, ẩn/hiện,
+xóa vi phạm và cảnh báo tác giả.
+end note
+
+@enduml

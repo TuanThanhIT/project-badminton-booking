@@ -1,0 +1,110 @@
+@startuml
+title Use Case "Mua hàng và tìm kiếm sản phẩm của khách hàng"
+
+left to right direction
+scale max 1050 width
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam actorStyle awesome
+skinparam dpi 150
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam packageFontSize 12
+skinparam usecaseFontSize 10
+skinparam actorFontSize 11
+skinparam linetype ortho
+
+actor "Khách hàng" as Customer
+actor "VNPay" as VNPay <<external>>
+actor "GHN" as GHN <<external>>
+
+rectangle "Hệ thống B-Hub" {
+  package "Duyệt và tìm sản phẩm" {
+    usecase "Xem danh mục\nsản phẩm" as UC_Category
+    usecase "Xem danh sách\nsản phẩm" as UC_ProductList
+    usecase "Tìm kiếm sản phẩm\nbằng từ khóa/bộ lọc" as UC_KeywordSearch
+    usecase "Xem chi tiết\nsản phẩm" as UC_ProductDetail
+    usecase "Xem đánh giá\nsản phẩm" as UC_ViewFeedback
+  }
+
+  package "AI sản phẩm" {
+    usecase "Tìm kiếm sản phẩm\nbằng hình ảnh/văn bản" as UC_ImageSearch
+    usecase "Xem gợi ý sản phẩm\ncá nhân hóa" as UC_PersonalRecommend
+    usecase "Xem sản phẩm\nthường mua cùng" as UC_RelatedRecommend
+  }
+
+  package "Giỏ hàng và checkout" {
+    usecase "Quản lý giỏ hàng" as UC_Cart
+    usecase "Chọn địa chỉ\ngiao hàng" as UC_Address
+    usecase "Xem trước đơn hàng" as UC_CheckoutPreview
+    usecase "Tính phí vận chuyển" as UC_ShippingFee
+    usecase "Áp dụng mã giảm giá" as UC_Discount
+    usecase "Tạo đơn hàng" as UC_CreateOrder
+  }
+
+  package "Thanh toán và vận chuyển" {
+    usecase "Thanh toán đơn hàng\nbằng VNPay" as UC_VNPayPayment
+    usecase "Thanh toán đơn hàng\nbằng ví B-Hub" as UC_WalletPayment
+    usecase "Thanh toán lại\nqua VNPay" as UC_RetryVNPay
+    usecase "Theo dõi đơn hàng\nvà vận chuyển" as UC_TrackOrder
+  }
+
+  package "Sau mua hàng" {
+    usecase "Yêu cầu hủy đơn" as UC_CancelRequest
+    usecase "Yêu cầu trả hàng" as UC_ReturnRequest
+    usecase "Đánh giá sản phẩm" as UC_CreateFeedback
+  }
+}
+
+Customer -- UC_Category
+Customer -- UC_ProductList
+Customer -- UC_KeywordSearch
+Customer -- UC_ProductDetail
+Customer -- UC_ViewFeedback
+Customer -- UC_ImageSearch
+Customer -- UC_PersonalRecommend
+Customer -- UC_RelatedRecommend
+Customer -- UC_Cart
+Customer -- UC_Address
+Customer -- UC_CheckoutPreview
+Customer -- UC_Discount
+Customer -- UC_CreateOrder
+Customer -- UC_VNPayPayment
+Customer -- UC_WalletPayment
+Customer -- UC_RetryVNPay
+Customer -- UC_TrackOrder
+Customer -- UC_CancelRequest
+Customer -- UC_ReturnRequest
+Customer -- UC_CreateFeedback
+
+UC_ProductList ..> UC_Category : <<include>>
+UC_KeywordSearch ..> UC_ProductList : <<extend>>
+UC_ProductDetail ..> UC_ViewFeedback : <<include>>
+UC_RelatedRecommend ..> UC_ProductDetail : <<extend>>
+UC_CheckoutPreview ..> UC_Address : <<include>>
+UC_CheckoutPreview ..> UC_ShippingFee : <<include>>
+UC_Discount ..> UC_CheckoutPreview : <<extend>>
+UC_CreateOrder ..> UC_CheckoutPreview : <<include>>
+UC_CreateOrder ..> UC_VNPayPayment : <<extend>>
+UC_CreateOrder ..> UC_WalletPayment : <<extend>>
+UC_RetryVNPay ..> UC_VNPayPayment : <<include>>
+UC_TrackOrder ..> UC_ShippingFee : <<include>>
+
+UC_VNPayPayment -- VNPay
+UC_RetryVNPay -- VNPay
+UC_ShippingFee -- GHN
+UC_TrackOrder -- GHN
+
+note bottom of UC_ImageSearch
+  Backend nhận ảnh bằng multipart upload,
+  chuyển trực tiếp sang ai-service /search.
+  Source không cho thấy ảnh tìm kiếm được lưu Cloudinary.
+end note
+
+note bottom of UC_PersonalRecommend
+  Gợi ý cá nhân hóa và mua kèm gọi ai-service
+  qua /api/v1/recommend/product.
+  LightGBM/CLIP/FAISS là thành phần nội bộ.
+end note
+
+@enduml

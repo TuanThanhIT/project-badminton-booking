@@ -253,6 +253,7 @@ const mapConversation = async (conversation, currentUserId, transaction) => {
 
 const searchBranchMembersService = async ({ managerId, query }) => {
   const q = String(query.q || "").trim();
+  const usernameQuery = q.replace(/^@+/, "");
   const limit = Math.min(Number(query.limit || 15), 30);
 
   return sequelize.transaction(async (t) => {
@@ -269,7 +270,7 @@ const searchBranchMembersService = async ({ managerId, query }) => {
 
     if (q) {
       where[Op.or] = [
-        { username: { [Op.like]: `%${q}%` } },
+        { username: { [Op.like]: `%${usernameQuery || q}%` } },
         { email: { [Op.like]: `%${q}%` } },
         { "$profile.fullName$": { [Op.like]: `%${q}%` } },
         { "$profile.phoneNumber$": { [Op.like]: `%${q}%` } },

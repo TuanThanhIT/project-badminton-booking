@@ -1,0 +1,191 @@
+@startuml
+title Lược đồ Use Case tổng quát của hệ thống B-Hub
+
+left to right direction
+scale max 1120 width
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam actorStyle awesome
+skinparam dpi 150
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam packageFontSize 12
+skinparam usecaseFontSize 10
+skinparam actorFontSize 11
+skinparam noteFontSize 10
+skinparam linetype ortho
+
+actor "Khách vãng lai" as Guest
+actor "Khách hàng" as Customer
+actor "Huấn luyện viên" as Coach
+actor "Nhân viên chi nhánh" as Employee
+actor "Quản lý chi nhánh" as Manager
+actor "Quản trị viên" as Admin
+
+actor "VNPay" as VNPay <<external>>
+actor "GHN" as GHN <<external>>
+actor "Dịch vụ Email" as Email <<external>>
+actor "Cloudinary" as Cloudinary <<external>>
+actor "OpenAI API" as OpenAI <<external>>
+
+Customer <|-- Coach
+
+rectangle "Hệ thống B-Hub" {
+  package "Tài khoản và truy cập" {
+    usecase "Xem thông tin công khai\ntrang chủ, vị trí, giới thiệu" as UC_Public
+    usecase "Đăng ký, đăng nhập,\nOTP và khôi phục mật khẩu" as UC_Auth
+    usecase "Quản lý hồ sơ,\nđịa chỉ và thông báo" as UC_Profile
+    usecase "Tải lên và lưu trữ hình ảnh" as UC_UploadImage
+    usecase "Gửi OTP và email giao dịch" as UC_EmailNotify
+  }
+
+  package "Đặt sân và thanh toán" {
+    usecase "Tra cứu chi nhánh,\nsân và khung giờ trống" as UC_CourtSearch
+    usecase "Đặt sân theo lượt\nvà đặt sân tháng" as UC_Booking
+    usecase "Thanh toán đặt sân\nbằng VNPay hoặc ví" as UC_BookingPayment
+    usecase "Theo dõi, hủy hoặc\nyêu cầu hủy lịch đặt" as UC_BookingManage
+    usecase "Áp dụng mã giảm giá\ncho đặt sân" as UC_BookingDiscount
+  }
+
+  package "Mua hàng và vận chuyển" {
+    usecase "Xem sản phẩm,\ngiỏ hàng và checkout" as UC_Shopping
+    usecase "Tạo đơn hàng và\nthanh toán VNPay/ví/COD" as UC_Order
+    usecase "Tính phí, tạo vận đơn\nvà theo dõi GHN" as UC_Shipping
+    usecase "Yêu cầu hủy đơn\nhoặc trả hàng" as UC_OrderActions
+    usecase "Áp dụng mã giảm giá\ncho đơn hàng" as UC_OrderDiscount
+  }
+
+  package "Ví và giao dịch" {
+    usecase "Xem ví và lịch sử\ngiao dịch" as UC_WalletView
+    usecase "Nạp ví qua VNPay" as UC_WalletDeposit
+    usecase "Yêu cầu rút tiền\nvà xác thực OTP" as UC_WalletWithdraw
+  }
+
+  package "Cộng đồng và nhắn tin" {
+    usecase "Đăng bài, cập nhật\nvà xóa bài cộng đồng" as UC_Posts
+    usecase "Tương tác bài viết:\nlike, bình luận, repost, report" as UC_Social
+    usecase "Nhắn tin cá nhân,\nnhóm và tệp đính kèm" as UC_Messaging
+    usecase "Kiểm duyệt nội dung\ncộng đồng bằng AI và admin" as UC_Moderation
+  }
+
+  package "Huấn luyện viên và lớp học" {
+    usecase "Đăng ký trở thành\nhuấn luyện viên" as UC_CoachApply
+    usecase "Tạo và quản lý\nlớp học" as UC_CoachClass
+    usecase "Đăng ký lớp học\nvà theo dõi lớp của tôi" as UC_ClassEnroll
+    usecase "Quản lý học viên,\nthông báo và chat lớp" as UC_CoachStudents
+  }
+
+  package "AI trong trải nghiệm người dùng" {
+    usecase "B-Hub Assistant\ntrợ lý hội thoại" as UC_Assistant
+    usecase "Gợi ý sản phẩm\ncá nhân hóa/mua kèm" as UC_ProductRecommend
+    usecase "Tìm kiếm sản phẩm\nbằng ảnh và văn bản" as UC_ImageSearch
+  }
+
+  package "Vận hành chi nhánh" {
+    usecase "Xem chi nhánh phụ trách\nvà quản lý sân/giá sân" as UC_ManagerBranch
+    usecase "Quản lý booking,\norder và hội thoại chi nhánh" as UC_ManagerOps
+    usecase "Quầy nhân viên:\nca làm, bảng sân, draft và checkout" as UC_EmployeeCounter
+    usecase "Xử lý booking,\norder, hủy/trả và bàn giao GHN" as UC_EmployeeOps
+  }
+
+  package "Nhân sự, kho và báo cáo" {
+    usecase "Quản lý nhân viên,\nca làm và lương" as UC_HRShift
+    usecase "Quản lý tồn kho,\nnhà cung cấp và phiếu nhập" as UC_Inventory
+    usecase "Báo cáo doanh thu\nvà thống kê vận hành" as UC_Reports
+  }
+
+  package "Quản trị toàn hệ thống" {
+    usecase "Quản lý người dùng,\nvai trò và phân công manager" as UC_AdminUsers
+    usecase "Quản lý chi nhánh,\nsân, sản phẩm, danh mục, đồ uống" as UC_AdminCatalog
+    usecase "Quản lý tài chính,\nví và yêu cầu rút tiền" as UC_AdminFinance
+    usecase "Quản lý khuyến mãi,\nmã riêng và AI Insights" as UC_AdminPromoAI
+    usecase "Quản lý kiểm duyệt\nbài viết, bình luận, báo cáo" as UC_AdminModeration
+  }
+}
+
+Guest -- UC_Public
+Guest -- UC_Auth
+Guest -- UC_Assistant
+
+Customer -- UC_Profile
+Customer -- UC_CourtSearch
+Customer -- UC_Booking
+Customer -- UC_BookingPayment
+Customer -- UC_BookingManage
+Customer -- UC_BookingDiscount
+Customer -- UC_Shopping
+Customer -- UC_Order
+Customer -- UC_Shipping
+Customer -- UC_OrderActions
+Customer -- UC_OrderDiscount
+Customer -- UC_WalletView
+Customer -- UC_WalletDeposit
+Customer -- UC_WalletWithdraw
+Customer -- UC_Posts
+Customer -- UC_Social
+Customer -- UC_Messaging
+Customer -- UC_ClassEnroll
+Customer -- UC_Assistant
+Customer -- UC_ProductRecommend
+Customer -- UC_ImageSearch
+Customer -- UC_UploadImage
+
+Coach -- UC_CoachApply
+Coach -- UC_CoachClass
+Coach -- UC_CoachStudents
+
+Employee -- UC_EmployeeCounter
+Employee -- UC_EmployeeOps
+Employee -- UC_HRShift
+
+Manager -- UC_ManagerBranch
+Manager -- UC_ManagerOps
+Manager -- UC_HRShift
+Manager -- UC_Inventory
+Manager -- UC_Reports
+Manager -- UC_Messaging
+Manager -- UC_UploadImage
+
+Admin -- UC_AdminUsers
+Admin -- UC_AdminCatalog
+Admin -- UC_AdminFinance
+Admin -- UC_AdminPromoAI
+Admin -- UC_AdminModeration
+Admin -- UC_Inventory
+Admin -- UC_Reports
+Admin -- UC_UploadImage
+Admin -- UC_Moderation
+
+UC_Auth ..> UC_EmailNotify : <<include>>
+UC_WalletWithdraw ..> UC_EmailNotify : <<include>>
+UC_BookingPayment ..> VNPay
+UC_Order ..> VNPay
+UC_WalletDeposit ..> VNPay
+UC_Shipping ..> GHN
+UC_EmailNotify ..> Email
+UC_UploadImage ..> Cloudinary
+UC_Assistant ..> OpenAI
+
+note right of Employee
+  Quyền nhân viên được kiểm tra theo
+  chi nhánh được phân công, ca làm
+  và trạng thái check-in thu ngân.
+end note
+
+note right of Manager
+  Quản lý chi nhánh thao tác trong
+  phạm vi BranchManager đang active.
+end note
+
+note right of Admin
+  Middleware authorize cho phép ADMIN
+  truy cập các nhóm route quản trị
+  toàn hệ thống.
+end note
+
+note bottom of UC_Assistant
+  Khách vãng lai chỉ dùng được ngữ cảnh tổng quát.
+  Các ngữ cảnh đặt sân, mua sắm, HLV cần đăng nhập.
+end note
+
+@enduml

@@ -198,7 +198,7 @@ const BranchManagementPage = () => {
                     setPage(1);
                   }
                 }}
-                placeholder="Tên chi nhánh, địa chỉ, điện thoại, quản lý..."
+                placeholder="Tên chi nhánh, địa chỉ, điện thoại, username/email quản lý..."
                 className="h-10 w-full rounded-lg border border-slate-200 pl-8 pr-2.5 text-[13px] outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               />
             </div>

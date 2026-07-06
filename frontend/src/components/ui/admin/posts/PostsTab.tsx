@@ -179,7 +179,7 @@ const PostsTab = ({ onStatsChange }: { onStatsChange?: () => void }) => {
                     setPage(1);
                   }
                 }}
-                placeholder="Tiêu đề, nội dung..."
+                placeholder="Tiêu đề, nội dung, username (@username), tác giả..."
                 className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2.5 text-[13px] outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
               />
             </div>

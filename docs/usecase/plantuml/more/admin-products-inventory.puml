@@ -1,0 +1,89 @@
+@startuml
+title Lược đồ Use Case: Quản lý hàng hóa và kho của quản trị viên
+
+left to right direction
+scale max 1050 width
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #F8FBFF
+  BorderColor #2563EB
+  ArrowColor #334155
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #334155
+}
+skinparam rectangle {
+  BorderColor #475569
+}
+
+actor "Quản trị viên" as Admin
+actor "Cloudinary" as Cloudinary <<external>>
+
+rectangle "Hệ thống B-Hub" {
+  package "Danh mục và hàng hóa" {
+    usecase "Quản lý danh mục" as UC_Category
+    usecase "Quản lý sản phẩm" as UC_Product
+    usecase "Quản lý hình ảnh" as UC_ProductImages
+    usecase "Tải ảnh lên" as UC_UploadImage
+    usecase "Quản lý biến thể" as UC_ProductVariants
+    usecase "Quản lý đồ uống" as UC_Beverage
+  }
+
+  package "Kho toàn chuỗi" {
+    usecase "Xem tồn kho\ntoàn chuỗi" as UC_ViewStocks
+    usecase "Xem tồn kho\nsản phẩm" as UC_ViewVariantStocks
+    usecase "Xem tồn kho\nđồ uống" as UC_ViewBeverageStocks
+    usecase "Xem lịch sử\nnhập xuất" as UC_StockHistory
+  }
+
+  package "Nhà cung cấp và phiếu nhập" {
+    usecase "Quản lý\nnhà cung cấp" as UC_Supplier
+    usecase "Xem phiếu nhập" as UC_ViewReceipts
+    usecase "Xem chi tiết\nphiếu nhập" as UC_ReceiptDetail
+    usecase "Duyệt phiếu nhập" as UC_ApproveReceipt
+    usecase "Từ chối phiếu nhập" as UC_RejectReceipt
+    usecase "Cập nhật tồn kho\nvà ghi lịch sử" as UC_UpdateStock
+  }
+}
+
+Admin -- UC_Category
+Admin -- UC_Product
+Admin -- UC_Beverage
+Admin -- UC_ViewStocks
+Admin -- UC_StockHistory
+Admin -- UC_Supplier
+Admin -- UC_ViewReceipts
+
+UC_Product ..> UC_ProductImages : <<include>>
+UC_Product ..> UC_ProductVariants : <<include>>
+UC_ProductImages ..> UC_UploadImage : <<include>>
+UC_UploadImage -- Cloudinary
+
+UC_ViewStocks ..> UC_ViewVariantStocks : <<include>>
+UC_ViewStocks ..> UC_ViewBeverageStocks : <<include>>
+
+UC_ViewReceipts ..> UC_ReceiptDetail : <<include>>
+UC_ViewReceipts <.. UC_ApproveReceipt : <<extend>>
+UC_ViewReceipts <.. UC_RejectReceipt : <<extend>>
+UC_ApproveReceipt ..> UC_UpdateStock : <<include>>
+UC_UpdateStock ..> UC_StockHistory : <<include>>
+
+note right of UC_UploadImage
+  Route /admin/upload/image upload file ảnh
+  qua Cloudinary và trả về URL để lưu cho sản phẩm/ảnh.
+end note
+
+note bottom of UC_ApproveReceipt
+  Admin chỉ duyệt phiếu nhập đang PENDING.
+  Khi duyệt, hệ thống tăng tồn kho theo chi nhánh
+  và tạo StockTransaction.
+end note
+
+note bottom of UC_RejectReceipt
+  Admin chỉ từ chối phiếu nhập đang PENDING.
+  Quản lý chi nhánh tạo/hủy phiếu nhập là luồng khác.
+end note
+
+@enduml

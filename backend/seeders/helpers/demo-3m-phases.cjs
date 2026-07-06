@@ -1225,14 +1225,14 @@ const seedAiProductPatterns = async (qi, Sequelize) =>
         findProductVariantByCategory(qi, Sequelize, transaction, categoryIds, branch.id);
 
       const racket = await resolve([1]);
-      const shuttle = await resolve([70]);
+      const socks = await resolve([69]);
+      const string = await resolve([70]);
       const bag = await resolve([59]);
       const shoes = await resolve([11]);
-      const grip = await resolve([76]);
 
-      if (!racket || !shuttle) continue;
+      if (!racket || !socks) continue;
 
-      const beginnerKit = [racket, shuttle, bag].filter(Boolean);
+      const beginnerKit = [racket, socks, string, bag].filter(Boolean);
       for (let i = 0; i < AI_PRODUCT_CONFIG.KITS_PER_BRANCH; i += 1) {
         paySeq += 1;
         const buyer = users[(Number(branch.id) * 7 + i) % users.length];
@@ -1247,19 +1247,32 @@ const seedAiProductPatterns = async (qi, Sequelize) =>
         });
       }
 
-      if (shoes && grip) {
+      if (shoes && socks) {
         for (let i = 0; i < AI_PRODUCT_CONFIG.SHOE_KITS_PER_BRANCH; i += 1) {
           paySeq += 1;
           const buyer = users[(Number(branch.id) * 9 + i + 3) % users.length];
           await insertAiPaidOrder(qi, Sequelize, transaction, {
             user: buyer,
             branch,
-            variants: [shoes, grip].map((v) => buildVariantLine(v, 1)),
+            variants: [shoes, socks].map((v) => buildVariantLine(v, v === socks ? 2 : 1)),
             groupNote: `${AI_PRODUCT_TAG} SHOE-KIT-B${branch.id}-${u.pad(i + 1, 2)}`,
             createdAt: daysAgoFromToday(u.int(1, 45)),
             paySeq,
           });
         }
+      }
+
+      for (let i = 0; i < 4; i += 1) {
+        paySeq += 1;
+        const buyer = users[(Number(branch.id) * 11 + i) % users.length];
+        await insertAiPaidOrder(qi, Sequelize, transaction, {
+          user: buyer,
+          branch,
+          variants: [racket, socks].map((v) => buildVariantLine(v, v === socks ? 2 : 1)),
+          groupNote: `${AI_PRODUCT_TAG} RACKET-SOCKS-B${branch.id}-${u.pad(i + 1, 2)}`,
+          createdAt: daysAgoFromToday(u.int(2, 50)),
+          paySeq,
+        });
       }
     }
 
@@ -1267,7 +1280,8 @@ const seedAiProductPatterns = async (qi, Sequelize) =>
     const resolveMain = (categoryIds) =>
       findProductVariantByCategory(qi, Sequelize, transaction, categoryIds, mainBranch.id);
     const racket = await resolveMain([1]);
-    const shuttle = await resolveMain([70]);
+    const socks = await resolveMain([69]);
+    const string = await resolveMain([70]);
 
     const user001 = persona("demo_user1");
     if (user001 && racket) {
@@ -1285,13 +1299,15 @@ const seedAiProductPatterns = async (qi, Sequelize) =>
     }
 
     const user002 = persona("demo_user2");
-    if (user002 && racket && shuttle) {
+    if (user002 && racket && socks && string) {
       for (let i = 0; i < AI_PRODUCT_CONFIG.PERSONA_COMBO; i += 1) {
         paySeq += 1;
         await insertAiPaidOrder(qi, Sequelize, transaction, {
           user: user002,
           branch: mainBranch,
-          variants: [racket, shuttle].map((v) => buildVariantLine(v, 1)),
+          variants: [racket, socks, string].map((v) =>
+            buildVariantLine(v, v === socks ? 2 : 1),
+          ),
           groupNote: `${AI_PRODUCT_TAG} PERSONA-002-${u.pad(i + 1, 2)}`,
           createdAt: daysAgoFromToday(u.int(3, 35)),
           paySeq,
@@ -1398,7 +1414,7 @@ const seedAdminOccupancySkew = async (qi, Sequelize) =>
     churnUsers.forEach((user, idx) => {
       const court = courts[idx % courts.length];
       for (let i = 0; i < 3; i += 1) {
-        const daysBack = i === 2 ? 28 + idx : 60 + i * 20;
+        const daysBack = i === 2 ? 35 + idx : 60 + i * 20;
         pushBooking(
           user,
           court,

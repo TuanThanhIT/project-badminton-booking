@@ -25,9 +25,21 @@ from app.schemas import (
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-MODERATION_MODEL_DIR = os.getenv(
+
+
+def _resolve_path(env_key: str, default: Path) -> str:
+    raw = os.getenv(env_key)
+    if not raw:
+        return str(default)
+    path = Path(raw)
+    if path.is_absolute():
+        return str(path)
+    return str((BASE_DIR / path).resolve())
+
+
+MODERATION_MODEL_DIR = _resolve_path(
     "MODEL_DIR",
-    str(BASE_DIR / "models" / "bhub_phobert_moderation_model_v8"),
+    BASE_DIR / "models" / "bhub_phobert_moderation_model_v8",
 )
 MAX_LENGTH = int(os.getenv("MAX_LENGTH", "128"))
 

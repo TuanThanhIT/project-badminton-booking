@@ -9,12 +9,20 @@ import joblib
 import pandas as pd
 from lightgbm import LGBMClassifier
 
-MODEL_DIR = Path(
-    os.getenv(
-        "RECOMMENDATION_MODEL_DIR",
-        Path(__file__).resolve().parent.parent.parent / "models" / "recommendation",
-    )
-)
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+
+def _resolve_model_dir() -> Path:
+    raw = os.getenv("RECOMMENDATION_MODEL_DIR")
+    if not raw:
+        return BASE_DIR / "models" / "recommendation"
+    path = Path(raw)
+    if path.is_absolute():
+        return path
+    return (BASE_DIR / path).resolve()
+
+
+MODEL_DIR = _resolve_model_dir()
 MODEL_DIR.mkdir(parents=True, exist_ok=True)
 
 COOCCUR_PATH = MODEL_DIR / "product_cooccur.joblib"

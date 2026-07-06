@@ -11,6 +11,7 @@
     "npx sequelize-cli db:seed --seed 20260610120000-seed-3m-ai-pattern-bookings.cjs",
     "npx sequelize-cli db:seed --seed 20260610130000-seed-ai-product-patterns.cjs",
     "npx sequelize-cli db:seed --seed 20260610140000-seed-admin-occupancy-skew.cjs",
+    "npx sequelize-cli db:seed --seed 20260701100000-seed-ai-bought-together-patterns.cjs",
     "npx sequelize-cli db:seed --seed 20260619100000-seed-ai-bulk-training-data.cjs"
   ],
   "noteSeederAll": "db:seed:all đã gồm các file AI trên (theo timestamp). Chỉ chạy lẻ khi cần seed lại phần AI.",
@@ -37,7 +38,7 @@
     ],
     "boughtTogether": {
       "viewProduct": "Yonex Nanoflare Skill Vợt cầu lông Yonex (id ~10000)",
-      "expectKem": ["Cước đan vợt Yonex BG65 (~918)", "Balo Yonex Pro Tour 30L (~914)"]
+      "expectKem": ["Vớ Cầu Lông (category 69)", "Cước đan vợt (category 70)", "Balo Yonex (category 59)"]
     }
   },
   "verifySql": [

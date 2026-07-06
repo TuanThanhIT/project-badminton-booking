@@ -10,6 +10,10 @@
 
 const u = require("./demo-3m-utils.cjs");
 const { getBase, priceFor } = require("./demo-3m-phases.cjs");
+const {
+  CAT,
+  findVariantByCategories,
+} = require("./ai-bought-together-seed.cjs");
 
 const BULK_TAG = `${u.MARKER} AI-BULK-TRAIN`;
 const PAY_PREFIX = "AI-BULK-PAY-";
@@ -426,7 +430,7 @@ const seedBulkBookings = async (qi, Sequelize) =>
       );
       churnUsers.forEach((user, idx) => {
         const court = courts[idx % courts.length];
-        const gaps = [75, 45, 28 + idx * 2];
+        const gaps = [75, 45, 35 + idx * 2];
         gaps.forEach((daysBack, i) => {
           pushBooking({
             user,
@@ -491,26 +495,30 @@ const seedBulkOrders = async (qi, Sequelize) =>
     const stats = { beginnerKit: 0, shoeKit: 0, persona: 0, total: 0 };
 
     const resolveBranchProducts = async (branchId) => {
-      const [racket, shuttle, bag, shoes] = await Promise.all([
-        findProductVariant(qi, Sequelize, transaction, "%Nanoflare Skill%Vợt%", branchId),
-        findProductVariant(qi, Sequelize, transaction, "%Cước đan vợt%", branchId),
-        findProductVariant(qi, Sequelize, transaction, "%Balo cầu lông Yonex%", branchId),
-        findProductVariant(qi, Sequelize, transaction, "%Giày cầu lông Yonex%", branchId),
+      const [racket, socks, string, bag, shoes, grip] = await Promise.all([
+        findVariantByCategories(qi, Sequelize, transaction, CAT.RACKET_YONEX, branchId),
+        findVariantByCategories(qi, Sequelize, transaction, CAT.SOCKS, branchId),
+        findVariantByCategories(qi, Sequelize, transaction, CAT.STRING, branchId),
+        findVariantByCategories(qi, Sequelize, transaction, CAT.BAG, branchId),
+        findVariantByCategories(qi, Sequelize, transaction, CAT.SHOES_YONEX, branchId),
+        findVariantByCategories(qi, Sequelize, transaction, CAT.GRIP, branchId),
       ]);
-      return { racket, shuttle, bag, shoes };
+      return { racket, socks, string, bag, shoes, grip };
     };
 
     const PERSONAS = [
-      { suffix: "RACKET", pick: (p) => (p.racket ? [p.racket] : []), repeats: 4 },
-      { suffix: "COMBO", pick: (p) => [p.racket, p.shuttle].filter(Boolean), repeats: 5 },
-      { suffix: "BAG", pick: (p) => (p.bag ? [p.bag] : []), repeats: 3 },
-      { suffix: "SHOES", pick: (p) => (p.shoes ? [p.shoes] : []), repeats: 3 },
-      { suffix: "MIXED", pick: (p) => [p.shuttle, p.bag].filter(Boolean), repeats: 2 },
+      { suffix: "RACKET", pick: (p) => (p.racket ? [p.racket] : []), repeats: 3 },
+      { suffix: "RACKET-SOCKS", pick: (p) => [p.racket, p.socks].filter(Boolean), repeats: 5 },
+      { suffix: "COMBO", pick: (p) => [p.racket, p.socks, p.string].filter(Boolean), repeats: 4 },
+      { suffix: "BAG", pick: (p) => (p.bag ? [p.bag] : []), repeats: 2 },
+      { suffix: "SHOES-SOCKS", pick: (p) => [p.shoes, p.socks].filter(Boolean), repeats: 3 },
     ];
 
     for (const [branchIdx, branch] of base.branches.entries()) {
       const products = await resolveBranchProducts(branch.id);
-      const kit = [products.racket, products.shuttle, products.bag].filter(Boolean);
+      const kit = [products.racket, products.socks, products.string, products.bag].filter(
+        Boolean,
+      );
       if (kit.length >= 2) {
         for (let i = 0; i < BULK_CONFIG.KITS_PER_BRANCH; i += 1) {
           paySeq += 1;
@@ -531,7 +539,7 @@ const seedBulkOrders = async (qi, Sequelize) =>
         }
       }
 
-      const shoeKit = [products.shoes, products.bag].filter(Boolean);
+      const shoeKit = [products.shoes, products.socks].filter(Boolean);
       if (shoeKit.length >= 2) {
         for (let i = 0; i < BULK_CONFIG.SHOE_KITS_PER_BRANCH; i += 1) {
           paySeq += 1;

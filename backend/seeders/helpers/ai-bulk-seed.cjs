@@ -5,7 +5,7 @@
  * Marker: [DEMO-SEED-3M] AI-BULK-TRAIN
  *
  * Calibrated for 40 demo_user + existing ~760 demo bookings / ~560 demo orders.
- * Expected bulk output: ~450–520 bookings, ~130–140 PAID orders (5 branches).
+ * Expected bulk output: ~6k–9k bookings (occupancy grid), ~130–140 PAID orders (5 branches).
  */
 
 const u = require("./demo-3m-utils.cjs");
@@ -18,17 +18,55 @@ const {
 const BULK_TAG = `${u.MARKER} AI-BULK-TRAIN`;
 const PAY_PREFIX = "AI-BULK-PAY-";
 
+/**
+ * Mục tiêu % lấp đầy / khung giờ (capacity = số sân × OCCUPANCY_DAYS).
+ * peak 18–21h: 46–75% | mid 10–17h: 20–30% | low 7–8h: ~5–10% (ngày thưa).
+ */
+const BRANCH_OCCUPANCY_PROFILE = [
+  { peak: 0.75, mid: 0.3, low: 0.1 }, // Thủ Đức — đông nhất
+  { peak: 0.68, mid: 0.28, low: 0.09 },
+  { peak: 0.58, mid: 0.25, low: 0.08 },
+  { peak: 0.52, mid: 0.22, low: 0.07 },
+  { peak: 0.46, mid: 0.2, low: 0.06 }, // Quận 7 — vắng nhất
+];
+
+const MID_HOURS = [10, 11, 14, 15, 16, 17];
+
 /** Calibrated for 40 demo_user + existing ~760 demo bookings / ~560 demo orders */
 const BULK_CONFIG = {
   HABIT_WEEKS: 8,
   USERS_PER_BRANCH: 4,
-  OCCUPANCY_DAYS: 21,
+  OCCUPANCY_DAYS: 30,
   PEAK_HOURS: [18, 19, 20, 21],
   LOW_HOURS: [7, 8],
-  LOW_DAY_STEP: 5,
+  LOW_DAY_STEP: 4,
   CHURN_USERS_PER_BRANCH: 1,
-  KITS_PER_BRANCH: 8,
+  KITS_PER_BRANCH: 5,
   SHOE_KITS_PER_BRANCH: 4,
+};
+
+const courtsToBook = (courtCount, fraction) =>
+  Math.max(1, Math.min(courtCount, Math.round(courtCount * fraction)));
+
+const loadOccupiedSlots = async (qi, Sequelize, transaction, lookbackDays) => {
+  const rows = await u.q(
+    qi,
+    Sequelize,
+    `
+      SELECT bd.courtId,
+             DATE_FORMAT(bd.playDate, '%Y-%m-%d') AS playDate,
+             HOUR(bd.startTime) AS hour
+      FROM BookingDetails bd
+      WHERE bd.playDate >= :since
+    `,
+    { since: u.dateOnly(daysAgo(lookbackDays)) },
+    transaction,
+  );
+  const occupied = new Set();
+  rows.forEach((row) => {
+    occupied.add(`${row.courtId}-${row.playDate}-${row.hour}`);
+  });
+  return occupied;
 };
 
 const BRANCH_HABITS = [
@@ -380,42 +418,68 @@ const seedBulkBookings = async (qi, Sequelize) =>
       });
     });
 
-    // 2) Occupancy skew — mỗi chi nhánh: peak 18–20h, ít 7–8h (21 ngày gần đây)
+    // 2) Occupancy grid — nhiều sân / ngày theo profile từng chi nhánh (30 ngày)
+    const existingOccupied = await loadOccupiedSlots(
+      qi,
+      Sequelize,
+      transaction,
+      BULK_CONFIG.OCCUPANCY_DAYS,
+    );
+    existingOccupied.forEach((key) => occupied.add(key));
+
     base.branches.forEach((branch, branchIdx) => {
       const courts = courtsByBranch[branch.id] || [];
       if (!courts.length) return;
+      const profile =
+        BRANCH_OCCUPANCY_PROFILE[branchIdx % BRANCH_OCCUPANCY_PROFILE.length];
 
       for (let day = 1; day <= BULK_CONFIG.OCCUPANCY_DAYS; day += 1) {
-        for (const hour of BULK_CONFIG.PEAK_HOURS) {
-          const playDate = daysAgo(day);
-          const user = users[(branchIdx * 7 + day + hour) % users.length];
-          const court = courts[(day + hour) % courts.length];
-          pushBooking({
-            user,
-            branch,
-            court,
-            playDate,
-            hour,
-            duration: 1,
-            suffix: `OCC-PEAK-B${branch.id}`,
-          });
-        }
-      }
+        const playDate = daysAgo(day);
 
-      for (let day = 2; day <= BULK_CONFIG.OCCUPANCY_DAYS; day += BULK_CONFIG.LOW_DAY_STEP) {
+        for (const hour of BULK_CONFIG.PEAK_HOURS) {
+          const n = courtsToBook(courts.length, profile.peak);
+          for (let c = 0; c < n; c += 1) {
+            pushBooking({
+              user: users[(branchIdx * 11 + day + hour + c) % users.length],
+              branch,
+              court: courts[c % courts.length],
+              playDate,
+              hour,
+              duration: 1,
+              suffix: `OCC-PEAK-B${branch.id}`,
+            });
+          }
+        }
+
+        for (const hour of MID_HOURS) {
+          const n = courtsToBook(courts.length, profile.mid);
+          for (let c = 0; c < n; c += 1) {
+            pushBooking({
+              user: users[(branchIdx * 7 + day + hour + c) % users.length],
+              branch,
+              court: courts[(c + day) % courts.length],
+              playDate,
+              hour,
+              duration: 1,
+              suffix: `OCC-MID-B${branch.id}`,
+            });
+          }
+        }
+
+        if (day % BULK_CONFIG.LOW_DAY_STEP !== 0) continue;
         for (const hour of BULK_CONFIG.LOW_HOURS) {
-          const playDate = daysAgo(day);
-          const user = users[(branchIdx * 3 + day) % users.length];
-          const court = courts[day % courts.length];
-          pushBooking({
-            user,
-            branch,
-            court,
-            playDate,
-            hour,
-            duration: 1,
-            suffix: `OCC-LOW-B${branch.id}`,
-          });
+          const n = courtsToBook(courts.length, profile.low);
+          for (let c = 0; c < n; c += 1) {
+            pushBooking({
+              user: users[(branchIdx * 3 + day + hour + c) % users.length],
+              branch,
+              court: courts[c % courts.length],
+              playDate,
+              hour,
+              duration: 1,
+              suffix: `OCC-LOW-B${branch.id}`,
+            });
+          }
         }
       }
     });
@@ -507,11 +571,11 @@ const seedBulkOrders = async (qi, Sequelize) =>
     };
 
     const PERSONAS = [
-      { suffix: "RACKET", pick: (p) => (p.racket ? [p.racket] : []), repeats: 3 },
-      { suffix: "RACKET-SOCKS", pick: (p) => [p.racket, p.socks].filter(Boolean), repeats: 5 },
+      { suffix: "RACKET-SOCKS", pick: (p) => [p.racket, p.socks].filter(Boolean), repeats: 4 },
       { suffix: "COMBO", pick: (p) => [p.racket, p.socks, p.string].filter(Boolean), repeats: 4 },
-      { suffix: "BAG", pick: (p) => (p.bag ? [p.bag] : []), repeats: 2 },
-      { suffix: "SHOES-SOCKS", pick: (p) => [p.shoes, p.socks].filter(Boolean), repeats: 3 },
+      { suffix: "SHOES-SOCKS", pick: (p) => [p.shoes, p.socks].filter(Boolean), repeats: 4 },
+      { suffix: "SHOES-BAG", pick: (p) => [p.shoes, p.bag].filter(Boolean), repeats: 3 },
+      { suffix: "RACKET-BAG", pick: (p) => [p.racket, p.bag].filter(Boolean), repeats: 3 },
     ];
 
     for (const [branchIdx, branch] of base.branches.entries()) {

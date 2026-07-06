@@ -1,7 +1,9 @@
 name: Deploy B-Hub to VPS
 
 on:
-  workflow_dispatch:
+  push:
+    branch:
+      - main
 
 jobs:
   deploy:

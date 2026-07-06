@@ -5,6 +5,9 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+BASE_DIR = Path(__file__).resolve().parents[4]
+
+
 class Settings(BaseSettings):
     app_name: str = "badminton-ai-service"
     host: str = "0.0.0.0"
@@ -16,6 +19,8 @@ class Settings(BaseSettings):
     device: str = "cpu"
 
     index_path: Path = Path("data/index/product_vectors.faiss")
+    text_index_path: Path = Path("data/index/text_index.faiss")
+    image_index_path: Path = Path("data/index/image_index.faiss")
     metadata_path: Path = Path("data/index/product_metadata.json")
     products_csv_path: Path = Path("data/processed/products.csv")
 
@@ -28,7 +33,7 @@ class Settings(BaseSettings):
     color_mismatch_penalty: float = 0.06
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=BASE_DIR / ".env",
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -36,4 +41,16 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    settings = Settings()
+    for field in [
+        "model_cache_dir",
+        "index_path",
+        "text_index_path",
+        "image_index_path",
+        "metadata_path",
+        "products_csv_path",
+    ]:
+        value = getattr(settings, field)
+        if not value.is_absolute():
+            setattr(settings, field, BASE_DIR / value)
+    return settings

@@ -4,7 +4,6 @@ from PIL import Image
 
 from app.ml.image_search.config.config import get_settings
 from app.ml.image_search.embeddings.clip_encoder import ClipEncoder, get_clip_encoder
-from app.ml.image_search.embeddings.vector_utils import weighted_average
 from app.ml.image_search.image_processing.color_extractor import metadata_colors
 from app.ml.image_search.retrieval.faiss_store import FaissStore
 from app.ml.image_search.retrieval.metadata_store import MetadataStore
@@ -17,6 +16,8 @@ class SearchService:
         self.settings = get_settings()
         self._encoder: ClipEncoder | None = None
         self.faiss_store = FaissStore.load(self.settings.index_path)
+        self.text_store = FaissStore.load(self.settings.text_index_path)
+        self.image_store = FaissStore.load(self.settings.image_index_path)
         self.metadata_store = MetadataStore.load(self.settings.metadata_path)
 
     @property
@@ -27,12 +28,18 @@ class SearchService:
 
     def reload(self) -> None:
         self.faiss_store = FaissStore.load(self.settings.index_path)
+        self.text_store = FaissStore.load(self.settings.text_index_path)
+        self.image_store = FaissStore.load(self.settings.image_index_path)
         self.metadata_store = MetadataStore.load(self.settings.metadata_path)
 
     def status(self) -> dict:
         return {
             "index_loaded": self.faiss_store.is_loaded,
+            "text_index_loaded": self.text_store.is_loaded,
+            "image_index_loaded": self.image_store.is_loaded,
             "indexed_items": min(self.faiss_store.count, len(self.metadata_store)),
+            "text_indexed_items": min(self.text_store.count, len(self.metadata_store)),
+            "image_indexed_items": min(self.image_store.count, len(self.metadata_store)),
         }
 
     def search(
@@ -41,25 +48,23 @@ class SearchService:
         query: str | None,
         limit: int | None = None,
     ) -> dict:
-        if not self.faiss_store.is_loaded or len(self.metadata_store) == 0:
+        if len(self.metadata_store) == 0:
             raise FileNotFoundError(
-                "Image search index is not built. Run `python scripts/build_index.py` first."
+                "Image search metadata is not built. Run `python scripts/build_image_search_index.py` first."
             )
 
         parsed_query = parse_query(query)
-        query_vector = self._build_query_vector(image, parsed_query)
         requested_limit = min(limit or self.settings.default_limit, self.settings.max_limit)
         multiplier = 10 if parsed_query.has_structured_filters else 4
         candidate_limit = min(
             max(requested_limit * multiplier, requested_limit),
             self.settings.max_limit * multiplier,
         )
-        hits = self.faiss_store.search(query_vector, candidate_limit)
-
-        hydrated = []
-        for index, score in hits:
-            item = self.metadata_store.get(index)
-            hydrated.append({**item, "score": score})
+        hits = self._collect_hits(image, parsed_query, candidate_limit)
+        hydrated = [
+            {**self.metadata_store.get(index), "score": score}
+            for index, score in hits
+        ]
 
         results = rerank_results(hydrated, parsed_query)
         if parsed_query.has_structured_filters:
@@ -77,7 +82,7 @@ class SearchService:
         return {
             "query": parsed_query.raw_query or None,
             "desired_color": parsed_query.desired_color,
-            "search_mode": "ai_structured" if parsed_query.has_structured_filters else "ai_semantic",
+            "search_mode": self._search_mode(image is not None, parsed_query),
             "applied_filters": {
                 "category": parsed_query.category_key,
                 "color": parsed_query.desired_color,
@@ -88,21 +93,51 @@ class SearchService:
             "results": results,
         }
 
-    def _build_query_vector(self, image: Image.Image | None, parsed_query: ParsedQuery):
-        vectors = []
-        weights = []
-
-        if image is not None:
-            vectors.append(self.encoder.encode_image(image)[0])
-            weights.append(self.settings.image_weight)
-
-        if parsed_query.semantic_query:
-            vectors.append(self.encoder.encode_text(parsed_query.semantic_query)[0])
-            weights.append(self.settings.text_weight)
-
-        if not vectors:
+    def _collect_hits(
+        self,
+        image: Image.Image | None,
+        parsed_query: ParsedQuery,
+        candidate_limit: int,
+    ) -> list[tuple[int, float]]:
+        has_image = image is not None
+        has_text = bool(parsed_query.semantic_query)
+        if not has_image and not has_text:
             raise ValueError("Provide at least an image or a text query")
-        return weighted_average(vectors, weights)
+
+        merged: dict[int, float] = {}
+
+        if has_text:
+            text_store = self.text_store if self.text_store.is_loaded else self.faiss_store
+            if not text_store.is_loaded:
+                raise FileNotFoundError(
+                    "Text search index is not built. Run `python scripts/build_image_search_index.py` first."
+                )
+            text_vector = self.encoder.encode_text(parsed_query.semantic_query)[0]
+            for index, score in text_store.search(text_vector, candidate_limit):
+                merged[index] = max(merged.get(index, float("-inf")), score)
+
+        if has_image:
+            if not self.image_store.is_loaded:
+                if not has_text:
+                    raise FileNotFoundError(
+                        "Image index is not built. Run `python scripts/build_image_search_index.py --include-images` first."
+                    )
+            else:
+                image_vector = self.encoder.encode_image(image)[0]
+                for index, score in self.image_store.search(image_vector, candidate_limit):
+                    boost = 0.05 if index in merged else 0.0
+                    merged[index] = max(merged.get(index, float("-inf")), score + boost)
+
+        return sorted(merged.items(), key=lambda item: item[1], reverse=True)[:candidate_limit]
+
+    def _search_mode(self, has_image: bool, parsed_query: ParsedQuery) -> str:
+        has_text = bool(parsed_query.semantic_query)
+        if has_image and has_text:
+            suffix = "structured" if parsed_query.has_structured_filters else "semantic"
+            return f"ai_multimodal_{suffix}"
+        if has_image:
+            return "ai_image"
+        return "ai_structured" if parsed_query.has_structured_filters else "ai_semantic"
 
     def _matches_structured_filters(self, item: dict, parsed_query: ParsedQuery) -> bool:
         searchable_text = normalize_text(

@@ -17,8 +17,7 @@ async def search_products(
 ):
     try:
         pil_image = await open_upload_image(image) if image else None
-        query_hint = query or (image.filename if image else None)
-        return service.search(pil_image, query_hint, limit)
+        return service.search(pil_image, query, limit)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except FileNotFoundError as exc:

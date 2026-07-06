@@ -40,7 +40,7 @@ CATEGORY_RULES = [
     {
         "key": "shoe",
         "terms": ("giay cau long",),
-        "aliases": ("giay cau long", "giay danh cau", "doi giay"),
+        "aliases": ("giay cau long", "giay danh cau", "doi giay", "giay", "shoes", "shoe"),
         "excluded": ("lot giay", "de lot"),
     },
     {
@@ -52,19 +52,19 @@ CATEGORY_RULES = [
     {
         "key": "racket",
         "terms": ("vot cau long",),
-        "aliases": ("vot cau long", "cay vot", "vot danh cau"),
+        "aliases": ("vot cau long", "vot", "cay vot", "vot danh cau", "racket", "racquet"),
         "excluded": (),
     },
     {
         "key": "shirt",
         "terms": ("ao cau long", "ao the thao"),
-        "aliases": ("ao cau long", "ao the thao", "ao danh cau"),
+        "aliases": ("ao cau long", "ao the thao", "ao danh cau", "ao", "shirt", "jersey"),
         "excluded": (),
     },
     {
         "key": "shorts",
         "terms": ("quan cau long",),
-        "aliases": ("quan cau long", "quan danh cau"),
+        "aliases": ("quan cau long", "quan danh cau", "quan", "shorts"),
         "excluded": (),
     },
     {
@@ -76,13 +76,13 @@ CATEGORY_RULES = [
     {
         "key": "backpack",
         "terms": ("balo cau long",),
-        "aliases": ("balo cau long", "ba lo cau long"),
+        "aliases": ("balo cau long", "ba lo cau long", "balo", "ba lo", "backpack"),
         "excluded": (),
     },
     {
         "key": "bag",
         "terms": ("tui vot cau long", "tui cau long"),
-        "aliases": ("tui vot cau long", "tui cau long", "tui dung vot"),
+        "aliases": ("tui vot cau long", "tui cau long", "tui dung vot", "bag"),
         "excluded": ("balo", "ba lo"),
     },
     {

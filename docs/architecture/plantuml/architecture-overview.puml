@@ -1,0 +1,55 @@
+@startuml
+title Mô hình tổng quan frontend, backend, cơ sở dữ liệu và dịch vụ tích hợp
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam componentStyle rectangle
+skinparam ArrowColor #475569
+skinparam ComponentBorderColor #64748B
+skinparam ComponentBackgroundColor #F8FAFC
+skinparam DatabaseBorderColor #64748B
+skinparam DatabaseBackgroundColor #F8FAFC
+
+actor "Người dùng" as User
+
+package "Frontend" {
+  component "React/Vite App" as Frontend
+}
+
+package "Backend" {
+  component "ExpressJS API" as Backend
+  component "Worker xử lý nền" as Worker
+}
+
+package "Data & Cache" {
+  database "MySQL" as MySQL
+  database "Redis" as Redis
+}
+
+package "Dịch vụ tích hợp" {
+  component "VNPay" as VNPay
+  component "GHN" as GHN
+  component "Cloudinary" as Cloudinary
+  component "Email Service" as Email
+}
+
+User --> Frontend : Tương tác
+Frontend --> Backend : Gửi request qua RESTful API
+Backend --> MySQL : Truy xuất / cập nhật dữ liệu
+Backend --> Redis : Cache, queue, session
+Backend --> Worker : Đưa tác vụ nền vào hàng đợi
+Worker --> MySQL : Xử lý tác vụ nền
+Worker --> Redis : Quản lý job/queue
+Worker --> VNPay : Xử lý thanh toán
+Worker --> GHN : Giao vận / cập nhật trạng thái
+Worker --> Cloudinary : Upload hình ảnh
+Worker --> Email : Gửi OTP / thông báo
+Backend --> VNPay : Khởi tạo thanh toán
+Backend --> GHN : Gọi API vận chuyển
+Backend --> Cloudinary : Lưu trữ hình ảnh
+Backend --> Email : Gửi email
+Backend --> Frontend : Trả kết quả phản hồi
+
+@enduml

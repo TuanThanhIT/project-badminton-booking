@@ -41,6 +41,7 @@ const PostListPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [hideReposts, setHideReposts] = useState(false);
   const [detailPost, setDetailPost] = useState<PostWithAuthor | null>(null);
+  const [isFilterCentered, setIsFilterCentered] = useState(false);
 
   const fetchPosts = useCallback(() => {
     const params: Record<string, string | number> = {
@@ -69,6 +70,16 @@ const PostListPage = () => {
   useEffect(() => {
     dispatch(getAllBranches());
   }, [dispatch]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsFilterCentered(window.scrollY > 360);
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const ids = posts
@@ -207,7 +218,13 @@ const PostListPage = () => {
 
       <div className="relative mx-auto -mt-8 max-w-7xl px-4 pb-12 sm:px-6">
         <div className="flex justify-center gap-6">
-          <div className="hidden h-fit lg:sticky lg:top-6 lg:block">
+          <div
+            className={`hidden transition-transform duration-200 lg:sticky lg:block lg:self-start ${
+              isFilterCentered
+                ? "lg:top-[42%] lg:-translate-y-1/2"
+                : "lg:top-18"
+            }`}
+          >
             <FilterSidebar
               selectedType={selectedType}
               onTypeChange={handleTypeChange}

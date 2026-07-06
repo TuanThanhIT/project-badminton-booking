@@ -34,7 +34,10 @@ const btnPrimary = (compact: boolean) =>
     ? "inline-flex shrink-0 items-center gap-1 rounded-xl bg-sky-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-sky-700 disabled:opacity-50"
     : "inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 disabled:opacity-50";
 
-const ClassEnrollAction = ({ postId, compact = false }: ClassEnrollActionProps) => {
+const ClassEnrollAction = ({
+  postId,
+  compact = false,
+}: ClassEnrollActionProps) => {
   const user = useAppSelector((state) => state.auth.user);
   const [ctx, setCtx] = useState<PostEnrollmentContext | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,7 +52,8 @@ const ClassEnrollAction = ({ postId, compact = false }: ClassEnrollActionProps) 
     setLoading(true);
     setFetchError(false);
     try {
-      const res = await coachClassService.getPostEnrollmentContextService(postId);
+      const res =
+        await coachClassService.getPostEnrollmentContextService(postId);
       setCtx(res.data.data);
     } catch {
       setCtx(null);
@@ -78,7 +82,9 @@ const ClassEnrollAction = ({ postId, compact = false }: ClassEnrollActionProps) 
     }
     return (
       <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-        <p className="text-sm text-slate-600">Đăng nhập để đăng ký tham gia lớp học.</p>
+        <p className="text-sm text-slate-600">
+          Đăng nhập để đăng ký tham gia lớp học.
+        </p>
         <Link to="/login" className={`mt-3 ${btnPrimary(false)}`}>
           <UserPlus className="h-4 w-4" />
           Đăng nhập
@@ -115,6 +121,15 @@ const ClassEnrollAction = ({ postId, compact = false }: ClassEnrollActionProps) 
   const statusLabels = compact ? STATUS_LABEL : STATUS_LABEL_FULL;
 
   const handleEnroll = async () => {
+    const confirmed = await showConfirmDialog(
+      "Xác nhận đăng ký lớp?",
+      "Yêu cầu đăng ký của bạn sẽ được gửi đến người dạy để xem xét.",
+      "Xác nhận",
+      "Quay lại",
+      "question",
+    );
+    if (!confirmed) return;
+
     setActing(true);
     try {
       await coachClassService.enrollInClassService(postId);
@@ -179,7 +194,9 @@ const ClassEnrollAction = ({ postId, compact = false }: ClassEnrollActionProps) 
           {statusLabels[mine.status] || mine.status}
         </p>
         {mine.status === "REJECTED" && mine.rejectReason && (
-          <p className="mt-1 text-xs text-slate-600">Lý do: {mine.rejectReason}</p>
+          <p className="mt-1 text-xs text-slate-600">
+            Lý do: {mine.rejectReason}
+          </p>
         )}
         {canCancel && (
           <button
@@ -248,7 +265,11 @@ const ClassEnrollAction = ({ postId, compact = false }: ClassEnrollActionProps) 
       className={btnPrimary(compact)}
     >
       {acting ? (
-        <Loader2 className={compact ? "h-3.5 w-3.5 animate-spin" : "h-4 w-4 animate-spin"} />
+        <Loader2
+          className={
+            compact ? "h-3.5 w-3.5 animate-spin" : "h-4 w-4 animate-spin"
+          }
+        />
       ) : (
         <UserPlus className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} />
       )}

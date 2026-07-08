@@ -1,8 +1,186 @@
-# B-Hub AI Moderation Service
+# B-Hub AI Service
 
-AI service dùng để kiểm duyệt bài đăng cộng đồng trong hệ thống B-Hub.
+`ai-service` là FastAPI service dùng chung cho 3 nhóm model AI của dự án B-Hub:
 
-Service này sử dụng FastAPI để chạy model PhoBERT đã fine-tune cho 4 nhãn:
+1. **PhoBERT moderation model**: kiểm duyệt nội dung bài đăng cộng đồng.
+2. **LightGBM product recommendation model**: gợi ý sản phẩm cá nhân hóa / mua kèm.
+3. **CLIP + FAISS image search model**: tìm kiếm sản phẩm bằng ảnh và từ khóa.
+
+Backend Node.js gọi service này qua `AI_MODERATION_URL` và `AI_SERVICE_URL`, mặc định là:
+
+```env
+AI_MODERATION_URL=http://127.0.0.1:8001
+AI_SERVICE_URL=http://127.0.0.1:8001
+```
+
+Trong Docker Compose, backend gọi nội bộ qua:
+
+```env
+AI_MODERATION_URL=http://ai-service:8001
+AI_SERVICE_URL=http://ai-service:8001
+```
+
+## 1. Cấu trúc chính
+
+```text
+ai-service/
+  app/
+    main.py                         # FastAPI entrypoint
+    schemas.py                      # request/response schema cho recommendation
+    insights/
+      admin_rules.py                # rule-based admin insights
+    ml/
+      product_trainer.py            # train/recommend LightGBM + co-occurrence
+      image_search/                 # CLIP + FAISS image/text search
+  data/
+    index/
+      product_vectors.faiss
+      text_index.faiss
+      image_index.faiss
+      product_metadata.json
+    processed/
+      products.csv
+      image_captions.csv
+  models/
+    bhub_phobert_moderation_model_v8/
+      config.json
+      model.safetensors
+      tokenizer_config.json
+      vocab.txt
+      bpe.codes
+    recommendation/
+      product_lgbm.joblib
+      product_meta.joblib
+      product_cooccur.joblib
+    image_search/
+      cache/
+        models--sentence-transformers--clip-ViT-B-32...
+        models--sentence-transformers--clip-ViT-B-32-multilingual-v1...
+  scripts/
+    build_image_search_index.py
+    rebuild_image_search.py
+    test_image_search.py
+  requirements.txt
+  .env.example
+  Dockerfile
+```
+
+## 2. Yêu cầu môi trường
+
+Cài các thành phần sau:
+
+```text
+Python 3.10+ hoặc 3.11
+pip
+venv hoặc virtualenv
+```
+
+Kiểm tra Python:
+
+```powershell
+python --version
+```
+
+Hoặc trên Windows:
+
+```powershell
+py --version
+```
+
+## 3. Cài đặt local
+
+Từ thư mục gốc repo:
+
+```powershell
+cd ai-service
+python -m venv .venv
+.\.venv\Scripts\activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+Nếu dùng Git Bash/Linux/macOS:
+
+```bash
+cd ai-service
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+## 4. Cấu hình `.env`
+
+Tạo file `.env` từ mẫu:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Nội dung mẫu đang dùng:
+
+```env
+MODEL_DIR=./models/bhub_phobert_moderation_model_v8
+MAX_LENGTH=128
+RECOMMENDATION_MODEL_DIR=./models/recommendation
+
+APP_NAME=badminton-ai-service
+TEXT_MODEL_NAME=sentence-transformers/clip-ViT-B-32-multilingual-v1
+IMAGE_MODEL_NAME=sentence-transformers/clip-ViT-B-32
+MODEL_CACHE_DIR=models/image_search/cache
+DEVICE=cpu
+INDEX_PATH=data/index/product_vectors.faiss
+METADATA_PATH=data/index/product_metadata.json
+PRODUCTS_CSV_PATH=data/processed/products.csv
+DEFAULT_LIMIT=12
+MAX_LIMIT=50
+IMAGE_TIMEOUT_SECONDS=20
+IMAGE_WEIGHT=0.65
+TEXT_WEIGHT=0.35
+COLOR_MATCH_BONUS=0.08
+COLOR_MISMATCH_PENALTY=0.06
+```
+
+Các biến quan trọng:
+
+| Biến | Tác dụng |
+| --- | --- |
+| `MODEL_DIR` | Thư mục model PhoBERT moderation |
+| `MAX_LENGTH` | Độ dài token tối đa khi kiểm duyệt text |
+| `RECOMMENDATION_MODEL_DIR` | Thư mục lưu model recommendation `.joblib` |
+| `TEXT_MODEL_NAME` | Model text encoder cho image search |
+| `IMAGE_MODEL_NAME` | Model image encoder cho image search |
+| `MODEL_CACHE_DIR` | Cache model CLIP/sentence-transformers |
+| `INDEX_PATH` | FAISS index tổng hợp mặc định |
+| `TEXT_INDEX_PATH` | FAISS index cho text, nếu cấu hình thêm |
+| `IMAGE_INDEX_PATH` | FAISS index cho ảnh, nếu cấu hình thêm |
+| `METADATA_PATH` | Metadata sản phẩm đi kèm FAISS index |
+| `PRODUCTS_CSV_PATH` | CSV nguồn để rebuild index |
+| `DEVICE` | `cpu` hoặc `cuda` |
+
+## 5. Chuẩn bị 3 model
+
+### 5.1. Model 1: PhoBERT moderation
+
+Model này được load ngay khi start service trong `app/main.py`.
+
+Đường dẫn mặc định:
+
+```text
+ai-service/models/bhub_phobert_moderation_model_v8/
+```
+
+Thư mục phải có ít nhất:
+
+```text
+config.json
+model.safetensors
+tokenizer_config.json
+vocab.txt
+bpe.codes
+```
+
+Model trả về 4 nhãn:
 
 ```text
 normal
@@ -11,236 +189,179 @@ unauthorized_ad
 offensive
 ```
 
-Backend NodeJS sẽ gọi AI service qua API `/predict`.
+Nếu thiếu `config.json`, `model.safetensors`, tokenizer hoặc vocab, service sẽ lỗi ngay khi start.
 
----
+### 5.2. Model 2: Product recommendation
 
-## 1. Cấu trúc thư mục
-
-Cấu trúc chuẩn của `ai-service`:
+Model recommendation nằm ở:
 
 ```text
-ai-service/
-  app/
-    main.py
-  models/
-    bhub_phobert_moderation_model_v8/
-      config.json
-      model.safetensors
-      tokenizer_config.json
-      special_tokens_map.json
-      vocab.txt
-      ...
-  requirements.txt
-  README.md
-  .env.example
+ai-service/models/recommendation/
 ```
 
-Lưu ý:
+Các file chính:
 
 ```text
-.venv/
-models/
-__pycache__/
-*.pyc
-*.zip
+product_lgbm.joblib       # LightGBM model cá nhân hóa
+product_meta.joblib       # metadata train
+product_cooccur.joblib    # dữ liệu mua kèm/co-occurrence
 ```
 
-không nên commit lên Git.
+Service có thể chạy khi chưa có model recommendation, nhưng `/api/v1/product/status` sẽ báo:
 
----
+```json
+{
+  "success": true,
+  "data": {
+    "ready": false
+  }
+}
+```
 
-## 2. Yêu cầu môi trường
+Khi backend gọi train, service sẽ tạo/cập nhật các file `.joblib` trong `RECOMMENDATION_MODEL_DIR`.
 
-Cần cài:
+### 5.3. Model 3: CLIP + FAISS image search
+
+Image search dùng:
 
 ```text
-Python 3.10+
-pip
-virtualenv hoặc venv
+TEXT_MODEL_NAME=sentence-transformers/clip-ViT-B-32-multilingual-v1
+IMAGE_MODEL_NAME=sentence-transformers/clip-ViT-B-32
 ```
 
-Kiểm tra Python:
+Cache model mặc định:
 
-```bash
-python --version
+```text
+ai-service/models/image_search/cache/
 ```
 
-Hoặc:
+Index và metadata mặc định:
 
-```bash
-py --version
+```text
+ai-service/data/index/product_vectors.faiss
+ai-service/data/index/text_index.faiss
+ai-service/data/index/image_index.faiss
+ai-service/data/index/product_metadata.json
 ```
 
----
+CSV nguồn mặc định:
 
-## 3. Tạo môi trường ảo
-
-Di chuyển vào thư mục `ai-service`:
-
-```bash
-cd ai-service
+```text
+ai-service/data/processed/products.csv
 ```
 
-Tạo virtual environment:
+Nếu chạy offline/Docker production, cần bảo đảm cache model và FAISS index đã có sẵn.
 
-```bash
-python -m venv .venv
-```
+## 6. Chạy service local
 
-Nếu dùng Windows PowerShell, kích hoạt môi trường:
+Trong thư mục `ai-service`:
 
 ```powershell
 .\.venv\Scripts\activate
-```
-
-Nếu dùng Git Bash/Linux/macOS:
-
-```bash
-source .venv/bin/activate
-```
-
-Sau khi activate thành công, terminal sẽ hiện dạng:
-
-```text
-(.venv)
-```
-
----
-
-## 4. Cài thư viện
-
-Chạy lệnh:
-
-```bash
-pip install -r requirements.txt
-```
-
-Nếu pip quá cũ, có thể nâng cấp trước:
-
-```bash
-python -m pip install --upgrade pip
-```
-
----
-
-## 5. Tải model AI
-
-Do model khá nặng nên không lưu trực tiếp trong Git.
-
-Tải file model từ link được cung cấp riêng, ví dụ:
-
-```text
-bhub_phobert_moderation_model_v8.zip
-```
-
-Sau khi tải về, giải nén vào thư mục:
-
-```text
-ai-service/models/bhub_phobert_moderation_model_v8/
-```
-
-Cấu trúc sau khi giải nén phải giống như sau:
-
-```text
-ai-service/
-  models/
-    bhub_phobert_moderation_model_v8/
-      config.json
-      model.safetensors
-      tokenizer_config.json
-      special_tokens_map.json
-      vocab.txt
-```
-
-Nếu thiếu `config.json` hoặc `model.safetensors`, service sẽ không chạy được.
-
----
-
-## 6. Tạo file môi trường
-
-Tạo file `.env` trong thư mục `ai-service` nếu project đã hỗ trợ đọc `.env`.
-
-Ví dụ:
-
-```env
-MODEL_DIR=./models/bhub_phobert_moderation_model_v8
-MAX_LENGTH=128
-```
-
-Nếu code đang dùng đường dẫn mặc định trong `app/main.py`, có thể không cần tạo `.env`.
-
-Mặc định model sẽ được load từ:
-
-```text
-ai-service/models/bhub_phobert_moderation_model_v8
-```
-
----
-
-## 7. Chạy AI service
-
-Trong thư mục `ai-service`, chạy:
-
-```bash
 uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 ```
 
-Nếu chạy thành công, terminal sẽ hiện dạng:
+Nếu chạy được, terminal sẽ có dạng:
 
 ```text
 Uvicorn running on http://0.0.0.0:8001
 ```
 
----
-
-## 8. Kiểm tra service
-
-Mở trình duyệt:
+Mở health check:
 
 ```text
 http://127.0.0.1:8001/health
 ```
 
-Nếu thành công sẽ trả về dạng:
+Response mẫu:
 
 ```json
 {
   "status": "ok",
-  "message": "AI service is running",
-  "model_loaded": true,
-  "model_dir": "./models/bhub_phobert_moderation_model_v8",
-  "device": "cpu",
-  "labels": {
-    "0": "normal",
-    "1": "spam",
-    "2": "unauthorized_ad",
-    "3": "offensive"
+  "moderationModel": {
+    "ready": true,
+    "modelDir": ".../models/bhub_phobert_moderation_model_v8",
+    "device": "cpu",
+    "labels": {
+      "0": "normal",
+      "1": "spam",
+      "2": "unauthorized_ad",
+      "3": "offensive"
+    }
+  },
+  "productModel": {
+    "ready": true
+  },
+  "imageSearch": {
+    "ready": true
   }
 }
 ```
 
----
+Lưu ý: lần start đầu tiên có thể chậm vì service load PhoBERT và CLIP models.
 
-## 9. Test API predict
+## 7. Chạy bằng Docker Compose
 
-Có thể test bằng Postman hoặc curl.
+Từ thư mục gốc repo:
 
-Endpoint:
+```powershell
+docker compose up -d ai-service
+```
+
+Xem trạng thái:
+
+```powershell
+docker compose ps ai-service
+```
+
+Xem log:
+
+```powershell
+docker compose logs --tail 100 ai-service
+```
+
+Trong `docker-compose.yml`, service mount:
+
+```yaml
+volumes:
+  - ./ai-service/models:/app/models:ro
+  - ./ai-service/data:/app/data:ro
+```
+
+Vì mount `:ro`, container chỉ đọc model/data. Nếu muốn train recommendation hoặc rebuild index bên trong container, cần ghi ra volume writable hoặc chạy local/script ngoài container rồi mount kết quả vào.
+
+## 8. API của 3 model
+
+### 8.1. Health check
+
+```http
+GET /health
+```
+
+Kiểm tra cả 3 nhóm:
 
 ```text
-POST http://127.0.0.1:8001/predict
+moderationModel
+productModel
+imageSearch
+```
+
+### 8.2. PhoBERT moderation
+
+```http
+POST /predict
+Content-Type: application/json
 ```
 
 Body:
 
 ```json
 {
-  "text": "Loại bài: tìm người chơi. Tối nay thiếu 2 bạn đánh cầu ở Thủ Đức. Tiền sân chia đều."
+  "text": "Loại bài: tìm người chơi. Tối nay thiếu 2 bạn đánh cầu ở Thủ Đức."
 }
 ```
 
-Response mẫu:
+Response:
 
 ```json
 {
@@ -255,22 +376,174 @@ Response mẫu:
 }
 ```
 
----
-
-## 10. Kết nối với backend NodeJS
-
-Trong backend, cấu hình biến môi trường:
+Backend dùng endpoint này qua:
 
 ```env
 AI_MODERATION_URL=http://127.0.0.1:8001
 AI_MODERATION_TIMEOUT_MS=8000
 ```
 
-Khi chạy local, cần mở 2 terminal:
+### 8.3. Product recommendation status
+
+```http
+GET /api/v1/product/status
+```
+
+Response khi model đã sẵn sàng:
+
+```json
+{
+  "success": true,
+  "data": {
+    "ready": true,
+    "features": ["userId", "productId", "categoryId"],
+    "modelType": "LightGBMClassifier",
+    "trainedAt": "..."
+  }
+}
+```
+
+### 8.4. Train product recommendation
+
+```http
+POST /api/v1/product/train
+Content-Type: application/json
+```
+
+Body rút gọn:
+
+```json
+{
+  "baskets": [[1, 2, 3], [2, 4]],
+  "records": [
+    { "userId": 10, "productId": 1, "categoryId": 5 },
+    { "userId": 10, "productId": 2, "categoryId": 5 }
+  ],
+  "products": [
+    { "id": 1, "name": "Vợt cầu lông A", "categoryId": 5 },
+    { "id": 2, "name": "Giày cầu lông B", "categoryId": 7 }
+  ]
+}
+```
+
+Service cần tối thiểu `MIN_RECORDS = 10` records. Nếu ít hơn, response sẽ là `trained: false`.
+
+### 8.5. Recommend product
+
+```http
+POST /api/v1/recommend/product
+Content-Type: application/json
+```
+
+Mode cá nhân hóa:
+
+```json
+{
+  "mode": "user",
+  "userId": 10,
+  "history": [{ "productId": 1, "categoryId": 5 }],
+  "products": [],
+  "popularProducts": [],
+  "topK": 6
+}
+```
+
+Mode mua kèm:
+
+```json
+{
+  "mode": "related",
+  "productId": 1,
+  "products": [],
+  "popularProducts": [],
+  "topK": 6
+}
+```
+
+Backend thường là nơi build payload đầy đủ từ DB rồi gọi endpoint này.
+
+### 8.6. Admin insights
+
+```http
+POST /api/v1/recommend/admin
+Content-Type: application/json
+```
+
+Dùng rule-based insight để phân tích:
+
+```text
+occupancy theo chi nhánh/khung giờ
+khách có nguy cơ rời bỏ
+khách nên nhận voucher
+khung giờ thấp điểm
+```
+
+### 8.7. Image search
+
+```http
+POST /search
+Content-Type: multipart/form-data
+```
+
+Form data:
+
+| Field | Bắt buộc | Mô tả |
+| --- | --- | --- |
+| `image` | Không | Ảnh sản phẩm upload |
+| `query` | Không | Từ khóa mô tả sản phẩm |
+| `limit` | Không | Số kết quả, mặc định `DEFAULT_LIMIT` |
+
+Ít nhất phải có `image` hoặc `query`.
+
+Ví dụ dùng curl:
+
+```bash
+curl -X POST http://127.0.0.1:8001/search \
+  -F "image=@sample.jpg" \
+  -F "query=vợt lining màu đỏ" \
+  -F "limit=8"
+```
+
+### 8.8. Rebuild image search index
+
+```http
+POST /index/rebuild
+```
+
+Query params:
+
+```text
+csv_path       optional
+include_images true/false
+```
+
+Ví dụ:
+
+```text
+POST http://127.0.0.1:8001/index/rebuild?include_images=true
+```
+
+Hoặc chạy script:
+
+```powershell
+cd ai-service
+.\.venv\Scripts\activate
+python scripts\build_image_search_index.py --include-images
+```
+
+Nếu chỉ muốn build text index, bỏ `--include-images`:
+
+```powershell
+python scripts\build_image_search_index.py
+```
+
+## 9. Kết nối với backend Node.js
+
+Khi chạy local, mở 2 terminal.
 
 Terminal 1 chạy AI service:
 
-```bash
+```powershell
 cd ai-service
 .\.venv\Scripts\activate
 uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
@@ -278,217 +551,207 @@ uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 
 Terminal 2 chạy backend:
 
-```bash
+```powershell
 cd backend
 npm run dev
 ```
 
-Backend sẽ gọi AI service thông qua:
+Backend `.env` cần có:
 
-```text
-http://127.0.0.1:8001/predict
+```env
+AI_MODERATION_URL=http://127.0.0.1:8001
+AI_MODERATION_TIMEOUT_MS=8000
+AI_SERVICE_URL=http://127.0.0.1:8001
+AI_SERVICE_TIMEOUT_MS=30000
+IMAGE_SEARCH_TIMEOUT_MS=60000
 ```
 
----
+Các backend service đang gọi AI:
 
-## 11. Test từ backend
+```text
+backend/src/services/aiModerationService.js
+backend/src/services/aiRecommendationClient.js
+backend/src/services/user/productService.js
+```
 
-Nếu backend có script test AI moderation, chạy:
+## 10. Test nhanh
 
-```bash
+Health:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8001/health
+```
+
+Moderation:
+
+```powershell
+Invoke-RestMethod `
+  -Method Post `
+  -Uri http://127.0.0.1:8001/predict `
+  -ContentType "application/json" `
+  -Body '{"text":"Tối nay thiếu 2 bạn đánh cầu ở Thủ Đức."}'
+```
+
+Product model status:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8001/api/v1/product/status
+```
+
+Backend moderation script:
+
+```powershell
 cd backend
 npm run test:ai-moderation
 ```
 
-Expected:
+Image search script:
 
-```text
-NORMAL -> ALLOW
-SPAM -> BLOCK
-UNAUTHORIZED_AD -> REVIEW
-OFFENSIVE -> BLOCK
+```powershell
+cd ai-service
+.\.venv\Scripts\activate
+python scripts\test_image_search.py
 ```
 
----
+## 11. Lỗi thường gặp
 
-## 12. Khi thay model mới
+### Service start chậm hoặc health chưa lên
 
-Ví dụ sau này train lại model V9, giải nén vào:
+Nguyên nhân thường là model PhoBERT/CLIP đang load. Kiểm tra log:
 
-```text
-ai-service/models/bhub_phobert_moderation_model_v9/
+```powershell
+docker compose logs --tail 100 ai-service
 ```
 
-Sau đó đổi `MODEL_DIR`:
+Hoặc chờ thêm rồi gọi lại:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8001/health
+```
+
+### Không tìm thấy PhoBERT model
+
+Kiểm tra:
+
+```text
+ai-service/models/bhub_phobert_moderation_model_v8/config.json
+ai-service/models/bhub_phobert_moderation_model_v8/model.safetensors
+ai-service/models/bhub_phobert_moderation_model_v8/vocab.txt
+```
+
+Nếu đổi model mới, sửa:
 
 ```env
-MODEL_DIR=./models/bhub_phobert_moderation_model_v9
-MAX_LENGTH=128
+MODEL_DIR=./models/<ten_model_moi>
 ```
 
-Restart AI service:
+### Product recommendation chưa ready
 
-```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
-```
-
-Kiểm tra lại:
+Kiểm tra:
 
 ```text
-http://127.0.0.1:8001/health
+ai-service/models/recommendation/product_cooccur.joblib
+ai-service/models/recommendation/product_lgbm.joblib
+ai-service/models/recommendation/product_meta.joblib
 ```
 
-Đảm bảo `model_dir` đang trỏ tới model mới.
+Nếu chưa có, gọi backend train job hoặc gọi trực tiếp:
 
----
+```http
+POST /api/v1/product/train
+```
 
-## 13. Các lỗi thường gặp
+### Image search không có kết quả hoặc báo thiếu index
 
-### Lỗi thiếu thư viện
-
-Nếu gặp lỗi kiểu:
+Kiểm tra:
 
 ```text
-ModuleNotFoundError
+ai-service/data/index/product_vectors.faiss
+ai-service/data/index/text_index.faiss
+ai-service/data/index/image_index.faiss
+ai-service/data/index/product_metadata.json
+ai-service/data/processed/products.csv
 ```
 
-Chạy lại:
+Rebuild:
 
-```bash
-pip install -r requirements.txt
+```powershell
+python scripts\build_image_search_index.py --include-images
 ```
 
----
+### Backend gọi AI bị `ECONNREFUSED`
 
-### Lỗi không tìm thấy model
+AI service chưa chạy hoặc sai port. Chạy:
 
-Nếu gặp lỗi khi load model, kiểm tra lại thư mục:
-
-```text
-ai-service/models/bhub_phobert_moderation_model_v8/
-```
-
-Bên trong phải có:
-
-```text
-config.json
-model.safetensors hoặc pytorch_model.bin
-tokenizer_config.json
-vocab.txt
-```
-
----
-
-### Lỗi backend gọi AI bị ECONNREFUSED
-
-Lỗi này nghĩa là AI service chưa chạy.
-
-Cần chạy:
-
-```bash
+```powershell
 cd ai-service
 .\.venv\Scripts\activate
 uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 ```
 
----
-
-### Lỗi port 8001 đã được dùng
-
-Đổi port khác:
-
-```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8002 --reload
-```
-
-Sau đó sửa backend:
+Kiểm tra backend `.env`:
 
 ```env
-AI_MODERATION_URL=http://127.0.0.1:8002
+AI_MODERATION_URL=http://127.0.0.1:8001
+AI_SERVICE_URL=http://127.0.0.1:8001
 ```
 
----
+### Docker không ghi được model/index
 
-## 14. Ghi chú Git
+Trong compose hiện tại:
 
-Không commit các file local/generated:
+```yaml
+./ai-service/models:/app/models:ro
+./ai-service/data:/app/data:ro
+```
+
+`ro` là read-only. Nếu cần train/rebuild trong container, đổi sang writable hoặc chạy script local rồi restart container.
+
+## 12. Ghi chú Git
+
+Không nên commit:
 
 ```gitignore
 ai-service/.venv/
 ai-service/**/__pycache__/
 ai-service/**/*.pyc
 ai-service/models/
+ai-service/data/index/*.faiss
 *.zip
 ```
 
-Chỉ nên commit:
+Nên commit:
 
 ```text
-ai-service/app/main.py
+ai-service/app/
+ai-service/scripts/
+ai-service/training/
 ai-service/requirements.txt
-ai-service/README.md
 ai-service/.env.example
+ai-service/README.md
 ```
 
-Model nên được lưu riêng bằng Google Drive, OneDrive, GitHub Release hoặc nơi lưu trữ riêng.
+Model lớn nên lưu riêng bằng Google Drive, OneDrive, GitHub Release, artifact server hoặc volume deploy riêng.
 
----
+## 13. Lệnh chạy nhanh
 
-## 15. Tóm tắt chạy nhanh
-# B-Hub AI Recommendation Service
+Local:
 
-Python microservice gợi ý **sản phẩm mua kèm / cá nhân hóa** (LightGBM + market-basket co-occurrence) và **rule-based insights** cho Admin.
-
-## Kiến trúc
-
-```
-Backend (Node.js)  →  AI Service (FastAPI + LightGBM)  →  JSON
-Backend (Node.js)  →  OpenAI (gpt-4o-mini)             →  câu trả lời tự nhiên (optional)
-```
-
-## Chạy local
-
-```bash
+```powershell
 cd ai-service
-python -m venv .venv
 .\.venv\Scripts\activate
-pip install -r requirements.txt
 uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 ```
 
-Sau đó mở:
+Docker:
 
-```text
-http://127.0.0.1:8001/health
-```
-.venv\Scripts\activate   # Windows
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8001
+```powershell
+docker compose up -d ai-service
+docker compose ps ai-service
 ```
 
-Backend cần `AI_SERVICE_URL=http://localhost:8001`.
+Health:
 
-## API
-
-| Method | Path | Mô tả |
-|--------|------|--------|
-| GET | `/health` | Health check + trạng thái model sản phẩm |
-| POST | `/api/v1/recommend/admin` | Phân tích lấp đầy + khách cần voucher |
-| GET | `/api/v1/product/status` | Trạng thái model gợi ý sản phẩm |
-| POST | `/api/v1/product/train` | Huấn luyện gợi ý sản phẩm (LightGBM + co-occurrence) |
-| POST | `/api/v1/recommend/product` | Gợi ý sản phẩm (cá nhân hóa / mua kèm) |
-
-## Luồng gợi ý sản phẩm
-
-- **Mua kèm (related)**: market-basket co-occurrence — sản phẩm thường mua chung trong một đơn.
-- **Cá nhân hóa (user)**: LightGBM xếp hạng (userId, productId, categoryId); fallback theo danh mục đã mua + phổ biến.
-- **User mới**: sản phẩm phổ biến.
-
-## Luồng Admin (rule-based)
-
-- Tỷ lệ lấp đầy theo chi nhánh / khung giờ
-- Khung giờ thấp điểm → gợi ý tạo khuyến mãi
-- Khách quay lại / cần voucher kích hoạt
-
-Model PhoBERT lưu trong `models/bhub_phobert_moderation_model_v8/`.
-Model LightGBM/joblib lưu trong `models/recommendation/`.
+```powershell
+Invoke-RestMethod http://127.0.0.1:8001/health
+```

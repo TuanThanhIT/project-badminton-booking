@@ -192,7 +192,7 @@ const assertBookableStartTime = ({ playDate, startTime }) => {
   const today = getTodayDate();
 
   if (date < today) {
-    throw new BadRequestError("Khong the dat san cho ngay trong qua khu");
+    throw new BadRequestError("Không thể đặt sân cho ngày trong quá khứ");
   }
 
   const now = new Date();
@@ -202,7 +202,7 @@ const assertBookableStartTime = ({ playDate, startTime }) => {
 
   if (date === today && dateTimeFromDateAndTime(date, startTime) < earliest) {
     throw new BadRequestError(
-      "Gio bat dau phai sau thoi diem hien tai it nhat 1 tieng",
+      "Giờ bắt đầu phải sau thời điểm hiện tại ít nhất 1 tiếng",
     );
   }
 };

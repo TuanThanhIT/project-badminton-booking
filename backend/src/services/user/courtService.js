@@ -124,7 +124,6 @@ const getAvailableCourtsService = async (data) => {
       thumbnailUrl: court.thumbnailUrl,
       totalPrice: Math.round(totalCalculatedPrice),
       duration: (endNum - startNum).toFixed(1),
-      // Thêm trường status này để UI xử lý 👇
       status: isBooked ? "booked" : "ACTIVE",
     };
   });

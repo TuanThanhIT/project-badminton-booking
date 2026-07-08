@@ -259,6 +259,9 @@ services:
       DEFAULT_LIMIT: 12
       MAX_LIMIT: 50
 
+    volumes:
+      - ./ai-service/models:/app/models:ro
+      - ./ai-service/data:/app/data:ro
     ports:
       - "8001:8001"
     healthcheck:

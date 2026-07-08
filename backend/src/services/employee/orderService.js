@@ -15,6 +15,7 @@ import {
   OrderGroup,
   OrderShippingLog,
   Payment,
+  VariantStock,
   Wallet,
   WalletTransaction,
 } from "../../models/index.js";
@@ -638,6 +639,26 @@ const updateOrderGroupAfterChildChanged = async ({
   return orderGroup;
 };
 
+const restoreOrderStock = async ({ order, transaction }) => {
+  const details = await OrderDetail.findAll({
+    where: { orderId: order.id },
+    transaction,
+  });
+
+  await Promise.all(
+    details.map((detail) =>
+      VariantStock.increment("stock", {
+        by: detail.quantity,
+        where: {
+          branchId: order.branchId,
+          variantId: detail.variantId,
+        },
+        transaction,
+      }),
+    ),
+  );
+};
+
 const getEmployeeOrderForAction = async ({
   orderId,
   employeeId,
@@ -725,6 +746,8 @@ const approveCancelOrderService = async (data) => {
         transaction: t,
       });
 
+      await restoreOrderStock({ order, transaction: t });
+
       await updateOrderGroupAfterChildChanged({
         orderGroupId: order.orderGroupId,
         transaction: t,
@@ -769,6 +792,8 @@ const approveCancelOrderService = async (data) => {
         orderGroup: order.orderGroup,
         transaction: t,
       });
+
+      await restoreOrderStock({ order, transaction: t });
 
       await updateOrderGroupAfterChildChanged({
         orderGroupId: order.orderGroupId,
@@ -986,6 +1011,8 @@ const completeReturnOrderService = async (data) => {
       orderGroup: order.orderGroup,
       transaction: t,
     });
+
+    await restoreOrderStock({ order, transaction: t });
 
     updatedOrder = order;
   });

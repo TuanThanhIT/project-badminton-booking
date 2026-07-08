@@ -12,10 +12,6 @@ import sequelize from "../../config/db.js";
 import { redisClient } from "../../config/redis.js";
 import { getCheckoutKey } from "../../utils/checkoutKey.js";
 
-/**
- * Kiểm tra mã có khớp phạm vi đặt sân (chi nhánh / khung giờ / mã riêng).
- * context: { userId, branchId, startHour, endHour, transaction }
- */
 export const assertBookingDiscountScope = async (discount, context = {}) => {
   const { userId, branchId, startHour, endHour, transaction } = context;
 

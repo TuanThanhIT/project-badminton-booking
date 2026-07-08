@@ -1,6 +1,7 @@
 "use strict";
 
 const u = require("./demo-3m-utils.cjs");
+const { buildBundleLinesForOrder } = require("./order-bundle-utils.cjs");
 
 const seedToday = () => {
   const d = new Date();
@@ -46,7 +47,8 @@ const getBase = async (qi, Sequelize, transaction) => {
         qi,
         Sequelize,
         `
-      SELECT pv.*, p.productName, p.thumbnailUrl, vs.branchId, vs.stock
+      SELECT pv.*, p.productName, p.thumbnailUrl, p.categoryId, p.id AS productId,
+             vs.branchId, vs.stock
       FROM ProductVariants pv
       JOIN Products p ON p.id = pv.productId
       JOIN VariantStocks vs ON vs.variantId = pv.id
@@ -1009,8 +1011,8 @@ const AI_OCCUPANCY_TAG = `${u.MARKER} AI-OCCUPANCY-SKEW`;
 
 /** Bổ sung co-occurrence — không trùng bulk KIT (40 demo_user + bulk ~40 KIT) */
 const AI_PRODUCT_CONFIG = {
-  KITS_PER_BRANCH: 6,
-  SHOE_KITS_PER_BRANCH: 2,
+  KITS_PER_BRANCH: 5,
+  SHOE_KITS_PER_BRANCH: 4,
   PERSONA_RACKET: 4,
   PERSONA_COMBO: 6,
 };
@@ -1353,11 +1355,33 @@ const seedAdminOccupancySkew = async (qi, Sequelize) =>
     );
     if (!courts.length) return;
 
+    const occupied = new Set();
+    const existingRows = await u.q(
+      qi,
+      Sequelize,
+      `
+        SELECT bd.courtId,
+               DATE_FORMAT(bd.playDate, '%Y-%m-%d') AS playDate,
+               HOUR(bd.startTime) AS hour
+        FROM BookingDetails bd
+        WHERE bd.playDate >= :since
+      `,
+      { since: u.dateOnly(daysAgoFromToday(45)) },
+      transaction,
+    );
+    existingRows.forEach((row) => {
+      occupied.add(`${row.courtId}-${row.playDate}-${row.hour}`);
+    });
+
     const bookings = [];
     const detailsMeta = [];
     let seq = 0;
 
     const pushBooking = (user, court, playDate, hour, markerSuffix) => {
+      const slotKey = `${court.id}-${u.dateOnly(playDate)}-${hour}`;
+      if (occupied.has(slotKey)) return false;
+      occupied.add(slotKey);
+
       seq += 1;
       const price = priceFor(base.prices, skewBranch.id, playDate, hour, hour + 1);
       const createdAt = u.addDays(u.dateTime(playDate, Math.max(6, hour - 4), 0), -1);
@@ -1387,28 +1411,10 @@ const seedAdminOccupancySkew = async (qi, Sequelize) =>
         endTime: u.time(hour + 1),
         price,
       });
+      return true;
     };
 
-    // Giờ cao điểm 18–21: bổ sung Thủ Đức (bulk đã cover 5 CN) — 14 ngày
-    for (let day = 1; day <= 14; day += 1) {
-      for (const hour of [18, 19, 20, 21]) {
-        const playDate = daysAgoFromToday(day);
-        const user = users[day % users.length];
-        const court = courts[(day + hour) % courts.length];
-        pushBooking(user, court, playDate, hour, "PEAK");
-      }
-    }
-
-    // Giờ thấp điểm 7–8: ít booking
-    for (let day = 2; day <= 14; day += 3) {
-      for (const hour of [7, 8]) {
-        const playDate = daysAgoFromToday(day);
-        const user = users[(day + hour) % users.length];
-        const court = courts[day % courts.length];
-        pushBooking(user, court, playDate, hour, "LOW");
-      }
-    }
-
+    // Peak/low occupancy do AI-BULK-TRAIN (occupancy grid). Skew chỉ giữ churn risk.
     // Khách churn: đặt 3 lần nhưng lần cuối >25 ngày trước
     const churnUsers = users.slice(10, 15);
     churnUsers.forEach((user, idx) => {
@@ -1855,13 +1861,10 @@ const seedOrders = async (qi, Sequelize) =>
       const pool = base.variants.filter(
         (v) => Number(v.branchId) === Number(order.branchId),
       );
-      const selected = [];
-      const lineCount = u.int(1, 3);
-      for (let i = 0; i < lineCount && pool.length; i += 1) {
-        const v = pool[(i + Number(order.id)) % pool.length];
-        if (selected.includes(v.id)) continue;
-        selected.push(v.id);
-        const quantity = u.int(1, 3);
+      const bundleLines = buildBundleLinesForOrder(pool, Number(order.id));
+      for (const line of bundleLines) {
+        const v = line.variant;
+        const quantity = line.quantity;
         const unitPrice = u.money(
           Number(v.price) * (1 - Number(v.discount || 0) / 100),
         );

@@ -11,6 +11,7 @@
     "npx sequelize-cli db:seed --seed 20260610120000-seed-3m-ai-pattern-bookings.cjs",
     "npx sequelize-cli db:seed --seed 20260610130000-seed-ai-product-patterns.cjs",
     "npx sequelize-cli db:seed --seed 20260610140000-seed-admin-occupancy-skew.cjs",
+    "npx sequelize-cli db:seed --seed 20260701000000-seed-admin-winback-customers.cjs",
     "npx sequelize-cli db:seed --seed 20260701100000-seed-ai-bought-together-patterns.cjs",
     "npx sequelize-cli db:seed --seed 20260619100000-seed-ai-bulk-training-data.cjs"
   ],
@@ -20,11 +21,12 @@
     "demo_customer_role": 0,
     "demoBookings": "~760",
     "demoOrderGroups": "~560",
-    "aiBulkBookings": "~528",
+    "aiBulkBookings": "~6500–9000",
     "aiBulkPaidOrders": "135",
     "aiProductPatternOrders": "~50",
     "aiPatternBookings": "~60",
-    "aiOccupancySkewBookings": "~75"
+    "aiOccupancySkewBookings": "~15 (churn only)",
+    "aiWinbackUsers": "12 (8 churn + 4 nudge)"
   },
   "testAccounts": {
     "bookingRec": [

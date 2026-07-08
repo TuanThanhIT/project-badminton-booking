@@ -147,6 +147,37 @@ const deleteWinbackBookings = async (qi, Sequelize, transaction) => {
   await u.del(qi, "Bookings", { id: ids }, transaction);
 };
 
+/** Bulk/demo seed từng gán nhầm booking cho demo_winback_* — xóa hết trừ AI-WINBACK. */
+const purgeForeignBookingsForWinbackUsers = async (qi, Sequelize, transaction) => {
+  const users = await u.q(
+    qi,
+    Sequelize,
+    "SELECT id FROM Users WHERE username LIKE 'demo\\_winback\\_%'",
+    {},
+    transaction,
+  );
+  const userIds = users.map((r) => Number(r.id));
+  if (!userIds.length) return 0;
+
+  const foreign = await u.q(
+    qi,
+    Sequelize,
+    `
+      SELECT id FROM Bookings
+      WHERE userId IN (:userIds)
+        AND (note IS NULL OR note NOT LIKE :winbackTag)
+    `,
+    { userIds, winbackTag: `${WINBACK_TAG}%` },
+    transaction,
+  );
+  const bookingIds = foreign.map((r) => Number(r.id));
+  if (!bookingIds.length) return 0;
+
+  await u.del(qi, "BookingDetails", { bookingId: bookingIds }, transaction);
+  await u.del(qi, "Bookings", { id: bookingIds }, transaction);
+  return bookingIds.length;
+};
+
 const deleteWinbackUsers = async (qi, Sequelize, transaction) => {
   const users = await u.q(
     qi,
@@ -276,6 +307,7 @@ const ensureWinbackUsers = async (qi, Sequelize, transaction) => {
 
 const seedAdminWinbackCustomers = async (qi, Sequelize) =>
   u.phaseTransaction(qi, async (transaction) => {
+    const purged = await purgeForeignBookingsForWinbackUsers(qi, Sequelize, transaction);
     await deleteWinbackBookings(qi, Sequelize, transaction);
 
     const base = await getBase(qi, Sequelize, transaction);
@@ -290,6 +322,23 @@ const seedAdminWinbackCustomers = async (qi, Sequelize) =>
     }, {});
 
     const occupied = new Set();
+    const existingRows = await u.q(
+      qi,
+      Sequelize,
+      `
+        SELECT bd.courtId,
+               DATE_FORMAT(bd.playDate, '%Y-%m-%d') AS playDate,
+               HOUR(bd.startTime) AS hour
+        FROM BookingDetails bd
+        WHERE bd.playDate >= :since
+      `,
+      { since: u.dateOnly(daysAgo(120)) },
+      transaction,
+    );
+    existingRows.forEach((row) => {
+      occupied.add(`${row.courtId}-${row.playDate}-${row.hour}`);
+    });
+
     const bookings = [];
     const detailsMeta = [];
     let seq = 0;
@@ -390,6 +439,7 @@ const seedAdminWinbackCustomers = async (qi, Sequelize) =>
     return {
       ok: true,
       tag: WINBACK_TAG,
+      purgedForeignBookings: purged,
       users: WINBACK_PERSONAS.length,
       churnCandidates: churnCount,
       secondBookingNudgeCandidates: nudgeCount,

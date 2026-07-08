@@ -114,7 +114,7 @@ const getDemoUsers = async (qi, Sequelize, transaction) =>
     FROM Users u
     JOIN Roles r ON r.id = u.roleId
     LEFT JOIN Profiles p ON p.userId = u.id
-    WHERE u.email LIKE '%@bhub.local' OR u.username LIKE 'demo\\_%'
+    WHERE u.username LIKE 'demo_user%'
     ORDER BY u.id
   `, {}, transaction);
 

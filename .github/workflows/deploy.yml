@@ -2,7 +2,7 @@ name: Deploy B-Hub to VPS
 
 on:
   push:
-    branch:
+    branches:
       - main
 
 jobs:

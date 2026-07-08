@@ -8,6 +8,11 @@ import { OPENAI_DEFAULTS } from "../constants/aiConstant.js";
 import BadRequestError from "../errors/BadRequestError.js";
 import aiRecommendationClient from "./aiRecommendationClient.js";
 import aiRecommendationDataService from "./aiRecommendationDataService.js";
+import { buildAdminInsights } from "./adminInsightsRules.js";
+import {
+  getCachedAdminInsights,
+  setCachedAdminInsights,
+} from "./adminInsightsCache.js";
 
 dotenv.config();
 
@@ -131,31 +136,44 @@ export const getAdminRecommendationService = async ({
   churnDaysThreshold,
   naturalLanguage = false,
 }) => {
-  const payload = await aiRecommendationDataService.buildAdminInsightsPayload({
-    lookbackDays,
-    lowFillThreshold,
-    churnDaysThreshold,
-  });
-  const insights = await aiRecommendationClient.getAdminInsights(payload);
+  const cacheParams = { lookbackDays, lowFillThreshold, churnDaysThreshold };
 
-  const result = {
-    insights,
-    meta: {
-      lookbackDays:
-        lookbackDays ?? AI_RECOMMENDATION_DEFAULTS.OCCUPANCY_LOOKBACK_DAYS,
-      occupancyRowCount: payload.occupancy.length,
-      userActivityCount: payload.userActivity.length,
-    },
-  };
+  let baseResult = naturalLanguage
+    ? await getCachedAdminInsights(cacheParams)
+    : null;
 
-  if (naturalLanguage) {
-    result.naturalLanguageAnswer = await summarizeWithLlm({
-      audience: AI_RECOMMENDATION_AUDIENCE.ADMIN,
-      jsonPayload: insights,
+  if (!baseResult) {
+    const payload = await aiRecommendationDataService.buildAdminInsightsPayload({
+      lookbackDays,
+      lowFillThreshold,
+      churnDaysThreshold,
     });
+    const insights = buildAdminInsights(payload);
+
+    baseResult = {
+      insights,
+      meta: {
+        lookbackDays:
+          lookbackDays ?? AI_RECOMMENDATION_DEFAULTS.OCCUPANCY_LOOKBACK_DAYS,
+        occupancyRowCount: payload.occupancy.length,
+        userActivityCount: payload.userActivity.length,
+      },
+    };
+
+    await setCachedAdminInsights(cacheParams, baseResult);
   }
 
-  return result;
+  if (!naturalLanguage) {
+    return baseResult;
+  }
+
+  return {
+    ...baseResult,
+    naturalLanguageAnswer: await summarizeWithLlm({
+      audience: AI_RECOMMENDATION_AUDIENCE.ADMIN,
+      jsonPayload: baseResult.insights,
+    }),
+  };
 };
 
 export const getAiServiceStatusService = async () => {

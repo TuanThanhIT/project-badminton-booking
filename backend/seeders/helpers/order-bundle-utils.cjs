@@ -2,16 +2,37 @@
 
 /**
  * Combo mua kèm thực tế — mỗi đơn ≥2 loại sản phẩm (không 2–3 đôi giày / 2 vợt).
+ *
+ * categoryId tham chiếu DB:
+ *  1  Vợt Yonex | 11 Giày Yonex | 21 Áo Yonex | 39 Quần Yonex
+ *  59 Balo | 69 Vớ | 70 Cước | 71 Quả cầu | 76 Quấn cán
  */
 const ORDER_BUNDLES = [
+  // --- Vợt + phụ kiện ---
   { categories: [1, 69], quantities: [1, 2], label: "racket-socks" },
   { categories: [1, 69, 70], quantities: [1, 2, 1], label: "racket-socks-string" },
   { categories: [1, 59], quantities: [1, 1], label: "racket-bag" },
   { categories: [1, 76], quantities: [1, 2], label: "racket-grip" },
+  { categories: [1, 71], quantities: [1, 1], label: "racket-shuttle" },
+  { categories: [1, 70, 76], quantities: [1, 1, 2], label: "racket-string-grip" },
+  { categories: [1, 59, 70], quantities: [1, 1, 1], label: "racket-bag-string" },
+  { categories: [1, 69, 76], quantities: [1, 2, 2], label: "racket-socks-grip" },
+  // --- Giày + phụ kiện ---
   { categories: [11, 69], quantities: [1, 2], label: "shoes-socks" },
   { categories: [11, 59], quantities: [1, 1], label: "shoes-bag" },
   { categories: [11, 69, 59], quantities: [1, 2, 1], label: "shoes-socks-bag" },
-  { categories: [1, 71], quantities: [1, 1], label: "racket-shuttle" },
+  { categories: [11, 71], quantities: [1, 1], label: "shoes-shuttle" },
+  // --- Trang phục cầu lông ---
+  { categories: [21, 39], quantities: [1, 1], label: "shirt-pants" },
+  { categories: [21, 39, 69], quantities: [1, 1, 2], label: "outfit-socks" },
+  { categories: [21, 39, 59], quantities: [1, 1, 1], label: "outfit-bag" },
+  { categories: [21, 69], quantities: [1, 2], label: "shirt-socks" },
+  { categories: [39, 69], quantities: [1, 2], label: "pants-socks" },
+  // --- Bộ trang bị đầy đủ ---
+  { categories: [1, 21, 39], quantities: [1, 1, 1], label: "racket-outfit" },
+  { categories: [11, 21, 39], quantities: [1, 1, 1], label: "shoes-outfit" },
+  { categories: [1, 21, 39, 69], quantities: [1, 1, 1, 2], label: "full-kit-racket" },
+  { categories: [1, 59, 71, 76], quantities: [1, 1, 1, 2], label: "racket-accessories-pack" },
 ];
 
 const pickVariantForCategory = (pool, categoryId, usedProductIds, salt = 0) => {

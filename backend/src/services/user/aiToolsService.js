@@ -14,6 +14,7 @@ import productService from "./productService.js";
 import postService from "./postService.js";
 import BadRequestError from "../../errors/BadRequestError.js";
 import { AI_TOOL_NAMES } from "../../constants/aiConstant.js";
+import { getTodayInVietnam, parseNaturalDate } from "./aiBookingParser.js";
 
 const PLAYER_LEVEL_LABELS = {
   [PLAYER_LEVEL.BEGINNER]: "Mới bắt đầu",
@@ -37,9 +38,11 @@ const PRODUCT_HINTS_BY_LEVEL = {
 };
 
 const getTomorrowDate = () => {
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
-  return d.toISOString().split("T")[0];
+  const today = getTodayInVietnam();
+  const [y, m, d] = today.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  dt.setUTCDate(dt.getUTCDate() + 1);
+  return dt.toISOString().split("T")[0];
 };
 
 // Cộng 1 giờ vào "HH:mm" (chặn trần 23:59) để mặc định khung 1 tiếng khi thiếu endTime
@@ -469,7 +472,7 @@ const searchClassPostsTool = async (args, options = {}) => {
         schedule: fd?.schedule || null,
         tuitionFee: fd?.tuitionFee || fd?.fee || null,
         maxStudents: fd?.maxStudents || null,
-        url: `/posts`,
+        url: `/posts?postId=${post.id}`,
       };
     }),
     postsUrl: "/posts",
@@ -511,6 +514,10 @@ export const executeAiTool = async (toolName, rawArgs, options = {}) => {
         args.branchId = Number(options.defaultBranchId);
       }
       if (!args.date) args.date = getTomorrowDate();
+      else {
+        const parsed = parseNaturalDate(args.date);
+        if (parsed) args.date = parsed;
+      }
       if (args.startTime && !args.endTime) {
         args.endTime = addOneHour(args.startTime);
       }

@@ -559,15 +559,19 @@ const seedBulkOrders = async (qi, Sequelize) =>
     const stats = { beginnerKit: 0, shoeKit: 0, persona: 0, total: 0 };
 
     const resolveBranchProducts = async (branchId) => {
-      const [racket, socks, string, bag, shoes, grip] = await Promise.all([
-        findVariantByCategories(qi, Sequelize, transaction, CAT.RACKET_YONEX, branchId),
-        findVariantByCategories(qi, Sequelize, transaction, CAT.SOCKS, branchId),
-        findVariantByCategories(qi, Sequelize, transaction, CAT.STRING, branchId),
-        findVariantByCategories(qi, Sequelize, transaction, CAT.BAG, branchId),
-        findVariantByCategories(qi, Sequelize, transaction, CAT.SHOES_YONEX, branchId),
-        findVariantByCategories(qi, Sequelize, transaction, CAT.GRIP, branchId),
-      ]);
-      return { racket, socks, string, bag, shoes, grip };
+      const [racket, socks, string, bag, shoes, grip, shirt, pants, shuttle] =
+        await Promise.all([
+          findVariantByCategories(qi, Sequelize, transaction, CAT.RACKET_YONEX, branchId),
+          findVariantByCategories(qi, Sequelize, transaction, CAT.SOCKS, branchId),
+          findVariantByCategories(qi, Sequelize, transaction, CAT.STRING, branchId),
+          findVariantByCategories(qi, Sequelize, transaction, CAT.BAG, branchId),
+          findVariantByCategories(qi, Sequelize, transaction, CAT.SHOES_YONEX, branchId),
+          findVariantByCategories(qi, Sequelize, transaction, CAT.GRIP, branchId),
+          findVariantByCategories(qi, Sequelize, transaction, CAT.SHIRT_YONEX, branchId),
+          findVariantByCategories(qi, Sequelize, transaction, CAT.PANTS_YONEX, branchId),
+          findVariantByCategories(qi, Sequelize, transaction, CAT.SHUTTLE, branchId),
+        ]);
+      return { racket, socks, string, bag, shoes, grip, shirt, pants, shuttle };
     };
 
     const PERSONAS = [
@@ -576,6 +580,9 @@ const seedBulkOrders = async (qi, Sequelize) =>
       { suffix: "SHOES-SOCKS", pick: (p) => [p.shoes, p.socks].filter(Boolean), repeats: 4 },
       { suffix: "SHOES-BAG", pick: (p) => [p.shoes, p.bag].filter(Boolean), repeats: 3 },
       { suffix: "RACKET-BAG", pick: (p) => [p.racket, p.bag].filter(Boolean), repeats: 3 },
+      { suffix: "SHIRT-PANTS", pick: (p) => [p.shirt, p.pants].filter(Boolean), repeats: 4 },
+      { suffix: "OUTFIT-SOCKS", pick: (p) => [p.shirt, p.pants, p.socks].filter(Boolean), repeats: 3 },
+      { suffix: "RACKET-OUTFIT", pick: (p) => [p.racket, p.shirt, p.pants].filter(Boolean), repeats: 3 },
     ];
 
     for (const [branchIdx, branch] of base.branches.entries()) {

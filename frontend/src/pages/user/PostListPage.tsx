@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   MessageCircle,
   Search,
@@ -19,8 +20,10 @@ import CreatePostBar from "../../components/ui/user/postList/CreatePostBar";
 import FilterSidebar from "../../components/ui/user/postList/FilterSidebar";
 import PostCard from "../../components/ui/user/postList/PostCard";
 import PostDetailModal from "../../components/ui/user/postList/PostDetailModal";
+import postService from "../../services/user/postService";
 
 const PostListPage = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const dispatch = useAppDispatch();
   const { posts, total, limit } = useAppSelector((state) => state.post.posts);
   const branches = useAppSelector((state) => state.branch.branches);
@@ -103,6 +106,51 @@ const PostListPage = () => {
     const t = setTimeout(() => setSearchDebounce(search), 300);
     return () => clearTimeout(t);
   }, [search]);
+
+  const clearPostIdParam = useCallback(() => {
+    if (!searchParams.has("postId")) return;
+    const next = new URLSearchParams(searchParams);
+    next.delete("postId");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  useEffect(() => {
+    const raw = searchParams.get("postId");
+    if (!raw) return;
+
+    const postId = Number(raw);
+    if (!Number.isFinite(postId) || postId <= 0) {
+      clearPostIdParam();
+      return;
+    }
+
+    const fromList = posts.find((p) => p.id === postId);
+    if (fromList) {
+      setDetailPost(fromList);
+      return;
+    }
+
+    let cancelled = false;
+    postService
+      .getPostByIdService(postId)
+      .then((res) => {
+        if (cancelled) return;
+        if (res.data?.data) setDetailPost(res.data.data);
+        else clearPostIdParam();
+      })
+      .catch(() => {
+        if (!cancelled) clearPostIdParam();
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams, posts, clearPostIdParam]);
+
+  const handleCloseDetail = useCallback(() => {
+    setDetailPost(null);
+    clearPostIdParam();
+  }, [clearPostIdParam]);
 
   const handleTypeChange = (t: PostType | "") => {
     setSelectedType(t);
@@ -372,7 +420,7 @@ const PostListPage = () => {
 
       <PostDetailModal
         post={detailPost}
-        onClose={() => setDetailPost(null)}
+        onClose={handleCloseDetail}
         branchInfoById={branchInfoById}
         courtNameById={courtNameById}
       />

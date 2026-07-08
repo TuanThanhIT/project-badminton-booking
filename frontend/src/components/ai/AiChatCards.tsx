@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 
 export type AiChatCard = {
-  type: "product" | "court";
+  type: "product" | "court" | "class";
   id?: number;
   name?: string;
   price?: number | null;
@@ -59,7 +59,11 @@ export const AiChatCards = ({ cards, onNavigate }: AiChatCardsProps) => {
             : card.url || "#");
         const title =
           card.name ||
-          (card.type === "court" ? "Sân" : `Sản phẩm #${card.id ?? index}`);
+          (card.type === "court"
+            ? "Sân"
+            : card.type === "class"
+              ? `Lớp #${card.id ?? index}`
+              : `Sản phẩm #${card.id ?? index}`);
 
         return (
           <Link
@@ -76,7 +80,7 @@ export const AiChatCards = ({ cards, onNavigate }: AiChatCardsProps) => {
               />
             ) : (
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-xs font-semibold text-sky-700">
-                {card.type === "court" ? "Sân" : "SP"}
+                {card.type === "court" ? "Sân" : card.type === "class" ? "Lớp" : "SP"}
               </div>
             )}
             <div className="min-w-0 flex-1">

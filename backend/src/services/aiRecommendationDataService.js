@@ -41,12 +41,11 @@ export const getOccupancyByBranchHour = async (
       `
         SELECT br.id AS branchId,
                br.branchName,
-               (
-                 SELECT COUNT(*)
-                 FROM Courts c
-                 WHERE c.branchId = br.id AND c.courtStatus = 'ACTIVE'
-               ) AS courtCount
+               COUNT(c.id) AS courtCount
         FROM Branches br
+        LEFT JOIN Courts c
+          ON c.branchId = br.id AND c.courtStatus = 'ACTIVE'
+        GROUP BY br.id, br.branchName
         ORDER BY br.id
       `,
       { type: QueryTypes.SELECT },
@@ -57,9 +56,11 @@ export const getOccupancyByBranchHour = async (
                HOUR(bd.startTime) AS hour,
                COUNT(bd.id) AS bookedCount
         FROM BookingDetails bd
-        INNER JOIN Bookings b ON bd.bookingId = b.id
-        WHERE b.bookingStatus IN (:statuses)
-          AND bd.playDate >= :since
+        INNER JOIN Bookings b
+          ON bd.bookingId = b.id
+         AND b.bookingStatus IN (:statuses)
+        WHERE bd.playDate >= :since
+          AND HOUR(bd.startTime) BETWEEN 6 AND 21
         GROUP BY b.branchId, HOUR(bd.startTime)
       `,
       {
@@ -110,50 +111,77 @@ export const getUserActivityForAdmin = async (
   lookbackDays = AI_RECOMMENDATION_DEFAULTS.CUSTOMER_ACTIVITY_LOOKBACK_DAYS,
 ) => {
   const since = getLookbackDate(lookbackDays);
+  const vipMinSessions = AI_RECOMMENDATION_DEFAULTS.VIP_MIN_SESSIONS;
 
   const rows = await sequelize.query(
     `
-      SELECT u.id AS userId,
-             p.fullName,
-             u.email,
-             COUNT(DISTINCT b.id) AS totalBookings,
-             SUM(CASE WHEN b.bookingStatus = :completed THEN 1 ELSE 0 END) AS completedBookings,
-             COUNT(CASE WHEN bd.playDate >= :since THEN bd.id END) AS sessionsLast30Days,
-             COUNT(DISTINCT CASE WHEN bd.playDate >= :since THEN b.id END) AS ordersLast30Days,
-             MAX(bd.playDate) AS lastPlayDate,
-             (
-               SELECT b2.branchId
-               FROM Bookings b2
-               INNER JOIN BookingDetails bd2 ON bd2.bookingId = b2.id
-               WHERE b2.userId = u.id
-                 AND b2.bookingStatus IN (:statuses)
-               ORDER BY bd2.playDate DESC, bd2.startTime DESC
-               LIMIT 1
-             ) AS lastBranchId,
-             (
-               SELECT br.branchName
-               FROM Bookings b2
-               INNER JOIN BookingDetails bd2 ON bd2.bookingId = b2.id
-               INNER JOIN Branches br ON b2.branchId = br.id
-               WHERE b2.userId = u.id
-                 AND b2.bookingStatus IN (:statuses)
-               ORDER BY bd2.playDate DESC, bd2.startTime DESC
-               LIMIT 1
-             ) AS lastBranchName,
-             AVG(HOUR(bd.startTime)) AS avgHour
-      FROM Users u
-      LEFT JOIN Profiles p ON p.userId = u.id
-      INNER JOIN Bookings b ON b.userId = u.id
-      INNER JOIN BookingDetails bd ON bd.bookingId = b.id
-      WHERE b.bookingStatus IN (:statuses)
-      GROUP BY u.id, p.fullName, u.email
-      HAVING totalBookings >= 1
+      WITH booking_lines AS (
+        SELECT b.userId,
+               b.id AS bookingId,
+               b.branchId,
+               b.bookingStatus,
+               bd.playDate,
+               bd.startTime,
+               bd.id AS detailId
+        FROM Bookings b
+        INNER JOIN BookingDetails bd ON bd.bookingId = b.id
+        WHERE b.bookingStatus IN (:statuses)
+      ),
+      user_stats AS (
+        SELECT u.id AS userId,
+               p.fullName,
+               u.email,
+               COUNT(DISTINCT bl.bookingId) AS totalBookings,
+               SUM(CASE WHEN bl.bookingStatus = :completed THEN 1 ELSE 0 END) AS completedBookings,
+               COUNT(CASE WHEN bl.playDate >= :since THEN bl.detailId END) AS sessionsLast30Days,
+               COUNT(DISTINCT CASE WHEN bl.playDate >= :since THEN bl.bookingId END) AS ordersLast30Days,
+               MAX(bl.playDate) AS lastPlayDate,
+               AVG(HOUR(bl.startTime)) AS avgHour
+        FROM Users u
+        LEFT JOIN Profiles p ON p.userId = u.id
+        INNER JOIN booking_lines bl ON bl.userId = u.id
+        GROUP BY u.id, p.fullName, u.email
+        HAVING totalBookings >= 1
+           AND (
+             sessionsLast30Days >= :vipMinSessions
+             OR sessionsLast30Days = 0
+           )
+      ),
+      last_visit AS (
+        SELECT userId, branchId, branchName
+        FROM (
+          SELECT bl.userId,
+                 bl.branchId,
+                 br.branchName,
+                 ROW_NUMBER() OVER (
+                   PARTITION BY bl.userId
+                   ORDER BY bl.playDate DESC, bl.startTime DESC
+                 ) AS rn
+          FROM booking_lines bl
+          INNER JOIN Branches br ON br.id = bl.branchId
+        ) ranked
+        WHERE rn = 1
+      )
+      SELECT s.userId,
+             s.fullName,
+             s.email,
+             s.totalBookings,
+             s.completedBookings,
+             s.sessionsLast30Days,
+             s.ordersLast30Days,
+             s.lastPlayDate,
+             s.avgHour,
+             lv.branchId AS lastBranchId,
+             lv.branchName AS lastBranchName
+      FROM user_stats s
+      LEFT JOIN last_visit lv ON lv.userId = s.userId
     `,
     {
       replacements: {
         statuses: SUCCESS_STATUSES,
         completed: BOOKING_STATUS.COMPLETED,
         since,
+        vipMinSessions,
       },
       type: QueryTypes.SELECT,
     },
@@ -249,20 +277,73 @@ export const getProductPurchaseRows = async () => {
   return rows;
 };
 
-export const getActiveProductsForRec = async () => {
+export const getProductSoldCountMap = async () => {
   const rows = await sequelize.query(
     `
-      SELECT p.id,
-             p.productName,
-             p.thumbnailUrl,
-             p.categoryId,
-             MIN(pv.price) AS minPrice
-      FROM Products p
-      INNER JOIN ProductVariants pv ON pv.productId = p.id
-      GROUP BY p.id, p.productName, p.thumbnailUrl, p.categoryId
+      SELECT p.id AS productId,
+             SUM(od.quantity) AS soldCount
+      FROM OrderDetails od
+      INNER JOIN Orders o ON od.orderId = o.id
+      INNER JOIN OrderGroups og ON o.orderGroupId = og.id
+      INNER JOIN ProductVariants pv ON od.variantId = pv.id
+      INNER JOIN Products p ON pv.productId = p.id
+      WHERE og.status = :paid
+      GROUP BY p.id
     `,
-    { type: QueryTypes.SELECT },
+    {
+      replacements: { paid: PAID },
+      type: QueryTypes.SELECT,
+    },
   );
+
+  const map = new Map();
+  for (const row of rows) {
+    map.set(Number(row.productId), Number(row.soldCount) || 0);
+  }
+  return map;
+};
+
+export const getUserAvgPriceMap = async () => {
+  const rows = await sequelize.query(
+    `
+      SELECT og.userId,
+             AVG(od.unitPrice) AS avgPriceUser
+      FROM OrderGroups og
+      INNER JOIN Orders o ON o.orderGroupId = og.id
+      INNER JOIN OrderDetails od ON od.orderId = o.id
+      WHERE og.status = :paid AND og.userId IS NOT NULL
+      GROUP BY og.userId
+    `,
+    {
+      replacements: { paid: PAID },
+      type: QueryTypes.SELECT,
+    },
+  );
+
+  const map = new Map();
+  for (const row of rows) {
+    map.set(Number(row.userId), Math.round(Number(row.avgPriceUser) || 0));
+  }
+  return map;
+};
+
+export const getActiveProductsForRec = async () => {
+  const [rows, soldMap] = await Promise.all([
+    sequelize.query(
+      `
+        SELECT p.id,
+               p.productName,
+               p.thumbnailUrl,
+               p.categoryId,
+               MIN(pv.price) AS minPrice
+        FROM Products p
+        INNER JOIN ProductVariants pv ON pv.productId = p.id
+        GROUP BY p.id, p.productName, p.thumbnailUrl, p.categoryId
+      `,
+      { type: QueryTypes.SELECT },
+    ),
+    getProductSoldCountMap(),
+  ]);
 
   return rows.map((row) => ({
     id: Number(row.id),
@@ -270,6 +351,7 @@ export const getActiveProductsForRec = async () => {
     thumbnailUrl: row.thumbnailUrl,
     categoryId: Number(row.categoryId) || 0,
     minPrice: row.minPrice != null ? Number(row.minPrice) : null,
+    soldCount: soldMap.get(Number(row.id)) || 0,
   }));
 };
 
@@ -324,11 +406,13 @@ export const getUserPurchaseHistory = async (userId) => {
 };
 
 export const buildProductTrainPayload = async () => {
-  const [rows, products] = await Promise.all([
+  const [rows, products, userAvgMap] = await Promise.all([
     getProductPurchaseRows(),
     getActiveProductsForRec(),
+    getUserAvgPriceMap(),
   ]);
 
+  const productById = new Map(products.map((p) => [p.id, p]));
   const basketMap = new Map();
   const recordKeys = new Set();
   const records = [];
@@ -343,10 +427,15 @@ export const buildProductTrainPayload = async () => {
       const key = `${row.userId}-${productId}`;
       if (!recordKeys.has(key)) {
         recordKeys.add(key);
+        const userId = Number(row.userId);
+        const product = productById.get(productId);
         records.push({
-          userId: Number(row.userId),
+          userId,
           productId,
           categoryId: Number(row.categoryId) || 0,
+          soldCount: product?.soldCount ?? 0,
+          minPrice: product?.minPrice ?? 0,
+          avgPriceUser: userAvgMap.get(userId) ?? 0,
         });
       }
     }
@@ -356,7 +445,25 @@ export const buildProductTrainPayload = async () => {
     .map((set) => [...set])
     .filter((items) => items.length >= 2);
 
-  return { baskets, records, products };
+  const userProfiles = [...userAvgMap.entries()].map(([userId, avgPriceUser]) => ({
+    userId,
+    avgPriceUser,
+  }));
+
+  return {
+    baskets,
+    records,
+    products,
+    userProfiles,
+    featureSchema: [
+      "userId",
+      "productId",
+      "categoryId",
+      "soldCount",
+      "minPrice",
+      "avgPriceUser",
+    ],
+  };
 };
 
 export const buildProductRecommendPayload = async ({
@@ -365,20 +472,26 @@ export const buildProductRecommendPayload = async ({
   productId = null,
   topK = AI_RECOMMENDATION_DEFAULTS.TOP_K,
 }) => {
-  const [products, popular, history] = await Promise.all([
+  const [products, popular, history, userAvgMap] = await Promise.all([
     getActiveProductsForRec(),
     getPopularProducts(topK + 4),
     mode === "user" && userId ? getUserPurchaseHistory(userId) : [],
+    getUserAvgPriceMap(),
   ]);
+
+  const avgPriceUser =
+    userId != null ? (userAvgMap.get(Number(userId)) ?? 0) : null;
 
   return {
     mode,
     userId: userId || null,
     productId: productId || null,
+    avgPriceUser,
     history,
     products,
     popularProducts: popular,
     topK,
+    maxPerCategory: AI_RECOMMENDATION_DEFAULTS.MAX_ITEMS_PER_CATEGORY,
   };
 };
 
@@ -386,4 +499,6 @@ export default {
   buildAdminInsightsPayload,
   buildProductTrainPayload,
   buildProductRecommendPayload,
+  getProductSoldCountMap,
+  getUserAvgPriceMap,
 };

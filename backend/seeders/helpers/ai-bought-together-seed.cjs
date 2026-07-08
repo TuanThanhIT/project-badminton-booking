@@ -34,6 +34,8 @@ const CAT = {
   GRIP: [76],
   BAG: [59],
   SHOES_YONEX: [11],
+  SHIRT_YONEX: [21],
+  PANTS_YONEX: [39],
 };
 
 const BUNDLE_PLANS = [
@@ -73,11 +75,60 @@ const BUNDLE_PLANS = [
     repeatsPerBranch: 4,
   },
   {
+    code: "RACKET-SOCKS-GRIP",
+    label: "Vợt + Vớ + Quấn cán",
+    categories: [CAT.RACKET_YONEX, CAT.SOCKS, CAT.GRIP],
+    quantities: [1, 2, 2],
+    repeatsPerBranch: 3,
+  },
+  {
     code: "SHOES-SOCKS",
     label: "Giày + Vớ",
     categories: [CAT.SHOES_YONEX, CAT.SOCKS],
     quantities: [1, 2],
     repeatsPerBranch: 5,
+  },
+  {
+    code: "SHOES-SOCKS-BAG",
+    label: "Giày + Vớ + Balo",
+    categories: [CAT.SHOES_YONEX, CAT.SOCKS, CAT.BAG],
+    quantities: [1, 2, 1],
+    repeatsPerBranch: 3,
+  },
+  {
+    code: "SHIRT-PANTS",
+    label: "Áo + Quần cầu lông",
+    categories: [CAT.SHIRT_YONEX, CAT.PANTS_YONEX],
+    quantities: [1, 1],
+    repeatsPerBranch: 5,
+  },
+  {
+    code: "OUTFIT-SOCKS",
+    label: "Áo + Quần + Vớ",
+    categories: [CAT.SHIRT_YONEX, CAT.PANTS_YONEX, CAT.SOCKS],
+    quantities: [1, 1, 2],
+    repeatsPerBranch: 4,
+  },
+  {
+    code: "OUTFIT-BAG",
+    label: "Áo + Quần + Balo",
+    categories: [CAT.SHIRT_YONEX, CAT.PANTS_YONEX, CAT.BAG],
+    quantities: [1, 1, 1],
+    repeatsPerBranch: 3,
+  },
+  {
+    code: "RACKET-OUTFIT",
+    label: "Vợt + Áo + Quần",
+    categories: [CAT.RACKET_YONEX, CAT.SHIRT_YONEX, CAT.PANTS_YONEX],
+    quantities: [1, 1, 1],
+    repeatsPerBranch: 3,
+  },
+  {
+    code: "SHOES-OUTFIT",
+    label: "Giày + Áo + Quần",
+    categories: [CAT.SHOES_YONEX, CAT.SHIRT_YONEX, CAT.PANTS_YONEX],
+    quantities: [1, 1, 1],
+    repeatsPerBranch: 3,
   },
 ];
 

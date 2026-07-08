@@ -63,14 +63,10 @@ const run = async () => {
   console.log("winback in userActivity:", winbackInPayload.length);
   if (winbackInPayload[0]) console.log("sample:", winbackInPayload[0]);
 
-  try {
-    const axios = (await import("axios")).default;
-    const { data } = await axios.post(
-      `${process.env.AI_SERVICE_URL.replace(/\/$/, "")}/api/v1/recommend/admin`,
-      payload,
-      { timeout: 15000 },
-    );
-    const insights = data?.data ?? data;
+  const { buildAdminInsights } = await import(
+    "../src/services/adminInsightsRules.js"
+  );
+  const insights = buildAdminInsights(payload);
     console.log(
       "voucherActivationCandidates:",
       insights?.voucherActivationCandidates?.length ?? 0,
@@ -79,9 +75,6 @@ const run = async () => {
       "likelyReturnCustomers:",
       insights?.likelyReturnCustomers?.length ?? 0,
     );
-  } catch (e) {
-    console.log("AI service error:", e.message);
-  }
 };
 
 run()

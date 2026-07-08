@@ -1013,6 +1013,7 @@ const AI_OCCUPANCY_TAG = `${u.MARKER} AI-OCCUPANCY-SKEW`;
 const AI_PRODUCT_CONFIG = {
   KITS_PER_BRANCH: 5,
   SHOE_KITS_PER_BRANCH: 4,
+  OUTFIT_KITS_PER_BRANCH: 3,
   PERSONA_RACKET: 4,
   PERSONA_COMBO: 6,
 };
@@ -1231,6 +1232,10 @@ const seedAiProductPatterns = async (qi, Sequelize) =>
       const string = await resolve([70]);
       const bag = await resolve([59]);
       const shoes = await resolve([11]);
+      const shirt = await resolve([21]);
+      const pants = await resolve([39]);
+      const grip = await resolve([76]);
+      const shuttle = await resolve([71]);
 
       if (!racket || !socks) continue;
 
@@ -1259,6 +1264,39 @@ const seedAiProductPatterns = async (qi, Sequelize) =>
             variants: [shoes, socks].map((v) => buildVariantLine(v, v === socks ? 2 : 1)),
             groupNote: `${AI_PRODUCT_TAG} SHOE-KIT-B${branch.id}-${u.pad(i + 1, 2)}`,
             createdAt: daysAgoFromToday(u.int(1, 45)),
+            paySeq,
+          });
+        }
+      }
+
+      if (shirt && pants) {
+        for (let i = 0; i < AI_PRODUCT_CONFIG.OUTFIT_KITS_PER_BRANCH; i += 1) {
+          paySeq += 1;
+          const buyer = users[(Number(branch.id) * 13 + i + 5) % users.length];
+          const outfitKit = [shirt, pants, socks].filter(Boolean);
+          await insertAiPaidOrder(qi, Sequelize, transaction, {
+            user: buyer,
+            branch,
+            variants: outfitKit.map((v) => buildVariantLine(v, v === socks ? 2 : 1)),
+            groupNote: `${AI_PRODUCT_TAG} OUTFIT-KIT-B${branch.id}-${u.pad(i + 1, 2)}`,
+            createdAt: daysAgoFromToday(u.int(2, 55)),
+            paySeq,
+          });
+        }
+      }
+
+      if (racket && grip && shuttle) {
+        for (let i = 0; i < 3; i += 1) {
+          paySeq += 1;
+          const buyer = users[(Number(branch.id) * 15 + i) % users.length];
+          await insertAiPaidOrder(qi, Sequelize, transaction, {
+            user: buyer,
+            branch,
+            variants: [racket, grip, shuttle].map((v) =>
+              buildVariantLine(v, v === grip ? 2 : 1),
+            ),
+            groupNote: `${AI_PRODUCT_TAG} RACKET-ACC-B${branch.id}-${u.pad(i + 1, 2)}`,
+            createdAt: daysAgoFromToday(u.int(3, 60)),
             paySeq,
           });
         }

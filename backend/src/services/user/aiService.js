@@ -11,6 +11,18 @@ import BadRequestError from "../../errors/BadRequestError.js";
 import UnauthorizedError from "../../errors/UnauthorizedError.js";
 import { Branch, Court, Product } from "../../models/index.js";
 import B_HUB_KNOWLEDGE_BASE from "./aiKnowledgeBase.js";
+import { tryFaqRouter } from "./aiFaqRouter.js";
+import {
+  applyBookingSlotsToArgs,
+  extractBookingSlotsFromMessage,
+  getTodayInVietnam,
+  normalizeTime,
+  resolveBookingSlots,
+} from "./aiBookingParser.js";
+import {
+  formatRetrievedKnowledge,
+  retrieveKnowledgeChunks,
+} from "./aiKnowledgeRetriever.js";
 import {
   appendSessionMessage,
   loadSessionMessages,
@@ -28,6 +40,12 @@ dotenv.config();
 
 const AI_CARDS_PREFIX = "<<AI_CARDS>>";
 const AI_CARDS_SUFFIX = "<<END_AI_CARDS>>";
+
+const logRagFlow = (payload) => {
+  if (process.env.AI_RAG_DEBUG === "1" || process.env.NODE_ENV !== "production") {
+    console.debug("[AI-RAG]", payload);
+  }
+};
 
 const extractToolCards = (toolName, result) => {
   if (!result || typeof result !== "object" || result.error) return [];
@@ -54,6 +72,17 @@ const extractToolCards = (toolName, result) => {
       price: c.estimatedPrice,
       branchName: result.branch?.name,
       url: result.bookingUrl || `/branches/${result.branch?.id || ""}`,
+    }));
+  }
+
+  if (toolName === AI_TOOL_NAMES.SEARCH_CLASS_POSTS && Array.isArray(result.classes)) {
+    return result.classes.slice(0, 3).map((c) => ({
+      type: "class",
+      id: c.id,
+      name: c.title,
+      price: c.tuitionFee ?? null,
+      branchName: c.coachName || null,
+      url: c.url || `/posts?postId=${c.id}`,
     }));
   }
 
@@ -254,16 +283,6 @@ const loadPageContext = async ({ branchId, courtId, productId }) => {
   return page;
 };
 
-const getTodayInVietnam = () => {
-  const formatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Ho_Chi_Minh",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-  return formatter.format(new Date());
-};
-
 const sanitizeApiMessage = (message) => {
   if (!message || typeof message !== "object") return message;
   const { _rawChoice, ...rest } = message;
@@ -303,6 +322,7 @@ const buildSystemPrompt = async ({
   userProfile,
   pageContext,
   detectedBranch,
+  retrievedChunks = [],
 }) => {
   const contextBlocks = {
     [AI_CONTEXT.GENERAL]: `
@@ -315,9 +335,11 @@ Bạn đang ở chế độ **Đặt sân**: tra cứu sân trống, hướng d�
 Luồng tra sân trống (bắt buộc theo thứ tự):
 1. User hỏi còn sân/giờ/ngày NHƯNG HOÀN TOÀN chưa nói chi nhánh nào → chỉ gọi list_branches, liệt kê tên (và địa chỉ ngắn), hỏi "Bạn muốn tra cứu chi nhánh nào?". KHÔNG gọi search_available_courts, KHÔNG liệt kê sân.
 2. User ĐÃ nói tên chi nhánh (kể cả một phần như "Thủ Đức", "Quận 1") trong tin nhắn này HOẶC trong lịch sử, hoặc đang ở trang có branchId, hoặc hệ thống đã xác định chi nhánh ở trên → gọi search_available_courts NGAY với branchName/branchId đó. TUYỆT ĐỐI KHÔNG gọi list_branches và KHÔNG hỏi lại chi nhánh trong trường hợp này.
-3. Nếu user CÓ nói ngày (kể cả dạng "16/6", "hôm nay", "mai", "ngày kia") → BẮT BUỘC truyền tham số date đúng theo ngày đó (định dạng YYYY-MM-DD, suy ra năm theo "Hôm nay" ở đầu prompt). VÍ DỤ: "18h ngày 16/6" → date là ngày 16 tháng 6 của năm hiện tại, startTime=18:00. CHỈ mặc định mai khi user hoàn toàn không nói ngày. Thiếu giờ → dùng giờ user đã nói hoặc hỏi 1 câu.
-4. Trả lời sân: nêu RÕ ngày + khung giờ đã tra (vd: "ngày 16/06, 18:00–19:00"), rồi bullet (• Sân XX — giá ₫) + [Đặt sân tại đây](/branches/{branchId}).
-5. Nếu kết quả công cụ có "doNotChangeDate" hoặc báo giờ đã quá hạn/quá khứ → nói ĐÚNG lý do đó cho user và HỎI họ chọn khung giờ/ngày khác. TUYỆT ĐỐI KHÔNG tự đổi sang ngày/giờ khác rồi trả lời như thể còn sân.
+3. Nếu user CÓ nói ngày (kể cả "16/6", "hôm nay", "mai", "ngày kia") → BẮT BUỘC truyền date YYYY-MM-DD. CHỈ mặc định mai khi user hoàn toàn không nói ngày.
+4. Ngày/giờ lấy từ TIN NHẮN HIỆN TẠI; nếu user chỉ trả lời tên chi nhánh thì GIỮ ngày/giờ từ câu hỏi trước trong phiên (xem extractedBooking trong ngữ cảnh).
+5. TUYỆT ĐỐI KHÔNG tự đổi sang 08:00 hoặc ngày hôm nay nếu user đã nói "mai" và 17:00–19:00 ở tin trước.
+6. Trả lời sân: nêu RÕ ngày + khung giờ đã tra (vd: "ngày 16/06, 18:00–19:00"), rồi bullet (• Sân XX — giá ₫) + [Đặt sân tại đây](/branches/{branchId}).
+7. Nếu kết quả công cụ có "doNotChangeDate" hoặc báo giờ đã quá hạn/quá khứ → nói ĐÚNG lý do đó cho user và HỎI họ chọn khung giờ/ngày khác. TUYỆT ĐỐI KHÔNG tự đổi sang ngày/giờ khác rồi trả lời như thể còn sân.
 `,
     [AI_CONTEXT.SHOPPING]: `
 Bạn đang ở chế độ **Mua sắm**: tư vấn vợt, giày, phụ kiện theo trình độ và ngân sách.
@@ -335,7 +357,7 @@ Bạn đang ở chế độ **HLV & Lớp học**: tìm lớp CLASS, hướng d�
 Luồng tìm lớp (bắt buộc):
 1. User hỏi tìm lớp → LUÔN gọi search_class_posts trước khi trả lời.
 2. Hỏi người mới / căn bản → inputLevel: BEGINNER; KHÔNG dùng search="người mới".
-3. Chọn 1–3 lớp từ kết quả (ưu tiên inputLevel, lịch học, học phí); bullet tên lớp — HLV — học phí + [Xem lớp học](/posts).
+3. Chọn 1–3 lớp từ kết quả (ưu tiên inputLevel, lịch học, học phí); bullet tên lớp — HLV — học phí + [Xem lớp học](/posts?postId={id}) dùng đúng id từ kết quả công cụ.
 4. KHÔNG nói "không có lớp" nếu chưa gọi công cụ hoặc danh sách classes không rỗng.
 `,
   };
@@ -368,6 +390,14 @@ Người dùng chưa đăng nhập — chỉ hỗ trợ thông tin chung; nhắc
     ? `\nChi nhánh user đang nhắc tới: **${detectedBranch.name}** (branchId=${detectedBranch.id}). BẮT BUỘC dùng branchId này để gọi search_available_courts NGAY — KHÔNG gọi list_branches, KHÔNG hỏi lại chi nhánh.\n`
     : "";
 
+  const knowledgeBlock = retrievedChunks.length
+    ? formatRetrievedKnowledge(retrievedChunks)
+    : B_HUB_KNOWLEDGE_BASE;
+
+  const knowledgeHeader = retrievedChunks.length
+    ? "## Kiến thức liên quan (RAG retrieval — chỉ dùng các đoạn sau)"
+    : "## Knowledge base (fallback)";
+
   return `Bạn là **B-Hub Assistant** — trợ lý AI của hệ thống đặt sân và mua dụng cụ cầu lông B-Hub.
 
 Hôm nay: ${today} (múi giờ Việt Nam). "Hôm nay"/"mai"/"ngày kia" tính theo ngày này.
@@ -384,15 +414,15 @@ Quy tắc trả lời:
 Định dạng hiển thị trong chat (bắt buộc):
 - KHÔNG dùng ** in đậm. Liệt kê sân/sản phẩm: mỗi dòng "• Tên — giá" (vd: • Sân 01 — 300.000 ₫).
 - Giá dùng ₫, không viết VNĐ.
-- Link luôn markdown + đường dẫn tương đối: [Đặt sân tại đây](/branches/4) hoặc [Xem sản phẩm](/product/5). KHÔNG dùng URL đầy đủ https://...
+- Link luôn markdown + đường dẫn tương đối: [Đặt sân tại đây](/branches/4), [Xem sản phẩm](/product/5), [Xem lớp học](/posts?postId=12). KHÔNG dùng URL đầy đủ https://...
 
 ${contextBlocks[context] || contextBlocks[AI_CONTEXT.GENERAL]}
 ${userBlock}
 ${pageBlock}
 ${relatedBlock}
 
-## Knowledge base
-${B_HUB_KNOWLEDGE_BASE}
+${knowledgeHeader}
+${knowledgeBlock}
 `.trim();
 };
 
@@ -469,6 +499,7 @@ const runToolLoop = async ({
   playerLevel,
   defaultBranchId,
   userMessage,
+  bookingHistory,
   userId,
   onStatus,
 }) => {
@@ -509,17 +540,35 @@ const runToolLoop = async ({
         args = {};
       }
 
-      if (args.date && typeof args.date === "string") {
-        const parsed = parseNaturalDate(args.date);
-        if (parsed) args.date = parsed;
-      }
-      if (args.startTime != null) {
-        const nt = normalizeTime(args.startTime);
-        if (nt) args.startTime = nt;
-      }
-      if (args.endTime != null) {
-        const nt = normalizeTime(args.endTime);
-        if (nt) args.endTime = nt;
+      if (name === AI_TOOL_NAMES.SEARCH_AVAILABLE_COURTS) {
+        const applied = applyBookingSlotsToArgs(args, userMessage, bookingHistory);
+        args = applied.args;
+        if (applied.slots.date || applied.slots.startTime) {
+          logRagFlow({
+            tier: "booking-parse",
+            userMessage,
+            extracted: applied.slots,
+            fromHistory: Boolean(
+              !extractBookingSlotsFromMessage(userMessage).date &&
+                applied.slots.date,
+            ),
+            finalArgs: {
+              date: args.date,
+              startTime: args.startTime,
+              endTime: args.endTime,
+              branchId: args.branchId,
+            },
+          });
+        }
+      } else {
+        if (args.startTime != null) {
+          const nt = normalizeTime(args.startTime);
+          if (nt) args.startTime = nt;
+        }
+        if (args.endTime != null) {
+          const nt = normalizeTime(args.endTime);
+          if (nt) args.endTime = nt;
+        }
       }
 
       let result;
@@ -569,84 +618,6 @@ const runToolLoop = async ({
   return appendAiCards(text, collectedCards);
 };
 
-// Cộng n ngày vào chuỗi YYYY-MM-DD (dùng UTC để không bị lệch múi giờ)
-const addDaysToYmd = (ymd, n) => {
-  const [y, m, d] = ymd.split("-").map(Number);
-  const dt = new Date(Date.UTC(y, m - 1, d));
-  dt.setUTCDate(dt.getUTCDate() + n);
-  return dt.toISOString().split("T")[0];
-};
-
-// VN natural date parser: returns YYYY-MM-DD or null
-const parseNaturalDate = (text) => {
-  if (!text) return null;
-  const t = String(text).toLowerCase().trim();
-
-  // Đã đúng ISO YYYY-MM-DD
-  if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t;
-
-  const todayStr = getTodayInVietnam(); // YYYY-MM-DD theo giờ VN
-  const [todayYear, todayMonth, todayDay] = todayStr.split("-").map(Number);
-
-  // d/m/yyyy hoặc d-m-yyyy
-  const dmyMatch = t.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
-  if (dmyMatch) {
-    const day = String(dmyMatch[1]).padStart(2, "0");
-    const month = String(dmyMatch[2]).padStart(2, "0");
-    return `${dmyMatch[3]}-${month}-${day}`;
-  }
-
-  // d/m (không có năm) -> suy ra năm theo hôm nay (VN); nếu đã qua trong năm nay thì sang năm sau
-  const dmMatch = t.match(/^(\d{1,2})[\/.-](\d{1,2})$/);
-  if (dmMatch) {
-    const day = Number(dmMatch[1]);
-    const month = Number(dmMatch[2]);
-    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
-      let year = todayYear;
-      const alreadyPassed =
-        month < todayMonth || (month === todayMonth && day < todayDay);
-      if (alreadyPassed) year += 1;
-      return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    }
-  }
-
-  if (t.includes("hôm nay") || t === "nay") return todayStr;
-  if (t.includes("ngày kia") || t.includes("kia")) return addDaysToYmd(todayStr, 2);
-  if (t.includes("mai")) return addDaysToYmd(todayStr, 1);
-
-  return null;
-};
-
-// Chuẩn hoá giờ về dạng HH:mm. Hỗ trợ "18:00", "18h", "18h30", "18g", "6pm", "18".
-const normalizeTime = (text) => {
-  if (text == null) return null;
-  const t = String(text).trim().toLowerCase();
-  if (!t) return null;
-
-  const build = (h, m) =>
-    h >= 0 && h <= 23 && m >= 0 && m <= 59
-      ? `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
-      : null;
-
-  let m = t.match(/^(\d{1,2}):(\d{2})$/);
-  if (m) return build(Number(m[1]), Number(m[2]));
-
-  m = t.match(/^(\d{1,2})\s*(am|pm)$/);
-  if (m) {
-    let h = Number(m[1]) % 12;
-    if (m[2] === "pm") h += 12;
-    return build(h, 0);
-  }
-
-  m = t.match(/^(\d{1,2})\s*(?:h|g|giờ|gio)\s*(\d{1,2})?$/);
-  if (m) return build(Number(m[1]), m[2] ? Number(m[2]) : 0);
-
-  m = t.match(/^(\d{1,2})$/);
-  if (m) return build(Number(m[1]), 0);
-
-  return null;
-};
-
 const assertContextAccess = (context, userId) => {
   if (context === AI_CONTEXT.GENERAL) return;
   if (!userId) {
@@ -671,7 +642,6 @@ const chatService = async (payload, onStatus) => {
 
   const trimmedMessage = message.trim();
   assertContextAccess(context, userId);
-  assertOpenAiKey();
 
   const { session, guestToken: resolvedGuestToken } = await resolveSession({
     sessionId,
@@ -700,6 +670,27 @@ const chatService = async (payload, onStatus) => {
   ).slice(-AI_PROMPT_HISTORY_LIMIT);
 
   await appendSessionMessage(session.id, AI_MESSAGE_ROLE.USER, trimmedMessage);
+
+  // ── Tầng 1: FAQ Router (không gọi OpenAI) ──
+  const faqHit = tryFaqRouter(trimmedMessage, context);
+  if (faqHit) {
+    logRagFlow({
+      tier: 1,
+      intent: faqHit.intent,
+      message: trimmedMessage,
+      context,
+    });
+    if (onStatus) onStatus("Đang tra FAQ...");
+    await appendSessionMessage(session.id, AI_MESSAGE_ROLE.ASSISTANT, faqHit.answer);
+    return {
+      answer: faqHit.answer,
+      sessionId: session.id,
+      guestToken: resolvedGuestToken,
+      rag: { tier: 1, intent: faqHit.intent },
+    };
+  }
+
+  assertOpenAiKey();
 
   const userProfile = await loadUserAiProfile(userId);
   const pageContext = await loadPageContext({ branchId, courtId, productId });
@@ -734,11 +725,31 @@ const chatService = async (payload, onStatus) => {
   }
   const effectiveBranchId = branchId || detectedBranch?.id || null;
 
+  if (context === AI_CONTEXT.BOOKING) {
+    const extractedBooking = resolveBookingSlots(trimmedMessage, promptHistory);
+    if (extractedBooking.date || extractedBooking.startTime) {
+      pageContext.extractedBooking = extractedBooking;
+    }
+  }
+
+  // ── Tầng 2: RAG-lite BM25 retrieval ──
+  const { chunks: retrievedChunks, scores: retrievalScores } =
+    retrieveKnowledgeChunks(trimmedMessage, { context, topK: 3 });
+
+  logRagFlow({
+    tier: retrievedChunks.length ? 2 : "2-fallback",
+    message: trimmedMessage,
+    context,
+    chunkIds: retrievedChunks.map((c) => c.id),
+    scores: retrievalScores,
+  });
+
   const systemPrompt = await buildSystemPrompt({
     context,
     userProfile,
     pageContext,
     detectedBranch,
+    retrievedChunks,
   });
 
   const tools = getToolsForContext(context);
@@ -756,6 +767,7 @@ const chatService = async (payload, onStatus) => {
     playerLevel: userProfile?.playerLevel,
     defaultBranchId: effectiveBranchId,
     userMessage: trimmedMessage,
+    bookingHistory: promptHistory,
     userId,
     onStatus,
   });
@@ -768,6 +780,11 @@ const chatService = async (payload, onStatus) => {
     answer,
     sessionId: session.id,
     guestToken: resolvedGuestToken,
+    rag: {
+      tier: 3,
+      retrievedChunks: retrievedChunks.map((c) => c.id),
+      retrievalScores,
+    },
   };
 };
 

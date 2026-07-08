@@ -43,6 +43,9 @@ class ProductTrainRecord(BaseModel):
     userId: int
     productId: int
     categoryId: int = 0
+    soldCount: int = 0
+    minPrice: float = 0
+    avgPriceUser: float = 0
 
 
 class ProductCatalogItem(BaseModel):
@@ -51,12 +54,20 @@ class ProductCatalogItem(BaseModel):
     thumbnailUrl: str | None = None
     minPrice: float | None = None
     categoryId: int = 0
+    soldCount: int = 0
+
+
+class UserPriceProfile(BaseModel):
+    userId: int
+    avgPriceUser: float = 0
 
 
 class ProductTrainRequest(BaseModel):
     baskets: list[list[int]] = Field(default_factory=list)
     records: list[ProductTrainRecord] = Field(default_factory=list)
     products: list[ProductCatalogItem] = Field(default_factory=list)
+    userProfiles: list[UserPriceProfile] = Field(default_factory=list)
+    featureSchema: list[str] = Field(default_factory=list)
 
 
 class ProductHistoryItem(BaseModel):
@@ -68,10 +79,12 @@ class ProductRecommendRequest(BaseModel):
     mode: str = Field(default="user", description="user | related")
     userId: int | None = None
     productId: int | None = None
+    avgPriceUser: float | None = None
     history: list[ProductHistoryItem] = Field(default_factory=list)
     products: list[ProductCatalogItem] = Field(default_factory=list)
     popularProducts: list[dict[str, Any]] = Field(default_factory=list)
     topK: int = Field(default=6, ge=1, le=20)
+    maxPerCategory: int = Field(default=3, ge=1, le=10)
 
 
 class ApiResponse(BaseModel):

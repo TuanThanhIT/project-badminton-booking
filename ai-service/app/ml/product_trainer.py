@@ -29,9 +29,20 @@ COOCCUR_PATH = MODEL_DIR / "product_cooccur.joblib"
 PRODUCT_MODEL_PATH = MODEL_DIR / "product_lgbm.joblib"
 PRODUCT_META_PATH = MODEL_DIR / "product_meta.joblib"
 
-FEATURES = ["userId", "productId", "categoryId"]
+FEATURES_V2 = [
+    "userId",
+    "productId",
+    "categoryId",
+    "soldCount",
+    "minPrice",
+    "avgPriceUser",
+]
+FEATURES_V1 = ["userId", "productId", "categoryId"]
+FEATURES = FEATURES_V2
+
 MIN_RECORDS = 10
 TOP_COOCCUR_PER_ITEM = 12
+MAX_ITEMS_PER_CATEGORY = 3
 
 
 def product_model_ready() -> bool:
@@ -44,14 +55,88 @@ def _meta() -> dict:
     return {}
 
 
+def _active_features() -> list[str]:
+    meta = _meta()
+    return list(meta.get("features") or FEATURES)
+
+
 def get_product_model_info() -> dict:
     if not product_model_ready():
         return {"ready": False}
-    return {"ready": True, **_meta()}
+    return {
+        "ready": True,
+        "modelDir": str(MODEL_DIR),
+        "artifactPaths": {
+            "cooccurJoblib": str(COOCCUR_PATH),
+            "lgbmJoblib": str(PRODUCT_MODEL_PATH),
+            "metaJoblib": str(PRODUCT_META_PATH),
+        },
+        **_meta(),
+    }
+
+
+def _build_product_maps(products: list) -> dict[int, dict]:
+    return {
+        int(p["id"]): {
+            "categoryId": int(p.get("categoryId") or 0),
+            "minPrice": float(p.get("minPrice") or 0),
+            "soldCount": int(p.get("soldCount") or 0),
+        }
+        for p in products
+    }
+
+
+def _build_user_avg_map(payload: dict) -> dict[int, float]:
+    profiles = payload.get("userProfiles") or []
+    if profiles:
+        return {
+            int(row["userId"]): float(row.get("avgPriceUser") or 0) for row in profiles
+        }
+
+    result: dict[int, float] = {}
+    for row in payload.get("records") or []:
+        uid = int(row["userId"])
+        if row.get("avgPriceUser") is not None:
+            result[uid] = float(row.get("avgPriceUser") or 0)
+    return result
+
+
+def _feature_row(
+    user_id: int,
+    product_id: int,
+    product_maps: dict[int, dict],
+    user_avg_map: dict[int, float],
+    *,
+    record: dict | None = None,
+) -> dict:
+    info = product_maps.get(int(product_id), {})
+    avg_price = user_avg_map.get(int(user_id))
+    if avg_price is None and record is not None:
+        avg_price = float(record.get("avgPriceUser") or 0)
+    if avg_price is None:
+        avg_price = 0.0
+
+    if record is not None:
+        return {
+            "userId": int(user_id),
+            "productId": int(product_id),
+            "categoryId": int(record.get("categoryId") or info.get("categoryId", 0)),
+            "soldCount": int(record.get("soldCount") or info.get("soldCount", 0)),
+            "minPrice": float(record.get("minPrice") or info.get("minPrice", 0)),
+            "avgPriceUser": float(record.get("avgPriceUser") or avg_price),
+        }
+
+    return {
+        "userId": int(user_id),
+        "productId": int(product_id),
+        "categoryId": int(info.get("categoryId", 0)),
+        "soldCount": int(info.get("soldCount", 0)),
+        "minPrice": float(info.get("minPrice", 0)),
+        "avgPriceUser": float(avg_price),
+    }
 
 
 def _build_cooccurrence(baskets: list[list[int]]) -> dict[int, list[dict]]:
-    """Đếm số lần các cặp sản phẩm xuất hiện chung trong một đơn hàng."""
     counts: dict[int, dict[int, int]] = {}
 
     for basket in baskets:
@@ -89,15 +174,22 @@ def train_product_model(payload: dict) -> dict:
     cooccur = _build_cooccurrence(baskets)
     joblib.dump(cooccur, COOCCUR_PATH)
 
-    category_of = {int(p["id"]): int(p.get("categoryId") or 0) for p in products}
-    all_product_ids = list(category_of.keys())
+    product_maps = _build_product_maps(products)
+    user_avg_map = _build_user_avg_map(payload)
+    features = list(payload.get("featureSchema") or FEATURES)
 
-    df_pos = pd.DataFrame(records)
-    df_pos["label"] = 1
+    positive_rows = [
+        {**_feature_row(int(r["userId"]), int(r["productId"]), product_maps, user_avg_map, record=r), "label": 1}
+        for r in records
+    ]
+    df_pos = pd.DataFrame(positive_rows)
     positive_keys = set(zip(df_pos["userId"], df_pos["productId"]))
     users = df_pos["userId"].unique().tolist()
+    all_product_ids = list(product_maps.keys())
 
     trained_model = False
+    metrics: dict[str, float | None] = {"accuracy": None, "rocAuc": None}
+
     if all_product_ids and len(users) > 0:
         neg_rows: list[dict] = []
         target_neg = min(len(df_pos) * 2, 8000)
@@ -108,14 +200,9 @@ def train_product_model(payload: dict) -> dict:
             pid = int(random.choice(all_product_ids))
             if (uid, pid) in positive_keys:
                 continue
-            neg_rows.append(
-                {
-                    "userId": uid,
-                    "productId": pid,
-                    "categoryId": category_of.get(pid, 0),
-                    "label": 0,
-                }
-            )
+            row = _feature_row(uid, pid, product_maps, user_avg_map)
+            row["label"] = 0
+            neg_rows.append(row)
 
         from sklearn.metrics import accuracy_score, roc_auc_score
         from sklearn.model_selection import train_test_split
@@ -129,8 +216,7 @@ def train_product_model(payload: dict) -> dict:
             random_state=42,
             verbose=-1,
         )
-        metrics: dict[str, float | None] = {"accuracy": None, "rocAuc": None}
-        x = df[FEATURES]
+        x = df[features]
         y = df["label"]
         if len(df) >= 40:
             x_train, x_test, y_train, y_test = train_test_split(
@@ -147,24 +233,21 @@ def train_product_model(payload: dict) -> dict:
                     metrics["rocAuc"] = None
         else:
             model.fit(x, y)
+
         joblib.dump(model, PRODUCT_MODEL_PATH)
         trained_model = True
-    else:
-        metrics = {"accuracy": None, "rocAuc": None}
 
     trained_at = datetime.now(timezone.utc).isoformat()
-    joblib.dump(
-        {
-            "features": FEATURES,
-            "recordCount": len(records),
-            "basketCount": len(baskets),
-            "cooccurItems": len(cooccur),
-            "modelType": "LightGBMClassifier" if trained_model else "cooccurrence_only",
-            "trainedAt": trained_at,
-            "metrics": metrics,
-        },
-        PRODUCT_META_PATH,
-    )
+    meta = {
+        "features": features,
+        "recordCount": len(records),
+        "basketCount": len(baskets),
+        "cooccurItems": len(cooccur),
+        "modelType": "LightGBMClassifier" if trained_model else "cooccurrence_only",
+        "trainedAt": trained_at,
+        "metrics": metrics,
+    }
+    joblib.dump(meta, PRODUCT_META_PATH)
 
     return {
         "trained": True,
@@ -174,6 +257,7 @@ def train_product_model(payload: dict) -> dict:
         "personalizedModel": trained_model,
         "trainedAt": trained_at,
         "metrics": metrics,
+        "features": features,
     }
 
 
@@ -202,6 +286,7 @@ def _decorate(product_ids: list[int], product_map: dict, reason: str) -> list[di
                 "thumbnailUrl": info.get("thumbnailUrl"),
                 "minPrice": info.get("minPrice"),
                 "categoryId": info.get("categoryId"),
+                "soldCount": info.get("soldCount"),
                 "reason": reason,
             }
         )
@@ -213,20 +298,41 @@ def _popular_items(payload: dict, product_map: dict, exclude: set[int], top_k: i
     ids = [int(p["productId"]) for p in popular if int(p["productId"]) not in exclude]
     items = _decorate(ids, product_map, "popular")
     if len(items) < top_k:
-        # bổ sung bằng catalog nếu chưa đủ
         chosen = {it["productId"] for it in items}
         extra_ids = [
-            pid
-            for pid in product_map.keys()
-            if pid not in exclude and pid not in chosen
+            pid for pid in product_map.keys() if pid not in exclude and pid not in chosen
         ]
         items.extend(_decorate(extra_ids, product_map, "catalog"))
     return items[:top_k]
 
 
+def _select_diverse_by_category(
+    df: pd.DataFrame,
+    *,
+    top_k: int,
+    max_per_category: int,
+) -> pd.DataFrame:
+    """Giữ top score nhưng mỗi categoryId tối đa max_per_category sản phẩm."""
+    if max_per_category <= 0 or df.empty:
+        return df.head(top_k)
+
+    cat_counts: dict[int, int] = {}
+    selected_indices: list = []
+    for idx, row in df.iterrows():
+        cat = int(row["categoryId"])
+        if cat_counts.get(cat, 0) >= max_per_category:
+            continue
+        selected_indices.append(idx)
+        cat_counts[cat] = cat_counts.get(cat, 0) + 1
+        if len(selected_indices) >= top_k:
+            break
+    return df.loc[selected_indices]
+
+
 def recommend_products(payload: dict) -> dict:
     mode = payload.get("mode", "user")
     top_k = int(payload.get("topK", 6))
+    max_per_category = int(payload.get("maxPerCategory") or MAX_ITEMS_PER_CATEGORY)
     products = payload.get("products") or []
     product_map = {
         int(p["id"]): {
@@ -234,21 +340,19 @@ def recommend_products(payload: dict) -> dict:
             "thumbnailUrl": p.get("thumbnailUrl"),
             "minPrice": p.get("minPrice"),
             "categoryId": int(p.get("categoryId") or 0),
+            "soldCount": int(p.get("soldCount") or 0),
         }
         for p in products
     }
 
-    # ===== Mode 1: sản phẩm thường mua kèm (item-to-item) =====
     if mode == "related":
         product_id = int(payload.get("productId") or 0)
         exclude = {product_id}
         cooccur = _load_cooccur()
         related = cooccur.get(product_id) or []
         ranked_ids = [int(r["productId"]) for r in related if int(r["productId"]) not in exclude]
-
         items = _decorate(ranked_ids, product_map, "bought_together")
 
-        # fallback: cùng danh mục
         if len(items) < top_k:
             base = product_map.get(product_id)
             if base:
@@ -267,7 +371,6 @@ def recommend_products(payload: dict) -> dict:
             "modelUsed": bool(related),
         }
 
-    # ===== Mode 2: gợi ý cá nhân hóa cho user =====
     history = payload.get("history") or []
     user_id = payload.get("userId")
     purchased_ids = {int(h["productId"]) for h in history}
@@ -278,19 +381,21 @@ def recommend_products(payload: dict) -> dict:
 
     model = _load_product_model()
     candidate_ids = [pid for pid in product_map.keys() if pid not in purchased_ids]
+    features = _active_features()
+    product_maps = _build_product_maps(products)
+    user_avg_map = {int(user_id): float(payload.get("avgPriceUser") or 0)}
 
     if model is not None and candidate_ids:
         rows = [
-            {
-                "userId": int(user_id),
-                "productId": pid,
-                "categoryId": product_map[pid]["categoryId"],
-            }
+            _feature_row(int(user_id), pid, product_maps, user_avg_map)
             for pid in candidate_ids
         ]
         df = pd.DataFrame(rows)
-        df["score"] = model.predict_proba(df[FEATURES])[:, 1]
-        df = df.sort_values("score", ascending=False).head(top_k)
+        df["score"] = model.predict_proba(df[features])[:, 1]
+        df = df.sort_values("score", ascending=False)
+        df = _select_diverse_by_category(
+            df, top_k=top_k, max_per_category=max_per_category
+        )
 
         items = []
         for _, row in df.iterrows():
@@ -303,13 +408,19 @@ def recommend_products(payload: dict) -> dict:
                     "thumbnailUrl": info["thumbnailUrl"],
                     "minPrice": info["minPrice"],
                     "categoryId": info["categoryId"],
+                    "soldCount": info["soldCount"],
                     "score": round(float(row["score"]), 4),
                     "reason": "ml_prediction",
                 }
             )
-        return {"strategy": "ml_personalized", "items": items, "modelUsed": True}
+        return {
+            "strategy": "ml_personalized",
+            "items": items,
+            "modelUsed": True,
+            "featuresUsed": features,
+            "maxPerCategory": max_per_category,
+        }
 
-    # fallback: ưu tiên cùng danh mục đã mua, rồi phổ biến
     fav_categories = {int(h.get("categoryId") or 0) for h in history}
     same_cat = [
         pid

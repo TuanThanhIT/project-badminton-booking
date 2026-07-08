@@ -1,5 +1,7 @@
 export const AI_RECOMMENDATION_DEFAULTS = Object.freeze({
   TOP_K: 12,
+  /** Tối đa sản phẩm gợi ý / danh mục (đa dạng hóa). */
+  MAX_ITEMS_PER_CATEGORY: 3,
   TRAINING_LOOKBACK_DAYS: 180,
   OCCUPANCY_LOOKBACK_DAYS: 30,
   /** Khung có % lấp đầy dưới ngưỡng → gợi ý KM (giờ nào thì do data quyết định). */
@@ -18,6 +20,8 @@ export const AI_RECOMMENDATION_DEFAULTS = Object.freeze({
   CUSTOMER_SEGMENT_TOP_K: 20,
   /** Khách 1 đơn, quá ngày này chưa đặt lần 2 → nhắc tái kích hoạt. */
   SECOND_BOOKING_NUDGE_DAYS: 7,
+  /** Cache kết quả phân tích admin (giây). Mặc định 10 phút. */
+  INSIGHTS_CACHE_TTL_SEC: 600,
 });
 
 export const AI_RECOMMENDATION_AUDIENCE = Object.freeze({

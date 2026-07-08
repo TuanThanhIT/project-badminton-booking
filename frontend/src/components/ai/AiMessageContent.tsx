@@ -21,6 +21,8 @@ const normalizeHref = (
     const url = new URL(trimmed);
     const host = url.hostname.toLowerCase();
     if (
+      host === "bhub.vn" ||
+      host.endsWith(".bhub.vn") ||
       host === "b-hub.vn" ||
       host.endsWith(".b-hub.vn") ||
       host === "localhost" ||

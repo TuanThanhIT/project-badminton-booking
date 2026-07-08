@@ -10,6 +10,18 @@ const getBackendUrl = () =>
   import.meta.env.VITE_BACKEND_URL || "http://localhost:8080";
 
 const GUEST_TOKEN_KEY = "bhub_ai_guest_token";
+const AI_CHAT_CONTEXTS = ["general", "booking", "shopping", "coach"] as const;
+
+export const getAiChatOwnerKey = (userId?: number | null) => {
+  if (userId) return `user_${userId}`;
+  return `guest_${getAiGuestToken()}`;
+};
+
+export const rotateAiGuestToken = () => {
+  const token = createRandomId();
+  localStorage.setItem(GUEST_TOKEN_KEY, token);
+  return token;
+};
 
 export const getAiGuestToken = () => {
   let token = localStorage.getItem(GUEST_TOKEN_KEY);
@@ -20,11 +32,23 @@ export const getAiGuestToken = () => {
   return token;
 };
 
-export const getSessionStorageKey = (context: AiChatContextType) =>
-  `bhub_ai_session_${context}`;
+export const getSessionStorageKey = (
+  context: AiChatContextType,
+  ownerKey: string,
+) => `bhub_ai_session_${ownerKey}_${context}`;
 
-export const getStoredSessionId = (context: AiChatContextType) => {
-  const raw = localStorage.getItem(getSessionStorageKey(context));
+/** Xóa key phiên chat cũ (trước khi scope theo user). */
+export const clearLegacyAiSessionKeys = () => {
+  for (const context of AI_CHAT_CONTEXTS) {
+    localStorage.removeItem(`bhub_ai_session_${context}`);
+  }
+};
+
+export const getStoredSessionId = (
+  context: AiChatContextType,
+  ownerKey: string,
+) => {
+  const raw = localStorage.getItem(getSessionStorageKey(context, ownerKey));
   if (!raw) return undefined;
   const id = Number(raw);
   return Number.isNaN(id) ? undefined : id;
@@ -32,9 +56,10 @@ export const getStoredSessionId = (context: AiChatContextType) => {
 
 export const setStoredSessionId = (
   context: AiChatContextType,
+  ownerKey: string,
   sessionId?: number,
 ) => {
-  const key = getSessionStorageKey(context);
+  const key = getSessionStorageKey(context, ownerKey);
   if (!sessionId) {
     localStorage.removeItem(key);
     return;
@@ -196,8 +221,11 @@ const aiService = {
   clearAiSession,
   sendAiChat,
   getAiGuestToken,
+  rotateAiGuestToken,
+  getAiChatOwnerKey,
   getStoredSessionId,
   setStoredSessionId,
+  clearLegacyAiSessionKeys,
 };
 
 export default aiService;

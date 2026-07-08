@@ -5,10 +5,13 @@ import { useAIChat } from "../../contexts/AIChatContext";
 import { useAppSelector } from "../../redux/hook";
 import {
   clearAiSession,
+  clearLegacyAiSessionKeys,
   fetchAiSessionMessages,
   generateAiStreamingResponse,
+  getAiChatOwnerKey,
   getAiGuestToken,
   getStoredSessionId,
+  rotateAiGuestToken,
   setStoredSessionId,
 } from "../../services/user/aiService";
 import type { AiChatContextType, AiChatMessage } from "../../types/ai";
@@ -53,6 +56,13 @@ const QUICK_PROMPTS: Record<AiChatContextType, string[]> = {
 
 const newId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
+const EMPTY_MESSAGES: Record<AiChatContextType, AiChatMessage[]> = {
+  general: [],
+  booking: [],
+  shopping: [],
+  coach: [],
+};
+
 const AIChatWidget = () => {
   const {
     isOpen,
@@ -62,16 +72,12 @@ const AIChatWidget = () => {
     activeContext,
     setActiveContext,
   } = useAIChat();
-  const { accessToken } = useAppSelector((s) => s.auth);
+  const { accessToken, user } = useAppSelector((s) => s.auth);
+  const ownerKey = getAiChatOwnerKey(user?.id);
 
   const [messagesByContext, setMessagesByContext] = useState<
     Record<AiChatContextType, AiChatMessage[]>
-  >({
-    general: [],
-    booking: [],
-    shopping: [],
-    coach: [],
-  });
+  >(() => ({ ...EMPTY_MESSAGES }));
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [statusText, setStatusText] = useState<string | null>(null);
@@ -80,6 +86,24 @@ const AIChatWidget = () => {
 
   const messages = messagesByContext[activeContext] || [];
   const guestTokenRef = useRef(getAiGuestToken());
+  const prevOwnerKeyRef = useRef(ownerKey);
+
+  useEffect(() => {
+    if (prevOwnerKeyRef.current === ownerKey) return;
+
+    const wasLoggedIn = prevOwnerKeyRef.current.startsWith("user_");
+    prevOwnerKeyRef.current = ownerKey;
+
+    clearLegacyAiSessionKeys();
+    setMessagesByContext({ ...EMPTY_MESSAGES });
+    setInput("");
+    setStatusText(null);
+    setIsLoading(false);
+
+    if (!ownerKey.startsWith("user_") && wasLoggedIn) {
+      guestTokenRef.current = rotateAiGuestToken();
+    }
+  }, [ownerKey]);
 
   useEffect(() => {
     if (shouldScrollRef.current && listRef.current) {
@@ -90,8 +114,11 @@ const AIChatWidget = () => {
   useEffect(() => {
     if (!isOpen) return;
 
-    const sessionId = getStoredSessionId(activeContext);
-    if (!sessionId) return;
+    const sessionId = getStoredSessionId(activeContext, ownerKey);
+    if (!sessionId) {
+      setMessagesByContext((prev) => ({ ...prev, [activeContext]: [] }));
+      return;
+    }
 
     let cancelled = false;
     fetchAiSessionMessages(sessionId, guestTokenRef.current)
@@ -108,13 +135,13 @@ const AIChatWidget = () => {
         }));
       })
       .catch(() => {
-        if (!cancelled) setStoredSessionId(activeContext);
+        if (!cancelled) setStoredSessionId(activeContext, ownerKey);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [activeContext, isOpen]);
+  }, [activeContext, isOpen, ownerKey]);
 
   const appendMessage = useCallback(
     (ctx: AiChatContextType, msg: AiChatMessage) => {
@@ -203,7 +230,7 @@ const AIChatWidget = () => {
             setIsLoading(false);
           },
           onComplete: ({ sessionId, guestToken }) => {
-            if (sessionId) setStoredSessionId(activeContext, sessionId);
+            if (sessionId) setStoredSessionId(activeContext, ownerKey, sessionId);
             if (guestToken) {
               guestTokenRef.current = guestToken;
               localStorage.setItem("bhub_ai_guest_token", guestToken);
@@ -225,13 +252,14 @@ const AIChatWidget = () => {
       activeContext,
       appendMessage,
       isLoading,
+      ownerKey,
       pageHints,
       updateAssistantMessage,
     ],
   );
 
   const handleClearChat = useCallback(async () => {
-    const sessionId = getStoredSessionId(activeContext);
+    const sessionId = getStoredSessionId(activeContext, ownerKey);
     if (sessionId) {
       try {
         await clearAiSession(sessionId, guestTokenRef.current);
@@ -239,11 +267,11 @@ const AIChatWidget = () => {
         /* ignore */
       }
     }
-    setStoredSessionId(activeContext);
+    setStoredSessionId(activeContext, ownerKey);
     setMessagesByContext((prev) => ({ ...prev, [activeContext]: [] }));
     setInput("");
     setStatusText(null);
-  }, [activeContext]);
+  }, [activeContext, ownerKey]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {

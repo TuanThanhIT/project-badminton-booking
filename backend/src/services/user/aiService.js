@@ -12,6 +12,7 @@ import UnauthorizedError from "../../errors/UnauthorizedError.js";
 import { Branch, Court, Product } from "../../models/index.js";
 import B_HUB_KNOWLEDGE_BASE from "./aiKnowledgeBase.js";
 import { tryFaqRouter } from "./aiFaqRouter.js";
+import { detectClassSearchIntent, tryClassRouter } from "./aiClassRouter.js";
 import { detectProductSearchIntent, tryProductRouter } from "./aiProductRouter.js";
 import {
   applyBookingSlotsToArgs,
@@ -29,6 +30,7 @@ import {
   loadSessionMessages,
   messagesToPromptHistory,
   resolveSession,
+  stripAiCards,
 } from "./aiChatHistoryService.js";
 import {
   executeAiTool,
@@ -367,9 +369,11 @@ Bạn đang ở chế độ **HLV & Lớp học**: tìm lớp CLASS, hướng d�
 
 Luồng tìm lớp (bắt buộc):
 1. User hỏi tìm lớp → LUÔN gọi search_class_posts trước khi trả lời.
-2. Hỏi người mới / căn bản → inputLevel: BEGINNER; KHÔNG dùng search="người mới".
-3. Chọn 1–3 lớp từ kết quả (ưu tiên inputLevel, lịch học, học phí); bullet tên lớp — HLV — học phí + [Xem lớp học](/posts?postId={id}) dùng đúng id từ kết quả công cụ.
-4. KHÔNG nói "không có lớp" nếu chưa gọi công cụ hoặc danh sách classes không rỗng.
+2. User đổi trình độ (mới → trung bình → nâng cao) → BẮT BUỘC gọi LẠI search_class_posts theo TIN NHẮN HIỆN TẠI; KHÔNG tái dùng lớp từ câu trả lời trước.
+3. Hỏi người mới / căn bản → inputLevel: BEGINNER; trung bình → INTERMEDIATE; KHÔNG dùng search="người mới".
+4. Trình độ lấy từ câu hỏi hiện tại; profile user chỉ tham khảo khi user hỏi gợi ý chung ("gợi ý lớp cho tôi").
+5. Chọn 1–3 lớp từ kết quả (ưu tiên inputLevel, lịch học, học phí); bullet tên lớp — HLV — học phí + [Xem lớp học](/posts?postId={id}) dùng đúng id từ kết quả công cụ.
+6. KHÔNG gợi ý lớp BEGINNER khi user hỏi INTERMEDIATE/ADVANCED.
 `,
   };
 
@@ -547,25 +551,51 @@ const runToolLoop = async ({
         rounds === 1 &&
         detectProductSearchIntent(userMessage, context);
 
-      if (productIntent) {
-        if (onStatus) onStatus("Đang tìm sản phẩm phù hợp...");
+      const hasClassTool = tools?.some(
+        (t) => t.function?.name === AI_TOOL_NAMES.SEARCH_CLASS_POSTS,
+      );
+      const classIntent =
+        hasClassTool &&
+        !collectedCards.length &&
+        rounds === 1 &&
+        detectClassSearchIntent(userMessage, context);
+
+      const forcedTool = productIntent
+        ? AI_TOOL_NAMES.SEARCH_PRODUCTS
+        : classIntent
+          ? AI_TOOL_NAMES.SEARCH_CLASS_POSTS
+          : null;
+
+      if (forcedTool) {
+        if (onStatus) {
+          onStatus(
+            forcedTool === AI_TOOL_NAMES.SEARCH_PRODUCTS
+              ? "Đang tìm sản phẩm phù hợp..."
+              : "Đang tìm lớp học...",
+          );
+        }
         try {
           const result = await executeAiTool(
-            AI_TOOL_NAMES.SEARCH_PRODUCTS,
+            forcedTool,
             {},
-            { userMessage, playerLevel, userId },
+            {
+              userMessage,
+              playerLevel,
+              userId,
+              defaultBranchId,
+            },
           );
-          collectedCards.push(...extractToolCards(AI_TOOL_NAMES.SEARCH_PRODUCTS, result));
+          collectedCards.push(...extractToolCards(forcedTool, result));
           workingMessages.pop();
           workingMessages.push({
             role: "assistant",
             content: null,
             tool_calls: [
               {
-                id: "forced-search-products",
+                id: `forced-${forcedTool}`,
                 type: "function",
                 function: {
-                  name: AI_TOOL_NAMES.SEARCH_PRODUCTS,
+                  name: forcedTool,
                   arguments: "{}",
                 },
               },
@@ -573,7 +603,7 @@ const runToolLoop = async ({
           });
           workingMessages.push({
             role: "tool",
-            tool_call_id: "forced-search-products",
+            tool_call_id: `forced-${forcedTool}`,
             content: JSON.stringify(result),
           });
           continue;
@@ -721,7 +751,7 @@ const chatService = async (payload, onStatus) => {
         .slice(-AI_HISTORY_LIMIT)
         .map((h) => ({
           role: h.role === AI_MESSAGE_ROLE.USER ? AI_MESSAGE_ROLE.USER : AI_MESSAGE_ROLE.ASSISTANT,
-          content: String(h.content || ""),
+          content: stripAiCards(h.content),
         }))
         .filter((h) => h.content.trim())
     : [];
@@ -751,6 +781,33 @@ const chatService = async (payload, onStatus) => {
   }
 
   const userProfile = await loadUserAiProfile(userId);
+
+  // ── Tầng 1.5: Class Router (tra DB server-side) ──
+  const classHit = await tryClassRouter(trimmedMessage, context, {
+    userId,
+    defaultBranchId: branchId,
+  });
+  if (classHit) {
+    logRagFlow({
+      tier: classHit.tier,
+      intent: classHit.intent,
+      message: trimmedMessage,
+      context,
+      search: classHit.search,
+    });
+    if (onStatus) onStatus("Đang tìm lớp học...");
+    await appendSessionMessage(session.id, AI_MESSAGE_ROLE.ASSISTANT, classHit.answer);
+    return {
+      answer: classHit.answer,
+      sessionId: session.id,
+      guestToken: resolvedGuestToken,
+      rag: {
+        tier: classHit.tier,
+        intent: classHit.intent,
+        search: classHit.search,
+      },
+    };
+  }
 
   // ── Tầng 1.5: Product Router (tra DB server-side, không phụ thuộc LLM gọi tool) ──
   const productHit = await tryProductRouter(trimmedMessage, context, {

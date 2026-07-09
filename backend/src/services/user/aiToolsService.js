@@ -75,24 +75,24 @@ const inferMenuGroup = (text) => {
 
 const SKILL_LEVEL_PATTERNS = [
   {
-    pattern: /mới chơi|người mới|mới bắt đầu|tập chơi|căn bản|beginner/i,
+    pattern: /moi choi|nguoi moi|moi bat dau|tap choi|can ban|beginner/i,
     level: PLAYER_LEVEL.BEGINNER,
   },
   {
-    pattern: /giải trí|chơi vui|recreational/i,
+    pattern: /giai tri|choi vui|recreational/i,
     level: PLAYER_LEVEL.RECREATIONAL,
   },
   {
-    pattern: /trung bình|trung cấp|intermediate/i,
+    pattern: /trung binh|trung cap|intermediate/i,
     level: PLAYER_LEVEL.INTERMEDIATE,
   },
   {
     pattern:
-      /nâng cao|khá|advanced|lâu năm|lau nam|người chơi lâu|nguoi choi lau|chơi lâu|choi lau|nhiều năm|nhieu nam|kinh nghiệm|kinh nghiem/i,
+      /nang cao|kha|advanced|lau nam|nguoi choi lau|choi lau|nhieu nam|kinh nghiem/i,
     level: PLAYER_LEVEL.ADVANCED,
   },
   {
-    pattern: /thi đấu|competitive|phong trào/i,
+    pattern: /thi dau|competitive|phong trao/i,
     level: PLAYER_LEVEL.COMPETITIVE,
   },
 ];
@@ -109,20 +109,25 @@ const RECREATIONAL_DESC_PATTERN = /giai tri|choi vui/i;
 const PERSONALIZED_LEVEL_HINT =
   /phu hop|goi y|nen mua|tu van|chon giup|cho toi\b|danh cho toi/i;
 
-export const messageMentionsSkillLevel = (text) =>
-  SKILL_LEVEL_PATTERNS.some(({ pattern }) => pattern.test(text || ""));
-
-const shouldUseProfileLevel = (text) =>
-  messageMentionsSkillLevel(text) || PERSONALIZED_LEVEL_HINT.test(text || "");
-
 /** Ưu tiên trình độ trong câu hỏi; profile chỉ dùng khi user hỏi gợi ý cá nhân chung chung. */
 export const resolvePlayerLevel = (text, { toolLevel, profileLevel } = {}) => {
+  const normalized = normalizeText(text);
   for (const { pattern, level } of SKILL_LEVEL_PATTERNS) {
-    if (pattern.test(text || "")) return level;
+    if (pattern.test(normalized)) return level;
   }
   if (toolLevel) return toolLevel;
-  if (profileLevel && shouldUseProfileLevel(text)) return profileLevel;
+  if (profileLevel && shouldUseProfileLevel(normalized)) return profileLevel;
   return null;
+};
+
+export const messageMentionsSkillLevel = (text) => {
+  const normalized = normalizeText(text);
+  return SKILL_LEVEL_PATTERNS.some(({ pattern }) => pattern.test(normalized));
+};
+
+const shouldUseProfileLevel = (text) => {
+  const normalized = normalizeText(text);
+  return messageMentionsSkillLevel(normalized) || PERSONALIZED_LEVEL_HINT.test(normalized);
 };
 
 const inferPlayerLevel = (text, options = {}) => resolvePlayerLevel(text, options);
@@ -536,11 +541,12 @@ const getProductDetailTool = async (args) => {
 /** Cách 2: hỏi theo trình độ → lọc formData.inputLevel, không search title bằng "người mới" */
 const normalizeClassSearchArgs = (args, options = {}) => {
   let search = args.search?.trim() || null;
+  const userMessage = relaxProductTypos(options.userMessage || "");
 
-  const combined = [options.userMessage, search].filter(Boolean).join(" ");
+  const combined = [userMessage, search].filter(Boolean).join(" ");
   const inputLevel = inferPlayerLevel(combined, {
     toolLevel: args.inputLevel || null,
-    profileLevel: options.playerLevel || null,
+    profileLevel: shouldUseProfileLevel(combined) ? options.playerLevel : null,
   });
 
   const branchId = args.branchId
@@ -592,12 +598,8 @@ const searchClassPostsTool = async (args, options = {}) => {
   let result = await postService.getPostsService(query);
   let posts = result?.data || [];
 
-  // Có trình độ nhưng không khớp → liệt kê tất cả lớp để AI gợi ý
-  if (posts.length === 0 && inputLevel) {
-    const fallbackQuery = { ...query };
-    delete fallbackQuery["formData[inputLevel]"];
-    result = await postService.getPostsService(fallbackQuery);
-    posts = result?.data || [];
+  if (inputLevel) {
+    posts = posts.filter((post) => post.formData?.inputLevel === inputLevel);
   }
 
   return {
@@ -605,7 +607,7 @@ const searchClassPostsTool = async (args, options = {}) => {
     search,
     inputLevel: inputLevel || null,
     inputLevelLabel: inputLevel ? PLAYER_LEVEL_LABELS[inputLevel] : null,
-    total: result?.total ?? posts.length,
+    total: posts.length,
     classes: posts.slice(0, limit).map((post) => {
       const fd = post.formData || {};
       return {
@@ -629,9 +631,11 @@ const searchClassPostsTool = async (args, options = {}) => {
     becomeCoachUrl: "/become-coach",
     hint:
       posts.length === 0
-        ? "Chưa có bài đăng lớp CLASS phù hợp trong hệ thống."
+        ? inputLevel
+          ? `Không có lớp CLASS đúng trình độ ${PLAYER_LEVEL_LABELS[inputLevel] || inputLevel}. TUYỆT ĐỐI KHÔNG gợi ý lớp trình độ khác hoặc lớp từ câu trả lời trước.`
+          : "Chưa có bài đăng lớp CLASS phù hợp trong hệ thống."
         : inputLevel
-          ? "Ưu tiên lớp có inputLevel phù hợp; nếu không khớp hãy gợi ý lớp gần nhất từ danh sách."
+          ? `Chỉ gợi ý lớp có inputLevel=${inputLevel} trong danh sách.`
           : null,
   };
 };

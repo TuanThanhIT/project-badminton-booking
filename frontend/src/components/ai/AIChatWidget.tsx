@@ -206,6 +206,7 @@ const AIChatWidget = () => {
         {
           message: trimmed,
           context: activeContext,
+          sessionId: getStoredSessionId(activeContext, ownerKey),
           branchId: pageHints.branchId,
           productId: pageHints.productId,
           courtId: pageHints.courtId,

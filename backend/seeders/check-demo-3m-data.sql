@@ -1,10 +1,10 @@
 -- Verification queries for [DEMO-SEED-3M] data.
--- Scope: 2026-03-10 00:00:00 to 2026-06-30 23:59:59, Asia/Ho_Chi_Minh.
+-- Scope: 2026-03-10 00:00:00 to 2026-07-15 23:59:59, Asia/Ho_Chi_Minh.
 
 SET @demo_marker = '%[DEMO-SEED-3M]%';
 SET @demo_start = '2026-03-10 00:00:00';
-SET @demo_end = '2026-06-30 23:59:59';
-SET @feedback_end = '2026-06-30 23:59:59';
+SET @demo_end = '2026-07-15 23:59:59';
+SET @feedback_end = '2026-07-15 23:59:59';
 
 -- 1) Demo user totals by role.
 SELECT r.name AS roleName, COUNT(*) AS total
@@ -85,7 +85,7 @@ HAVING ABS(og.totalAmount - COALESCE(SUM(o.subtotal), 0)) > 1
 
 SELECT trackingCode, COUNT(*) AS total FROM Orders WHERE trackingCode LIKE 'BH-DEMO-%' GROUP BY trackingCode HAVING COUNT(*) > 1;
 
--- 8) Feedback coverage through the end of June 2026.
+-- 8) Feedback coverage through July 15, 2026.
 SELECT DATE(createdAt) AS feedbackDate,
        COUNT(*) AS total,
        SUM(variantId IS NOT NULL) AS productFeedbacks,

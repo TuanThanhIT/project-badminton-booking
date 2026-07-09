@@ -695,10 +695,11 @@ const seedBookings = async (qi, Sequelize) =>
     const occupied = new Set();
     const bookings = [];
     const detailsMeta = [];
-    for (let i = 1; i <= 760; i += 1) {
+    const bookingTotal = 861;
+    for (let i = 1; i <= bookingTotal; i += 1) {
       let branch = u.pick(base.branches);
       let courts = courtsByBranch[branch.id] || base.courts;
-      let d = u.spreadDate(i - 1, 760);
+      let d = u.spreadDate(i - 1, bookingTotal);
       let start = u.bookingHour();
       let duration = u.rand() < 0.72 ? 1 : 2;
       let court = u.pick(courts);
@@ -1732,10 +1733,11 @@ const seedOrders = async (qi, Sequelize) =>
     );
     const groups = [];
     const groupMeta = [];
-    for (let i = 1; i <= 560; i += 1) {
+    const orderGroupTotal = 635;
+    for (let i = 1; i <= orderGroupTotal; i += 1) {
       const user = u.pick(customers);
       const createdAt = u.dateTime(
-        u.spreadDate(i - 1, 560),
+        u.spreadDate(i - 1, orderGroupTotal),
         u.publicHour(),
         u.int(0, 59),
       );
@@ -2070,7 +2072,7 @@ const seedFeedbacks = async (qi, Sequelize) =>
       AND COALESCE(o.deliveredAt, DATE_ADD(o.createdAt, INTERVAL 3 DAY)) <= :latestEligibleAt
     ORDER BY eligibleAt, o.id, od.variantId
   `,
-      { latestEligibleAt: "2026-06-28 23:59:59" },
+      { latestEligibleAt: "2026-07-13 23:59:59" },
       transaction,
     );
     const branchCandidates = await u.q(
@@ -2098,7 +2100,7 @@ const seedFeedbacks = async (qi, Sequelize) =>
   `,
       {
         note: `%${u.MARKER}%`,
-        latestEligibleAt: "2026-06-28 23:59:59",
+        latestEligibleAt: "2026-07-13 23:59:59",
       },
       transaction,
     );

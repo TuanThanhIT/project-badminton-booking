@@ -6,9 +6,9 @@ const { QueryTypes } = require("sequelize");
 const MARKER = "[DEMO-SEED-3M]";
 const RANDOM_SEED = 20260310;
 const START = new Date("2026-03-10T00:00:00+07:00");
-const END = new Date("2026-06-30T23:59:59+07:00");
-const FEEDBACK_END = new Date("2026-06-30T23:59:59+07:00");
-const RECENT_CUTOFF = new Date("2026-06-27T00:00:00+07:00");
+const END = new Date("2026-07-15T23:59:59+07:00");
+const FEEDBACK_END = new Date("2026-07-15T23:59:59+07:00");
+const RECENT_CUTOFF = new Date("2026-07-12T00:00:00+07:00");
 
 const STATUS = {
   booking: ["PENDING", "CONFIRMED", "CHECKED_IN", "COMPLETED", "CANCELLED", "FAILED"],

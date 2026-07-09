@@ -23,6 +23,7 @@ import userSearchService from "../../services/user/userSearchService";
 import conversationService from "../../services/user/conversationService";
 import type {
   ClassEnrollmentItem,
+  ClassEnrollmentStatus,
   CoachClassSummary,
   EnrollmentStatus,
 } from "../../types/coachClass";
@@ -32,6 +33,7 @@ import { ROLE_NAME } from "../../utils/constants/role";
 import { showConfirmDialog } from "../../utils/confirmDialog";
 
 type Tab = "students" | "classes";
+type ClassStatusFilter = "" | ClassEnrollmentStatus;
 
 const normalizeTab = (value: string | null): Tab => {
   if (value === "classes") return "classes";
@@ -46,6 +48,35 @@ const STATUS_OPTIONS: { value: "" | EnrollmentStatus; label: string }[] = [
   { value: "COMPLETED", label: "Hoàn thành" },
   { value: "CANCELLED", label: "Đã hủy" },
 ];
+
+const CLASS_STATUS_OPTIONS: {
+  value: ClassStatusFilter;
+  label: string;
+  activeClass: string;
+}[] = [
+  {
+    value: "",
+    label: "Tất cả",
+    activeClass: "border-sky-300 bg-sky-50 text-sky-800",
+  },
+  {
+    value: "OPEN",
+    label: "Đang mở",
+    activeClass: "border-emerald-300 bg-emerald-50 text-emerald-800",
+  },
+  {
+    value: "LOCKED",
+    label: "Đã khóa",
+    activeClass: "border-amber-300 bg-amber-50 text-amber-800",
+  },
+  {
+    value: "ENDED",
+    label: "Đã kết thúc",
+    activeClass: "border-slate-300 bg-slate-100 text-slate-700",
+  },
+];
+
+const CLASS_STATUS_DEFAULT: ClassEnrollmentStatus = "OPEN";
 
 const STATUS_META: Record<
   EnrollmentStatus,
@@ -111,6 +142,8 @@ const CoachStudentsPage = () => {
   const [showStatusHelp, setShowStatusHelp] = useState(false);
 
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [classStatusFilter, setClassStatusFilter] =
+    useState<ClassStatusFilter>("");
   const [classFilter, setClassFilter] = useState<string>(initialPostId || "");
   const [studentSearch, setStudentSearch] = useState("");
   const [studentPage, setStudentPage] = useState(1);
@@ -224,13 +257,36 @@ const CoachStudentsPage = () => {
     return () => clearTimeout(t);
   }, [userSearchQ, addMemberOpen]);
 
+  const classStatusCounts = useMemo(
+    () =>
+      classes.reduce<Record<ClassEnrollmentStatus, number>>(
+        (acc, cls) => {
+          const status = cls.enrollmentStatus || CLASS_STATUS_DEFAULT;
+          acc[status] += 1;
+          return acc;
+        },
+        { OPEN: 0, LOCKED: 0, ENDED: 0 },
+      ),
+    [classes],
+  );
+
+  const filteredClasses = useMemo(() => {
+    if (!classStatusFilter) return classes;
+    return classes.filter(
+      (cls) =>
+        (cls.enrollmentStatus || CLASS_STATUS_DEFAULT) === classStatusFilter,
+    );
+  }, [classes, classStatusFilter]);
+
+  const openClassCount = classStatusCounts.OPEN;
+
   const summary = useMemo(
     () => ({
       pending: classes.reduce((s, c) => s + c.stats.pending, 0),
       active: classes.reduce((s, c) => s + c.stats.active, 0),
-      classCount: classes.length,
+      classCount: openClassCount,
     }),
-    [classes],
+    [classes, openClassCount],
   );
 
   const filteredEnrollments = useMemo(() => {
@@ -836,28 +892,74 @@ const CoachStudentsPage = () => {
                   </Link>
                 </div>
               ) : (
-                <div className="-mx-5 sm:-mx-6">
-                  <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-3 pt-1 scroll-smooth sm:px-6 [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent">
-                    {classes.map((cls) => (
-                      <CoachClassCard
-                        key={cls.id}
-                        cls={cls}
-                        branch={getBranchForClass(cls)}
-                        statusUpdating={statusUpdatingId === cls.id}
-                        onViewStudents={() => {
-                          setClassFilter(String(cls.id));
-                          switchTab("students");
-                        }}
-                        onAddMember={() => openAddMember(cls.id)}
-                        onOpenChat={() => handleOpenClassChat(cls.id)}
-                        onNotify={() => setNotifyPostId(cls.id)}
-                        onLock={() => handleClassStatus(cls.id, "lock")}
-                        onUnlock={() => handleClassStatus(cls.id, "unlock")}
-                        onEnd={() => handleClassStatus(cls.id, "end")}
-                      />
-                    ))}
+                <>
+                  <div className="mb-4 flex flex-wrap gap-2">
+                    {CLASS_STATUS_OPTIONS.map((option) => {
+                      const count = option.value
+                        ? classStatusCounts[option.value]
+                        : classes.length;
+                      const active = classStatusFilter === option.value;
+
+                      return (
+                        <button
+                          key={option.value || "all"}
+                          type="button"
+                          onClick={() => setClassStatusFilter(option.value)}
+                          className={`inline-flex h-9 items-center gap-2 rounded-full border px-3 text-xs font-semibold transition ${
+                            active
+                              ? option.activeClass
+                              : "border-slate-200 bg-slate-50 text-slate-600 hover:border-sky-200 hover:bg-white hover:text-slate-900"
+                          }`}
+                        >
+                          <span>{option.label}</span>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[11px] ${
+                              active
+                                ? "bg-white/75 text-inherit"
+                                : "bg-white text-slate-500"
+                            }`}
+                          >
+                            {count}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
-                </div>
+
+                  {filteredClasses.length === 0 ? (
+                    <div className="flex min-h-[260px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/70 text-center">
+                      <GraduationCap className="h-12 w-12 text-slate-300" />
+                      <p className="mt-4 text-sm font-medium text-slate-700">
+                        Không có lớp phù hợp với bộ lọc này.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="-mx-5 sm:-mx-6">
+                      <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-3 pt-1 scroll-smooth sm:px-6 [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent">
+                        {filteredClasses.map((cls) => (
+                          <CoachClassCard
+                            key={cls.id}
+                            cls={cls}
+                            branch={getBranchForClass(cls)}
+                            statusUpdating={statusUpdatingId === cls.id}
+                            onViewStudents={() => {
+                              setClassFilter(String(cls.id));
+                              switchTab("students");
+                            }}
+                            onAddMember={() => openAddMember(cls.id)}
+                            onOpenChat={() => handleOpenClassChat(cls.id)}
+                            onNotify={() => setNotifyPostId(cls.id)}
+                            onLock={() => handleClassStatus(cls.id, "lock")}
+                            onUnlock={() =>
+                              handleClassStatus(cls.id, "unlock")
+                            }
+                            onEnd={() => handleClassStatus(cls.id, "end")}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           ) : null}

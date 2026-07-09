@@ -12,6 +12,7 @@ import UnauthorizedError from "../../errors/UnauthorizedError.js";
 import { Branch, Court, Product } from "../../models/index.js";
 import B_HUB_KNOWLEDGE_BASE from "./aiKnowledgeBase.js";
 import { tryFaqRouter } from "./aiFaqRouter.js";
+import { detectProductSearchIntent, tryProductRouter } from "./aiProductRouter.js";
 import {
   applyBookingSlotsToArgs,
   extractBookingSlotsFromMessage,
@@ -159,7 +160,7 @@ const OPENAI_TOOLS = [
     function: {
       name: AI_TOOL_NAMES.SEARCH_PRODUCTS,
       description:
-        "Tìm sản phẩm trong cửa hàng B-Hub. BẮT BUỘC gọi khi user hỏi gợi ý/mua sắm. Dùng groupName (Vợt cầu lông, Giày cầu lông...) để lọc danh mục; keyword tìm trong tên, thương hiệu, mô tả. Kèm playerLevel khi hỏi theo trình độ.",
+        "Tìm sản phẩm trong cửa hàng B-Hub. BẮT BUỘC gọi mỗi khi user hỏi gợi ý/mua sắm hoặc đổi tiêu chí (giá, thương hiệu, trình độ). Dùng groupName (Vợt cầu lông, Giày cầu lông...) để lọc danh mục; keyword tìm trong tên, thương hiệu, mô tả. Kèm playerLevel khi hỏi theo trình độ; minPrice/maxPrice (VND) khi user nói giá (vd trên 2 triệu → minPrice: 2000000).",
       parameters: {
         type: "object",
         properties: {
@@ -178,6 +179,14 @@ const OPENAI_TOOLS = [
               "ADVANCED",
               "COMPETITIVE",
             ],
+          },
+          minPrice: {
+            type: "number",
+            description: "Giá tối thiểu VND (vd 2000000 khi user nói 'trên 2 triệu')",
+          },
+          maxPrice: {
+            type: "number",
+            description: "Giá tối đa VND (vd 1500000 khi user nói 'dưới 1.5 triệu')",
           },
           limit: { type: "number" },
         },
@@ -346,10 +355,12 @@ Bạn đang ở chế độ **Mua sắm**: tư vấn vợt, giày, phụ kiện 
 
 Luồng tư vấn sản phẩm (bắt buộc):
 1. User hỏi về sản phẩm → LUÔN gọi search_products trước khi trả lời.
-2. Hỏi vợt → groupName: "Vợt cầu lông"; hỏi giày → "Giày cầu lông"; tương tự các nhóm khác.
-3. Hỏi theo trình độ (người mới, tầm trung...) → truyền playerLevel (BEGINNER, RECREATIONAL...) và groupName phù hợp; keyword có thể là thương hiệu hoặc bỏ trống.
-4. Chọn 2–4 sản phẩm từ kết quả (ưu tiên mô tả phù hợp trình độ); bullet tên — giá + link [Xem sản phẩm](/product/{id}).
-5. KHÔNG nói "không tìm được" nếu chưa gọi search_products; KHÔNG bịa sản phẩm ngoài kết quả công cụ.
+2. User đổi tiêu chí (giá, thương hiệu, trình độ) → BẮT BUỘC gọi LẠI search_products theo TIN NHẮN HIỆN TẠI; KHÔNG tái dùng danh sách sản phẩm từ câu trả lời trước.
+3. Hỏi vợt → groupName: "Vợt cầu lông"; hỏi giày → "Giày cầu lông"; tương tự các nhóm khác.
+4. Hỏi theo trình độ (người mới, tầm trung...) → truyền playerLevel (BEGINNER, RECREATIONAL...) và groupName phù hợp; keyword có thể là thương hiệu hoặc bỏ trống.
+5. Hỏi theo giá (trên/dưới X triệu, từ X đến Y) → truyền minPrice/maxPrice (VND) từ tin nhắn hiện tại; chỉ gợi ý sản phẩm có giá khớp trong kết quả công cụ.
+6. Chọn 2–4 sản phẩm từ kết quả (ưu tiên mô tả phù hợp trình độ); bullet tên — giá + link [Xem sản phẩm](/product/{id}).
+7. KHÔNG nói "không tìm được" nếu chưa gọi search_products; KHÔNG bịa sản phẩm ngoài kết quả công cụ.
 `,
     [AI_CONTEXT.COACH]: `
 Bạn đang ở chế độ **HLV & Lớp học**: tìm lớp CLASS, hướng dẫn đăng ký HLV (/become-coach), lớp của tôi (/my-classes).
@@ -405,7 +416,7 @@ ${branchNote}
 
 Quy tắc trả lời:
 - **Tiếng Việt**, thân thiện, **ngắn gọn đúng trọng tâm**: tối đa 3–5 câu hoặc 5 bullet; không mở đầu dài, không lặp lại câu hỏi.
-- Đọc **toàn bộ lịch sử hội thoại** phía trên; không hỏi lại thông tin user đã nói (chi nhánh, ngày, giờ, sản phẩm...).
+- Đọc **toàn bộ lịch sử hội thoại** phía trên để hiểu ngữ cảnh; không hỏi lại thông tin user đã nói (chi nhánh, ngày, giờ...). Khi tìm sản phẩm, tiêu chí giá/trình độ lấy từ **tin nhắn hiện tại** (và bổ sung từ lịch sử nếu user chỉ nói thêm một phần, vd chỉ "trên 2 triệu" sau câu hỏi vợt người mới).
 - **Bắt buộc gọi công cụ** khi cần dữ liệu thật. Tra sân trống: list_branches trước nếu chưa có chi nhánh, rồi search_available_courts một chi nhánh.
 - **Không bịa** giá, tồn kho, lịch sân — chỉ dùng kết quả công cụ.
 - Không đặt sân/mua hàng thay user; chỉ hướng dẫn và gửi link.
@@ -486,7 +497,11 @@ const callOpenAI = async ({ messages, tools, toolChoice = "auto" }) => {
   // light logging for troubleshooting during development
   console.debug("OpenAI choice:", {
     role: message.role,
-    has_function_call: Boolean(message.function_call),
+    has_function_call: Boolean(
+      message.function_call ||
+        message.tool_calls?.length ||
+        message._rawChoice?.message?.tool_calls?.length,
+    ),
     content_preview: (message.content || "").slice(0, 200),
   });
 
@@ -496,6 +511,7 @@ const callOpenAI = async ({ messages, tools, toolChoice = "auto" }) => {
 const runToolLoop = async ({
   messages,
   tools,
+  context,
   playerLevel,
   defaultBranchId,
   userMessage,
@@ -522,6 +538,50 @@ const runToolLoop = async ({
 
     if (!toolCalls || !toolCalls.length) {
       const text = assistantMessage.content?.trim() || "";
+      const hasProductTool = tools?.some(
+        (t) => t.function?.name === AI_TOOL_NAMES.SEARCH_PRODUCTS,
+      );
+      const productIntent =
+        hasProductTool &&
+        !collectedCards.length &&
+        rounds === 1 &&
+        detectProductSearchIntent(userMessage, context);
+
+      if (productIntent) {
+        if (onStatus) onStatus("Đang tìm sản phẩm phù hợp...");
+        try {
+          const result = await executeAiTool(
+            AI_TOOL_NAMES.SEARCH_PRODUCTS,
+            {},
+            { userMessage, playerLevel, userId },
+          );
+          collectedCards.push(...extractToolCards(AI_TOOL_NAMES.SEARCH_PRODUCTS, result));
+          workingMessages.pop();
+          workingMessages.push({
+            role: "assistant",
+            content: null,
+            tool_calls: [
+              {
+                id: "forced-search-products",
+                type: "function",
+                function: {
+                  name: AI_TOOL_NAMES.SEARCH_PRODUCTS,
+                  arguments: "{}",
+                },
+              },
+            ],
+          });
+          workingMessages.push({
+            role: "tool",
+            tool_call_id: "forced-search-products",
+            content: JSON.stringify(result),
+          });
+          continue;
+        } catch {
+          /* fall through to text response */
+        }
+      }
+
       return appendAiCards(text, collectedCards);
     }
 
@@ -690,9 +750,37 @@ const chatService = async (payload, onStatus) => {
     };
   }
 
+  const userProfile = await loadUserAiProfile(userId);
+
+  // ── Tầng 1.5: Product Router (tra DB server-side, không phụ thuộc LLM gọi tool) ──
+  const productHit = await tryProductRouter(trimmedMessage, context, {
+    userId,
+    playerLevel: userProfile?.playerLevel,
+  });
+  if (productHit) {
+    logRagFlow({
+      tier: productHit.tier,
+      intent: productHit.intent,
+      message: trimmedMessage,
+      context,
+      search: productHit.search,
+    });
+    if (onStatus) onStatus("Đang tìm sản phẩm phù hợp...");
+    await appendSessionMessage(session.id, AI_MESSAGE_ROLE.ASSISTANT, productHit.answer);
+    return {
+      answer: productHit.answer,
+      sessionId: session.id,
+      guestToken: resolvedGuestToken,
+      rag: {
+        tier: productHit.tier,
+        intent: productHit.intent,
+        search: productHit.search,
+      },
+    };
+  }
+
   assertOpenAiKey();
 
-  const userProfile = await loadUserAiProfile(userId);
   const pageContext = await loadPageContext({ branchId, courtId, productId });
 
   if (productId && (context === AI_CONTEXT.SHOPPING || context === AI_CONTEXT.GENERAL)) {
@@ -764,6 +852,7 @@ const chatService = async (payload, onStatus) => {
   const answer = await runToolLoop({
     messages,
     tools,
+    context,
     playerLevel: userProfile?.playerLevel,
     defaultBranchId: effectiveBranchId,
     userMessage: trimmedMessage,

@@ -15,6 +15,7 @@ import postService from "./postService.js";
 import BadRequestError from "../../errors/BadRequestError.js";
 import { AI_TOOL_NAMES } from "../../constants/aiConstant.js";
 import { getTodayInVietnam, parseNaturalDate } from "./aiBookingParser.js";
+import { extractPriceConstraints, normalizeText, relaxProductTypos } from "./aiTextUtils.js";
 
 const PLAYER_LEVEL_LABELS = {
   [PLAYER_LEVEL.BEGINNER]: "Mới bắt đầu",
@@ -64,9 +65,10 @@ const MENU_GROUP_BY_KEYWORD = [
 ];
 
 const inferMenuGroup = (text) => {
-  if (!text) return null;
+  const relaxed = relaxProductTypos(text);
+  if (!relaxed) return null;
   for (const { pattern, group } of MENU_GROUP_BY_KEYWORD) {
-    if (pattern.test(text)) return group;
+    if (pattern.test(relaxed)) return group;
   }
   return null;
 };
@@ -85,7 +87,8 @@ const SKILL_LEVEL_PATTERNS = [
     level: PLAYER_LEVEL.INTERMEDIATE,
   },
   {
-    pattern: /nâng cao|khá|advanced/i,
+    pattern:
+      /nâng cao|khá|advanced|lâu năm|lau nam|người chơi lâu|nguoi choi lau|chơi lâu|choi lau|nhiều năm|nhieu nam|kinh nghiệm|kinh nghiem/i,
     level: PLAYER_LEVEL.ADVANCED,
   },
   {
@@ -96,29 +99,59 @@ const SKILL_LEVEL_PATTERNS = [
 
 const KNOWN_BRANDS = /yonex|victor|lining|mizuno|apacs|kawasaki/i;
 
-const inferPlayerLevel = (text, explicitLevel) => {
-  if (explicitLevel) return explicitLevel;
+const BEGINNER_DESC_PATTERN =
+  /moi bat dau|moi choi|can ban|de lam quen|goi y cho nguoi moi|phu hop nguoi moi|nguoi moi/i;
+const ADVANCED_DESC_PATTERN =
+  /nang cao|tan cong|thi dau|cao cap|trung-cao|trung cao|luc danh|chuyen dung|thi dau phong trao/i;
+const INTERMEDIATE_DESC_PATTERN = /trung cap|trung binh|trung-cao/i;
+const RECREATIONAL_DESC_PATTERN = /giai tri|choi vui/i;
+
+const PERSONALIZED_LEVEL_HINT =
+  /phu hop|goi y|nen mua|tu van|chon giup|cho toi\b|danh cho toi/i;
+
+export const messageMentionsSkillLevel = (text) =>
+  SKILL_LEVEL_PATTERNS.some(({ pattern }) => pattern.test(text || ""));
+
+const shouldUseProfileLevel = (text) =>
+  messageMentionsSkillLevel(text) || PERSONALIZED_LEVEL_HINT.test(text || "");
+
+/** Ưu tiên trình độ trong câu hỏi; profile chỉ dùng khi user hỏi gợi ý cá nhân chung chung. */
+export const resolvePlayerLevel = (text, { toolLevel, profileLevel } = {}) => {
   for (const { pattern, level } of SKILL_LEVEL_PATTERNS) {
     if (pattern.test(text || "")) return level;
   }
+  if (toolLevel) return toolLevel;
+  if (profileLevel && shouldUseProfileLevel(text)) return profileLevel;
   return null;
 };
+
+const inferPlayerLevel = (text, options = {}) => resolvePlayerLevel(text, options);
 
 const extractBrandKeyword = (text) => {
   const match = text?.match(KNOWN_BRANDS);
   return match ? match[0] : null;
 };
 
+const toPriceNumber = (value) => {
+  const num = Number(value);
+  return Number.isFinite(num) && num > 0 ? Math.round(num) : null;
+};
+
 /** Cách 2: hỏi theo trình độ → browse theo groupName + playerLevel, keyword chỉ giữ thương hiệu */
 const normalizeProductSearchArgs = (args, options = {}) => {
   let keyword = args.keyword?.trim() || null;
   let groupName = args.groupName?.trim() || null;
-  let playerLevel = args.playerLevel || options.playerLevel || null;
+  const userMessage = relaxProductTypos(options.userMessage || "");
 
-  const combined = [options.userMessage, keyword, groupName]
-    .filter(Boolean)
-    .join(" ");
-  playerLevel = inferPlayerLevel(combined, playerLevel);
+  const combined = [userMessage, keyword, groupName].filter(Boolean).join(" ");
+  let playerLevel = inferPlayerLevel(combined, {
+    toolLevel: args.playerLevel || null,
+    profileLevel: shouldUseProfileLevel(combined) ? options.playerLevel : null,
+  });
+
+  const priceFromMessage = extractPriceConstraints(userMessage);
+  let minPrice = toPriceNumber(args.minPrice) ?? priceFromMessage.minPrice;
+  let maxPrice = toPriceNumber(args.maxPrice) ?? priceFromMessage.maxPrice;
 
   if (!groupName) {
     groupName = inferMenuGroup(combined);
@@ -132,17 +165,32 @@ const normalizeProductSearchArgs = (args, options = {}) => {
       else if (/giày|giay/i.test(combined)) groupName = "Giày cầu lông";
     }
   } else if (keyword && SKILL_LEVEL_PATTERNS.some(({ pattern }) => pattern.test(keyword))) {
-    playerLevel = inferPlayerLevel(keyword, null);
+    playerLevel = inferPlayerLevel(keyword, {
+      toolLevel: null,
+      profileLevel: shouldUseProfileLevel(combined) ? options.playerLevel : null,
+    });
     keyword = extractBrandKeyword(keyword);
     if (!groupName) groupName = inferMenuGroup(combined);
   }
 
   const browseByLevel = Boolean(playerLevel && groupName && !keyword);
-  const limit = browseByLevel
+  const hasPriceFilter = Boolean(minPrice || maxPrice);
+  const baseLimit = browseByLevel
     ? Math.min(Number(args.limit) || 15, 20)
     : Math.min(Number(args.limit) || 8, 12);
+  const limit =
+    browseByLevel || hasPriceFilter ? Math.min(baseLimit * 4, 60) : baseLimit;
 
-  return { keyword, groupName, playerLevel, limit, browseByLevel };
+  return {
+    keyword,
+    groupName,
+    playerLevel,
+    minPrice,
+    maxPrice,
+    limit,
+    browseByLevel,
+    hasPriceFilter,
+  };
 };
 
 const resolveCategoryIds = async (groupName) => {
@@ -170,8 +218,19 @@ const buildProductWhere = (keyword, categoryIds) => {
   return where;
 };
 
-const fetchProductsForSearch = async ({ keyword, categoryIds, limit }) =>
-  Product.findAll({
+const fetchProductsForSearch = async ({
+  keyword,
+  categoryIds,
+  limit,
+  minPrice,
+  maxPrice,
+}) => {
+  const hasPriceFilter = Boolean(minPrice || maxPrice);
+  const variantWhere = {};
+  if (minPrice) variantWhere.price = { ...(variantWhere.price || {}), [Op.gte]: minPrice };
+  if (maxPrice) variantWhere.price = { ...(variantWhere.price || {}), [Op.lte]: maxPrice };
+
+  return Product.findAll({
     where: buildProductWhere(keyword, categoryIds),
     attributes: ["id", "productName", "brand", "description", "thumbnailUrl"],
     include: [
@@ -179,12 +238,14 @@ const fetchProductsForSearch = async ({ keyword, categoryIds, limit }) =>
         model: ProductVariant,
         as: "variants",
         attributes: ["price", "discount"],
-        required: false,
+        required: hasPriceFilter,
+        ...(hasPriceFilter ? { where: variantWhere } : {}),
       },
     ],
     limit,
     order: [["id", "DESC"]],
   });
+};
 
 const mapProductSearchResults = (products) =>
   products.map((p) => {
@@ -204,6 +265,61 @@ const mapProductSearchResults = (products) =>
       url: `/product/${p.id}`,
     };
   });
+
+const filterProductsByPrice = (products, { minPrice, maxPrice }) => {
+  if (!minPrice && !maxPrice) return products;
+  return products.filter((product) => {
+    if (product.minPrice == null) return false;
+    if (minPrice && product.minPrice < minPrice) return false;
+    if (maxPrice && product.minPrice > maxPrice) return false;
+    return true;
+  });
+};
+
+const productDescriptionText = (product) =>
+  normalizeText(`${product.description || ""} ${product.name || ""}`);
+
+const filterProductsBySkillLevel = (products, playerLevel) => {
+  if (!playerLevel || !products.length) return products;
+
+  const beginnerMatches = products.filter((p) =>
+    BEGINNER_DESC_PATTERN.test(productDescriptionText(p)),
+  );
+  const advancedMatches = products.filter(
+    (p) =>
+      ADVANCED_DESC_PATTERN.test(productDescriptionText(p)) &&
+      !BEGINNER_DESC_PATTERN.test(productDescriptionText(p)),
+  );
+  const notBeginner = products.filter(
+    (p) => !BEGINNER_DESC_PATTERN.test(productDescriptionText(p)),
+  );
+
+  switch (playerLevel) {
+    case PLAYER_LEVEL.BEGINNER:
+      return beginnerMatches.length ? beginnerMatches : products;
+    case PLAYER_LEVEL.ADVANCED:
+    case PLAYER_LEVEL.COMPETITIVE:
+      if (advancedMatches.length) return advancedMatches;
+      if (notBeginner.length) return notBeginner;
+      return [];
+    case PLAYER_LEVEL.INTERMEDIATE: {
+      const intermediateMatches = products.filter((p) =>
+        INTERMEDIATE_DESC_PATTERN.test(productDescriptionText(p)),
+      );
+      if (intermediateMatches.length) return intermediateMatches;
+      if (notBeginner.length) return notBeginner;
+      return products;
+    }
+    case PLAYER_LEVEL.RECREATIONAL: {
+      const recreationalMatches = products.filter((p) =>
+        RECREATIONAL_DESC_PATTERN.test(productDescriptionText(p)),
+      );
+      return recreationalMatches.length ? recreationalMatches : products;
+    }
+    default:
+      return products;
+  }
+};
 
 const listBranchesTool = async () => {
   const branches = await Branch.findAll({
@@ -293,8 +409,11 @@ const searchProductsTool = async (args, options = {}) => {
     keyword,
     groupName,
     playerLevel,
+    minPrice,
+    maxPrice,
     limit,
     browseByLevel,
+    hasPriceFilter,
   } = normalizeProductSearchArgs(args, options);
 
   let categoryIds = await resolveCategoryIds(groupName);
@@ -304,6 +423,8 @@ const searchProductsTool = async (args, options = {}) => {
     keyword: browseByLevel ? null : keyword,
     categoryIds,
     limit,
+    minPrice,
+    maxPrice,
   });
 
   if (products.length === 0 && keyword && categoryIds.length > 0) {
@@ -311,6 +432,8 @@ const searchProductsTool = async (args, options = {}) => {
       keyword: null,
       categoryIds,
       limit,
+      minPrice,
+      maxPrice,
     });
   }
 
@@ -322,12 +445,16 @@ const searchProductsTool = async (args, options = {}) => {
         keyword,
         categoryIds: inferredIds,
         limit,
+        minPrice,
+        maxPrice,
       });
       if (products.length === 0 && inferredIds.length > 0) {
         products = await fetchProductsForSearch({
           keyword: null,
           categoryIds: inferredIds,
           limit,
+          minPrice,
+          maxPrice,
         });
       }
     }
@@ -338,6 +465,20 @@ const searchProductsTool = async (args, options = {}) => {
       PRODUCT_HINTS_BY_LEVEL[PLAYER_LEVEL.BEGINNER]
     : null;
 
+  const displayLimit = browseByLevel ? 15 : 8;
+  const mappedProducts = filterProductsByPrice(
+    filterProductsBySkillLevel(mapProductSearchResults(products), playerLevel),
+    { minPrice, maxPrice },
+  ).slice(0, displayLimit);
+
+  const priceHint = hasPriceFilter
+    ? minPrice && maxPrice
+      ? `Đã lọc giá từ ${minPrice.toLocaleString("vi-VN")}₫ đến ${maxPrice.toLocaleString("vi-VN")}₫.`
+      : minPrice
+        ? `Đã lọc giá từ ${minPrice.toLocaleString("vi-VN")}₫ trở lên.`
+        : `Đã lọc giá tối đa ${maxPrice.toLocaleString("vi-VN")}₫.`
+    : null;
+
   return {
     searchMode: browseByLevel ? "level_browse" : "keyword",
     keyword,
@@ -346,15 +487,23 @@ const searchProductsTool = async (args, options = {}) => {
     playerLevelLabel: playerLevel
       ? PLAYER_LEVEL_LABELS[playerLevel]
       : null,
+    minPrice: minPrice || null,
+    maxPrice: maxPrice || null,
     levelHint,
-    products: mapProductSearchResults(products),
+    products: mappedProducts,
     shopUrl: "/products",
     hint:
-      products.length === 0
-        ? "Không có sản phẩm trong nhóm này. Kiểm tra groupName (vd: Vợt cầu lông)."
+      mappedProducts.length === 0
+        ? playerLevel && hasPriceFilter
+          ? `Không có sản phẩm phù hợp trình độ ${PLAYER_LEVEL_LABELS[playerLevel] || playerLevel}${groupName ? ` trong nhóm ${groupName}` : ""}${priceHint ? ` (${priceHint})` : ""}. Gợi ý user xem thêm tại /products hoặc nới ngân sách.`
+          : hasPriceFilter
+          ? `Không có sản phẩm phù hợp${groupName ? ` trong nhóm ${groupName}` : ""} với khoảng giá yêu cầu. ${priceHint || ""} Hãy báo user và gợi ý nới lỏng ngân sách hoặc xem thêm tại /products.`
+          : playerLevel
+            ? `Không có sản phẩm phù hợp trình độ ${PLAYER_LEVEL_LABELS[playerLevel] || playerLevel} trong nhóm này.`
+          : "Không có sản phẩm trong nhóm này. Kiểm tra groupName (vd: Vợt cầu lông)."
         : playerLevel
-          ? "Chọn 2–4 sản phẩm phù hợp playerLevel từ danh sách (đọc description)."
-          : null,
+          ? `Chọn 2–4 sản phẩm phù hợp playerLevel từ danh sách (đọc description).${priceHint ? ` ${priceHint}` : ""}`
+          : priceHint,
   };
 };
 
@@ -387,11 +536,12 @@ const getProductDetailTool = async (args) => {
 /** Cách 2: hỏi theo trình độ → lọc formData.inputLevel, không search title bằng "người mới" */
 const normalizeClassSearchArgs = (args, options = {}) => {
   let search = args.search?.trim() || null;
-  let inputLevel =
-    args.inputLevel || inferPlayerLevel(options.userMessage, null) || options.playerLevel || null;
 
   const combined = [options.userMessage, search].filter(Boolean).join(" ");
-  inputLevel = inferPlayerLevel(combined, inputLevel);
+  const inputLevel = inferPlayerLevel(combined, {
+    toolLevel: args.inputLevel || null,
+    profileLevel: options.playerLevel || null,
+  });
 
   const branchId = args.branchId
     ? Number(args.branchId)
@@ -535,7 +685,10 @@ export const executeAiTool = async (toolName, rawArgs, options = {}) => {
       return searchProductsTool(
         {
           ...args,
-          playerLevel: args.playerLevel || options.playerLevel,
+          // Chỉ dùng playerLevel khi tool/model truyền rõ ràng.
+          // Không bơm profile level vào đây để tránh câu hỏi chỉ lọc giá
+          // bị gắn nhãn "mới bắt đầu".
+          playerLevel: args.playerLevel || null,
         },
         options,
       );

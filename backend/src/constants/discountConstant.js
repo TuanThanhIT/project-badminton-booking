@@ -25,4 +25,30 @@ export const DISCOUNT_SEGMENT = Object.freeze({
   WINBACK: "WINBACK", // Khách lâu chưa quay lại — mã kéo về
 });
 
+export const DISCOUNT_APPLICATION_MODE = Object.freeze({
+  CODE: "CODE",
+  AUTOMATIC: "AUTOMATIC",
+});
+
+export const DISCOUNT_USAGE_LIMIT_PERIOD = Object.freeze({
+  MONTHLY: "MONTHLY",
+});
+
+export const DISCOUNT_USAGE_REFERENCE_TYPE = Object.freeze({
+  ORDER: "ORDER",
+  BOOKING: "BOOKING",
+});
+
+export const DISCOUNT_USAGE_STATUS = Object.freeze({
+  PENDING: "PENDING",
+  USED: "USED",
+  RESTORED: "RESTORED",
+  CANCELLED: "CANCELLED",
+});
+
+export const WALLET_PAYMENT_PROMOTION = Object.freeze({
+  CAMPAIGN_KEY: "BHUB_WALLET_PAYMENT",
+  CODE: "BHUB_WALLET_10",
+});
+
 export const NOTIFICATION_TYPE_PROMOTION = "PROMOTION";

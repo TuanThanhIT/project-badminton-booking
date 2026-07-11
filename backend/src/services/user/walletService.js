@@ -27,6 +27,7 @@ import {
   createVNPayDateRange,
   logVNPayDiagnostics,
 } from "../../utils/vnpayDate.js";
+import { getWalletPaymentPromotionInfo } from "../shared/walletPromotionService.js";
 import mailer from "../../helpers/mailer.js";
 import { OTP_TYPE } from "../../constants/userConstant.js";
 import ForbiddenError from "../../errors/ForbiddenError.js";
@@ -742,8 +743,12 @@ const walletWithdrawCancelService = async (data) => {
   });
 };
 
+const getWalletPaymentPromotionService = async ({ userId = null } = {}) =>
+  getWalletPaymentPromotionInfo({ userId });
+
 const walletService = {
   getWalletOverviewService,
+  getWalletPaymentPromotionService,
   walletDepositService,
   walletCallbackService,
   walletWithdrawRequestService,

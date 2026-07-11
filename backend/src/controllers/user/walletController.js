@@ -8,6 +8,14 @@ const getWalletOverviewController = asyncHandler(async (req, res) => {
   return res.status(200).json(new SuccessResponse("Lấy dữ liệu ví thành công", wallet));
 });
 
+const getWalletPaymentPromotionController = asyncHandler(async (req, res) => {
+  const data = { userId: req.user?.id || null };
+  const promotion = await walletService.getWalletPaymentPromotionService(data);
+  return res
+    .status(200)
+    .json(new SuccessResponse("Lay thong tin uu dai Vi B-Hub thanh cong", promotion));
+});
+
 const walletDepositController = asyncHandler(async (req, res) => {
   const data = { ...req.body, userId: req.user.id, ip: req.ip };
   const paymentUrl = await walletService.walletDepositService(data);
@@ -70,6 +78,7 @@ const walletWithdrawCancelController = asyncHandler(async (req, res) => {
 
 const walletController = {
   getWalletOverviewController,
+  getWalletPaymentPromotionController,
   walletDepositController,
   walletCallbackController,
   walletWithdrawRequestController,

@@ -41,6 +41,8 @@ import { showConfirmDialog } from "../../utils/confirmDialog";
 import { BOOKING_DISCOUNT_STORAGE_KEY } from "../../constants/bookingDiscount";
 import { formatPrice } from "../../utils/checkout";
 import { formatTimeRange } from "../../utils/booking";
+import walletService from "../../services/user/walletService";
+import type { WalletPromotion } from "../../types/wallet";
 
 const iconMap = {
   cash: <Banknote size={18} />,
@@ -62,12 +64,26 @@ const CheckoutBookingPage = () => {
   const [openDiscount, setOpenDiscount] = useState(false);
   const [appliedDiscount, setAppliedDiscount] =
     useState<DiscountCheckResult | null>(null);
+  const [walletPromotion, setWalletPromotion] =
+    useState<WalletPromotion | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const autoDiscountAppliedRef = useRef(false);
 
   const totalAmount = Number(state?.totalAmount || 0);
   const discountAmount = appliedDiscount?.discountValue ?? 0;
-  const finalAmount = appliedDiscount?.finalAmount ?? totalAmount;
+  const estimatedWalletDiscount =
+    selectedMethod === BOOKING_PAYMENT_METHOD.WALLET.value &&
+    !appliedDiscount &&
+    walletPromotion?.isActive
+      ? Math.min(
+          Math.round((totalAmount * Number(walletPromotion.discountRate || 0)) / 100),
+          Number(walletPromotion.maxDiscount || 0),
+        )
+      : 0;
+  const finalAmount =
+    selectedMethod === BOOKING_PAYMENT_METHOD.WALLET.value && !appliedDiscount
+      ? Math.max(0, totalAmount - estimatedWalletDiscount)
+      : appliedDiscount?.finalAmount ?? totalAmount;
 
   const bookingScope = useMemo(() => {
     const parseHour = (t?: string) => {
@@ -116,6 +132,13 @@ const CheckoutBookingPage = () => {
 
     dispatch(getDiscountsCheckout({ data }));
   }, [dispatch, totalAmount, bookingScope]);
+
+  useEffect(() => {
+    walletService
+      .getWalletPaymentPromotionService()
+      .then((res) => setWalletPromotion(res.data.data))
+      .catch(() => setWalletPromotion(null));
+  }, []);
 
   useEffect(() => {
     if (!totalAmount || autoDiscountAppliedRef.current) return;
@@ -220,6 +243,25 @@ const CheckoutBookingPage = () => {
 
     if (!confirmed) return;
     navigate("/courts");
+  };
+
+  const handleSelectPaymentMethod = async (method: BookingPaymentMethod) => {
+    if (
+      method === BOOKING_PAYMENT_METHOD.WALLET.value &&
+      appliedDiscount
+    ) {
+      const confirmed = await showConfirmDialog(
+        "Chọn ưu đãi",
+        "Voucher và ưu đãi Ví B-Hub không thể sử dụng đồng thời. Bỏ voucher hiện tại để dùng ưu đãi ví?",
+        "Bỏ voucher",
+        "Giữ voucher",
+      );
+      if (!confirmed) return;
+      setAppliedDiscount(null);
+      localStorage.removeItem(BOOKING_DISCOUNT_STORAGE_KEY);
+    }
+
+    setSelectedMethod(method);
   };
 
   const handlePayNow = async () => {
@@ -476,7 +518,7 @@ const CheckoutBookingPage = () => {
                       <button
                         type="button"
                         key={method.value}
-                        onClick={() => setSelectedMethod(method.value)}
+                        onClick={() => handleSelectPaymentMethod(method.value)}
                         className={`rounded-2xl border p-5 text-left transition-all ${
                           active
                             ? "border-sky-300 bg-sky-50 shadow-sm"
@@ -523,10 +565,20 @@ const CheckoutBookingPage = () => {
 
                   {discountAmount > 0 && (
                     <div className="flex justify-between gap-4 text-emerald-600">
-                      <span>Giảm giá</span>
+                      <span>Voucher</span>
 
                       <span className="font-medium">
                         -{formatPrice(discountAmount)}
+                      </span>
+                    </div>
+                  )}
+
+                  {estimatedWalletDiscount > 0 && (
+                    <div className="flex justify-between gap-4 text-sky-600">
+                      <span>Ưu đãi Ví B-Hub</span>
+
+                      <span className="font-medium">
+                        -{formatPrice(estimatedWalletDiscount)}
                       </span>
                     </div>
                   )}
@@ -567,6 +619,18 @@ const CheckoutBookingPage = () => {
                     này có thể bị trừ.
                   </div>
                 )}
+
+                {selectedMethod === BOOKING_PAYMENT_METHOD.WALLET.value &&
+                  walletPromotion && (
+                    <div className="mt-3 rounded-2xl border border-sky-100 bg-sky-50 p-4 text-xs leading-5 text-sky-800">
+                      Ưu đãi Ví B-Hub giảm {walletPromotion.discountRate}%,
+                      tối đa {formatPrice(walletPromotion.maxDiscount)} mỗi
+                      giao dịch.{" "}
+                      {walletPromotion.remainingUsageCount === 0
+                        ? "Bạn đã hết lượt ưu đãi trong tháng này nhưng vẫn có thể thanh toán bằng ví."
+                        : `Bạn còn ${walletPromotion.remainingUsageCount ?? walletPromotion.monthlyUsageLimit}/${walletPromotion.monthlyUsageLimit} lượt trong tháng này.`}
+                    </div>
+                  )}
 
                 <button
                   type="button"

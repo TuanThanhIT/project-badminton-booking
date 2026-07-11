@@ -116,6 +116,7 @@ export const checkoutPreviewSchema = {
     addressId: idParams("addressId"),
     cartItemIds: Joi.array().items(idParams("cartItemId")).min(1),
     buyNowItem: buyNowItemSchema,
+    paymentMethod: paymentMethodField.optional(),
   }).xor("cartItemIds", "buyNowItem"),
 };
 

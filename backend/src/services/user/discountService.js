@@ -3,6 +3,7 @@ import { Op } from "sequelize";
 import NotFoundError from "../../errors/NotFoundError.js";
 import BadRequestError from "../../errors/BadRequestError.js"; // Giả định bạn có class này
 import {
+  DISCOUNT_APPLICATION_MODE,
   DISCOUNT_APPLY_TYPE,
   DISCOUNT_TARGET_TYPE,
   DISCOUNT_TYPE,
@@ -11,6 +12,7 @@ import {
 import sequelize from "../../config/db.js";
 import { redisClient } from "../../config/redis.js";
 import { getCheckoutKey } from "../../utils/checkoutKey.js";
+import { PAYMENT_METHOD_STATUS } from "../../constants/paymentConstant.js";
 
 export const assertBookingDiscountScope = async (discount, context = {}) => {
   const { userId, branchId, startHour, endHour, transaction } = context;
@@ -66,6 +68,7 @@ const checkDiscountBookingService = async (data) => {
       isActive: true,
       startDate: { [Op.lte]: new Date() },
       endDate: { [Op.gte]: new Date() },
+      applicationMode: DISCOUNT_APPLICATION_MODE.CODE,
     },
   });
 
@@ -124,11 +127,20 @@ const applyDiscountService = async ({ code, userId, cartId }) => {
 
   const session = JSON.parse(raw);
 
+  if (session.group?.paymentMethod === PAYMENT_METHOD_STATUS.WALLET) {
+    throw new BadRequestError(
+      "Uu dai Vi B-Hub khong duoc ap dung dong thoi voi voucher. Vui long chon mot trong hai uu dai.",
+    );
+  }
+
   return sequelize.transaction(async (t) => {
     const normalizedCode = code.trim().toUpperCase();
 
     const discount = await Discount.findOne({
-      where: { code: normalizedCode },
+      where: {
+        code: normalizedCode,
+        applicationMode: DISCOUNT_APPLICATION_MODE.CODE,
+      },
       transaction: t,
       lock: t.LOCK.UPDATE,
     });
@@ -236,6 +248,7 @@ const getDiscountsCheckoutService = async (data) => {
     startDate: { [Op.lte]: today },
     endDate: { [Op.gte]: today },
     applyType: { [Op.in]: applyTypes },
+    applicationMode: DISCOUNT_APPLICATION_MODE.CODE,
   };
 
   const order = [

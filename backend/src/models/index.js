@@ -29,6 +29,7 @@ import OrderDetail from "./orderDetail.js";
 import Payment from "./payment.js";
 import Discount from "./discount.js";
 import DiscountUser from "./discountUser.js";
+import DiscountUsage from "./discountUsage.js";
 
 import DraftBooking from "./draftBooking.js";
 import DraftBookingItem from "./draftBookingItem.js";
@@ -268,6 +269,15 @@ Booking.belongsTo(Discount, {
   as: "discount",
 });
 
+Discount.hasMany(Booking, {
+  foreignKey: "walletDiscountId",
+  as: "walletDiscountBookings",
+});
+Booking.belongsTo(Discount, {
+  foreignKey: "walletDiscountId",
+  as: "walletDiscount",
+});
+
 Discount.belongsTo(Branch, {
   foreignKey: "branchId",
   as: "branch",
@@ -298,6 +308,23 @@ DiscountUser.belongsTo(Discount, {
   as: "discount",
 });
 DiscountUser.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
+Discount.hasMany(DiscountUsage, {
+  foreignKey: "discountId",
+  as: "usages",
+});
+DiscountUsage.belongsTo(Discount, {
+  foreignKey: "discountId",
+  as: "discount",
+});
+User.hasMany(DiscountUsage, {
+  foreignKey: "userId",
+  as: "discountUsages",
+});
+DiscountUsage.belongsTo(User, {
   foreignKey: "userId",
   as: "user",
 });
@@ -429,6 +456,15 @@ Discount.hasMany(OrderGroup, {
 OrderGroup.belongsTo(Discount, {
   foreignKey: "discountId",
   as: "discount",
+});
+
+Discount.hasMany(OrderGroup, {
+  foreignKey: "walletDiscountId",
+  as: "walletDiscountOrderGroups",
+});
+OrderGroup.belongsTo(Discount, {
+  foreignKey: "walletDiscountId",
+  as: "walletDiscount",
 });
 
 OrderGroup.hasMany(Order, {
@@ -1024,6 +1060,7 @@ export {
   Payment,
   Discount,
   DiscountUser,
+  DiscountUsage,
   DraftBooking,
   DraftBookingItem,
   DraftProductItem,

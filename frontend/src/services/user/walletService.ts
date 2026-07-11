@@ -4,6 +4,7 @@ import type {
   WalletDepositRequest,
   WalletDepositResponse,
   WalletOverviewResponse,
+  WalletPromotionResponse,
   WalletWithdrawCancelRequest,
   WalletWithdrawConfirmRequest,
   WalletWithdrawRequest,
@@ -13,6 +14,9 @@ import instance from "../../utils/axiosCustomize";
 
 const getWalletOverviewService = () =>
   instance.get<WalletOverviewResponse>("/user/wallet");
+
+const getWalletPaymentPromotionService = () =>
+  instance.get<WalletPromotionResponse>("/user/wallet/payment-promotion");
 
 const walletDepositService = (data: WalletDepositRequest) =>
   instance.post<WalletDepositResponse>("/user/wallet/deposit", data);
@@ -31,6 +35,7 @@ const walletWithdrawCancelService = (data: WalletWithdrawCancelRequest) =>
 
 const walletService = {
   getWalletOverviewService,
+  getWalletPaymentPromotionService,
   walletDepositService,
   walletCallbackService,
   walletWithdrawRequestService,

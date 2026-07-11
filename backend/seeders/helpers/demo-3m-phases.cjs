@@ -3,6 +3,10 @@
 const u = require("./demo-3m-utils.cjs");
 const { buildBundleLinesForOrder } = require("./order-bundle-utils.cjs");
 
+const DEMO_OPERATION_DATES = new Set(["2026-07-10", "2026-07-13"]);
+
+const isDemoOperationDate = (date) => DEMO_OPERATION_DATES.has(u.dateOnly(date));
+
 const seedToday = () => {
   const d = new Date();
   d.setHours(12, 0, 0, 0);
@@ -542,20 +546,26 @@ const seedWorkShifts = async (qi, Sequelize) =>
     const base = await getBase(qi, Sequelize, transaction);
     const shifts = [];
     for (let d = new Date(u.START); d <= u.END; d = u.addDays(d, 1)) {
+      const workDate = u.dateOnly(d);
+      const demoOperationDate = isDemoOperationDate(d);
       base.branches.forEach((branch) => {
         [
           ["Morning", 6, 14],
           ["Evening", 14, 22],
         ].forEach(([label, start, end]) => {
           shifts.push({
-            shiftName: `${u.MARKER} ${label} ${branch.branchName} ${u.dateOnly(d)}`,
-            workDate: u.dateOnly(d),
+            shiftName: `${u.MARKER} ${label} ${branch.branchName} ${workDate}`,
+            workDate,
             startTime: `${u.time(start)}:00`,
             endTime: `${u.time(end)}:00`,
             cashierShiftWage: 280000,
             staffShiftWage: 240000,
             branchId: branch.id,
-            shiftStatus: u.rand() < 0.025 ? "CANCELLED" : "COMPLETED",
+            shiftStatus: demoOperationDate
+              ? "SCHEDULED"
+              : u.rand() < 0.025
+                ? "CANCELLED"
+                : "COMPLETED",
             createdAt: u.dateTime(d, start - 1, 40),
             updatedAt: u.dateTime(d, end, 10),
           });
@@ -598,14 +608,15 @@ const seedWorkShifts = async (qi, Sequelize) =>
           -u.int(0, 8),
         );
         const cancelled = shift.shiftStatus === "CANCELLED";
+        const demoOperationDate = DEMO_OPERATION_DATES.has(shift.workDate);
         assignments.push({
           workShiftId: shift.id,
           employeeId: pool[(index + i) % pool.length],
           roleInShift: isCashier ? "CASHIER" : "STAFF",
-          checkIn: cancelled ? null : start,
-          checkOut: cancelled ? null : end,
-          completionRate: cancelled ? 0 : 1,
-          earnedWage: cancelled
+          checkIn: cancelled || demoOperationDate ? null : start,
+          checkOut: cancelled || demoOperationDate ? null : end,
+          completionRate: cancelled || demoOperationDate ? 0 : 1,
+          earnedWage: cancelled || demoOperationDate
             ? 0
             : isCashier
               ? shift.cashierShiftWage
@@ -631,7 +642,11 @@ const seedWorkShifts = async (qi, Sequelize) =>
       qi,
       "CashRegisters",
       cashiers
-        .filter((c) => c.shiftStatus !== "CANCELLED")
+        .filter(
+          (c) =>
+            c.shiftStatus !== "CANCELLED" &&
+            !DEMO_OPERATION_DATES.has(c.workDate),
+        )
         .map((c, i) => {
           const opening = 1000000 + (i % 4) * 250000;
           const expected = opening + (i % 9) * 120000;
@@ -695,6 +710,7 @@ const seedBookings = async (qi, Sequelize) =>
     const occupied = new Set();
     const bookings = [];
     const detailsMeta = [];
+    const demoBookingStatusCounts = new Map();
     const bookingTotal = 861;
     for (let i = 1; i <= bookingTotal; i += 1) {
       let branch = u.pick(base.branches);
@@ -715,8 +731,15 @@ const seedBookings = async (qi, Sequelize) =>
         guard += 1;
       }
       occupied.add(key);
-      const status =
-        d > u.RECENT_CUTOFF
+      const playDate = u.dateOnly(d);
+      const demoStatusIndex = demoBookingStatusCounts.get(playDate) || 0;
+      const status = DEMO_OPERATION_DATES.has(playDate)
+        ? demoStatusIndex < 3
+          ? "PENDING"
+          : demoStatusIndex < 6
+            ? "CONFIRMED"
+            : "COMPLETED"
+        : d > u.RECENT_CUTOFF
           ? u.weighted([
               ["CONFIRMED", 55],
               ["PENDING", 20],
@@ -728,6 +751,9 @@ const seedBookings = async (qi, Sequelize) =>
               ["FAILED", 2],
               ["CONFIRMED", 9],
             ]);
+      if (DEMO_OPERATION_DATES.has(playDate)) {
+        demoBookingStatusCounts.set(playDate, demoStatusIndex + 1);
+      }
       const price = priceFor(
         base.prices,
         branch.id,
@@ -763,7 +789,7 @@ const seedBookings = async (qi, Sequelize) =>
       detailsMeta.push({
         marker: `DEMO-BOOKING-${u.pad(i, 5)}`,
         courtId: court.id,
-        playDate: u.dateOnly(d),
+        playDate,
         startTime: u.time(start),
         endTime: u.time(start + duration),
         price,

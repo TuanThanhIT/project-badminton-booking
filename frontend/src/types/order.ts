@@ -1,5 +1,6 @@
 import type { ReviewStatus } from "../utils/constants/review";
 import type { ApiResponse } from "./api";
+import type { WalletPromotionEligibility } from "./wallet";
 
 export type ShippingStatus =
   | "PENDING"
@@ -61,6 +62,7 @@ export type CheckoutPreviewOrder = {
 };
 
 export type DiscountInfo = {
+  id?: number | null;
   code: string | null;
   amount: number;
 };
@@ -74,6 +76,9 @@ export type CheckoutPreviewGroup = {
   serviceId: number | null;
 
   discount: DiscountInfo;
+  walletDiscount?: DiscountInfo;
+  walletPromotion?: WalletPromotionEligibility | null;
+  paymentMethod?: string | null;
   total: number;
 };
 
@@ -100,6 +105,7 @@ export type CheckoutPreviewRequest = {
   addressId: number;
   cartItemIds?: number[];
   buyNowItem?: BuyNowItemRequest;
+  paymentMethod?: string;
 };
 
 export type CalculateShippingRequest = {
@@ -122,6 +128,8 @@ export type CreateOrderData = {
   cartItemIds?: number[];
   buyNowItem?: BuyNowItemRequest;
   paymentUrl?: string;
+  walletDiscountAmount?: number;
+  walletPromotion?: WalletPromotionEligibility | null;
 };
 
 export type CreateOrderResponse = ApiResponse<CreateOrderData>;

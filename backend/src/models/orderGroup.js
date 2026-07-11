@@ -57,6 +57,30 @@ const OrderGroup = sequelize.define(
         },
       },
     },
+    walletDiscountId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: Discount, key: "id" },
+      validate: {
+        isInt: { msg: "Wallet discount ID must be an integer" },
+        min: {
+          args: [1],
+          msg: "Wallet discount ID must be positive",
+        },
+      },
+    },
+    walletDiscountAmount: {
+      type: DataTypes.DECIMAL(12, 2),
+      allowNull: false,
+      defaultValue: 0,
+      validate: {
+        isDecimal: { msg: "Wallet discount must be a number" },
+        min: {
+          args: [0],
+          msg: "Wallet discount must be >= 0",
+        },
+      },
+    },
     isDiscountApplied: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
@@ -122,10 +146,18 @@ const OrderGroup = sequelize.define(
 );
 
 OrderGroup.beforeValidate((group) => {
+  const discountAmount = Number(group.discountAmount || 0);
+  const walletDiscountAmount = Number(group.walletDiscountAmount || 0);
+
+  if (discountAmount > 0 && walletDiscountAmount > 0) {
+    throw new Error("Voucher and wallet discount cannot be stacked");
+  }
+
   const expected =
     Number(group.totalAmount) +
     Number(group.totalShippingFee) -
-    Number(group.discountAmount);
+    discountAmount -
+    walletDiscountAmount;
 
   if (Number(group.finalAmount) !== expected) {
     throw new Error("Invalid final amount");

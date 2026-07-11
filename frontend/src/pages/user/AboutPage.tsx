@@ -570,6 +570,64 @@ const AboutPage = () => {
         </div>
       </section>
 
+      <section className="mx-auto mb-24 max-w-7xl px-6">
+        <div className="overflow-hidden rounded-[2.5rem] border border-sky-100 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.06)]">
+          <div className="grid gap-0 lg:grid-cols-[0.95fr_1.05fr]">
+            <div className="bg-sky-950 p-8 text-white md:p-10">
+              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-sky-200">
+                <WalletCards size={28} />
+              </div>
+              <p className="text-sm font-semibold uppercase tracking-widest text-sky-200">
+                Thanh toán tiện lợi với Ví B-Hub
+              </p>
+              <h2 className="mt-3 text-3xl font-bold leading-tight">
+                Nạp tiền miễn phí, thanh toán nhanh, nhận ưu đãi ví
+              </h2>
+              <p className="mt-4 text-sm leading-relaxed text-sky-100">
+                Nạp tiền vào Ví B-Hub hoàn toàn miễn phí và dùng số dư ví để
+                thanh toán nhanh cho đơn hàng mua sản phẩm hoặc đặt sân. Khi
+                thanh toán bằng ví, khách hàng được giảm 10% giá trị giao dịch,
+                tối đa 50.000đ mỗi lần và tối đa 5 lần trong một tháng.
+              </p>
+              <p className="mt-3 text-sm leading-relaxed text-sky-100">
+                Ưu đãi Ví B-Hub không áp dụng đồng thời với voucher hoặc mã giảm
+                giá khác.
+              </p>
+              <a
+                href="/wallet"
+                className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-sky-900 transition hover:bg-sky-50"
+              >
+                Nạp tiền ngay
+                <ArrowRight size={17} />
+              </a>
+            </div>
+
+            <div className="grid gap-4 p-6 sm:grid-cols-2 md:p-8">
+              {[
+                "Nạp tiền miễn phí",
+                "Thanh toán nhanh",
+                "Giảm 10%",
+                "Tối đa 50.000đ mỗi giao dịch",
+                "Tối đa 5 lần mỗi tháng",
+                "Áp dụng cho mua hàng và đặt sân",
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="rounded-2xl border border-slate-100 bg-slate-50 p-4"
+                >
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-sky-100 text-sky-700">
+                    <CheckCircle2 size={20} />
+                  </div>
+                  <p className="text-sm font-semibold text-slate-800">
+                    {item}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* STATS */}
       <section className="max-w-7xl mx-auto px-6 mb-24">
         <div className="relative bg-sky-950 rounded-[3rem] p-10 md:p-14 text-white overflow-hidden">

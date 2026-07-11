@@ -7,6 +7,7 @@ import {
   RefreshCcw,
   Search,
   ShieldCheck,
+  TicketPercent,
   Wallet,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -25,6 +26,7 @@ import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hook";
 import { otpSend, setOtpFlow } from "../../../../redux/slices/user/authSlice";
 import {
+  getWalletPaymentPromotion,
   getWalletOverview,
   walletDeposit,
   walletWithdrawRequest,
@@ -144,6 +146,9 @@ const WalletPanel = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const overview = useAppSelector((state) => state.wallet.overview);
+  const paymentPromotion = useAppSelector(
+    (state) => state.wallet.paymentPromotion,
+  );
   const paymentUrl = useAppSelector((state) => state.wallet.paymentUrl);
   const user = useAppSelector((state) => state.auth.user);
   const loading = useAppSelector((state) =>
@@ -151,6 +156,9 @@ const WalletPanel = () => {
   );
   const withdrawLoading = useAppSelector((state) =>
     Boolean(state.ui.loadingMap["wallet/walletWithdrawRequest"]),
+  );
+  const promotionLoading = useAppSelector((state) =>
+    Boolean(state.ui.loadingMap["wallet/getWalletPaymentPromotion"]),
   );
 
   const [activeTab, setActiveTab] = useState<TabType>("DEPOSIT");
@@ -160,6 +168,7 @@ const WalletPanel = () => {
 
   useEffect(() => {
     dispatch(getWalletOverview());
+    dispatch(getWalletPaymentPromotion());
   }, [dispatch]);
 
   useEffect(() => {
@@ -282,6 +291,20 @@ const WalletPanel = () => {
     icon: ShieldCheck,
   };
   const WalletStatusIcon = walletStatus.icon;
+  const promotionLimit = Number(paymentPromotion?.monthlyUsageLimit || 0);
+  const promotionUsed = Number(paymentPromotion?.monthlyUsageCount || 0);
+  const promotionRemaining =
+    paymentPromotion?.remainingUsageCount == null
+      ? null
+      : Number(paymentPromotion.remainingUsageCount);
+  const promotionPercent =
+    promotionLimit > 0
+      ? Math.min(100, Math.max(0, (promotionUsed / promotionLimit) * 100))
+      : 0;
+  const currentMonth = new Date().toLocaleDateString("vi-VN", {
+    month: "2-digit",
+    year: "numeric",
+  });
 
   return (
     <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_12px_35px_rgba(15,23,42,0.08)]">
@@ -324,7 +347,7 @@ const WalletPanel = () => {
 
       <div className="space-y-5 bg-slate-100/60 p-3 sm:p-5">
         <div className="grid gap-5 lg:grid-cols-[1fr_1.35fr]">
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-sm font-medium text-slate-500">Số dư hiện tại</p>
             <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
               {loading ? "..." : formatCurrency(overview?.wallet.balance)}
@@ -345,6 +368,55 @@ const WalletPanel = () => {
               <span className="inline-flex rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700">
                 Chờ rút: {formatCurrency(overview?.wallet.pendingWithdrawAmount)}
               </span>
+            </div>
+
+            <div className="mt-5 rounded-2xl border border-sky-100 bg-sky-50/70 p-4 text-sky-900">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-sky-600 shadow-sm">
+                    <TicketPercent size={20} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold">
+                      Ưu đãi thanh toán ví tháng này
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-sky-700">
+                      {promotionLoading
+                        ? "Đang cập nhật số lượt ưu đãi..."
+                        : paymentPromotion?.isActive
+                          ? `Giảm ${paymentPromotion.discountRate}% tối đa ${formatCurrency(
+                              paymentPromotion.maxDiscount,
+                            )} khi thanh toán bằng ví.`
+                          : "Hiện chưa có ưu đãi thanh toán ví đang hoạt động."}
+                    </p>
+                  </div>
+                </div>
+                <span className="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-semibold text-sky-700 ring-1 ring-sky-100">
+                  {currentMonth}
+                </span>
+              </div>
+
+              <div className="mt-4">
+                <div className="mb-2 flex items-center justify-between gap-3 text-xs font-semibold text-sky-800">
+                  <span>
+                    Còn{" "}
+                    {promotionLoading || promotionRemaining == null
+                      ? "..."
+                      : promotionRemaining}{" "}
+                    lượt
+                  </span>
+                  <span>
+                    Đã dùng {promotionLoading ? "..." : promotionUsed}/
+                    {promotionLoading || !promotionLimit ? "..." : promotionLimit}
+                  </span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-white">
+                  <div
+                    className="h-full rounded-full bg-sky-500 transition-all"
+                    style={{ width: `${promotionPercent}%` }}
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="mt-5 grid gap-3">
@@ -376,11 +448,11 @@ const WalletPanel = () => {
               </div>
             </div>
 
-            <div className="h-[340px]">
+            <div className="h-[320px] lg:h-[455px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                   data={overview?.chart || []}
-                  margin={{ top: 16, right: 8, bottom: 8, left: 0 }}
+                  margin={{ top: 12, right: 8, bottom: 0, left: 0 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis
@@ -397,6 +469,7 @@ const WalletPanel = () => {
                     tick={{ fill: "#64748b", fontSize: 12 }}
                     axisLine={false}
                     tickLine={false}
+                    tickCount={6}
                     tickFormatter={(value) =>
                       Number(value) >= 1000000
                         ? `${Number(value) / 1000000}tr`
@@ -404,7 +477,7 @@ const WalletPanel = () => {
                     }
                     width={54}
                   />
-                  <Legend />
+                  <Legend wrapperStyle={{ paddingTop: 8 }} />
                   <Line
                     type="monotone"
                     dataKey="deposit"

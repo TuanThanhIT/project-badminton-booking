@@ -49,6 +49,18 @@ const formatCurrency = (value: number) =>
 
 const timeShort = (time: string) => time?.slice(0, 5) || "--:--";
 
+const formatDateTime = (value?: string | null) => {
+  if (!value) return "--";
+  return new Date(value).toLocaleString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: "Asia/Ho_Chi_Minh",
+  });
+};
+
 const ShiftStatCard = ({
   label,
   value,
@@ -595,10 +607,14 @@ const WorkShiftPage = () => {
                                   </select>
                                 </td>
                                 <td className="px-3 py-3 text-slate-600">
-                                  {assignment.checkIn || "Chưa check-in"}
+                                  {assignment.checkIn
+                                    ? formatDateTime(assignment.checkIn)
+                                    : "Chưa check-in"}
                                 </td>
                                 <td className="px-3 py-3 text-slate-600">
-                                  {assignment.checkOut || "Chưa check-out"}
+                                  {assignment.checkOut
+                                    ? formatDateTime(assignment.checkOut)
+                                    : "Chưa check-out"}
                                 </td>
                                 <td className="px-3 py-3 text-right">
                                   <button

@@ -22,6 +22,13 @@ const initWalletRoute = (app) => {
     walletController.getWalletOverviewController,
   );
 
+  walletRoute.get(
+    "/payment-promotion",
+    auth,
+    authorize(ROLE_NAME.USER, ROLE_NAME.COACH),
+    walletController.getWalletPaymentPromotionController,
+  );
+
   walletRoute.post(
     "/deposit",
     auth,

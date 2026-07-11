@@ -48,6 +48,11 @@ import {
   applyDiscountUsage,
   restoreDiscountUsage,
 } from "../shared/applyDiscountUsage.js";
+import {
+  cancelWalletPromotionUsage,
+  createWalletPromotionUsage,
+  validateWalletPromotionEligibility,
+} from "../shared/walletPromotionService.js";
 import { assertBookingDiscountScope } from "./discountService.js";
 import {
   sendBranchStaffNotification,
@@ -58,6 +63,10 @@ import {
   WORK_SHIFT_STATUS,
 } from "../../constants/workShiftConstant.js";
 import { OTP_TYPE } from "../../constants/userConstant.js";
+import {
+  DISCOUNT_APPLICATION_MODE,
+  DISCOUNT_USAGE_REFERENCE_TYPE,
+} from "../../constants/discountConstant.js";
 
 const DIRECT_USER_CANCEL_STATUSES = [BOOKING_STATUS.PENDING];
 const REQUEST_USER_CANCEL_STATUSES = [BOOKING_STATUS.CONFIRMED];
@@ -299,6 +308,10 @@ const calculateBookingDiscount = async ({
 
   if (!discount.isActive) {
     throw new BadRequestError("Mã giảm giá đã bị vô hiệu hóa");
+  }
+
+  if (discount.applicationMode !== DISCOUNT_APPLICATION_MODE.CODE) {
+    throw new BadRequestError("Mã này không thể nhập trực tiếp");
   }
 
   const today = new Date().toISOString().split("T")[0];
@@ -553,7 +566,10 @@ const createBookingService = async (bookingData) => {
       transaction,
     });
 
-    const { discountAmount, finalAmount } = await calculateBookingDiscount({
+    const {
+      discountAmount: voucherDiscountAmount,
+      finalAmount: voucherFinalAmount,
+    } = await calculateBookingDiscount({
       discountId,
       bookingAmount: totalAmount,
       transaction,
@@ -562,6 +578,30 @@ const createBookingService = async (bookingData) => {
       startHour: Number(String(startTime).split(":")[0]),
       endHour: Number(String(endTime).split(":")[0]),
     });
+
+    let walletPromotion = null;
+    let walletDiscountId = null;
+    let walletDiscountAmount = 0;
+    let finalAmount = voucherFinalAmount;
+
+    if (paymentMethod === PAYMENT_METHOD_STATUS.WALLET) {
+      walletPromotion = await validateWalletPromotionEligibility({
+        userId,
+        paymentMethod,
+        targetType: DISCOUNT_USAGE_REFERENCE_TYPE.BOOKING,
+        eligibleAmount: totalAmount,
+        voucherDiscountAmount,
+        branchId,
+        transaction,
+        lock: true,
+      });
+
+      if (walletPromotion.eligible) {
+        walletDiscountId = walletPromotion.discountId;
+        walletDiscountAmount = walletPromotion.discountAmount;
+        finalAmount = Math.max(0, totalAmount - walletDiscountAmount);
+      }
+    }
 
     const bookingStatus =
       paymentMethod === PAYMENT_METHOD_STATUS.COD
@@ -573,6 +613,8 @@ const createBookingService = async (bookingData) => {
         userId,
         branchId,
         discountId: discountId || null,
+        walletDiscountId,
+        walletDiscountAmount,
         totalAmount: finalAmount,
         bookingStatus,
         note,
@@ -582,6 +624,17 @@ const createBookingService = async (bookingData) => {
 
     if (discountId) {
       await applyDiscountUsage(discountId, transaction, userId);
+    }
+
+    if (walletDiscountId && walletDiscountAmount > 0) {
+      await createWalletPromotionUsage({
+        discountId: walletDiscountId,
+        userId,
+        referenceType: DISCOUNT_USAGE_REFERENCE_TYPE.BOOKING,
+        referenceId: booking.id,
+        discountAmount: walletDiscountAmount,
+        transaction,
+      });
     }
 
     await BookingDetail.create(
@@ -644,7 +697,9 @@ const createBookingService = async (bookingData) => {
         bookingId: booking.id,
         amount: finalAmount,
         depositAmount,
-        discountAmount,
+        discountAmount: voucherDiscountAmount,
+        walletDiscountAmount,
+        walletPromotion,
         paymentMethod,
         status: booking.bookingStatus,
       };
@@ -700,7 +755,9 @@ const createBookingService = async (bookingData) => {
       return {
         bookingId: booking.id,
         amount: finalAmount,
-        discountAmount,
+        discountAmount: voucherDiscountAmount,
+        walletDiscountAmount,
+        walletPromotion,
         paymentMethod,
         status: booking.bookingStatus,
       };
@@ -717,7 +774,9 @@ const createBookingService = async (bookingData) => {
       return {
         bookingId: booking.id,
         amount: finalAmount,
-        discountAmount,
+        discountAmount: voucherDiscountAmount,
+        walletDiscountAmount,
+        walletPromotion,
         paymentMethod,
         paymentUrl,
         status: booking.bookingStatus,
@@ -834,6 +893,12 @@ const walletBookingConfirmService = async (data) => {
         { paymentStatus: PAYMENT_STATUS.FAILED },
         { transaction },
       );
+      await cancelWalletPromotionUsage({
+        discountId: booking.walletDiscountId,
+        referenceType: DISCOUNT_USAGE_REFERENCE_TYPE.BOOKING,
+        referenceId: booking.id,
+        transaction,
+      });
       throw new BadRequestError("Phiên thanh toán đã hết hạn");
     }
 
@@ -1268,6 +1333,15 @@ const requestCancelBookingService = async ({
           transaction,
           booking.userId,
         );
+      }
+
+      if (booking.walletDiscountId) {
+        await cancelWalletPromotionUsage({
+          discountId: booking.walletDiscountId,
+          referenceType: DISCOUNT_USAGE_REFERENCE_TYPE.BOOKING,
+          referenceId: booking.id,
+          transaction,
+        });
       }
 
       await booking.update(

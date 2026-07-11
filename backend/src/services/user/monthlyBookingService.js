@@ -22,9 +22,15 @@ import {
 import { Op } from "sequelize";
 import {
   DISCOUNT_APPLY_TYPE,
+  DISCOUNT_APPLICATION_MODE,
+  DISCOUNT_USAGE_REFERENCE_TYPE,
   DISCOUNT_TYPE,
 } from "../../constants/discountConstant.js";
 import { applyDiscountUsage } from "../shared/applyDiscountUsage.js";
+import {
+  createWalletPromotionUsage,
+  validateWalletPromotionEligibility,
+} from "../shared/walletPromotionService.js";
 import { assertBookingDiscountScope } from "./discountService.js";
 import { sendBranchStaffNotification } from "../../helpers/notification.js";
 import { formatBookingCode } from "../../utils/displayCode.js";
@@ -232,6 +238,9 @@ const calculateBookingDiscount = async ({
 
   if (!discount) throw new BadRequestError("Ma giam gia khong ton tai");
   if (!discount.isActive) throw new BadRequestError("Ma giam gia da bi vo hieu hoa");
+  if (discount.applicationMode !== DISCOUNT_APPLICATION_MODE.CODE) {
+    throw new BadRequestError("Ma nay khong the nhap truc tiep");
+  }
 
   const today = new Date().toISOString().split("T")[0];
   if (discount.startDate > today) {
@@ -347,7 +356,10 @@ const createMonthlyBookingService = async (data) => {
       transaction: t,
     });
 
-    const { discountAmount, finalAmount } = await calculateBookingDiscount({
+    const {
+      discountAmount: voucherDiscountAmount,
+      finalAmount: voucherFinalAmount,
+    } = await calculateBookingDiscount({
       discountId,
       bookingAmount: monthlyPrice.totalAmount,
       transaction: t,
@@ -356,6 +368,30 @@ const createMonthlyBookingService = async (data) => {
       startHour: Number(String(startTime).split(":")[0]),
       endHour: Number(String(endTime).split(":")[0]),
     });
+
+    let walletPromotion = null;
+    let walletDiscountId = null;
+    let walletDiscountAmount = 0;
+    let finalAmount = voucherFinalAmount;
+
+    if (paymentMethod === PAYMENT_METHOD_STATUS.WALLET) {
+      walletPromotion = await validateWalletPromotionEligibility({
+        userId,
+        paymentMethod,
+        targetType: DISCOUNT_USAGE_REFERENCE_TYPE.BOOKING,
+        eligibleAmount: monthlyPrice.totalAmount,
+        voucherDiscountAmount,
+        branchId,
+        transaction: t,
+        lock: true,
+      });
+
+      if (walletPromotion.eligible) {
+        walletDiscountId = walletPromotion.discountId;
+        walletDiscountAmount = walletPromotion.discountAmount;
+        finalAmount = Math.max(0, monthlyPrice.totalAmount - walletDiscountAmount);
+      }
+    }
 
     const monthlyBooking = await MonthlyBooking.create(
       {
@@ -383,6 +419,8 @@ const createMonthlyBookingService = async (data) => {
         userId,
         branchId,
         discountId: discountId || null,
+        walletDiscountId,
+        walletDiscountAmount,
         totalAmount: finalAmount,
         bookingStatus: "PENDING",
         note: `Monthly booking #${monthlyBooking.id}`,
@@ -392,6 +430,17 @@ const createMonthlyBookingService = async (data) => {
 
     if (discountId) {
       await applyDiscountUsage(discountId, t, userId);
+    }
+
+    if (walletDiscountId && walletDiscountAmount > 0) {
+      await createWalletPromotionUsage({
+        discountId: walletDiscountId,
+        userId,
+        referenceType: DISCOUNT_USAGE_REFERENCE_TYPE.BOOKING,
+        referenceId: booking.id,
+        discountAmount: walletDiscountAmount,
+        transaction: t,
+      });
     }
 
     // =====================================================
@@ -534,7 +583,9 @@ const createMonthlyBookingService = async (data) => {
     return {
       monthlyBooking,
       booking,
-      discountAmount,
+      discountAmount: voucherDiscountAmount,
+      walletDiscountAmount,
+      walletPromotion,
       paymentMethod,
       paymentUrl,
       totalSessions: details.length,

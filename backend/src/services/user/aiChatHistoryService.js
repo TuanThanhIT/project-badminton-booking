@@ -7,6 +7,14 @@ import ForbiddenError from "../../errors/ForbiddenError.js";
 import { AiChatMessage, AiChatSession } from "../../models/index.js";
 import { createRandomId } from "../../utils/randomId.js";
 
+const AI_CARDS_PATTERN = /<<AI_CARDS>>[\s\S]*?<<END_AI_CARDS>>/g;
+
+export const stripAiCards = (content = "") =>
+  String(content || "")
+    .replace(AI_CARDS_PATTERN, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
 const truncateTitle = (text, max = 100) => {
   const trimmed = String(text || "").trim();
   if (!trimmed) return null;
@@ -124,8 +132,9 @@ export const messagesToPromptHistory = (rows) =>
     )
     .map((m) => ({
       role: m.role,
-      content: m.content,
-    }));
+      content: stripAiCards(m.content),
+    }))
+    .filter((m) => m.content);
 
 export default {
   resolveSession,
@@ -136,4 +145,5 @@ export default {
   listUserSessions,
   assertSessionAccess,
   messagesToPromptHistory,
+  stripAiCards,
 };

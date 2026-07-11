@@ -1,4 +1,4 @@
-import { Op, literal } from "sequelize";
+import { Op, literal, QueryTypes } from "sequelize";
 import {
   Post,
   Comment,
@@ -25,6 +25,32 @@ import {
 import { createViolation } from "../moderationViolationService.js";
 import { sendUserNotification } from "../../helpers/notification.js";
 
+const buildDateRange = (startDate, endDate) => {
+  const range = {};
+  if (startDate) {
+    range[Op.gte] = new Date(`${startDate}T00:00:00`);
+  }
+  if (endDate) {
+    range[Op.lte] = new Date(`${endDate}T23:59:59.999`);
+  }
+  return Reflect.ownKeys(range).length ? range : null;
+};
+
+const getDefaultAnalyticsRange = () => {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(start.getDate() - 29);
+  return {
+    startDate: start.toISOString().slice(0, 10),
+    endDate: end.toISOString().slice(0, 10),
+  };
+};
+
+const resolveAnalyticsRange = ({ startDate, endDate } = {}) => {
+  if (startDate && endDate) return { startDate, endDate };
+  return getDefaultAnalyticsRange();
+};
+
 const getAdminPostsService = async (data) => {
   const {
     page = 1,
@@ -36,6 +62,8 @@ const getAdminPostsService = async (data) => {
     isDeleted,
     moderationStatus,
     moderationLabel,
+    startDate,
+    endDate,
   } = data;
   const offset = (page - 1) * limit;
 
@@ -59,6 +87,8 @@ const getAdminPostsService = async (data) => {
   if (isDeleted !== undefined && isDeleted !== "") {
     where.isDeleted = isDeleted === "true" || isDeleted === true;
   }
+  const createdAtRange = buildDateRange(startDate, endDate);
+  if (createdAtRange) where.createdAt = createdAtRange;
 
   const { rows, count } = await Post.findAndCountAll({
     where,
@@ -110,6 +140,155 @@ const getAdminPostsService = async (data) => {
   return { posts, pagination: { page: Number(page), limit: Number(limit), total: count } };
 };
 
+const getAdminPostAnalyticsService = async (data = {}) => {
+  const { startDate, endDate } = resolveAnalyticsRange(data);
+  const startAt = new Date(`${startDate}T00:00:00`);
+  const endAt = new Date(`${endDate}T23:59:59.999`);
+  const replacements = { startAt, endAt };
+
+  const [typeRows, featuredRows] = await Promise.all([
+    sequelize.query(
+      `
+        SELECT
+          p.type,
+          COUNT(DISTINCT p.id) AS totalPosts,
+          COUNT(DISTINCT CASE WHEN p.isActive = 1 AND p.isDeleted = 0 THEN p.id END) AS activePosts,
+          COUNT(DISTINCT CASE WHEN p.isActive = 0 AND p.isDeleted = 0 THEN p.id END) AS hiddenPosts,
+          COUNT(DISTINCT CASE WHEN p.moderationStatus = :reviewStatus AND p.isDeleted = 0 THEN p.id END) AS reviewRequiredPosts,
+          COUNT(DISTINCT c.id) AS commentCount,
+          COUNT(DISTINCT cr.id) AS reportCount
+        FROM Posts p
+        LEFT JOIN Comments c
+          ON c.postId = p.id
+         AND c.createdAt BETWEEN :startAt AND :endAt
+        LEFT JOIN CommentReports cr
+          ON cr.commentId = c.id
+         AND cr.createdAt BETWEEN :startAt AND :endAt
+        WHERE p.createdAt BETWEEN :startAt AND :endAt
+          AND p.isDeleted = 0
+        GROUP BY p.type
+        ORDER BY totalPosts DESC, p.type ASC
+      `,
+      {
+        replacements: {
+          ...replacements,
+          reviewStatus: POST_MODERATION_STATUS.REVIEW_REQUIRED,
+        },
+        type: QueryTypes.SELECT,
+      },
+    ),
+    sequelize.query(
+      `
+        SELECT *
+        FROM (
+          SELECT
+            p.id,
+            p.title,
+            p.type,
+            p.content,
+            p.isActive,
+            p.isDeleted,
+            p.createdAt,
+            p.moderationStatus,
+            p.moderationLabel,
+            p.moderationConfidence,
+            p.moderationReason,
+            u.username AS authorUsername,
+            pr.fullName AS authorName,
+            (
+              SELECT COUNT(*)
+              FROM Comments c
+              WHERE c.postId = p.id
+                AND c.createdAt BETWEEN :startAt AND :endAt
+            ) AS commentCount,
+            (
+              SELECT COUNT(*)
+              FROM Comments c
+              INNER JOIN CommentReports cr ON cr.commentId = c.id
+              WHERE c.postId = p.id
+                AND cr.createdAt BETWEEN :startAt AND :endAt
+            ) AS reportCount,
+            (
+              (
+                SELECT COUNT(*)
+                FROM Comments c
+                WHERE c.postId = p.id
+                  AND c.createdAt BETWEEN :startAt AND :endAt
+              ) * 3
+              +
+              (
+                SELECT COUNT(*)
+                FROM Comments c
+                INNER JOIN CommentReports cr ON cr.commentId = c.id
+                WHERE c.postId = p.id
+                  AND cr.createdAt BETWEEN :startAt AND :endAt
+              ) * 5
+              + CASE WHEN p.moderationStatus = :reviewStatus THEN 4 ELSE 0 END
+              + CASE WHEN p.isActive = 0 THEN 2 ELSE 0 END
+            ) AS hotScore
+          FROM Posts p
+          INNER JOIN Users u ON u.id = p.authorId
+          LEFT JOIN Profiles pr ON pr.userId = u.id
+          WHERE p.createdAt BETWEEN :startAt AND :endAt
+            AND p.isDeleted = 0
+        ) featured
+        ORDER BY featured.hotScore DESC, featured.createdAt DESC
+        LIMIT 10
+      `,
+      {
+        replacements: {
+          ...replacements,
+          reviewStatus: POST_MODERATION_STATUS.REVIEW_REQUIRED,
+        },
+        type: QueryTypes.SELECT,
+      },
+    ),
+  ]);
+
+  const typeBreakdown = typeRows.map((row) => ({
+    type: row.type,
+    totalPosts: Number(row.totalPosts) || 0,
+    activePosts: Number(row.activePosts) || 0,
+    hiddenPosts: Number(row.hiddenPosts) || 0,
+    reviewRequiredPosts: Number(row.reviewRequiredPosts) || 0,
+    commentCount: Number(row.commentCount) || 0,
+    reportCount: Number(row.reportCount) || 0,
+  }));
+
+  const featuredPosts = featuredRows.map((row) => ({
+    id: Number(row.id),
+    title: row.title,
+    type: row.type,
+    content: row.content,
+    isActive: Boolean(row.isActive),
+    isDeleted: Boolean(row.isDeleted),
+    createdAt: row.createdAt,
+    moderationStatus: row.moderationStatus,
+    moderationLabel: row.moderationLabel,
+    moderationConfidence:
+      row.moderationConfidence != null ? Number(row.moderationConfidence) : null,
+    moderationReason: row.moderationReason,
+    authorUsername: row.authorUsername,
+    authorName: row.authorName,
+    commentCount: Number(row.commentCount) || 0,
+    reportCount: Number(row.reportCount) || 0,
+    hotScore: Number(row.hotScore) || 0,
+  }));
+
+  return {
+    period: { startDate, endDate },
+    typeBreakdown,
+    featuredPosts,
+    summary: {
+      totalPosts: typeBreakdown.reduce((sum, row) => sum + row.totalPosts, 0),
+      totalComments: typeBreakdown.reduce((sum, row) => sum + row.commentCount, 0),
+      totalReports: typeBreakdown.reduce((sum, row) => sum + row.reportCount, 0),
+      typeCount: typeBreakdown.length,
+      featuredCount: featuredPosts.length,
+    },
+  };
+};
+
 const toggleAdminPostActiveService = async (postId) => {
   const post = await Post.findByPk(postId);
   if (!post) throw new NotFoundError("Không tìm thấy bài đăng");
@@ -137,6 +316,8 @@ const getAdminCommentsService = async (data) => {
     isActive,
     isDeleted,
     reportFilter,
+    startDate,
+    endDate,
   } = data;
   const offset = (page - 1) * limit;
 
@@ -162,6 +343,8 @@ const getAdminCommentsService = async (data) => {
   if (reportFilter === "HIDDEN") {
     where.isActive = false;
   }
+  const createdAtRange = buildDateRange(startDate, endDate);
+  if (createdAtRange) where.createdAt = createdAtRange;
 
   const includePendingReport = reportFilter === "PENDING_REPORT";
 
@@ -320,6 +503,8 @@ const getCommentReportsService = async (data) => {
     keyword,
     search,
     autoHidden,
+    startDate,
+    endDate,
   } = data;
   const normalizedPage = Number(page);
   const normalizedLimit = Number(limit);
@@ -337,6 +522,8 @@ const getCommentReportsService = async (data) => {
   const reportWhere = {};
   if (status) reportWhere.status = status;
   if (reason) reportWhere.reason = reason;
+  const reportCreatedAtRange = buildDateRange(startDate, endDate);
+  if (reportCreatedAtRange) reportWhere.createdAt = reportCreatedAtRange;
 
   const { rows, count } = await Comment.findAndCountAll({
     where,
@@ -634,6 +821,8 @@ const getPendingModerationPostsService = async ({
   moderationLabel,
   type,
   keyword,
+  startDate,
+  endDate,
 }) => {
   const normalizedPage = Number(page);
   const normalizedLimit = Number(limit);
@@ -645,6 +834,8 @@ const getPendingModerationPostsService = async ({
     };
   if (moderationLabel) where.moderationLabel = moderationLabel;
   if (type) where.type = type;
+  const createdAtRange = buildDateRange(startDate, endDate);
+  if (createdAtRange) where.createdAt = createdAtRange;
   const trimmedKeyword = String(keyword || "").trim();
   const usernameKeyword = trimmedKeyword.replace(/^@+/, "");
   if (trimmedKeyword) {
@@ -865,6 +1056,7 @@ const rejectModerationPostService = async (
 
 const adminPostService = {
   getAdminPostsService,
+  getAdminPostAnalyticsService,
   toggleAdminPostActiveService,
   deleteAdminPostService,
   getAdminCommentsService,

@@ -14,6 +14,18 @@ const getPostsController = asyncHandler(async (req, res) => {
     );
 });
 
+const getPostAnalyticsController = asyncHandler(async (req, res) => {
+  const result = await adminPostService.getAdminPostAnalyticsService(req.query);
+  return res
+    .status(200)
+    .json(
+      new SuccessResponse(
+        "Lấy phân tích bài đăng thành công",
+        result,
+      ),
+    );
+});
+
 const togglePostActiveController = asyncHandler(async (req, res) => {
   const result =
     await adminPostService.toggleAdminPostActiveService(
@@ -180,6 +192,7 @@ const warnCommentAuthorController = asyncHandler(async (req, res) => {
 
 const adminPostController = {
   getPostsController,
+  getPostAnalyticsController,
   togglePostActiveController,
   deletePostController,
   getCommentsController,

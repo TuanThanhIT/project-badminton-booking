@@ -9,6 +9,8 @@ export const getAdminInsightsController = asyncHandler(async (req, res) => {
   const naturalLanguage = parseBool(req.query.naturalLanguage);
 
   const result = await aiRecommendationService.getAdminRecommendationService({
+    startDate: req.query.startDate,
+    endDate: req.query.endDate,
     lookbackDays: req.query.lookbackDays
       ? Number(req.query.lookbackDays)
       : undefined,

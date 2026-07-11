@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  CalendarRange,
   CheckCircle,
   EyeOff,
   FileText,
@@ -7,6 +8,7 @@ import {
   MessagesSquare,
   RefreshCw,
   ShieldAlert,
+  TrendingUp,
   type LucideIcon,
 } from "lucide-react";
 import { toast } from "react-toastify";
@@ -14,10 +16,11 @@ import PostsTab from "../../components/ui/admin/posts/PostsTab";
 import CommentsTab from "../../components/ui/admin/posts/CommentsTab";
 import ModerationTab from "../../components/ui/admin/posts/ModerationTab";
 import ReportedCommentsTab from "../../components/ui/admin/posts/ReportedCommentsTab";
+import PostAnalyticsTab from "../../components/ui/admin/posts/PostAnalyticsTab";
 import AdminPageHeader from "../../components/ui/admin/AdminPageHeader";
 import adminPostService from "../../services/admin/postService";
 
-type TabType = "posts" | "moderation" | "comments" | "commentReports";
+type TabType = "posts" | "analytics" | "moderation" | "comments" | "commentReports";
 
 type PostManagementStats = {
   totalPosts: number;
@@ -30,6 +33,42 @@ type PostManagementStats = {
   pendingCommentReports: number;
   autoHiddenComments: number;
 };
+
+const toDateInput = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const today = () => toDateInput(new Date());
+
+const daysAgo = (days: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() - (days - 1));
+  return toDateInput(date);
+};
+
+const firstDayOfMonth = () => {
+  const date = new Date();
+  return toDateInput(new Date(date.getFullYear(), date.getMonth(), 1));
+};
+
+const DATE_PRESETS = [
+  { label: "7 ngày", getRange: () => ({ start: daysAgo(7), end: today() }) },
+  { label: "30 ngày", getRange: () => ({ start: daysAgo(30), end: today() }) },
+  {
+    label: "Tháng này",
+    getRange: () => ({ start: firstDayOfMonth(), end: today() }),
+  },
+];
+
+const formatPeriodVi = (iso: string) =>
+  new Date(`${iso}T00:00:00`).toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 
 const StatCard = ({
   label,
@@ -56,6 +95,11 @@ const StatCard = ({
 );
 
 const PostManagementPage = () => {
+  const initialRange = DATE_PRESETS[1].getRange();
+  const [startDate, setStartDate] = useState(initialRange.start);
+  const [endDate, setEndDate] = useState(initialRange.end);
+  const [applied, setApplied] = useState(initialRange);
+  const [activePreset, setActivePreset] = useState(DATE_PRESETS[1].label);
   const [activeTab, setActiveTab] = useState<TabType>("posts");
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
@@ -73,6 +117,10 @@ const PostManagementPage = () => {
 
   const fetchStats = useCallback(async () => {
     try {
+      const rangeParams = {
+        startDate: applied.start,
+        endDate: applied.end,
+      };
       const [
         postsRes,
         activePostsRes,
@@ -88,42 +136,50 @@ const PostManagementPage = () => {
             page: 1,
             limit: 1,
             isDeleted: "false",
+            ...rangeParams,
           }),
           adminPostService.getPostsService({
             page: 1,
             limit: 1,
             isActive: "true",
             isDeleted: "false",
+            ...rangeParams,
           }),
           adminPostService.getPostsService({
             page: 1,
             limit: 1,
             isActive: "false",
             isDeleted: "false",
+            ...rangeParams,
           }),
-          adminPostService.getCommentsService({ page: 1, limit: 1 }),
+          adminPostService.getCommentsService({ page: 1, limit: 1, ...rangeParams }),
           adminPostService.getCommentsService({
             page: 1,
             limit: 1,
             commentType: "REPLY",
+            ...rangeParams,
           }),
           adminPostService.getPendingModerationPostsService({
             page: 1,
             limit: 1,
+            ...rangeParams,
           }),
           adminPostService.getCommentReportsService({
             page: 1,
             limit: 1,
+            ...rangeParams,
           }),
           adminPostService.getCommentReportsService({
             page: 1,
             limit: 1,
             status: "PENDING",
+            ...rangeParams,
           }),
           adminPostService.getCommentReportsService({
             page: 1,
             limit: 1,
             autoHidden: "true",
+            ...rangeParams,
           }),
         ]);
 
@@ -145,7 +201,7 @@ const PostManagementPage = () => {
     } catch {
       toast.error("Không thể tải thống kê bài đăng");
     }
-  }, []);
+  }, [applied]);
 
   useEffect(() => {
     fetchStats();
@@ -161,8 +217,30 @@ const PostManagementPage = () => {
     }
   };
 
+  const applyPreset = (preset: (typeof DATE_PRESETS)[number]) => {
+    const range = preset.getRange();
+    setStartDate(range.start);
+    setEndDate(range.end);
+    setActivePreset(preset.label);
+    setApplied(range);
+  };
+
+  const applyCustomRange = () => {
+    if (!startDate || !endDate) {
+      toast.error("Vui lòng chọn đủ ngày bắt đầu và ngày kết thúc");
+      return;
+    }
+    if (startDate > endDate) {
+      toast.error("Ngày bắt đầu không được sau ngày kết thúc");
+      return;
+    }
+    setActivePreset("Tùy chỉnh");
+    setApplied({ start: startDate, end: endDate });
+  };
+
   const tabs: { key: TabType; label: string; icon: typeof FileText }[] = [
     { key: "posts", label: "Bài đăng", icon: FileText },
+    { key: "analytics", label: "Phân tích", icon: TrendingUp },
     {
       key: "moderation",
       label: `Chờ kiểm duyệt (${stats.pendingModeration})`,
@@ -251,6 +329,70 @@ const PostManagementPage = () => {
           }
         />
 
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
+                <CalendarRange className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-slate-800">
+                  Khoảng thời gian thống kê
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Đang xem từ {formatPeriodVi(applied.start)} đến{" "}
+                  {formatPeriodVi(applied.end)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {DATE_PRESETS.map((preset) => (
+                <button
+                  key={preset.label}
+                  type="button"
+                  onClick={() => applyPreset(preset)}
+                  className={`h-10 rounded-lg px-4 text-sm font-semibold transition ${
+                    activePreset === preset.label
+                      ? "bg-sky-600 text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+              <input
+                type="date"
+                value={startDate}
+                max={today()}
+                onChange={(event) => {
+                  setStartDate(event.target.value);
+                  setActivePreset("Tùy chỉnh");
+                }}
+                className="h-10 rounded-lg border border-slate-200 px-2.5 text-[13px] outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
+              />
+              <span className="text-sm text-slate-400">đến</span>
+              <input
+                type="date"
+                value={endDate}
+                max={today()}
+                onChange={(event) => {
+                  setEndDate(event.target.value);
+                  setActivePreset("Tùy chỉnh");
+                }}
+                className="h-10 rounded-lg border border-slate-200 px-2.5 text-[13px] outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
+              />
+              <button
+                type="button"
+                onClick={applyCustomRange}
+                className="h-10 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white transition hover:bg-slate-800"
+              >
+                Áp dụng
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div className="space-y-4">
           <section>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -297,6 +439,13 @@ const PostManagementPage = () => {
 
         {activeTab === "posts" ? (
           <PostsTab key={`posts-${refreshVersion}`} onStatsChange={fetchStats} />
+        ) : activeTab === "analytics" ? (
+          <PostAnalyticsTab
+            key={`analytics-${refreshVersion}-${applied.start}-${applied.end}`}
+            startDate={applied.start}
+            endDate={applied.end}
+            refreshVersion={refreshVersion}
+          />
         ) : activeTab === "moderation" ? (
           <ModerationTab
             key={`moderation-${refreshVersion}`}

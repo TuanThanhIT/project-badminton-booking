@@ -12,6 +12,13 @@ const violationLabels = [
   MODERATION_LABEL.OFFENSIVE,
 ];
 
+const dateField = Joi.string()
+  .pattern(/^\d{4}-\d{2}-\d{2}$/)
+  .optional()
+  .messages({
+    "string.pattern.base": "Ngày phải có định dạng YYYY-MM-DD",
+  });
+
 export const moderationPostIdSchema = {
   params: Joi.object({
     postId: idParams("postId"),
@@ -29,6 +36,27 @@ export const pendingModerationPostsSchema = {
       .valid("FIND_PLAYER", "FIND_COACH", "CLASS", "TOURNAMENT", "GROUP")
       .optional(),
     keyword: Joi.string().trim().max(200).allow("", null).optional(),
+    startDate: dateField,
+    endDate: dateField,
+  }).custom((value, helpers) => {
+    const { startDate, endDate } = value;
+    if (startDate && endDate && startDate > endDate) {
+      return helpers.message("Ngày bắt đầu không được sau ngày kết thúc");
+    }
+    return value;
+  }),
+};
+
+export const postAnalyticsQuerySchema = {
+  query: Joi.object({
+    startDate: dateField,
+    endDate: dateField,
+  }).custom((value, helpers) => {
+    const { startDate, endDate } = value;
+    if (startDate && endDate && startDate > endDate) {
+      return helpers.message("Ngày bắt đầu không được sau ngày kết thúc");
+    }
+    return value;
   }),
 };
 

@@ -131,12 +131,20 @@ export const getProductRecommendationService = async ({
 };
 
 export const getAdminRecommendationService = async ({
+  startDate,
+  endDate,
   lookbackDays,
   lowFillThreshold,
   churnDaysThreshold,
   naturalLanguage = false,
 }) => {
-  const cacheParams = { lookbackDays, lowFillThreshold, churnDaysThreshold };
+  const cacheParams = {
+    startDate,
+    endDate,
+    lookbackDays,
+    lowFillThreshold,
+    churnDaysThreshold,
+  };
 
   let baseResult = naturalLanguage
     ? await getCachedAdminInsights(cacheParams)
@@ -144,6 +152,8 @@ export const getAdminRecommendationService = async ({
 
   if (!baseResult) {
     const payload = await aiRecommendationDataService.buildAdminInsightsPayload({
+      startDate,
+      endDate,
       lookbackDays,
       lowFillThreshold,
       churnDaysThreshold,
@@ -153,8 +163,9 @@ export const getAdminRecommendationService = async ({
     baseResult = {
       insights,
       meta: {
-        lookbackDays:
-          lookbackDays ?? AI_RECOMMENDATION_DEFAULTS.OCCUPANCY_LOOKBACK_DAYS,
+        lookbackDays: payload.lookbackDays,
+        periodStart: payload.periodStart,
+        periodEnd: payload.periodEnd,
         occupancyRowCount: payload.occupancy.length,
         userActivityCount: payload.userActivity.length,
       },

@@ -1,5 +1,53 @@
 import instance from "../../utils/axiosCustomize";
 
+export type AdminPostAnalyticsTypeRow = {
+  type: string;
+  totalPosts: number;
+  activePosts: number;
+  hiddenPosts: number;
+  reviewRequiredPosts: number;
+  commentCount: number;
+  reportCount: number;
+};
+
+export type AdminPostAnalyticsFeaturedPost = {
+  id: number;
+  title: string;
+  type: string;
+  content?: string | null;
+  isActive: boolean;
+  isDeleted: boolean;
+  createdAt: string;
+  moderationStatus?: string | null;
+  moderationLabel?: string | null;
+  moderationConfidence?: number | null;
+  moderationReason?: string | null;
+  authorUsername?: string;
+  authorName?: string;
+  commentCount: number;
+  reportCount: number;
+  hotScore: number;
+};
+
+export type AdminPostAnalytics = {
+  period: { startDate: string; endDate: string };
+  typeBreakdown: AdminPostAnalyticsTypeRow[];
+  featuredPosts: AdminPostAnalyticsFeaturedPost[];
+  summary: {
+    totalPosts: number;
+    totalComments: number;
+    totalReports: number;
+    typeCount: number;
+    featuredCount: number;
+  };
+};
+
+type ApiEnvelope<T> = {
+  success: boolean;
+  message: string;
+  data: T;
+};
+
 const getPostsService = (params: {
   page?: number;
   limit?: number;
@@ -9,7 +57,17 @@ const getPostsService = (params: {
   isDeleted?: string;
   moderationStatus?: string;
   moderationLabel?: string;
+  startDate?: string;
+  endDate?: string;
 }) => instance.get("/admin/posts", { params });
+
+const getPostAnalyticsService = (params: {
+  startDate?: string;
+  endDate?: string;
+}) =>
+  instance.get<ApiEnvelope<AdminPostAnalytics>>("/admin/posts/analytics", {
+    params,
+  });
 
 const togglePostActiveService = (postId: number) =>
   instance.put(`/admin/posts/${postId}/toggle-active`);
@@ -27,6 +85,8 @@ const getCommentsService = (params: {
   isActive?: string;
   isDeleted?: string;
   reportFilter?: string;
+  startDate?: string;
+  endDate?: string;
 }) => instance.get("/admin/comments", { params });
 
 const deleteCommentService = (commentId: number) =>
@@ -40,6 +100,8 @@ const getCommentReportsService = (params: {
   search?: string;
   keyword?: string;
   autoHidden?: string;
+  startDate?: string;
+  endDate?: string;
 }) => instance.get("/admin/comment-reports", { params });
 
 const rejectCommentReportService = (
@@ -64,6 +126,8 @@ const getPendingModerationPostsService = (params: {
   moderationLabel?: string;
   type?: string;
   keyword?: string;
+  startDate?: string;
+  endDate?: string;
 }) => instance.get("/admin/posts/moderation/review", { params });
 
 const getPostModerationDetailService = (postId: number) =>
@@ -81,6 +145,7 @@ const rejectModerationPostService = (
 
 const adminPostService = {
   getPostsService,
+  getPostAnalyticsService,
   togglePostActiveService,
   deletePostService,
   getCommentsService,

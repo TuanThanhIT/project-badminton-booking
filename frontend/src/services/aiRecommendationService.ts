@@ -8,6 +8,8 @@ type ApiEnvelope<T> = {
 };
 
 export type AdminInsightsParams = {
+  startDate?: string;
+  endDate?: string;
   lookbackDays?: number;
   lowFillThreshold?: number;
   churnDaysThreshold?: number;

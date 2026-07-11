@@ -12,6 +12,7 @@ import {
   Sparkles,
   TicketPercent,
   TrendingUp,
+  CalendarRange,
 } from "lucide-react";
 import {
   Bar,
@@ -214,6 +215,53 @@ const datePlusDays = (days: number) => {
   return d.toISOString().slice(0, 10);
 };
 
+const toDateInput = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const today = () => toDateInput(new Date());
+
+const daysAgo = (days: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() - (days - 1));
+  return toDateInput(date);
+};
+
+const firstDayOfMonth = () => {
+  const date = new Date();
+  return toDateInput(new Date(date.getFullYear(), date.getMonth(), 1));
+};
+
+const DATE_PRESETS = [
+  { label: "7 ngày", getRange: () => ({ start: daysAgo(7), end: today() }) },
+  { label: "30 ngày", getRange: () => ({ start: daysAgo(30), end: today() }) },
+  {
+    label: "Tháng này",
+    getRange: () => ({ start: firstDayOfMonth(), end: today() }),
+  },
+];
+
+const formatPeriodVi = (iso: string) =>
+  new Date(`${iso}T00:00:00`).toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+
+const buildPeriodLabel = (
+  periodStart?: string,
+  periodEnd?: string,
+  lookbackDays?: number,
+) => {
+  if (periodStart && periodEnd) {
+    return `${formatPeriodVi(periodStart)} → ${formatPeriodVi(periodEnd)}`;
+  }
+  return `${lookbackDays ?? 30} ngày gần nhất`;
+};
+
 /** Điền sẵn mã kích cầu cho 1 khung giờ trống của 1 chi nhánh. */
 const buildLowFillSlotDraft = (
   branchId: number,
@@ -301,10 +349,12 @@ const BranchPromotionPanel = ({
   groups,
   hourRowCount,
   onCreatePromo,
+  periodLabel,
 }: {
   groups: AdminPromotionByBranch[];
   hourRowCount: number;
   onCreatePromo: (draft: DiscountSegmentDraft) => void;
+  periodLabel: string;
 }) => {
   const [activeBranchId, setActiveBranchId] = useState<number | null>(null);
 
@@ -314,7 +364,7 @@ const BranchPromotionPanel = ({
         <p>Không có dữ liệu khung giờ để gợi ý khuyến mãi.</p>
         {hourRowCount === 0 ? (
           <p className="text-xs text-slate-400">
-            Chưa có lịch đặt sân đủ điều kiện trong 30 ngày gần nhất. Hãy kiểm
+            Chưa có lịch đặt sân đủ điều kiện trong {periodLabel}. Hãy kiểm
             tra dữ liệu đặt sân hoặc bấm <strong>Làm mới</strong> sau khi có
             lịch mới.
           </p>
@@ -369,7 +419,7 @@ const BranchPromotionPanel = ({
               {branch.branchName}
             </p>
             <p className="text-xs text-slate-500">
-              Mức lấp đầy 30 ngày:{" "}
+              Mức lấp đầy ({periodLabel}):{" "}
               <strong className="text-slate-700">
                 {branch.branchFillRate}%
               </strong>
@@ -687,32 +737,63 @@ const formatDaysSinceLabel = (days?: number | null) => {
   return `${days} ngày trước`;
 };
 
-const downloadInsightsExcel = (data: AdminAiInsights) => {
+const downloadInsightsExcel = (data: AdminAiInsights, periodLabel: string) => {
   exportExcel(`bhub-ai-insights-${new Date().toISOString().slice(0, 10)}.xls`, [
     {
-      title: "Khung giờ thấp điểm",
-      headers: ["Chi nhánh", "Giờ", "Fill rate %", "Ghi chú"],
+      title: "1. Khung giờ thấp điểm nên tạo khuyến mãi",
+      headers: ["Chi nhánh", "Khung giờ", "Tỷ lệ lấp đầy (%)", "Số lượt đặt", "Sức chứa", "Gợi ý"],
       rows: (data.lowFillPromotionSuggestions || []).map((slot) => [
         slot.branchName,
         slot.hourLabel,
         slot.fillRate,
+        slot.bookedCount ?? 0,
+        slot.capacity ?? 0,
         slot.suggestion,
       ]),
     },
     {
-      title: "Khách hàng cần tái kích hoạt",
+      title: "2. Khách thân thiết nên tri ân",
+      headers: [
+        "Ưu tiên",
+        "Khách hàng",
+        "Email",
+        "Chi nhánh gần nhất",
+        `Lượt đặt sân (${periodLabel})`,
+        `Số đơn (${periodLabel})`,
+        "Lần đặt gần nhất",
+        "Lý do chọn",
+      ],
+      rows: (data.likelyReturnCustomers || []).map((user) => [
+        user.rank ? `#${user.rank}` : "",
+        user.fullName || `User #${user.userId}`,
+        user.email || "",
+        user.lastBranchName || "",
+        user.sessionsLast30Days ?? 0,
+        user.ordersLast30Days ?? 0,
+        formatDaysSinceLabel(user.daysSinceLastBooking),
+        "Khách đặt sân thường xuyên trong khoảng phân tích",
+      ]),
+    },
+    {
+      title: "3. Khách hàng cần tái kích hoạt",
       headers: [
         "Khách hàng",
+        "Email",
         "Chi nhánh gần nhất",
-        "Số lượt 30 ngày",
+        `Lượt đặt sân (${periodLabel})`,
+        `Số đơn (${periodLabel})`,
         "Lần đặt gần nhất",
+        "Lý do",
         "Gợi ý",
       ],
       rows: (data.voucherActivationCandidates || []).map((user) => [
         user.fullName || `User #${user.userId}`,
+        user.email || "",
         user.lastBranchName || "",
         user.sessionsLast30Days ?? 0,
+        user.ordersLast30Days ?? 0,
         formatDaysSinceLabel(user.daysSinceLastBooking),
+        user.reason === "churn_risk" ? "Lâu chưa quay lại" : "Mới đặt 1 lần",
         user.suggestedAction || user.reason,
       ]),
     },
@@ -720,6 +801,11 @@ const downloadInsightsExcel = (data: AdminAiInsights) => {
 };
 
 const AiInsightsPage = () => {
+  const initialRange = DATE_PRESETS[1].getRange();
+  const [startDate, setStartDate] = useState(initialRange.start);
+  const [endDate, setEndDate] = useState(initialRange.end);
+  const [applied, setApplied] = useState(initialRange);
+  const [activePreset, setActivePreset] = useState(DATE_PRESETS[1].label);
   const [insights, setInsights] = useState<AdminAiInsights | null>(null);
   const [naturalAnswer, setNaturalAnswer] = useState<string>("");
   const [status, setStatus] = useState<AiServiceStatus | null>(null);
@@ -750,6 +836,8 @@ const AiInsightsPage = () => {
           setLoading(true);
         }
         const result = await aiRecommendationService.getAdminAiInsights({
+          startDate: applied.start,
+          endDate: applied.end,
           naturalLanguage: withNaturalLanguage,
         });
         setInsights(result.insights);
@@ -765,8 +853,29 @@ const AiInsightsPage = () => {
         setExplaining(false);
       }
     },
-    [],
+    [applied],
   );
+
+  const applyPreset = (preset: (typeof DATE_PRESETS)[number]) => {
+    const range = preset.getRange();
+    setStartDate(range.start);
+    setEndDate(range.end);
+    setActivePreset(preset.label);
+    setApplied(range);
+  };
+
+  const applyCustomRange = () => {
+    if (!startDate || !endDate) {
+      toast.error("Vui lòng chọn đủ ngày bắt đầu và ngày kết thúc");
+      return;
+    }
+    if (startDate > endDate) {
+      toast.error("Ngày bắt đầu không được sau ngày kết thúc");
+      return;
+    }
+    setActivePreset("Tùy chỉnh");
+    setApplied({ start: startDate, end: endDate });
+  };
 
   useEffect(() => {
     loadInsights(false);
@@ -805,6 +914,11 @@ const AiInsightsPage = () => {
   };
 
   const summary = insights?.summary;
+  const periodLabel = buildPeriodLabel(
+    summary?.periodStart,
+    summary?.periodEnd,
+    summary?.customerLookbackDays ?? summary?.lookbackDays,
+  );
   const fillRateChart = (insights?.fillRateByBranch || []).map((row) => ({
     name: row.branchName,
     fillRate: row.fillRate,
@@ -841,7 +955,7 @@ const AiInsightsPage = () => {
             </button>
             <button
               type="button"
-              onClick={() => insights && downloadInsightsExcel(insights)}
+              onClick={() => insights && downloadInsightsExcel(insights, periodLabel)}
               disabled={!insights}
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:opacity-50"
             >
@@ -887,6 +1001,69 @@ const AiInsightsPage = () => {
         </span>
       </div>
 
+      <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
+              <CalendarRange className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-slate-800">
+                Khoảng thời gian phân tích
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                Đang xem từ {formatPeriodVi(applied.start)} đến{" "}
+                {formatPeriodVi(applied.end)}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {DATE_PRESETS.map((preset) => (
+              <button
+                key={preset.label}
+                type="button"
+                onClick={() => applyPreset(preset)}
+                className={`h-10 rounded-lg px-4 text-sm font-semibold transition ${
+                  activePreset === preset.label
+                    ? "bg-sky-600 text-white"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                {preset.label}
+              </button>
+            ))}
+            <input
+              type="date"
+              value={startDate}
+              onChange={(event) => {
+                setStartDate(event.target.value);
+                setActivePreset("Tùy chỉnh");
+              }}
+              className="h-10 rounded-lg border border-slate-200 px-2.5 text-[13px] outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
+            />
+            <span className="text-sm text-slate-400">đến</span>
+            <input
+              type="date"
+              value={endDate}
+              max={today()}
+              onChange={(event) => {
+                setEndDate(event.target.value);
+                setActivePreset("Tùy chỉnh");
+              }}
+              className="h-10 rounded-lg border border-slate-200 px-2.5 text-[13px] outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-100"
+            />
+            <button
+              type="button"
+              onClick={applyCustomRange}
+              className="h-10 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white transition hover:bg-slate-800"
+            >
+              Áp dụng
+            </button>
+          </div>
+        </div>
+      </div>
+
       <AdminUsageGuide />
 
       {loading ? (
@@ -915,7 +1092,7 @@ const AiInsightsPage = () => {
             <StatCard
               title="Tri ân (top suất)"
               value={String(summary?.likelyReturnCount ?? 0)}
-              note={`Kỳ ${summary?.customerLookbackDays ?? 30} ngày`}
+              note={periodLabel}
               icon={Gift}
               tone="bg-emerald-50 text-emerald-600"
             />
@@ -1003,7 +1180,7 @@ const AiInsightsPage = () => {
                     Bản đồ lấp đầy theo chi nhánh & giờ
                   </h3>
                   <p className="text-xs text-slate-400">
-                    30 ngày gần nhất · di chuột vào ô để xem số lượt đặt và
+                    {periodLabel} · di chuột vào ô để xem số lượt đặt và
                     sức chứa của khung giờ.
                   </p>
                 </div>
@@ -1050,7 +1227,7 @@ const AiInsightsPage = () => {
                     Gợi ý khuyến mãi theo chi nhánh
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Ưu tiên các khung có nhiều sân trống trong 30 ngày gần nhất.
+                    Ưu tiên các khung có nhiều sân trống trong {periodLabel}.
                   </p>
                 </div>
               </div>
@@ -1064,6 +1241,7 @@ const AiInsightsPage = () => {
                 groups={promotionGroups}
                 hourRowCount={hourRowCount}
                 onCreatePromo={handleCreatePromo}
+                periodLabel={periodLabel}
               />
             </div>
           </div>
@@ -1079,7 +1257,7 @@ const AiInsightsPage = () => {
                     Khung giờ cao điểm
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Các khung được đặt nhiều nhất trong 30 ngày gần nhất, nên
+                    Các khung được đặt nhiều nhất trong {periodLabel}, nên
                     hạn chế giảm giá sâu và chuẩn bị nhân sự/sân tốt hơn.
                   </p>
                 </div>
@@ -1094,7 +1272,8 @@ const AiInsightsPage = () => {
           <CustomerPoliciesSection
             activeRows={insights?.likelyReturnCustomers || []}
             comebackRows={insights?.voucherActivationCandidates || []}
-            lowFillCount={summary?.lowFillSlotCount ?? 0}
+            activeTotal={summary?.likelyReturnEligibleCount}
+            comebackTotal={summary?.voucherCandidateEligibleCount}
             periodStart={summary?.periodStart}
             periodEnd={summary?.periodEnd}
             lookbackDays={summary?.customerLookbackDays ?? summary?.lookbackDays}

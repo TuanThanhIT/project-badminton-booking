@@ -3,6 +3,8 @@ import sequelize from "../config/db.js";
 import { BOOKING_STATUS } from "../constants/bookingConstant.js";
 import { AI_RECOMMENDATION_DEFAULTS } from "../constants/aiRecommendationConstant.js";
 import { ORDER_GROUP_STATUS } from "../constants/orderConstant.js";
+import { DRAFT_BOOKING_STATUS } from "../constants/draftBookingConstant.js";
+import { PAYMENT_STATUS } from "../constants/paymentConstant.js";
 
 const SUCCESS_STATUSES = [
   BOOKING_STATUS.CONFIRMED,
@@ -10,12 +12,48 @@ const SUCCESS_STATUSES = [
   BOOKING_STATUS.COMPLETED,
 ];
 
+const getTodayDate = () =>
+  new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Ho_Chi_Minh",
+  }).format(new Date());
+
 const getLookbackDate = (days) => {
   const d = new Date();
   d.setDate(d.getDate() - days);
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Ho_Chi_Minh",
   }).format(d);
+};
+
+const countDaysInclusive = (startDate, endDate) => {
+  const start = new Date(`${startDate}T00:00:00`);
+  const end = new Date(`${endDate}T00:00:00`);
+  return Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+};
+
+export const resolveInsightsPeriod = (options = {}) => {
+  if (options.startDate && options.endDate) {
+    const lookbackDays = countDaysInclusive(options.startDate, options.endDate);
+    return {
+      startDate: options.startDate,
+      endDate: options.endDate,
+      lookbackDays,
+      customerLookbackDays: lookbackDays,
+    };
+  }
+
+  const lookbackDays =
+    options.lookbackDays ?? AI_RECOMMENDATION_DEFAULTS.OCCUPANCY_LOOKBACK_DAYS;
+  const customerLookbackDays =
+    options.customerLookbackDays ??
+    AI_RECOMMENDATION_DEFAULTS.CUSTOMER_ACTIVITY_LOOKBACK_DAYS;
+
+  return {
+    startDate: getLookbackDate(lookbackDays),
+    endDate: getTodayDate(),
+    lookbackDays,
+    customerLookbackDays,
+  };
 };
 
 /**
@@ -31,10 +69,12 @@ const formatHourRange = (hour) => {
   return `${start}:00–${end}:00`;
 };
 
-export const getOccupancyByBranchHour = async (
-  lookbackDays = AI_RECOMMENDATION_DEFAULTS.OCCUPANCY_LOOKBACK_DAYS,
-) => {
-  const since = getLookbackDate(lookbackDays);
+export const getOccupancyByBranchHour = async (period = {}) => {
+  const {
+    startDate: since,
+    endDate: until,
+    lookbackDays,
+  } = resolveInsightsPeriod(period);
 
   const [branches, bookingRows] = await Promise.all([
     sequelize.query(
@@ -52,19 +92,49 @@ export const getOccupancyByBranchHour = async (
     ),
     sequelize.query(
       `
-        SELECT b.branchId,
-               HOUR(bd.startTime) AS hour,
-               COUNT(bd.id) AS bookedCount
-        FROM BookingDetails bd
-        INNER JOIN Bookings b
-          ON bd.bookingId = b.id
-         AND b.bookingStatus IN (:statuses)
-        WHERE bd.playDate >= :since
-          AND HOUR(bd.startTime) BETWEEN 6 AND 21
-        GROUP BY b.branchId, HOUR(bd.startTime)
+        SELECT bookingSources.branchId,
+               bookingSources.hour,
+               SUM(bookingSources.bookedCount) AS bookedCount
+        FROM (
+          SELECT b.branchId,
+                 HOUR(bd.startTime) AS hour,
+                 COUNT(DISTINCT bd.id) AS bookedCount
+          FROM BookingDetails bd
+          INNER JOIN Bookings b
+            ON bd.bookingId = b.id
+           AND b.bookingStatus IN (:statuses)
+          WHERE bd.playDate >= :since
+            AND bd.playDate <= :until
+            AND HOUR(bd.startTime) BETWEEN 6 AND 21
+          GROUP BY b.branchId, HOUR(bd.startTime)
+
+          UNION ALL
+
+          SELECT db.branchId,
+                 HOUR(dbi.startTime) AS hour,
+                 COUNT(DISTINCT dbi.id) AS bookedCount
+          FROM DraftBookingItems dbi
+          INNER JOIN DraftBookings db
+            ON dbi.draftId = db.id
+           AND db.draftBookingStatus = :completedDraftStatus
+          INNER JOIN OfflineBookings ob
+            ON ob.draftId = db.id
+           AND ob.paymentStatus = :paidStatus
+          WHERE dbi.playDate >= :since
+            AND dbi.playDate <= :until
+            AND HOUR(dbi.startTime) BETWEEN 6 AND 21
+          GROUP BY db.branchId, HOUR(dbi.startTime)
+        ) AS bookingSources
+        GROUP BY bookingSources.branchId, bookingSources.hour
       `,
       {
-        replacements: { since, statuses: SUCCESS_STATUSES },
+        replacements: {
+          since,
+          until,
+          statuses: SUCCESS_STATUSES,
+          completedDraftStatus: DRAFT_BOOKING_STATUS.COMPLETED,
+          paidStatus: PAYMENT_STATUS.PAID,
+        },
         type: QueryTypes.SELECT,
       },
     ),
@@ -107,10 +177,11 @@ export const getOccupancyByBranchHour = async (
   return occupancy;
 };
 
-export const getUserActivityForAdmin = async (
-  lookbackDays = AI_RECOMMENDATION_DEFAULTS.CUSTOMER_ACTIVITY_LOOKBACK_DAYS,
-) => {
-  const since = getLookbackDate(lookbackDays);
+export const getUserActivityForAdmin = async (period = {}) => {
+  const {
+    startDate: since,
+    endDate: until,
+  } = resolveInsightsPeriod(period);
   const vipMinSessions = AI_RECOMMENDATION_DEFAULTS.VIP_MIN_SESSIONS;
 
   const rows = await sequelize.query(
@@ -126,6 +197,7 @@ export const getUserActivityForAdmin = async (
         FROM Bookings b
         INNER JOIN BookingDetails bd ON bd.bookingId = b.id
         WHERE b.bookingStatus IN (:statuses)
+          AND bd.playDate <= :until
       ),
       user_stats AS (
         SELECT u.id AS userId,
@@ -133,8 +205,8 @@ export const getUserActivityForAdmin = async (
                u.email,
                COUNT(DISTINCT bl.bookingId) AS totalBookings,
                SUM(CASE WHEN bl.bookingStatus = :completed THEN 1 ELSE 0 END) AS completedBookings,
-               COUNT(CASE WHEN bl.playDate >= :since THEN bl.detailId END) AS sessionsLast30Days,
-               COUNT(DISTINCT CASE WHEN bl.playDate >= :since THEN bl.bookingId END) AS ordersLast30Days,
+               COUNT(CASE WHEN bl.playDate >= :since AND bl.playDate <= :until THEN bl.detailId END) AS sessionsLast30Days,
+               COUNT(DISTINCT CASE WHEN bl.playDate >= :since AND bl.playDate <= :until THEN bl.bookingId END) AS ordersLast30Days,
                MAX(bl.playDate) AS lastPlayDate,
                AVG(HOUR(bl.startTime)) AS avgHour
         FROM Users u
@@ -181,21 +253,22 @@ export const getUserActivityForAdmin = async (
         statuses: SUCCESS_STATUSES,
         completed: BOOKING_STATUS.COMPLETED,
         since,
+        until,
         vipMinSessions,
       },
       type: QueryTypes.SELECT,
     },
   );
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const referenceDate = new Date(`${until}T00:00:00`);
+  referenceDate.setHours(0, 0, 0, 0);
 
   return rows.map((row) => {
     let daysSinceLastBooking = null;
     if (row.lastPlayDate) {
       const last = new Date(`${row.lastPlayDate}T00:00:00`);
       daysSinceLastBooking = Math.floor(
-        (today.getTime() - last.getTime()) / (1000 * 60 * 60 * 24),
+        (referenceDate.getTime() - last.getTime()) / (1000 * 60 * 60 * 24),
       );
     }
 
@@ -216,8 +289,7 @@ export const getUserActivityForAdmin = async (
 };
 
 export const buildAdminInsightsPayload = async (options = {}) => {
-  const lookbackDays =
-    options.lookbackDays ?? AI_RECOMMENDATION_DEFAULTS.OCCUPANCY_LOOKBACK_DAYS;
+  const period = resolveInsightsPeriod(options);
   const lowFillThreshold =
     options.lowFillThreshold ?? AI_RECOMMENDATION_DEFAULTS.LOW_FILL_THRESHOLD;
   const churnDaysThreshold =
@@ -225,26 +297,23 @@ export const buildAdminInsightsPayload = async (options = {}) => {
   const peakSlotsPerBranch =
     options.peakSlotsPerBranch ??
     AI_RECOMMENDATION_DEFAULTS.PEAK_SLOTS_PER_BRANCH;
-  const customerLookbackDays =
-    options.customerLookbackDays ??
-    AI_RECOMMENDATION_DEFAULTS.CUSTOMER_ACTIVITY_LOOKBACK_DAYS;
 
   const [occupancy, userActivity] = await Promise.all([
-    getOccupancyByBranchHour(lookbackDays),
-    getUserActivityForAdmin(customerLookbackDays),
+    getOccupancyByBranchHour(period),
+    getUserActivityForAdmin(period),
   ]);
 
   return {
     occupancy,
     userActivity,
-    lookbackDays,
+    lookbackDays: period.lookbackDays,
     lowFillThreshold,
     churnDaysThreshold,
     peakSlotsPerBranch,
     maxPeakSlotsGlobal: AI_RECOMMENDATION_DEFAULTS.MAX_PEAK_SLOTS_GLOBAL,
-    periodStart: getLookbackDate(customerLookbackDays),
-    periodEnd: getLookbackDate(0),
-    customerLookbackDays,
+    periodStart: period.startDate,
+    periodEnd: period.endDate,
+    customerLookbackDays: period.customerLookbackDays,
     vipMinSessions: AI_RECOMMENDATION_DEFAULTS.VIP_MIN_SESSIONS,
     segmentTopK: AI_RECOMMENDATION_DEFAULTS.CUSTOMER_SEGMENT_TOP_K,
     secondBookingNudgeDays: AI_RECOMMENDATION_DEFAULTS.SECOND_BOOKING_NUDGE_DAYS,

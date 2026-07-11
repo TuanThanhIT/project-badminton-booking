@@ -103,7 +103,12 @@ const segmentCustomers = (
     (a, b) => (b.daysSinceLastBooking ?? 0) - (a.daysSinceLastBooking ?? 0),
   );
 
-  return [likelyReturn, needsVoucher.slice(0, segmentTopK)];
+  return {
+    likelyReturn,
+    needsVoucher: needsVoucher.slice(0, segmentTopK),
+    likelyReturnEligibleCount: vipPool.length,
+    voucherCandidateEligibleCount: needsVoucher.length,
+  };
 };
 
 export const buildAdminInsights = (payload = {}) => {
@@ -209,7 +214,12 @@ export const buildAdminInsights = (payload = {}) => {
     )
     .slice(0, maxPeakGlobal);
 
-  const [likelyReturn, needsVoucher] = segmentCustomers(userActivity, {
+  const {
+    likelyReturn,
+    needsVoucher,
+    likelyReturnEligibleCount,
+    voucherCandidateEligibleCount,
+  } = segmentCustomers(userActivity, {
     churnDays,
     vipMinSessions,
     segmentTopK,
@@ -229,6 +239,8 @@ export const buildAdminInsights = (payload = {}) => {
       lowFillSlotCount: lowFillSlots.length,
       likelyReturnCount: likelyReturn.length,
       voucherCandidateCount: needsVoucher.length,
+      likelyReturnEligibleCount,
+      voucherCandidateEligibleCount,
       avgFillRate:
         branchSummary.length > 0
           ? Math.round(

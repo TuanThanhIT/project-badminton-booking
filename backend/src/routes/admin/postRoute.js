@@ -8,12 +8,21 @@ import {
   approveModerationPostSchema,
   moderationPostIdSchema,
   pendingModerationPostsSchema,
+  postAnalyticsQuerySchema,
   rejectModerationPostSchema,
 } from "../../validations/adminModerationValidation.js";
 
 const adminPostRoute = express.Router();
 
 const initAdminPostRoute = (app) => {
+  adminPostRoute.get(
+    "/analytics",
+    auth,
+    authorize(ROLE_NAME.ADMIN),
+    validate(postAnalyticsQuerySchema),
+    adminPostController.getPostAnalyticsController,
+  );
+
   adminPostRoute.get(
     "/moderation/review",
     auth,

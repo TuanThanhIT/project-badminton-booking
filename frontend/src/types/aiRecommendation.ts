@@ -35,9 +35,9 @@ export type AdminCustomerInsight = {
   email?: string;
   /** Tổng đơn đặt cả đời */
   totalBookings: number;
-  /** Suất chơi trong cửa sổ rolling (mặc định 30 ngày) */
+  /** Suất chơi trong khoảng ngày đang phân tích. */
   sessionsLast30Days?: number;
-  /** Đơn đặt trong cửa sổ rolling (mặc định 30 ngày) */
+  /** Đơn đặt trong khoảng ngày đang phân tích. */
   ordersLast30Days?: number;
   daysSinceLastBooking?: number | null;
   lastBranchName?: string;
@@ -79,6 +79,8 @@ export type AdminAiInsights = {
     lowFillSlotCount: number;
     likelyReturnCount: number;
     voucherCandidateCount: number;
+    likelyReturnEligibleCount?: number;
+    voucherCandidateEligibleCount?: number;
     avgFillRate: number;
     lookbackDays?: number;
     customerLookbackDays?: number;
@@ -95,6 +97,8 @@ export type AdminRecommendationResponse = {
   insights: AdminAiInsights;
   meta: {
     lookbackDays: number;
+    periodStart?: string;
+    periodEnd?: string;
     occupancyRowCount: number;
     userActivityCount: number;
   };

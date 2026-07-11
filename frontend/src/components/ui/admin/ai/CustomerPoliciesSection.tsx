@@ -12,6 +12,7 @@ import { toast } from "react-toastify";
 import type { AdminCustomerInsight } from "../../../../types/aiRecommendation";
 import { type DiscountSegmentDraft } from "../../../../constants/marketingSegment";
 import TargetedDiscountModal from "./TargetedDiscountModal";
+import { exportExcel } from "../../../../utils/exportExcel";
 
 const formatDaysSince = (days?: number | null) => {
   if (days == null) return "—";
@@ -79,39 +80,56 @@ const buildComebackDiscountDraft = (count: number): DiscountSegmentDraft => ({
   segmentLabel: "Tái kích hoạt",
 });
 
-const downloadSegmentCsv = (
-  segmentName: string,
+const downloadSegmentExcel = (
+  variant: "vip" | "comeback",
   rows: AdminCustomerInsight[],
   periodStart?: string,
   periodEnd?: string,
 ) => {
-  const periodNote =
-    periodStart && periodEnd ? `${periodStart} → ${periodEnd}` : "";
-  const lines = [
-    ["Nhóm khách", "Khoảng dữ liệu", "Ưu tiên", "Họ tên", "Email", "Lượt đặt sân", "Đơn trong 30 ngày", "Lần gần nhất", "Chi nhánh gần nhất", "Lý do chọn"],
-    ...rows.map((row) => [
-      segmentName,
-      periodNote,
-      row.rank != null ? String(row.rank) : "",
-      row.fullName || `User #${row.userId}`,
-      row.email || "",
-      String(row.sessionsLast30Days ?? 0),
-      String(row.ordersLast30Days ?? 0),
-      formatDaysSince(row.daysSinceLastBooking),
-      row.lastBranchName || "",
-      reasonLabel(row.reason),
-    ]),
-  ];
-  const csv = lines
-    .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
-    .join("\n");
-  const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `bhub-segment-${segmentName}-${new Date().toISOString().slice(0, 10)}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
+  const periodLabel =
+    periodStart && periodEnd
+      ? `${formatPeriodVi(periodStart)} → ${formatPeriodVi(periodEnd)}`
+      : "Khoảng đang chọn";
+  const isVip = variant === "vip";
+  const title = isVip
+    ? "Danh sách khách thân thiết nên tri ân"
+    : "Danh sách khách nên mời quay lại";
+  const filename = isVip
+    ? `bhub-khach-tri-an-${new Date().toISOString().slice(0, 10)}.xls`
+    : `bhub-khach-tai-kich-hoat-${new Date().toISOString().slice(0, 10)}.xls`;
+
+  exportExcel(filename, [
+    {
+      title: `${title} (${periodLabel})`,
+      headers: [
+        "STT",
+        "Ưu tiên",
+        "Khách hàng",
+        "Email",
+        "Chi nhánh gần nhất",
+        `Lượt đặt sân (${periodLabel})`,
+        `Số đơn (${periodLabel})`,
+        "Lần đặt gần nhất",
+        "Nhóm/Lý do",
+        "Gợi ý hành động",
+      ],
+      rows: rows.map((row, index) => [
+        index + 1,
+        row.rank ? `#${row.rank}` : "",
+        row.fullName || `User #${row.userId}`,
+        row.email || "",
+        row.lastBranchName || "",
+        row.sessionsLast30Days ?? 0,
+        row.ordersLast30Days ?? 0,
+        formatDaysSince(row.daysSinceLastBooking),
+        reasonLabel(row.reason),
+        row.suggestedAction ||
+          (isVip
+            ? "Tạo mã tri ân cho khách đặt sân thường xuyên"
+            : "Tạo mã cá nhân nhắc khách quay lại"),
+      ]),
+    },
+  ]);
 };
 
 const CustomerTable = ({
@@ -161,7 +179,7 @@ const CustomerTable = ({
                   </span>
                 ) : null}
                 <span className="text-[10px] text-slate-400">
-                  {row.ordersLast30Days ?? 0} đơn trong 30 ngày
+                  {row.ordersLast30Days ?? 0} đơn trong khoảng chọn
                 </span>
               </div>
             </div>
@@ -195,23 +213,25 @@ const CustomerTable = ({
 const CustomerSegmentPolicyCard = ({
   variant,
   rows,
-  lowFillCount,
   periodStart,
   periodEnd,
   lookbackDays,
   vipMinSessions,
+  totalEligible,
 }: {
   variant: "vip" | "comeback";
   rows: AdminCustomerInsight[];
-  lowFillCount?: number;
   periodStart?: string;
   periodEnd?: string;
   lookbackDays?: number;
   vipMinSessions?: number;
+  totalEligible?: number;
 }) => {
   const [expanded, setExpanded] = useState(false);
   const [showTargetedModal, setShowTargetedModal] = useState(false);
   const count = rows.length;
+  const total = totalEligible ?? count;
+  const isLimited = total > count;
   const isVip = variant === "vip";
   const days = lookbackDays ?? 30;
   const minSessions = vipMinSessions ?? 2;
@@ -270,7 +290,9 @@ const CustomerSegmentPolicyCard = ({
               : "bg-slate-100 text-slate-500"
           }`}
         >
-          {count} khách phù hợp
+          {isLimited
+            ? `Hiển thị top ${count}/${total} khách`
+            : `${count} khách phù hợp`}
         </span>
       </div>
 
@@ -308,7 +330,8 @@ const CustomerSegmentPolicyCard = ({
         <div className="flex justify-between gap-2">
           <span className="text-slate-500">Số khách nhận mã</span>
           <span className="font-semibold text-slate-700">
-            {count} khách · mỗi khách dùng 1 lần
+            {count} khách đang hiển thị
+            {isLimited ? ` / ${total} khách phù hợp` : ""} · mỗi khách dùng 1 lần
           </span>
         </div>
       </div>
@@ -328,7 +351,7 @@ const CustomerSegmentPolicyCard = ({
         <button
           type="button"
           onClick={() =>
-            downloadSegmentCsv(
+            downloadSegmentExcel(
               isVip ? "vip" : "comeback",
               rows,
               periodStart,
@@ -358,14 +381,8 @@ const CustomerSegmentPolicyCard = ({
             <strong className="text-slate-700">Mục đích:</strong>{" "}
             {isVip
               ? "tri ân khách thân thiết, tăng sự gắn bó và khuyến khích họ tiếp tục đặt sân."
-              : "nhắc khách quay lại bằng ưu đãi có thời hạn, ưu tiên gắn với các khung giờ còn trống."}
+              : "kích hoạt lại nhóm khách có dấu hiệu rời bỏ bằng mã cá nhân có thời hạn, giúp họ có thêm lý do quay lại đặt sân."}
           </p>
-          {!isVip && lowFillCount ? (
-            <p>
-              <strong className="text-slate-700">Gợi ý gửi mã:</strong> nên gắn ưu đãi
-              vào {lowFillCount} khung giờ còn trống để tăng khả năng khách quay lại.
-            </p>
-          ) : null}
         </div>
       </div>
 
@@ -376,7 +393,9 @@ const CustomerSegmentPolicyCard = ({
             onClick={() => setExpanded((v) => !v)}
             className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
           >
-            <span>Danh sách {count} khách phù hợp</span>
+            <span>
+              Danh sách {isLimited ? `top ${count}/${total}` : count} khách phù hợp
+            </span>
             {expanded ? (
               <ChevronUp className="h-4 w-4" />
             ) : (
@@ -428,7 +447,8 @@ const CustomerSegmentPolicyCard = ({
 const CustomerPoliciesSection = ({
   activeRows,
   comebackRows,
-  lowFillCount,
+  activeTotal,
+  comebackTotal,
   periodStart,
   periodEnd,
   lookbackDays,
@@ -436,7 +456,8 @@ const CustomerPoliciesSection = ({
 }: {
   activeRows: AdminCustomerInsight[];
   comebackRows: AdminCustomerInsight[];
-  lowFillCount: number;
+  activeTotal?: number;
+  comebackTotal?: number;
   periodStart?: string;
   periodEnd?: string;
   lookbackDays?: number;
@@ -453,6 +474,7 @@ const CustomerPoliciesSection = ({
         <CustomerSegmentPolicyCard
           variant="vip"
           rows={activeRows}
+          totalEligible={activeTotal}
           periodStart={periodStart}
           periodEnd={periodEnd}
           lookbackDays={lookbackDays}
@@ -461,7 +483,7 @@ const CustomerPoliciesSection = ({
         <CustomerSegmentPolicyCard
           variant="comeback"
           rows={comebackRows}
-          lowFillCount={lowFillCount}
+          totalEligible={comebackTotal}
           periodStart={periodStart}
           periodEnd={periodEnd}
           lookbackDays={lookbackDays}

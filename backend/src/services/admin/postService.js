@@ -233,7 +233,6 @@ const getAdminPostAnalyticsService = async (data = {}) => {
             AND p.isDeleted = 0
         ) featured
         ORDER BY featured.hotScore DESC, featured.createdAt DESC
-        LIMIT 10
       `,
       {
         replacements: {

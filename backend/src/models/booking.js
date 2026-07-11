@@ -99,6 +99,34 @@ const Booking = sequelize.define(
         },
       },
     },
+    walletDiscountId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: Discount, key: "id" },
+      validate: {
+        isInt: {
+          msg: "Wallet discount ID must be an integer",
+        },
+        min: {
+          args: [1],
+          msg: "Wallet discount ID must be a positive number",
+        },
+      },
+    },
+    walletDiscountAmount: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+      defaultValue: 0,
+      validate: {
+        isFloat: {
+          msg: "Wallet discount amount must be a number",
+        },
+        min: {
+          args: [0],
+          msg: "Wallet discount amount must be >= 0",
+        },
+      },
+    },
     note: {
       type: DataTypes.STRING(500),
       allowNull: true,

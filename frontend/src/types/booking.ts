@@ -1,5 +1,6 @@
 import type { ApiResponse } from "./api";
 import type { VNPayCallbackRequest } from "./wallet";
+import type { WalletPromotionEligibility } from "./wallet";
 
 export type BookingStatus =
   | "PENDING"
@@ -26,6 +27,9 @@ export type CreateBookingData = {
   amount: number;
   paymentMethod: string;
   paymentUrl?: string;
+  discountAmount?: number;
+  walletDiscountAmount?: number;
+  walletPromotion?: WalletPromotionEligibility | null;
   status: BookingStatus;
 };
 

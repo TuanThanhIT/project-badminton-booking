@@ -154,6 +154,7 @@ const CheckoutPage = () => {
           data: {
             cartId: checkoutCartId,
             addressId: selectedAddress.id,
+            paymentMethod,
             ...checkoutPayload,
           },
         }),
@@ -176,6 +177,7 @@ const CheckoutPage = () => {
     checkoutCartId,
     checkoutPayload,
     hasCheckoutPayload,
+    paymentMethod,
     selectedAddress,
   ]);
 
@@ -299,6 +301,24 @@ const CheckoutPage = () => {
       .catch(() => {
         localStorage.removeItem("discountCode");
       });
+  };
+
+  const handleSelectPaymentMethod = async (method: PaymentMethod) => {
+    if (
+      method === PAYMENT_METHOD.WALLET.value &&
+      (checkoutPreview?.group?.discount?.amount ?? 0) > 0
+    ) {
+      const confirmed = await showConfirmDialog(
+        "Chọn ưu đãi",
+        "Voucher và ưu đãi Ví B-Hub không thể sử dụng đồng thời. Bỏ voucher hiện tại để dùng ưu đãi ví?",
+        "Bỏ voucher",
+        "Giữ voucher",
+      );
+      if (!confirmed) return;
+      localStorage.removeItem("discountCode");
+    }
+
+    setPaymentMethod(method);
   };
 
   const handleCreateOrder = async () => {
@@ -559,13 +579,21 @@ const CheckoutPage = () => {
 
                   <button
                     onClick={() => setOpenDiscount(true)}
-                    className="rounded-2xl bg-sky-500 px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-sky-600"
+                    disabled={paymentMethod === PAYMENT_METHOD.WALLET.value}
+                    className="rounded-2xl bg-sky-500 px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-sky-600 disabled:cursor-not-allowed disabled:bg-slate-300"
                   >
                     {checkoutPreview?.group?.discount?.code
                       ? "Đổi mã"
                       : "Chọn mã"}
                   </button>
                 </div>
+
+                {paymentMethod === PAYMENT_METHOD.WALLET.value && (
+                  <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    Voucher và ưu đãi Ví B-Hub không thể sử dụng đồng thời.
+                    Vui lòng bỏ voucher nếu muốn nhận ưu đãi ví.
+                  </div>
+                )}
 
                 <div>
                   <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-600">
@@ -594,7 +622,7 @@ const CheckoutPage = () => {
                 <button
                   type="button"
                   key={method.value}
-                  onClick={() => setPaymentMethod(method.value)}
+                  onClick={() => handleSelectPaymentMethod(method.value)}
                   className={`rounded-2xl border p-4 text-left transition-all ${
                     paymentMethod === method.value
                       ? "border-sky-300 bg-sky-50 shadow-sm"
@@ -647,7 +675,7 @@ const CheckoutPage = () => {
 
                 {(checkoutPreview?.group?.discount?.amount ?? 0) > 0 && (
                   <div className="flex items-center justify-between gap-4 text-emerald-600">
-                    <span>Giảm giá</span>
+                    <span>Voucher</span>
                     <span className="font-medium">
                       -
                       {formatPrice(
@@ -656,6 +684,29 @@ const CheckoutPage = () => {
                     </span>
                   </div>
                 )}
+
+                {(checkoutPreview?.group?.walletDiscount?.amount ?? 0) > 0 && (
+                  <div className="flex items-center justify-between gap-4 text-sky-600">
+                    <span>Ưu đãi Ví B-Hub</span>
+                    <span className="font-medium">
+                      -
+                      {formatPrice(
+                        checkoutPreview?.group?.walletDiscount?.amount ?? 0,
+                      )}
+                    </span>
+                  </div>
+                )}
+
+                {paymentMethod === PAYMENT_METHOD.WALLET.value &&
+                  checkoutPreview?.group?.walletPromotion &&
+                  !checkoutPreview.group.walletPromotion.eligible && (
+                    <div className="rounded-2xl border border-amber-100 bg-amber-50 p-3 text-xs leading-5 text-amber-800">
+                      {checkoutPreview.group.walletPromotion.reason ===
+                      "MONTHLY_USAGE_LIMIT_REACHED"
+                        ? "Bạn đã sử dụng hết 5 lượt ưu đãi Ví B-Hub trong tháng này. Bạn vẫn có thể thanh toán bằng ví nhưng không được giảm giá."
+                        : "Ưu đãi Ví B-Hub chưa áp dụng cho giao dịch này."}
+                    </div>
+                  )}
 
                 <div className="flex justify-between gap-4 text-slate-600">
                   <span>Sản phẩm</span>

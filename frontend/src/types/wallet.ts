@@ -125,3 +125,33 @@ export type WalletWithdrawData = {
 };
 
 export type WalletWithdrawResponse = ApiResponse<WalletWithdrawData>;
+
+export type WalletPromotion = {
+  isActive: boolean;
+  title: string;
+  description: string;
+  discountRate: number;
+  maxDiscount: number;
+  monthlyUsageLimit: number;
+  monthlyUsageCount: number | null;
+  remainingUsageCount: number | null;
+  applyTypes: ("ORDER" | "BOOKING")[];
+  allowStacking: boolean;
+  startDate: string | null;
+  endDate: string | null;
+};
+
+export type WalletPromotionEligibility = {
+  eligible: boolean;
+  discountId: number | null;
+  campaignKey: string;
+  discountRate: number;
+  maxDiscount: number;
+  discountAmount: number;
+  monthlyUsageCount: number;
+  monthlyUsageLimit: number;
+  remainingUsageCount: number;
+  reason: string | null;
+};
+
+export type WalletPromotionResponse = ApiResponse<WalletPromotion>;

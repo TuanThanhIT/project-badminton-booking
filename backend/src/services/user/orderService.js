@@ -53,6 +53,12 @@ import {
   getLeadtimeService,
 } from "../shared/ghnService.js";
 import { applyDiscountUsage } from "../shared/applyDiscountUsage.js";
+import {
+  cancelWalletPromotionUsage,
+  createWalletPromotionUsage,
+  validateWalletPromotionEligibility,
+} from "../shared/walletPromotionService.js";
+import { DISCOUNT_USAGE_REFERENCE_TYPE } from "../../constants/discountConstant.js";
 import ForbiddenError from "../../errors/ForbiddenError.js";
 import { syncOrderStatus } from "../../utils/orderMapper.js";
 import {
@@ -107,7 +113,7 @@ const deleteSelectedCartItems = async ({
 };
 
 const checkoutPreviewService = async (data) => {
-  const { cartId, addressId, userId } = data;
+  const { cartId, addressId, userId, paymentMethod } = data;
   const selectedCartItemIds = normalizeCartItemIds(data.cartItemIds);
   const buyNowItem = normalizeBuyNowItem(data.buyNowItem);
   const checkoutMode = buyNowItem ? "BUY_NOW" : "CART";
@@ -418,11 +424,42 @@ const checkoutPreviewService = async (data) => {
             amount: 0,
           },
 
+      walletDiscount: {
+        id: null,
+        code: null,
+        amount: 0,
+      },
+      walletPromotion: null,
+      paymentMethod: paymentMethod || oldSession?.group?.paymentMethod || null,
       total:
         subTotal +
         (isSameAddress ? oldSession?.group?.shippingFeeTotal || 0 : 0) -
         (isSameSelection ? oldSession?.group?.discount?.amount || 0 : 0),
     };
+
+    if (paymentMethod === PAYMENT_METHOD_STATUS.WALLET) {
+      const walletPromotion = await validateWalletPromotionEligibility({
+        userId,
+        paymentMethod,
+        targetType: DISCOUNT_USAGE_REFERENCE_TYPE.ORDER,
+        eligibleAmount: subTotal,
+        voucherDiscountAmount: group.discount?.amount || 0,
+        transaction: t,
+      });
+      group.walletPromotion = walletPromotion;
+      if (walletPromotion.eligible) {
+        group.walletDiscount = {
+          id: walletPromotion.discountId,
+          code: walletPromotion.campaignKey,
+          amount: walletPromotion.discountAmount,
+        };
+        group.discount = { id: null, code: null, amount: 0 };
+        group.total =
+          subTotal +
+          group.shippingFeeTotal -
+          walletPromotion.discountAmount;
+      }
+    }
 
     // ================= 9. SAVE =================
     const session = {
@@ -578,7 +615,8 @@ const calculateShippingService = async (data) => {
   session.group.total =
     session.group.subTotal +
     totalShipping -
-    (session.group.discount?.amount || 0);
+    (session.group.discount?.amount || 0) -
+    (session.group.walletDiscount?.amount || 0);
 
   await redisClient.set(redisKey, JSON.stringify(session), "EX", 1800);
 
@@ -741,20 +779,70 @@ const createOrderService = async (data) => {
     const address = await UserAddress.findByPk(addressId, { transaction: t });
     if (!address) throw new NotFoundError("Địa chỉ không tồn tại");
 
+    let walletPromotion = null;
+    let walletDiscount = { id: null, amount: 0 };
+    let voucherDiscount = {
+      id: preview.group.discount?.id || null,
+      amount: Number(preview.group.discount?.amount || 0),
+    };
+
+    if (paymentMethod === PAYMENT_METHOD_STATUS.WALLET) {
+      walletPromotion = await validateWalletPromotionEligibility({
+        userId,
+        paymentMethod,
+        targetType: DISCOUNT_USAGE_REFERENCE_TYPE.ORDER,
+        eligibleAmount: preview.group.subTotal,
+        voucherDiscountAmount: voucherDiscount.amount,
+        transaction: t,
+        lock: true,
+      });
+
+      if (walletPromotion.eligible) {
+        walletDiscount = {
+          id: walletPromotion.discountId,
+          amount: walletPromotion.discountAmount,
+        };
+        voucherDiscount = { id: null, amount: 0 };
+      }
+    }
+
+    const finalAmount = Math.max(
+      0,
+      Math.round(
+        Number(preview.group.subTotal || 0) +
+          Number(preview.group.shippingFeeTotal || 0) -
+          Number(voucherDiscount.amount || 0) -
+          Number(walletDiscount.amount || 0),
+      ),
+    );
+
     // ================= ORDER GROUP =================
     const orderGroup = await OrderGroup.create(
       {
         userId,
         totalAmount: preview.group.subTotal,
         totalShippingFee: preview.group.shippingFeeTotal,
-        discountId: preview.group.discount.id,
-        discountAmount: preview.group.discount.amount,
-        finalAmount: preview.group.total,
+        discountId: voucherDiscount.id,
+        discountAmount: voucherDiscount.amount,
+        walletDiscountId: walletDiscount.id,
+        walletDiscountAmount: walletDiscount.amount,
+        finalAmount,
         status: ORDER_GROUP_STATUS.PENDING_PAYMENT,
         note,
       },
       { transaction: t },
     );
+
+    if (walletDiscount.id && walletDiscount.amount > 0) {
+      await createWalletPromotionUsage({
+        discountId: walletDiscount.id,
+        userId,
+        referenceType: DISCOUNT_USAGE_REFERENCE_TYPE.ORDER,
+        referenceId: orderGroup.id,
+        discountAmount: walletDiscount.amount,
+        transaction: t,
+      });
+    }
 
     // ================= CREATE ORDERS =================
     for (const o of preview.group.orders) {
@@ -801,6 +889,8 @@ const createOrderService = async (data) => {
     let result = {
       orderGroupId: orderGroup.id,
       amount: orderGroup.finalAmount,
+      walletDiscountAmount: Number(orderGroup.walletDiscountAmount || 0),
+      walletPromotion,
       cartId,
       cartItemIds: selectedCartItemIds,
       buyNowItem,
@@ -1107,6 +1197,12 @@ const walletOrderConfirmService = async (data) => {
         { status: WALLET_TRANSACTION_STATUS.FAILED },
         { transaction: t },
       );
+      await cancelWalletPromotionUsage({
+        discountId: orderGroup.walletDiscountId,
+        referenceType: DISCOUNT_USAGE_REFERENCE_TYPE.ORDER,
+        referenceId: orderGroup.id,
+        transaction: t,
+      });
       throw new BadRequestError("Phiên thanh toán đã hết hạn");
     }
 
@@ -1522,7 +1618,9 @@ const calculateRefundAmount = async (order, orderGroup) => {
     Number(orderGroup.totalShippingFee || 0);
 
   const orderAmount = Number(order.totalAmount || 0);
-  const discountAmount = Number(orderGroup.discountAmount || 0);
+  const discountAmount =
+    Number(orderGroup.discountAmount || 0) +
+    Number(orderGroup.walletDiscountAmount || 0);
 
   if (!discountAmount || !groupBeforeDiscount) {
     return orderAmount;

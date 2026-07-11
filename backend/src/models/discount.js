@@ -1,10 +1,13 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
 import {
+  DISCOUNT_APPLICATION_MODE,
   DISCOUNT_APPLY_TYPE,
   DISCOUNT_TYPE,
+  DISCOUNT_USAGE_LIMIT_PERIOD,
   DISCOUNT_VISIBILITY,
 } from "../constants/discountConstant.js";
+import { PAYMENT_METHOD_STATUS } from "../constants/paymentConstant.js";
 
 const Discount = sequelize.define(
   "Discount",
@@ -22,6 +25,23 @@ const Discount = sequelize.define(
         len: {
           args: [3, 30],
           msg: "Discount code must be between 3 and 30 characters",
+        },
+      },
+    },
+    campaignKey: {
+      type: DataTypes.STRING(80),
+      allowNull: true,
+      unique: true,
+      set(value) {
+        this.setDataValue(
+          "campaignKey",
+          value ? String(value).trim().toUpperCase() : null,
+        );
+      },
+      validate: {
+        len: {
+          args: [1, 80],
+          msg: "Campaign key must be at most 80 characters",
         },
       },
     },
@@ -114,6 +134,50 @@ const Discount = sequelize.define(
           msg: "Invalid discount visibility",
         },
       },
+    },
+    applicationMode: {
+      type: DataTypes.ENUM(...Object.values(DISCOUNT_APPLICATION_MODE)),
+      allowNull: false,
+      defaultValue: DISCOUNT_APPLICATION_MODE.CODE,
+      validate: {
+        isIn: {
+          args: [Object.values(DISCOUNT_APPLICATION_MODE)],
+          msg: "Invalid discount application mode",
+        },
+      },
+    },
+    requiredPaymentMethod: {
+      type: DataTypes.ENUM(...Object.values(PAYMENT_METHOD_STATUS)),
+      allowNull: true,
+      validate: {
+        isIn: {
+          args: [Object.values(PAYMENT_METHOD_STATUS)],
+          msg: "Invalid required payment method",
+        },
+      },
+    },
+    usageLimitPerUser: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: {
+        isInt: { msg: "Usage limit per user must be an integer" },
+        min: { args: [1], msg: "Usage limit per user must be greater than 0" },
+      },
+    },
+    usageLimitPeriod: {
+      type: DataTypes.ENUM(...Object.values(DISCOUNT_USAGE_LIMIT_PERIOD)),
+      allowNull: true,
+      validate: {
+        isIn: {
+          args: [Object.values(DISCOUNT_USAGE_LIMIT_PERIOD)],
+          msg: "Invalid usage limit period",
+        },
+      },
+    },
+    allowStacking: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
     },
     // Phạm vi áp dụng cho đặt sân. null = áp cho mọi chi nhánh.
     branchId: {

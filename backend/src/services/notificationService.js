@@ -25,12 +25,15 @@ const normalizeNotificationMessage = (message) => {
   return message;
 };
 
+const normalizeIsRead = (value) =>
+  value === true || value === 1 || value === "1";
+
 const formatNotification = (notify) => ({
   id: notify.id,
   title: normalizeNotificationTitle(notify.title),
   message: normalizeNotificationMessage(notify.message),
 
-  isRead: notify.isRead,
+  isRead: normalizeIsRead(notify.isRead),
   type: notify.type,
   createdAt: notify.createdAt,
 });

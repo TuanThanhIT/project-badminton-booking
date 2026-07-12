@@ -36,6 +36,7 @@ import {
 } from "../../components/commons/manager/ManagerPage";
 import TablePagination from "../../components/ui/user/pagination/TablePagination";
 import { showConfirmDialog } from "../../utils/confirmDialog";
+import { getApiErrorMessage } from "../../utils/apiError";
 
 const today = new Date().toISOString().slice(0, 10);
 const LIMIT = 10;
@@ -177,8 +178,8 @@ const WorkShiftPage = () => {
         shiftName: "",
       }));
       setShowShiftForm(false);
-    } catch (error: any) {
-      toast.error(error?.message || "Tạo ca thất bại");
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error, "Tạo ca thất bại"));
     }
   };
 
@@ -204,8 +205,8 @@ const WorkShiftPage = () => {
         ...current,
         [shift.id]: { employeeId: "", roleInShift: "STAFF" },
       }));
-    } catch (error: any) {
-      toast.error(error?.message || "Phân ca thất bại");
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error, "Phân ca thất bại"));
     }
   };
 
@@ -218,8 +219,8 @@ const WorkShiftPage = () => {
         updateManagerShiftAssignment({ assignmentId, roleInShift }),
       ).unwrap();
       toast.success("Đã cập nhật vai trò trong ca");
-    } catch (error: any) {
-      toast.error(error?.message || "Cập nhật thất bại");
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error, "Cập nhật thất bại"));
     }
   };
 
@@ -236,8 +237,8 @@ const WorkShiftPage = () => {
     try {
       await dispatch(removeManagerShiftAssignment(assignmentId)).unwrap();
       toast.success("Đã xóa phân ca");
-    } catch (error: any) {
-      toast.error(error?.message || "Xóa phân ca thất bại");
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error, "Xóa phân ca thất bại"));
     }
   };
 

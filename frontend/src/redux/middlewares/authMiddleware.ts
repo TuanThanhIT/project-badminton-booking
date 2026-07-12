@@ -1,6 +1,7 @@
 import { isRejectedWithValue, type Middleware } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import { logoutLocal } from "../slices/user/authSlice";
+import { getApiErrorMessage } from "../../utils/apiError";
 import {
   forceLogoutUser,
   isAccountLockPayload,
@@ -15,7 +16,7 @@ export const authMiddleware: Middleware =
     }
 
     const status = action.payload?.statusCode;
-    const message = action.payload?.message || "Có lỗi xảy ra";
+    const message = getApiErrorMessage(action.payload);
     const remainingTime = action.payload?.data?.remainingTime;
     const accountLockPayload = {
       forceLogout:
@@ -39,10 +40,6 @@ export const authMiddleware: Middleware =
       return result;
     }
 
-    if (!remainingTime && status !== 401 && status !== 403) {
-      toast.error(message, { toastId: message });
-    }
-
     if (
       status === 401 &&
       action.type === "auth/refreshTokenThunk/rejected"
@@ -52,13 +49,21 @@ export const authMiddleware: Middleware =
         { toastId: "session-expired" },
       );
       store.dispatch(logoutLocal());
+      return result;
     }
 
     if (status === 403) {
       toast.error(message || "Không có quyền truy cập", {
         toastId: "forbidden",
       });
+      return result;
     }
+
+    if (remainingTime || status === 401) {
+      return result;
+    }
+
+    toast.error(message, { toastId: message });
 
     return result;
   };

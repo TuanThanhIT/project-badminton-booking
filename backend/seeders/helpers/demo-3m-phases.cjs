@@ -547,6 +547,7 @@ const seedWorkShifts = async (qi, Sequelize) =>
     const shifts = [];
     for (let d = new Date(u.START); d <= u.END; d = u.addDays(d, 1)) {
       const workDate = u.dateOnly(d);
+      if (u.isExcludedSeedDate(d)) continue;
       const demoOperationDate = isDemoOperationDate(d);
       base.branches.forEach((branch) => {
         [

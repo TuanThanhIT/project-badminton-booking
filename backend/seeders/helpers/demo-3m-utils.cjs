@@ -9,6 +9,7 @@ const START = new Date("2026-03-10T00:00:00+07:00");
 const END = new Date("2026-07-13T23:59:59+07:00");
 const FEEDBACK_END = new Date("2026-07-13T23:59:59+07:00");
 const RECENT_CUTOFF = new Date("2026-07-12T00:00:00+07:00");
+const EXCLUDED_SEED_DATES = new Set(["2026-07-12"]);
 
 const STATUS = {
   booking: ["PENDING", "CONFIRMED", "CHECKED_IN", "COMPLETED", "CANCELLED", "FAILED"],
@@ -64,6 +65,15 @@ const dateTime = (date, hour = 0, minute = 0) => {
 const time = (hour, minute = 0) => `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 const addMinutes = (date, minutes) => new Date(date.getTime() + minutes * 60000);
 const addDays = (date, days) => new Date(date.getTime() + days * 86400000);
+const isExcludedSeedDate = (date) => EXCLUDED_SEED_DATES.has(dateOnly(date));
+const avoidExcludedSeedDate = (date, start = START, end = END) => {
+  if (!isExcludedSeedDate(date)) return date;
+  const next = addDays(date, 1);
+  if (next <= end && !isExcludedSeedDate(next)) return next;
+  const previous = addDays(date, -1);
+  if (previous >= start && !isExcludedSeedDate(previous)) return previous;
+  return date;
+};
 const weighted = (pairs) => {
   const total = pairs.reduce((sum, item) => sum + item[1], 0);
   let roll = rand() * total;
@@ -80,13 +90,13 @@ const randomDate = () => {
   const month = d.getMonth();
   const multiplier = month === 4 ? 1.18 : month === 3 ? 1.05 : 1;
   if (rand() > multiplier / 1.2) return randomDate();
-  return d;
+  return avoidExcludedSeedDate(d);
 };
 const spreadDate = (index, total, start = START, end = END) => {
-  if (total <= 1) return new Date(end);
+  if (total <= 1) return avoidExcludedSeedDate(new Date(end), start, end);
   const days = Math.floor((end - start) / 86400000);
   const offset = Math.round((Math.max(0, index) * days) / (total - 1));
-  return addDays(start, Math.min(days, offset));
+  return avoidExcludedSeedDate(addDays(start, Math.min(days, offset)), start, end);
 };
 const bookingHour = () => weighted([[6, 12], [7, 10], [8, 8], [10, 5], [14, 7], [17, 16], [18, 18], [19, 20], [20, 18], [21, 13]]);
 const publicHour = () => int(8, 23);
@@ -259,9 +269,9 @@ const cleanupUsers = async (qi, transaction) => {
 };
 
 module.exports = {
-  MARKER, RANDOM_SEED, START, END, FEEDBACK_END, RECENT_CUTOFF, STATUS, addresses, avatar, names,
+  MARKER, RANDOM_SEED, START, END, FEEDBACK_END, RECENT_CUTOFF, EXCLUDED_SEED_DATES, STATUS, addresses, avatar, names,
   rand, int, pick, money, pad, dateOnly, dateTime, addMinutes, addDays, time,
-  weighted, randomDate, spreadDate, bookingHour, publicHour, q, exec, insert, del,
+  weighted, randomDate, spreadDate, isExcludedSeedDate, avoidExcludedSeedDate, bookingHour, publicHour, q, exec, insert, del,
   getRoleIds, getDemoUsers, phaseTransaction, deletePaymentsByExternal,
   deleteBookings, deleteOrders, deleteCounter, deleteSocial, deleteChat,
   cleanupUsers, bcrypt,
